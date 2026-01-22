@@ -13,7 +13,7 @@ on:
       - 'CHelper-Doc/**'
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
