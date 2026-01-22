@@ -46,8 +46,8 @@ CHelper 内核包含了语法解析、错误检测、补全提示、命令结构
 CHelper 使用 CMake 项目构建系统，同时支持 GCC、Clang、MSVC 等主流编译器，也同时支持 Windows、Linux、MacOS 等主流的操作系统。在你电脑安装好 CMake 和任意的 c++ 编译工具链后，即可通过下面的命令构建 CHelper，命令仅作参考：
 
 ```bash
-git clone https://github.com/Yancey2023/CHelper-Core.git
-cd CHelper
+git clone https://github.com/Yancey2023/CHelper.git
+cd ./CHelper/CHelper-Core
 cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release
 cmake --build ./build ---target CHelperCmd
 ```
@@ -85,8 +85,8 @@ source ./emsdk_env.sh
 sudo apt-get install -y cmake ninja-build
 cd ..
 
-git clone https://github.com/Yancey2023/CHelper-Core.git
-cd ./CHelper-Core/CHelper-Web
+git clone https://github.com/Yancey2023/CHelper.git
+cd ./CHelper/CHelper-Web
 
 cmake -B build -D CMAKE_BUILD_TYPE=MinSizeRel -D CMAKE_TOOLCHAIN_FILE="./emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" -G "Ninja"
 cd build

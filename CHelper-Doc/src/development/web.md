@@ -1,6 +1,6 @@
 # CHelper 网页接口 / JavaScript 接口文档
 
-如果有不明白的地方，可以直接参考[CHelper 网页版](https://github.com/Yancey2023/CHelper/CHelper-Web)的内核对接方式。
+如果有不明白的地方，可以直接参考[CHelper 网页版](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Web)的内核对接方式。
 
 ## 编译内核（可选）
 
@@ -12,7 +12,7 @@
 
 ## 与 JavaScipt 代码交互
 
-通过观察[CHelper-Web](https://github.com/Yancey2023/CHelper/CHelper-Web)这个项目，可以发现：在`src/assets`目录下，有 1 个`wasm`格式的文件是生成好的内核，6 个`cpack`格式的文件是生成好的资源包，你可以直接使用这些文件。在`src/core`目录下，`libCHelperWeb.js`用于加载`wasm`文件，并且提供了 js 的调用方式：
+通过观察[CHelper-Web](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Web)这个项目，可以发现：在`src/assets`目录下，有 1 个`wasm`格式的文件是生成好的内核，6 个`cpack`格式的文件是生成好的资源包，你可以直接使用这些文件。在`src/core`目录下，`libCHelperWeb.js`用于加载`wasm`文件，并且提供了 js 的调用方式：
 
 ```js
 export class CHelperCore {

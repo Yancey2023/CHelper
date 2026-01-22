@@ -17,7 +17,7 @@ hero:
       link: /chelper
     - theme: alt
       text: GitHub
-      link: https://github.com/Yancey2023/CHelper-Core
+      link: https://github.com/Yancey2023/CHelper
 
 features:
   - title: 命令补全
