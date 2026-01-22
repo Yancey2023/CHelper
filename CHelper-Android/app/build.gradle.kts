@@ -134,7 +134,7 @@ dependencies {
     // https://github.com/getActivity/DeviceCompat
     implementation("com.github.getActivity:DeviceCompat:1.6")
     // https://github.com/getActivity/XXPermissions
-    implementation("com.github.getActivity:XXPermissions:26.5")
+    implementation("com.github.getActivity:XXPermissions:26.8")
     // https://github.com/getActivity/Toaster
     implementation("com.github.getActivity:Toaster:13.8")
     // https://github.com/getActivity/EasyWindow
