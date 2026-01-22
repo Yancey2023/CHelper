@@ -31,7 +31,7 @@ export default defineConfig({
     logo: "/logo.webp",
 
     editLink: {
-      pattern: "https://github.com/Yancey2023/CHelper-Doc/edit/main/src/:path",
+      pattern: "https://github.com/Yancey2023/CHelper/edit/main/CHelper-Doc/src/:path",
       text: "在 GitHub 上编辑此页面",
     },
 

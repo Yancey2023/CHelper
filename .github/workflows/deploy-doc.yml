@@ -12,6 +12,15 @@ on:
       - '.github/workflows/deploy-doc.yml'
       - 'CHelper-Doc/**'
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -48,4 +57,4 @@ jobs:
           SOURCE: "CHelper-Doc/.vitepress/dist/"
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.CHELPER_WEB_TARGET }}
+          TARGET: ${{ secrets.CHELPER_DOC_TARGET }}
