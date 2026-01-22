@@ -1,4 +1,4 @@
-name: Deploy CHelper-Web to my server
+name: Deploy CHelper-Web
 
 on:
   push:
@@ -36,7 +36,23 @@ jobs:
         working-directory: ${{ github.workspace }}/CHelper-Web
         run: pnpm install
 
-      - name: Build
+      - name: Build For GitHub Page
+        working-directory: ${{ github.workspace }}/CHelper-Web
+        run: npx vite build --base=/${{ github.event.repository.name }}/ --mode production
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: './CHelper-Web/dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Build For My Server
         working-directory: ${{ github.workspace }}/CHelper-Web
         run: npx vite build --base=/chelper/ --mode my_server
   

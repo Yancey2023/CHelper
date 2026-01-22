@@ -1,4 +1,4 @@
-name: Deploy CHelper-Doc to my server
+name: Deploy CHelper-Doc
 
 on:
   push:
