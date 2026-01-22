@@ -4,6 +4,7 @@ project(CHelper LANGUAGES CXX)
 # using c++ 20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # export compile commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,6 +20,7 @@ endif ()
 # Fix issues in MSVC
 if (MSVC)
     add_compile_options("/utf-8")
+    add_compile_options("/Zc:__cplusplus")
 endif ()
 
 # ThirdParty: fmt
