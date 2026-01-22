@@ -8,7 +8,7 @@
 #define CHELPER_NAMESPACEID_H
 
 #include <chelper/resources/id/NormalId.h>
-#include <pch.h>
+#include <../../../../pch.h>
 
 namespace CHelper {
 

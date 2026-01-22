@@ -2,7 +2,7 @@
 // Created by Yancey on 2023/11/5.
 //
 
-#include "CHelperCmd.h"
+#include "CHelperResourceGenerator.h"
 #include <chelper/parser/Parser.h>
 
 int main() {
@@ -27,7 +27,7 @@ int main() {
 
 [[maybe_unused]] void testBin() {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    for (const auto &cpackPath: std::filesystem::directory_iterator(resourceDir / "run" / "cpack")) {
+    for (const auto &cpackPath: std::filesystem::directory_iterator(resourceDir / "generated" / "cpack")) {
         std::string fileName = cpackPath.path().filename().string();
         if (fileName.find("beta-experiment-") != std::string::npos) {
             CHelper::Test::testBin(cpackPath, resourceDir / "test" / "test.txt", true);
@@ -43,15 +43,15 @@ int main() {
     bool isSuccess = true;
     for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "release")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("release"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "run" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
     }
     for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "beta")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("beta"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "run" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
     }
     for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "netease")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("netease"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "run" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
     }
     return isSuccess;
 }
@@ -60,7 +60,7 @@ bool outputOld2New() {
     // old2new
     std::filesystem::path resourceDir(RESOURCE_DIR);
     std::filesystem::path input = resourceDir / "resources" / "old2new" / "blockFixData.json";
-    std::filesystem::path output = resourceDir / "run" / "old2new" / "old2new.dat";
+    std::filesystem::path output = resourceDir / "generated" / "old2new" / "old2new.dat";
     CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(serialization::get_json_from_file(input));
     std::filesystem::create_directories(output.parent_path());
     std::ofstream ostream(output, std::ios::binary);

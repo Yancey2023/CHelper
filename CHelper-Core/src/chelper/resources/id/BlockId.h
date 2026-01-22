@@ -10,7 +10,7 @@
 
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
-#include <pch.h>
+#include <../../../../pch.h>
 
 namespace CHelper {
 

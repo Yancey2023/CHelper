@@ -9,11 +9,6 @@ build
 # MacOS
 .DS_STORE
 
-# QtCreator
-*.user
-
-# run directory
-/CHelper-Resource/run
-
 # others
-/plan
+/CHelper-Resource/generated/
+/plan/

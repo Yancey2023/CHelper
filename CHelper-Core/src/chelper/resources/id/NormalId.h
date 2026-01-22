@@ -7,7 +7,7 @@
 #ifndef CHELPER_NORMALID_H
 #define CHELPER_NORMALID_H
 
-#include <pch.h>
+#include <../../../../pch.h>
 
 namespace CHelper {
 

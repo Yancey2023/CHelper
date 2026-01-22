@@ -13,12 +13,12 @@ git submodule update --init --recursive --progress
 
 ## Multi-platform
 
-|                             project                              |                                                       description                                                        |
-| :--------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
-|    [CHelper-Core](https://github.com/Yancey2023/CHelper-Core)    |                                   CHelper-Core is the core of CHelper, written in c++                                    |
-| [CHelper-Android](https://github.com/Yancey2023/CHelper-Android) | CHelper-Android is the Android version of the app, depends on [CHelper-Core](https://github.com/Yancey2023/CHelper-Core) |
-|     [CHelper-Web](https://github.com/Yancey2023/chelper_web)     |     CHelper-Web is the web version of the app, depends on [CHelper-Core](https://github.com/Yancey2023/CHelper-Core)     |
-|                    [CHelper-Qt](./CHelper-Qt)                    |       maintain in [CHelper-Core](https://github.com/Yancey2023/CHelper-Core) for development and debugging purpose       |
+|               project                |                                   description                                    |
+| :----------------------------------: | :------------------------------------------------------------------------------: |
+|    [CHelper-Core](./CHelper-Core)    |               CHelper-Core is the core of CHelper, written in c++                |
+| [CHelper-Android](./CHelper-Android) |                CHelper-Android is the Android version of the app                 |
+|     [CHelper-Web](./CHelper-Web)     |                    CHelper-Web is the web version of the app                     |
+|      [CHelper-Qt](./CHelper-Qt)      | maintain in [CHelper-Core](./CHelper-Core) for development and debugging purpose |
 
 ## Usage
 

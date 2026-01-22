@@ -6,22 +6,20 @@ on:
     paths:
       - '.github/workflows/build-wasm.yml'
       - 'CHelper-Core/**'
-      - 'CHelper-Web/**'
   pull_request:
     branches: [ "master", "dev" ]
     paths:
       - '.github/workflows/build-wasm.yml'
       - 'CHelper-Core/**'
-      - 'CHelper-Web/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
       - name: Install emsdk and build wasm
-        run: cd ./CHelper-Web/script && sudo bash ./build-wasm.bash
+        run: cd ./CHelper-Core/script && sudo bash ./build-wasm.bash

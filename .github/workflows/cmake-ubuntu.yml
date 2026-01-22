@@ -5,18 +5,12 @@ on:
     branches: [ "master", "dev" ]
     paths:
       - '.github/workflows/cmake-ubuntu.yml'
-      - 'CHelper-Cmd/**'
       - 'CHelper-Core/**'
-      - 'CHelper-Qt/**'
-      - 'CHelper-Test/**'
   pull_request:
     branches: [ "master", "dev" ]
     paths:
       - '.github/workflows/cmake-ubuntu.yml'
-      - 'CHelper-Cmd/**'
       - 'CHelper-Core/**'
-      - 'CHelper-Qt/**'
-      - 'CHelper-Test/**'
 
 jobs:
   build:
@@ -42,7 +36,7 @@ jobs:
         with:
           version: '6.5.3'
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -58,21 +52,21 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
+          -S ${{ github.workspace }}/CHelper-Core
 
       - name: Build Test
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperTest
 
       - name: Run Test
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        run: ./CHelper-Test/CHelperTest
+        run: ./CHelperTest
 
-      - name: Build CHelperCmd
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperCmd
+      - name: Build Resource Generator
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperResourceGenerator
 
-      - name: Run CHelperCmd
+      - name: Run Resource Generator
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        run: ./CHelper-Cmd/CHelperCmd
+        run: ./CHelperResourceGenerator
 
       - name: Build CHelperQt
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperQt

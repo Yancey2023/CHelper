@@ -12,7 +12,7 @@
 #include <chelper/parser/ASTNode.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/syntax_highlight/SyntaxResult.h>
-#include <pch.h>
+#include <../../pch.h>
 
 namespace CHelper {
 

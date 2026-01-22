@@ -5,20 +5,12 @@ on:
     branches: [ "master", "dev" ]
     paths:
       - '.github/workflows/cmake-windows.yml'
-      - 'CHelper-Cmd/**'
       - 'CHelper-Core/**'
-      - 'CHelper-Qt/**'
-      - 'CHelper-Test/**'
-      - 'CHelper-Windows/**'
   pull_request:
     branches: [ "master", "dev" ]
     paths:
       - '.github/workflows/cmake-windows.yml'
-      - 'CHelper-Cmd/**'
       - 'CHelper-Core/**'
-      - 'CHelper-Qt/**'
-      - 'CHelper-Test/**'
-      - 'CHelper-Windows/**'
 
 jobs:
   build:
@@ -41,7 +33,7 @@ jobs:
         with:
           version: '6.5.3'
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
@@ -75,7 +67,3 @@ jobs:
 
       - name: Build CHelperQt
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperQt
-
-      - name: Build CHelperWindows
-        if: runner.os == 'Windows'
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperWindows
