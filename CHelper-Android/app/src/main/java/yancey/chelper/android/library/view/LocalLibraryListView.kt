@@ -79,10 +79,6 @@ class LocalLibraryListView @SuppressLint("NotifyDataSetChanged") constructor(fws
         update()
     }
 
-    override fun gePageName(): String {
-        return "LocalLibraryList"
-    }
-
     fun update(keyword: CharSequence?) {
         if (libraryFunctions == null) {
             return

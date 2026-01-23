@@ -28,7 +28,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import yancey.chelper.R;
 import yancey.chelper.android.common.style.CustomTheme;
-import yancey.chelper.android.common.util.MonitorUtil;
 import yancey.chelper.fws.view.FWSView;
 
 /**
@@ -46,26 +45,18 @@ public abstract class BaseView extends FWSView {
     ) {
         super(fwsContext, layoutId);
         View mainView = view.findViewById(R.id.main);
-        ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
-            Insets stateBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
-            v.setPadding(stateBars.left, stateBars.top, stateBars.right, stateBars.bottom);
-            return insets;
-        });
-        mainView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-            if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
-                backgroundUpdateTimes = CustomTheme.INSTANCE.invokeBackgroundForce(mainView);
-            }
-        });
-    }
-
-    protected abstract String gePageName();
-
-    /**
-     * 界面切换后台事件
-     */
-    public void onPause() {
-        super.onPause();
-        MonitorUtil.onPageEnd(gePageName());
+        if (mainView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
+                Insets stateBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+                v.setPadding(stateBars.left, stateBars.top, stateBars.right, stateBars.bottom);
+                return insets;
+            });
+            mainView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
+                    backgroundUpdateTimes = CustomTheme.INSTANCE.invokeBackgroundForce(mainView);
+                }
+            });
+        }
     }
 
     /**
@@ -73,7 +64,6 @@ public abstract class BaseView extends FWSView {
      */
     public void onResume() {
         super.onResume();
-        MonitorUtil.onPageStart(gePageName());
         // 支持自定义背景
         View mainView = view.findViewById(R.id.main);
         backgroundUpdateTimes = CustomTheme.INSTANCE.invokeBackground(mainView, backgroundUpdateTimes);

@@ -101,11 +101,11 @@ class Old2NewIMEService : InputMethodService() {
             inputConnection ?: return ""
             // 这里使用Short.MAX_VALUE，因为使用Integer.MAX_VALUE太大，QQ会崩
             val textBeforeCursor =
-                inputConnection.getTextBeforeCursor(Short.Companion.MAX_VALUE.toInt(), 0)
+                inputConnection.getTextBeforeCursor(Short.MAX_VALUE.toInt(), 0)
             val selectedText =
-                inputConnection.getSelectedText(Short.Companion.MAX_VALUE.toInt())
+                inputConnection.getSelectedText(Short.MAX_VALUE.toInt())
             val textAfterCursor =
-                inputConnection.getTextAfterCursor(Short.Companion.MAX_VALUE.toInt(), 0)
+                inputConnection.getTextAfterCursor(Short.MAX_VALUE.toInt(), 0)
             return listOfNotNull(textBeforeCursor, selectedText, textAfterCursor).joinToString("")
         }
         /**
@@ -119,11 +119,11 @@ class Old2NewIMEService : InputMethodService() {
             time = System.currentTimeMillis()
             // 这里使用Short.MAX_VALUE，因为使用Integer.MAX_VALUE太大，QQ会崩
             val before =
-                inputConnection.getTextBeforeCursor(Short.Companion.MAX_VALUE.toInt(), 0)
+                inputConnection.getTextBeforeCursor(Short.MAX_VALUE.toInt(), 0)
             val selected =
-                inputConnection.getSelectedText(Short.Companion.MAX_VALUE.toInt())
+                inputConnection.getSelectedText(Short.MAX_VALUE.toInt())
             val after =
-                inputConnection.getTextAfterCursor(Short.Companion.MAX_VALUE.toInt(), 0)
+                inputConnection.getTextAfterCursor(Short.MAX_VALUE.toInt(), 0)
             val beforeLength = before?.length ?: 0
             val selectedLength = selected?.length ?: 0
             val afterLength = after?.length ?: 0

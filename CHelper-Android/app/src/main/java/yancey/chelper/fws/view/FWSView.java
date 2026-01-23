@@ -80,6 +80,7 @@ public abstract class FWSView extends FrameLayout {
     protected final @NonNull View view;
     private final @NonNull OnBackPressedDispatcher onBackPressedDispatcher;
     protected int backgroundUpdateTimes = 0;
+    private final @LayoutRes int layoutId;
 
     /**
      * @param fwsContext 自定义上下文
@@ -92,13 +93,15 @@ public abstract class FWSView extends FrameLayout {
         super(fwsContext.context);
         this.fwsContext = fwsContext;
         this.context = fwsContext.context;
-        // 添加界面
-        view = LayoutInflater.from(fwsContext.context).inflate(layoutId, this, false);
+        this.layoutId = layoutId;
+        this.view = getView();
         addView(view);
         onBackPressedDispatcher = new OnBackPressedDispatcher(fwsContext.onBackPressedDispatcher::onBackPressed);
     }
 
-    protected abstract String gePageName();
+    protected View getView() {
+        return LayoutInflater.from(fwsContext.context).inflate(layoutId, this, false);
+    }
 
     /**
      * 界面切换后台事件

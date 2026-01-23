@@ -58,8 +58,4 @@ class LocalLibraryShowView @SuppressLint("HardwareIds") constructor(
         likeCount.visibility = GONE
         name.text = before.name
     }
-
-    override fun gePageName(): String {
-        return "LocalLibraryShow"
-    }
 }

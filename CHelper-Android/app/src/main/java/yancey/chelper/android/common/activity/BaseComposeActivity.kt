@@ -40,7 +40,6 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import yancey.chelper.android.common.style.CustomTheme
-import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.common.util.Settings
 import yancey.chelper.ui.common.CHelperTheme
 
@@ -71,7 +70,6 @@ abstract class BaseComposeActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        MonitorUtil.onPageStart(pageName)
         val updateTimes = CustomTheme.INSTANCE.backgroundBitmap.updateTimes
         if (backgroundUpdateTimes != updateTimes) {
             backgroundUpdateTimes = updateTimes
@@ -102,11 +100,6 @@ abstract class BaseComposeActivity : ComponentActivity() {
             resources.configuration.uiMode =
                 if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        MonitorUtil.onPageEnd(pageName)
     }
 
     protected fun setContent(parent: CompositionContext? = null, content: @Composable () -> Unit) {

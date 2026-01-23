@@ -67,20 +67,6 @@ public class MonitorUtil {
         UMCrash.generateCustomLog(e, type);
     }
 
-    public static void onPageStart(String pageName) {
-        if (BuildConfig.DEBUG) {
-            return;
-        }
-        MobclickAgent.onPageStart(pageName);
-    }
-
-    public static void onPageEnd(String pageName) {
-        if (BuildConfig.DEBUG) {
-            return;
-        }
-        MobclickAgent.onPageEnd(pageName);
-    }
-
     public static void monitHttp(OkHttpClient.Builder builder) {
         if (BuildConfig.DEBUG) {
             return;

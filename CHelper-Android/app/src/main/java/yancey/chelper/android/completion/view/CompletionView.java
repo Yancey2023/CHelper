@@ -252,11 +252,6 @@ public class CompletionView extends BaseView {
     }
 
     @Override
-    protected String gePageName() {
-        return "Completion";
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
         isGuiLoaded = false;

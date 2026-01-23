@@ -47,9 +47,4 @@ public class HistoryView extends BaseView {
         rv_favoriteList.setAdapter(adapter);
     }
 
-    @Override
-    protected String gePageName() {
-        return "History";
-    }
-
 }
