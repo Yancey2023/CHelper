@@ -18,11 +18,38 @@
         },
         {
             "type": "TEXT",
+            "id": "attach_to_entity",
+            "description": "将相机固定于实体上",
+            "data": {
+                "name": "attach_to_entity",
+                "description": "将相机固定于实体上"
+            }
+        },
+        {
+            "type": "TARGET_SELECTOR",
+            "id": "attachEntity",
+            "description": "相机将要固定于的实体",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        {
+            "type": "TEXT",
             "id": "clear",
             "description": "清除玩家的相机视角效果",
             "data": {
                 "name": "clear",
                 "description": "清除玩家的相机视角效果"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "detach_to_entity",
+            "description": "解绑实体上的相机",
+            "data": {
+                "name": "attach_to_entity",
+                "description": "解绑实体上的相机"
             }
         },
         {
@@ -384,11 +411,31 @@
             "description": "相机视角运镜的移动函数/类型",
             "ignoreError": true,
             "key": "cameraEasing"
+        },
+        {
+            "type": "TEXT",
+            "id": "play_spline",
+            "description": "重置相机的视场角",
+            "data": {
+                "name": "play_spline",
+                "description": "重置相机的视场角"
+            }
+        },
+        {
+            "type": "STRING",
+            "id": "name",
+            "brief": "样条ID",
+            "description": "指定样条ID。只在使用minecraft:free预设时有效",
+            "canContainSpace": true,
+            "ignoreLater": false
         }
     ],
     "ast": [
-        ["players", "clear", "fade", "fov_clear", "fov_set", "remove_target", "set", "target_entity"],
+        ["players", "attach_to_entity", "clear", "detach_to_entity", "fade", "fov_clear", "fov_set", "play_spline", "remove_target", "set", "target_entity"],
+        ["attach_to_entity", "attachEntity"],
+        ["attachEntity", "LF"],
         ["clear", "LF"],
+        ["detach_to_entity", "LF"],
         ["fade", "LF", "color", "time"],
         ["color", "red"],
         ["red", "green"],
@@ -404,6 +451,8 @@
         ["fov_value", "LF", "fovEaseTime"],
         ["fovEaseTime", "LF", "fovEaseType"],
         ["fovEaseType", "LF"],
+        ["play_spline", "name"],
+        ["name", "LF"],
         ["set", "preset"],
         ["preset", "LF", "default", "ease", "entity_offset", "facing", "pos", "rot", "view_offset"],
         ["default", "LF"],
