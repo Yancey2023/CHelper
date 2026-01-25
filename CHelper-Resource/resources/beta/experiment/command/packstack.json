@@ -1,0 +1,51 @@
+{
+    "name": [
+        "packstack"
+    ],
+    "description": "显示资源包和行为包数据。",
+    "start": [
+        "stackType"
+    ],
+    "node": [
+        {
+            "type": "NORMAL_ID",
+            "id": "stackType",
+            "brief": "包的类型",
+            "description": "包的类型",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "client",
+                    "description": "客户端"
+                },
+                {
+                    "name": "server",
+                    "description": "服务端"
+                }
+            ]
+        },
+        {
+            "type": "TEXT",
+            "id": "verbose",
+            "description": "是否显示未启用的包和包的详细信息",
+            "data": {
+                "name": "verbose",
+                "description": "是否显示未启用的包和包的详细信息"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "exclude_vanilla",
+            "description": "是否排除原版包",
+            "data": {
+                "name": "exclude_vanilla",
+                "description": "是否排除原版包"
+            }
+        }
+    ],
+    "ast": [
+        ["stackType", "verbose", "LF"],
+        ["verbose", "exclude_vanilla", "LF"],
+        ["exclude_vanilla", "LF"]
+    ]
+}

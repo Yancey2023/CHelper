@@ -343,10 +343,51 @@
             "brief": "z方向相对于实体的偏移量",
             "description": "相机视角z方向相对于实体的偏移量",
             "canUseCaretNotation": true
+        },
+        {
+            "type": "TEXT",
+            "id": "fov_clear",
+            "description": "重置相机的视场角",
+            "data": {
+                "name": "fov_clear",
+                "description": "重置相机的视场角"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "fov_set",
+            "description": "指定相机的视场角",
+            "data": {
+                "name": "fov_set",
+                "description": "指定相机的视场角"
+            }
+        },
+        {
+            "type": "FLOAT",
+            "id": "fov_value",
+            "brief": "视场角",
+            "description": "指定相机的视场角",
+            "min": 30,
+            "max": 110
+        },
+        {
+            "type": "FLOAT",
+            "id": "fovEaseTime",
+            "brief": "持续时间",
+            "description": "指定相机视场角过渡的持续时间",
+            "min": 0
+        },
+        {
+            "type": "NORMAL_ID",
+            "id": "fovEaseType",
+            "brief": "运镜函数",
+            "description": "相机视角运镜的移动函数/类型",
+            "ignoreError": true,
+            "key": "cameraEasing"
         }
     ],
     "ast": [
-        ["players", "clear", "fade", "remove_target", "set", "target_entity"],
+        ["players", "clear", "fade", "fov_clear", "fov_set", "remove_target", "set", "target_entity"],
         ["clear", "LF"],
         ["fade", "LF", "color", "time"],
         ["color", "red"],
@@ -358,6 +399,11 @@
         ["holdSeconds", "fadeOutSeconds"],
         ["fadeOutSeconds", "LF", "color"],
         ["remove_target", "LF"],
+        ["fov_clear", "LF", "fovEaseTime"],
+        ["fov_set", "fov_value"],
+        ["fov_value", "LF", "fovEaseTime"],
+        ["fovEaseTime", "LF", "fovEaseType"],
+        ["fovEaseType", "LF"],
         ["set", "preset"],
         ["preset", "LF", "default", "ease", "entity_offset", "facing", "pos", "rot", "view_offset"],
         ["default", "LF"],
