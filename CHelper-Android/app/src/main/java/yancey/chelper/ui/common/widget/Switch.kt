@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import yancey.chelper.ui.common.CHelperTheme
 
@@ -93,7 +94,9 @@ fun Switch(
         Canvas(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .offset(x = (width - thumbRadius * 2) * thumbPosition)
+                .offset {
+                    IntOffset(((width.toPx() - thumbRadius.toPx() * 2) * thumbPosition).toInt(), 0)
+                }
                 .size(thumbRadius * 2)
                 .shadow(
                     elevation = 5.dp,

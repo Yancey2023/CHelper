@@ -1,10 +1,15 @@
-name: Deploy CHelper-Doc
+name: Build CHelper-Web
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
     paths:
-      - '.github/workflows/deploy-doc.yml'
+      - '.github/workflows/build-doc.yml'
+      - 'CHelper-Doc/**'
+  pull_request:
+    branches: [ "master", "dev" ]
+    paths:
+      - '.github/workflows/build-doc.yml'
       - 'CHelper-Doc/**'
 
 jobs:
@@ -34,13 +39,3 @@ jobs:
       - name: Build
         working-directory: ${{ github.workspace }}/CHelper-Doc
         run: npx vitepress build --base=/chelper_doc/
-  
-      - name: Deploy
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
-          ARGS: "-avz --delete"
-          SOURCE: "CHelper-Doc/.vitepress/dist/"
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.CHELPER_DOC_TARGET }}

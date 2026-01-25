@@ -6,11 +6,6 @@ on:
     paths:
       - '.github/workflows/deploy-web.yml'
       - 'CHelper-Web/**'
-  pull_request:
-    branches: [ "master" ]
-    paths:
-      - '.github/workflows/deploy-web.yml'
-      - 'CHelper-Web/**'
 
 permissions:
   contents: read
