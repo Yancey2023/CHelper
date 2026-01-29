@@ -108,7 +108,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.12.2")
     implementation("androidx.activity:activity-compose:1.12.2")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
-    implementation("androidx.navigation:navigation-compose:2.9.6")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
 //    implementation("androidx.datastore:datastore:1.1.7")
 //    implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
