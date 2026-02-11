@@ -19,6 +19,10 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
 
+#ifdef CHelperDebug
+#include <chelper/node/NodeType.h>
+#endif
+
 namespace CHelper::Node {
 
     NodeSerializable::NodeSerializable(const std::optional<std::string> &id,

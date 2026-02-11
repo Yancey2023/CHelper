@@ -29,7 +29,7 @@
 
 namespace CHelper::Node {
 
-    const char *getNodeTypeName(const CHelper::Node::NodeTypeId::NodeTypeId id) {
+    const char *getNodeTypeName(const NodeTypeId::NodeTypeId id) {
         switch (id) {
             CODEC_PASTE(CHELPER_GET_NAME, CHELPER_NODE_TYPES)
             default:
@@ -37,7 +37,7 @@ namespace CHelper::Node {
         }
     }
 
-    std::optional<CHelper::Node::NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &type) {
+    std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &type) {
         CODEC_PASTE(CHELPER_GET_NODE_TYPE_BY_NAME, CHELPER_NODE_TYPES)
         return std::nullopt;
     }

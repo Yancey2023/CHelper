@@ -335,7 +335,7 @@ namespace CHelper {
             static constexpr auto name = "OPTIONAL";
         };
 
-        const char *getNodeTypeName(const CHelper::Node::NodeTypeId::NodeTypeId id);
+        const char *getNodeTypeName(NodeTypeId::NodeTypeId id);
 
         std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &id);
 
