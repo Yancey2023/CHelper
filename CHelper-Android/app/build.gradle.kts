@@ -132,7 +132,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson")
     implementation("com.squareup.retrofit2:adapter-rxjava3")
     // https://github.com/getActivity/DeviceCompat
-    implementation("com.github.getActivity:DeviceCompat:2.5")
+    implementation("com.github.getActivity:DeviceCompat:2.6")
     // https://github.com/getActivity/XXPermissions
     implementation("com.github.getActivity:XXPermissions:28.0")
     // https://github.com/getActivity/Toaster
