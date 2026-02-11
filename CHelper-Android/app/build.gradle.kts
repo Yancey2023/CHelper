@@ -104,7 +104,7 @@ dependencies {
     implementation("com.github.Redempt:Crunch:2.0.3")
     // https://github.com/androidx/androidx
     implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.activity:activity:1.12.3")
+    implementation("androidx.activity:activity:1.12.4")
     implementation("androidx.activity:activity-ktx:1.12.3")
     implementation("androidx.activity:activity-compose:1.12.3")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
