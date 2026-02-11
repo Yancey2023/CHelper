@@ -116,7 +116,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.10.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.10.2")
     implementation("androidx.compose.foundation:foundation:1.10.2")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.10.2")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.10.3")
     // https://github.com/ReactiveX/RxJava
     implementation("io.reactivex.rxjava3:rxjava:3.1.12")
     // https://github.com/ReactiveX/RxAndroid
