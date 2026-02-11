@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,6 @@ public interface CommandGuiCoreInterface {
     /**
      * 更新语法高亮
      */
-    void updateSyntaxHighlight(@Nullable int[] tokens);
+    void updateSyntaxHighlight(int @Nullable [] tokens);
 
 }

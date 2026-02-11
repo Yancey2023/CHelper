@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ class SettingsViewModel : ViewModel() {
     var isSyntaxHighlight by mutableStateOf(false)
     var cpackBranch by mutableStateOf("")
     private var _themeId = mutableStateOf("")
-//    val themeId = _themeId.value
     private var onThemeChangedCallback: (() -> Unit)? = null
 
     var isShowResumeBackgroundDialog by mutableStateOf(false)

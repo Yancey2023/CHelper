@@ -159,7 +159,7 @@ export default {
     <header class="header">
       <div>
         <div class="text-structure">{{ structure }}</div>
-        <div class="text-description">{{ paramHint }}</div>
+        <div class="text-param-hint">{{ paramHint }}</div>
         <div class="text-error-reason" v-if="errorReason">{{ errorReason }}</div>
         <div class="line"></div>
       </div>
@@ -221,7 +221,7 @@ main {
   white-space: pre-wrap;
 }
 
-.text-description {
+.text-param-hint {
   height: auto;
   padding: 10px;
   margin: 5px 5px 0 5px;

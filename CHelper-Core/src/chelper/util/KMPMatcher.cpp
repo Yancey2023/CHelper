@@ -1,7 +1,3 @@
-//
-// Created by Yancey on 2024-07-24.
-//
-
 #include <chelper/util/KMPMatcher.h>
 
 namespace CHelper {

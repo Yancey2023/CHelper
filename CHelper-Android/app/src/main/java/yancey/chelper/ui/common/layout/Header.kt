@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,9 +78,11 @@ fun Header(title: String, right: @Composable () -> Unit = {}) {
 fun HeaderLightThemePreview() {
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
         Header("Title") {
-            Icon(id = R.drawable.plus, modifier = Modifier
-                .padding(5.dp)
-                .size(24.dp))
+            Icon(
+                id = R.drawable.plus, modifier = Modifier
+                    .padding(5.dp)
+                    .size(24.dp)
+            )
         }
     }
 }

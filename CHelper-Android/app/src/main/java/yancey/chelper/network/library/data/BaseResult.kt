@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package yancey.chelper.network.library.data
 class BaseResult<T> {
     var status: String? = null
     var data: T? = null
+
     @Suppress("PropertyName")
     var error_type: String? = null
     var message: String? = null

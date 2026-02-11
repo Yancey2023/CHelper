@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ interface CommandLabPublicService {
         var id: Int? = null
         var uuid: String? = null
         var functions: MutableList<LibraryFunction?>? = null
+
         @Suppress("PropertyName")
         var backup_file: String? = null
     }
@@ -95,6 +96,7 @@ interface CommandLabPublicService {
 
     class UpdateFunctionRequest {
         var content: String? = null
+
         @Suppress("PropertyName")
         var auth_key: String? = null
     }
@@ -123,6 +125,7 @@ interface CommandLabPublicService {
 
     class LibraryLikeResponse {
         var action: String? = null // like或unlike
+
         @Suppress("PropertyName")
         var like_count: Int? = null // 当前点赞总数
     }
