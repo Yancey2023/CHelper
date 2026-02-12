@@ -8,3 +8,7 @@
 # toolchain
 /android-ndk-*.zip
 /android-ndk-*/
+
+# script
+build.py
+release.py

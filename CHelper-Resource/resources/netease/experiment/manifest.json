@@ -1,12 +1,12 @@
 {
     "name": "[内置] 中国版实验性玩法",
     "description": "CHelper内置资源包",
-    "version": "1.21.0.03",
+    "version": "1.21.50.07",
     "versionType": "netease",
     "branch": "experiment",
     "author": "Yancey",
-    "updateDate": "2026-02-11",
-    "packId": "BasicPack-1.21.0.03-experiment",
+    "updateDate": "2026-02-13",
+    "packId": "BasicPack-1.21.50.07-experiment",
     "versionCode": 1,
     "isBasicPack": true,
     "isDefault": true
