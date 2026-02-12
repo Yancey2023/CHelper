@@ -4,27 +4,9 @@
     ],
     "description": "以指定位置为生成原点，放置已配置的地物、结构地物、结构模板或结构池",
     "start": [
-        "feature", "featurerule", "jigsaw", "structure"
+        "jigsaw", "structure"
     ],
     "node": [
-        {
-            "type": "TEXT",
-            "id": "feature",
-            "description": "放置地物",
-            "data": {
-                "name": "feature",
-                "description": "放置地物"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "featurerule",
-            "description": "要设置的地物规则",
-            "data": {
-                "name": "featurerule",
-                "description": "要设置的地物规则"
-            }
-        },
         {
             "type": "TEXT",
             "id": "jigsaw",
@@ -42,28 +24,6 @@
                 "name": "structure",
                 "description": "放置结构地物"
             }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "features",
-            "brief": "地物",
-            "description": "要放置的地物名称",
-            "ignoreError": true,
-            "key": "feature"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "feature_rules",
-            "brief": "地物规则",
-            "description": "要设置了地物规则",
-            "ignoreError": true,
-            "key": "featureRule"
-        },
-        {
-            "type": "POSITION",
-            "id": "position1",
-            "brief": "生成原点",
-            "description": "放置时使用的生成原点"
         },
         {
             "type": "NORMAL_ID",
@@ -122,14 +82,6 @@
             "descriptionTrue": "设置为true"
         },
         {
-            "type": "BOOLEAN",
-            "id": "includeEntities",
-            "brief": "值",
-            "description": "指定被放置结构是否包含实体，默认为false",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
             "type": "POSITION",
             "id": "pos1",
             "brief": "位置",
@@ -142,39 +94,15 @@
             "description": "放置结构时是否忽略起始高度",
             "descriptionFalse": "设置为false",
             "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "liquidSettings",
-            "brief": "流体处理方式",
-            "description": "指定流体处理方式",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "apply_waterlogging",
-                    "description": "允许含水"
-                },
-                {
-                    "name": "ignore_waterlogging",
-                    "description": " 忽略含水"
-                }
-            ]
         }
     ],
     "ast": [
-        ["feature", "features"],
-        ["features", "position1", "LF"],
-        ["position1", "LF"],
-        ["featurerule", "feature_rules"],
-        ["feature_rules", "position1", "LF"],
         ["jigsaw", "pool"],
         ["pool", "jigsawTarget"],
         ["jigsawTarget", "maxDepth"],
         ["maxDepth", "pos", "LF"],
         ["pos", "keepJigsaws", "LF"],
-        ["keepJigsaws", "includeEntities", "LF"],
-        ["includeEntities", "liquidSettings", "LF"],
-        ["liquidSettings", "LF"],
+        ["keepJigsaws", "LF"],
         ["structure", "structure_feature"],
         ["structure_feature", "pos1", "LF"],
         ["pos1", "ignoreStartHeight", "LF"],

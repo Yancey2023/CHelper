@@ -48,6 +48,15 @@
         },
         {
             "type": "TEXT",
+            "id": "mine",
+            "description": "模拟使用指定工具挖掘指定位置的方块",
+            "data": {
+                "name": "mine",
+                "description": "模拟使用指定工具挖掘指定位置的方块"
+            }
+        },
+        {
+            "type": "TEXT",
             "id": "block",
             "description": "将物品分配到容器方块中",
             "data": {
@@ -189,15 +198,21 @@
             "description": "使用的战利品表",
             "ignoreError": true,
             "key": "lootTable"
+        },
+        {
+            "type": "POSITION",
+            "id": "TargetBlockPosition",
+            "brief": "位置",
+            "description": "方块坐标"
         }
     ],
     "ast": [
         ["give", "givePlayer"],
-        ["givePlayer", "kill", "loot"],
+        ["givePlayer", "kill", "loot", "mine"],
         ["insert", "insertPosition"],
-        ["insertPosition", "kill", "loot"],
+        ["insertPosition", "kill", "loot", "mine"],
         ["spawn", "spawnPosition"],
-        ["spawnPosition", "kill", "loot"],
+        ["spawnPosition", "kill", "loot", "mine"],
         ["replace", "block", "entity"],
         ["block", "replacePosition"],
         ["replacePosition", "slot.container"],
@@ -209,6 +224,8 @@
         ["count", "kill", "loot"],
         ["kill", "killEntity"],
         ["killEntity", "tool", "mainhand", "offhand", "LF"],
+        ["mine", "TargetBlockPosition"],
+        ["TargetBlockPosition", "tool", "mainhand", "offhand", "LF"],
         ["loot", "lootTable"],
         ["lootTable", "tool", "mainhand", "offhand", "LF"],
         ["tool", "LF"],

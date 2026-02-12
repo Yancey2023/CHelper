@@ -1,0 +1,97 @@
+{
+    "name": [
+        "aimassist"
+    ],
+    "description": "设定与清除瞄准辅助",
+    "start": [
+        "player"
+    ],
+    "node": [
+        {
+            "type": "TARGET_SELECTOR",
+            "id": "player",
+            "description": "被修改瞄准辅助的玩家",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        {
+            "type": "TEXT",
+            "id": "clear",
+            "description": "清除瞄准辅助",
+            "data": {
+                "name": "clear",
+                "description": "清除瞄准辅助"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "set",
+            "description": "设定瞄准辅助",
+            "data": {
+                "name": "set",
+                "description": "设定瞄准辅助"
+            }
+        },
+        {
+            "type": "FLOAT",
+            "id": "xAngle",
+            "brief": "X轴角度",
+            "description": "指定X轴角度",
+            "min": 10,
+            "max": 90
+        },
+        {
+            "type": "FLOAT",
+            "id": "yAngle",
+            "brief": "Y轴角度",
+            "description": "指定Y轴角度",
+            "min": 10,
+            "max": 90
+        },
+        {
+            "type": "FLOAT",
+            "id": "maxDistance",
+            "brief": "最大距离",
+            "description": "指定最大距离",
+            "min": 1,
+            "max": 16
+        },
+        {
+            "type": "NORMAL_ID",
+            "id": "targetMode",
+            "brief": "瞄准模式",
+            "description": "指定瞄准模式, 默认为距离",
+            "ignoreError": true,
+            "contents": [
+                {
+                    "name": "distance",
+                    "description": "指定瞄准模式为距离"
+                },
+                {
+                    "name": "angle",
+                    "description": "指定瞄准模式为角度"
+                }
+            ]
+        },
+        {
+            "type": "STRING",
+            "id": "presetId",
+            "brief": "预设ID",
+            "description": "指定预设ID",
+            "canContainSpace": true,
+            "ignoreLater": false
+        }
+    ],
+    "ast": [
+        ["player", "clear", "set"],
+        ["clear", "LF"],
+        ["set", "xAngle", "LF"],
+        ["xAngle", "yAngle", "LF"],
+        ["yAngle", "maxDistance", "LF"],
+        ["maxDistance", "targetMode", "LF"],
+        ["targetMode", "presetId", "LF"],
+        ["presetId", "LF"]
+    ]
+}

@@ -4,9 +4,9 @@
     ],
     "description": "在指定的区域全部被加载时执行函数",
     "start": [
+        "clear",
         "delay",
-        "on_area_loaded",
-        "tickingarea_clear"
+        "on_area_loaded"
     ],
     "node": [
         {
@@ -97,7 +97,7 @@
         },
         {
             "type": "TEXT",
-            "id": "add",
+            "id": "on_area_loaded_add",
             "description": "增加",
             "data": {
                 "name": "add",
@@ -163,12 +163,20 @@
             "ignoreLater": false
         },
         {
+            "type": "STRING",
+            "id": "on_area_loaded_clear_name",
+            "brief": "常加载区域名称",
+            "description": "常加载区域的名称",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        {
             "type": "TEXT",
-            "id": "tickingarea_clear",
-            "description": "清除按常加载区计划为*on_area_loaded*的所有或指定队列函数",
+            "id": "clear",
+            "description": "将之前指定的函数从计划中移除",
             "data": {
                 "name": "clear",
-                "description": "清除按常加载区计划为*on_area_loaded*的所有或指定队列函数"
+                "description": "将之前指定的函数从计划中移除"
             }
         },
         {
@@ -200,17 +208,18 @@
         }
     ],
     "ast": [
-        ["delay", "delay_add"],
+        ["clear", "function"],
+        ["function", "LF"],
+        ["delay", "delay_add", "clear"],
         ["delay_add", "delay_function"],
         ["delay_function", "delay_time"],
         ["delay_time", "delay_append", "delay_replace", "LF"],
         ["delay_append", "LF"],
         ["delay_replace", "LF"],
-        ["on_area_loaded", "add", "on_area_loaded_clear"],
-        ["add", "from", "circle", "tickingarea"],
+        ["on_area_loaded", "on_area_loaded_add", "on_area_loaded_clear"],
+        ["on_area_loaded_add", "from", "circle", "tickingarea"],
         ["from", "to"],
         ["to", "function"],
-        ["function", "LF"],
         ["circle", "center"],
         ["center", "radius"],
         ["radius", "function"],
@@ -218,7 +227,7 @@
         ["name", "function"],
         ["on_area_loaded_clear", "on_area_loaded_clear_function", "on_area_loaded_clear_tickingarea"],
         ["on_area_loaded_clear_function", "function"],
-        ["on_area_loaded_clear_tickingarea", "name"],
-        ["tickingarea_clear", "function"]
+        ["on_area_loaded_clear_tickingarea", "on_area_loaded_clear_name"],
+        ["on_area_loaded_clear_name", "function", "LF"]
     ]
 }

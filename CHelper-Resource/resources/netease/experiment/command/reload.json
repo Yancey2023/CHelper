@@ -4,6 +4,25 @@
     ],
     "description": "重新加载行为包中的函数和脚本",
     "start": [
-        "LF"
+        "LF",
+        "reload_all"
+    ],
+    "node": [
+        {
+            "type": "NORMAL_ID",
+            "id": "reload_all",
+            "brief": "all: reload_all",
+            "description": "对整个编辑器进行完整的热重载",
+            "contents": [
+                {
+                    "name": "all",
+                    "description": "对整个编辑器进行完整的热重载"
+                }
+            ],
+            "ignoreError": true
+        }
+    ],
+    "ast": [
+        ["reload_all", "LF"]
     ]
 }

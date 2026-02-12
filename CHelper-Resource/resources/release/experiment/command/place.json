@@ -22,7 +22,7 @@
             "description": "要设置的地物规则",
             "data": {
                 "name": "featurerule",
-                "description": "要设置的地物规则*"
+                "description": "要设置的地物规则"
             }
         },
         {
@@ -122,6 +122,14 @@
             "descriptionTrue": "设置为true"
         },
         {
+            "type": "BOOLEAN",
+            "id": "includeEntities",
+            "brief": "值",
+            "description": "指定被放置结构是否包含实体，默认为false",
+            "descriptionFalse": "设置为false",
+            "descriptionTrue": "设置为true"
+        },
+        {
             "type": "POSITION",
             "id": "pos1",
             "brief": "位置",
@@ -158,17 +166,18 @@
         ["features", "position1", "LF"],
         ["position1", "LF"],
         ["featurerule", "feature_rules"],
-        ["feature_rules", "position1"],
+        ["feature_rules", "position1", "LF"],
         ["jigsaw", "pool"],
         ["pool", "jigsawTarget"],
         ["jigsawTarget", "maxDepth"],
-        ["maxDepth", "LF", "pos"],
-        ["pos", "LF", "keepJigsaws"],
-        ["keepJigsaws", "liquidSettings", "LF"],
+        ["maxDepth", "pos", "LF"],
+        ["pos", "keepJigsaws", "LF"],
+        ["keepJigsaws", "includeEntities", "LF"],
+        ["includeEntities", "liquidSettings", "LF"],
         ["liquidSettings", "LF"],
         ["structure", "structure_feature"],
-        ["structure_feature", "LF", "pos1"],
-        ["pos1", "LF", "ignoreStartHeight"],
-        ["ignoreStartHeight", "LF", "keepJigsaws"]
+        ["structure_feature", "pos1", "LF"],
+        ["pos1", "ignoreStartHeight", "LF"],
+        ["ignoreStartHeight", "keepJigsaws", "LF"]
     ]
 }

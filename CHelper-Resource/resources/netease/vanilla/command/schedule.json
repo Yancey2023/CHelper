@@ -4,9 +4,88 @@
     ],
     "description": "在指定的区域全部被加载时执行函数",
     "start": [
+        "clear",
+        "delay",
         "on_area_loaded"
     ],
     "node": [
+        {
+            "type": "TEXT",
+            "id": "delay",
+            "description": "延迟执行函数",
+            "data": {
+                "name": "delay",
+                "description": "延迟执行函数"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "delay_add",
+            "description": "增加",
+            "data": {
+                "name": "add",
+                "description": "增加"
+            }
+        },
+        {
+            "type": "STRING",
+            "id": "delay_function",
+            "brief": "函数",
+            "description": "要执行的函数或函数标签",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        {
+            "type": "INTEGER_WITH_UNIT",
+            "id": "delay_time",
+            "brief": "时间",
+            "description": "等待的时间",
+            "units": [
+                {
+                    "name": "D",
+                    "description": "一个游戏日，合24000游戏刻"
+                },
+                {
+                    "name": "S",
+                    "description": "一秒，合20游戏刻"
+                },
+                {
+                    "name": "T",
+                    "description": "（默认且可省略）：一个游戏刻，无单位时默认"
+                },
+                {
+                    "name": "d",
+                    "description": "一个游戏日，合24000游戏刻"
+                },
+                {
+                    "name": "s",
+                    "description": "一秒，合20游戏刻"
+                },
+                {
+                    "name": "t",
+                    "description": "（默认且可省略）：一个游戏刻，无单位时默认"
+                }
+            ],
+            "ignoreLater": true
+        },
+        {
+            "type": "TEXT",
+            "id": "delay_append",
+            "description": "append|replace",
+            "data": {
+                "name": "append",
+                "description": "为此函数或函数标签添加新的计划"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "delay_replace",
+            "description": "append|replace",
+            "data": {
+                "name": "replace",
+                "description": "（默认值）取代此函数或函数标签的现有计划"
+            }
+        },
         {
             "type": "TEXT",
             "id": "on_area_loaded",
@@ -18,7 +97,7 @@
         },
         {
             "type": "TEXT",
-            "id": "add",
+            "id": "on_area_loaded_add",
             "description": "增加",
             "data": {
                 "name": "add",
@@ -82,18 +161,73 @@
             "description": "常加载区域的名称",
             "canContainSpace": true,
             "ignoreLater": false
+        },
+        {
+            "type": "STRING",
+            "id": "on_area_loaded_clear_name",
+            "brief": "常加载区域名称",
+            "description": "常加载区域的名称",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        {
+            "type": "TEXT",
+            "id": "clear",
+            "description": "将之前指定的函数从计划中移除",
+            "data": {
+                "name": "clear",
+                "description": "将之前指定的函数从计划中移除"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "on_area_loaded_clear",
+            "description": "清除与指定名称相匹配的所有队列函数",
+            "data": {
+                "name": "clear",
+                "description": "清除与指定名称相匹配的所有队列函数"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "on_area_loaded_clear_function",
+            "description": "函数",
+            "data": {
+                "name": "function",
+                "description": "函数"
+            }
+        },
+        {
+            "type": "TEXT",
+            "id": "on_area_loaded_clear_tickingarea",
+            "description": "常加载区",
+            "data": {
+                "name": "tickingarea",
+                "description": "常加载区"
+            }
         }
     ],
     "ast": [
-        ["on_area_loaded", "add"],
-        ["add", "from", "circle", "tickingarea"],
+        ["clear", "function"],
+        ["function", "LF"],
+        ["delay", "delay_add", "clear"],
+        ["delay_add", "delay_function"],
+        ["delay_function", "delay_time"],
+        ["delay_time", "delay_append", "delay_replace", "LF"],
+        ["delay_append", "LF"],
+        ["delay_replace", "LF"],
+        ["on_area_loaded", "on_area_loaded_add", "on_area_loaded_clear"],
+        ["on_area_loaded_add", "from", "circle", "tickingarea"],
         ["from", "to"],
         ["to", "function"],
-        ["function", "LF"],
         ["circle", "center"],
         ["center", "radius"],
         ["radius", "function"],
         ["tickingarea", "name"],
-        ["name", "function"]
+        ["name", "function"],
+        ["on_area_loaded_clear", "on_area_loaded_clear_function", "on_area_loaded_clear_tickingarea"],
+        ["on_area_loaded_clear_function", "function"],
+        ["on_area_loaded_clear_tickingarea", "on_area_loaded_clear_name"],
+        ["on_area_loaded_clear_name", "function", "LF"]
     ]
 }

@@ -52,14 +52,33 @@
             "description": "是否隐藏药水粒子",
             "descriptionTrue": "隐藏药水粒子",
             "descriptionFalse": "显示药水粒子"
+        },
+        {
+            "type": "TEXT",
+            "id": "infinite",
+            "description": "无限时长",
+            "data": {
+                "name": "infinite",
+                "description": "无限时长"
+            }
+        },
+        {
+            "type": "NORMAL_ID",
+            "id": "clear_effect",
+            "brief": "效果",
+            "description": "需要移除的效果",
+            "ignoreError": true,
+            "key": "effect"
         }
     ],
     "ast": [
         ["player", "clear", "effect"],
-        ["clear", "LF"],
-        ["effect", "seconds", "LF"],
+        ["clear", "clear_effect", "LF"],
+        ["clear_effect", "LF"],
+        ["effect", "seconds", "infinite", "LF"],
         ["seconds", "amplifier", "LF"],
         ["amplifier", "hideParticles", "LF"],
-        ["hideParticles", "LF"]
+        ["hideParticles", "LF"],
+        ["infinite", "LF", "amplifier"]
     ]
 }

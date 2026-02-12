@@ -43,6 +43,12 @@
             "isMustPlayer": false,
             "isMustNPC": false,
             "isWildcard": false
+        },
+        {
+            "type": "INTEGER",
+            "id": "maxHeight",
+            "brief": "最大高度",
+            "description": "限制传送位置的最大高度"
         }
     ],
     "ast": [
@@ -50,6 +56,7 @@
         ["z", "spreadDistance"],
         ["spreadDistance", "maxRange"],
         ["maxRange", "victim"],
-        ["victim", "LF"]
+        ["victim", "LF", "maxHeight"],
+        ["maxHeight", "LF"]
     ]
 }
