@@ -24,7 +24,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Install dependencies
-        run: sudo apt-get install -y ninja-build
+        run: sudo apt-get install -y cmake ninja-build
 
       - name: Build Web Core
         run: python ./script/build_web_core.py
