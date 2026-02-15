@@ -23,7 +23,6 @@ import okhttp3.OkHttpClient
 import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import yancey.chelper.BuildConfig
 import yancey.chelper.android.common.util.MonitorUtil
@@ -59,13 +58,11 @@ object ServiceManager {
             .baseUrl("https://www.yanceymc.cn/api/chelper/")
             .client(CLIENT!!)
             .addConverterFactory(GsonConverterFactory.create(GSON!!))
-            .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
             .build()
         COMMAND_LAB_RETROFIT = Retrofit.Builder()
             .baseUrl("https://abyssous.site/")
             .client(CLIENT!!)
             .addConverterFactory(GsonConverterFactory.create(GSON!!))
-            .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
             .build()
         CHELPER_SERVICE = CHELPER_RETROFIT!!.create(CHelperService::class.java)
         COMMAND_LAB_PUBLIC_SERVICE =

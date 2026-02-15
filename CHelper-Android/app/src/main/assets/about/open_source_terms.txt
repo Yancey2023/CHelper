@@ -9,28 +9,22 @@ Copyright (C) 2018 The Android Open Source Project
 2. gson
 Copyright 2008 Google Inc.
 
-3. RxJava
-Copyright (c) 2016-present, RxJava Contributors.
-
-4. RxAndroid
-Copyright 2015 The RxAndroid authors
-
-5. okhttp
+3. okhttp
 Copyright 2019 Square, Inc.
 
-6. retrofit
+4. retrofit
 Copyright 2013 Square, Inc.
 
-8. DeviceCompat
+5. DeviceCompat
 Copyright 2025 Huang JinQun
 
-9. XXPermissions
+6. XXPermissions
 Copyright 2018 Huang JinQun
 
-10. Toaster
+7. Toaster
 Copyright 2018 Huang JinQun
 
-11. EasyWindow
+8. EasyWindow
 Copyright 2019 Huang JinQun
 
 

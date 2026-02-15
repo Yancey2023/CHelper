@@ -191,12 +191,12 @@ fun SettingsScreen(
             }
         )
     }
-    if (viewModel.isShowInputFloatingWindowAlphaDialog) {
+    if (viewModel.isShowInputFloatingWindowSizeDialog) {
         val textFieldState = rememberTextFieldState(
             initialText = viewModel.floatingWindowSize.toString()
         )
         InputStringDialog(
-            onDismissRequest = { viewModel.isShowInputFloatingWindowAlphaDialog = false },
+            onDismissRequest = { viewModel.isShowInputFloatingWindowSizeDialog = false },
             title = "请输入透明度",
             textFieldState = textFieldState,
             onConfirm = {
@@ -213,12 +213,12 @@ fun SettingsScreen(
             }
         )
     }
-    if (viewModel.isShowInputFloatingWindowSizeDialog) {
+    if (viewModel.isShowInputFloatingWindowAlphaDialog) {
         val textFieldState = rememberTextFieldState(
             initialText = (viewModel.floatingWindowAlpha * 100).toInt().toString()
         )
         InputStringDialog(
-            onDismissRequest = { viewModel.isShowInputFloatingWindowSizeDialog = false },
+            onDismissRequest = { viewModel.isShowInputFloatingWindowAlphaDialog = false },
             title = "请输入透明度",
             textFieldState = textFieldState,
             onConfirm = {
