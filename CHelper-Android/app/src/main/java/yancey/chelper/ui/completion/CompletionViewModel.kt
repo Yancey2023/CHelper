@@ -54,9 +54,8 @@ class CompletionViewModel : ViewModel() {
     var structure by mutableStateOf<String?>(null)
     var paramHint by mutableStateOf<String?>(null)
     var errorReasons by mutableStateOf<Array<ErrorReason?>?>(null)
-
-    // TODO 使用更加合理的方式判断是否刷新列表，不要用补全提示数量进行判断
     var suggestionsSize by mutableIntStateOf(0)
+    var suggestionsUpdateTimes by mutableIntStateOf(0)
     var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
     var core = CHelperGuiCore()
     private lateinit var historyManager: HistoryManager
@@ -110,6 +109,7 @@ class CompletionViewModel : ViewModel() {
 
             override fun updateSuggestions() {
                 this@CompletionViewModel.suggestionsSize = core.getSuggestionsSize()
+                this@CompletionViewModel.suggestionsUpdateTimes++;
             }
 
             override fun getSelectedString(): SelectedString {
