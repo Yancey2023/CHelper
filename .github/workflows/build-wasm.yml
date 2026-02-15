@@ -27,4 +27,4 @@ jobs:
         run: sudo apt-get install -y ninja-build
 
       - name: Build Web Core
-        run: python .\script\build_web_core.py
+        run: python ./script/build_web_core.py
