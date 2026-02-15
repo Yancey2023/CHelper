@@ -50,8 +50,6 @@ abstract class BaseComposeActivity : ComponentActivity() {
     protected var theme by mutableStateOf(CHelperTheme.Theme.Light)
     protected var isSystemDarkMode = false
 
-    abstract val pageName: String
-
     override fun onCreate(savedInstanceState: Bundle?) {
         isSystemDarkMode =
             (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES

@@ -27,6 +27,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.navigation.compose.rememberNavController
 import com.hjq.permissions.XXPermissions
@@ -37,7 +38,6 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import yancey.chelper.android.common.activity.BaseComposeActivity
-import yancey.chelper.android.common.dialog.IsConfirmDialog
 import yancey.chelper.android.common.style.CustomTheme
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.completion.util.CompletionWindowManager
@@ -49,20 +49,17 @@ import java.io.IOException
  * 首页
  */
 class HomeActivity : BaseComposeActivity() {
-    override val pageName = "Home"
-
     private var setBackGroundDrawable: Disposable? = null
     lateinit var onBackPressedCallback: OnBackPressedCallback
     lateinit var photoPicker: ActivityResultLauncher<PickVisualMediaRequest>
+    private var isShowSavingBackgroundDialog = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         onBackPressedCallback = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
                 if (setBackGroundDrawable != null && !setBackGroundDrawable!!.isDisposed) {
-                    IsConfirmDialog(this@HomeActivity)
-                        .message("背景图片正在保存中，请稍候")
-                        .show()
+                    isShowSavingBackgroundDialog.value = true
                 }
             }
         }
@@ -73,6 +70,7 @@ class HomeActivity : BaseComposeActivity() {
                 navController = rememberNavController(),
                 chooseBackground = this::chooseBackground,
                 restoreBackground = this::restoreBackground,
+                isShowSavingBackgroundDialog = isShowSavingBackgroundDialog,
                 onChooseTheme = this::refreshTheme,
                 shutdown = this::finishAffinity,
             )
@@ -124,7 +122,10 @@ class HomeActivity : BaseComposeActivity() {
                 emitter.onComplete()
             }.subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally { onBackPressedCallback.isEnabled = false }
+                .doFinally {
+                    onBackPressedCallback.isEnabled = false
+                    isShowSavingBackgroundDialog.value = false
+                }
                 .subscribe(
                     { backgroundBitmap = it.asImageBitmap() },
                     { Toaster.show(it.message) }

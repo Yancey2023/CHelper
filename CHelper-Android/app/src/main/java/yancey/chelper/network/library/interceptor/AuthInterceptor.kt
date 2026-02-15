@@ -29,7 +29,7 @@ class AuthInterceptor private constructor() : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         if (chain.request().url.host == "abyssous.site") {
             val token = LoginUtil.token
-            if (token != null && !token.isEmpty()) {
+            if (!token.isNullOrEmpty()) {
                 return chain.proceed(
                     chain.request().newBuilder()
                         .addHeader("Authorization", "Bearer $token")

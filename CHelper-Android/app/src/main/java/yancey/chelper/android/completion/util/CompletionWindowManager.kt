@@ -27,32 +27,23 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.activity.OnBackPressedDispatcher
-import com.hjq.device.compat.DeviceOs
-import com.hjq.permissions.XXPermissions
-import com.hjq.permissions.permission.PermissionLists
-import com.hjq.toast.Toaster
 import com.hjq.window.EasyWindow
 import com.hjq.window.draggable.MovingWindowDraggableRule
 import yancey.chelper.R
-import yancey.chelper.android.common.dialog.IsConfirmDialog
-import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.Settings
 import yancey.chelper.android.completion.view.CompletionView
 import yancey.chelper.fws.view.FWSMainView
 import yancey.chelper.fws.view.FWSView
 import yancey.chelper.fws.view.FWSView.FWSContext
-import java.io.File
 
 /**
  * 悬浮窗管理
  */
 class CompletionWindowManager private constructor(
     private val application: Application,
-    private val xiaomiClipboardPermissionTipsFile: File
 ) {
     private var mainViewWindow: EasyWindow<*>? = null
     private var iconViewWindow: EasyWindow<*>? = null
-    private var isShowXiaomiClipboardPermissionTips: Boolean? = null
 
     val isUsingFloatingWindow: Boolean
         /**
@@ -69,57 +60,6 @@ class CompletionWindowManager private constructor(
      */
     @Suppress("deprecation")
     fun startFloatingWindow(context: Context) {
-        if (isShowXiaomiClipboardPermissionTips == null) {
-            isShowXiaomiClipboardPermissionTips =
-                !xiaomiClipboardPermissionTipsFile.exists() && (DeviceOs.isHyperOs() || DeviceOs.isMiui())
-        }
-        startFloatingWindow(context, isShowXiaomiClipboardPermissionTips!!)
-    }
-
-    /**
-     * 开启悬浮窗
-     *
-     * @param context                             上下文
-     * @param isShowXiaomiClipboardPermissionTips 是否为小米用户或红米用户显示剪切板权限提示
-     */
-    @Suppress("deprecation")
-    private fun startFloatingWindow(
-        context: Context,
-        isShowXiaomiClipboardPermissionTips: Boolean
-    ) {
-        if (!XXPermissions.isGrantedPermission(
-                context,
-                PermissionLists.getSystemAlertWindowPermission()
-            )
-        ) {
-            IsConfirmDialog(context, false)
-                .message("需要悬浮窗权限，请进入设置进行授权")
-                .onConfirm("打开设置") {
-                    XXPermissions.with(context)
-                        .permission(PermissionLists.getSystemAlertWindowPermission())
-                        .request { _, deniedList ->
-                            if (deniedList.isEmpty()) {
-                                Toaster.show("悬浮窗权限获取成功")
-                            } else {
-                                Toaster.show("悬浮窗权限获取失败")
-                            }
-                        }
-                }
-                .show()
-            return
-        }
-        if (isShowXiaomiClipboardPermissionTips) {
-            IsConfirmDialog(context, false)
-                .message("对于小米手机和红米手机，需要将写入剪切板权限设置为始终允许才能在悬浮窗复制文本。具体设置方式如下：设置-应用设置-权限管理-应用权限管理-CHelper-写入剪切板-始终允许。")
-                .onConfirm { startFloatingWindow(context, false) }
-                .onCancel("不再提示") {
-                    this.isShowXiaomiClipboardPermissionTips = false
-                    FileUtil.writeString(xiaomiClipboardPermissionTipsFile, "")
-                    startFloatingWindow(context, false)
-                }
-                .show()
-            return
-        }
         val iconSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             Settings.INSTANCE.floatingWindowSize.toFloat(),
@@ -213,8 +153,8 @@ class CompletionWindowManager private constructor(
          * 初始化
          */
         @JvmStatic
-        fun init(application: Application, xiaomiClipboardPermissionTipsFile: File) {
-            INSTANCE = CompletionWindowManager(application, xiaomiClipboardPermissionTipsFile)
+        fun init(application: Application) {
+            INSTANCE = CompletionWindowManager(application)
         }
     }
 }

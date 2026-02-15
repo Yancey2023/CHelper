@@ -22,6 +22,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +36,7 @@ import kotlinx.serialization.Serializable
 import yancey.chelper.android.library.util.LocalLibraryManager
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.about.AboutScreen
+import yancey.chelper.ui.common.dialog.IsConfirmDialog
 import yancey.chelper.ui.completion.CompletionScreen
 import yancey.chelper.ui.completion.HistoryScreen
 import yancey.chelper.ui.enumeration.EnumerationScreen
@@ -99,6 +102,7 @@ fun NavHost(
     navController: NavHostController,
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
+    isShowSavingBackgroundDialog: MutableState<Boolean> = mutableStateOf(false),
     onChooseTheme: () -> Unit,
     shutdown: () -> Unit
 ) {
@@ -175,6 +179,12 @@ fun NavHost(
                 content = showText.content
             )
         }
+    }
+    if (isShowSavingBackgroundDialog.value) {
+        IsConfirmDialog(
+            onDismissRequest = { isShowSavingBackgroundDialog.value = false },
+            content = "背景图片正在保存中，请稍候",
+        )
     }
 }
 

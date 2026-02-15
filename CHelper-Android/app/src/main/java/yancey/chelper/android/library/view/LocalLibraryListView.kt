@@ -19,7 +19,9 @@
 package yancey.chelper.android.library.view
 
 import android.annotation.SuppressLint
+import android.text.Editable
 import android.text.TextUtils
+import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -33,7 +35,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
-import yancey.chelper.android.common.util.TextWatcherUtil
 import yancey.chelper.android.common.view.BaseView
 import yancey.chelper.android.library.adapter.LocalLibraryListAdapter
 import yancey.chelper.android.library.util.LocalLibraryManager
@@ -59,9 +60,20 @@ class LocalLibraryListView @SuppressLint("NotifyDataSetChanged") constructor(fws
         val title = view.findViewById<TextView>(R.id.title)
         title.setText(R.string.layout_library_list_title_local)
         search = view.findViewById<EditText>(R.id.search)
-        search.addTextChangedListener(TextWatcherUtil.onTextChanged {
-            this.update(it)
+        search.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                this@LocalLibraryListView.update(s)
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+
+            }
         })
+
         val listView = view.findViewById<RecyclerView>(R.id.list_view)
         listView.addItemDecoration(
             DividerItemDecoration(
