@@ -65,7 +65,14 @@ if __name__ == "__main__":
     # generate resources
     print("generating resources")
     subprocess.run(
-        os.path.join(".", "CHelper-Core", "cmake-build-release", "CHelperResourceGenerator.exe"),
+        [
+            os.path.join(
+                ".",
+                "CHelper-Core",
+                "cmake-build-release",
+                "CHelperResourceGenerator.exe",
+            )
+        ],
         check=True,
     )
     shutil.copytree(
@@ -79,15 +86,36 @@ if __name__ == "__main__":
         dirs_exist_ok=True,
     )
     with open(
-        os.path.join(".", "CHelper-Resource", "resources", "release", "experiment", "manifest.json"),
+        os.path.join(
+            ".",
+            "CHelper-Resource",
+            "resources",
+            "release",
+            "experiment",
+            "manifest.json",
+        ),
         "r",
         encoding="utf-8",
     ) as file:
         manifest = json.load(file)
         version = manifest["version"]
         shutil.copyfile(
-            os.path.join(".", "CHelper-Resource", "generated", "cpack", f"release-experiment-{version}.cpack"),
-            os.path.join(".", "CHelper-Core", "src", "apps", "qt", "assets", f"release-experiment-{version}.cpack"),
+            os.path.join(
+                ".",
+                "CHelper-Resource",
+                "generated",
+                "cpack",
+                f"release-experiment-{version}.cpack",
+            ),
+            os.path.join(
+                ".",
+                "CHelper-Core",
+                "src",
+                "apps",
+                "qt",
+                "assets",
+                f"release-experiment-{version}.cpack",
+            ),
         )
 
     # build apk

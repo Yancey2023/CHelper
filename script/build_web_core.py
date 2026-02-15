@@ -23,31 +23,55 @@ def ensure_download_emsdk(toolchain_dir: str):
 def build_web_core(toolchain_dir: str):
     emsdk_path = os.path.join(toolchain_dir, "emsdk")
     build_directory = "./build/web_core"
-    configure_cmd = f"""cmake \
-        -S ./CHelper-Core \
-        -D CMAKE_BUILD_TYPE=MinSizeRel \
-        -D CMAKE_TOOLCHAIN_FILE="{emsdk_path}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
-        -B {build_directory} \
-        -G Ninja"""
-    subprocess.run(configure_cmd, check=True)
-    subprocess.run(f"cmake --build {build_directory} --target CHelperWeb", check=True)
-    link_cmd = f"""python \
-        {os.path.join(emsdk_path, "upstream", "emscripten", "emcc.py")} \
-        {build_directory}/libCHelperWeb.a \
-        {build_directory}/libCHelperNoFilesystemCore.a \
-        {build_directory}/3rdparty/fmt/libfmt.a \
-        {build_directory}/3rdparty/spdlog/libspdlog.a \
-        {build_directory}/3rdparty/xxHash/cmake_unofficial/libxxhash.a \
-        -Os \
-        -o {build_directory}/libCHelperWeb.js \
-        -s FILESYSTEM=0 \
-        -s DISABLE_EXCEPTION_CATCHING=1 \
-        -s ALLOW_MEMORY_GROWTH \
-        -s ENVIRONMENT="web" \
-        -s EXPORTED_FUNCTIONS="['_init','_release','_onTextChanged','_onSelectionChanged','_getParamHint','_getErrorReasons','_getSuggestionSize','_getSuggestion','_getAllSuggestions','_onSuggestionClick','_getSyntaxTokens','_malloc','_free']" \
-        -s WASM=1 \
-        -s "EXPORTED_RUNTIME_METHODS=[]\""""
-    subprocess.run(link_cmd)
+    subprocess.run(
+        [
+            "cmake",
+            "-S",
+            "./CHelper-Core",
+            "-D",
+            "CMAKE_BUILD_TYPE=MinSizeRel",
+            "-D",
+            f'CMAKE_TOOLCHAIN_FILE={emsdk_path}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake',
+            "-B",
+            build_directory,
+            "-G",
+            "Ninja",
+        ],
+        check=True,
+    )
+    subprocess.run(
+        ["cmake", "--build", build_directory, "--target", "CHelperWeb"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "python",
+            os.path.join(emsdk_path, "upstream", "emscripten", "emcc.py"),
+            f"{build_directory}/libCHelperWeb.a",
+            f"{build_directory}/libCHelperNoFilesystemCore.a",
+            f"{build_directory}/3rdparty/fmt/libfmt.a",
+            f"{build_directory}/3rdparty/spdlog/libspdlog.a",
+            f"{build_directory}/3rdparty/xxHash/cmake_unofficial/libxxhash.a",
+            "-Os",
+            "-o",
+            f"{build_directory}/libCHelperWeb.js",
+            "-s",
+            "FILESYSTEM=0",
+            "-s",
+            "DISABLE_EXCEPTION_CATCHING=1",
+            "-s",
+            "ALLOW_MEMORY_GROWTH",
+            "-s",
+            'ENVIRONMENT=["web"]',
+            "-s",
+            "EXPORTED_FUNCTIONS=['_init','_release','_onTextChanged','_onSelectionChanged','_getParamHint','_getErrorReasons','_getSuggestionSize','_getSuggestion','_getAllSuggestions','_onSuggestionClick','_getSyntaxTokens','_malloc','_free']",
+            "-s",
+            "WASM=1",
+            "-s",
+            "EXPORTED_RUNTIME_METHODS=[]",
+        ],
+        check=True,
+    )
     shutil.copyfile(
         os.path.join(build_directory, "libCHelperWeb.wasm"),
         os.path.join(".", "CHelper-Web", "src", "assets", "libCHelperWeb.wasm"),
