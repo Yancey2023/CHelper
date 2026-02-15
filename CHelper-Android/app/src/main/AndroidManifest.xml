@@ -25,7 +25,7 @@
         tools:targetApi="35">
 
         <activity
-            android:name=".android.home.activity.HomeActivity"
+            android:name=".android.common.activity.HomeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
@@ -46,7 +46,7 @@
         </activity>
 
         <service
-            android:name=".android.old2new.service.Old2NewIMEService"
+            android:name=".android.common.service.Old2NewIMEService"
             android:exported="true"
             android:label="@string/old2new_ime_name"
             android:permission="android.permission.BIND_INPUT_METHOD">

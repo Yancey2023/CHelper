@@ -58,7 +58,7 @@
             android:background="@drawable/copy"
             android:contentDescription="@string/common_icon_copy_content_description" />
 
-        <yancey.chelper.android.common.view.CommandEditText
+        <yancey.chelper.android.common.widget.CommandEditText
             android:id="@+id/expression"
             android:layout_width="match_parent"
             android:layout_height="40dp"

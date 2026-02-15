@@ -60,7 +60,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.android.common.util.Settings
-import yancey.chelper.android.common.view.CommandEditText
+import yancey.chelper.android.common.widget.CommandEditText
 import yancey.chelper.core.CHelperGuiCore
 import yancey.chelper.core.SelectedString
 import yancey.chelper.core.Suggestion
@@ -372,14 +372,15 @@ fun CompletionScreen(
                             )
                         } else {
                             val realIndex = suggestionIndex - 1
-                            val suggestionText = remember(viewModel.suggestionsUpdateTimes, realIndex) {
-                                val suggestion = viewModel.core.getSuggestion(realIndex)
-                                if (suggestion != null && suggestion.description != null) {
-                                    (suggestion.name ?: "") + " - " + suggestion.description!!
-                                } else {
-                                    suggestion?.name ?: ""
+                            val suggestionText =
+                                remember(viewModel.suggestionsUpdateTimes, realIndex) {
+                                    val suggestion = viewModel.core.getSuggestion(realIndex)
+                                    if (suggestion != null && suggestion.description != null) {
+                                        (suggestion.name ?: "") + " - " + suggestion.description!!
+                                    } else {
+                                        suggestion?.name ?: ""
+                                    }
                                 }
-                            }
                             Text(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -403,9 +404,10 @@ fun CompletionScreen(
                                 })
                                 .padding(5.dp)
                         ) {
-                            val suggestion = remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
-                                viewModel.core.getSuggestion(suggestionIndex)
-                            }
+                            val suggestion =
+                                remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
+                                    viewModel.core.getSuggestion(suggestionIndex)
+                                }
                             suggestion?.name?.let {
                                 Text(
                                     text = it,

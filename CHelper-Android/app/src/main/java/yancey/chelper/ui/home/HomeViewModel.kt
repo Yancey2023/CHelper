@@ -34,7 +34,7 @@ import yancey.chelper.BuildConfig
 import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
 import yancey.chelper.android.common.util.Settings
-import yancey.chelper.android.completion.util.CompletionWindowManager
+import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.chelper.data.Announcement
 import yancey.chelper.network.chelper.data.VersionInfo
@@ -49,16 +49,18 @@ class HomeViewModel : ViewModel() {
     val isShowPolicyGrantDialog get() = policyGrantState != PolicyGrantManager.State.AGREE
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
+    private var floatingWindowManager: FloatingWindowManager? = null
+    private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
     private lateinit var skipAnnouncementFile: File
     private lateinit var skipVersionFile: File
-    private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
     }
 
-    fun init(context: Context) {
+    fun init(context: Context, floatingWindowManager: FloatingWindowManager?) {
+        this.floatingWindowManager = floatingWindowManager
         this.skipXiaomiClipboardPermissionTipsFile =
             context.dataDir.resolve("xiaomi_clipboard_permission_no_tips.txt")
         this.skipAnnouncementFile =
@@ -71,7 +73,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun isUsingFloatingWindow(): Boolean {
-        return CompletionWindowManager.INSTANCE!!.isUsingFloatingWindow
+        return floatingWindowManager?.isUsingFloatingWindow == true
     }
 
     fun startFloatingWindow(
@@ -96,7 +98,7 @@ class HomeViewModel : ViewModel() {
                 return
             }
         }
-        CompletionWindowManager.INSTANCE!!.startFloatingWindow(context)
+        floatingWindowManager?.startFloatingWindow(context)
     }
 
     fun dismissShowXiaomiClipboardPermissionTipsForever() {
@@ -105,7 +107,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun stopFloatingWindow() {
-        CompletionWindowManager.INSTANCE!!.stopFloatingWindow()
+        floatingWindowManager?.stopFloatingWindow()
     }
 
     fun agreePolicy() {

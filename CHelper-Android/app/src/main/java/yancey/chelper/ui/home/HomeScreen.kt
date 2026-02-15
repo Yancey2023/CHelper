@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.android.common.util.PolicyGrantManager
-import yancey.chelper.android.completion.util.CompletionWindowManager
+import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.AboutScreenKey
 import yancey.chelper.ui.CompletionScreenKey
 import yancey.chelper.ui.EnumerationScreenKey
@@ -78,10 +78,11 @@ import yancey.chelper.ui.common.widget.Text
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
+    floatingWindowManager: FloatingWindowManager? = null
 ) {
     val context = LocalContext.current
     LaunchedEffect(viewModel) {
-        viewModel.init(context)
+        viewModel.init(context, floatingWindowManager)
     }
     RootView {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -126,7 +127,7 @@ fun HomeScreen(
                     NameAndAction(
                         name = stringResource(R.string.layout_home_command_completion_app_mode),
                         onClick = {
-                            if (CompletionWindowManager.INSTANCE!!.isUsingFloatingWindow) {
+                            if (viewModel.isUsingFloatingWindow()) {
                                 Toaster.show("你必须关闭悬浮窗模式才可以进入应用模式")
                             } else {
                                 navController.navigate(CompletionScreenKey)

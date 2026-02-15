@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import yancey.chelper.android.common.style.CustomTheme;
-
 /**
  * 软件设置
  */

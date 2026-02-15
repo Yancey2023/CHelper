@@ -33,7 +33,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import yancey.chelper.android.library.util.LocalLibraryManager
+import yancey.chelper.android.common.util.LocalLibraryManager
+import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.about.AboutScreen
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
@@ -100,6 +101,7 @@ data class ShowTextScreenKey(
 @Composable
 fun NavHost(
     navController: NavHostController,
+    floatingWindowManager: FloatingWindowManager,
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
     isShowSavingBackgroundDialog: MutableState<Boolean> = mutableStateOf(false),
@@ -115,7 +117,7 @@ fun NavHost(
         popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
     ) {
         composable<HomeScreenKey> {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, floatingWindowManager = floatingWindowManager)
         }
         composable<CompletionScreenKey> {
             CompletionScreen(

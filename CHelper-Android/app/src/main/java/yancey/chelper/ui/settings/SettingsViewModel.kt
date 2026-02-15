@@ -24,7 +24,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import yancey.chelper.android.common.style.CustomTheme
+import yancey.chelper.android.common.util.CustomTheme
 import yancey.chelper.android.common.util.Settings
 
 class SettingsViewModel : ViewModel() {

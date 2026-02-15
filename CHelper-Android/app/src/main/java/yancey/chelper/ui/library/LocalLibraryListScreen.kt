@@ -52,7 +52,7 @@ import com.google.gson.reflect.TypeToken
 import com.hjq.toast.Toaster
 import kotlinx.coroutines.launch
 import yancey.chelper.R
-import yancey.chelper.android.library.util.LocalLibraryManager
+import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LibraryEditScreenKey

@@ -23,12 +23,11 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
-import yancey.chelper.android.common.style.CustomTheme
+import yancey.chelper.android.common.util.CustomTheme
+import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
 import yancey.chelper.android.common.util.Settings
-import yancey.chelper.android.completion.util.CompletionWindowManager
-import yancey.chelper.android.library.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.LoginUtil
 import java.io.File
@@ -68,8 +67,6 @@ class CHelperApplication : Application() {
             Log.e("Settings", "fail to read settings from json", throwable)
             MonitorUtil.generateCustomLog(throwable, "ReadSettingException")
         }
-        // 悬浮窗管理初始化
-        CompletionWindowManager.init(this)
         // 自定义主题初始化
         CustomTheme.init(dataDir.resolve("theme"))
         // 本地命令库初始化
