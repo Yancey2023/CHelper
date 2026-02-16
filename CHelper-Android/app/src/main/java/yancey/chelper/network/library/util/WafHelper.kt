@@ -83,16 +83,14 @@ object WafHelper {
         val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
-        settings.databaseEnabled = true
+        // settings.databaseEnabled = true // Deprecated in API 24
         settings.userAgentString = USER_AGENT
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         
         // 设置 CookieManager
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            cookieManager.setAcceptThirdPartyCookies(webView, true)
-        }
+        cookieManager.setAcceptThirdPartyCookies(webView, true) // minSdk 24 >= 21
         
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -131,14 +129,25 @@ object WafHelper {
 
             override fun onReceivedError(
                 view: WebView?,
-                errorCode: Int,
-                description: String?,
-                failingUrl: String?
+                request: WebResourceRequest?,
+                error: android.webkit.WebResourceError?
             ) {
-                super.onReceivedError(view, errorCode, description, failingUrl)
-                Log.e(TAG, "WebView error: $errorCode, $description")
-                destroyWebView(webView)
-                callback(false)
+                super.onReceivedError(view, request, error)
+                if (request?.isForMainFrame == true) {
+                    val errorCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        error?.errorCode ?: 0
+                    } else {
+                        0
+                    }
+                    val description = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        error?.description ?: "Unknown error"
+                    } else {
+                        "Unknown error"
+                    }
+                    Log.e(TAG, "WebView error: $errorCode, $description")
+                    destroyWebView(webView)
+                    callback(false)
+                }
             }
         }
         
