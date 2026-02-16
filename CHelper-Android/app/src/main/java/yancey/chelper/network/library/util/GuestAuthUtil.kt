@@ -177,7 +177,7 @@ object GuestAuthUtil {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
             
-            val request = CommandLabUserService.GuestLoginRequest().apply {
+            val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
                 this.auth_code = authCode
             }
@@ -207,7 +207,7 @@ object GuestAuthUtil {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
             
-            val request = CommandLabUserService.GuestRegisterRequest().apply {
+            val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
                 this.auth_code = authCode
             }

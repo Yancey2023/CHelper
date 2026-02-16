@@ -46,9 +46,15 @@ class CaptchaDialogKt(
         val frameLayout = FrameLayout(context)
         frameLayout.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            1200 // 固定高度或者适配
+            ViewGroup.LayoutParams.MATCH_PARENT
         )
         frameLayout.setBackgroundColor(Color.WHITE)
+
+        // Force full screen
+        window?.let {
+            it.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            it.setBackgroundDrawableResource(android.R.color.white)
+        }
 
         // WebView
         webView = WebView(context).apply {
@@ -58,11 +64,19 @@ class CaptchaDialogKt(
             )
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.databaseEnabled = true
+            settings.useWideViewPort = true
+            settings.loadWithOverviewMode = true
+            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             settings.cacheMode = WebSettings.LOAD_DEFAULT
+            
+            // Disable hardware acceleration to prevent rendering glitches
+            setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
             setBackgroundColor(Color.WHITE)
             
             addJavascriptInterface(JsInterface(), "android")
             
+            webChromeClient = android.webkit.WebChromeClient()
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
@@ -71,6 +85,10 @@ class CaptchaDialogKt(
                             android.onSuccess(result);
                         };
                     """.trimIndent(), null)
+                }
+                
+                override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                    handler?.proceed() // Ignore SSL errors for internal testing if needed, though use with caution
                 }
             }
         }
@@ -87,6 +105,9 @@ class CaptchaDialogKt(
         frameLayout.addView(progressBar)
 
         setContentView(frameLayout)
+        
+        // Override FixedDialog width/height to be full screen
+        window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         
         // 开始流程
         startVerification(progressBar)

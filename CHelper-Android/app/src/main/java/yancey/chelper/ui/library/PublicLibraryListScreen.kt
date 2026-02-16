@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -89,14 +90,25 @@ fun PublicLibraryListScreen(
     RootViewWithHeaderAndCopyright(
         title = stringResource(R.string.layout_library_list_title_public),
         headerRight = {
-            Icon(
-                id = R.drawable.refresh,
-                modifier = Modifier
-                    .clickable { viewModel.refresh() }
-                    .padding(5.dp)
-                    .size(24.dp),
-                contentDescription = "刷新"
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    id = R.drawable.folder,
+                    modifier = Modifier
+                        .clickable { navController.navigate(yancey.chelper.ui.CPLUserScreenKey) }
+                        .padding(5.dp)
+                        .size(24.dp),
+                    contentDescription = "用户中心"
+                )
+                Spacer(Modifier.width(10.dp))
+                Icon(
+                    id = R.drawable.refresh,
+                    modifier = Modifier
+                        .clickable { viewModel.refresh() }
+                        .padding(5.dp)
+                        .size(24.dp),
+                    contentDescription = "刷新"
+                )
+            }
         }
     ) {
         Column {

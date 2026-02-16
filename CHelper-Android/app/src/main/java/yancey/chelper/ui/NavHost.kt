@@ -49,6 +49,8 @@ import yancey.chelper.ui.library.LocalLibraryShowViewModel
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
 import yancey.chelper.ui.library.PublicLibraryShowViewModel
+import yancey.chelper.ui.library.CPLUserScreen
+import yancey.chelper.ui.library.CPLUploadScreen
 import yancey.chelper.ui.old2new.Old2NewIMEGuideScreen
 import yancey.chelper.ui.old2new.Old2NewScreen
 import yancey.chelper.ui.rawtext.RawtextScreen
@@ -108,6 +110,14 @@ data class ShowTextScreenKey(
     val title: String,
     val content: String
 )
+
+
+
+@Serializable
+object CPLUserScreenKey
+
+@Serializable
+object CPLUploadScreenKey
 
 @Composable
 fun NavHost(
@@ -199,6 +209,12 @@ fun NavHost(
             val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
             val viewModel: PublicLibraryShowViewModel = viewModel()
             PublicLibraryShowScreen(id = publicLibraryShow.id, viewModel = viewModel)
+        }
+        composable<CPLUserScreenKey> {
+            CPLUserScreen(navController = navController)
+        }
+        composable<CPLUploadScreenKey> {
+            CPLUploadScreen(navController = navController)
         }
     }
     if (isShowSavingBackgroundDialog.value) {
