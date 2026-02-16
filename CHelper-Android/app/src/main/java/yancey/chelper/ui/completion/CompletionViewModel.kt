@@ -58,14 +58,14 @@ class CompletionViewModel : ViewModel() {
     var suggestionsUpdateTimes by mutableIntStateOf(0)
     var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
     var core = CHelperGuiCore()
-    private lateinit var historyManager: HistoryManager
-    private lateinit var file: File
+    private var historyManager: HistoryManager? = null
+    private var file: File? = null
 
     fun init(context: Context) {
         historyManager = HistoryManager.getInstance(context)
         file = FileUtil.getFile(context.filesDir.absolutePath, "cache", "lastInput.dat")
         if (Settings.INSTANCE.isSavingWhenPausing) {
-            if (file.exists()) {
+            if (file!!.exists()) {
                 try {
                     DataInputStream(BufferedInputStream(FileInputStream(file))).use { dataInputStream ->
                         command = TextFieldState(
@@ -109,7 +109,7 @@ class CompletionViewModel : ViewModel() {
 
             override fun updateSuggestions() {
                 this@CompletionViewModel.suggestionsSize = core.getSuggestionsSize()
-                this@CompletionViewModel.suggestionsUpdateTimes++;
+                this@CompletionViewModel.suggestionsUpdateTimes++
             }
 
             override fun getSelectedString(): SelectedString {
@@ -156,14 +156,14 @@ class CompletionViewModel : ViewModel() {
     }
 
     fun onCopy(content: String) {
-        historyManager.add(content)
+        historyManager?.add(content)
     }
 
     override fun onCleared() {
         super.onCleared()
-        historyManager.save()
+        historyManager?.save()
         // 保存上次的输入内容
-        if (FileUtil.createParentFile(file)) {
+        if (file != null && FileUtil.createParentFile(file)) {
             try {
                 DataOutputStream(BufferedOutputStream(FileOutputStream(file))).use { dataOutputStream ->
                     dataOutputStream.writeUTF(command.text.toString())

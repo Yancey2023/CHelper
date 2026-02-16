@@ -21,7 +21,6 @@ package yancey.chelper.android.window
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
@@ -72,7 +71,7 @@ class FloatingWindowManager(
     private var iconViewWindow: EasyWindow<*>? = null
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
-    private var isCompose = true
+    private var isCompose = false
 
     val isUsingFloatingWindow: Boolean
         /**
@@ -104,20 +103,21 @@ class FloatingWindowManager(
             )
         )
         if (isCompose) {
-            val mainView = FrameLayout(context).apply {
-                isFocusable = true
-                isFocusableInTouchMode = true
-                setOnKeyListener { _, keyCode, event ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
+            val mainView = object : FrameLayout(context) {
+                override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+                    if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                         floatBackPressedOwner?.onBackPressedDispatcher?.onBackPressed()
-                        Log.e("Fuck", "on back pressed")
-                        true
+                        requestFocus()
+                        return true
                     } else {
-                        false
+                        return false
                     }
                 }
+            }.apply {
+                isFocusable = true
+                isFocusableInTouchMode = true
             }
-            val composeView = ComposeView(application).apply {
+            val composeView = ComposeView(context).apply {
                 setContent {
                     CHelperTheme(
                         when (Settings.INSTANCE.themeId) {

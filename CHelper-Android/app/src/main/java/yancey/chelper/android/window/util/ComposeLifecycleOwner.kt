@@ -32,7 +32,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 
 /**
- * copt form: https://github.com/Petterpx/FloatingX/blob/main/floatingx_compose/src/main/java/com/petterp/floatingx/compose/FxComposeLifecycleOwner.kt
+ * copy form: https://github.com/Petterpx/FloatingX/blob/main/floatingx_compose/src/main/java/com/petterp/floatingx/compose/FxComposeLifecycleOwner.kt
  */
 class ComposeLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
