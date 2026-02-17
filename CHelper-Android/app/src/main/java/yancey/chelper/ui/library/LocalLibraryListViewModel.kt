@@ -24,21 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.network.library.data.LibraryFunction
 
 class LocalLibraryListViewModel : ViewModel() {
     var keyword by mutableStateOf(TextFieldState())
-    var libraries: SnapshotStateList<LibraryFunction> =
-        LocalLibraryManager.INSTANCE!!.getFunctions()
+    var libraries: SnapshotStateList<LibraryFunction>? = null
     var isShowImportDialog by mutableStateOf(false)
     var isShowExportDialog by mutableStateOf(false)
-
-    init {
-        viewModelScope.launch {
-            LocalLibraryManager.INSTANCE!!.ensureInit()
-        }
-    }
 }

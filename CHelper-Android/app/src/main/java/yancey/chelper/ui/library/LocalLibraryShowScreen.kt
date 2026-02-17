@@ -33,7 +33,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
@@ -97,14 +97,13 @@ fun LocalLibraryShowScreen(viewModel: LocalLibraryShowViewModel = viewModel()) {
                             )
                         )
                         if (content.first) {
-                            val scope = rememberCoroutineScope()
                             Icon(
                                 id = R.drawable.copy,
                                 contentDescription = stringResource(R.string.common_icon_copy_content_description),
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
                                     .clickable {
-                                        scope.launch {
+                                        viewModel.viewModelScope.launch {
                                             clipboard.setClipEntry(
                                                 ClipEntry(
                                                     ClipData.newPlainText(

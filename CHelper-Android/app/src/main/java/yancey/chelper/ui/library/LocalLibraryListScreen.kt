@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,9 +74,10 @@ fun LocalLibraryListScreen(
     val clipboard = LocalClipboard.current
     val filteredLibraries = remember(viewModel.keyword.text, viewModel.libraries) {
         if (viewModel.keyword.text.isEmpty()) {
-            viewModel.libraries
+            viewModel.libraries ?: listOf()
         } else {
-            viewModel.libraries.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
+            viewModel.libraries?.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
+                ?: listOf()
         }
     }
     RootViewWithHeaderAndCopyright(
@@ -189,7 +191,7 @@ fun LocalLibraryListScreen(
                         if (itemCount > 0) {
                             val text = getItemAt(0).text.toString()
                             try {
-                                viewModel.libraries.addAll(
+                                viewModel.libraries?.addAll(
                                     ServiceManager.GSON!!.fromJson(
                                         text,
                                         object : TypeToken<MutableList<LibraryFunction>>() {
@@ -237,11 +239,13 @@ fun LocalLibraryListScreen(
 fun LocalLibraryListScreenLightThemePreview() {
     val viewModel = remember {
         LocalLibraryListViewModel().apply {
-            for (i in 0..100) {
-                libraries.add(LibraryFunction().apply {
-                    name = "Library $i"
-                    note = "Author $i"
-                })
+            libraries = mutableStateListOf<LibraryFunction>().apply {
+                for (i in 0..100) {
+                    add(LibraryFunction().apply {
+                        name = "Library $i"
+                        note = "Description $i"
+                    })
+                }
             }
         }
     }
@@ -255,11 +259,13 @@ fun LocalLibraryListScreenLightThemePreview() {
 fun LocalLibraryListScreenDarkThemePreview() {
     val viewModel = remember {
         LocalLibraryListViewModel().apply {
-            for (i in 0..100) {
-                libraries.add(LibraryFunction().apply {
-                    name = "Library $i"
-                    note = "Description $i"
-                })
+            libraries = mutableStateListOf<LibraryFunction>().apply {
+                for (i in 0..100) {
+                    add(LibraryFunction().apply {
+                        name = "Library $i"
+                        note = "Description $i"
+                    })
+                }
             }
         }
     }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +45,7 @@ import yancey.chelper.ui.common.widget.Divider
 
 @Composable
 fun AboutScreen(navController: NavHostController) {
+    val coroutineScope = rememberCoroutineScope()
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_about_title)) {
         Column(
             modifier = Modifier
@@ -78,7 +80,8 @@ fun AboutScreen(navController: NavHostController) {
                 NameAndAsset(
                     navController,
                     stringResource(R.string.layout_about_release_note),
-                    "about/release_note.txt"
+                    "about/release_note.txt",
+                    coroutineScope,
                 )
                 Divider()
                 NameAndLink(
@@ -99,13 +102,15 @@ fun AboutScreen(navController: NavHostController) {
                 NameAndAsset(
                     navController,
                     stringResource(R.string.layout_about_privacy_policy),
-                    "about/privacy_policy.txt"
+                    "about/privacy_policy.txt",
+                    coroutineScope,
                 )
                 Divider()
                 NameAndAsset(
                     navController,
                     stringResource(R.string.layout_about_open_source_terms),
-                    "about/open_source_terms.txt"
+                    "about/open_source_terms.txt",
+                    coroutineScope,
                 )
             }
         }

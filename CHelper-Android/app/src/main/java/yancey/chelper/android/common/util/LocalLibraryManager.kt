@@ -32,21 +32,19 @@ class LocalLibraryManager private constructor(private val file: File) {
     private var libraryFunctions = mutableStateListOf<LibraryFunction>()
 
     suspend fun ensureInit() {
-        if (!isInit) {
-            if (file.exists()) {
-                withContext(Dispatchers.IO) {
-                    try {
-                        val libraryFunctions0 =
-                            ServiceManager.GSON!!.fromJson<List<LibraryFunction>>(
-                                FileUtil.readString(file),
-                                object :
-                                    TypeToken<List<LibraryFunction>>() {
-                                }.type
-                            )
-                        libraryFunctions.clear()
-                        libraryFunctions.addAll(libraryFunctions0)
-                    } catch (_: Throwable) {
-                    }
+        if (!isInit && file.exists()) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val libraryFunctions0 =
+                        ServiceManager.GSON!!.fromJson<List<LibraryFunction>>(
+                            FileUtil.readString(file),
+                            object :
+                                TypeToken<List<LibraryFunction>>() {
+                            }.type
+                        )
+                    libraryFunctions.clear()
+                    libraryFunctions.addAll(libraryFunctions0)
+                } catch (_: Throwable) {
                 }
             }
         }

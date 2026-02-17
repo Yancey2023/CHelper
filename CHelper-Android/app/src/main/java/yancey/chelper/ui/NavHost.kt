@@ -44,6 +44,7 @@ import yancey.chelper.ui.enumeration.EnumerationScreen
 import yancey.chelper.ui.home.HomeScreen
 import yancey.chelper.ui.library.LocalLibraryEditScreen
 import yancey.chelper.ui.library.LocalLibraryListScreen
+import yancey.chelper.ui.library.LocalLibraryListViewModel
 import yancey.chelper.ui.library.LocalLibraryShowScreen
 import yancey.chelper.ui.library.LocalLibraryShowViewModel
 import yancey.chelper.ui.library.PublicLibraryListScreen
@@ -178,6 +179,13 @@ fun NavHost(
             EnumerationScreen()
         }
         composable<LocalLibraryListScreenKey> {
+            val viewModel: LocalLibraryListViewModel = viewModel()
+            LaunchedEffect(viewModel) {
+                viewModel.viewModelScope.launch {
+                    LocalLibraryManager.INSTANCE!!.ensureInit()
+                    viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
+                }
+            }
             LocalLibraryListScreen(navController = navController)
         }
         composable<LibraryShowScreenKey> { navBackStackEntry ->
@@ -276,6 +284,13 @@ fun FloatingWindowNavHost(
             EnumerationScreen()
         }
         composable<LocalLibraryListScreenKey> {
+            val viewModel: LocalLibraryListViewModel = viewModel()
+            LaunchedEffect(viewModel) {
+                viewModel.viewModelScope.launch {
+                    LocalLibraryManager.INSTANCE!!.ensureInit()
+                    viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
+                }
+            }
             LocalLibraryListScreen(navController = navController)
         }
         composable<LibraryShowScreenKey> { navBackStackEntry ->

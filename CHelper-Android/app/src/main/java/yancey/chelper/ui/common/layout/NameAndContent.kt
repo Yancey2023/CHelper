@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -117,29 +117,21 @@ fun NameAndLink(name: String, link: Uri) {
 }
 
 @Composable
-fun NameAndAsset(navController: NavHostController, name: String, assetsPath: String) {
+fun NameAndAsset(
+    navController: NavHostController,
+    name: String,
+    assetsPath: String,
+    coroutineScope: CoroutineScope
+) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     NameAndAction(name) {
-        scope.launch {
+        coroutineScope.launch {
             val content = withContext(Dispatchers.IO) {
                 context.assets.open(assetsPath).bufferedReader().use { it.readText() }
             }
             navController.navigate(ShowTextScreenKey(name, content))
         }
     }
-}
-
-@Composable
-fun NameAndStartActivity(name: String, activityClass: Class<*>) {
-    val context = LocalContext.current
-    NameAndAction(
-        iconId = R.drawable.chevron_right,
-        name = name,
-        onClick = {
-            context.startActivity(Intent(context, activityClass))
-        }
-    )
 }
 
 @Composable
