@@ -2,17 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/emscripten" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/emscripten/test/third_party/googletest" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/emscripten/test/third_party/posixtestsuite" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/emscripten/test/third_party/wasi-test-suite" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/fmt" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/googletest" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/serialization" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/serialization/rapidjson" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/serialization/rapidjson/thirdparty/gtest" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/spdlog" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/utfcpp" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../CHelper-Core/3rdparty/xxHash" vcs="Git" />
   </component>
 </project>

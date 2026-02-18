@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,26 +31,20 @@ import yancey.chelper.network.library.data.LibraryFunction
 @Suppress("unused")
 interface CommandLabPublicService {
     class GetFunctionsResponse {
-        @JvmField
+        @com.google.gson.annotations.SerializedName("list")
         var functions: MutableList<LibraryFunction?>? = null
-        var pagination: Pagination? = null
 
-        class Pagination {
-            @Suppress("PropertyName")
-            var current_page: Int? = null // 当前页码
+        @com.google.gson.annotations.SerializedName("pageNum")
+        var currentPage: Int? = null
 
-            @Suppress("PropertyName")
-            var per_page: Int? = null // 每页数量
+        @com.google.gson.annotations.SerializedName("pageSize")
+        var perPage: Int? = null
 
-            @Suppress("PropertyName")
-            var total_pages: Int? = null // 总页数
-
-            @Suppress("PropertyName")
-            var total_count: Int? = null // 总记录数
-        }
+        @com.google.gson.annotations.SerializedName("total")
+        var totalCount: Int? = null
     }
 
-    @GET("functions")
+    @GET("library")
     suspend fun getFunctions(
         @Query("page") page: Int,
         @Suppress("LocalVariableName")
@@ -63,7 +57,7 @@ interface CommandLabPublicService {
         @Query("android_id") android_id: String?
     ): BaseResult<GetFunctionsResponse?>
 
-    @GET("function/{id}")
+    @GET("library/detail/{id}")
     suspend fun getFunction(
         @Path("id") id: Int,
         @Suppress("LocalVariableName")

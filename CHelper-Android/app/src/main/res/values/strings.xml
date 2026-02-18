@@ -121,7 +121,7 @@
 
     <!--    use in LocalLibraryListView and PublicLibraryListView    -->
     <string name="layout_library_list_title_local">本地命令库</string>
-    <string name="layout_library_list_title_public">公有命令库（待开放）</string>
+    <string name="layout_library_list_title_public">公有命令库</string>
     <string name="layout_library_list_icon_import_content_description">导入</string>
     <string name="layout_library_list_icon_export_content_description">导出</string>
     <string name="layout_library_list_icon_add_content_description">添加</string>

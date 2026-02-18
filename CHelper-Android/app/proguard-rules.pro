@@ -55,6 +55,10 @@
 
 -keep class com.efs.** { *; }
 
+-dontwarn com.umeng.**
+-dontwarn com.uc.**
+-dontwarn com.efs.**
+
 -keepclassmembers class *{
     public <init>(org.json.JSONObject);
 }

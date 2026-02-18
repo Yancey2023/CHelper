@@ -165,7 +165,40 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.isSyntaxHighlight = it },
                 )
             }
+            // 测试设置
+            CollectionName("测试设置")
+            Collection {
+                NameAndAction(
+                    name = "自定义 API Base URL",
+                    description = if (viewModel.customApiUrl.isEmpty()) "使用默认地址" else viewModel.customApiUrl,
+                ) {
+                    viewModel.isShowInputCustomApiUrlDialog = true
+                }
+            }
+            // 实验性功能
+            CollectionName("实验性功能")
+            Collection {
+                SettingsItem(
+                    name = "显示公有命令库入口",
+                    description = "在主页显示公有命令库入口（仍在开发中）",
+                    checked = viewModel.isShowPublicLibrary,
+                    onCheckedChange = { viewModel.isShowPublicLibrary = it }
+                )
+            }
         }
+    }
+    if (viewModel.isShowInputCustomApiUrlDialog) {
+        val textFieldState = rememberTextFieldState(
+            initialText = viewModel.customApiUrl
+        )
+        InputStringDialog(
+            onDismissRequest = { viewModel.isShowInputCustomApiUrlDialog = false },
+            title = "请输入 API Base URL",
+            textFieldState = textFieldState,
+            onConfirm = {
+                viewModel.customApiUrl = textFieldState.text.toString().trim()
+            }
+        )
     }
     if (viewModel.isShowChooseThemeDialog) {
         val data = remember {
