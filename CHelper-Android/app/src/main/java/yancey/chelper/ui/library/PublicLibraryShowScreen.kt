@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package yancey.chelper.ui.library
 
 import android.content.ClipData
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,41 +38,143 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Divider
+import yancey.chelper.ui.common.widget.DividerVertical
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
 @Composable
 fun PublicLibraryShowScreen(
     id: Int,
+    isPrivate: Boolean = false,
     viewModel: PublicLibraryShowViewModel = viewModel()
 ) {
     val clipboard = LocalClipboard.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // 对话框状态
+    var showMainMenu by remember { mutableStateOf(false) }
+    var showManageMenu by remember { mutableStateOf(false) }
+    var showLineCopyDialog by remember { mutableStateOf(false) }
     
-    LaunchedEffect(id) {
-        viewModel.loadFunction(id)
+    LaunchedEffect(id, isPrivate) {
+        viewModel.loadFunction(id, isPrivate)
+    }
+
+    // 操作结果反馈
+    LaunchedEffect(viewModel.actionMessage) {
+        viewModel.actionMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.actionMessage = null
+        }
+    }
+
+    // 主菜单对话框
+    if (showMainMenu) {
+        val menuItems = if (isPrivate) {
+            arrayOf(
+                "管理 ▸" to "manage",
+                "逐行复制" to "line_copy"
+            )
+        } else {
+            arrayOf(
+                "逐行复制" to "line_copy"
+            )
+        }
+        ChoosingDialog(
+            onDismissRequest = { showMainMenu = false },
+            data = menuItems,
+            onChoose = { action ->
+                when (action) {
+                    "manage" -> showManageMenu = true
+                    "line_copy" -> showLineCopyDialog = true
+                }
+            }
+        )
+    }
+
+    // 管理子菜单对话框
+    if (showManageMenu) {
+        ChoosingDialog(
+            onDismissRequest = { showManageMenu = false },
+            data = arrayOf(
+                "切换公开/私有" to "toggle_publish",
+                "同步到公开库" to "sync",
+                "编辑" to "edit"
+            ),
+            onChoose = { action ->
+                when (action) {
+                    "toggle_publish" -> viewModel.library.id?.let { viewModel.togglePublish(it) }
+                    "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
+                    "edit" -> Toast.makeText(context, "编辑功能开发中", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    // 逐行复制对话框
+    if (showLineCopyDialog) {
+        val commands = remember(viewModel.library) {
+            viewModel.library.content
+                ?.split("\n")
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() && !it.startsWith("#") }
+                ?: emptyList()
+        }
+        if (commands.isEmpty()) {
+            LaunchedEffect(Unit) {
+                Toast.makeText(context, "没有可复制的命令", Toast.LENGTH_SHORT).show()
+                showLineCopyDialog = false
+            }
+        } else {
+            LineCopyDialog(
+                commands = commands,
+                onDismiss = { showLineCopyDialog = false }
+            )
+        }
     }
     
-    RootViewWithHeaderAndCopyright(title = viewModel.library.name ?: "加载中") {
+    RootViewWithHeaderAndCopyright(
+        title = viewModel.library.name ?: "加载中",
+        headerRight = {
+            Icon(
+                id = R.drawable.more,
+                modifier = Modifier
+                    .clickable { showMainMenu = true }
+                    .padding(5.dp)
+                    .size(24.dp),
+                contentDescription = "菜单"
+            )
+        }
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 viewModel.isLoading -> {
@@ -97,7 +201,7 @@ fun PublicLibraryShowScreen(
                             Spacer(Modifier.height(10.dp))
                             Text(
                                 text = "点击重试",
-                                modifier = Modifier.clickable { viewModel.loadFunction(id) },
+                                modifier = Modifier.clickable { viewModel.loadFunction(id, isPrivate) },
                                 style = TextStyle(color = CHelperTheme.colors.mainColor)
                             )
                         }
@@ -216,6 +320,127 @@ fun PublicLibraryShowScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 逐行复制对话框：逐条展示命令并自动复制到剪贴板。
+ * 用户点击"下一条"前进并复制下一条，点击"完成"关闭。
+ */
+@Composable
+private fun LineCopyDialog(
+    commands: List<String>,
+    onDismiss: () -> Unit
+) {
+    val clipboard = LocalClipboard.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var currentIndex by remember { mutableIntStateOf(0) }
+    
+    // 自动复制当前命令
+    LaunchedEffect(currentIndex) {
+        if (currentIndex < commands.size) {
+            clipboard.setClipEntry(
+                ClipEntry(ClipData.newPlainText(null, commands[currentIndex]))
+            )
+            Toast.makeText(
+                context,
+                "已复制 (${currentIndex + 1}/${commands.size})",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(CHelperTheme.colors.backgroundComponentNoTranslate)
+        ) {
+            // 标题
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 10.dp),
+                text = "逐行复制 (${currentIndex + 1}/${commands.size})",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            // 当前命令预览
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp, 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(CHelperTheme.colors.backgroundComponent)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = if (currentIndex < commands.size) commands[currentIndex] else "",
+                    style = TextStyle(
+                        color = CHelperTheme.colors.textMain,
+                        fontSize = 14.sp
+                    )
+                )
+            }
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 4.dp, 0.dp, 8.dp),
+                text = "已自动复制到剪贴板",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    color = CHelperTheme.colors.textSecondary
+                )
+            )
+            Divider(0.dp)
+            // 底部按钮行
+            Row(Modifier.height(45.dp)) {
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .clickable { onDismiss() }
+                ) {
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = "关闭",
+                        style = TextStyle(
+                            fontSize = 20.sp,
+                            color = CHelperTheme.colors.mainColor,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                }
+                DividerVertical(0.dp)
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .clickable {
+                            if (currentIndex < commands.size - 1) {
+                                currentIndex++
+                            } else {
+                                onDismiss()
+                            }
+                        }
+                ) {
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = if (currentIndex < commands.size - 1) "下一条 ▸" else "全部完成 ✓",
+                        style = TextStyle(
+                            fontSize = 20.sp,
+                            color = CHelperTheme.colors.mainColor,
+                            textAlign = TextAlign.Center
+                        )
+                    )
                 }
             }
         }

@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ import java.security.spec.PKCS8EncodedKeySpec
  * 负责访客的自动注册和登录
  * 
  * 使用方式：
- * 1. 在 Application.onCreate 中调用 init(context)
- * 2. 之后可随时调用 ensureLoggedIn() 确保已登录
+ * 在 Application.onCreate 中调用 init(context)
+ * 之后可随时调用 ensureLoggedIn() 确保已登录
  */
 object GuestAuthUtil {
     

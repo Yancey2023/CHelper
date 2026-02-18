@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ object LoginUtil {
             
             // 重新登录获取新令牌
             val request = LoginRequest().apply {
-                mail = savedMail
+                account = savedMail
                 password = savedPassword
             }
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)?.execute()
@@ -130,7 +130,7 @@ object LoginUtil {
      */
     fun login(mail: String, password: String): Result<CommandLabUserService.LoginResponse> {
         val request = LoginRequest().apply {
-            this.mail = mail
+            this.account = mail
             this.password = password
         }
         

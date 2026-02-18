@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,24 +27,32 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
 
 class PublicLibraryShowViewModel : ViewModel() {
     var library by mutableStateOf(LibraryFunction())
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+    var actionMessage by mutableStateOf<String?>(null)
+    var isPrivate by mutableStateOf(false)
     
-    fun loadFunction(id: Int) {
+    fun loadFunction(id: Int, isPrivate: Boolean) {
+        this.isPrivate = isPrivate
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
             
             try {
-                val response = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(
-                        id = id,
-                        android_id = null
-                    )
+                val response: BaseResult<LibraryFunction?>? = withContext(Dispatchers.IO) {
+                    if (isPrivate) {
+                        ServiceManager.COMMAND_LAB_USER_SERVICE?.getPrivateFunction(id)
+                    } else {
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(
+                            id = id,
+                            android_id = null
+                        )
+                    }
                 }
                 
                 if (response?.isSuccess() == true && response.data != null) {
@@ -56,6 +64,40 @@ class PublicLibraryShowViewModel : ViewModel() {
                 errorMessage = "网络错误: ${e.message}"
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    fun togglePublish(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.togglePublish(id)
+                }
+                actionMessage = if (result?.isSuccess() == true) {
+                    "发布状态已切换"
+                } else {
+                    result?.message ?: "操作失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    fun syncToPublic(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.syncToPublic(id)
+                }
+                actionMessage = if (result?.isSuccess() == true) {
+                    "已提交同步申请"
+                } else {
+                    result?.message ?: "同步失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
             }
         }
     }

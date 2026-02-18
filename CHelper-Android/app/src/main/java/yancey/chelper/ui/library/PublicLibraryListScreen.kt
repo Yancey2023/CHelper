@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2025  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.library
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -232,13 +235,28 @@ private fun PublicLibraryItem(
                     )
                 }
                 library.like_count?.let { likes ->
-                    Text(
-                        text = " · ♥ $likes",
-                        style = TextStyle(
-                            color = CHelperTheme.colors.textSecondary,
-                            fontSize = 12.sp
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = " · ",
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
                         )
-                    )
+                        Image(
+                            painter = painterResource(R.drawable.ic_heart),
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
+                        )
+                        Text(
+                            text = " $likes",
+                             style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
+                    }
                 }
             }
             library.note?.takeIf { it.isNotBlank() }?.let { note ->

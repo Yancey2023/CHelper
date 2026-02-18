@@ -1,3 +1,21 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package yancey.chelper.ui.library
 
 import androidx.compose.animation.core.animateDpAsState
@@ -30,11 +48,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.R
-import yancey.chelper.android.common.dialog.CaptchaDialogKt
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.CPLUploadScreenKey
+import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.*
 
@@ -45,13 +63,24 @@ fun CPLUserScreen(
 ) {
     val context = LocalContext.current
     
+    // Captcha State
+    var showCaptchaDialog by remember { mutableStateOf(false) }
+    var captchaAction by remember { mutableStateOf("") }
+    var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
+
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = captchaAction,
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { code -> captchaCallback(code) }
+        )
+    }
+
     // Helper for Captcha
     fun showCaptcha(action: String, onSuccess: (String) -> Unit) {
-        CaptchaDialogKt(context, action) { result ->
-            if (result is CaptchaDialogKt.Result.Success) {
-                onSuccess(result.specialCode)
-            }
-        }.show()
+        captchaAction = action
+        captchaCallback = onSuccess
+        showCaptchaDialog = true
     }
 
     LaunchedEffect(Unit) {
@@ -139,7 +168,7 @@ fun UserProfileView(viewModel: CPLUserViewModel, navController: NavHostControlle
         ) {
             items(viewModel.myLibraries) { lib ->
                 MyLibraryItem(lib) {
-                    navController.navigate(PublicLibraryShowScreenKey(lib.id!!))
+                    navController.navigate(PublicLibraryShowScreenKey(lib.id!!, isPrivate = true))
                 }
                 Divider(0.5.dp)
             }
@@ -304,8 +333,8 @@ fun LoginRegisterView(
                 } else {
                     // Register Inputs
                     TextField(
-                        state = viewModel.registerEmail,
-                        hint = "电子邮箱",
+                        state = viewModel.registerAccount,
+                        hint = "电子邮箱 / 手机号",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(R.drawable.ic_mail, Modifier.size(20.dp)) }
                     )
@@ -323,7 +352,7 @@ fun LoginRegisterView(
                             onClick = {
                                 if (!viewModel.isCheckingCaptcha) {
                                     viewModel.isCheckingCaptcha = true
-                                    onCaptchaRequest("register") { code ->
+                                    onCaptchaRequest("注册账号") { code ->
                                         viewModel.sendVerifyCode(code)
                                     }
                                 }
@@ -354,7 +383,7 @@ fun LoginRegisterView(
                         onClick = {
                             if (!viewModel.isLoading) {
                                 viewModel.isCheckingCaptcha = true
-                                onCaptchaRequest("register") { code ->
+                                onCaptchaRequest("注册账号") { code ->
                                     viewModel.register(code)
                                 }
                             }

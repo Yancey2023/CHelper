@@ -45,7 +45,7 @@ class CPLUploadViewModel : ViewModel() {
         }
     }
     
-    fun upload(specialCode: String, onSuccess: () -> Unit) {
+    fun upload(specialCode: String?, onSuccess: () -> Unit) {
         if (name.text.isBlank() || commands.text.isBlank()) {
             Toaster.show("名称和内容不能为空")
             return
@@ -54,23 +54,28 @@ class CPLUploadViewModel : ViewModel() {
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Construct LibraryFunction object
-                val function = LibraryFunction().apply {
-                    this.name = this@CPLUploadViewModel.name.text.toString()
-                    this.version = this@CPLUploadViewModel.version.text.toString()
-                    this.author = this@CPLUploadViewModel.author.text.toString()
-                    this.note = this@CPLUploadViewModel.description.text.toString()
-                    this.tags = this@CPLUploadViewModel.tags.text.toString()
-                        .split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                    this.content = this@CPLUploadViewModel.commands.text.toString()
-                    // Other fields like id, uuid, created_at handled by server
+                // Construct MCD format string
+                val mcdBuilder = StringBuilder()
+                mcdBuilder.append("@name=${this@CPLUploadViewModel.name.text}\n")
+                mcdBuilder.append("@author=${this@CPLUploadViewModel.author.text}\n")
+                mcdBuilder.append("@version=${this@CPLUploadViewModel.version.text}\n")
+                
+                val tagList = this@CPLUploadViewModel.tags.text.toString()
+                    .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                if (tagList.isNotEmpty()) {
+                    mcdBuilder.append("@tags=${tagList.joinToString(",")}\n")
                 }
                 
-                // Serialize to JSON string for 'content' field
-                val contentJson = ServiceManager.GSON!!.toJson(function)
+                mcdBuilder.append("@note=${this@CPLUploadViewModel.description.text}\n")
+                mcdBuilder.append("\n")
+                mcdBuilder.append("###Function###\n")
+                mcdBuilder.append(this@CPLUploadViewModel.commands.text.toString())
+                mcdBuilder.append("\n###End###")
+                
+                val finalContent = mcdBuilder.toString()
                 
                 val request = CommandLabUserService.UploadLibraryRequest().apply {
-                    this.content = contentJson
+                    this.content = finalContent
                     this.special_code = specialCode
                     this.is_publish = isPublic
                 }

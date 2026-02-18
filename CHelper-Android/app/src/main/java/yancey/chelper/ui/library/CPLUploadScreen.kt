@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -18,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.android.common.dialog.CaptchaDialogKt
+import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -32,15 +31,16 @@ fun CPLUploadScreen(
     viewModel: CPLUploadViewModel = viewModel(),
     navController: NavHostController
 ) {
-    val context = LocalContext.current
     var showImportDialog by remember { mutableStateOf(false) }
+    var showCaptchaDialog by remember { mutableStateOf(false) }
+    var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
-    fun showCaptcha(action: String, onSuccess: (String) -> Unit) {
-        CaptchaDialogKt(context, action) { result ->
-            if (result is CaptchaDialogKt.Result.Success) {
-                onSuccess(result.specialCode)
-            }
-        }.show()
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = "发布函数包",
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { code -> captchaCallback(code) }
+        )
     }
 
     RootViewWithHeaderAndCopyright(title = "上传指令库") {
@@ -99,8 +99,15 @@ fun CPLUploadScreen(
                 text = if (viewModel.isLoading) "上传中..." else "确认上传",
                 onClick = {
                     if (!viewModel.isLoading) {
-                        showCaptcha("upload") { code ->
-                            viewModel.upload(code) {
+                        if (viewModel.isPublic) {
+                            captchaCallback = { code ->
+                                viewModel.upload(code) {
+                                    navController.popBackStack()
+                                }
+                            }
+                            showCaptchaDialog = true
+                        } else {
+                            viewModel.upload(null) {
                                 navController.popBackStack()
                             }
                         }
@@ -125,6 +132,10 @@ fun CPLUploadScreen(
 @Composable
 fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
     val libraries = remember { LocalLibraryManager.INSTANCE?.getFunctions() ?: mutableListOf() }
+    
+    LaunchedEffect(Unit) {
+        LocalLibraryManager.INSTANCE?.ensureInit()
+    }
     
     Dialog(onDismissRequest = onDismiss) {
         Column(

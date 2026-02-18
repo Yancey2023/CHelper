@@ -26,6 +26,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
+import yancey.chelper.network.library.data.LibraryFunction
 
 /**
  * CommandLab 用户系统 API
@@ -35,16 +36,42 @@ import yancey.chelper.network.library.data.BaseResult
 @Suppress("unused")
 interface CommandLabUserService {
     
+
+    
+    // -------------------------------------------------------------
+    // Guest System
+    // -------------------------------------------------------------
+
+    class GuestAuthRequest {
+        var fingerprint: String? = null
+        @Suppress("PropertyName")
+        var auth_code: String? = null
+    }
+
+    @POST("guest/login")
+    fun guestLogin(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
+
+    @POST("guest/register")
+    fun guestRegister(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
+
+    @POST("guest/migrate")
+    fun guestMigrate(@Body request: GuestAuthRequest): Call<BaseResult<Void?>>
+
+    // -------------------------------------------------------------
+    // Official User System
+    // -------------------------------------------------------------
+
     // 注册相关
     
     /**
      * 发送邮箱验证码请求体
      */
-    class SendMailRequest {
+    class SendCodeRequest {
         @Suppress("PropertyName")
         var special_code: String? = null
         var type: Int? = null  // 0=注册, 1=更新密码, 2=找回密码
-        var mail: String? = null
+        var email: String? = null
+        var phone: String? = null
         var lang: String? = "zh-CN"
         
         companion object {
@@ -59,17 +86,21 @@ interface CommandLabUserService {
      * 
      * 需要先完成人机验证获取 special_code
      */
-    @POST("register/sendMail")
-    fun sendMail(@Body request: SendMailRequest): Call<BaseResult<Void?>>
+    @POST("register/sendCode")
+    fun sendCode(@Body request: SendCodeRequest): Call<BaseResult<Void?>>
     
+    /**
+     * 注册请求体
+     */
     /**
      * 注册请求体
      */
     class RegisterRequest {
         @Suppress("PropertyName")
         var special_code: String? = null
-        var mailCode: String? = null
-        var mail: String? = null
+        var code: String? = null
+        var email: String? = null
+        var phone: String? = null
         var nickname: String? = null
         var password: String? = null
         @Suppress("PropertyName")
@@ -89,9 +120,7 @@ interface CommandLabUserService {
      */
     class LoginRequest {
         @JvmField
-        var mail: String? = null
-        @JvmField
-        var account: String? = null // From upstream
+        var account: String? = null
         @JvmField
         var password: String? = null
     }
@@ -129,31 +158,8 @@ interface CommandLabUserService {
      */
     @POST("register/login")
     fun login(@Body request: LoginRequest): Call<BaseResult<LoginResponse?>>
+
     
-    // -------------------------------------------------------------
-    // Guest System
-    // -------------------------------------------------------------
-
-    class GuestAuthRequest {
-        var fingerprint: String? = null
-        @Suppress("PropertyName")
-        var auth_code: String? = null
-    }
-
-    @POST("guest/login")
-    fun guestLogin(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
-
-    @POST("guest/register")
-    fun guestRegister(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
-
-    @POST("guest/migrate")
-    fun guestMigrate(@Body request: GuestAuthRequest): Call<BaseResult<Void?>>
-
-    // -------------------------------------------------------------
-    // Official User System
-    // -------------------------------------------------------------
-
-    // Reuse existing SendMailRequest, RegisterRequest, LoginRequest...
 
     // -------------------------------------------------------------
     // Library Management
@@ -184,4 +190,37 @@ interface CommandLabUserService {
         @Query("pageSize") pageSize: Int = 100
     ): Call<BaseResult<CommandLabPublicService.GetFunctionsResponse?>>
 
+    /**
+     * Get private library detail
+     */
+    @GET("library/detail/{id}")
+    suspend fun getPrivateFunction(
+        @Path("id") id: Int
+    ): BaseResult<LibraryFunction?>
+
+    /**
+     * 切换发布状态（公开/私有）
+     */
+    @POST("library/{id}/publish")
+    suspend fun togglePublish(
+        @Path("id") id: Int
+    ): BaseResult<Void?>
+
+    /**
+     * 同步私有库到公开库
+     * 限制: 3次/小时
+     */
+    @POST("library/{id}/sync")
+    suspend fun syncToPublic(
+        @Path("id") id: Int
+    ): BaseResult<Void?>
+
+    /**
+     * 编辑私有库内容
+     */
+    @PUT("library/{id}")
+    suspend fun editLibrary(
+        @Path("id") id: Int,
+        @Body request: UploadLibraryRequest
+    ): BaseResult<Void?>
 }

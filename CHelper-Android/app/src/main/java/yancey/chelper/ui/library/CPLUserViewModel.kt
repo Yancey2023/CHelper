@@ -1,3 +1,21 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package yancey.chelper.ui.library
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -29,12 +47,15 @@ class CPLUserViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
     var isCheckingCaptcha by mutableStateOf(false)
 
+    // Register temporary data
+    // private var tempSpecialCode: String? = null
+
     // Login Fields
     val loginAccount = TextFieldState()
     val loginPassword = TextFieldState()
 
     // Register Fields
-    val registerEmail = TextFieldState()
+    val registerAccount = TextFieldState()
     val registerCode = TextFieldState()
     val registerPassword = TextFieldState()
     val registerNickname = TextFieldState()
@@ -105,19 +126,25 @@ class CPLUserViewModel : ViewModel() {
     }
 
     fun sendVerifyCode(specialCode: String) {
-        if (registerEmail.text.isBlank()) {
-            Toaster.show("请输入邮箱")
+        if (registerAccount.text.isBlank()) {
+            Toaster.show("请输入邮箱或手机号")
             return
         }
         isLoading = true
+        // Cache special_code for registration (Removed as we now double-verify)
+        
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val request = CommandLabUserService.SendMailRequest().apply {
-                    this.mail = registerEmail.text.toString()
+                val request = CommandLabUserService.SendCodeRequest().apply {
+                    if (registerAccount.text.toString().contains("@")) {
+                        this.email = registerAccount.text.toString()
+                    } else {
+                        this.phone = registerAccount.text.toString()
+                    }
                     this.special_code = specialCode
-                    this.type = CommandLabUserService.SendMailRequest.TYPE_REGISTER
+                    this.type = CommandLabUserService.SendCodeRequest.TYPE_REGISTER
                 }
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendMail(request).execute()
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendCode(request).execute()
                 withContext(Dispatchers.Main) {
                     if (response.body()?.isSuccess() == true) {
                         Toaster.show("验证码已发送")
@@ -139,26 +166,34 @@ class CPLUserViewModel : ViewModel() {
     }
 
     fun register(specialCode: String) {
-        if (registerEmail.text.isBlank() || registerCode.text.isBlank() || registerPassword.text.isBlank()) {
+        if (registerAccount.text.isBlank() || registerCode.text.isBlank() || registerPassword.text.isBlank()) {
             Toaster.show("请补全注册信息")
             return
         }
+        
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val request = CommandLabUserService.RegisterRequest().apply {
-                    this.mail = registerEmail.text.toString()
-                    this.mailCode = registerCode.text.toString()
-                    this.password = registerPassword.text.toString()
-                    this.nickname = registerNickname.text.toString()
+                    if (registerAccount.text.toString().contains("@")) {
+                        this.email = registerAccount.text.toString()
+                    } else {
+                        this.phone = registerAccount.text.toString()
+                    }
+                    this.code = registerCode.text.toString()
                     this.special_code = specialCode
+                    this.nickname = registerNickname.text.toString().takeIf { it.isNotBlank() }
+                        ?: "用户${System.currentTimeMillis() % 1000}"
+                    this.password = registerPassword.text.toString()
+                    this.android_id = GuestAuthUtil.getFingerprint()
                 }
+
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.register(request).execute()
                 withContext(Dispatchers.Main) {
                     if (response.body()?.isSuccess() == true) {
                         Toaster.show("注册成功，请登录")
                         currentTab = UserTab.LOGIN
-                        loginAccount.setTextAndPlaceCursorAtEnd(registerEmail.text.toString())
+                        loginAccount.setTextAndPlaceCursorAtEnd(registerAccount.text.toString())
                     } else {
                         Toaster.show("注册失败: ${response.body()?.message}")
                     }

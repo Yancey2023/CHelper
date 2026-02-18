@@ -102,7 +102,8 @@ object PublicLibraryListScreenKey
 
 @Serializable
 data class PublicLibraryShowScreenKey(
-    val id: Int
+    val id: Int,
+    val isPrivate: Boolean = false
 )
 
 @Serializable
@@ -207,8 +208,7 @@ fun NavHost(
         }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
-            val viewModel: PublicLibraryShowViewModel = viewModel()
-            PublicLibraryShowScreen(id = publicLibraryShow.id, viewModel = viewModel)
+            PublicLibraryShowScreen(id = publicLibraryShow.id, isPrivate = publicLibraryShow.isPrivate)
         }
         composable<CPLUserScreenKey> {
             CPLUserScreen(navController = navController)
