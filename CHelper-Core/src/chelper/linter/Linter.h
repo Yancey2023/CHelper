@@ -32,4 +32,4 @@ namespace CHelper::Linter {
 
 }// namespace CHelper::Linter
 
-#endif //CHELPER_LINTER_H
+#endif//CHELPER_LINTER_H

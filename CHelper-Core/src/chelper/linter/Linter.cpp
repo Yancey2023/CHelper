@@ -226,6 +226,7 @@ namespace CHelper::Linter {
 
     std::vector<std::shared_ptr<ErrorReason>> sortByLevel(const std::vector<std::shared_ptr<ErrorReason>> &input) {
         std::vector<std::shared_ptr<ErrorReason>> output;
+        output.reserve(input.size());
         uint8_t i = ErrorReasonLevel::maxLevel;
         while (true) {
             for (const auto &item: input) {

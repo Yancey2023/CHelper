@@ -400,23 +400,23 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
 class NodeTypeHelper {
 public:
     template<class JsonValueType>
-    static void to_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
+    static void to_json(CHelper::Node::NodeTypeId::NodeTypeId id,
                         typename JsonValueType::AllocatorType &allocator,
                         JsonValueType &jsonValue,
                         const CHelper::Node::NodeWithType &t);
 
     template<class JsonValueType>
-    static void from_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
+    static void from_json(CHelper::Node::NodeTypeId::NodeTypeId id,
                           const JsonValueType &jsonValue,
                           CHelper::Node::NodeWithType &t);
 
     template<bool isNeedConvert>
-    static void to_binary(const CHelper::Node::NodeTypeId::NodeTypeId id,
+    static void to_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
                           std::ostream &ostream,
                           const CHelper::Node::NodeWithType &t);
 
     template<bool isNeedConvert>
-    static void from_binary(const CHelper::Node::NodeTypeId::NodeTypeId id,
+    static void from_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
                             std::istream &istream,
                             CHelper::Node::NodeWithType &t);
 };
@@ -522,7 +522,7 @@ CODEC_NODE(CHelper::Node::NodeJsonObject, data)
 CODEC_NODE(CHelper::Node::NodeJsonString, data)
 
 template<class JsonValueType>
-void NodeTypeHelper::to_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
+void NodeTypeHelper::to_json(CHelper::Node::NodeTypeId::NodeTypeId id,
                              typename JsonValueType::AllocatorType &allocator,
                              JsonValueType &jsonValue,
                              const CHelper::Node::NodeWithType &t) {
@@ -534,7 +534,7 @@ void NodeTypeHelper::to_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
 }
 
 template<class JsonValueType>
-void NodeTypeHelper::from_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
+void NodeTypeHelper::from_json(CHelper::Node::NodeTypeId::NodeTypeId id,
                                const JsonValueType &jsonValue,
                                CHelper::Node::NodeWithType &t) {
     switch (id) {
@@ -545,7 +545,7 @@ void NodeTypeHelper::from_json(const CHelper::Node::NodeTypeId::NodeTypeId id,
 }
 
 template<bool isNeedConvert>
-void NodeTypeHelper::to_binary(const CHelper::Node::NodeTypeId::NodeTypeId id,
+void NodeTypeHelper::to_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
                                std::ostream &ostream,
                                const CHelper::Node::NodeWithType &t) {
     switch (id) {
@@ -556,7 +556,7 @@ void NodeTypeHelper::to_binary(const CHelper::Node::NodeTypeId::NodeTypeId id,
 }
 
 template<bool isNeedConvert>
-void NodeTypeHelper::from_binary(const CHelper::Node::NodeTypeId::NodeTypeId id,
+void NodeTypeHelper::from_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
                                  std::istream &istream,
                                  CHelper::Node::NodeWithType &t) {
     switch (id) {

@@ -21,7 +21,7 @@
 
 namespace CHelper {
 
-   const Node::NodeWithType &ItemId::getNode() {
+    const Node::NodeWithType &ItemId::getNode() {
         if (node == nullptr) [[unlikely]] {
             if (max.has_value() && max.value() < 0) [[unlikely]] {
                 throw std::runtime_error("item id max data value should be a positive number");

@@ -21,12 +21,12 @@
 #ifndef CHELPER_TOKENREADER_H
 #define CHELPER_TOKENREADER_H
 
-#include <chelper/parser/ASTNode.h>
-#include <chelper/parser/TokensView.h>
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
-#include <pch.h>
 #include <chelper/node/NodeWithType.h>
+#include <chelper/parser/ASTNode.h>
+#include <chelper/parser/TokensView.h>
+#include <pch.h>
 
 namespace CHelper {
 

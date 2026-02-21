@@ -136,10 +136,9 @@ namespace CHelper {
     }
 
     bool ASTNode::isAllSpaceError() const {
-        return isError() && std::all_of(errorReasons.begin(), errorReasons.end(),
-                                        [](const auto &item) {
-                                            return item->level == ErrorReasonLevel::REQUIRE_SPACE;
-                                        });
+        return isError() && std::ranges::all_of(errorReasons, [](const auto &item) {
+                   return item->level == ErrorReasonLevel::REQUIRE_SPACE;
+               });
     }
 
     [[nodiscard]] const ASTNode &ASTNode::getBestNode() const {

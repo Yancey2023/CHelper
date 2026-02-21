@@ -262,7 +262,7 @@ namespace CHelper {
 #ifndef CHELPER_NO_FILESYSTEM
     std::unique_ptr<CPack> CPack::createByDirectory(const std::filesystem::path &path) {
         Profile::push("start load CPack by DIRECTORY: {}", FORMAT_ARG(path.string()));
-        std::unique_ptr<CPack> cpack = std::make_unique<CPack>(path);
+        auto cpack = std::make_unique<CPack>(path);
         Profile::pop();
         return cpack;
     }
@@ -277,7 +277,7 @@ namespace CHelper {
 
     std::unique_ptr<CPack> CPack::createByBinary(std::istream &istream) {
         Profile::push("start load CPack by binary");
-        std::unique_ptr<CPack> cpack = std::make_unique<CPack>(istream);
+        auto cpack = std::make_unique<CPack>(istream);
         Profile::pop();
         return cpack;
     }

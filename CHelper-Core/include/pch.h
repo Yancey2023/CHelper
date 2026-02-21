@@ -1,3 +1,21 @@
+/**
+* It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Yancey
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #ifndef CHELPER_PCH_H
@@ -14,10 +32,17 @@
 #else
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_INFO
 #endif
+
 #if defined(__ANDROID__) || defined(CHELPER_NO_FILESYSTEM)
 #define FORMAT_ARG(arg) arg
 #else
 #define FORMAT_ARG(arg) fmt::styled(arg, fg(fmt::color::medium_purple))
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#define CHELPER_UNREACHABLE() __assume(false)
+#else
+#define CHELPER_UNREACHABLE() __builtin_unreachable()
 #endif
 
 // 数据结构
@@ -74,11 +99,5 @@
 #include <chelper/util/StringUtil.h>
 // KMP字符串匹配算法
 #include <chelper/util/KMPMatcher.h>
-
-#if defined(_MSC_VER) && !defined(__clang__)
-#define CHELPER_UNREACHABLE() __assume(false)
-#else
-#define CHELPER_UNREACHABLE() __builtin_unreachable()
-#endif
 
 #endif// CHELPER_PCH_H

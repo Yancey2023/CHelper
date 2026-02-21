@@ -80,7 +80,7 @@ namespace CHelper::Node {
 
     template<>
     struct NodeInitialization<NodeJson> {
-        ;
+
         static void init(NodeJson &node, const CPack &cpack) {
             for (const auto &item: cpack.jsonNodes) {
                 if (item.id == node.key) [[unlikely]] {

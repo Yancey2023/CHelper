@@ -46,4 +46,4 @@ namespace CHelper::AutoSuggestion {
         return XXH3_64bits_digest(&hashState);
     }
 
-}// namespace CHelper
+}// namespace CHelper::AutoSuggestion

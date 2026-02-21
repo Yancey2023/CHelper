@@ -26,7 +26,7 @@
 
 namespace CHelper::SyntaxHighlight {
 
-    SyntaxResult getSyntaxResult(const ASTNode& astNode);
+    SyntaxResult getSyntaxResult(const ASTNode &astNode);
 
 }// namespace CHelper::SyntaxHighlight
 

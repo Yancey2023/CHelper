@@ -201,23 +201,19 @@ namespace CHelper {
             const std::u16string &blockId,
             const std::u16string &propertyName) const {
         for (const auto &item: block) {
-            if (std::find(item.blocks.begin(), item.blocks.end(), blockId) != item.blocks.end() ||
-                std::find(item.blocks.begin(), item.blocks.end(), blockIdWithNamespace) != item.blocks.end()) {
-                const auto &it = std::find_if(
-                        item.properties.begin(), item.properties.end(),
-                        [&propertyName](const BlockPropertyDescription &item1) -> bool {
-                            return item1.propertyName == propertyName;
-                        });
+            if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
+                std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
+                const auto &it = std::ranges::find_if(item.properties, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                    return item1.propertyName == propertyName;
+                });
                 if (it != item.properties.end()) [[likely]] {
                     return *it;
                 }
             }
         }
-        const auto &it = std::find_if(
-                common.begin(), common.end(),
-                [&propertyName](const BlockPropertyDescription &item1) -> bool {
-                    return item1.propertyName == propertyName;
-                });
+        const auto &it = std::ranges::find_if(common, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+            return item1.propertyName == propertyName;
+        });
         if (it != common.end()) [[likely]] {
             return *it;
         }
@@ -355,7 +351,7 @@ namespace CHelper {
                 blockStateEntryChildNode2.reserve(2);
                 std::vector<Node::NodeWithType> blockStateEntryChildNode1;
                 blockStateEntryChildNode1.reserve(properties.value().size());
-                std::transform(properties.value().begin(), properties.value().end(),
+                std::ranges::transform(properties.value(),
                                std::back_inserter(blockStateEntryChildNode1),
                                [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
                                    const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(

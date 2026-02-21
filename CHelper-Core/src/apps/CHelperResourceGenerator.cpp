@@ -225,7 +225,7 @@ namespace CHelper::Test {
                 } else {
                     fmt::println("error reasons:");
                     for (size_t i = 0; i < errorReasons.size(); ++i) {
-                        const auto& errorReason = errorReasons[i];
+                        const auto &errorReason = errorReasons[i];
                         fmt::print("{}. {} {}\n{}{}{}\n",
                                    i,
                                    fmt::styled(utf8::utf16to8(command.substr(errorReason->start, errorReason->end - errorReason->start)), fg(fmt::color::red)),

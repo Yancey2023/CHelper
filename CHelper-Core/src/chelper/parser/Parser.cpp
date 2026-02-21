@@ -785,7 +785,7 @@ namespace CHelper::Parser {
                 return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
             }
             std::u16string_view key = astNodeKey.tokens.string();
-            auto it = std::find_if(node.equalDatas.begin(), node.equalDatas.end(), [&key](const auto &t) {
+            auto it = std::ranges::find_if(node.equalDatas, [&key](const auto &t) {
                 return t.name == key;
             });
             // = or =!
@@ -990,7 +990,7 @@ namespace CHelper::Parser {
     }
 
     ASTNode parse(const std::u16string &content, const Node::NodeWithType &mainNode) {
-        TokenReader tokenReader = TokenReader(std::make_shared<LexerResult>(Lexer::lex(content)));
+        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(content)));
 #ifdef CHelperTest
         Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(tokenReader.lexerResult->content)));
 #endif

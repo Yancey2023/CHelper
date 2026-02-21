@@ -16,12 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <chelper/CHelperCore.h>
-#include <pch.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
+#include <chelper/CHelperCore.h>
 #include <jni.h>
+#include <pch.h>
 #include <spdlog/sinks/android_sink.h>
 
 std::u16string jstring2u16string(JNIEnv *env, jstring jString) {

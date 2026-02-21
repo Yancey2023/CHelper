@@ -222,7 +222,7 @@ namespace CHelper::AutoSuggestion {
             size_t end = astNode.tokens.endIndex;
             suggestions.reserveIdSuggestion(nameStartOf.size() + nameContain.size() +
                                             namespaceStartOf.size() + namespaceContain.size() +
-                                            (2 * descriptionContain.size()));
+                                            2 * descriptionContain.size());
             for (const auto &item: nameStartOf) {
                 suggestions.addIdSuggestion({start, end, node.getIsMustAfterSpace(), item});
             }
@@ -531,10 +531,9 @@ namespace CHelper::AutoSuggestion {
     }
 
     bool canAddSpace0(const ASTNode &astNode, size_t index) {
-        if (std::any_of(astNode.errorReasons.begin(), astNode.errorReasons.end(),
-                        [&index](const auto &item) {
-                            return item->level == ErrorReasonLevel::REQUIRE_SPACE && item->start >= index && item->end <= index;
-                        })) {
+        if (std::ranges::any_of(astNode.errorReasons, [&index](const auto &item) {
+                return item->level == ErrorReasonLevel::REQUIRE_SPACE && item->start >= index && item->end <= index;
+            })) {
             return true;
         }
         switch (astNode.mode) {

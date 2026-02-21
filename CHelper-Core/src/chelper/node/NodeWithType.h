@@ -75,7 +75,7 @@ namespace CHelper::Node {
     class NodeWithType {
     public:
         NodeTypeId::NodeTypeId nodeTypeId;
-        Node::NodeBase *data = nullptr;
+        NodeBase *data = nullptr;
 
         NodeWithType() = default;
 

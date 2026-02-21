@@ -53,7 +53,7 @@ namespace CHelper {
 
         explicit CPack(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
 
-        explicit CPack(std::istream &binaryReader);
+        explicit CPack(std::istream &istream);
 
     private:
         void applyId(const rapidjson::GenericValue<rapidjson::UTF8<>> &j);
@@ -73,7 +73,7 @@ namespace CHelper {
 
         static std::unique_ptr<CPack> createByJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
 
-        static std::unique_ptr<CPack> createByBinary(std::istream &binaryReader);
+        static std::unique_ptr<CPack> createByBinary(std::istream &istream);
 
 #ifndef CHELPER_NO_FILESYSTEM
         void writeJsonToDirectory(const std::filesystem::path &path) const;

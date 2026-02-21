@@ -23,7 +23,7 @@
         return NodeTypeDetail<CHelper::Node::NodeTypeId::v1>::name;
 
 #define CHELPER_GET_NODE_TYPE_BY_NAME(v1)                                             \
-    if (CHelper::Node::NodeTypeDetail<CHelper::Node::NodeTypeId::v1>::name == type) { \
+    if (CHelper::Node::NodeTypeDetail<CHelper::Node::NodeTypeId::v1>::name == name) { \
         return CHelper::Node::NodeTypeId::v1;                                         \
     }
 
@@ -37,7 +37,7 @@ namespace CHelper::Node {
         }
     }
 
-    std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &type) {
+    std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &name) {
         CODEC_PASTE(CHELPER_GET_NODE_TYPE_BY_NAME, CHELPER_NODE_TYPES)
         return std::nullopt;
     }

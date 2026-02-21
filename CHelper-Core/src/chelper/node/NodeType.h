@@ -337,7 +337,7 @@ namespace CHelper {
 
         const char *getNodeTypeName(NodeTypeId::NodeTypeId id);
 
-        std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &id);
+        std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &name);
 
     }// namespace Node
 
