@@ -170,7 +170,7 @@ class LibrarySearchViewModel : ViewModel() {
                         note = localFunc.note
                         tags = localFunc.tags
                         // 将本地包 ID 转为负数，防止和远端冲突，并在 UI 中做区分
-                        id = -(localFunc.id?.toInt() ?: 0)
+                        id = -(localFunc.id ?: 0)
                         author = "[本地包]"
                         version = localFunc.version
                     }

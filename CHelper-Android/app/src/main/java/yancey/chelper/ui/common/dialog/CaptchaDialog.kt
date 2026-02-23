@@ -92,30 +92,7 @@ private fun CaptchaDialogContent(
     // 用 Handler 而不是 rememberCoroutineScope，因为 Handler 不受 Composition 生命周期约束
     val handler = remember { Handler(Looper.getMainLooper()) }
 
-    class CaptchaJsInterface {
-        @JavascriptInterface
-        fun onSuccess(code: String?) {
-            handler.post {
-                if (!code.isNullOrEmpty()) {
-                    handleSuccess(code)
-                } else {
-                    handleFailure("验证返回为空")
-                }
-            }
-        }
-
-        @JavascriptInterface
-        fun onFail() {
-            handler.post { handleFailure("验证失败") }
-        }
-
-        @JavascriptInterface
-        fun onCancel() {
-            handler.post { onDismissRequest() }
-        }
-    }
-
-    val jsInterface = remember { CaptchaJsInterface() }
+    val jsInterface = remember { CaptchaJsInterface(handler, ::handleSuccess, ::handleFailure, onDismissRequest) }
 
     // 当 captchaUrl 和 webView 都就绪时加载页面
     LaunchedEffect(captchaUrl, webView) {
@@ -252,4 +229,32 @@ private fun CaptchaDialogContent(
         },
         modifier = Modifier.fillMaxSize()
     )
+}
+
+private class CaptchaJsInterface(
+    private val handler: Handler,
+    private val onSuccessCallback: (String?) -> Unit,
+    private val onFailureCallback: (String) -> Unit,
+    private val onCancelCallback: () -> Unit
+) {
+    @JavascriptInterface
+    fun onSuccess(code: String?) {
+        handler.post {
+            if (!code.isNullOrEmpty()) {
+                onSuccessCallback(code)
+            } else {
+                onFailureCallback("验证返回为空")
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun onFail() {
+        handler.post { onFailureCallback("验证失败") }
+    }
+
+    @JavascriptInterface
+    fun onCancel() {
+        handler.post { onCancelCallback() }
+    }
 }
