@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,15 +39,23 @@ import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.common.CHelperTheme
 
 @Composable
-fun Button(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun Button(
+    text: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(6.dp),
+    onClick: () -> Unit
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 5.dp)
             .height(45.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(CHelperTheme.colors.mainColor)
-            .clickable(onClick = onClick),
+            .clip(shape)
+            .background(
+                if (enabled) CHelperTheme.colors.mainColor else CHelperTheme.colors.mainColor.copy(alpha = 0.5f)
+            )
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(

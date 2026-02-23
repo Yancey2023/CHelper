@@ -46,6 +46,12 @@ import yancey.chelper.ui.library.LocalLibraryEditScreen
 import yancey.chelper.ui.library.LocalLibraryListScreen
 import yancey.chelper.ui.library.LocalLibraryShowScreen
 import yancey.chelper.ui.library.LocalLibraryShowViewModel
+import yancey.chelper.ui.library.PublicLibraryListScreen
+import yancey.chelper.ui.library.PublicLibraryShowScreen
+import yancey.chelper.ui.library.PublicLibraryShowViewModel
+import yancey.chelper.ui.library.CPLUserScreen
+import yancey.chelper.ui.library.CPLUploadScreen
+import yancey.chelper.ui.library.search.LibrarySearchScreen
 import yancey.chelper.ui.old2new.Old2NewIMEGuideScreen
 import yancey.chelper.ui.old2new.Old2NewScreen
 import yancey.chelper.ui.rawtext.RawtextScreen
@@ -93,10 +99,32 @@ object RawtextScreenKey
 object AboutScreenKey
 
 @Serializable
+object PublicLibraryListScreenKey
+
+@Serializable
+data class PublicLibraryShowScreenKey(
+    val id: Int,
+    val isPrivate: Boolean = false
+)
+
+@Serializable
 data class ShowTextScreenKey(
     val title: String,
     val content: String
 )
+
+@Serializable
+data class LibrarySearchScreenKey(
+    val initialKeyword: String? = null
+)
+
+
+
+@Serializable
+object CPLUserScreenKey
+
+@Serializable
+object CPLUploadScreenKey
 
 @Composable
 fun NavHost(
@@ -180,6 +208,23 @@ fun NavHost(
                 title = showText.title,
                 content = showText.content
             )
+        }
+        composable<PublicLibraryListScreenKey> {
+            PublicLibraryListScreen(navController = navController)
+        }
+        composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
+            val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
+            PublicLibraryShowScreen(id = publicLibraryShow.id, isPrivate = publicLibraryShow.isPrivate, navController = navController)
+        }
+        composable<LibrarySearchScreenKey> { navBackStackEntry ->
+            val args: LibrarySearchScreenKey = navBackStackEntry.toRoute()
+            LibrarySearchScreen(navController = navController, initialKeyword = args.initialKeyword)
+        }
+        composable<CPLUserScreenKey> {
+            CPLUserScreen(navController = navController)
+        }
+        composable<CPLUploadScreenKey> {
+            CPLUploadScreen(navController = navController)
         }
     }
     if (isShowSavingBackgroundDialog.value) {

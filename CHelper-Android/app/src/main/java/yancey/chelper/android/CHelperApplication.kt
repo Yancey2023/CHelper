@@ -29,6 +29,7 @@ import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
 import yancey.chelper.android.common.util.Settings
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 import java.io.File
 
@@ -53,13 +54,7 @@ class CHelperApplication : Application() {
                 resources.displayMetrics
             ).toInt()
         )
-        // 网络服务初始化
-        ServiceManager.init()
-        LoginUtil.init(dataDir.resolve("library").resolve("user.json")) { throwable ->
-            Log.e("LoginUtil", "fail to read user from json", throwable)
-            MonitorUtil.generateCustomLog(throwable, "ReadUserException")
-        }
-        // 设置初始化
+        // 设置初始化 (Must be before ServiceManager)
         Settings.init(
             this,
             dataDir.resolve("settings").resolve("settings.json")
@@ -67,6 +62,15 @@ class CHelperApplication : Application() {
             Log.e("Settings", "fail to read settings from json", throwable)
             MonitorUtil.generateCustomLog(throwable, "ReadSettingException")
         }
+        // 网络服务初始化
+        ServiceManager.init(this)
+        LoginUtil.init(dataDir.resolve("library").resolve("user.json")) { throwable ->
+            Log.e("LoginUtil", "fail to read user from json", throwable)
+            MonitorUtil.generateCustomLog(throwable, "ReadUserException")
+        }
+        // 访客认证初始化（用于自动访客登录）
+        GuestAuthUtil.init(this)
+
         // 自定义主题初始化
         CustomTheme.init(dataDir.resolve("theme"))
         // 本地命令库初始化

@@ -95,7 +95,7 @@
     <string name="layout_home_enumeration_app_mode">穷举</string>
     <string name="layout_home_experimental_feature">实验性功能</string>
     <string name="layout_home_experimental_feature_local_library">本地命令库</string>
-    <string name="layout_home_experimental_feature_public_library">公有命令库（待开放）</string>
+    <string name="layout_home_experimental_feature_public_library">公有命令库</string>
     <string name="layout_home_experimental_feature_raw_json_studio">原始Json文本生成器（未完工，期待有人接手）</string>
     <string name="layout_home_about">关于</string>
     <string name="layout_home_about_app_mode">关于</string>
@@ -121,7 +121,7 @@
 
     <!--    use in LocalLibraryListView and PublicLibraryListView    -->
     <string name="layout_library_list_title_local">本地命令库</string>
-    <string name="layout_library_list_title_public">公有命令库（待开放）</string>
+    <string name="layout_library_list_title_public">公有命令库</string>
     <string name="layout_library_list_icon_import_content_description">导入</string>
     <string name="layout_library_list_icon_export_content_description">导出</string>
     <string name="layout_library_list_icon_add_content_description">添加</string>

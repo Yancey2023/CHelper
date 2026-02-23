@@ -144,7 +144,7 @@ fun LocalLibraryListScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = library.name!!,
+                                text = library.name ?: "未命名",
                                 modifier = Modifier
                                     .fillMaxWidth(),
                                 style = TextStyle(
@@ -152,7 +152,7 @@ fun LocalLibraryListScreen(
                                 )
                             )
                             Text(
-                                text = library.note!!,
+                                text = library.note ?: "",
                                 modifier = Modifier
                                     .fillMaxWidth(),
                                 style = TextStyle(

@@ -102,7 +102,24 @@ public class Settings {
     public static String versionBetaVanilla;
     public static String versionBetaExperiment;
     public static String versionNeteaseVanilla;
+
     public static String versionNeteaseExperiment;
+
+    /**
+     * 自定义命令库地址（测试用）
+     */
+
+    public String apiUrl;
+
+    /**
+     * 是否显示公有命令库入口
+     */
+    public Boolean isShowPublicLibrary;
+
+    /**
+     * 请求速率限制（次/秒）
+     */
+    public Integer requestRateLimit;
 
     public void setCpackBranch(String cpackBranch) {
         this.cpackPath = cpackBranch;
@@ -152,6 +169,14 @@ public class Settings {
             INSTANCE = new Settings();
             isDirty = true;
         }
+        if (INSTANCE.isShowPublicLibrary == null) {
+            INSTANCE.isShowPublicLibrary = false;
+            isDirty = true;
+        }
+        if (INSTANCE.requestRateLimit == null) {
+            INSTANCE.requestRateLimit = 2;
+            isDirty = true;
+        }
         if (INSTANCE.isEnableUpdateNotifications == null) {
             INSTANCE.isEnableUpdateNotifications = true;
             isDirty = true;
@@ -193,12 +218,12 @@ public class Settings {
             isDirty = true;
         }
         if (INSTANCE.cpackPath == null ||
-            !(INSTANCE.cpackPath.equals("release-vanilla") ||
-              INSTANCE.cpackPath.equals("release-experiment") ||
-              INSTANCE.cpackPath.equals("beta-vanilla") ||
-              INSTANCE.cpackPath.equals("beta-experiment") ||
-              INSTANCE.cpackPath.equals("netease-vanilla") ||
-              INSTANCE.cpackPath.equals("netease-experiment"))) {
+                !(INSTANCE.cpackPath.equals("release-vanilla") ||
+                        INSTANCE.cpackPath.equals("release-experiment") ||
+                        INSTANCE.cpackPath.equals("beta-vanilla") ||
+                        INSTANCE.cpackPath.equals("beta-experiment") ||
+                        INSTANCE.cpackPath.equals("netease-vanilla") ||
+                        INSTANCE.cpackPath.equals("netease-experiment"))) {
             INSTANCE.cpackPath = DEFAULT_CPACK;
             isDirty = true;
         }
@@ -209,27 +234,33 @@ public class Settings {
             for (String filename : Objects.requireNonNull(application.getAssets().list("cpack"))) {
                 if (filename.startsWith("release-vanilla")) {
                     pathReleaseVanilla = "cpack/" + filename;
-                    versionReleaseVanilla = filename.substring("release-vanilla-".length(), filename.length() - ".cpack".length());
+                    versionReleaseVanilla = filename.substring("release-vanilla-".length(),
+                            filename.length() - ".cpack".length());
                 }
                 if (filename.startsWith("release-experiment")) {
                     pathReleaseExperiment = "cpack/" + filename;
-                    versionReleaseExperiment = filename.substring("release-experiment-".length(), filename.length() - ".cpack".length());
+                    versionReleaseExperiment = filename.substring("release-experiment-".length(),
+                            filename.length() - ".cpack".length());
                 }
                 if (filename.startsWith("beta-vanilla")) {
                     pathBetaVanilla = "cpack/" + filename;
-                    versionBetaVanilla = filename.substring("beta-vanilla-".length(), filename.length() - ".cpack".length());
+                    versionBetaVanilla = filename.substring("beta-vanilla-".length(),
+                            filename.length() - ".cpack".length());
                 }
                 if (filename.startsWith("beta-experiment")) {
                     pathBetaExperiment = "cpack/" + filename;
-                    versionBetaExperiment = filename.substring("beta-experiment-".length(), filename.length() - ".cpack".length());
+                    versionBetaExperiment = filename.substring("beta-experiment-".length(),
+                            filename.length() - ".cpack".length());
                 }
                 if (filename.startsWith("netease-vanilla")) {
                     pathNeteaseVanilla = "cpack/" + filename;
-                    versionNeteaseVanilla = filename.substring("netease-vanilla-".length(), filename.length() - ".cpack".length());
+                    versionNeteaseVanilla = filename.substring("netease-vanilla-".length(),
+                            filename.length() - ".cpack".length());
                 }
                 if (filename.startsWith("netease-experiment")) {
                     pathNeteaseExperiment = "cpack/" + filename;
-                    versionNeteaseExperiment = filename.substring("netease-experiment-".length(), filename.length() - ".cpack".length());
+                    versionNeteaseExperiment = filename.substring("netease-experiment-".length(),
+                            filename.length() - ".cpack".length());
                 }
             }
             Objects.requireNonNull(pathReleaseVanilla);

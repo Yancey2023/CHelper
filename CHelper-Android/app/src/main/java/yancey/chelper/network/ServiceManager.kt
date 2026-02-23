@@ -18,18 +18,25 @@
 
 package yancey.chelper.network
 
+import android.content.Context
 import com.google.gson.Gson
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import yancey.chelper.BuildConfig
+import yancey.chelper.android.common.util.Settings
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.network.chelper.service.CHelperService
 import yancey.chelper.network.library.interceptor.AuthInterceptor
+import yancey.chelper.network.library.service.CaptchaService
 import yancey.chelper.network.library.service.CommandLabPublicService
 import yancey.chelper.network.library.service.CommandLabUserService
+import yancey.chelper.network.library.util.WafHelper
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 object ServiceManager {
     @JvmField
@@ -42,12 +49,23 @@ object ServiceManager {
     @JvmField
     var COMMAND_LAB_PUBLIC_SERVICE: CommandLabPublicService? = null
     var COMMAND_LAB_USER_SERVICE: CommandLabUserService? = null
+    
+    @JvmField
+    var CAPTCHA_SERVICE: CaptchaService? = null
+
+    @JvmField
+    var LAB_BASE_URL = "https://abyssous.site/"
 
     @JvmStatic
-    fun init() {
+    fun init(context: Context) {
         GSON = Gson()
         val builder = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
             .addInterceptor(BrotliInterceptor)
+            .addInterceptor(yancey.chelper.network.library.interceptor.RateLimitInterceptor())
             .addInterceptor(AuthInterceptor.INSTANCE)
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
@@ -60,7 +78,7 @@ object ServiceManager {
             .addConverterFactory(GsonConverterFactory.create(GSON!!))
             .build()
         COMMAND_LAB_RETROFIT = Retrofit.Builder()
-            .baseUrl("https://abyssous.site/")
+            .baseUrl(Settings.INSTANCE.apiUrl?.takeIf { it.isNotEmpty() } ?: LAB_BASE_URL)
             .client(CLIENT!!)
             .addConverterFactory(GsonConverterFactory.create(GSON!!))
             .build()
@@ -68,5 +86,9 @@ object ServiceManager {
         COMMAND_LAB_PUBLIC_SERVICE =
             COMMAND_LAB_RETROFIT!!.create(CommandLabPublicService::class.java)
         COMMAND_LAB_USER_SERVICE = COMMAND_LAB_RETROFIT!!.create(CommandLabUserService::class.java)
+        CAPTCHA_SERVICE = COMMAND_LAB_RETROFIT!!.create(CaptchaService::class.java)
+        
+        // 初始化 WAF Helper
+        WafHelper.init(context)
     }
 }

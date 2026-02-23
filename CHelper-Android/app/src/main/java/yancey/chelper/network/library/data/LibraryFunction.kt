@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,11 @@
 
 package yancey.chelper.network.library.data
 
+import com.google.gson.TypeAdapter
+import com.google.gson.annotations.JsonAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import kotlinx.serialization.Serializable
 
 @Suppress("unused")
@@ -27,7 +32,10 @@ class LibraryFunction {
     var uuid: String? = null // 函数UUID
     var name: String? = null // 函数名称
     var content: String? = null // 函数内容
+
+    @JsonAdapter(AuthorAdapter::class)
     var author: String? = null // 作者
+
     var note: String? = null // 说明
     var tags: List<String>? = null // 标签
     var version: String? = null // 版本号
@@ -42,9 +50,40 @@ class LibraryFunction {
     @Suppress("PropertyName")
     var is_liked: Boolean? = null // 当前设备是否已点赞
 
-    @Suppress("PropertyName")
-    var user_key: String? = null // 随机生成的密钥
+    var hasPublicVersion: Boolean? = null // 是否已有公开版本（仅私有库返回）
 
-    @Suppress("PropertyName")
-    var backup_file: String? = null // 备份文件名
+    var isPublish: Boolean? = null // 当前是否为公开状态（仅私有库返回）
+}
+
+class AuthorAdapter : TypeAdapter<String?>() {
+    override fun write(out: JsonWriter, value: String?) {
+        out.value(value)
+    }
+
+    override fun read(reader: JsonReader): String? {
+        return when (reader.peek()) {
+            JsonToken.STRING -> reader.nextString()
+            JsonToken.BEGIN_OBJECT -> {
+                var name: String? = null
+                reader.beginObject()
+                while (reader.hasNext()) {
+                    if (reader.nextName() == "name") {
+                        name = reader.nextString()
+                    } else {
+                        reader.skipValue()
+                    }
+                }
+                reader.endObject()
+                name
+            }
+            JsonToken.NULL -> {
+                reader.nextNull()
+                null
+            }
+            else -> {
+                reader.skipValue()
+                null
+            }
+        }
+    }
 }

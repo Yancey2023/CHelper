@@ -49,6 +49,7 @@ class HomeViewModel : ViewModel() {
     val isShowPolicyGrantDialog get() = policyGrantState != PolicyGrantManager.State.AGREE
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
+    var isShowPublicLibrary by mutableStateOf(false)
     private var floatingWindowManager: FloatingWindowManager? = null
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
@@ -57,6 +58,11 @@ class HomeViewModel : ViewModel() {
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
+        this.isShowPublicLibrary = Settings.INSTANCE.isShowPublicLibrary
+    }
+
+    fun refreshSettings() {
+        this.isShowPublicLibrary = Settings.INSTANCE.isShowPublicLibrary
     }
 
     fun init(context: Context, floatingWindowManager: FloatingWindowManager?) {
