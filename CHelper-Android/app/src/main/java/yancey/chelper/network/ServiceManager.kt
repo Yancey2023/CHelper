@@ -34,6 +34,7 @@ import yancey.chelper.network.library.interceptor.AuthInterceptor
 import yancey.chelper.network.library.service.CaptchaService
 import yancey.chelper.network.library.service.CommandLabPublicService
 import yancey.chelper.network.library.service.CommandLabUserService
+import yancey.chelper.network.library.util.WafHelper
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -88,6 +89,6 @@ object ServiceManager {
         CAPTCHA_SERVICE = COMMAND_LAB_RETROFIT!!.create(CaptchaService::class.java)
         
         // 初始化 WAF Helper
-        yancey.chelper.network.library.util.WafHelper.init(context)
+        WafHelper.init(context)
     }
 }

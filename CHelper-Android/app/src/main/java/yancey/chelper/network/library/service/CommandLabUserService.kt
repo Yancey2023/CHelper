@@ -20,6 +20,7 @@ package yancey.chelper.network.library.service
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -166,11 +167,10 @@ interface CommandLabUserService {
     // -------------------------------------------------------------
 
     class UploadLibraryRequest {
-        @Suppress("PropertyName")
-        var special_code: String? = null
         var content: String? = null
+        // 上传固定为私有草稿，发布走 /release 接口
         @Suppress("PropertyName")
-        var is_publish: Boolean? = true
+        var is_publish: Boolean = false
     }
 
     class UploadLibraryResponse {
@@ -199,11 +199,13 @@ interface CommandLabUserService {
     ): BaseResult<LibraryFunction?>
 
     /**
-     * 切换发布状态（公开/私有）
+     * 发布私有库到公开市场（需要人机验证）
+     * /publish 是管理员接口，普通用户走 /release
      */
-    @POST("library/{id}/publish")
-    suspend fun togglePublish(
-        @Path("id") id: Int
+    @POST("library/{id}/release")
+    suspend fun releaseToPublic(
+        @Path("id") id: Int,
+        @Body body: Map<String, String>
     ): BaseResult<Void?>
 
     /**
@@ -216,11 +218,26 @@ interface CommandLabUserService {
     ): BaseResult<Void?>
 
     /**
-     * 编辑私有库内容
+     * 删除私有库
+     * 管理员可删除任意库，普通用户仅可删除自己的私有库
      */
-    @PUT("library/{id}")
-    suspend fun editLibrary(
-        @Path("id") id: Int,
-        @Body request: UploadLibraryRequest
+    @DELETE("library/{id}")
+    suspend fun deleteLibrary(
+        @Path("id") id: Int
     ): BaseResult<Void?>
+
+    // -------------------------------------------------------------
+    // Quota
+    // -------------------------------------------------------------
+
+    class QuotaResponse {
+        var used: Int? = null
+        var limit: Int? = null
+    }
+
+    /**
+     * 查询私有库配额：已用数量和上限
+     */
+    @GET("library/quota")
+    suspend fun getQuota(): BaseResult<QuotaResponse?>
 }

@@ -18,115 +18,50 @@
 
 package yancey.chelper.network.library.service
 
-import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
+import com.google.gson.annotations.SerializedName
 
 @Suppress("unused")
 interface CommandLabPublicService {
     class GetFunctionsResponse {
-        @com.google.gson.annotations.SerializedName("list")
+        @SerializedName("list")
         var functions: MutableList<LibraryFunction?>? = null
 
-        @com.google.gson.annotations.SerializedName("pageNum")
+        @SerializedName("pageNum")
         var currentPage: Int? = null
 
-        @com.google.gson.annotations.SerializedName("pageSize")
+        @SerializedName("pageSize")
         var perPage: Int? = null
 
-        @com.google.gson.annotations.SerializedName("total")
+        @SerializedName("total")
         var totalCount: Int? = null
     }
 
     @GET("library")
     suspend fun getFunctions(
-        @Query("page") page: Int,
-        @Suppress("LocalVariableName")
-        @Query("per_page") per_page: Int,
-        @Query("search") search: String?,
-        @Query("author") author: String?,
-        @Query("tags") tags: String?,
-        @Query("sort") sortType: String?,
-        @Suppress("LocalVariableName")
-        @Query("android_id") android_id: String?
+        @Query("pageNum") pageNum: Int,
+        @Query("pageSize") pageSize: Int,
+        @Query("keyword") keyword: String?,
+        @Query("type") type: Int = 0
     ): BaseResult<GetFunctionsResponse?>
 
     @GET("library/detail/{id}")
     suspend fun getFunction(
-        @Path("id") id: Int,
-        @Suppress("LocalVariableName")
-        @Query("android_id") android_id: String?
+        @Path("id") id: Int
     ): BaseResult<LibraryFunction?>
-
-    @GET("function/key/{user_key}")
-    suspend fun getFunctionByKey(
-        @Suppress("LocalVariableName")
-        @Path("user_key") user_key: String?
-    ): BaseResult<LibraryFunction?>
-
-    class UploadFunctionRequest {
-        var content: String? = null
-    }
-
-    class UploadFunctionResponse {
-        var id: Int? = null
-        var uuid: String? = null
-        var functions: MutableList<LibraryFunction?>? = null
-
-        @Suppress("PropertyName")
-        var backup_file: String? = null
-    }
-
-    @POST("upload")
-    suspend fun uploadFunction(
-        @Body request: UploadFunctionRequest?
-    ): BaseResult<UploadFunctionResponse?>
-
-    class UpdateFunctionRequest {
-        var content: String? = null
-
-        @Suppress("PropertyName")
-        var auth_key: String? = null
-    }
-
-    @PUT("function/{id}")
-    fun updateFunction(
-        @Path("id") id: Int,
-        @Body request: UpdateFunctionRequest?
-    ): BaseResult<UploadFunctionResponse?>
-
-    class DeleteFunctionRequest {
-        @Suppress("PropertyName")
-        var auth_key: String? = null
-    }
-
-    @DELETE("function/{id}")
-    fun deleteFunction(
-        @Path("id") id: Int,
-        @Body request: DeleteFunctionRequest?
-    ): BaseResult<Void?>
-
-    class LikeFunctionRequest {
-        @Suppress("PropertyName")
-        var android_id: String? = null
-    }
 
     class LibraryLikeResponse {
-        var action: String? = null // like或unlike
-
-        @Suppress("PropertyName")
-        var like_count: Int? = null // 当前点赞总数
+        var likeCount: Int? = null
+        var isLiked: Boolean? = null
     }
 
-    @POST("function/{id}/like")
-    fun like(
-        @Path("id") id: Int,
-        @Body request: LikeFunctionRequest?
+    @POST("library/{id}/like")
+    suspend fun like(
+        @Path("id") id: Int
     ): BaseResult<LibraryLikeResponse?>
 }

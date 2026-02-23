@@ -50,11 +50,9 @@ class LibraryFunction {
     @Suppress("PropertyName")
     var is_liked: Boolean? = null // 当前设备是否已点赞
 
-    @Suppress("PropertyName")
-    var user_key: String? = null // 随机生成的密钥
+    var hasPublicVersion: Boolean? = null // 是否已有公开版本（仅私有库返回）
 
-    @Suppress("PropertyName")
-    var backup_file: String? = null // 备份文件名
+    var isPublish: Boolean? = null // 当前是否为公开状态（仅私有库返回）
 }
 
 class AuthorAdapter : TypeAdapter<String?>() {

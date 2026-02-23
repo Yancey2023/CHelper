@@ -36,7 +36,6 @@ import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 
 class PublicLibraryListViewModel : ViewModel() {
-    var keyword by mutableStateOf(TextFieldState())
     var libraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
     
     var isLoading by mutableStateOf(false)
@@ -63,13 +62,9 @@ class PublicLibraryListViewModel : ViewModel() {
             try {
                 val response = withContext(Dispatchers.IO) {
                     ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunctions(
-                        page = currentPage,
-                        per_page = 20,
-                        search = search?.takeIf { it.isNotBlank() },
-                        author = null,
-                        tags = null,
-                        sortType = null,
-                        android_id = null
+                        pageNum = currentPage,
+                        pageSize = 20,
+                        keyword = search?.takeIf { it.isNotBlank() }
                     )
                 }
                 
@@ -97,14 +92,10 @@ class PublicLibraryListViewModel : ViewModel() {
     fun loadMore() {
         if (!hasMore || isLoading) return
         currentPage++
-        loadFunctions(keyword.text.toString(), resetPage = false)
-    }
-    
-    fun search(query: String) {
-        loadFunctions(query, resetPage = true)
+        loadFunctions(null, resetPage = false)
     }
     
     fun refresh() {
-        loadFunctions(keyword.text.toString(), resetPage = true)
+        loadFunctions(null, resetPage = true)
     }
 }

@@ -53,6 +53,7 @@ import yancey.chelper.ui.CPLUploadScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
+import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.*
 
@@ -158,7 +159,6 @@ fun UserProfileView(viewModel: CPLUserViewModel, navController: NavHostControlle
         }
         Spacer(Modifier.height(12.dp))
 
-        // My Cloud List
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -167,9 +167,15 @@ fun UserProfileView(viewModel: CPLUserViewModel, navController: NavHostControlle
                 .clip(RoundedCornerShape(12.dp))
         ) {
             items(viewModel.myLibraries) { lib ->
-                MyLibraryItem(lib) {
-                    navController.navigate(PublicLibraryShowScreenKey(lib.id!!, isPrivate = true))
-                }
+                MyLibraryItem(
+                    lib = lib,
+                    onClick = {
+                        navController.navigate(PublicLibraryShowScreenKey(lib.id!!, isPrivate = true))
+                    },
+                    onDelete = {
+                        viewModel.deleteLibrary(lib.id!!)
+                    }
+                )
                 Divider(0.5.dp)
             }
         }
@@ -235,7 +241,22 @@ fun GuestUserProfileView(viewModel: CPLUserViewModel) {
 }
 
 @Composable
-fun MyLibraryItem(lib: LibraryFunction, onClick: () -> Unit) {
+fun MyLibraryItem(lib: LibraryFunction, onClick: () -> Unit, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        ChoosingDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            data = arrayOf("确认删除" to "confirm", "取消" to "cancel"),
+            onChoose = { action ->
+                showDeleteConfirm = false
+                if (action == "confirm") {
+                    onDelete()
+                }
+            }
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -251,6 +272,14 @@ fun MyLibraryItem(lib: LibraryFunction, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Ver: ${lib.version}", style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 12.sp))
         }
+        Icon(
+            id = R.drawable.x,
+            modifier = Modifier
+                .size(20.dp)
+                .alpha(0.5f)
+                .clickable { showDeleteConfirm = true }
+        )
+        Spacer(Modifier.width(8.dp))
         Icon(id = R.drawable.chevron_right, modifier = Modifier.size(16.dp).alpha(0.5f))
     }
 }
@@ -420,7 +449,4 @@ fun RowScope.TabPill(text: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-// Extension to help with modifier chaining
-// Removed custom alpha, use androidx.compose.ui.draw.alpha instead
-
-
+// 以前这里有一个自定义的 Modifier 扩展，现在已经删掉了，直接用 androidx.compose.ui.draw.alpha 就行

@@ -37,7 +37,7 @@ fun CPLUploadScreen(
 
     if (showCaptchaDialog) {
         CaptchaDialog(
-            action = "发布函数包",
+            action = "publish",
             onDismissRequest = { showCaptchaDialog = false },
             onSuccess = { code -> captchaCallback(code) }
         )
@@ -62,8 +62,6 @@ fun CPLUploadScreen(
             TextField(state = viewModel.name, hint = "名称", modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(10.dp))
             TextField(state = viewModel.version, hint = "版本", modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(10.dp))
-            TextField(state = viewModel.author, hint = "作者", modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(10.dp))
             TextField(state = viewModel.description, hint = "简介", modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(10.dp))

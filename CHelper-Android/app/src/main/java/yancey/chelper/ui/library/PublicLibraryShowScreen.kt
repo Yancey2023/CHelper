@@ -62,7 +62,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Divider
@@ -74,6 +76,7 @@ import yancey.chelper.ui.common.widget.Text
 fun PublicLibraryShowScreen(
     id: Int,
     isPrivate: Boolean = false,
+    navController: androidx.navigation.NavHostController? = null,
     viewModel: PublicLibraryShowViewModel = viewModel()
 ) {
     val clipboard = LocalClipboard.current
@@ -84,6 +87,8 @@ fun PublicLibraryShowScreen(
     var showMainMenu by remember { mutableStateOf(false) }
     var showManageMenu by remember { mutableStateOf(false) }
     var showLineCopyDialog by remember { mutableStateOf(false) }
+    var showCaptchaDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     
     LaunchedEffect(id, isPrivate) {
         viewModel.loadFunction(id, isPrivate)
@@ -102,11 +107,13 @@ fun PublicLibraryShowScreen(
         val menuItems = if (isPrivate) {
             arrayOf(
                 "管理 ▸" to "manage",
-                "逐行复制" to "line_copy"
+                "逐行复制" to "line_copy",
+                "关闭" to "close"
             )
         } else {
             arrayOf(
-                "逐行复制" to "line_copy"
+                "逐行复制" to "line_copy",
+                "关闭" to "close"
             )
         }
         ChoosingDialog(
@@ -123,19 +130,58 @@ fun PublicLibraryShowScreen(
 
     // 管理子菜单对话框
     if (showManageMenu) {
+        val hasPublic = viewModel.library.hasPublicVersion == true
+        val manageItems = buildList {
+            if (hasPublic) {
+                add("查看公开版本" to "view_public")
+                add("同步到公开库" to "sync")
+            } else {
+                add("发布到公开市场" to "release")
+            }
+            add("编辑" to "edit")
+            add("删除私有库" to "delete")
+            add("◂ 返回" to "back")
+        }.toTypedArray()
         ChoosingDialog(
             onDismissRequest = { showManageMenu = false },
-            data = arrayOf(
-                "切换公开/私有" to "toggle_publish",
-                "同步到公开库" to "sync",
-                "编辑" to "edit"
-            ),
+            data = manageItems,
             onChoose = { action ->
                 when (action) {
-                    "toggle_publish" -> viewModel.library.id?.let { viewModel.togglePublish(it) }
+                    "release" -> showCaptchaDialog = true
+                    "view_public" -> navController?.navigate(PublicLibraryShowScreenKey(id = id, isPrivate = false))
                     "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
                     "edit" -> Toast.makeText(context, "编辑功能开发中", Toast.LENGTH_SHORT).show()
+                    "delete" -> showDeleteConfirmDialog = true
+                    "back" -> showMainMenu = true
                 }
+            }
+        )
+    }
+
+    if (showDeleteConfirmDialog) {
+        ChoosingDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            data = arrayOf("确认删除 (不可恢复)" to "confirm", "取消" to "cancel"),
+            onChoose = { action ->
+                if (action == "confirm") {
+                    viewModel.library.id?.let {
+                        viewModel.deleteLibrary(it, onSuccess = {
+                            navController?.popBackStack()
+                        })
+                    }
+                }
+                showDeleteConfirmDialog = false
+            }
+        )
+    }
+
+    // 发布验证码流程
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = "publish",
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { specialCode ->
+                viewModel.library.id?.let { viewModel.releaseToPublic(it, specialCode) }
             }
         )
     }
@@ -146,7 +192,12 @@ fun PublicLibraryShowScreen(
             viewModel.library.content
                 ?.split("\n")
                 ?.map { it.trim() }
-                ?.filter { it.isNotEmpty() && !it.startsWith("#") }
+                ?.filter { 
+                    it.isNotEmpty() && 
+                    !it.startsWith("#") && 
+                    !it.equals("###Function###", ignoreCase = true) &&
+                    !it.equals("###End###", ignoreCase = true)
+                }
                 ?: emptyList()
         }
         if (commands.isEmpty()) {
@@ -208,16 +259,18 @@ fun PublicLibraryShowScreen(
                     }
                 }
                 else -> {
-                    val contents: List<Pair<Boolean, String>> = remember(viewModel.library) {
+                    // 分类行：COMMENT(#开头), COMMAND(普通指令), META(@开头，不显示)
+                    val contents: List<Pair<String, String>> = remember(viewModel.library) {
                         viewModel.library.content
                             ?.split("\n")
                             ?.map { it.trim() }
                             ?.filter { it.isNotEmpty() }
-                            ?.map {
-                                if (it.startsWith("#")) {
-                                    true to it.substring(1).trim()
-                                } else {
-                                    false to it
+                            ?.mapNotNull {
+                                when {
+                                    it.equals("###Function###", ignoreCase = true) || it.equals("###End###", ignoreCase = true) -> null
+                                    it.startsWith("@") -> null // @元数据行不在指令区显示
+                                    it.startsWith("#") -> "comment" to it.substring(1).trim()
+                                    else -> "command" to it
                                 }
                             }
                             ?.filter { it.second.isNotEmpty() }
@@ -225,7 +278,7 @@ fun PublicLibraryShowScreen(
                     }
                     
                     Column(modifier = Modifier.padding(vertical = 10.dp)) {
-                        // 元信息
+                        // 元信息卡片
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -234,28 +287,118 @@ fun PublicLibraryShowScreen(
                                 .background(color = CHelperTheme.colors.backgroundComponent)
                                 .padding(15.dp)
                         ) {
+                            // 作者
                             viewModel.library.author?.let { author ->
-                                Text(
-                                    text = "作者: $author",
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 14.sp
-                                    )
-                                )
-                            }
-                            Row {
-                                viewModel.library.like_count?.let { likes ->
+                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
                                     Text(
-                                        text = "♥ $likes",
+                                        text = "作者  ",
                                         style = TextStyle(
-                                            color = CHelperTheme.colors.mainColor,
-                                            fontSize = 14.sp
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = author,
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textMain,
+                                            fontSize = 13.sp
                                         )
                                     )
                                 }
                             }
+                            // 版本
+                            viewModel.library.version?.takeIf { it.isNotBlank() }?.let { ver ->
+                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                    Text(
+                                        text = "版本  ",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = ver,
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textMain,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                }
+                            }
+                            // 标签
+                            viewModel.library.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+                                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                    Text(
+                                        text = "标签  ",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp
+                                        ),
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                    androidx.compose.foundation.layout.FlowRow {
+                                        tags.forEach { tag ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(end = 6.dp, bottom = 4.dp)
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(CHelperTheme.colors.background)
+                                                    .clickable { navController?.navigate(yancey.chelper.ui.LibrarySearchScreenKey(tag)) }
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = tag,
+                                                    style = TextStyle(
+                                                        color = CHelperTheme.colors.mainColor,
+                                                        fontSize = 12.sp
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // 创建时间
+                            viewModel.library.created_at?.takeIf { it.isNotBlank() }?.let { time ->
+                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                    Text(
+                                        text = "时间  ",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = time,
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textMain,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                }
+                            }
+                            // 点赞
+                            Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                viewModel.library.like_count?.let { likes ->
+                                    Icon(
+                                        id = R.drawable.ic_heart,
+                                        modifier = Modifier.size(14.dp),
+                                        contentDescription = "likes"
+                                    )
+                                    Spacer(Modifier.defaultMinSize(minWidth = 4.dp))
+                                    Text(
+                                        text = "$likes",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.mainColor,
+                                            fontSize = 13.sp
+                                        )
+                                    )
+                                }
+                            }
+                            // 备注
                             viewModel.library.note?.takeIf { it.isNotBlank() }?.let { note ->
-                                Spacer(Modifier.height(5.dp))
+                                Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = note,
                                     style = TextStyle(
@@ -268,7 +411,7 @@ fun PublicLibraryShowScreen(
                         
                         Spacer(Modifier.height(10.dp))
                         
-                        // 内容列表
+                        // 指令内容列表
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -277,6 +420,7 @@ fun PublicLibraryShowScreen(
                                 .background(color = CHelperTheme.colors.backgroundComponent)
                         ) {
                             items(contents) { content ->
+                                val isCommand = content.first == "command"
                                 Row(
                                     modifier = Modifier
                                         .padding(20.dp, 10.dp)
@@ -289,10 +433,12 @@ fun PublicLibraryShowScreen(
                                             .align(Alignment.CenterVertically)
                                             .weight(1f),
                                         style = TextStyle(
-                                            color = if (content.first) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
+                                            // 注释行用主题色，指令行用普通文字色
+                                            color = if (!isCommand) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
                                         )
                                     )
-                                    if (content.first) {
+                                    // 只有指令行显示复制按钮
+                                    if (isCommand) {
                                         val scope = rememberCoroutineScope()
                                         Icon(
                                             id = R.drawable.copy,

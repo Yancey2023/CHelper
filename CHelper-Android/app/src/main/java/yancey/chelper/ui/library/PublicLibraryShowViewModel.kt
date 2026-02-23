@@ -48,10 +48,7 @@ class PublicLibraryShowViewModel : ViewModel() {
                     if (isPrivate) {
                         ServiceManager.COMMAND_LAB_USER_SERVICE?.getPrivateFunction(id)
                     } else {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(
-                            id = id,
-                            android_id = null
-                        )
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(id)
                     }
                 }
                 
@@ -68,14 +65,17 @@ class PublicLibraryShowViewModel : ViewModel() {
         }
     }
 
-    fun togglePublish(id: Int) {
+    fun releaseToPublic(id: Int, specialCode: String = "") {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE?.togglePublish(id)
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.releaseToPublic(
+                        id,
+                        mapOf("special_code" to specialCode)
+                    )
                 }
                 actionMessage = if (result?.isSuccess() == true) {
-                    "发布状态已切换"
+                    "已提交发布申请"
                 } else {
                     result?.message ?: "操作失败"
                 }
@@ -95,6 +95,24 @@ class PublicLibraryShowViewModel : ViewModel() {
                     "已提交同步申请"
                 } else {
                     result?.message ?: "同步失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    fun deleteLibrary(id: Int, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
+                }
+                actionMessage = if (result?.isSuccess() == true) {
+                    onSuccess()
+                    "删除成功"
+                } else {
+                    result?.message ?: "删除失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"

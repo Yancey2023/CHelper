@@ -229,7 +229,10 @@ class CPLUserViewModel : ViewModel() {
                     if (response.body()?.isSuccess() == true) {
                         val data = response.body()!!.data
                         if (data != null && !data.functions.isNullOrEmpty()) {
-                            data.functions!!.filterNotNull().forEach { myLibraries.add(it) }
+                            val existingIds = myLibraries.mapNotNull { it.id }.toSet()
+                            data.functions!!.filterNotNull()
+                                .filter { it.id != null && it.id !in existingIds }
+                                .forEach { myLibraries.add(it) }
                             if (data.currentPage != null && data.totalCount != null && data.perPage != null) {
                                 val totalPages = (data.totalCount!! + data.perPage!! - 1) / data.perPage!!
                                 myLibrariesHasMore = data.currentPage!! < totalPages
@@ -250,5 +253,25 @@ class CPLUserViewModel : ViewModel() {
         LoginUtil.logout()
         GuestAuthUtil.clearGuestSession() // Optional: clear guest session too? maybe revert to guest
         refreshUserState()
+    }
+
+    fun deleteLibrary(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
+                withContext(Dispatchers.Main) {
+                    if (result?.isSuccess() == true) {
+                        myLibraries.removeAll { it.id == id }
+                        Toaster.show("删除成功")
+                    } else {
+                        Toaster.show("删除失败: ${result?.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toaster.show("网络错误: ${e.message}")
+                }
+            }
+        }
     }
 }

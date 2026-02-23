@@ -20,7 +20,6 @@ class CPLUploadViewModel : ViewModel() {
 
     val name = TextFieldState()
     val version = TextFieldState()
-    val author = TextFieldState()
     val description = TextFieldState()
     val tags = TextFieldState()
     val commands = TextFieldState() // The commands content
@@ -35,7 +34,6 @@ class CPLUploadViewModel : ViewModel() {
                 val function = LocalLibraryManager.INSTANCE!!.getFunctions()[id]
                 name.setTextAndPlaceCursorAtEnd(function.name ?: "")
                 version.setTextAndPlaceCursorAtEnd(function.version ?: "")
-                author.setTextAndPlaceCursorAtEnd(function.author ?: "")
                 description.setTextAndPlaceCursorAtEnd(function.note ?: "")
                 tags.setTextAndPlaceCursorAtEnd(function.tags?.joinToString(",") ?: "")
                 commands.setTextAndPlaceCursorAtEnd(function.content ?: "")
@@ -54,10 +52,9 @@ class CPLUploadViewModel : ViewModel() {
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Construct MCD format string
+                // 拼接 MCD 格式，@author 由服务器自动填充用户昵称
                 val mcdBuilder = StringBuilder()
                 mcdBuilder.append("@name=${this@CPLUploadViewModel.name.text}\n")
-                mcdBuilder.append("@author=${this@CPLUploadViewModel.author.text}\n")
                 mcdBuilder.append("@version=${this@CPLUploadViewModel.version.text}\n")
                 
                 val tagList = this@CPLUploadViewModel.tags.text.toString()
@@ -74,19 +71,30 @@ class CPLUploadViewModel : ViewModel() {
                 
                 val finalContent = mcdBuilder.toString()
                 
+                // 上传固定为私有草稿
                 val request = CommandLabUserService.UploadLibraryRequest().apply {
                     this.content = finalContent
-                    this.special_code = specialCode
-                    this.is_publish = isPublic
                 }
                 
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request).execute()
                 
-                withContext(Dispatchers.Main) {
-                    if (response.body()?.isSuccess() == true) {
-                        Toaster.show("上传成功")
-                        onSuccess()
+                if (response.body()?.isSuccess() == true) {
+                    // 原来设计上：如果用户勾了公开且有验证码，紧接着调 release
+                    // 现在：麻烦，暂时不实现
+                    if (isPublic && !specialCode.isNullOrEmpty()) {
+                        // 暂时只提示上传成功，用户可在"我的云端"里手动发布
+                        withContext(Dispatchers.Main) {
+                            Toaster.show("上传成功，请在我的云端库中发布到公开市场")
+                            onSuccess()
+                        }
                     } else {
+                        withContext(Dispatchers.Main) {
+                            Toaster.show("上传成功")
+                            onSuccess()
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
                         Toaster.show("上传失败: ${response.body()?.message}")
                     }
                 }

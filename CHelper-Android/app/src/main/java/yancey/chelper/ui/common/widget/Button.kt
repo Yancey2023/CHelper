@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +43,7 @@ fun Button(
     text: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(6.dp),
+    shape: Shape = RoundedCornerShape(6.dp),
     onClick: () -> Unit
 ) {
     Box(
