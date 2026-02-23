@@ -176,6 +176,7 @@ private fun CaptchaDialogContent(
                     setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                     setBackgroundColor(Color.WHITE)
 
+                    @SuppressLint("JavascriptInterface")
                     addJavascriptInterface(jsInterface, "android")
                     webChromeClient = WebChromeClient()
                     webViewClient = object : WebViewClient() {
