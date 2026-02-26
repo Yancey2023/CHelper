@@ -83,7 +83,7 @@ object EnumerationScreenKey
 object LocalLibraryListScreenKey
 
 @Serializable
-data class LibraryShowScreenKey(
+data class LocalLibraryShowScreenKey(
     val id: Int
 )
 
@@ -182,12 +182,13 @@ fun NavHost(
                 viewModel.viewModelScope.launch {
                     LocalLibraryManager.INSTANCE!!.ensureInit()
                     viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
+                    viewModel.isInit = true
                 }
             }
             LocalLibraryListScreen(navController = navController)
         }
-        composable<LibraryShowScreenKey> { navBackStackEntry ->
-            val localLibraryShow: LibraryShowScreenKey = navBackStackEntry.toRoute()
+        composable<LocalLibraryShowScreenKey> { navBackStackEntry ->
+            val localLibraryShow: LocalLibraryShowScreenKey = navBackStackEntry.toRoute()
             val viewModel: LocalLibraryShowViewModel = viewModel()
             LaunchedEffect(viewModel, localLibraryShow.id) {
                 viewModel.viewModelScope.launch {
@@ -295,8 +296,8 @@ fun FloatingWindowNavHost(
             }
             LocalLibraryListScreen(navController = navController)
         }
-        composable<LibraryShowScreenKey> { navBackStackEntry ->
-            val localLibraryShow: LibraryShowScreenKey = navBackStackEntry.toRoute()
+        composable<LocalLibraryShowScreenKey> { navBackStackEntry ->
+            val localLibraryShow: LocalLibraryShowScreenKey = navBackStackEntry.toRoute()
             val viewModel: LocalLibraryShowViewModel = viewModel()
             LaunchedEffect(viewModel, localLibraryShow.id) {
                 viewModel.viewModelScope.launch {

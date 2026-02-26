@@ -147,7 +147,17 @@ fun PublicLibraryListScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 if (viewModel.errorMessage != null && viewModel.libraries.isEmpty()) {
                     // 错误状态
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(15.dp, 0.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    color = CHelperTheme.colors.backgroundComponent
+                                ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = viewModel.errorMessage ?: "加载失败",
@@ -163,7 +173,17 @@ fun PublicLibraryListScreen(
                     }
                 } else if (viewModel.libraries.isEmpty() && !viewModel.isLoading) {
                     // 空状态
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(15.dp, 0.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    color = CHelperTheme.colors.backgroundComponent
+                                ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             text = "暂无数据",
                             style = TextStyle(color = CHelperTheme.colors.textSecondary)
@@ -235,9 +255,11 @@ private fun PublicLibraryItem(
     onClick: () -> Unit,
     onTagClick: (String) -> Unit = {}
 ) {
-    Row(modifier = Modifier
-        .clickable(onClick = onClick)
-        .padding(20.dp, 10.dp)) {
+    Row(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(20.dp, 10.dp)
+    ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = library.name ?: "未命名",

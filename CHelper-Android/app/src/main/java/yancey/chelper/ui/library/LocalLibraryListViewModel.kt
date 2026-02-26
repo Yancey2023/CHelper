@@ -27,6 +27,7 @@ import androidx.lifecycle.ViewModel
 import yancey.chelper.network.library.data.LibraryFunction
 
 class LocalLibraryListViewModel : ViewModel() {
+    var isInit by mutableStateOf(false)
     var keyword by mutableStateOf(TextFieldState())
     var libraries: SnapshotStateList<LibraryFunction>? = null
     var isShowImportDialog by mutableStateOf(false)

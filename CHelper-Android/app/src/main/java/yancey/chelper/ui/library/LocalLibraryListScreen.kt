@@ -57,7 +57,7 @@ import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LibraryEditScreenKey
-import yancey.chelper.ui.LibraryShowScreenKey
+import yancey.chelper.ui.LocalLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -72,7 +72,7 @@ fun LocalLibraryListScreen(
     navController: NavHostController = rememberNavController(),
 ) {
     val clipboard = LocalClipboard.current
-    val filteredLibraries = remember(viewModel.keyword.text, viewModel.libraries) {
+    val filteredLibraries = remember(viewModel.isInit, viewModel.keyword.text, viewModel.libraries) {
         if (viewModel.keyword.text.isEmpty()) {
             viewModel.libraries ?: listOf()
         } else {
@@ -140,7 +140,7 @@ fun LocalLibraryListScreen(
                     Row(
                         modifier = Modifier
                             .clickable(onClick = {
-                                navController.navigate(LibraryShowScreenKey(id = index))
+                                navController.navigate(LocalLibraryShowScreenKey(id = index))
                             })
                             .padding(20.dp, 10.dp)
                     ) {
@@ -191,13 +191,12 @@ fun LocalLibraryListScreen(
                         if (itemCount > 0) {
                             val text = getItemAt(0).text.toString()
                             try {
-                                viewModel.libraries?.addAll(
-                                    ServiceManager.GSON!!.fromJson(
+                                val libraries =
+                                    ServiceManager.GSON!!.fromJson<List<LibraryFunction>>(
                                         text,
-                                        object : TypeToken<MutableList<LibraryFunction>>() {
-                                        }.type
+                                        object : TypeToken<List<LibraryFunction>>() {}.type
                                     )
-                                )
+                                viewModel.libraries?.addAll(libraries)
                                 LocalLibraryManager.INSTANCE!!.save()
                                 Toaster.show("导入成功")
                             } catch (_: Throwable) {

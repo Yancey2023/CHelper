@@ -56,7 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.ui.LibraryShowScreenKey
+import yancey.chelper.ui.LocalLibraryShowScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -192,7 +192,7 @@ fun LibrarySearchScreen(
                                                     // 根据标识判断是本地包还是私有库
                                                     if (lib.author == "[本地包]") {
                                                         navController.navigate(
-                                                            LibraryShowScreenKey(
+                                                            LocalLibraryShowScreenKey(
                                                                 id = id
                                                             )
                                                         )
