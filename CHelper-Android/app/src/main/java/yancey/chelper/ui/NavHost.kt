@@ -42,6 +42,8 @@ import yancey.chelper.ui.completion.CompletionScreen
 import yancey.chelper.ui.completion.HistoryScreen
 import yancey.chelper.ui.enumeration.EnumerationScreen
 import yancey.chelper.ui.home.HomeScreen
+import yancey.chelper.ui.library.CPLUploadScreen
+import yancey.chelper.ui.library.CPLUserScreen
 import yancey.chelper.ui.library.LocalLibraryEditScreen
 import yancey.chelper.ui.library.LocalLibraryListScreen
 import yancey.chelper.ui.library.LocalLibraryListViewModel
@@ -49,9 +51,6 @@ import yancey.chelper.ui.library.LocalLibraryShowScreen
 import yancey.chelper.ui.library.LocalLibraryShowViewModel
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
-import yancey.chelper.ui.library.PublicLibraryShowViewModel
-import yancey.chelper.ui.library.CPLUserScreen
-import yancey.chelper.ui.library.CPLUploadScreen
 import yancey.chelper.ui.library.search.LibrarySearchScreen
 import yancey.chelper.ui.old2new.Old2NewIMEGuideScreen
 import yancey.chelper.ui.old2new.Old2NewScreen
@@ -118,7 +117,6 @@ data class ShowTextScreenKey(
 data class LibrarySearchScreenKey(
     val initialKeyword: String? = null
 )
-
 
 
 @Serializable
@@ -222,7 +220,11 @@ fun NavHost(
         }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
-            PublicLibraryShowScreen(id = publicLibraryShow.id, isPrivate = publicLibraryShow.isPrivate, navController = navController)
+            PublicLibraryShowScreen(
+                id = publicLibraryShow.id,
+                isPrivate = publicLibraryShow.isPrivate,
+                navController = navController
+            )
         }
         composable<LibrarySearchScreenKey> { navBackStackEntry ->
             val args: LibrarySearchScreenKey = navBackStackEntry.toRoute()

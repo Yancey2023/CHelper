@@ -40,29 +40,29 @@ import java.security.spec.PKCS8EncodedKeySpec
  * 之后可随时调用 ensureLoggedIn() 确保已登录
  */
 object GuestAuthUtil {
-    
+
     private const val SIGNATURE_ALGORITHM = "SHA256withECDSA"
     private const val KEY_ALGORITHM = "EC"
-    
+
     /**
      * 内置的 ECDSA 私钥（Base64 编码的 PKCS#8 格式）
      */
-    private const val PRIVATE_KEY_BASE64 = 
+    private const val PRIVATE_KEY_BASE64 =
         "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgqvJx/ysv0wqyM0ft" +
-        "S8/x9cs5s00wSxyCKcqmvPTl2Z6hRANCAAQEZUdqvygLrPJwTS4ITkDYz4wnFCm6" +
-        "jZLrxfZO2/2jjV/N8qBTBd1iyejpd0rBLxPqNBNIGzVPPGy6nDyRe3f7"
-    
+                "S8/x9cs5s00wSxyCKcqmvPTl2Z6hRANCAAQEZUdqvygLrPJwTS4ITkDYz4wnFCm6" +
+                "jZLrxfZO2/2jjV/N8qBTBd1iyejpd0rBLxPqNBNIGzVPPGy6nDyRe3f7"
+
     private var privateKey: PrivateKey? = null
     private var cachedFingerprint: String? = null
-    
+
     /** 当前访客用户信息 */
     var guestUser: CommandLabUserService.User? = null
         private set
-    
+
     /** 当前访客令牌 */
     var guestToken: String? = null
         private set
-    
+
     /**
      * 初始化
      * 
@@ -75,21 +75,21 @@ object GuestAuthUtil {
             context.contentResolver,
             Settings.Secure.ANDROID_ID
         ) ?: "unknown"
-        
+
         val digest = MessageDigest.getInstance("SHA-256")
         val hashBytes = digest.digest(androidId.toByteArray(Charsets.UTF_8))
         cachedFingerprint = hashBytes.joinToString("") { "%02x".format(it) }
-        
+
         // 初始化私钥
         initPrivateKey()
     }
-    
+
     /**
      * 初始化私钥
      */
     private fun initPrivateKey() {
         if (privateKey != null) return
-        
+
         try {
             val keyBytes = Base64.decode(PRIVATE_KEY_BASE64, Base64.DEFAULT)
             val keySpec = PKCS8EncodedKeySpec(keyBytes)
@@ -99,12 +99,12 @@ object GuestAuthUtil {
             e.printStackTrace()
         }
     }
-    
+
     /**
      * 获取设备指纹
      */
     fun getFingerprint(): String? = cachedFingerprint
-    
+
     /**
      * 生成 auth_code
      * 
@@ -114,26 +114,26 @@ object GuestAuthUtil {
         return try {
             initPrivateKey()
             val key = privateKey ?: return null
-            
+
             val signature = Signature.getInstance(SIGNATURE_ALGORITHM)
             signature.initSign(key)
             signature.update(fingerprint.toByteArray(Charsets.UTF_8))
             val signatureBytes = signature.sign()
-            
+
             Base64.encodeToString(signatureBytes, Base64.NO_WRAP)
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
-    
+
     /**
      * 检查是否已登录（包括正式用户和访客）
      */
     fun isLoggedIn(): Boolean {
         return LoginUtil.isLoggedIn || (guestToken != null && guestUser != null)
     }
-    
+
     /**
      * 确保已登录
      * 
@@ -145,47 +145,48 @@ object GuestAuthUtil {
     fun ensureLoggedIn(): Boolean {
         // 已经登录了
         if (isLoggedIn()) return true
-        
+
         // 尝试正式用户自动登录
         try {
             if (LoginUtil.token != null) return true
-        } catch (_: Exception) {}
-        
+        } catch (_: Exception) {
+        }
+
         // 尝试访客登录或注册
         return tryGuestAuth()
     }
-    
+
     /**
      * 尝试访客认证（先登录，失败则注册）
      */
     private fun tryGuestAuth(): Boolean {
         val fingerprint = cachedFingerprint ?: return false
-        
+
         // 先尝试登录
         if (guestLogin(fingerprint)) {
             return true
         }
-        
+
         // 登录失败，尝试注册
         return guestRegister(fingerprint)
     }
-    
+
     /**
      * 访客登录
      */
     private fun guestLogin(fingerprint: String): Boolean {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
-            
+
             val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
                 this.auth_code = authCode
             }
-            
+
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE
                 ?.guestLogin(request)
                 ?.execute()
-            
+
             if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
                 val data = response.body()!!.data!!
                 guestToken = data.token
@@ -199,23 +200,23 @@ object GuestAuthUtil {
             false
         }
     }
-    
+
     /**
      * 访客注册
      */
     private fun guestRegister(fingerprint: String): Boolean {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
-            
+
             val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
                 this.auth_code = authCode
             }
-            
+
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE
                 ?.guestRegister(request)
                 ?.execute()
-            
+
             if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
                 val data = response.body()!!.data!!
                 guestToken = data.token
@@ -229,7 +230,7 @@ object GuestAuthUtil {
             false
         }
     }
-    
+
     /**
      * 清除访客登录状态
      */

@@ -33,22 +33,22 @@ import java.util.function.Consumer
  */
 object LoginUtil {
     private var file: File? = null
-    
+
     /** 当前登录用户信息 */
     var currentUser: CommandLabUserService.User? = null
         private set
-    
+
     /** 当前登录令牌 */
     var currentToken: String? = null
         private set
-    
+
     /** 上次登录时间戳 */
     private var lastLoginTimestamp: Long? = null
-    
+
     /** 保存的登录凭据 */
     private var savedMail: String? = null
     private var savedPassword: String? = null
-    
+
     /**
      * 本地持久化的用户数据
      */
@@ -59,7 +59,7 @@ object LoginUtil {
         var lastLoginTimestamp: Long? = null
         var user: CommandLabUserService.User? = null
     }
-    
+
     /**
      * 初始化登录工具，从本地文件恢复登录状态
      */
@@ -68,7 +68,7 @@ object LoginUtil {
         if (file.exists()) {
             try {
                 val savedData = ServiceManager.GSON!!.fromJson(
-                    FileUtil.readString(file), 
+                    FileUtil.readString(file),
                     SavedUserData::class.java
                 )
                 savedMail = savedData.mail
@@ -81,13 +81,13 @@ object LoginUtil {
             }
         }
     }
-    
+
     /**
      * 检查是否已登录
      */
     val isLoggedIn: Boolean
         get() = currentToken != null && currentUser != null
-    
+
     /**
      * 获取 JWT 令牌
      * 
@@ -99,20 +99,21 @@ object LoginUtil {
             if (savedMail == null || savedPassword == null) {
                 return null
             }
-            
+
             // 令牌在 60 秒内有效，直接返回
-            if (currentToken != null && lastLoginTimestamp != null 
-                && System.currentTimeMillis() - lastLoginTimestamp!! < 60000) {
+            if (currentToken != null && lastLoginTimestamp != null
+                && System.currentTimeMillis() - lastLoginTimestamp!! < 60000
+            ) {
                 return currentToken
             }
-            
+
             // 重新登录获取新令牌
             val request = LoginRequest().apply {
                 account = savedMail
                 password = savedPassword
             }
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)?.execute()
-            
+
             if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
                 val data = response.body()!!.data!!
                 currentToken = data.token
@@ -121,10 +122,10 @@ object LoginUtil {
                 saveToFile()
                 return currentToken
             }
-            
+
             return null
         }
-    
+
     /**
      * 执行登录
      */
@@ -133,10 +134,10 @@ object LoginUtil {
             this.account = mail
             this.password = password
         }
-        
+
         return try {
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)?.execute()
-            
+
             if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
                 val data = response.body()!!.data!!
                 savedMail = mail
@@ -153,7 +154,7 @@ object LoginUtil {
             Result.failure(e)
         }
     }
-    
+
     /**
      * 登出
      */
@@ -165,7 +166,7 @@ object LoginUtil {
         lastLoginTimestamp = null
         file?.delete()
     }
-    
+
     /**
      * 保存登录状态到本地文件
      */

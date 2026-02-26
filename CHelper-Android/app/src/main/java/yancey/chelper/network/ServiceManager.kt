@@ -27,8 +27,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import yancey.chelper.BuildConfig
-import yancey.chelper.android.common.util.Settings
 import yancey.chelper.android.common.util.MonitorUtil
+import yancey.chelper.android.common.util.Settings
 import yancey.chelper.network.chelper.service.CHelperService
 import yancey.chelper.network.library.interceptor.AuthInterceptor
 import yancey.chelper.network.library.service.CaptchaService
@@ -49,7 +49,7 @@ object ServiceManager {
     @JvmField
     var COMMAND_LAB_PUBLIC_SERVICE: CommandLabPublicService? = null
     var COMMAND_LAB_USER_SERVICE: CommandLabUserService? = null
-    
+
     @JvmField
     var CAPTCHA_SERVICE: CaptchaService? = null
 
@@ -87,7 +87,7 @@ object ServiceManager {
             COMMAND_LAB_RETROFIT!!.create(CommandLabPublicService::class.java)
         COMMAND_LAB_USER_SERVICE = COMMAND_LAB_RETROFIT!!.create(CommandLabUserService::class.java)
         CAPTCHA_SERVICE = COMMAND_LAB_RETROFIT!!.create(CaptchaService::class.java)
-        
+
         // 初始化 WAF Helper
         WafHelper.init(context)
     }

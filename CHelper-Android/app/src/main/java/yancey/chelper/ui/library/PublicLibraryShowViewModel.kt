@@ -36,13 +36,13 @@ class PublicLibraryShowViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
     var actionMessage by mutableStateOf<String?>(null)
     var isPrivate by mutableStateOf(false)
-    
+
     fun loadFunction(id: Int, isPrivate: Boolean) {
         this.isPrivate = isPrivate
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
-            
+
             try {
                 val response: BaseResult<LibraryFunction?>? = withContext(Dispatchers.IO) {
                     if (isPrivate) {
@@ -51,7 +51,7 @@ class PublicLibraryShowViewModel : ViewModel() {
                         ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(id)
                     }
                 }
-                
+
                 if (response?.isSuccess() == true && response.data != null) {
                     library = response.data!!
                 } else {

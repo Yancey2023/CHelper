@@ -94,7 +94,8 @@ class CPLUserViewModel : ViewModel() {
         }
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
-            val result = LoginUtil.login(loginAccount.text.toString(), loginPassword.text.toString())
+            val result =
+                LoginUtil.login(loginAccount.text.toString(), loginPassword.text.toString())
             withContext(Dispatchers.Main) {
                 isLoading = false
                 if (result.isSuccess) {
@@ -132,7 +133,7 @@ class CPLUserViewModel : ViewModel() {
         }
         isLoading = true
         // Cache special_code for registration (Removed as we now double-verify)
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val request = CommandLabUserService.SendCodeRequest().apply {
@@ -170,7 +171,7 @@ class CPLUserViewModel : ViewModel() {
             Toaster.show("请补全注册信息")
             return
         }
-        
+
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -224,7 +225,7 @@ class CPLUserViewModel : ViewModel() {
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.getMyLibraries(
                     pageNum = myLibrariesPage
                 ).execute()
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.body()?.isSuccess() == true) {
                         val data = response.body()!!.data
@@ -234,7 +235,8 @@ class CPLUserViewModel : ViewModel() {
                                 .filter { it.id != null && it.id !in existingIds }
                                 .forEach { myLibraries.add(it) }
                             if (data.currentPage != null && data.totalCount != null && data.perPage != null) {
-                                val totalPages = (data.totalCount!! + data.perPage!! - 1) / data.perPage!!
+                                val totalPages =
+                                    (data.totalCount!! + data.perPage!! - 1) / data.perPage!!
                                 myLibrariesHasMore = data.currentPage!! < totalPages
                                 if (myLibrariesHasMore) myLibrariesPage++
                             }

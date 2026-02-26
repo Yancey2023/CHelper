@@ -23,7 +23,6 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
@@ -36,15 +35,15 @@ import yancey.chelper.network.library.data.LibraryFunction
  */
 @Suppress("unused")
 interface CommandLabUserService {
-    
 
-    
+
     // -------------------------------------------------------------
     // Guest System
     // -------------------------------------------------------------
 
     class GuestAuthRequest {
         var fingerprint: String? = null
+
         @Suppress("PropertyName")
         var auth_code: String? = null
     }
@@ -63,7 +62,7 @@ interface CommandLabUserService {
     // -------------------------------------------------------------
 
     // 注册相关
-    
+
     /**
      * 发送邮箱验证码请求体
      */
@@ -74,14 +73,14 @@ interface CommandLabUserService {
         var email: String? = null
         var phone: String? = null
         var lang: String? = "zh-CN"
-        
+
         companion object {
             const val TYPE_REGISTER = 0
             const val TYPE_UPDATE_PASSWORD = 1
             const val TYPE_RESET_PASSWORD = 2
         }
     }
-    
+
     /**
      * 发送邮箱验证码
      * 
@@ -89,7 +88,7 @@ interface CommandLabUserService {
      */
     @POST("register/sendCode")
     fun sendCode(@Body request: SendCodeRequest): Call<BaseResult<Void?>>
-    
+
     /**
      * 注册请求体
      */
@@ -104,28 +103,30 @@ interface CommandLabUserService {
         var phone: String? = null
         var nickname: String? = null
         var password: String? = null
+
         @Suppress("PropertyName")
         var android_id: String? = null
     }
-    
+
     /**
      * 提交注册
      */
     @POST("register")
     fun register(@Body request: RegisterRequest): Call<BaseResult<Void?>>
-    
+
     // 登录相关
-    
+
     /**
      * 登录请求体
      */
     class LoginRequest {
         @JvmField
         var account: String? = null
+
         @JvmField
         var password: String? = null
     }
-    
+
     /**
      * 用户信息
      */
@@ -136,14 +137,17 @@ interface CommandLabUserService {
 
         @Suppress("PropertyName")
         var is_guest: Boolean? = null
+
         @Suppress("PropertyName")
         var is_admin: Boolean? = null
+
         @Suppress("PropertyName")
         var is_moderator: Boolean? = null
+
         @Suppress("PropertyName")
         var gravatar_url: String? = null
     }
-    
+
     /**
      * 登录响应
      */
@@ -153,14 +157,13 @@ interface CommandLabUserService {
         var token: String? = null
         var user: User? = null
     }
-    
+
     /**
      * 正式用户登录
      */
     @POST("register/login")
     fun login(@Body request: LoginRequest): Call<BaseResult<LoginResponse?>>
 
-    
 
     // -------------------------------------------------------------
     // Library Management
@@ -168,6 +171,7 @@ interface CommandLabUserService {
 
     class UploadLibraryRequest {
         var content: String? = null
+
         // 上传固定为私有草稿，发布走 /release 接口
         @Suppress("PropertyName")
         var is_publish: Boolean = false

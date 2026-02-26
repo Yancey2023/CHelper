@@ -21,7 +21,16 @@ package yancey.chelper.ui.library.search
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -135,11 +144,17 @@ fun LibrarySearchScreen(
             Box(modifier = Modifier.weight(1f)) {
                 if (viewModel.isLoading && viewModel.localAndPrivateLibraries.isEmpty() && viewModel.publicLibraries.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("搜索中...", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                        Text(
+                            "搜索中...",
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                        )
                     }
                 } else if (!viewModel.isLoading && viewModel.localAndPrivateLibraries.isEmpty() && viewModel.publicLibraries.isEmpty() && viewModel.keyword.text.isNotBlank()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("未找到相关匹配项", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                        Text(
+                            "未找到相关匹配项",
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                        )
                     }
                 } else {
                     LazyColumn(
@@ -176,9 +191,18 @@ fun LibrarySearchScreen(
                                                 lib.id?.let { id ->
                                                     // 根据标识判断是本地包还是私有库
                                                     if (lib.author == "[本地包]") {
-                                                        navController.navigate(LibraryShowScreenKey(id = id))
+                                                        navController.navigate(
+                                                            LibraryShowScreenKey(
+                                                                id = id
+                                                            )
+                                                        )
                                                     } else {
-                                                        navController.navigate(PublicLibraryShowScreenKey(id = id, isPrivate = true))
+                                                        navController.navigate(
+                                                            PublicLibraryShowScreenKey(
+                                                                id = id,
+                                                                isPrivate = true
+                                                            )
+                                                        )
                                                     }
                                                 }
                                             }
@@ -211,10 +235,10 @@ fun LibrarySearchScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
                                         .background(CHelperTheme.colors.backgroundComponent)
-                                        // 为了美观预留一点内边距效果，目前用 Divider 分割
+                                    // 为了美观预留一点内边距效果，目前用 Divider 分割
                                 )
                             }
-                            
+
                             itemsIndexed(viewModel.publicLibraries) { _, library ->
                                 Box(modifier = Modifier.background(CHelperTheme.colors.backgroundComponent)) {
                                     Column {
@@ -223,7 +247,12 @@ fun LibrarySearchScreen(
                                             isPrivateOrLocal = false,
                                             onClick = {
                                                 library.id?.let { id ->
-                                                    navController.navigate(PublicLibraryShowScreenKey(id = id, isPrivate = false))
+                                                    navController.navigate(
+                                                        PublicLibraryShowScreenKey(
+                                                            id = id,
+                                                            isPrivate = false
+                                                        )
+                                                    )
                                                 }
                                             }
                                         )
@@ -231,7 +260,7 @@ fun LibrarySearchScreen(
                                     }
                                 }
                             }
-                            
+
                             // 闭合背景
                             item {
                                 Box(
@@ -251,7 +280,10 @@ fun LibrarySearchScreen(
                                         .padding(16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("加载更多...", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                                    Text(
+                                        "加载更多...",
+                                        style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                                    )
                                 }
                             }
                         }
@@ -307,10 +339,16 @@ private fun SearchLibraryItem(
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (!isPrivateOrLocal && !library.author.isNullOrBlank()) {
-                    Text(text = "作者: ${library.author}", style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 12.sp))
+                    Text(
+                        text = "作者: ${library.author}",
+                        style = TextStyle(
+                            color = CHelperTheme.colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    )
                     Spacer(Modifier.width(10.dp))
                 }
-                
+
                 library.like_count?.let { likes ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
@@ -320,7 +358,13 @@ private fun SearchLibraryItem(
                             colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
                         )
                         Spacer(Modifier.width(2.dp))
-                        Text(text = "$likes", style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 12.sp))
+                        Text(
+                            text = "$likes",
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
                     }
                 }
             }

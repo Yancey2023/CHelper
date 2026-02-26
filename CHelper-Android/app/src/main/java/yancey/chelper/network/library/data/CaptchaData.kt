@@ -30,7 +30,7 @@ class CaptchaTokenRequest {
     @Suppress("PropertyName")
     var special_code: String? = null
     var action: String? = null
-    
+
     companion object {
         // 预定义的 action 值
         const val ACTION_REGISTER = "注册账号"
@@ -47,6 +47,7 @@ class CaptchaTokenResponse {
     @Suppress("PropertyName")
     var verification_token: String? = null
     var action: String? = null
+
     @Suppress("PropertyName")
     var special_code: String? = null
 }
@@ -60,7 +61,7 @@ class CaptchaStatusResponse {
     var special_code: String? = null
     var status: String? = null
     var action: String? = null
-    
+
     companion object {
         const val STATUS_PENDING = "pending"
         const val STATUS_CHALLENGING = "challenging"

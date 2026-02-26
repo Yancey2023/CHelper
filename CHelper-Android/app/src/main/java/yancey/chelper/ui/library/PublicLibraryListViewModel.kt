@@ -18,8 +18,6 @@
 
 package yancey.chelper.ui.library
 
-import android.provider.Settings
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -37,28 +35,28 @@ import yancey.chelper.network.library.data.LibraryFunction
 
 class PublicLibraryListViewModel : ViewModel() {
     var libraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
-    
+
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
     var currentPage by mutableIntStateOf(1)
     var totalPages by mutableIntStateOf(1)
     var hasMore by mutableStateOf(true)
-    
+
     private var searchJob: Job? = null
-    
+
     fun loadFunctions(search: String? = null, resetPage: Boolean = true) {
         if (isLoading) return
-        
+
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             isLoading = true
             errorMessage = null
-            
+
             if (resetPage) {
                 currentPage = 1
                 libraries.clear()
             }
-            
+
             try {
                 val response = withContext(Dispatchers.IO) {
                     ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunctions(
@@ -67,7 +65,7 @@ class PublicLibraryListViewModel : ViewModel() {
                         keyword = search?.takeIf { it.isNotBlank() }
                     )
                 }
-                
+
                 if (response?.isSuccess() == true && response.data != null) {
                     val data = response.data!!
                     val functions = data.functions?.filterNotNull() ?: emptyList()
@@ -88,13 +86,13 @@ class PublicLibraryListViewModel : ViewModel() {
             }
         }
     }
-    
+
     fun loadMore() {
         if (!hasMore || isLoading) return
         currentPage++
         loadFunctions(null, resetPage = false)
     }
-    
+
     fun refresh() {
         loadFunctions(null, resetPage = true)
     }

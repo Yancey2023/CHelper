@@ -32,12 +32,21 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.CaptchaStatusResponse
 import yancey.chelper.network.library.data.CaptchaTokenRequest
@@ -92,7 +101,8 @@ private fun CaptchaDialogContent(
     // 用 Handler 而不是 rememberCoroutineScope，因为 Handler 不受 Composition 生命周期约束
     val handler = remember { Handler(Looper.getMainLooper()) }
 
-    val jsInterface = remember { CaptchaJsInterface(handler, ::handleSuccess, ::handleFailure, onDismissRequest) }
+    val jsInterface =
+        remember { CaptchaJsInterface(handler, ::handleSuccess, ::handleFailure, onDismissRequest) }
 
     // 当 captchaUrl 和 webView 都就绪时加载页面
     LaunchedEffect(captchaUrl, webView) {
@@ -137,7 +147,8 @@ private fun CaptchaDialogContent(
                                     break
                                 }
                             }
-                        } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                        }
                     }
                 }
             } else {
@@ -182,7 +193,8 @@ private fun CaptchaDialogContent(
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            view?.evaluateJavascript("""
+                            view?.evaluateJavascript(
+                                """
                                 window.handleCaptcha = function(data) {
                                     if (!data) return;
                                     if (data.status === 'verified' && data.special_code) {
@@ -201,10 +213,15 @@ private fun CaptchaDialogContent(
                                         window.handleCaptcha(event.data);
                                     }
                                 });
-                            """.trimIndent(), null)
+                            """.trimIndent(), null
+                            )
                         }
-                        
-                        override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+
+                        override fun onReceivedSslError(
+                            view: WebView?,
+                            handler: android.webkit.SslErrorHandler?,
+                            error: android.net.http.SslError?
+                        ) {
                             handler?.proceed()
                         }
                     }

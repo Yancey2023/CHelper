@@ -218,12 +218,12 @@ public class Settings {
             isDirty = true;
         }
         if (INSTANCE.cpackPath == null ||
-                !(INSTANCE.cpackPath.equals("release-vanilla") ||
-                        INSTANCE.cpackPath.equals("release-experiment") ||
-                        INSTANCE.cpackPath.equals("beta-vanilla") ||
-                        INSTANCE.cpackPath.equals("beta-experiment") ||
-                        INSTANCE.cpackPath.equals("netease-vanilla") ||
-                        INSTANCE.cpackPath.equals("netease-experiment"))) {
+            !(INSTANCE.cpackPath.equals("release-vanilla") ||
+              INSTANCE.cpackPath.equals("release-experiment") ||
+              INSTANCE.cpackPath.equals("beta-vanilla") ||
+              INSTANCE.cpackPath.equals("beta-experiment") ||
+              INSTANCE.cpackPath.equals("netease-vanilla") ||
+              INSTANCE.cpackPath.equals("netease-experiment"))) {
             INSTANCE.cpackPath = DEFAULT_CPACK;
             isDirty = true;
         }

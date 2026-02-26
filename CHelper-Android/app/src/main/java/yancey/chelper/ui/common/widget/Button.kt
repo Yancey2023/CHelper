@@ -53,7 +53,9 @@ fun Button(
             .height(45.dp)
             .clip(shape)
             .background(
-                if (enabled) CHelperTheme.colors.mainColor else CHelperTheme.colors.mainColor.copy(alpha = 0.5f)
+                if (enabled) CHelperTheme.colors.mainColor else CHelperTheme.colors.mainColor.copy(
+                    alpha = 0.5f
+                )
             )
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center

@@ -26,7 +26,7 @@ class BaseResult<T> {
     @Suppress("PropertyName")
     var error_type: String? = null
     var message: String? = null
-    
+
     /**
      * 判断请求是否成功
      * 兼容 status 为 "success" 或 "0" 的情况

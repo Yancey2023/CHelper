@@ -89,7 +89,7 @@ fun PublicLibraryShowScreen(
     var showLineCopyDialog by remember { mutableStateOf(false) }
     var showCaptchaDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(id, isPrivate) {
         viewModel.loadFunction(id, isPrivate)
     }
@@ -148,7 +148,13 @@ fun PublicLibraryShowScreen(
             onChoose = { action ->
                 when (action) {
                     "release" -> showCaptchaDialog = true
-                    "view_public" -> navController?.navigate(PublicLibraryShowScreenKey(id = id, isPrivate = false))
+                    "view_public" -> navController?.navigate(
+                        PublicLibraryShowScreenKey(
+                            id = id,
+                            isPrivate = false
+                        )
+                    )
+
                     "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
                     "edit" -> Toast.makeText(context, "编辑功能开发中", Toast.LENGTH_SHORT).show()
                     "delete" -> showDeleteConfirmDialog = true
@@ -192,11 +198,11 @@ fun PublicLibraryShowScreen(
             viewModel.library.content
                 ?.split("\n")
                 ?.map { it.trim() }
-                ?.filter { 
-                    it.isNotEmpty() && 
-                    !it.startsWith("#") && 
-                    !it.equals("###Function###", ignoreCase = true) &&
-                    !it.equals("###End###", ignoreCase = true)
+                ?.filter {
+                    it.isNotEmpty() &&
+                            !it.startsWith("#") &&
+                            !it.equals("###Function###", ignoreCase = true) &&
+                            !it.equals("###End###", ignoreCase = true)
                 }
                 ?: emptyList()
         }
@@ -212,7 +218,7 @@ fun PublicLibraryShowScreen(
             )
         }
     }
-    
+
     RootViewWithHeaderAndCopyright(
         title = viewModel.library.name ?: "加载中",
         headerRight = {
@@ -239,6 +245,7 @@ fun PublicLibraryShowScreen(
                         )
                     }
                 }
+
                 viewModel.errorMessage != null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -252,12 +259,18 @@ fun PublicLibraryShowScreen(
                             Spacer(Modifier.height(10.dp))
                             Text(
                                 text = "点击重试",
-                                modifier = Modifier.clickable { viewModel.loadFunction(id, isPrivate) },
+                                modifier = Modifier.clickable {
+                                    viewModel.loadFunction(
+                                        id,
+                                        isPrivate
+                                    )
+                                },
                                 style = TextStyle(color = CHelperTheme.colors.mainColor)
                             )
                         }
                     }
                 }
+
                 else -> {
                     // 分类行：COMMENT(#开头), COMMAND(普通指令), META(@开头，不显示)
                     val contents: List<Pair<String, String>> = remember(viewModel.library) {
@@ -267,7 +280,11 @@ fun PublicLibraryShowScreen(
                             ?.filter { it.isNotEmpty() }
                             ?.mapNotNull {
                                 when {
-                                    it.equals("###Function###", ignoreCase = true) || it.equals("###End###", ignoreCase = true) -> null
+                                    it.equals(
+                                        "###Function###",
+                                        ignoreCase = true
+                                    ) || it.equals("###End###", ignoreCase = true) -> null
+
                                     it.startsWith("@") -> null // @元数据行不在指令区显示
                                     it.startsWith("#") -> "comment" to it.substring(1).trim()
                                     else -> "command" to it
@@ -276,7 +293,7 @@ fun PublicLibraryShowScreen(
                             ?.filter { it.second.isNotEmpty() }
                             ?: listOf()
                     }
-                    
+
                     Column(modifier = Modifier.padding(vertical = 10.dp)) {
                         // 元信息卡片
                         Column(
@@ -344,7 +361,13 @@ fun PublicLibraryShowScreen(
                                                     .padding(end = 6.dp, bottom = 4.dp)
                                                     .clip(RoundedCornerShape(4.dp))
                                                     .background(CHelperTheme.colors.background)
-                                                    .clickable { navController?.navigate(yancey.chelper.ui.LibrarySearchScreenKey(tag)) }
+                                                    .clickable {
+                                                        navController?.navigate(
+                                                            yancey.chelper.ui.LibrarySearchScreenKey(
+                                                                tag
+                                                            )
+                                                        )
+                                                    }
                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                                             ) {
                                                 Text(
@@ -408,9 +431,9 @@ fun PublicLibraryShowScreen(
                                 )
                             }
                         }
-                        
+
                         Spacer(Modifier.height(10.dp))
-                        
+
                         // 指令内容列表
                         LazyColumn(
                             modifier = Modifier
@@ -485,7 +508,7 @@ private fun LineCopyDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var currentIndex by remember { mutableIntStateOf(0) }
-    
+
     // 自动复制当前命令
     LaunchedEffect(currentIndex) {
         if (currentIndex < commands.size) {
@@ -499,7 +522,7 @@ private fun LineCopyDialog(
             ).show()
         }
     }
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier

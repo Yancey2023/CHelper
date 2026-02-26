@@ -35,7 +35,7 @@ class AuthInterceptor private constructor() : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        
+
         if (request.url.host == "abyssous.site") {
             val builder = request.newBuilder()
 
@@ -49,18 +49,18 @@ class AuthInterceptor private constructor() : Interceptor {
             if (!isAuthEndpoint(request.url.encodedPath)) {
                 // 获取 token（正式用户优先，否则访客）
                 val token = getToken()
-                
+
                 if (!token.isNullOrEmpty()) {
                     builder.addHeader("Authorization", "Bearer $token")
                 }
             }
-            
+
             return chain.proceed(builder.build())
         }
-        
+
         return chain.proceed(request)
     }
-    
+
     /**
      * 判断是否是认证相关的 endpoint（登录/注册/验证码等）
      * 这些 endpoint 不需要添加 Authorization header，避免循环调用
@@ -75,7 +75,7 @@ class AuthInterceptor private constructor() : Interceptor {
         )
         return authPaths.any { path.contains(it, ignoreCase = true) }
     }
-    
+
     /**
      * 获取当前有效的 token
      * 
@@ -85,16 +85,17 @@ class AuthInterceptor private constructor() : Interceptor {
         // 尝试正式用户 token
         try {
             LoginUtil.token?.let { return it }
-        } catch (_: Exception) {}
-        
+        } catch (_: Exception) {
+        }
+
         // 尝试访客 token（需要先初始化 GuestAuthUtil）
         GuestAuthUtil.guestToken?.let { return it }
-        
+
         // 尝试自动访客登录/注册
         if (GuestAuthUtil.ensureLoggedIn()) {
             return GuestAuthUtil.guestToken
         }
-        
+
         return null
     }
 

@@ -2,11 +2,24 @@ package yancey.chelper.ui.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,9 +30,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Button
 import yancey.chelper.ui.common.widget.Switch
@@ -63,16 +76,26 @@ fun CPLUploadScreen(
             Spacer(modifier = Modifier.height(10.dp))
             TextField(state = viewModel.version, hint = "版本", modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(10.dp))
-            TextField(state = viewModel.description, hint = "简介", modifier = Modifier.fillMaxWidth())
+            TextField(
+                state = viewModel.description,
+                hint = "简介",
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(10.dp))
-            TextField(state = viewModel.tags, hint = "标签 (逗号分隔)", modifier = Modifier.fillMaxWidth())
+            TextField(
+                state = viewModel.tags,
+                hint = "标签 (逗号分隔)",
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(10.dp))
-            
+
             // Content
             TextField(
-                state = viewModel.commands, 
-                hint = "指令内容 (MCD格式)", 
-                modifier = Modifier.fillMaxWidth().height(200.dp),
+                state = viewModel.commands,
+                hint = "指令内容 (MCD格式)",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
                 contentAlignment = Alignment.TopStart
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -119,7 +142,7 @@ fun CPLUploadScreen(
     if (showImportDialog) {
         ImportLocalLibraryDialog(
             onDismiss = { showImportDialog = false },
-            onSelect = { id -> 
+            onSelect = { id ->
                 viewModel.loadFromLocal(id)
                 showImportDialog = false
             }
@@ -130,11 +153,11 @@ fun CPLUploadScreen(
 @Composable
 fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
     val libraries = remember { LocalLibraryManager.INSTANCE?.getFunctions() ?: mutableListOf() }
-    
+
     LaunchedEffect(Unit) {
         LocalLibraryManager.INSTANCE?.ensureInit()
     }
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -149,9 +172,11 @@ fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
                     color = CHelperTheme.colors.textMain,
                     textAlign = TextAlign.Center
                 ),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
             )
-            
+
             Column(
                 modifier = Modifier
                     .weight(1f, fill = false)
@@ -166,22 +191,32 @@ fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
                             .padding(vertical = 12.dp),
                         style = TextStyle(color = CHelperTheme.colors.textMain)
                     )
-                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(CHelperTheme.colors.line))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(CHelperTheme.colors.line)
+                    )
                 }
                 if (libraries.isEmpty()) {
-                    Text(text = "本地无指令库", style = TextStyle(color = CHelperTheme.colors.textHint))
+                    Text(
+                        text = "本地无指令库",
+                        style = TextStyle(color = CHelperTheme.colors.textHint)
+                    )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Text(
                     text = "取消",
-                    modifier = Modifier.clickable { onDismiss() }.padding(8.dp),
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(8.dp),
                     style = TextStyle(color = CHelperTheme.colors.mainColor)
                 )
             }

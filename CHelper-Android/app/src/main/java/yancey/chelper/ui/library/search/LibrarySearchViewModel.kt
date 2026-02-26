@@ -19,7 +19,6 @@
 package yancey.chelper.ui.library.search
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,23 +38,23 @@ import yancey.chelper.network.library.data.LibraryFunction
 
 class LibrarySearchViewModel : ViewModel() {
     val keyword = TextFieldState()
-    
+
     // 第一栏：来自本地和私有云端库的匹配项
     var localAndPrivateLibraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
-    
+
     // 第二栏：来自公开市场库的匹配项
     var publicLibraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
-    
+
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
-    
+
     // 公开市场库的分页参数
     var currentPage by mutableIntStateOf(1)
     var totalPages by mutableIntStateOf(1)
     var hasMore by mutableStateOf(true)
-    
+
     private var searchJob: Job? = null
-    
+
     fun setInitialKeyword(initialWord: String?) {
         if (!initialWord.isNullOrBlank()) {
             keyword.setTextAndPlaceCursorAtEnd(initialWord)
@@ -72,7 +71,7 @@ class LibrarySearchViewModel : ViewModel() {
             hasMore = false
             return
         }
-        
+
         loadFunctions(q, resetPage = true)
     }
 
@@ -85,28 +84,28 @@ class LibrarySearchViewModel : ViewModel() {
 
     private fun loadFunctions(searchStr: String, resetPage: Boolean) {
         if (isLoading) return
-        
+
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             isLoading = true
             errorMessage = null
-            
+
             if (resetPage) {
                 currentPage = 1
                 localAndPrivateLibraries.clear()
                 publicLibraries.clear()
             }
-            
+
             try {
                 // 并行执行两部分逻辑
                 withContext(Dispatchers.IO) {
                     val publicJob = launch { fetchPublicLibraries(searchStr) }
-                    
+
                     // 私有与本地过滤只在第一页加载时查一次即可
                     if (resetPage) {
                         launch { fetchLocalAndPrivateLibraries(searchStr) }
                     }
-                    
+
                     publicJob.join()
                 }
             } catch (e: Exception) {
@@ -120,7 +119,7 @@ class LibrarySearchViewModel : ViewModel() {
             }
         }
     }
-    
+
     /**
      * 加载第二栏数据，从远端获取市场公开库
      */
@@ -130,7 +129,7 @@ class LibrarySearchViewModel : ViewModel() {
             pageSize = 20,
             keyword = searchStr
         )
-        
+
         withContext(Dispatchers.Main) {
             if (response?.isSuccess() == true && response.data != null) {
                 val data = response.data!!
@@ -148,14 +147,14 @@ class LibrarySearchViewModel : ViewModel() {
             }
         }
     }
-    
+
     /**
      * 加载第一栏数据，从本地和云端私有库过滤
      */
     private suspend fun fetchLocalAndPrivateLibraries(searchStr: String) {
         val searchLower = searchStr.lowercase()
         val tempMatches = mutableListOf<LibraryFunction>()
-        
+
         // 扫描本地库 (转换为 LibraryFunction 做格式统一，我们借用 name, note 等字段)
         LocalLibraryManager.INSTANCE?.ensureInit()
         val localList = LocalLibraryManager.INSTANCE?.getFunctions()
@@ -177,17 +176,19 @@ class LibrarySearchViewModel : ViewModel() {
                 )
             }
         }
-        
+
         // 2. 扫描云端私有库
         try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries()?.execute()?.body()
+            val response =
+                ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries()?.execute()?.body()
             if (response?.isSuccess() == true && response.data != null) {
                 val privateList = response.data!!.functions?.filterNotNull() ?: emptyList()
                 privateList.forEach { privateFunc ->
                     val nameMatch = privateFunc.name?.lowercase()?.contains(searchLower) == true
-                    val tagsMatch = privateFunc.tags?.any { it.lowercase().contains(searchLower) } == true
+                    val tagsMatch =
+                        privateFunc.tags?.any { it.lowercase().contains(searchLower) } == true
                     val noteMatch = privateFunc.note?.lowercase()?.contains(searchLower) == true
-                    
+
                     if (nameMatch || tagsMatch || noteMatch) {
                         privateFunc.author = "[我的私有库]" // 标记
                         tempMatches.add(privateFunc)
@@ -198,7 +199,7 @@ class LibrarySearchViewModel : ViewModel() {
             if (e is kotlinx.coroutines.CancellationException) throw e
             e.printStackTrace()
         }
-        
+
         withContext(Dispatchers.Main) {
             localAndPrivateLibraries.addAll(tempMatches)
         }

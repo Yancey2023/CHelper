@@ -33,7 +33,7 @@ import yancey.chelper.network.library.data.CaptchaTokenResponse
  * 用于在敏感操作（注册、修改密码等）前验证用户是否为真人
  */
 interface CaptchaService {
-    
+
     /**
      * 请求验证凭证
      * 
@@ -48,7 +48,7 @@ interface CaptchaService {
      */
     @POST("captcha")
     suspend fun requestToken(@Body request: CaptchaTokenRequest): BaseResult<CaptchaTokenResponse?>
-    
+
     /**
      * 查询验证状态
      * 

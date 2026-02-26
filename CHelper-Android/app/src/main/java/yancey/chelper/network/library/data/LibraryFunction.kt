@@ -76,10 +76,12 @@ class AuthorAdapter : TypeAdapter<String?>() {
                 reader.endObject()
                 name
             }
+
             JsonToken.NULL -> {
                 reader.nextNull()
                 null
             }
+
             else -> {
                 reader.skipValue()
                 null

@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
-import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
 
 class CPLUploadViewModel : ViewModel() {
@@ -42,13 +41,13 @@ class CPLUploadViewModel : ViewModel() {
             }
         }
     }
-    
+
     fun upload(specialCode: String?, onSuccess: () -> Unit) {
         if (name.text.isBlank() || commands.text.isBlank()) {
             Toaster.show("名称和内容不能为空")
             return
         }
-        
+
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -56,28 +55,29 @@ class CPLUploadViewModel : ViewModel() {
                 val mcdBuilder = StringBuilder()
                 mcdBuilder.append("@name=${this@CPLUploadViewModel.name.text}\n")
                 mcdBuilder.append("@version=${this@CPLUploadViewModel.version.text}\n")
-                
+
                 val tagList = this@CPLUploadViewModel.tags.text.toString()
                     .split(",").map { it.trim() }.filter { it.isNotEmpty() }
                 if (tagList.isNotEmpty()) {
                     mcdBuilder.append("@tags=${tagList.joinToString(",")}\n")
                 }
-                
+
                 mcdBuilder.append("@note=${this@CPLUploadViewModel.description.text}\n")
                 mcdBuilder.append("\n")
                 mcdBuilder.append("###Function###\n")
                 mcdBuilder.append(this@CPLUploadViewModel.commands.text.toString())
                 mcdBuilder.append("\n###End###")
-                
+
                 val finalContent = mcdBuilder.toString()
-                
+
                 // 上传固定为私有草稿
                 val request = CommandLabUserService.UploadLibraryRequest().apply {
                     this.content = finalContent
                 }
-                
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request).execute()
-                
+
+                val response =
+                    ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request).execute()
+
                 if (response.body()?.isSuccess() == true) {
                     // 原来设计上：如果用户勾了公开且有验证码，紧接着调 release
                     // 现在：麻烦，暂时不实现
