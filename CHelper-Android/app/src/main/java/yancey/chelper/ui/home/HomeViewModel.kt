@@ -49,7 +49,7 @@ class HomeViewModel : ViewModel() {
     val isShowPolicyGrantDialog get() = policyGrantState != PolicyGrantManager.State.AGREE
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
-    var isShowPublicLibrary by mutableStateOf(false)
+    var isShowPublicLibrary by mutableStateOf(true)
     private var floatingWindowManager: FloatingWindowManager? = null
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
@@ -58,11 +58,7 @@ class HomeViewModel : ViewModel() {
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
-        this.isShowPublicLibrary = Settings.INSTANCE.isShowPublicLibrary
-    }
-
-    fun refreshSettings() {
-        this.isShowPublicLibrary = Settings.INSTANCE.isShowPublicLibrary
+        isShowPublicLibrary = Settings.INSTANCE?.isShowPublicLibrary ?: true
     }
 
     fun init(context: Context, floatingWindowManager: FloatingWindowManager?) {
@@ -129,6 +125,11 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 announcement = ServiceManager.CHELPER_SERVICE!!.getAnnouncement()
+                isShowPublicLibrary = announcement!!.isEnableCommandLab ?: true
+                if (Settings.INSTANCE.isShowPublicLibrary != isShowPublicLibrary) {
+                    Settings.INSTANCE.isShowPublicLibrary = isShowPublicLibrary
+                    Settings.INSTANCE.save()
+                }
                 var isShow = true
                 val isForce = announcement!!.isForce ?: false
                 if (!isForce) {
@@ -197,8 +198,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun dismissUpdateNotificationDialog() {
-        isShowAnnouncementDialog = false
-        checkUpdate()
+        isShowUpdateNotificationsDialog = false
     }
 
     fun ignoreLatestVersion() {

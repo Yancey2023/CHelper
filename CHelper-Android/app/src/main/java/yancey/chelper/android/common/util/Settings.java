@@ -105,11 +105,10 @@ public class Settings {
 
     public static String versionNeteaseExperiment;
 
-    /**
-     * 自定义命令库地址（测试用）
-     */
-
-    public String apiUrl;
+//    /**
+//     * 自定义命令库地址（测试用）
+//     */
+//    public String apiUrl;
 
     /**
      * 是否显示公有命令库入口
@@ -170,7 +169,7 @@ public class Settings {
             isDirty = true;
         }
         if (INSTANCE.isShowPublicLibrary == null) {
-            INSTANCE.isShowPublicLibrary = false;
+            INSTANCE.isShowPublicLibrary = true;
             isDirty = true;
         }
         if (INSTANCE.requestRateLimit == null) {

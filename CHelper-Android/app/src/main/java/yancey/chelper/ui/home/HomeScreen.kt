@@ -83,7 +83,6 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     LaunchedEffect(viewModel) {
-        viewModel.refreshSettings()
         viewModel.init(context, floatingWindowManager)
     }
     RootView {
