@@ -42,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
@@ -81,7 +81,6 @@ fun PublicLibraryShowScreen(
 ) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     // 对话框状态
     var showMainMenu by remember { mutableStateOf(false) }
@@ -462,14 +461,13 @@ fun PublicLibraryShowScreen(
                                     )
                                     // 只有指令行显示复制按钮
                                     if (isCommand) {
-                                        val scope = rememberCoroutineScope()
                                         Icon(
                                             id = R.drawable.copy,
                                             contentDescription = stringResource(R.string.common_icon_copy_content_description),
                                             modifier = Modifier
                                                 .align(Alignment.CenterVertically)
                                                 .clickable {
-                                                    scope.launch {
+                                                    viewModel.viewModelScope.launch {
                                                         clipboard.setClipEntry(
                                                             ClipEntry(
                                                                 ClipData.newPlainText(
@@ -506,7 +504,6 @@ private fun LineCopyDialog(
 ) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var currentIndex by remember { mutableIntStateOf(0) }
 
     // 自动复制当前命令

@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.hjq.toast.Toaster
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -93,12 +94,11 @@ private fun CaptchaDialogContent(
     fun handleFailure(message: String) {
         if (isCompleted) return
         isCompleted = true
-        println("Captcha failed: $message")
+        Toaster.show(message)
         onDismissRequest()
     }
 
     // JS 回调运行在 WebView 线程，需要切回主线程
-    // 用 Handler 而不是 rememberCoroutineScope，因为 Handler 不受 Composition 生命周期约束
     val handler = remember { Handler(Looper.getMainLooper()) }
 
     val jsInterface =
@@ -215,14 +215,6 @@ private fun CaptchaDialogContent(
                                 });
                             """.trimIndent(), null
                             )
-                        }
-
-                        override fun onReceivedSslError(
-                            view: WebView?,
-                            handler: android.webkit.SslErrorHandler?,
-                            error: android.net.http.SslError?
-                        ) {
-                            handler?.proceed()
                         }
                     }
                 }

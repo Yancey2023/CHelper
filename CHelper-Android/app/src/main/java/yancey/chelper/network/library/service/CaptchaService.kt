@@ -59,7 +59,6 @@ interface CaptchaService {
      */
     @GET("captcha/status")
     suspend fun getStatus(
-        @Suppress("LocalVariableName")
-        @Query("special_code") special_code: String
+        @Query("special_code") specialCode: String
     ): BaseResult<CaptchaStatusResponse?>
 }

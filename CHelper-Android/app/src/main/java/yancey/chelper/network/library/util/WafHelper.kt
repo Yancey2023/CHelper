@@ -1,5 +1,6 @@
 package yancey.chelper.network.library.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -71,6 +72,7 @@ object WafHelper {
 
     // 移除同步方法避免死锁风险，因为 WebView 必须在主线程
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun performRefresh(callback: (Boolean) -> Unit) {
         val context = appContext
         if (context == null) {
@@ -134,18 +136,8 @@ object WafHelper {
             ) {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
-                    val errorCode =
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                            error?.errorCode ?: 0
-                        } else {
-                            0
-                        }
-                    val description =
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                            error?.description ?: "Unknown error"
-                        } else {
-                            "Unknown error"
-                        }
+                    val errorCode = error?.errorCode ?: 0
+                    val description = error?.description ?: "Unknown error"
                     Log.e(TAG, "WebView error: $errorCode, $description")
                     destroyWebView(webView)
                     callback(false)
