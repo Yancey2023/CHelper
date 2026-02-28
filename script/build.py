@@ -66,6 +66,16 @@ if __name__ == "__main__":
     print("generating resources")
     subprocess.run(
         [
+            "cmake",
+            "--build",
+            "./CHelper-Core/cmake-build-release",
+            "--target",
+            "CHelperResourceGenerator",
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
             os.path.join(
                 ".",
                 "CHelper-Core",
