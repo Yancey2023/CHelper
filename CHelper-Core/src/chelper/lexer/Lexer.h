@@ -26,7 +26,7 @@
 
 namespace CHelper::Lexer {
 
-    LexerResult lex(const std::u16string &content);
+    LexerResult lex(std::u16string content);
 
 }// namespace CHelper::Lexer
 

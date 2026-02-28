@@ -71,7 +71,7 @@ namespace CHelper {
 
         [[nodiscard]] std::optional<std::pair<std::u16string, size_t>> onSuggestionClick(size_t which);
 
-        static std::u16string old2new(const Old2New::BlockFixData &blockFixData, const std::u16string &old);
+        static std::u16string old2new(const Old2New::BlockFixData &blockFixData, std::u16string old);
     };
 
 }// namespace CHelper

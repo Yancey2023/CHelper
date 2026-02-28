@@ -71,7 +71,7 @@ namespace CHelper::Old2New {
 
     bool expectCommand(const BlockFixData &blockFixData, TokenReader &tokenReader, std::vector<DataFix> &dataFixList);
 
-    std::u16string old2new(const BlockFixData &blockFixData, const std::u16string &old);
+    std::u16string old2new(const BlockFixData &blockFixData, std::u16string old);
 
     BlockFixData blockFixDataFromJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
 

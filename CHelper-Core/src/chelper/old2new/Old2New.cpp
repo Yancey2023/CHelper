@@ -179,8 +179,7 @@ namespace CHelper::Old2New {
         // get key
         std::u16string front = u"minecraft:";
         std::u16string key = trip(blockId);
-        bool isStartWithMinecraft = key.size() > front.size() && key.substr(0, front.size()) == front;
-        if (isStartWithMinecraft) {
+        if (key.size() > front.size() && key.starts_with(front)) {
             key = key.substr(front.size());
         }
         // find fixed block state by key
@@ -622,8 +621,8 @@ namespace CHelper::Old2New {
         return true;
     }
 
-    std::u16string old2new(const BlockFixData &blockFixData, const std::u16string &old) {
-        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(old)));
+    std::u16string old2new(const BlockFixData &blockFixData, std::u16string old) {
+        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(std::move(old))));
         std::vector<DataFix> dataFixList;
         expectCommand(blockFixData, tokenReader, dataFixList);
         std::ranges::sort(dataFixList, [](const DataFix &dataFix1, const DataFix &dataFix2) {
@@ -633,22 +632,13 @@ namespace CHelper::Old2New {
         size_t index = 0;
         for (const auto &item: dataFixList) {
             if (item.start > index) {
-                result.append(old.substr(index, item.start - index));
+                result.append(tokenReader.lexerResult->content.substr(index, item.start - index));
             }
             result.append(item.content);
             index = item.end;
         }
-        result.append(old.substr(index));
+        result.append(tokenReader.lexerResult->content.substr(index));
         return result;
-    }
-
-    template<class T, class S>
-    S &getOrCreate(std::unordered_map<T, S> &map, const T &&key) {
-        const auto &iter = map.find(key);
-        if (iter != map.end()) {
-            return iter->second;
-        }
-        return map.emplace(key, S()).first->second;
     }
 
     BlockFixData blockFixDataFromJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j) {
@@ -669,7 +659,8 @@ namespace CHelper::Old2New {
             serialization::Codec<decltype(newBlockId)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::newBlockId_(), newBlockId);
             std::optional<std::u16string> blockState;
             serialization::Codec<decltype(blockState)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::blockState_(), blockState);
-            getOrCreate(blockFixData, std::move(name)).insert({data, {std::move(newBlockId), std::move(blockState)}});
+            const auto &iter = blockFixData.try_emplace(std::move(name)).first;
+            iter->second.insert({data, {std::move(newBlockId), std::move(blockState)}});
         }
         return blockFixData;
     }

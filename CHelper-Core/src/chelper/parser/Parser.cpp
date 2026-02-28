@@ -171,13 +171,10 @@ namespace CHelper::Parser {
         if (convertResult.errorReason != nullptr) [[unlikely]] {
             return {ASTNode::simpleNode(node, tokens, convertResult.errorReason), std::move(convertResult)};
         }
-        auto tokenReader = TokenReader(std::make_shared<LexerResult>(Lexer::lex(convertResult.result)));
 #ifdef CHelperTest
-        Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(content)));
+        Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(convertResult.result)));
 #endif
-        DEBUG_GET_NODE_BEGIN(mainNode, index);
         ASTNode result = parse(convertResult.result, mainNode);
-        DEBUG_GET_NODE_END(mainNode, index);
 #ifdef CHelperTest
         Profile::pop();
 #endif
@@ -204,7 +201,7 @@ namespace CHelper::Parser {
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
                 return ASTNode::simpleNode(node, tokens, errorReason);
             }
-            auto [innerNode, convertResult] = getInnerASTNode(node, tokens, std::u16string(str), node.nodeData);
+            ASTNode innerNode = getInnerASTNode(node, tokens, std::u16string(str), node.nodeData).first;
             ASTNode newResult = ASTNode::andNode(node, {std::move(innerNode)}, tokens, errorReason, ASTNodeId::NODE_STRING_INNER);
             if (errorReason == nullptr) [[unlikely]] {
                 for (auto &item: newResult.errorReasons) {
@@ -989,8 +986,8 @@ namespace CHelper::Parser {
         }
     }
 
-    ASTNode parse(const std::u16string &content, const Node::NodeWithType &mainNode) {
-        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(content)));
+    ASTNode parse(std::u16string content, const Node::NodeWithType &mainNode) {
+        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(std::move(content))));
 #ifdef CHelperTest
         Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(tokenReader.lexerResult->content)));
 #endif
@@ -1003,8 +1000,8 @@ namespace CHelper::Parser {
         return result;
     }
 
-    ASTNode parse(const std::u16string &content, const CPack &cpack) {
-        return parse(content, cpack.mainNode);
+    ASTNode parse(std::u16string content, const CPack &cpack) {
+        return parse(std::move(content), cpack.mainNode);
     }
 
 }// namespace CHelper::Parser

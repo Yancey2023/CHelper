@@ -165,8 +165,8 @@ namespace CHelper {
         return result;
     }
 
-    std::u16string CHelperCore::old2new(const Old2New::BlockFixData &blockFixData, const std::u16string &old) {
-        return Old2New::old2new(blockFixData, old);
+    std::u16string CHelperCore::old2new(const Old2New::BlockFixData &blockFixData, std::u16string old) {
+        return Old2New::old2new(blockFixData, std::move(old));
     }
 
 }// namespace CHelper

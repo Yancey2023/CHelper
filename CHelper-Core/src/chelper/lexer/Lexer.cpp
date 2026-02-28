@@ -208,7 +208,7 @@ namespace CHelper::Lexer {
         }
     };
 
-    LexerResult lex(const std::u16string &content) {
+    LexerResult lex(std::u16string content) {
 #ifdef CHelperTest
         Profile::push("start lex: {}", FORMAT_ARG(utf8::utf16to8(content)));
 #endif
@@ -217,7 +217,7 @@ namespace CHelper::Lexer {
 #ifdef CHelperTest
         Profile::pop();
 #endif
-        return {content, lexer.getResult()};
+        return {std::move(content), lexer.getResult()};
     }
 
 }// namespace CHelper::Lexer
