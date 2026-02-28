@@ -21,7 +21,7 @@
 namespace CHelper::CommandStructure {
 
     StructureBuilder &StructureBuilder::appendUnknown(bool isMustHave) {
-        return append(isMustHave, u"未知");
+        return appendStringWithBracket(isMustHave, u"未知");
     }
 
     StructureBuilder &StructureBuilder::appendSymbol(char16_t ch) {
@@ -29,7 +29,7 @@ namespace CHelper::CommandStructure {
         return *this;
     }
 
-    StructureBuilder &StructureBuilder::append(const std::u16string &str) {
+    StructureBuilder &StructureBuilder::appendString(const std::u16string_view &str) {
         structure.append(str);
         return *this;
     }
@@ -49,8 +49,8 @@ namespace CHelper::CommandStructure {
         return appendSymbol(isMustHave ? u'>' : u']');
     }
 
-    StructureBuilder &StructureBuilder::append(bool isMustHave, const std::u16string &str) {
-        return appendSpace().appendLeftBracket(isMustHave).append(str).appendRightBracket(isMustHave);
+    StructureBuilder &StructureBuilder::appendStringWithBracket(bool isMustHave, const std::u16string_view &str) {
+        return appendSpace().appendLeftBracket(isMustHave).appendString(str).appendRightBracket(isMustHave);
     }
 
     std::u16string StructureBuilder::build() {

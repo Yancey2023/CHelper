@@ -39,7 +39,7 @@ namespace CHelper {
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
             const auto end = std::chrono::high_resolution_clock::now();
 #endif
-            SPDLOG_INFO("CPack load successfully ({})", fmt::styled(std::chrono::duration_cast<std::chrono::milliseconds>(end - start), fg(fmt::color::medium_purple)));
+            SPDLOG_INFO("CPack load successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             ASTNode astNode = Parser::parse(u"", *cPack);
             return new CHelperCore(std::move(cPack), std::move(astNode));
         } catch (const std::exception &e) {

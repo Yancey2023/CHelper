@@ -69,16 +69,19 @@
 // 字符串格式化
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4702)
 #endif
+#define FMT_ENFORCE_COMPILE_STRING
 #include <fmt/base.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 #include <fmt/chrono.h>
-#include <fmt/color.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
+#if !defined(__ANDROID__) && !defined(CHELPER_NO_FILESYSTEM)
+#include <fmt/color.h>
+#endif
 // 日志库
 #include <spdlog/spdlog.h>
 // 哈希算法

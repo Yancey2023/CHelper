@@ -44,7 +44,13 @@ namespace CHelper::CommandStructure {
     template<bool isJson>
     struct CommandStructure<Node::NodeTemplateBoolean<isJson>> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeTemplateBoolean<isJson> &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"布尔值")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"布尔值");
+            }
             return true;
         }
     };
@@ -53,7 +59,13 @@ namespace CHelper::CommandStructure {
     struct CommandStructure<Node::NodeTemplateNumber<T, isJson>> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeTemplateNumber<T, isJson> &node, StructureBuilder &structure, bool isMustHave) {
             constexpr auto defaultStr = std::numeric_limits<T>::is_integer ? u"整数" : u"数字";
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(defaultStr)));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, defaultStr);
+            }
             return true;
         }
     };
@@ -61,9 +73,9 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeBlock> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeBlock &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, u"方块ID");
+            structure.appendStringWithBracket(isMustHave, u"方块ID");
             if (node.nodeBlockType == Node::NodeBlockType::BLOCK_WITH_BLOCK_STATE) [[likely]] {
-                structure.append(false, u"方块状态");
+                structure.appendStringWithBracket(false, u"方块状态");
             }
             return true;
         }
@@ -73,9 +85,9 @@ namespace CHelper::CommandStructure {
     struct CommandStructure<Node::NodeCommand> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeCommand &node, StructureBuilder &structure, bool isMustHave) {
             if (astNode == nullptr || astNode->childNodes.size() < 2 || astNode->tokens.size() < 2) {
-                structure.append(isMustHave, u"命令");
+                structure.appendStringWithBracket(isMustHave, u"命令");
             } else {
-                structure.appendSpace().append(std::u16string(astNode->childNodes[0].tokens.string()));
+                structure.appendSpace().appendString(astNode->childNodes[0].tokens.string());
                 const auto &usage = astNode->childNodes[1];
                 collectNodeStructure(&usage, usage.node, structure, isMustHave);
             }
@@ -86,7 +98,11 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeCommandName> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeCommandName &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(u"命令名"));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"命令名");
+            }
             return true;
         }
     };
@@ -94,7 +110,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeIntegerWithUnit> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeIntegerWithUnit &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"可能带单位的整数")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"可能带单位的整数");
+            }
             return true;
         }
     };
@@ -128,7 +150,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeJson> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeJson &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"JSON文本")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"JSON文本");
+            }
             return true;
         }
     };
@@ -136,7 +164,7 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeLF> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeLF &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(u"\n");
+            structure.appendSymbol(u'\n');
             return true;
         }
     };
@@ -144,7 +172,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeNamespaceId> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeNamespaceId &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"ID")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"ID");
+            }
             return true;
         }
     };
@@ -152,7 +186,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeNormalId> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeNormalId &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"ID")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"ID");
+            }
             return true;
         }
     };
@@ -169,7 +209,11 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodePosition> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodePosition &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(u"位置"));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"位置");
+            }
             return true;
         }
     };
@@ -177,7 +221,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeRange> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeRange &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"范围")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"范围");
+            }
             return true;
         }
     };
@@ -185,7 +235,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeRelativeFloat> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeRelativeFloat &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"坐标")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"坐标");
+            }
             return true;
         }
     };
@@ -219,7 +275,7 @@ namespace CHelper::CommandStructure {
                     } else {
                         if (!isAddMoreSymbol) {
                             isAddMoreSymbol = true;
-                            structure.appendSpace().append(u"...");
+                            structure.appendSpace().appendString(u"...");
                         }
                     }
                     if (item.whichBest == 1) [[unlikely]] {
@@ -230,7 +286,7 @@ namespace CHelper::CommandStructure {
             }
             //如果没有遇到结束语句，添加...和结束语句的结构
             if (!isAddMoreSymbol || isAddMiddle) {
-                structure.appendSpace().append(u"...");
+                structure.appendSpace().appendString(u"...");
             }
             for (const auto &item: reinterpret_cast<const Node::NodeAnd *>(reinterpret_cast<const Node::NodeOr *>(node.nodeElement.data)->childNodes[1].data)->childNodes) {
                 collectNodeStructure(nullptr, item, structure, true);
@@ -242,7 +298,13 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeString> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeString &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(node.description.value_or(u"字符串")));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else if (node.description.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.description.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"字符串");
+            }
             return true;
         }
     };
@@ -250,7 +312,11 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeTargetSelector> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeTargetSelector &node, StructureBuilder &structure, bool isMustHave) {
-            structure.append(isMustHave, node.brief.value_or(u"目标选择器"));
+            if (node.brief.has_value()) {
+                structure.appendStringWithBracket(isMustHave, node.brief.value());
+            } else {
+                structure.appendStringWithBracket(isMustHave, u"目标选择器");
+            }
             return true;
         }
     };
@@ -258,7 +324,7 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodeText> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodeText &node, StructureBuilder &structure, bool isMustHave) {
-            structure.appendSpace().append(node.data->name);
+            structure.appendSpace().appendString(node.data->name);
             return true;
         }
     };

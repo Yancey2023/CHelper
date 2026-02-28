@@ -34,7 +34,7 @@ namespace CHelper::CommandStructure {
 
         StructureBuilder &appendSymbol(char16_t ch);
 
-        StructureBuilder &append(const std::u16string &str);
+        StructureBuilder &appendString(const std::u16string_view &str);
 
         StructureBuilder &appendSpace();
 
@@ -42,7 +42,7 @@ namespace CHelper::CommandStructure {
 
         StructureBuilder &appendRightBracket(bool isMustHave);
 
-        StructureBuilder &append(bool isMustHave, const std::u16string &str);
+        StructureBuilder &appendStringWithBracket(bool isMustHave, const std::u16string_view &str);
 
         std::u16string build();
     };
