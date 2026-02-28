@@ -165,7 +165,7 @@ namespace CHelper::Parser {
     std::pair<ASTNode, JsonUtil::ConvertResult>
     getInnerASTNode(const Node::NodeWithType &node,
                     const TokensView &tokens,
-                    const std::u16string &content,
+                    const std::u16string_view &content,
                     const Node::NodeWithType &mainNode) {
         auto convertResult = JsonUtil::jsonString2String(content);
         if (convertResult.errorReason != nullptr) [[unlikely]] {
@@ -201,7 +201,7 @@ namespace CHelper::Parser {
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
                 return ASTNode::simpleNode(node, tokens, errorReason);
             }
-            ASTNode innerNode = getInnerASTNode(node, tokens, std::u16string(str), node.nodeData).first;
+            ASTNode innerNode = getInnerASTNode(node, tokens, str, node.nodeData).first;
             ASTNode newResult = ASTNode::andNode(node, {std::move(innerNode)}, tokens, errorReason, ASTNodeId::NODE_STRING_INNER);
             if (errorReason == nullptr) [[unlikely]] {
                 for (auto &item: newResult.errorReasons) {
