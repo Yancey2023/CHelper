@@ -23,6 +23,7 @@ class Announcement {
     var isForce: Boolean? = null
     var isBigDialog: Boolean? = null
     var isEnableCommandLab: Boolean? = null
+    var commandLabMinVersion: Int? = null
     var title: String? = null
     var message: String? = null
     override fun equals(other: Any?): Boolean {

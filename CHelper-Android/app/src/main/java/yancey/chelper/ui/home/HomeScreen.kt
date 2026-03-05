@@ -175,7 +175,9 @@ fun HomeScreen(
                     if (viewModel.isShowPublicLibrary) {
                         Divider()
                         NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
-                            navController.navigate(PublicLibraryListScreenKey)
+                            viewModel.checkCommandLabVersion {
+                                navController.navigate(PublicLibraryListScreenKey)
+                            }
                         }
                     }
                     Divider()
@@ -264,6 +266,13 @@ fun HomeScreen(
                     viewModel.ignoreCurrentAnnouncement()
                 }
             }
+        )
+    }
+    if (viewModel.isShowCommandLabVersionDialog) {
+        IsConfirmDialog(
+            onDismissRequest = { viewModel.dismissCommandLabVersionDialog() },
+            title = "版本提示",
+            content = "公有命令库需要最新版软件才能使用，请下载最新版软件体验完整功能。"
         )
     }
     if (viewModel.isShowUpdateNotificationsDialog) {

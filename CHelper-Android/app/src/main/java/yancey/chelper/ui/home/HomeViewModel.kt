@@ -50,6 +50,8 @@ class HomeViewModel : ViewModel() {
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
     var isShowPublicLibrary by mutableStateOf(true)
+    var isShowCommandLabVersionDialog by mutableStateOf(false)
+    private var minVersion: Int? = null
     private var floatingWindowManager: FloatingWindowManager? = null
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
@@ -126,6 +128,7 @@ class HomeViewModel : ViewModel() {
             try {
                 announcement = ServiceManager.CHELPER_SERVICE!!.getAnnouncement()
                 isShowPublicLibrary = announcement!!.isEnableCommandLab ?: true
+                minVersion = announcement!!.commandLabMinVersion
                 if (Settings.INSTANCE.isShowPublicLibrary != isShowPublicLibrary) {
                     Settings.INSTANCE.isShowPublicLibrary = isShowPublicLibrary
                     Settings.INSTANCE.save()
@@ -214,5 +217,17 @@ class HomeViewModel : ViewModel() {
 
             }
         }
+    }
+
+    fun checkCommandLabVersion(onVersionOk: () -> Unit) {
+        if (minVersion != null && BuildConfig.VERSION_CODE < minVersion!!) {
+            isShowCommandLabVersionDialog = true
+        } else {
+            onVersionOk()
+        }
+    }
+
+    fun dismissCommandLabVersionDialog() {
+        isShowCommandLabVersionDialog = false
     }
 }
