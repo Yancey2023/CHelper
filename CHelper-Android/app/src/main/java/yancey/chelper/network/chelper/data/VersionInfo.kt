@@ -18,15 +18,17 @@
 
 package yancey.chelper.network.chelper.data
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Suppress("unused")
 class VersionInfo {
-    @Suppress("PropertyName", "unused")
-    var version_code: Int? = null
+    @SerialName("version_code")
+    var versionCode: Int? = null
 
-    @Suppress("PropertyName")
-    var version_name: String? = null
+    @SerialName("version_name")
+    var versionName: String? = null
 
     @Suppress("unused")
     var link: String? = null

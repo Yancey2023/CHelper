@@ -115,14 +115,14 @@ private fun CaptchaDialogContent(
     LaunchedEffect(specialCode) {
         try {
             val request = CaptchaTokenRequest().apply {
-                this.special_code = specialCode
+                this.specialCode = specialCode
                 this.action = action
             }
             val response = withContext(Dispatchers.IO) {
                 ServiceManager.CAPTCHA_SERVICE?.requestToken(request)
             }
-            if (response?.isSuccess() == true && response.data?.verification_token != null) {
-                val token = response.data!!.verification_token
+            if (response?.isSuccess() == true && response.data?.verificationToken != null) {
+                val token = response.data!!.verificationToken
                 val baseUrl = ServiceManager.LAB_BASE_URL.removeSuffix("/")
                 captchaUrl = "$baseUrl/captcha/verifing?token=$token&callback=androidCallback"
 
@@ -139,7 +139,7 @@ private fun CaptchaDialogContent(
                             val status = ServiceManager.CAPTCHA_SERVICE?.getStatus(specialCode)
                             if (status?.isSuccess() == true && status.data != null) {
                                 if (status.data!!.status == CaptchaStatusResponse.STATUS_VERIFIED) {
-                                    val serverCode = status.data!!.special_code
+                                    val serverCode = status.data!!.specialCode
                                     withContext(Dispatchers.Main) { handleSuccess(serverCode) }
                                     break
                                 } else if (status.data!!.status == CaptchaStatusResponse.STATUS_FAILED) {

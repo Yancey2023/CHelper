@@ -151,6 +151,12 @@ interface CommandLabUserService {
         @SerialName("is_moderator")
         var isModerator: Boolean? = null
 
+        @SerialName("is_verified")
+        var isVerified: Boolean? = null
+
+        @SerialName("created_at")
+        var createdAt: String? = null
+
         @SerialName("gravatar_url")
         var gravatarUrl: String? = null
     }

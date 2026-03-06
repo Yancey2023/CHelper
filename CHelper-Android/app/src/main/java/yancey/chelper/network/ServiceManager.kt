@@ -57,6 +57,9 @@ object ServiceManager {
 
     @JvmStatic
     fun init(context: Context) {
+        val json = Json {
+            ignoreUnknownKeys = true
+        }
         val builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -74,7 +77,7 @@ object ServiceManager {
             .baseUrl("https://www.yanceymc.cn/api/chelper/")
             .client(CLIENT!!)
             .addConverterFactory(
-                Json.asConverterFactory(
+                json.asConverterFactory(
                     "application/json; charset=utf-8".toMediaType()
                 )
             )
@@ -83,7 +86,7 @@ object ServiceManager {
             .baseUrl(LAB_BASE_URL)
             .client(CLIENT!!)
             .addConverterFactory(
-                Json.asConverterFactory(
+                json.asConverterFactory(
                     "application/json; charset=utf-8".toMediaType()
                 )
             )

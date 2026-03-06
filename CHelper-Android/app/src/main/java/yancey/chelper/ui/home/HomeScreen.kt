@@ -316,7 +316,7 @@ fun HomeScreen(
     }
     if (viewModel.isShowUpdateNotificationsDialog) {
         val content = remember(viewModel.latestVersionInfo) {
-            viewModel.latestVersionInfo!!.version_name + "版本已发布，欢迎下载体验。本次更新内容如下：\n" + viewModel.latestVersionInfo!!.changelog
+            viewModel.latestVersionInfo!!.versionName + "版本已发布，欢迎下载体验。本次更新内容如下：\n" + viewModel.latestVersionInfo!!.changelog
         }
         IsConfirmDialog(
             onDismissRequest = { viewModel.isShowUpdateNotificationsDialog = false },

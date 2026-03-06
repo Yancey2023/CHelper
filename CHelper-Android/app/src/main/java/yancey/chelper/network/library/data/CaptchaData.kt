@@ -18,6 +18,7 @@
 
 package yancey.chelper.network.library.data
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -30,8 +31,8 @@ import kotlinx.serialization.Serializable
 @Suppress("unused")
 @Serializable
 class CaptchaTokenRequest {
-    @Suppress("PropertyName")
-    var special_code: String? = null
+    @SerialName("special_code")
+    var specialCode: String? = null
     var action: String? = null
 
     companion object {
@@ -48,12 +49,12 @@ class CaptchaTokenRequest {
 @Suppress("unused")
 @Serializable
 class CaptchaTokenResponse {
-    @Suppress("PropertyName")
-    var verification_token: String? = null
+    @SerialName("verification_token")
+    var verificationToken: String? = null
     var action: String? = null
 
-    @Suppress("PropertyName")
-    var special_code: String? = null
+    @SerialName("special_code")
+    var specialCode: String? = null
 }
 
 /**
@@ -62,8 +63,8 @@ class CaptchaTokenResponse {
 @Suppress("unused")
 @Serializable
 class CaptchaStatusResponse {
-    @Suppress("PropertyName")
-    var special_code: String? = null
+    @SerialName("special_code")
+    var specialCode: String? = null
     var status: String? = null
     var action: String? = null
 

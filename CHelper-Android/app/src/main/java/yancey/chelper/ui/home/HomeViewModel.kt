@@ -188,12 +188,12 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 latestVersionInfo = ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo()
-                if (latestVersionInfo!!.version_name != BuildConfig.VERSION_NAME) {
+                if (latestVersionInfo!!.versionName != BuildConfig.VERSION_NAME) {
                     val ignoreVersion = withContext(Dispatchers.IO) {
                         skipVersionFile.bufferedReader()
                             .use { it.readText() }
                     }
-                    if (latestVersionInfo!!.version_name != ignoreVersion) {
+                    if (latestVersionInfo!!.versionName != ignoreVersion) {
                         isShowUpdateNotificationsDialog = true
                     }
                 }
@@ -209,7 +209,7 @@ class HomeViewModel : ViewModel() {
                 withContext(Dispatchers.IO) {
                     FileUtil.writeString(
                         skipVersionFile,
-                        latestVersionInfo!!.version_name
+                        latestVersionInfo!!.versionName
                     )
                 }
             } catch (_: Exception) {
