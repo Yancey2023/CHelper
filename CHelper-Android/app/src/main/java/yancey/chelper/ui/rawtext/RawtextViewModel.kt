@@ -78,7 +78,7 @@ class RawtextViewModel : ViewModel() {
         val rawText = JsonArray()
         val text = JsonObject()
         text.addProperty("text", buildString {
-            if (colors.size > 0) {
+            if (colors.isNotEmpty()) {
                 var indexStart = 0
                 for (i in colors.indices) {
                     if (colors[i] == colors[indexStart]) {

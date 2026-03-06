@@ -104,9 +104,11 @@ fun CPLUserScreen(
     RootViewWithHeaderAndCopyright(
         title = "用户中心",
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(CHelperTheme.colors.background)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(CHelperTheme.colors.background)
+        ) {
             if (viewModel.currentUser != null && !viewModel.isGuest) {
                 UserProfileView(viewModel, navController)
             } else if (viewModel.isGuest) {
@@ -124,9 +126,11 @@ fun CPLUserScreen(
 fun UserProfileView(viewModel: CPLUserViewModel, navController: NavHostController) {
     val user = viewModel.currentUser ?: return
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
         // Profile Card
         Box(
             modifier = Modifier
@@ -256,9 +260,11 @@ fun GuestUserProfileView(viewModel: CPLUserViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(id = R.drawable.ic_user, modifier = Modifier
-            .size(80.dp)
-            .alpha(0.5f))
+        Icon(
+            id = R.drawable.ic_user, modifier = Modifier
+                .size(80.dp)
+                .alpha(0.5f)
+        )
         Spacer(Modifier.height(24.dp))
         Text(
             text = "访客模式",
@@ -333,9 +339,11 @@ fun MyLibraryItem(lib: LibraryFunction, onClick: () -> Unit, onDelete: () -> Uni
                 .clickable { showDeleteConfirm = true }
         )
         Spacer(Modifier.width(8.dp))
-        Icon(id = R.drawable.chevron_right, modifier = Modifier
-            .size(16.dp)
-            .alpha(0.5f))
+        Icon(
+            id = R.drawable.chevron_right, modifier = Modifier
+                .size(16.dp)
+                .alpha(0.5f)
+        )
     }
 }
 

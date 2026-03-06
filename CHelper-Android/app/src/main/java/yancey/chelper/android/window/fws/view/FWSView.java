@@ -77,30 +77,49 @@ public abstract class FWSView extends FrameLayout {
 
     private final @NonNull FWSContext fwsContext;
     protected final @NonNull Context context;
-    protected final @NonNull View view;
+    protected View contentView;
     private final @NonNull OnBackPressedDispatcher onBackPressedDispatcher;
     protected int backgroundUpdateTimes = 0;
-    private final @LayoutRes int layoutId;
 
     /**
      * @param fwsContext 自定义上下文
-     * @param layoutId   视图界面ID
      */
-    public FWSView(
-            @NonNull FWSContext fwsContext,
-            @LayoutRes int layoutId
-    ) {
+    public FWSView(@NonNull FWSContext fwsContext) {
         super(fwsContext.context);
         this.fwsContext = fwsContext;
         this.context = fwsContext.context;
-        this.layoutId = layoutId;
-        this.view = getView();
-        addView(view);
         onBackPressedDispatcher = new OnBackPressedDispatcher(fwsContext.onBackPressedDispatcher::onBackPressed);
+        onCreateView();
+        addView(contentView);
+        onStart();
     }
 
-    protected View getView() {
-        return LayoutInflater.from(fwsContext.context).inflate(layoutId, this, false);
+    protected void onCreateView() {
+    }
+
+    /**
+     * 设置视图界面
+     *
+     * @param layoutId 视图界面ID
+     */
+    protected void setContentView(@LayoutRes int layoutId) {
+        this.contentView = LayoutInflater.from(fwsContext.context).inflate(layoutId, this, false);
+    }
+
+    /**
+     * 设置视图界面
+     *
+     * @param contentView 视图界面
+     */
+    protected void setContentView(@NonNull View contentView) {
+        this.contentView = contentView;
+    }
+
+    /**
+     * 开始事件
+     */
+    public void onStart() {
+
     }
 
     /**

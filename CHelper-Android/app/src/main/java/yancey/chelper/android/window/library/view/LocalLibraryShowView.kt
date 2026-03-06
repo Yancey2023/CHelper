@@ -35,17 +35,20 @@ import yancey.chelper.network.library.data.LibraryFunction
 @SuppressLint("ViewConstructor")
 class LocalLibraryShowView @SuppressLint("HardwareIds") constructor(
     fwsContext: FWSContext,
-    before: LibraryFunction
-) : BaseView(fwsContext, R.layout.layout_library_show) {
-    init {
-        view.findViewById<View>(R.id.back).setOnClickListener {
+    var before: LibraryFunction
+) : BaseView(fwsContext) {
+
+    override fun onCreateView() {
+        super.onCreateView()
+        setContentView(R.layout.layout_library_show)
+        contentView.findViewById<View>(R.id.back).setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
-        val likeButton = view.findViewById<View>(R.id.btn_like)
-        val likeCount = view.findViewById<TextView>(R.id.like_count)
-        val name = view.findViewById<TextView>(R.id.name)
+        val likeButton = contentView.findViewById<View>(R.id.btn_like)
+        val likeCount = contentView.findViewById<TextView>(R.id.like_count)
+        val name = contentView.findViewById<TextView>(R.id.name)
         val adapter = LibraryShowAdapter(context, before)
-        val listView = view.findViewById<RecyclerView>(R.id.list_view)
+        val listView = contentView.findViewById<RecyclerView>(R.id.list_view)
         listView.addItemDecoration(
             DividerItemDecoration(
                 context,

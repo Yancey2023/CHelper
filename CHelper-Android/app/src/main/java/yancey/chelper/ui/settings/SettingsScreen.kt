@@ -25,12 +25,22 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import yancey.chelper.R
+import yancey.chelper.android.common.util.CustomTheme
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.dialog.InputStringDialog
@@ -47,10 +57,82 @@ fun SettingsScreen(
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
     onChooseTheme: () -> Unit,
-    viewModel: SettingsViewModel = viewModel(),
 ) {
-    LaunchedEffect(viewModel) {
-        viewModel.setOnThemeChangedCallback(onChooseTheme)
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
+    var isShowResumeBackgroundDialog by remember { mutableStateOf(false) }
+    var isShowChooseThemeDialog by remember { mutableStateOf(false) }
+    var isShowInputFloatingWindowAlphaDialog by remember { mutableStateOf(false) }
+    var isShowInputFloatingWindowSizeDialog by remember { mutableStateOf(false) }
+    var isShowChooseCpackBranchDialog by remember { mutableStateOf(false) }
+    val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
+        .collectAsState(initial = false)
+    val cpackBranch by settingsDataStore.cpackBranch()
+        .collectAsState(initial = "release-experiment")
+    val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
+        .collectAsState(initial = false)
+    val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
+        .collectAsState(initial = false)
+    val isSavingWhenPausing by settingsDataStore.isSavingWhenPausing()
+        .collectAsState(initial = false)
+    val isCrowded by settingsDataStore.isCrowded()
+        .collectAsState(initial = false)
+    val isShowErrorReason by settingsDataStore.isShowErrorReason()
+        .collectAsState(initial = false)
+    val isSyntaxHighlight by settingsDataStore.isSyntaxHighlight()
+        .collectAsState(initial = false)
+    val floatingWindowSize by settingsDataStore.floatingWindowSize()
+        .collectAsState(initial = 40)
+    val floatingWindowAlpha by settingsDataStore.floatingWindowAlpha()
+        .collectAsState(initial = 1.0f)
+    var cpackBranchesWithTranslate by remember {
+        mutableStateOf(
+            arrayOf(
+                "release-vanilla" to "正式版-原版",
+                "release-experiment" to "正式版-实验性玩法",
+                "beta-vanilla" to "测试版-原版",
+                "beta-experiment" to "测试版-实验性玩法",
+                "netease-vanilla" to "中国版-原版",
+                "netease-experiment" to "中国版-实验性玩法",
+            )
+        )
+    }
+    LaunchedEffect(context) {
+        coroutineScope.launch {
+            val filenames = withContext(Dispatchers.IO) { context.assets.list("cpack")!! }
+            val cpackBranches =
+                arrayOf(
+                    "release-vanilla",
+                    "release-experiment",
+                    "beta-vanilla",
+                    "beta-experiment",
+                    "netease-vanilla",
+                    "netease-experiment"
+                )
+            val cpackBranchTranslations =
+                arrayOf(
+                    "正式版-原版-",
+                    "正式版-实验性玩法-",
+                    "测试版-原版-",
+                    "测试版-实验性玩法-",
+                    "中国版-原版-",
+                    "中国版-实验性玩法-"
+                )
+            val newCPackBranchesWithTranslate = mutableListOf<Pair<String, String>>()
+            for (filename in filenames) {
+                for (i in 0..<cpackBranches.size) {
+                    if (filename!!.startsWith(cpackBranches[i])) {
+                        val version = filename.substring(
+                            cpackBranches[i].length,
+                            filename.length - ".cpack".length
+                        )
+                        newCPackBranchesWithTranslate.add("${cpackBranchTranslations[i]}${version}" to cpackBranches[i])
+                    }
+                }
+            }
+            cpackBranchesWithTranslate = newCPackBranchesWithTranslate.toTypedArray()
+        }
     }
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_settings_title)) {
         Column(
@@ -63,8 +145,12 @@ fun SettingsScreen(
                 SettingsItem(
                     name = stringResource(R.string.layout_settings_is_enable_update_notification),
                     description = stringResource(R.string.layout_settings_is_enable_update_notification_description),
-                    checked = viewModel.isEnableUpdateNotifications,
-                    onCheckedChange = { viewModel.isEnableUpdateNotifications = it },
+                    checked = isEnableUpdateNotifications,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsEnableUpdateNotifications(it)
+                        }
+                    },
                 )
             }
             CollectionName(stringResource(R.string.layout_settings_theme_settings))
@@ -80,38 +166,39 @@ fun SettingsScreen(
                     name = stringResource(R.string.layout_settings_restore_background),
                     description = stringResource(R.string.layout_settings_restore_background_description),
                 ) {
-                    viewModel.isShowResumeBackgroundDialog = true
+                    isShowResumeBackgroundDialog = true
                 }
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_theme),
                     description = stringResource(R.string.layout_settings_choose_theme_description),
                 ) {
-                    viewModel.isShowChooseThemeDialog = true
+                    isShowChooseThemeDialog = true
                 }
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_alpha),
                     description = stringResource(R.string.layout_settings_floating_window_alpha_description),
                 ) {
-                    viewModel.isShowInputFloatingWindowAlphaDialog = true
+                    isShowInputFloatingWindowAlphaDialog = true
                 }
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_size),
                     description = stringResource(R.string.layout_settings_floating_window_size_description),
                 ) {
-                    viewModel.isShowInputFloatingWindowSizeDialog = true
+                    isShowInputFloatingWindowSizeDialog = true
                 }
             }
             CollectionName(stringResource(R.string.layout_settings_completion_settings))
             Collection {
-                val currentCpackBranchTranslation = remember(viewModel.cpackBranch) {
-                    for (i in viewModel.cpackBranches.indices) {
-                        if (viewModel.cpackBranch == viewModel.cpackBranches[i]) {
-                            return@remember viewModel.cpackBranchTranslations[i]
+                val currentCpackBranchTranslation = remember(cpackBranchesWithTranslate) {
+                    for (pair in cpackBranchesWithTranslate) {
+                        if (cpackBranch == pair.second) {
+                            return@remember pair.first
                         }
                     }
+                    return@remember cpackBranch
                 }
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_cpack),
@@ -120,87 +207,78 @@ fun SettingsScreen(
                         currentCpackBranchTranslation
                     )
                 ) {
-                    viewModel.isShowChooseCpackBranchDialog = true
+                    isShowChooseCpackBranchDialog = true
                 }
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_checking_by_selection),
                     description = stringResource(R.string.layout_setting_checking_by_selection_description),
-                    checked = viewModel.isCheckingBySelection,
-                    onCheckedChange = { viewModel.isCheckingBySelection = it },
+                    checked = isCheckingBySelection,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsCheckingBySelection(it)
+                        }
+                    },
                 )
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_hide_window_when_copying),
                     description = stringResource(R.string.layout_setting_is_hide_window_when_copying_description),
-                    checked = viewModel.isHideWindowWhenCopying,
-                    onCheckedChange = { viewModel.isHideWindowWhenCopying = it },
+                    checked = isHideWindowWhenCopying,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsHideWindowWhenCopying(it)
+                        }
+                    },
                 )
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_saving_when_pausing),
                     description = stringResource(R.string.layout_setting_is_saving_when_pausing_description),
-                    checked = viewModel.isSavingWhenPausing,
-                    onCheckedChange = { viewModel.isSavingWhenPausing = it },
+                    checked = isSavingWhenPausing,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsSavingWhenPausing(it)
+                        }
+                    },
                 )
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_crowed),
                     description = stringResource(R.string.layout_setting_is_crowed_description),
-                    checked = viewModel.isCrowed,
-                    onCheckedChange = { viewModel.isCrowed = it },
+                    checked = isCrowded,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsCrowded(it)
+                        }
+                    },
                 )
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_show_error_reason),
                     description = stringResource(R.string.layout_setting_is_show_error_reason_description),
-                    checked = viewModel.isShowErrorReason,
-                    onCheckedChange = { viewModel.isShowErrorReason = it },
+                    checked = isShowErrorReason,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsShowErrorReason(it)
+                        }
+                    },
                 )
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_syntax_highlight),
                     description = stringResource(R.string.layout_setting_is_syntax_highlight_description),
-                    checked = viewModel.isSyntaxHighlight,
-                    onCheckedChange = { viewModel.isSyntaxHighlight = it },
+                    checked = isSyntaxHighlight,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsSyntaxHighlight(it)
+                        }
+                    },
                 )
             }
-//            // 测试设置
-//            CollectionName("测试设置")
-//            Collection {
-//                NameAndAction(
-//                    name = "自定义 API Base URL",
-//                    description = if (viewModel.customApiUrl.isEmpty()) "使用默认地址" else viewModel.customApiUrl,
-//                ) {
-//                    viewModel.isShowInputCustomApiUrlDialog = true
-//                }
-//            }
-//            // 实验性功能
-//            CollectionName("实验性功能")
-//            Collection {
-//                SettingsItem(
-//                    name = "显示公有命令库入口",
-//                    description = "在主页显示公有命令库入口（仍在开发中）",
-//                    checked = viewModel.isShowPublicLibrary,
-//                    onCheckedChange = { viewModel.isShowPublicLibrary = it }
-//                )
-//            }
         }
     }
-//    if (viewModel.isShowInputCustomApiUrlDialog) {
-//        val textFieldState = rememberTextFieldState(
-//            initialText = viewModel.customApiUrl
-//        )
-//        InputStringDialog(
-//            onDismissRequest = { viewModel.isShowInputCustomApiUrlDialog = false },
-//            title = "请输入 API Base URL",
-//            textFieldState = textFieldState,
-//            onConfirm = {
-//                viewModel.customApiUrl = textFieldState.text.toString().trim()
-//            }
-//        )
-//    }
-    if (viewModel.isShowChooseThemeDialog) {
+    if (isShowChooseThemeDialog) {
         val data = remember {
             arrayOf(
                 "浅色模式" to "MODE_NIGHT_NO",
@@ -209,27 +287,31 @@ fun SettingsScreen(
             )
         }
         ChoosingDialog(
-            onDismissRequest = { viewModel.isShowChooseThemeDialog = false },
+            onDismissRequest = { isShowChooseThemeDialog = false },
             data = data,
             onChoose = {
-                viewModel.setThemeId(it)
+                coroutineScope.launch {
+                    settingsDataStore.setThemeId(it)
+                    CustomTheme.refreshTheme(it)
+                    onChooseTheme()
+                }
             })
     }
-    if (viewModel.isShowResumeBackgroundDialog) {
+    if (isShowResumeBackgroundDialog) {
         IsConfirmDialog(
-            onDismissRequest = { viewModel.isShowResumeBackgroundDialog = false },
+            onDismissRequest = { isShowResumeBackgroundDialog = false },
             content = "是否恢复背景？",
             onConfirm = {
                 restoreBackground()
             }
         )
     }
-    if (viewModel.isShowInputFloatingWindowSizeDialog) {
+    if (isShowInputFloatingWindowSizeDialog) {
         val textFieldState = rememberTextFieldState(
-            initialText = viewModel.floatingWindowSize.toString()
+            initialText = floatingWindowSize.toString()
         )
         InputStringDialog(
-            onDismissRequest = { viewModel.isShowInputFloatingWindowSizeDialog = false },
+            onDismissRequest = { isShowInputFloatingWindowSizeDialog = false },
             title = "请输入透明度",
             textFieldState = textFieldState,
             onConfirm = {
@@ -240,18 +322,20 @@ fun SettingsScreen(
                     } else if (integer > 100) {
                         integer = 100
                     }
-                    viewModel.floatingWindowSize = integer
+                    coroutineScope.launch {
+                        settingsDataStore.setFloatingWindowSize(integer)
+                    }
                 } catch (_: NumberFormatException) {
                 }
             }
         )
     }
-    if (viewModel.isShowInputFloatingWindowAlphaDialog) {
+    if (isShowInputFloatingWindowAlphaDialog) {
         val textFieldState = rememberTextFieldState(
-            initialText = (viewModel.floatingWindowAlpha * 100).toInt().toString()
+            initialText = (floatingWindowAlpha * 100).toInt().toString()
         )
         InputStringDialog(
-            onDismissRequest = { viewModel.isShowInputFloatingWindowAlphaDialog = false },
+            onDismissRequest = { isShowInputFloatingWindowAlphaDialog = false },
             title = "请输入透明度",
             textFieldState = textFieldState,
             onConfirm = {
@@ -262,25 +346,22 @@ fun SettingsScreen(
                     } else if (integer > 100) {
                         integer = 100
                     }
-                    viewModel.floatingWindowAlpha = integer / 100f
+                    coroutineScope.launch {
+                        settingsDataStore.setFloatingWindowAlpha(integer / 100f)
+                    }
                 } catch (_: NumberFormatException) {
                 }
             }
         )
     }
-    if (viewModel.isShowChooseCpackBranchDialog) {
-        val data = remember {
-            val result = mutableListOf<Pair<String, String>>()
-            for (i in 0 until viewModel.cpackBranches.size) {
-                result.add(viewModel.cpackBranchTranslations[i] to viewModel.cpackBranches[i])
-            }
-            result.toTypedArray()
-        }
+    if (isShowChooseCpackBranchDialog) {
         ChoosingDialog(
-            onDismissRequest = { viewModel.isShowChooseCpackBranchDialog = false },
-            data = data,
+            onDismissRequest = { isShowChooseCpackBranchDialog = false },
+            data = cpackBranchesWithTranslate,
             onChoose = {
-                viewModel.cpackBranch = it
+                coroutineScope.launch {
+                    settingsDataStore.setCpackBranch(it)
+                }
             })
     }
 }

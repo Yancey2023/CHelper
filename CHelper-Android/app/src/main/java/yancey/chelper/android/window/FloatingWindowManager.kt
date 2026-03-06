@@ -45,7 +45,6 @@ import com.hjq.window.EasyWindow
 import com.hjq.window.draggable.MovingWindowDraggableRule
 import yancey.chelper.R
 import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.common.util.Settings
 import yancey.chelper.android.window.completion.view.CompletionView
 import yancey.chelper.android.window.fws.view.FWSMainView
 import yancey.chelper.android.window.fws.view.FWSView
@@ -87,10 +86,15 @@ class FloatingWindowManager(
      * @param context 上下文
      */
     @Suppress("deprecation")
-    fun startFloatingWindow(context: Context) {
+    fun startFloatingWindow(
+        context: Context,
+        themeId: String,
+        floatingWindowSize: Int,
+        floatingWindowAlpha: Float
+    ) {
         val iconSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
-            Settings.INSTANCE.floatingWindowSize.toFloat(),
+            floatingWindowSize.toFloat(),
             application.resources.displayMetrics
         ).toInt()
         val iconView = ImageView(context)
@@ -120,7 +124,7 @@ class FloatingWindowManager(
             val composeView = ComposeView(context).apply {
                 setContent {
                     CHelperTheme(
-                        when (Settings.INSTANCE.themeId) {
+                        when (themeId) {
                             "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
                             "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
                             else -> if ((application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
@@ -155,7 +159,7 @@ class FloatingWindowManager(
                 .setOutsideTouchable(true)
                 .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
                 .setWindowAnim(0)
-                .setWindowAlpha(Settings.INSTANCE.floatingWindowAlpha)
+                .setWindowAlpha(floatingWindowAlpha)
             mainViewWindow = EasyWindow.with(application)
                 .setContentView(mainView)
                 .setWindowSize(
@@ -170,7 +174,7 @@ class FloatingWindowManager(
                             or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
                 )
                 .setWindowAnim(0)
-                .setWindowAlpha(Settings.INSTANCE.floatingWindowAlpha)
+                .setWindowAlpha(floatingWindowAlpha)
             composeLifecycleOwner = ComposeLifecycleOwner().apply {
                 attachToDecorView(mainViewWindow!!.rootLayout)
                 onCreate()
@@ -209,7 +213,7 @@ class FloatingWindowManager(
                 .setOutsideTouchable(true)
                 .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
                 .setWindowAnim(0)
-                .setWindowAlpha(Settings.INSTANCE.floatingWindowAlpha)
+                .setWindowAlpha(floatingWindowAlpha)
             mainViewWindow = EasyWindow.with(application)
                 .setContentView(fwsMainView)
                 .setWindowSize(
@@ -224,7 +228,7 @@ class FloatingWindowManager(
                             or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
                 )
                 .setWindowAnim(0)
-                .setWindowAlpha(Settings.INSTANCE.floatingWindowAlpha)
+                .setWindowAlpha(floatingWindowAlpha)
             iconView.setOnClickListener {
                 mainViewWindow?.apply {
                     if (windowViewVisibility == View.VISIBLE) {

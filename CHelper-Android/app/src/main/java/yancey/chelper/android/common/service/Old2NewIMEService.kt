@@ -25,7 +25,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
-import yancey.chelper.android.common.util.Settings
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.old2new.Old2NewIMEScreen
@@ -41,6 +43,7 @@ class Old2NewIMEService : InputMethodService() {
     private var oldCommand: String? = null
     private var newCommand: String? = null
     private var lastIsUndo = false
+    private var settingsDataStore = SettingsDataStore(this)
 
     override fun onCreate() {
         super.onCreate()
@@ -132,7 +135,10 @@ class Old2NewIMEService : InputMethodService() {
         }
 
     private fun refreshTheme() {
-        theme = when (Settings.INSTANCE.themeId) {
+        val themeId = runBlocking {
+            settingsDataStore.themeId().first()
+        }
+        theme = when (themeId) {
             "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
             "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
             else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light

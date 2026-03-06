@@ -88,7 +88,7 @@ object EnumerationUtil {
         val params = mutableListOf<Param>()
         var start = 0
         while (true) {
-            val a = command.indexOf("\${", start)
+            val a = command.indexOf($$"${", start)
             if (a == -1) {
                 break
             }

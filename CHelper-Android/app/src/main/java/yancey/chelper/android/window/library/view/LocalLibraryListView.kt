@@ -46,20 +46,22 @@ import java.util.stream.Collectors
  */
 @SuppressLint("ViewConstructor")
 class LocalLibraryListView @SuppressLint("NotifyDataSetChanged") constructor(fwsContext: FWSContext) :
-    BaseView(fwsContext, R.layout.layout_library_list) {
-    private val adapter: LocalLibraryListAdapter
+    BaseView(fwsContext) {
+    private lateinit var adapter: LocalLibraryListAdapter
     private var libraryFunctions: List<LibraryFunction?>? = null
-    private val search: EditText
+    private lateinit var search: EditText
     private var isDirty = false
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    init {
-        view.findViewById<View>(R.id.back).setOnClickListener {
+    override fun onCreateView() {
+        super.onCreateView()
+        setContentView(R.layout.layout_library_list)
+        contentView.findViewById<View>(R.id.back).setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
-        val title = view.findViewById<TextView>(R.id.title)
+        val title = contentView.findViewById<TextView>(R.id.title)
         title.setText(R.string.layout_library_list_title_local)
-        search = view.findViewById<EditText>(R.id.search)
+        search = contentView.findViewById(R.id.search)
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
 
@@ -74,7 +76,7 @@ class LocalLibraryListView @SuppressLint("NotifyDataSetChanged") constructor(fws
             }
         })
 
-        val listView = view.findViewById<RecyclerView>(R.id.list_view)
+        val listView = contentView.findViewById<RecyclerView>(R.id.list_view)
         listView.addItemDecoration(
             DividerItemDecoration(
                 context,

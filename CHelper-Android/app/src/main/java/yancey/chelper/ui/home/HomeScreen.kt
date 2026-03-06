@@ -30,6 +30,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.android.common.util.PolicyGrantManager
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.AboutScreenKey
 import yancey.chelper.ui.CompletionScreenKey
@@ -82,9 +85,20 @@ fun HomeScreen(
     floatingWindowManager: FloatingWindowManager? = null
 ) {
     val context = LocalContext.current
-    LaunchedEffect(viewModel) {
-        viewModel.init(context, floatingWindowManager)
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
+    LaunchedEffect(viewModel, settingsDataStore, floatingWindowManager) {
+        viewModel.init(context, settingsDataStore, floatingWindowManager)
     }
+    val isShowPublicLibrary by settingsDataStore.isShowPublicLibrary()
+        .collectAsState(initial = false)
+    val isEnableUpdateNotifications by settingsDataStore.isShowPublicLibrary()
+        .collectAsState(initial = false)
+    val themeId by settingsDataStore.themeId()
+        .collectAsState(initial = "MODE_NIGHT_FOLLOW_SYSTEM")
+    val floatingWindowSize by settingsDataStore.floatingWindowSize()
+        .collectAsState(initial = 40)
+    val floatingWindowAlpha by settingsDataStore.floatingWindowAlpha()
+        .collectAsState(initial = 1.0f)
     RootView {
         Column(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -142,7 +156,13 @@ fun HomeScreen(
                             if (viewModel.isUsingFloatingWindow()) {
                                 viewModel.stopFloatingWindow()
                             } else {
-                                viewModel.startFloatingWindow(context)
+                                viewModel.startFloatingWindow(
+                                    context,
+                                    false,
+                                    themeId,
+                                    floatingWindowSize,
+                                    floatingWindowAlpha
+                                )
                             }
                         }
                     )
@@ -172,7 +192,7 @@ fun HomeScreen(
                     NameAndAction(stringResource(R.string.layout_home_experimental_feature_local_library)) {
                         navController.navigate(LocalLibraryListScreenKey)
                     }
-                    if (viewModel.isShowPublicLibrary) {
+                    if (isShowPublicLibrary) {
                         Divider()
                         NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
                             viewModel.checkCommandLabVersion {
@@ -227,10 +247,22 @@ fun HomeScreen(
             cancelText = "不再提示",
             onCancel = {
                 viewModel.dismissShowXiaomiClipboardPermissionTipsForever()
-                viewModel.startFloatingWindow(context, true)
+                viewModel.startFloatingWindow(
+                    context,
+                    true,
+                    themeId,
+                    floatingWindowSize,
+                    floatingWindowAlpha
+                )
             },
             onConfirm = {
-                viewModel.startFloatingWindow(context, true)
+                viewModel.startFloatingWindow(
+                    context,
+                    true,
+                    themeId,
+                    floatingWindowSize,
+                    floatingWindowAlpha
+                )
             }
         )
     }
@@ -256,7 +288,12 @@ fun HomeScreen(
     }
     if (viewModel.isShowAnnouncementDialog) {
         IsConfirmDialog(
-            onDismissRequest = { viewModel.dismissAnnouncementDialog() },
+            onDismissRequest = {
+                viewModel.isShowAnnouncementDialog = false
+                if (isEnableUpdateNotifications) {
+                    viewModel.checkUpdate()
+                }
+            },
             isBig = viewModel.announcement!!.isBigDialog!!,
             title = viewModel.announcement!!.title!!,
             content = viewModel.announcement!!.message!!,
@@ -280,7 +317,7 @@ fun HomeScreen(
             viewModel.latestVersionInfo!!.version_name + "版本已发布，欢迎下载体验。本次更新内容如下：\n" + viewModel.latestVersionInfo!!.changelog
         }
         IsConfirmDialog(
-            onDismissRequest = { viewModel.dismissUpdateNotificationDialog() },
+            onDismissRequest = { viewModel.isShowUpdateNotificationsDialog = false },
             title = "更新提醒",
             content = content,
             cancelText = "忽略此版本",

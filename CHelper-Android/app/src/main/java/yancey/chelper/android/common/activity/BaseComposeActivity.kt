@@ -35,17 +35,21 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.common.util.Settings
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 
 abstract class BaseComposeActivity : ComponentActivity() {
 
     private var backgroundUpdateTimes = 0
+    protected var settingsDataStore = SettingsDataStore(this)
     protected var backgroundBitmap by mutableStateOf<ImageBitmap?>(null)
     protected var theme by mutableStateOf(CHelperTheme.Theme.Light)
     protected var isSystemDarkMode = false
@@ -84,19 +88,22 @@ abstract class BaseComposeActivity : ComponentActivity() {
     protected fun refreshTheme() {
         val isDarkBefore =
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        theme = when (Settings.INSTANCE.themeId) {
-            "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
-            "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
-            else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
-        }
-        val isDarkMode = theme == CHelperTheme.Theme.Dark
-        if (isDarkBefore != isDarkMode) {
-            WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !isDarkMode
-                isAppearanceLightNavigationBars = !isDarkMode
+        lifecycleScope.launch {
+            val themeId = settingsDataStore.themeId().first()
+            theme = when (themeId) {
+                "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
+                "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
+                else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
             }
-            resources.configuration.uiMode =
-                if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            val isDarkMode = theme == CHelperTheme.Theme.Dark
+            if (isDarkBefore != isDarkMode) {
+                WindowInsetsControllerCompat(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !isDarkMode
+                    isAppearanceLightNavigationBars = !isDarkMode
+                }
+                resources.configuration.uiMode =
+                    if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            }
         }
     }
 
@@ -131,6 +138,7 @@ private val DefaultActivityContentLayoutParams =
 
 private fun ComponentActivity.setOwners() {
     val decorView = window.decorView
+
     if (decorView.findViewTreeLifecycleOwner() == null) {
         decorView.setViewTreeLifecycleOwner(this)
     }

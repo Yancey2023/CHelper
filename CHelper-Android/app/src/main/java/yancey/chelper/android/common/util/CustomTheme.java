@@ -134,19 +134,14 @@ public class CustomTheme {
         INSTANCE = new CustomTheme(new File(file, "background.png"));
     }
 
-    public static void refreshTheme() {
-        switch (Settings.INSTANCE.themeId) {
+    public static void refreshTheme(String themeId) {
+        switch (themeId) {
             case "MODE_NIGHT_NO" ->
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             case "MODE_NIGHT_YES" ->
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            case "MODE_NIGHT_FOLLOW_SYSTEM" ->
+            default ->
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-            default -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                Settings.INSTANCE.themeId = "MODE_NIGHT_FOLLOW_SYSTEM";
-                Settings.INSTANCE.save();
-            }
         }
     }
 

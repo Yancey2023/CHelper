@@ -21,7 +21,6 @@ package yancey.chelper.network.library.interceptor
 import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
-import yancey.chelper.android.common.util.Settings
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicLong
 
@@ -31,7 +30,9 @@ import java.util.concurrent.atomic.AtomicLong
  * 限制对 abyssous.site 的请求频率，防止触发 WAF 或过载
  * 采用令牌桶算法
  */
-class RateLimitInterceptor : Interceptor {
+class RateLimitInterceptor(
+    val limit: Int
+) : Interceptor {
 
     private val lastRequestTime = AtomicLong(0)
 
@@ -43,7 +44,6 @@ class RateLimitInterceptor : Interceptor {
         val request = chain.request()
 
         if (request.url.host == "abyssous.site") {
-            val limit = Settings.INSTANCE.requestRateLimit ?: 5
             if (limit > 0) {
                 val minInterval = 1000L / limit
                 synchronized(this) {

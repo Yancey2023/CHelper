@@ -27,7 +27,6 @@ import yancey.chelper.android.common.util.CustomTheme
 import yancey.chelper.android.common.util.LocalLibraryManager
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
-import yancey.chelper.android.common.util.Settings
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
@@ -54,14 +53,6 @@ class CHelperApplication : Application() {
                 resources.displayMetrics
             ).toInt()
         )
-        // 设置初始化 (Must be before ServiceManager)
-        Settings.init(
-            this,
-            dataDir.resolve("settings").resolve("settings.json")
-        ) { throwable ->
-            Log.e("Settings", "fail to read settings from json", throwable)
-            MonitorUtil.generateCustomLog(throwable, "ReadSettingException")
-        }
         // 网络服务初始化
         ServiceManager.init(this)
         LoginUtil.init(dataDir.resolve("library").resolve("user.json")) { throwable ->

@@ -31,10 +31,7 @@ import com.hjq.toast.Toaster
 import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.HistoryManager
 import yancey.chelper.android.common.util.MonitorUtil
-import yancey.chelper.android.common.util.Settings
 import yancey.chelper.core.CHelperCore
-import yancey.chelper.core.CHelperGuiCore
-import yancey.chelper.core.CommandGuiCoreInterface
 import yancey.chelper.core.ErrorReason
 import yancey.chelper.core.SelectedString
 import java.io.BufferedInputStream
@@ -57,14 +54,15 @@ class CompletionViewModel : ViewModel() {
     var suggestionsSize by mutableIntStateOf(0)
     var suggestionsUpdateTimes by mutableIntStateOf(0)
     var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
-    var core = CHelperGuiCore()
+    var core: CHelperCore? = null
+    var lastInput: SelectedString = SelectedString("", 0, 0)
     private var historyManager: HistoryManager? = null
     private var file: File? = null
 
-    fun init(context: Context) {
+    fun init(context: Context, isResumeInput: Boolean) {
         historyManager = HistoryManager.getInstance(context)
         file = FileUtil.getFile(context.filesDir.absolutePath, "cache", "lastInput.dat")
-        if (Settings.INSTANCE.isSavingWhenPausing) {
+        if (isResumeInput) {
             if (file!!.exists()) {
                 try {
                     DataInputStream(BufferedInputStream(FileInputStream(file))).use { dataInputStream ->
@@ -81,77 +79,134 @@ class CompletionViewModel : ViewModel() {
                 }
             }
         }
-        core.setCommandGuiCoreInterface(object : CommandGuiCoreInterface {
-
-            override fun isUpdateStructure() = true
-
-            override fun isUpdateParamHint() = true
-
-            override fun isUpdateErrorReason() =
-                Settings.INSTANCE.isShowErrorReason || isSyntaxHighlight()
-
-            override fun isCheckingBySelection() = Settings.INSTANCE.isCheckingBySelection
-
-            override fun isSyntaxHighlight() =
-                Settings.INSTANCE.isSyntaxHighlight && command.text.length < 200
-
-            override fun updateStructure(structure: String?) {
-                this@CompletionViewModel.structure = structure
-            }
-
-            override fun updateParamHint(paramHint: String?) {
-                this@CompletionViewModel.paramHint = paramHint
-            }
-
-            override fun updateErrorReason(errorReasons: Array<ErrorReason?>?) {
-                this@CompletionViewModel.errorReasons = errorReasons
-            }
-
-            override fun updateSuggestions() {
-                this@CompletionViewModel.suggestionsSize = core.getSuggestionsSize()
-                this@CompletionViewModel.suggestionsUpdateTimes++
-            }
-
-            override fun getSelectedString(): SelectedString {
-                val selectionStart =
-                    min(command.selection.start, command.selection.end)
-                val selectionEnd =
-                    max(command.selection.start, command.selection.end)
-                return SelectedString(
-                    command.text.toString(),
-                    selectionStart,
-                    selectionEnd
-                )
-            }
-
-            override fun setSelectedString(selectedString: SelectedString) {
-                command.edit {
-                    replace(0, length, selectedString.text)
-                    selection = TextRange(
-                        selectedString.selectionStart,
-                        selectedString.selectionEnd
-                    )
-                }
-            }
-
-            override fun updateSyntaxHighlight(tokens: IntArray?) {
-                syntaxHighlightTokens = tokens
-            }
-        })
     }
 
-    fun refreshCHelperCore(context: Context) {
-        val cpackPath = Settings.INSTANCE.cpackPath
-        if (core.core == null || core.core!!.path != cpackPath) {
-            var core1: CHelperCore? = null
+    fun onSelectionChanged(
+        isCheckingBySelection: Boolean,
+        isSyntaxHighlight: Boolean,
+        isShowErrorReason: Boolean
+    ) {
+        val selectedString = SelectedString(
+            command.text.toString(),
+            min(command.selection.start, command.selection.end),
+            max(command.selection.start, command.selection.end)
+        )
+        val isSyntaxHighlight = isSyntaxHighlight && command.text.length < 200
+        val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
+        if (selectedString.text.isEmpty()) {
+            // 输入内容为空
+            lastInput = selectedString
+            // 显示欢迎词
+            structure = "欢迎使用CHelper"
+            // 显示作者信息
+            paramHint = "作者：Yancey"
+            // 更新错误原因
+            if (isUpdateErrorReason) {
+                errorReasons = null
+            }
+            // 通知内核
+            if (core != null) {
+                core!!.onTextChanged(selectedString.text, 0)
+            }
+            // 更新补全提示
+            suggestionsSize = core?.getSuggestionsSize() ?: 0
+            suggestionsUpdateTimes++
+            return
+        }
+        if (core == null) {
+            return
+        }
+        if (selectedString.text == lastInput.text) {
+            if (selectedString.selectionStart == lastInput.selectionStart) {
+                return
+            }
+            lastInput = selectedString
+            // 文本内容不变和光标都改变了
+            // 如果关闭了"根据光标位置提供补全提示"，就什么都不做
+            if (!isCheckingBySelection) {
+                return
+            }
+            // 通知内核
+            core!!.onSelectionChanged(selectedString.selectionStart)
+        } else {
+            lastInput = selectedString
+            // 文本内容和光标都改变了
+            // 如果关闭了"根据光标位置提供补全提示"，就在通知内核时把光标位置当成在文本最后面
+            val selectionStart = if (isCheckingBySelection) {
+                selectedString.selectionStart
+            } else {
+                selectedString.text.length
+            }
+            // 通知内核
+            core!!.onTextChanged(selectedString.text, selectionStart)
+            // 更新颜色
+            syntaxHighlightTokens = if (isSyntaxHighlight) {
+                core!!.getSyntaxToken()
+            } else {
+                null
+            }
+            // 更新命令语法结构
+            structure = core!!.getStructure()
+            // 更新错误原因
+            if (isUpdateErrorReason) {
+                errorReasons = core!!.getErrorReasons()
+            }
+        }
+        // 更新命令参数介绍
+        paramHint = core!!.getParamHint()
+        // 更新补全提示列表
+        suggestionsSize = core!!.getSuggestionsSize()
+        suggestionsUpdateTimes++
+    }
+
+    fun onItemClick(which: Int) {
+        if (core == null) {
+            return
+        }
+        val result = core!!.onSuggestionClick(which)
+        if (result != null) {
+            command.edit {
+                replace(0, length, result.text)
+                selection = TextRange(
+                    result.selection,
+                    result.selection
+                )
+            }
+        }
+    }
+
+    fun refreshCHelperCore(
+        context: Context,
+        cpackBranch: String,
+        isCheckingBySelection: Boolean,
+        isSyntaxHighlight: Boolean,
+        isShowErrorReason: Boolean
+    ) {
+        if (cpackBranch.isEmpty()) {
+            core?.close()
+            core = null
+        }
+        var cpackPath: String? = null
+        for (filename in context.assets.list("cpack")!!) {
+            if (filename!!.startsWith(cpackBranch)) {
+                cpackPath = "cpack/$filename"
+            }
+        }
+        if (core == null || core!!.path != cpackPath) {
+            var newCore: CHelperCore? = null
             try {
-                core1 = CHelperCore.fromAssets(context.assets, cpackPath)
+                newCore = CHelperCore.fromAssets(context.assets, cpackPath)
             } catch (throwable: Throwable) {
                 Toaster.show("资源包加载失败")
                 Log.w("CompletionViewModel", "fail to load resource pack", throwable)
                 MonitorUtil.generateCustomLog(throwable, "LoadResourcePackException")
             }
-            core.setCore(core1)
+            if (newCore != null) {
+                core?.close()
+                core = newCore
+                lastInput = SelectedString("", 0, 0)
+                onSelectionChanged(isCheckingBySelection, isSyntaxHighlight, isShowErrorReason)
+            }
         }
     }
 
@@ -162,6 +217,7 @@ class CompletionViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         historyManager?.save()
+        core?.close()
         // 保存上次的输入内容
         if (file != null && FileUtil.createParentFile(file)) {
             try {

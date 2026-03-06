@@ -38,6 +38,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,11 +61,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.R
-import yancey.chelper.android.common.util.Settings
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.android.common.widget.CommandEditText
-import yancey.chelper.core.CHelperGuiCore
 import yancey.chelper.core.SelectedString
-import yancey.chelper.core.Suggestion
 import yancey.chelper.core.Theme
 import yancey.chelper.ui.HistoryScreenKey
 import yancey.chelper.ui.LocalLibraryListScreenKey
@@ -321,16 +321,35 @@ fun CompletionScreen(
     hideView: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
+    val cpackBranch by settingsDataStore.cpackBranch()
+        .collectAsState(initial = "")
+    val isCrowded by settingsDataStore.isCrowded()
+        .collectAsState(initial = false)
+    val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
+        .collectAsState(initial = false)
+    val isSavingWhenPausing by settingsDataStore.isHideWindowWhenCopying()
+        .collectAsState(initial = false)
+    val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
+        .collectAsState(initial = true)
+    val isSyntaxHighlight by settingsDataStore.isSyntaxHighlight()
+        .collectAsState(initial = false)
+    val isShowErrorReason by settingsDataStore.isShowErrorReason()
+        .collectAsState(initial = false)
+
     LaunchedEffect(viewModel) {
-        viewModel.init(context)
+        viewModel.init(context, isSavingWhenPausing)
     }
-    LaunchedEffect(viewModel, Settings.INSTANCE.cpackPath) {
-        viewModel.refreshCHelperCore(context)
+    LaunchedEffect(viewModel, cpackBranch) {
+        viewModel.refreshCHelperCore(
+            context,
+            cpackBranch,
+            isCheckingBySelection,
+            isSyntaxHighlight,
+            isShowErrorReason
+        )
     }
     val clipboard = LocalClipboard.current
-    val isCrowed = remember {
-        Settings.INSTANCE.isCrowed
-    }
     val errorReason = remember(viewModel.errorReasons) {
         if (viewModel.errorReasons == null || viewModel.errorReasons!!.isEmpty()) {
             return@remember null
@@ -353,7 +372,7 @@ fun CompletionScreen(
                 .fillMaxSize()
                 .background(CHelperTheme.colors.backgroundComponent)
         ) {
-            if (!isCrowed) {
+            if (!isCrowded) {
                 CompletionScreenTopBar(viewModel.structure, viewModel.paramHint, errorReason)
             }
             LazyColumn(
@@ -361,8 +380,8 @@ fun CompletionScreen(
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                items(if (isCrowed) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
-                    if (isCrowed) {
+                items(if (isCrowded) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
+                    if (isCrowded) {
                         if (suggestionIndex == 0) {
                             CompletionScreenTopBar(
                                 viewModel.structure,
@@ -374,7 +393,7 @@ fun CompletionScreen(
                             val realIndex = suggestionIndex - 1
                             val suggestionText =
                                 remember(viewModel.suggestionsUpdateTimes, realIndex) {
-                                    val suggestion = viewModel.core.getSuggestion(realIndex)
+                                    val suggestion = viewModel.core?.getSuggestion(realIndex)
                                     if (suggestion != null && suggestion.description != null) {
                                         (suggestion.name ?: "") + " - " + suggestion.description!!
                                     } else {
@@ -385,8 +404,12 @@ fun CompletionScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(onClick = {
-                                        viewModel.core.onItemClick(realIndex)
-                                        viewModel.core.onSelectionChanged()
+                                        viewModel.onItemClick(realIndex)
+                                        viewModel.onSelectionChanged(
+                                            isCheckingBySelection,
+                                            isSyntaxHighlight,
+                                            isShowErrorReason
+                                        )
                                     })
                                     .padding(5.dp),
                                 text = suggestionText,
@@ -399,14 +422,18 @@ fun CompletionScreen(
                         Column(
                             modifier = Modifier
                                 .clickable(onClick = {
-                                    viewModel.core.onItemClick(suggestionIndex)
-                                    viewModel.core.onSelectionChanged()
+                                    viewModel.onItemClick(suggestionIndex)
+                                    viewModel.onSelectionChanged(
+                                        isCheckingBySelection,
+                                        isSyntaxHighlight,
+                                        isShowErrorReason
+                                    )
                                 })
                                 .padding(5.dp)
                         ) {
                             val suggestion =
                                 remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
-                                    viewModel.core.getSuggestion(suggestionIndex)
+                                    viewModel.core?.getSuggestion(suggestionIndex)
                                 }
                             suggestion?.name?.let {
                                 Text(
@@ -592,7 +619,7 @@ fun CompletionScreen(
                                     )
                                 )
                             }
-                            if (Settings.INSTANCE.isHideWindowWhenCopying) {
+                            if (isHideWindowWhenCopying) {
                                 hideView()
                             }
                         }
@@ -603,7 +630,11 @@ fun CompletionScreen(
             }
         }
         LaunchedEffect(viewModel.command.text, viewModel.command.selection) {
-            viewModel.core.onSelectionChanged()
+            viewModel.onSelectionChanged(
+                isCheckingBySelection,
+                isSyntaxHighlight,
+                isShowErrorReason
+            )
         }
     }
 }
@@ -615,14 +646,6 @@ fun CompletionScreenLightThemePreview() {
         CompletionViewModel().apply {
             isShowMenu = true
             suggestionsSize = 20
-        }
-    }
-    viewModel.core = object : CHelperGuiCore() {
-        override fun getSuggestion(index: Int): Suggestion {
-            return Suggestion().apply {
-                name = "name$index"
-                description = "description$index"
-            }
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
@@ -639,14 +662,6 @@ fun CompletionScreenDarkThemePreview() {
         CompletionViewModel().apply {
             isShowMenu = true
             suggestionsSize = 20
-        }
-    }
-    viewModel.core = object : CHelperGuiCore() {
-        override fun getSuggestion(index: Int): Suggestion {
-            return Suggestion().apply {
-                name = "name$index"
-                description = "description$index"
-            }
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {

@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
 import yancey.chelper.BuildConfig
 import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
-import yancey.chelper.android.common.util.Settings
+import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.chelper.data.Announcement
@@ -49,9 +49,9 @@ class HomeViewModel : ViewModel() {
     val isShowPolicyGrantDialog get() = policyGrantState != PolicyGrantManager.State.AGREE
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
-    var isShowPublicLibrary by mutableStateOf(true)
     var isShowCommandLabVersionDialog by mutableStateOf(false)
     private var minVersion: Int? = null
+    private lateinit var settingsDataStore: SettingsDataStore
     private var floatingWindowManager: FloatingWindowManager? = null
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
@@ -60,10 +60,15 @@ class HomeViewModel : ViewModel() {
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
-        isShowPublicLibrary = Settings.INSTANCE?.isShowPublicLibrary ?: true
     }
 
-    fun init(context: Context, floatingWindowManager: FloatingWindowManager?) {
+
+    fun init(
+        context: Context,
+        settingsDataStore: SettingsDataStore,
+        floatingWindowManager: FloatingWindowManager?
+    ) {
+        this.settingsDataStore = settingsDataStore
         this.floatingWindowManager = floatingWindowManager
         this.skipXiaomiClipboardPermissionTipsFile =
             context.dataDir.resolve("xiaomi_clipboard_permission_no_tips.txt")
@@ -82,7 +87,10 @@ class HomeViewModel : ViewModel() {
 
     fun startFloatingWindow(
         context: Context,
-        isSkipXiaomiClipboardPermissionTips: Boolean = false
+        isSkipXiaomiClipboardPermissionTips: Boolean,
+        themeId: String,
+        floatingWindowSize: Int,
+        floatingWindowAlpha: Float
     ) {
         if (!XXPermissions.isGrantedPermission(
                 context,
@@ -102,7 +110,12 @@ class HomeViewModel : ViewModel() {
                 return
             }
         }
-        floatingWindowManager?.startFloatingWindow(context)
+        floatingWindowManager?.startFloatingWindow(
+            context,
+            themeId,
+            floatingWindowSize,
+            floatingWindowAlpha
+        )
     }
 
     fun dismissShowXiaomiClipboardPermissionTipsForever() {
@@ -127,12 +140,8 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 announcement = ServiceManager.CHELPER_SERVICE!!.getAnnouncement()
-                isShowPublicLibrary = announcement!!.isEnableCommandLab ?: true
+                settingsDataStore.setIsShowPublicLibrary(announcement!!.isEnableCommandLab ?: true)
                 minVersion = announcement!!.commandLabMinVersion
-                if (Settings.INSTANCE.isShowPublicLibrary != isShowPublicLibrary) {
-                    Settings.INSTANCE.isShowPublicLibrary = isShowPublicLibrary
-                    Settings.INSTANCE.save()
-                }
                 var isShow = true
                 val isForce = announcement!!.isForce ?: false
                 if (!isForce) {
@@ -174,34 +183,23 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun dismissAnnouncementDialog() {
-        isShowAnnouncementDialog = false
-        checkUpdate()
-    }
-
     fun checkUpdate() {
-        if (Settings.INSTANCE.isEnableUpdateNotifications) {
-            viewModelScope.launch {
-                try {
-                    latestVersionInfo = ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo()
-                    if (latestVersionInfo!!.version_name != BuildConfig.VERSION_NAME) {
-                        val ignoreVersion = withContext(Dispatchers.IO) {
-                            skipVersionFile.bufferedReader()
-                                .use { it.readText() }
-                        }
-                        if (latestVersionInfo!!.version_name != ignoreVersion) {
-                            isShowUpdateNotificationsDialog = true
-                        }
+        viewModelScope.launch {
+            try {
+                latestVersionInfo = ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo()
+                if (latestVersionInfo!!.version_name != BuildConfig.VERSION_NAME) {
+                    val ignoreVersion = withContext(Dispatchers.IO) {
+                        skipVersionFile.bufferedReader()
+                            .use { it.readText() }
                     }
-                } catch (_: Exception) {
-
+                    if (latestVersionInfo!!.version_name != ignoreVersion) {
+                        isShowUpdateNotificationsDialog = true
+                    }
                 }
+            } catch (_: Exception) {
+
             }
         }
-    }
-
-    fun dismissUpdateNotificationDialog() {
-        isShowUpdateNotificationsDialog = false
     }
 
     fun ignoreLatestVersion() {

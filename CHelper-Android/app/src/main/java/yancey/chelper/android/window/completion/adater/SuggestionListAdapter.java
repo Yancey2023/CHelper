@@ -39,13 +39,13 @@ public class SuggestionListAdapter extends RecyclerView.Adapter<SuggestionListAd
 
     private final Context context;
     private final CHelperGuiCore core;
-    private final boolean isCrowed;
+    private final boolean isCrowded;
     private String structure, paramHint, errorReasons;
 
-    public SuggestionListAdapter(Context context, CHelperGuiCore core, boolean isCrowed) {
+    public SuggestionListAdapter(Context context, CHelperGuiCore core, boolean isCrowded) {
         this.context = context;
         this.core = core;
-        this.isCrowed = isCrowed;
+        this.isCrowded = isCrowded;
         this.structure = context.getString(R.string.layout_completion_welcome);
         this.paramHint = context.getString(R.string.layout_completion_author);
     }
@@ -64,7 +64,7 @@ public class SuggestionListAdapter extends RecyclerView.Adapter<SuggestionListAd
 
     @Override
     public int getItemViewType(int position) {
-        if (!isCrowed) {
+        if (!isCrowded) {
             return 0;
         } else if (position > 0) {
             return 1;
@@ -87,7 +87,7 @@ public class SuggestionListAdapter extends RecyclerView.Adapter<SuggestionListAd
     @Override
     @SuppressLint("SetTextI18n")
     public void onBindViewHolder(@NonNull CommandListViewHolder holder, int position) {
-        if (isCrowed && position == 0) {
+        if (isCrowded && position == 0) {
             holder.structure.setText(structure);
             holder.paramHint.setText(paramHint);
             if (errorReasons == null) {
@@ -98,7 +98,7 @@ public class SuggestionListAdapter extends RecyclerView.Adapter<SuggestionListAd
             }
             return;
         }
-        Suggestion data = core.getSuggestion(isCrowed ? position - 1 : position);
+        Suggestion data = core.getSuggestion(isCrowded ? position - 1 : position);
         if (data == null) {
             holder.content.setText(null);
             if (holder.description != null) {
@@ -112,13 +112,13 @@ public class SuggestionListAdapter extends RecyclerView.Adapter<SuggestionListAd
                 holder.content.setText(data.name);
                 holder.description.setText(data.description);
             }
-            holder.itemView.setOnClickListener(view -> core.onItemClick(isCrowed ? position - 1 : position));
+            holder.itemView.setOnClickListener(view -> core.onItemClick(isCrowded ? position - 1 : position));
         }
     }
 
     @Override
     public int getItemCount() {
-        return isCrowed ? core.getSuggestionsSize() + 1 : core.getSuggestionsSize();
+        return isCrowded ? core.getSuggestionsSize() + 1 : core.getSuggestionsSize();
     }
 
     public static class CommandListViewHolder extends RecyclerView.ViewHolder {

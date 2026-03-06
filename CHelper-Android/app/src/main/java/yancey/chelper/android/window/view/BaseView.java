@@ -20,7 +20,6 @@ package yancey.chelper.android.window.view;
 
 import android.view.View;
 
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -37,14 +36,15 @@ public abstract class BaseView extends FWSView {
 
     /**
      * @param fwsContext 自定义上下文
-     * @param layoutId   视图界面ID
      */
-    public BaseView(
-            @NonNull FWSContext fwsContext,
-            @LayoutRes int layoutId
-    ) {
-        super(fwsContext, layoutId);
-        View mainView = view.findViewById(R.id.main);
+    public BaseView(@NonNull FWSContext fwsContext) {
+        super(fwsContext);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        View mainView = contentView.findViewById(R.id.main);
         if (mainView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
                 Insets stateBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
@@ -65,7 +65,7 @@ public abstract class BaseView extends FWSView {
     public void onResume() {
         super.onResume();
         // 支持自定义背景
-        View mainView = view.findViewById(R.id.main);
+        View mainView = contentView.findViewById(R.id.main);
         backgroundUpdateTimes = CustomTheme.INSTANCE.invokeBackground(mainView, backgroundUpdateTimes);
         WindowInsetsCompat rootWindowInsets = ViewCompat.getRootWindowInsets(mainView);
         if (rootWindowInsets != null) {

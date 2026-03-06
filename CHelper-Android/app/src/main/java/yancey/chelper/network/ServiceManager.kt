@@ -30,6 +30,7 @@ import yancey.chelper.BuildConfig
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.network.chelper.service.CHelperService
 import yancey.chelper.network.library.interceptor.AuthInterceptor
+import yancey.chelper.network.library.interceptor.RateLimitInterceptor
 import yancey.chelper.network.library.service.CaptchaService
 import yancey.chelper.network.library.service.CommandLabPublicService
 import yancey.chelper.network.library.service.CommandLabUserService
@@ -64,7 +65,7 @@ object ServiceManager {
             .writeTimeout(15, TimeUnit.SECONDS)
             .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
             .addInterceptor(BrotliInterceptor)
-            .addInterceptor(yancey.chelper.network.library.interceptor.RateLimitInterceptor())
+            .addInterceptor(RateLimitInterceptor(2))
             .addInterceptor(AuthInterceptor.INSTANCE)
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
@@ -77,7 +78,6 @@ object ServiceManager {
             .addConverterFactory(GsonConverterFactory.create(GSON!!))
             .build()
         COMMAND_LAB_RETROFIT = Retrofit.Builder()
-//            .baseUrl(Settings.INSTANCE.apiUrl?.takeIf { it.isNotEmpty() } ?: LAB_BASE_URL)
             .baseUrl(LAB_BASE_URL)
             .client(CLIENT!!)
             .addConverterFactory(GsonConverterFactory.create(GSON!!))

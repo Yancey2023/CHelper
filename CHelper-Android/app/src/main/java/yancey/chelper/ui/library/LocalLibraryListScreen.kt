@@ -72,14 +72,15 @@ fun LocalLibraryListScreen(
     navController: NavHostController = rememberNavController(),
 ) {
     val clipboard = LocalClipboard.current
-    val filteredLibraries = remember(viewModel.isInit, viewModel.keyword.text, viewModel.libraries) {
-        if (viewModel.keyword.text.isEmpty()) {
-            viewModel.libraries ?: listOf()
-        } else {
-            viewModel.libraries?.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
-                ?: listOf()
+    val filteredLibraries =
+        remember(viewModel.isInit, viewModel.keyword.text, viewModel.libraries) {
+            if (viewModel.keyword.text.isEmpty()) {
+                viewModel.libraries ?: listOf()
+            } else {
+                viewModel.libraries?.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
+                    ?: listOf()
+            }
         }
-    }
     RootViewWithHeaderAndCopyright(
         title = stringResource(R.string.layout_library_list_title_local),
         headerRight = {
