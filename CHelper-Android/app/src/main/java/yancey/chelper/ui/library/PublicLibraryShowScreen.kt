@@ -382,7 +382,7 @@ fun PublicLibraryShowScreen(
                                 }
                             }
                             // 创建时间
-                            viewModel.library.created_at?.takeIf { it.isNotBlank() }?.let { time ->
+                            viewModel.library.createdAt?.takeIf { it.isNotBlank() }?.let { time ->
                                 Row(modifier = Modifier.padding(bottom = 4.dp)) {
                                     Text(
                                         text = "时间  ",
@@ -402,7 +402,7 @@ fun PublicLibraryShowScreen(
                             }
                             // 点赞
                             Row(modifier = Modifier.padding(bottom = 4.dp)) {
-                                viewModel.library.like_count?.let { likes ->
+                                viewModel.library.likeCount?.let { likes ->
                                     Icon(
                                         id = R.drawable.ic_heart,
                                         modifier = Modifier.size(14.dp),
@@ -621,7 +621,7 @@ fun PublicLibraryShowScreenLightThemePreview() {
         name = "Test Library"
         author = "Test Author"
         note = "This is a test description"
-        like_count = 42
+        likeCount = 42
         content = buildString {
             for (i in 1..10) {
                 append("# Command${i * 2 - 1}\n")
@@ -642,7 +642,7 @@ fun PublicLibraryShowScreenDarkThemePreview() {
         name = "Test Library"
         author = "Test Author"
         note = "This is a test description"
-        like_count = 42
+        likeCount = 42
         content = buildString {
             for (i in 1..10) {
                 append("# Command${i * 2 - 1}\n")

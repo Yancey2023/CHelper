@@ -20,10 +20,9 @@ package yancey.chelper.android.common.util
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import yancey.chelper.network.ServiceManager
+import kotlinx.serialization.json.Json
 import yancey.chelper.network.library.data.LibraryFunction
 import java.io.File
 
@@ -33,19 +32,18 @@ class LocalLibraryManager private constructor(private val file: File) {
 
     suspend fun ensureInit() {
         if (!isInit && file.exists()) {
-            withContext(Dispatchers.IO) {
+            val libraryFunctions0 = withContext(Dispatchers.IO) {
                 try {
-                    val libraryFunctions0 =
-                        ServiceManager.GSON!!.fromJson<List<LibraryFunction>>(
-                            FileUtil.readString(file),
-                            object :
-                                TypeToken<List<LibraryFunction>>() {
-                            }.type
-                        )
-                    libraryFunctions.clear()
-                    libraryFunctions.addAll(libraryFunctions0)
+                    return@withContext FileUtil.readString(file)?.let {
+                        Json.decodeFromString<List<LibraryFunction>>(it)
+                    }
                 } catch (_: Throwable) {
                 }
+                return@withContext null
+            }
+            if (libraryFunctions0 != null) {
+                libraryFunctions.clear()
+                libraryFunctions.addAll(libraryFunctions0)
             }
         }
     }
@@ -55,7 +53,10 @@ class LocalLibraryManager private constructor(private val file: File) {
     }
 
     suspend fun save() = withContext(Dispatchers.IO) {
-        FileUtil.writeString(file, ServiceManager.GSON!!.toJson(libraryFunctions))
+        file.outputStream().write(
+            Json.encodeToString(libraryFunctions.toList())
+                .encodeToByteArray()
+        )
     }
 
     companion object {

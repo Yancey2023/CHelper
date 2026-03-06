@@ -19,13 +19,14 @@
 package yancey.chelper.network
 
 import android.content.Context
-import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 import okhttp3.Cache
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import yancey.chelper.BuildConfig
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.network.chelper.service.CHelperService
@@ -39,8 +40,6 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object ServiceManager {
-    @JvmField
-    var GSON: Gson? = null
     var CLIENT: OkHttpClient? = null
     var CHELPER_RETROFIT: Retrofit? = null
     var COMMAND_LAB_RETROFIT: Retrofit? = null
@@ -58,7 +57,6 @@ object ServiceManager {
 
     @JvmStatic
     fun init(context: Context) {
-        GSON = Gson()
         val builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -75,12 +73,20 @@ object ServiceManager {
         CHELPER_RETROFIT = Retrofit.Builder()
             .baseUrl("https://www.yanceymc.cn/api/chelper/")
             .client(CLIENT!!)
-            .addConverterFactory(GsonConverterFactory.create(GSON!!))
+            .addConverterFactory(
+                Json.asConverterFactory(
+                    "application/json; charset=utf-8".toMediaType()
+                )
+            )
             .build()
         COMMAND_LAB_RETROFIT = Retrofit.Builder()
             .baseUrl(LAB_BASE_URL)
             .client(CLIENT!!)
-            .addConverterFactory(GsonConverterFactory.create(GSON!!))
+            .addConverterFactory(
+                Json.asConverterFactory(
+                    "application/json; charset=utf-8".toMediaType()
+                )
+            )
             .build()
         CHELPER_SERVICE = CHELPER_RETROFIT!!.create(CHelperService::class.java)
         COMMAND_LAB_PUBLIC_SERVICE =

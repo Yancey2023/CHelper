@@ -18,7 +18,8 @@
 
 package yancey.chelper.network.library.service
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -28,17 +29,18 @@ import yancey.chelper.network.library.data.LibraryFunction
 
 @Suppress("unused")
 interface CommandLabPublicService {
+    @Serializable
     class GetFunctionsResponse {
-        @SerializedName("list")
+        @SerialName("list")
         var functions: MutableList<LibraryFunction?>? = null
 
-        @SerializedName("pageNum")
+        @SerialName("pageNum")
         var currentPage: Int? = null
 
-        @SerializedName("pageSize")
+        @SerialName("pageSize")
         var perPage: Int? = null
 
-        @SerializedName("total")
+        @SerialName("total")
         var totalCount: Int? = null
     }
 

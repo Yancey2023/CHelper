@@ -277,7 +277,7 @@ private fun PublicLibraryItem(
                             )
                     )
                 }
-                library.like_count?.let { likes ->
+                library.likeCount?.let { likes ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = " · ",
@@ -374,7 +374,7 @@ fun PublicLibraryListScreenLightThemePreview() {
                         name = "Library $i"
                         author = "Author $i"
                         note = "Description for library $i"
-                        like_count = i * 10
+                        likeCount = i * 10
                     }
                 )
             }
@@ -397,7 +397,7 @@ fun PublicLibraryListScreenDarkThemePreview() {
                         name = "Library $i"
                         author = "Author $i"
                         note = "This is a longer description for library $i"
-                        like_count = i * 5
+                        likeCount = i * 5
                     }
                 )
             }

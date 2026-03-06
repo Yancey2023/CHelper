@@ -24,8 +24,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 class ColorFormat(var format: String, var color: Color, var isLight: Boolean)
 
@@ -74,26 +76,27 @@ class RawtextViewModel : ViewModel() {
             colors.fill(range.item.color, range.start, range.end)
         }
         // 输出Json
-        val result = JsonObject()
-        val rawText = JsonArray()
-        val text = JsonObject()
-        text.addProperty("text", buildString {
-            if (colors.isNotEmpty()) {
-                var indexStart = 0
-                for (i in colors.indices) {
-                    if (colors[i] == colors[indexStart]) {
-                        continue
-                    }
-                    append(colorFormats.find { it.color == colors[indexStart] }?.format)
-                    append(annotatedString.text.substring(indexStart, i))
-                    indexStart = i
+        val result = buildJsonObject {
+            putJsonArray("rawtext") {
+                addJsonObject {
+                    put("text", buildString {
+                        if (colors.isNotEmpty()) {
+                            var indexStart = 0
+                            for (i in colors.indices) {
+                                if (colors[i] == colors[indexStart]) {
+                                    continue
+                                }
+                                append(colorFormats.find { it.color == colors[indexStart] }?.format)
+                                append(annotatedString.text.substring(indexStart, i))
+                                indexStart = i
+                            }
+                            append(colorFormats.find { it.color == colors[indexStart] }?.format)
+                            append(annotatedString.text.substring(indexStart, colors.size))
+                        }
+                    })
                 }
-                append(colorFormats.find { it.color == colors[indexStart] }?.format)
-                append(annotatedString.text.substring(indexStart, colors.size))
             }
-        })
-        rawText.add(text)
-        result.add("rawtext", rawText)
+        }
         return result.toString()
     }
 }

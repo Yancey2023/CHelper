@@ -49,12 +49,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.gson.reflect.TypeToken
 import com.hjq.toast.Toaster
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import yancey.chelper.R
 import yancey.chelper.android.common.util.LocalLibraryManager
-import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LibraryEditScreenKey
 import yancey.chelper.ui.LocalLibraryShowScreenKey
@@ -192,11 +191,7 @@ fun LocalLibraryListScreen(
                         if (itemCount > 0) {
                             val text = getItemAt(0).text.toString()
                             try {
-                                val libraries =
-                                    ServiceManager.GSON!!.fromJson<List<LibraryFunction>>(
-                                        text,
-                                        object : TypeToken<List<LibraryFunction>>() {}.type
-                                    )
+                                val libraries = Json.decodeFromString<List<LibraryFunction>>(text)
                                 viewModel.libraries?.addAll(libraries)
                                 LocalLibraryManager.INSTANCE!!.save()
                                 Toaster.show("导入成功")
@@ -211,7 +206,7 @@ fun LocalLibraryListScreen(
     }
     if (viewModel.isShowExportDialog) {
         val output = remember(viewModel.libraries) {
-            ServiceManager.GSON!!.toJson(viewModel.libraries)
+            Json.encodeToString(viewModel.libraries?.toList())
         }
         IsConfirmDialog(
             onDismissRequest = { viewModel.isShowExportDialog = false },

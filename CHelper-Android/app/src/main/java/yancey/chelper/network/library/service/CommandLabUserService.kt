@@ -18,6 +18,8 @@
 
 package yancey.chelper.network.library.service
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -44,8 +46,8 @@ interface CommandLabUserService {
     class GuestAuthRequest {
         var fingerprint: String? = null
 
-        @Suppress("PropertyName")
-        var auth_code: String? = null
+        @SerialName("auth_code")
+        var authCode: String? = null
     }
 
     @POST("guest/login")
@@ -67,8 +69,8 @@ interface CommandLabUserService {
      * 发送邮箱验证码请求体
      */
     class SendCodeRequest {
-        @Suppress("PropertyName")
-        var special_code: String? = null
+        @SerialName("special_code")
+        var specialCode: String? = null
         var type: Int? = null  // 0=注册, 1=更新密码, 2=找回密码
         var email: String? = null
         var phone: String? = null
@@ -96,16 +98,16 @@ interface CommandLabUserService {
      * 注册请求体
      */
     class RegisterRequest {
-        @Suppress("PropertyName")
-        var special_code: String? = null
+        @SerialName("special_code")
+        var specialCode: String? = null
         var code: String? = null
         var email: String? = null
         var phone: String? = null
         var nickname: String? = null
         var password: String? = null
 
-        @Suppress("PropertyName")
-        var android_id: String? = null
+        @SerialName("android_id")
+        var androidId: String? = null
     }
 
     /**
@@ -130,30 +132,31 @@ interface CommandLabUserService {
     /**
      * 用户信息
      */
+    @Serializable
     class User {
         var id: Int? = null
         var email: String? = null
         var nickname: String? = null
 
-        @Suppress("PropertyName")
-        var is_guest: Boolean? = null
+        @SerialName("is_guest")
+        var isGuest: Boolean? = null
 
-        @Suppress("PropertyName")
-        var is_admin: Boolean? = null
+        @SerialName("is_admin")
+        var isAdmin: Boolean? = null
 
-        @Suppress("PropertyName")
-        var is_moderator: Boolean? = null
+        @SerialName("is_moderator")
+        var isModerator: Boolean? = null
 
-        @Suppress("PropertyName")
-        var gravatar_url: String? = null
+        @SerialName("gravatar_url")
+        var gravatarUrl: String? = null
     }
 
     /**
      * 登录响应
      */
     class LoginResponse {
-        @Suppress("PropertyName")
-        var user_id: Int? = null // Added from upstream
+        @SerialName("user_id")
+        var userId: Int? = null // Added from upstream
         var token: String? = null
         var user: User? = null
     }
@@ -173,8 +176,8 @@ interface CommandLabUserService {
         var content: String? = null
 
         // 上传固定为私有草稿，发布走 /release 接口
-        @Suppress("PropertyName")
-        var is_publish: Boolean = false
+        @SerialName("is_publish")
+        var isPublish: Boolean = false
     }
 
     class UploadLibraryResponse {

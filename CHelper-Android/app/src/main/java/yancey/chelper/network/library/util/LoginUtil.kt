@@ -18,6 +18,8 @@
 
 package yancey.chelper.network.library.util
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.service.CommandLabUserService
@@ -52,6 +54,7 @@ object LoginUtil {
     /**
      * 本地持久化的用户数据
      */
+    @Serializable
     private class SavedUserData {
         var mail: String? = null
         var password: String? = null
@@ -67,10 +70,7 @@ object LoginUtil {
         this.file = file
         if (file.exists()) {
             try {
-                val savedData = ServiceManager.GSON!!.fromJson(
-                    FileUtil.readString(file),
-                    SavedUserData::class.java
-                )
+                val savedData = Json.decodeFromString<SavedUserData>(FileUtil.readString(file)!!)
                 savedMail = savedData.mail
                 savedPassword = savedData.password
                 currentToken = savedData.token
@@ -178,8 +178,6 @@ object LoginUtil {
             lastLoginTimestamp = this@LoginUtil.lastLoginTimestamp
             user = currentUser
         }
-        file?.let {
-            FileUtil.writeString(it, ServiceManager.GSON!!.toJson(savedData))
-        }
+        file?.let { FileUtil.writeString(it, Json.encodeToString(savedData)) }
     }
 }

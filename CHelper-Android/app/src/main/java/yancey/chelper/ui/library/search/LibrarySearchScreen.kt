@@ -349,7 +349,7 @@ private fun SearchLibraryItem(
                     Spacer(Modifier.width(10.dp))
                 }
 
-                library.like_count?.let { likes ->
+                library.likeCount?.let { likes ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(R.drawable.ic_heart),

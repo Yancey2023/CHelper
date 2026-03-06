@@ -180,7 +180,7 @@ object GuestAuthUtil {
 
             val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
-                this.auth_code = authCode
+                this.authCode = authCode
             }
 
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE
@@ -210,7 +210,7 @@ object GuestAuthUtil {
 
             val request = CommandLabUserService.GuestAuthRequest().apply {
                 this.fingerprint = fingerprint
-                this.auth_code = authCode
+                this.authCode = authCode
             }
 
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE

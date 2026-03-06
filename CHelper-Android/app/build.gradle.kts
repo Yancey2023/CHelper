@@ -126,7 +126,7 @@ dependencies {
     // https://github.com/square/retrofit
     implementation(platform("com.squareup.retrofit2:retrofit-bom:3.0.0"))
     implementation("com.squareup.retrofit2:retrofit")
-    implementation("com.squareup.retrofit2:converter-gson")
+    implementation("com.squareup.retrofit2:converter-kotlinx-serialization")
     // https://github.com/getActivity/DeviceCompat
     implementation("com.github.getActivity:DeviceCompat:2.6")
     // https://github.com/getActivity/XXPermissions

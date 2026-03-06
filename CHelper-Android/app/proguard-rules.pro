@@ -33,20 +33,6 @@
 -keep class yancey.chelper.core.ErrorReason{ *; }
 -keep class yancey.chelper.core.ClickSuggestionResult{ *; }
 
-# ----- Settings -----
-
--keep class yancey.chelper.android.common.util.Settings{ *; }
-
-# ===== CHelper Server -----
-
--keep class yancey.chelper.network.chelper.data.**{ *; }
--keep class yancey.chelper.network.chelper.service.**{ *; }
-
-# ----- Command Lab -----
-
--keep class yancey.chelper.network.library.data.**{ *; }
--keep class yancey.chelper.network.library.service.**{ *; }
-
 # ----- umeng -----
 
 -keep class com.umeng.** { *; }

@@ -143,7 +143,7 @@ class CPLUserViewModel : ViewModel() {
                     } else {
                         this.phone = registerAccount.text.toString()
                     }
-                    this.special_code = specialCode
+                    this.specialCode = specialCode
                     this.type = CommandLabUserService.SendCodeRequest.TYPE_REGISTER
                 }
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendCode(request).execute()
@@ -183,11 +183,11 @@ class CPLUserViewModel : ViewModel() {
                         this.phone = registerAccount.text.toString()
                     }
                     this.code = registerCode.text.toString()
-                    this.special_code = specialCode
+                    this.specialCode = specialCode
                     this.nickname = registerNickname.text.toString().takeIf { it.isNotBlank() }
                         ?: "用户${System.currentTimeMillis() % 1000}"
                     this.password = registerPassword.text.toString()
-                    this.android_id = GuestAuthUtil.getFingerprint()
+                    this.androidId = GuestAuthUtil.getFingerprint()
                 }
 
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.register(request).execute()
