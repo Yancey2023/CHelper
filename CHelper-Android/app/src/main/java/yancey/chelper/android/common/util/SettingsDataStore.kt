@@ -20,6 +20,7 @@ package yancey.chelper.android.common.util
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
@@ -30,48 +31,42 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
 import java.io.InputStream
 import java.io.OutputStream
 
 private val Context.settingsDataStore: DataStore<Settings> by dataStore(
     fileName = "settings.json",
     serializer = SettingsSerializer,
+    produceMigrations = {
+        listOf(MigrationToV73(it))
+    }
 )
 
 @Serializable
 data class Settings(
-    val isEnableUpdateNotifications: Boolean,
-    val themeId: String,
-    val floatingWindowAlpha: Float,
-    val floatingWindowSize: Int,
-    val isCheckingBySelection: Boolean,
-    val isHideWindowWhenCopying: Boolean,
-    val isSavingWhenPausing: Boolean,
-    val isCrowded: Boolean,
-    val isShowErrorReason: Boolean,
-    val isSyntaxHighlight: Boolean,
-    val cpackBranch: String,
-    val isShowPublicLibrary: Boolean,
-    val publicLibraryMinVersion: Int,
+    val isEnableUpdateNotifications: Boolean? = null,
+    val themeId: String? = null,
+    val floatingWindowAlpha: Float? = null,
+    val floatingWindowSize: Int? = null,
+    val isCheckingBySelection: Boolean? = null,
+    val isHideWindowWhenCopying: Boolean? = null,
+    val isSavingWhenPausing: Boolean? = null,
+    val isCrowded: Boolean? = null,
+    val isShowErrorReason: Boolean? = null,
+    val isSyntaxHighlight: Boolean? = null,
+    val cpackBranch: String? = null,
+    val isShowPublicLibrary: Boolean? = null,
+    val publicLibraryMinVersion: Int? = null,
 )
 
 object SettingsSerializer : Serializer<Settings> {
 
-    override val defaultValue: Settings = Settings(
-        isEnableUpdateNotifications = true,
-        themeId = "MODE_NIGHT_FOLLOW_SYSTEM",
-        floatingWindowAlpha = 1.0f,
-        floatingWindowSize = 40,
-        isCheckingBySelection = true,
-        isHideWindowWhenCopying = false,
-        isSavingWhenPausing = true,
-        isCrowded = false,
-        isShowErrorReason = true,
-        isSyntaxHighlight = true,
-        cpackBranch = "release-experiment",
-        isShowPublicLibrary = true,
-        publicLibraryMinVersion = 0,
-    )
+    override val defaultValue: Settings = Settings()
 
     override suspend fun readFrom(input: InputStream): Settings =
         try {
@@ -97,43 +92,43 @@ object SettingsSerializer : Serializer<Settings> {
 class SettingsDataStore(private val context: Context) {
 
     fun isEnableUpdateNotifications(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isEnableUpdateNotifications }
+        context.settingsDataStore.data.map { it.isEnableUpdateNotifications ?: true }
 
     fun themeId(): Flow<String> =
-        context.settingsDataStore.data.map { it.themeId }
+        context.settingsDataStore.data.map { it.themeId ?: "MODE_NIGHT_FOLLOW_SYSTEM" }
 
     fun floatingWindowAlpha(): Flow<Float> =
-        context.settingsDataStore.data.map { it.floatingWindowAlpha }
+        context.settingsDataStore.data.map { it.floatingWindowAlpha ?: 1.0f }
 
     fun floatingWindowSize(): Flow<Int> =
-        context.settingsDataStore.data.map { it.floatingWindowSize }
+        context.settingsDataStore.data.map { it.floatingWindowSize ?: 40 }
 
     fun isCheckingBySelection(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isCheckingBySelection }
+        context.settingsDataStore.data.map { it.isCheckingBySelection ?: true }
 
     fun isHideWindowWhenCopying(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isHideWindowWhenCopying }
+        context.settingsDataStore.data.map { it.isHideWindowWhenCopying ?: false }
 
     fun isSavingWhenPausing(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isSavingWhenPausing }
+        context.settingsDataStore.data.map { it.isSavingWhenPausing ?: true }
 
     fun isCrowded(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isCrowded }
+        context.settingsDataStore.data.map { it.isCrowded ?: false }
 
     fun isShowErrorReason(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isShowErrorReason }
+        context.settingsDataStore.data.map { it.isShowErrorReason ?: true }
 
     fun isSyntaxHighlight(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isSyntaxHighlight }
+        context.settingsDataStore.data.map { it.isSyntaxHighlight ?: true }
 
     fun cpackBranch(): Flow<String> =
-        context.settingsDataStore.data.map { it.cpackBranch }
+        context.settingsDataStore.data.map { it.cpackBranch ?: "release-experiment" }
 
     fun isShowPublicLibrary(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isShowPublicLibrary }
+        context.settingsDataStore.data.map { it.isShowPublicLibrary ?: true }
 
     fun publicLibraryMinVersion(): Flow<Int> =
-        context.settingsDataStore.data.map { it.publicLibraryMinVersion }
+        context.settingsDataStore.data.map { it.publicLibraryMinVersion ?: 0 }
 
     suspend fun setIsEnableUpdateNotifications(value: Boolean) {
         context.settingsDataStore.updateData { it.copy(isEnableUpdateNotifications = value) }
@@ -185,5 +180,49 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setPublicLibraryMinVersion(value: Int) {
         context.settingsDataStore.updateData { it.copy(publicLibraryMinVersion = value) }
+    }
+}
+
+/**
+ * 0.3.15 版本之后，软件设置从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
+ */
+class MigrationToV73(private val context: Context) : DataMigration<Settings> {
+    override suspend fun shouldMigrate(currentData: Settings): Boolean {
+        return context.dataDir.resolve("settings").resolve("settings.json").exists()
+    }
+
+    override suspend fun migrate(currentData: Settings): Settings {
+        val oldSettings = Json.decodeFromString<JsonObject>(
+            context.dataDir.resolve("settings").resolve("settings.json").readBytes()
+                .decodeToString()
+        )
+        var cpackBranch = (oldSettings["cpackPath"] as? JsonPrimitive)?.content
+        if (cpackBranch == null ||
+            !(cpackBranch == "release-vanilla" ||
+                    cpackBranch == "release-experiment" ||
+                    cpackBranch == "beta-vanilla" ||
+                    cpackBranch == "beta-experiment" ||
+                    cpackBranch == "netease-vanilla" ||
+                    cpackBranch == "netease-experiment")
+        ) {
+            cpackBranch = null
+        }
+        return currentData.copy(
+            isEnableUpdateNotifications = (oldSettings["isEnableUpdateNotifications"] as? JsonPrimitive)?.booleanOrNull,
+            themeId = (oldSettings["themeId"] as? JsonPrimitive)?.content,
+            floatingWindowAlpha = (oldSettings["floatingWindowAlpha"] as? JsonPrimitive)?.floatOrNull,
+            floatingWindowSize = (oldSettings["floatingWindowSize"] as? JsonPrimitive)?.intOrNull,
+            isCheckingBySelection = (oldSettings["isCheckingBySelection"] as? JsonPrimitive)?.booleanOrNull,
+            isHideWindowWhenCopying = (oldSettings["isHideWindowWhenCopying"] as? JsonPrimitive)?.booleanOrNull,
+            isSavingWhenPausing = (oldSettings["isSavingWhenPausing"] as? JsonPrimitive)?.booleanOrNull,
+            isCrowded = (oldSettings["isCrowed"] as? JsonPrimitive)?.booleanOrNull,// 之前的配置文件中 crowded 名字拼写错了
+            isShowErrorReason = (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
+            isSyntaxHighlight = (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
+            cpackBranch = cpackBranch,
+        )
+    }
+
+    override suspend fun cleanUp() {
+        context.dataDir.resolve("settings").resolve("settings.json").delete()
     }
 }

@@ -219,7 +219,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun checkCommandLabVersion(publicLibraryMinVersion: Int, onVersionOk: () -> Unit) {
-        if (BuildConfig.VERSION_CODE >= publicLibraryMinVersion) {
+        if (BuildConfig.VERSION_CODE < publicLibraryMinVersion) {
             isShowCommandLabVersionDialog = true
         } else {
             onVersionOk()
