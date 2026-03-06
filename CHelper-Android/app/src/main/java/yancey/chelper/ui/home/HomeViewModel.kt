@@ -31,7 +31,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.BuildConfig
-import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.PolicyGrantManager
 import yancey.chelper.android.common.util.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
@@ -118,7 +117,7 @@ class HomeViewModel : ViewModel() {
 
     fun dismissShowXiaomiClipboardPermissionTipsForever() {
         this.isNeedToShowXiaomiClipboardPermissionTips = false
-        FileUtil.writeString(skipXiaomiClipboardPermissionTipsFile, "")
+        skipXiaomiClipboardPermissionTipsFile.outputStream().write("".toByteArray())
     }
 
     fun stopFloatingWindow() {
@@ -127,7 +126,7 @@ class HomeViewModel : ViewModel() {
 
     fun agreePolicy() {
         this.policyGrantState = PolicyGrantManager.State.AGREE
-        PolicyGrantManager.INSTANCE.agree()
+        PolicyGrantManager.INSTANCE?.agree()
         showAnnouncementDialog()
     }
 
@@ -172,10 +171,8 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    FileUtil.writeString(
-                        skipAnnouncementFile,
-                        announcement.hashCode().toString()
-                    )
+                    skipAnnouncementFile.outputStream()
+                        .write(announcement.hashCode().toString().toByteArray())
                 }
             } catch (_: Exception) {
 
@@ -206,10 +203,8 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    FileUtil.writeString(
-                        skipVersionFile,
-                        latestVersionInfo!!.versionName
-                    )
+                    skipVersionFile.outputStream()
+                        .write(latestVersionInfo!!.versionName!!.toByteArray())
                 }
             } catch (_: Exception) {
 

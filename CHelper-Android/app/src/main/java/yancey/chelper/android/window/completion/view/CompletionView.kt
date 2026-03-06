@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import yancey.chelper.R
 import yancey.chelper.android.common.util.ClipboardUtil
-import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.android.common.util.HistoryManager
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.android.common.util.SettingsDataStore
@@ -50,6 +49,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -237,8 +237,7 @@ class CompletionView(
         // 加载上次的输入内容
         var selectedString: SelectedString? = null
         if (isSavingWhenPausing) {
-            val file =
-                FileUtil.getFile(context.filesDir.absolutePath, "cache", "lastInput.dat")
+            val file = context.filesDir.resolve("cache").resolve("lastInput.dat")
             if (file.exists()) {
                 try {
                     DataInputStream(BufferedInputStream(FileInputStream(file))).use { dataInputStream ->
@@ -279,9 +278,9 @@ class CompletionView(
         isGuiLoaded = false
         historyManager.save()
         // 保存上次的输入内容
-        val file =
-            FileUtil.getFile(getContext().filesDir.absolutePath, "cache", "lastInput.dat")
-        if (!FileUtil.createParentFile(file)) {
+        val file = getContext().filesDir.resolve("cache").resolve("lastInput.dat")
+        val parentFile: File? = file.parentFile
+        if (parentFile == null || (!parentFile.exists() && !parentFile.mkdirs())) {
             Log.e(TAG, "fail to create parent file : " + file.absolutePath)
             return
         }

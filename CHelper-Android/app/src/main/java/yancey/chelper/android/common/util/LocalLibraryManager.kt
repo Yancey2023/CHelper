@@ -34,7 +34,7 @@ class LocalLibraryManager private constructor(private val file: File) {
         if (!isInit && file.exists()) {
             val libraryFunctions0 = withContext(Dispatchers.IO) {
                 try {
-                    return@withContext FileUtil.readString(file)?.let {
+                    return@withContext file.readBytes().decodeToString().let {
                         Json.decodeFromString<List<LibraryFunction>>(it)
                     }
                 } catch (_: Throwable) {

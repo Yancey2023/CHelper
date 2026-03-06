@@ -27,8 +27,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.hjq.toast.Toaster
-import yancey.chelper.android.common.util.FileUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import yancey.chelper.android.common.util.HistoryManager
 import yancey.chelper.android.common.util.MonitorUtil
 import yancey.chelper.core.CHelperCore
@@ -39,7 +42,6 @@ import java.io.BufferedOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.math.max
@@ -58,25 +60,35 @@ class CompletionViewModel : ViewModel() {
     var lastInput: SelectedString = SelectedString("", 0, 0)
     private var historyManager: HistoryManager? = null
     private var file: File? = null
+    private var isResumed = false
 
-    fun init(context: Context, isResumeInput: Boolean) {
+    fun init(context: Context) {
         historyManager = HistoryManager.getInstance(context)
-        file = FileUtil.getFile(context.filesDir.absolutePath, "cache", "lastInput.dat")
-        if (isResumeInput) {
-            if (file!!.exists()) {
-                try {
-                    DataInputStream(BufferedInputStream(FileInputStream(file))).use { dataInputStream ->
-                        command = TextFieldState(
-                            dataInputStream.readUTF(),
-                            TextRange(
-                                dataInputStream.readInt(),
-                                dataInputStream.readInt()
-                            )
-                        )
-                    }
-                } catch (_: IOException) {
+        file = context.filesDir.resolve("cache").resolve("lastInput.dat")
+    }
 
+    fun resumeText() {
+        if (isResumed) {
+            return
+        }
+        isResumed = true
+        if (file!!.exists()) {
+            try {
+                viewModelScope.launch {
+                    command = withContext(Dispatchers.IO) {
+                        DataInputStream(BufferedInputStream(file!!.inputStream())).use { dataInputStream ->
+                            return@withContext TextFieldState(
+                                dataInputStream.readUTF(),
+                                TextRange(
+                                    dataInputStream.readInt(),
+                                    dataInputStream.readInt()
+                                )
+                            )
+                        }
+                    }
                 }
+            } catch (_: IOException) {
+
             }
         }
     }
@@ -219,7 +231,8 @@ class CompletionViewModel : ViewModel() {
         historyManager?.save()
         core?.close()
         // 保存上次的输入内容
-        if (file != null && FileUtil.createParentFile(file)) {
+        if (file != null) {
+            file?.parentFile?.mkdirs()
             try {
                 DataOutputStream(BufferedOutputStream(FileOutputStream(file))).use { dataOutputStream ->
                     dataOutputStream.writeUTF(command.text.toString())

@@ -122,7 +122,8 @@ public class CustomTheme {
             }
             return;
         }
-        if (!FileUtil.createParentFile(file)) {
+        File parentFile = file.getParentFile();
+        if (parentFile == null || (!parentFile.exists() && !parentFile.mkdirs())) {
             throw new IOException("fail to create parent directory");
         }
         try (OutputStream fos = new BufferedOutputStream(new FileOutputStream(file))) {

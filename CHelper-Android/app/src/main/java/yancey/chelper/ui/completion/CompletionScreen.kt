@@ -328,7 +328,7 @@ fun CompletionScreen(
         .collectAsState(initial = false)
     val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
         .collectAsState(initial = false)
-    val isSavingWhenPausing by settingsDataStore.isHideWindowWhenCopying()
+    val isSavingWhenPausing by settingsDataStore.isSavingWhenPausing()
         .collectAsState(initial = false)
     val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
         .collectAsState(initial = true)
@@ -338,7 +338,12 @@ fun CompletionScreen(
         .collectAsState(initial = false)
 
     LaunchedEffect(viewModel) {
-        viewModel.init(context, isSavingWhenPausing)
+        viewModel.init(context)
+    }
+    LaunchedEffect(isSavingWhenPausing) {
+        if (isSavingWhenPausing) {
+            viewModel.resumeText()
+        }
     }
     LaunchedEffect(viewModel, cpackBranch) {
         viewModel.refreshCHelperCore(

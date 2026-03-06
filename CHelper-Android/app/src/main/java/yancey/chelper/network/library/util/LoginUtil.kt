@@ -20,7 +20,6 @@ package yancey.chelper.network.library.util
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import yancey.chelper.android.common.util.FileUtil
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.service.CommandLabUserService
 import yancey.chelper.network.library.service.CommandLabUserService.LoginRequest
@@ -70,7 +69,7 @@ object LoginUtil {
         this.file = file
         if (file.exists()) {
             try {
-                val savedData = Json.decodeFromString<SavedUserData>(FileUtil.readString(file)!!)
+                val savedData = Json.decodeFromString<SavedUserData>(file.readBytes().decodeToString())
                 savedMail = savedData.mail
                 savedPassword = savedData.password
                 currentToken = savedData.token
@@ -178,6 +177,6 @@ object LoginUtil {
             lastLoginTimestamp = this@LoginUtil.lastLoginTimestamp
             user = currentUser
         }
-        file?.let { FileUtil.writeString(it, Json.encodeToString(savedData)) }
+        file?.outputStream()?.write(Json.encodeToString(savedData).toByteArray())
     }
 }
