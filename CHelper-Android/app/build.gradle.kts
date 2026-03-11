@@ -117,7 +117,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.10.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.10.4")
     implementation("androidx.compose.foundation:foundation:1.10.4")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.10.4")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.10.5")
     // https://github.com/square/okhttp
     implementation(platform("com.squareup.okhttp3:okhttp-bom:5.3.2"))
     implementation("com.squareup.okhttp3:okhttp")
