@@ -197,6 +197,7 @@ class CompletionViewModel : ViewModel() {
         if (cpackBranch.isEmpty()) {
             core?.close()
             core = null
+            return
         }
         var cpackPath: String? = null
         for (filename in context.assets.list("cpack")!!) {
