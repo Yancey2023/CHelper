@@ -45,6 +45,7 @@ class LocalLibraryManager private constructor(private val file: File) {
                 libraryFunctions.clear()
                 libraryFunctions.addAll(libraryFunctions0)
             }
+            isInit = true
         }
     }
 
