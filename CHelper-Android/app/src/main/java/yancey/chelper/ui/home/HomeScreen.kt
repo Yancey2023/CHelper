@@ -54,8 +54,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
-import yancey.chelper.android.common.util.PolicyGrantManager
-import yancey.chelper.android.common.util.SettingsDataStore
+import yancey.chelper.android.util.PolicyGrantManager
+import yancey.chelper.android.util.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.AboutScreenKey
 import yancey.chelper.ui.CompletionScreenKey

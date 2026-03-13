@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.activity
+package yancey.chelper.android.activity
 
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -36,8 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.common.util.MonitorUtil
+import yancey.chelper.android.activit.BaseComposeActivity
+import yancey.chelper.android.util.CustomTheme
+import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.NavHost
 import java.io.BufferedInputStream

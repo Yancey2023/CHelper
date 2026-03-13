@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.util
+package yancey.chelper.android.util
 
 import android.content.Context
 import java.io.File

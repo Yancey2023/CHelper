@@ -45,11 +45,7 @@ import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.hjq.window.EasyWindow
 import com.hjq.window.draggable.MovingWindowDraggableRule
 import yancey.chelper.R
-import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.window.completion.view.CompletionView
-import yancey.chelper.android.window.fws.view.FWSMainView
-import yancey.chelper.android.window.fws.view.FWSView
-import yancey.chelper.android.window.util.ComposeLifecycleOwner
+import yancey.chelper.android.util.CustomTheme
 import yancey.chelper.ui.FloatingWindowNavHost
 import yancey.chelper.ui.common.CHelperTheme
 
@@ -71,7 +67,6 @@ class FloatingWindowManager(
     private var iconViewWindow: EasyWindow<*>? = null
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
-    private var isCompose = true
 
     val isUsingFloatingWindow: Boolean
         /**
@@ -107,142 +102,95 @@ class FloatingWindowManager(
                 Gravity.START or Gravity.TOP
             )
         )
-        if (isCompose) {
-            val mainView = object : FrameLayout(context) {
-                override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-                    if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                        floatBackPressedOwner?.onBackPressedDispatcher?.onBackPressed()
-                        return true
-                    }
-                    return super.dispatchKeyEvent(event)
+        val mainView = object : FrameLayout(context) {
+            override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+                if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+                    floatBackPressedOwner?.onBackPressedDispatcher?.onBackPressed()
+                    return true
                 }
-            }.apply {
-                isFocusable = true
-                isFocusableInTouchMode = true
+                return super.dispatchKeyEvent(event)
             }
-            val composeView = ComposeView(context).apply {
-                setContent {
-                    CHelperTheme(
-                        when (themeId) {
-                            "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
-                            "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
-                            else -> if ((application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
-                        }, CustomTheme.INSTANCE.backgroundBitmap.imageBitmap
+        }.apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+        }
+        val composeView = ComposeView(context).apply {
+            setContent {
+                CHelperTheme(
+                    when (themeId) {
+                        "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
+                        "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
+                        else -> if ((application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
+                    }, CustomTheme.INSTANCE.backgroundBitmap.imageBitmap
+                ) {
+                    val lifecycleOwner = rememberLifecycleOwner()
+                    val navigationEventDispatcher = remember { NavigationEventDispatcher() }
+                    val navigationEventOwner =
+                        remember { FloatWindowNavigationEventOwner(navigationEventDispatcher) }
+                    val navController = rememberNavController()
+                    val softwareKeyboardController = LocalSoftwareKeyboardController.current
+                    LaunchedEffect(navController) {
+                        navController.setLifecycleOwner(lifecycleOwner)
+                        navController.setOnBackPressedDispatcher(floatBackPressedOwner!!.onBackPressedDispatcher)
+                        navController.addOnDestinationChangedListener { _, _, _ ->
+                            mainView.clearFocus()
+                            mainView.requestFocus()
+                            softwareKeyboardController?.hide()
+                        }
+                    }
+                    CompositionLocalProvider(
+                        LocalOnBackPressedDispatcherOwner provides floatBackPressedOwner!!,
+                        LocalNavigationEventDispatcherOwner provides navigationEventOwner,
                     ) {
-                        val lifecycleOwner = rememberLifecycleOwner()
-                        val navigationEventDispatcher = remember { NavigationEventDispatcher() }
-                        val navigationEventOwner =
-                            remember { FloatWindowNavigationEventOwner(navigationEventDispatcher) }
-                        val navController = rememberNavController()
-                        val softwareKeyboardController = LocalSoftwareKeyboardController.current
-                        LaunchedEffect(navController) {
-                            navController.setLifecycleOwner(lifecycleOwner)
-                            navController.setOnBackPressedDispatcher(floatBackPressedOwner!!.onBackPressedDispatcher)
-                            navController.addOnDestinationChangedListener { _, _, _ ->
-                                mainView.clearFocus()
-                                mainView.requestFocus()
-                                softwareKeyboardController?.hide()
-                            }
-                        }
-                        CompositionLocalProvider(
-                            LocalOnBackPressedDispatcherOwner provides floatBackPressedOwner!!,
-                            LocalNavigationEventDispatcherOwner provides navigationEventOwner,
-                        ) {
-                            FloatingWindowNavHost(
-                                navController = navController,
-                                shutdown = { stopFloatingWindow() },
-                                hideView = { iconView.callOnClick() },
-                            )
-                        }
+                        FloatingWindowNavHost(
+                            navController = navController,
+                            shutdown = { stopFloatingWindow() },
+                            hideView = { iconView.callOnClick() },
+                        )
                     }
                 }
             }
-            mainView.addView(composeView)
-            iconViewWindow = EasyWindow.with(application)
-                .setContentView(iconView)
-                .setWindowDraggableRule(MovingWindowDraggableRule())
-                .setOutsideTouchable(true)
-                .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
-                .setWindowAnim(0)
-                .setWindowAlpha(floatingWindowAlpha)
-            mainViewWindow = EasyWindow.with(application)
-                .setContentView(mainView)
-                .setWindowSize(
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.MATCH_PARENT
-                )
-                .removeWindowFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-                .setSystemUiVisibility(
-                    (mainView.systemUiVisibility
-                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
-                )
-                .setWindowAnim(0)
-                .setWindowAlpha(floatingWindowAlpha)
-            composeLifecycleOwner = ComposeLifecycleOwner().apply {
-                attachToDecorView(mainViewWindow!!.rootLayout)
-                onCreate()
-                onStart()
-            }
-            floatBackPressedOwner = FloatWindowBackPressedOwner(composeLifecycleOwner!!.lifecycle)
-            mainView.requestFocus()
-            iconView.setOnClickListener {
-                mainViewWindow?.apply {
-                    if (windowViewVisibility == View.VISIBLE) {
-                        composeLifecycleOwner?.onPause()
-                        mainView.clearFocus()
-                        windowViewVisibility = View.INVISIBLE
-                    } else {
-                        composeLifecycleOwner?.onResume()
-                        mainView.requestFocus()
-                        windowViewVisibility = View.VISIBLE
-                    }
-                }
-            }
-        } else {
-            val fwsMainView = FWSMainView<CompletionView?>(
-                context,
-                FWSView.Environment.FLOATING_WINDOW,
-                { customContext: FWSView.FWSContext? ->
-                    CompletionView(
-                        customContext!!,
-                        { this.stopFloatingWindow() },
-                        { iconView.callOnClick() })
-                },
-                OnBackPressedDispatcher { iconView.callOnClick() }
+        }
+        mainView.addView(composeView)
+        iconViewWindow = EasyWindow.with(application)
+            .setContentView(iconView)
+            .setWindowDraggableRule(MovingWindowDraggableRule())
+            .setOutsideTouchable(true)
+            .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
+            .setWindowAnim(0)
+            .setWindowAlpha(floatingWindowAlpha)
+        mainViewWindow = EasyWindow.with(application)
+            .setContentView(mainView)
+            .setWindowSize(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT
             )
-            iconViewWindow = EasyWindow.with(application)
-                .setContentView(iconView)
-                .setWindowDraggableRule(MovingWindowDraggableRule())
-                .setOutsideTouchable(true)
-                .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
-                .setWindowAnim(0)
-                .setWindowAlpha(floatingWindowAlpha)
-            mainViewWindow = EasyWindow.with(application)
-                .setContentView(fwsMainView)
-                .setWindowSize(
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.MATCH_PARENT
-                )
-                .removeWindowFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-                .setSystemUiVisibility(
-                    (fwsMainView.systemUiVisibility
-                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
-                )
-                .setWindowAnim(0)
-                .setWindowAlpha(floatingWindowAlpha)
-            iconView.setOnClickListener {
-                mainViewWindow?.apply {
-                    if (windowViewVisibility == View.VISIBLE) {
-                        fwsMainView.onPause()
-                        windowViewVisibility = View.INVISIBLE
-                    } else {
-                        windowViewVisibility = View.VISIBLE
-                        fwsMainView.onResume()
-                    }
+            .removeWindowFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            .setSystemUiVisibility(
+                (mainView.systemUiVisibility
+                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+            )
+            .setWindowAnim(0)
+            .setWindowAlpha(floatingWindowAlpha)
+        composeLifecycleOwner = ComposeLifecycleOwner().apply {
+            attachToDecorView(mainViewWindow!!.rootLayout)
+            onCreate()
+            onStart()
+        }
+        floatBackPressedOwner = FloatWindowBackPressedOwner(composeLifecycleOwner!!.lifecycle)
+        mainView.requestFocus()
+        iconView.setOnClickListener {
+            mainViewWindow?.apply {
+                if (windowViewVisibility == View.VISIBLE) {
+                    composeLifecycleOwner?.onPause()
+                    mainView.clearFocus()
+                    windowViewVisibility = View.INVISIBLE
+                } else {
+                    composeLifecycleOwner?.onResume()
+                    mainView.requestFocus()
+                    windowViewVisibility = View.VISIBLE
                 }
             }
         }
@@ -260,25 +208,15 @@ class FloatingWindowManager(
      */
     fun stopFloatingWindow() {
         if (mainViewWindow != null) {
-            if (isCompose) {
-                composeLifecycleOwner?.apply {
-                    onStop()
-                    onDestroy()
-                    detachFromDecorView(mainViewWindow!!.contentView)
-                }
-                composeLifecycleOwner = null
-                floatBackPressedOwner = null
-                mainViewWindow!!.recycle()
-                mainViewWindow = null
-            } else {
-                val fwsFloatingMainView = mainViewWindow!!.contentView as FWSMainView<*>?
-                if (fwsFloatingMainView != null) {
-                    fwsFloatingMainView.onPause()
-                    fwsFloatingMainView.onDestroy()
-                }
-                mainViewWindow!!.recycle()
-                mainViewWindow = null
+            composeLifecycleOwner?.apply {
+                onStop()
+                onDestroy()
+                detachFromDecorView(mainViewWindow!!.contentView)
             }
+            composeLifecycleOwner = null
+            floatBackPressedOwner = null
+            mainViewWindow!!.recycle()
+            mainViewWindow = null
         }
         if (iconViewWindow != null) {
             iconViewWindow!!.recycle()

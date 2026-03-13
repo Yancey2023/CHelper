@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.android.common.util.LocalLibraryManager
+import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright

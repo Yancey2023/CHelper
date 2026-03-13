@@ -23,10 +23,10 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
-import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.common.util.LocalLibraryManager
-import yancey.chelper.android.common.util.MonitorUtil
-import yancey.chelper.android.common.util.PolicyGrantManager
+import yancey.chelper.android.util.CustomTheme
+import yancey.chelper.android.util.LocalLibraryManager
+import yancey.chelper.android.util.MonitorUtil
+import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil

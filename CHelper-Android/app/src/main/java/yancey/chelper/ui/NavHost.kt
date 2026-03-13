@@ -33,7 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import yancey.chelper.android.common.util.LocalLibraryManager
+import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.about.AboutScreen

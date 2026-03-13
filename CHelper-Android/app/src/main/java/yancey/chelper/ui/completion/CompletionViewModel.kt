@@ -32,8 +32,8 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yancey.chelper.android.common.util.HistoryManager
-import yancey.chelper.android.common.util.MonitorUtil
+import yancey.chelper.android.util.HistoryManager
+import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.core.ErrorReason
 import yancey.chelper.core.SelectedString

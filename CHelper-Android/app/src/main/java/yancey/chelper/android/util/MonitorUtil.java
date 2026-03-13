@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.util;
+package yancey.chelper.android.util;
 
 import android.app.Application;
 
@@ -25,6 +25,8 @@ import com.efs.sdk.net.OkHttpListener;
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.commonsdk.UMConfigure;
 import com.umeng.umcrash.UMCrash;
+
+import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import yancey.chelper.BuildConfig;
@@ -39,7 +41,7 @@ public class MonitorUtil {
             return;
         }
         MonitorUtil.application = application;
-        if (PolicyGrantManager.INSTANCE.getState() == PolicyGrantManager.State.AGREE) {
+        if (Objects.requireNonNull(PolicyGrantManager.INSTANCE).getState() == PolicyGrantManager.State.AGREE) {
             UMConfigure.init(application, "6836aa2bbc47b67d8374e464", "official", UMConfigure.DEVICE_TYPE_PHONE, "");
             isInit = true;
         } else {

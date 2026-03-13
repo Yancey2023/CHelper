@@ -31,8 +31,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.BuildConfig
-import yancey.chelper.android.common.util.PolicyGrantManager
-import yancey.chelper.android.common.util.SettingsDataStore
+import yancey.chelper.android.util.PolicyGrantManager
+import yancey.chelper.android.util.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.chelper.data.Announcement

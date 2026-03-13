@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.activity
-
+package yancey.chelper.android.activit
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
@@ -42,8 +41,8 @@ import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import yancey.chelper.android.common.util.CustomTheme
-import yancey.chelper.android.common.util.SettingsDataStore
+import yancey.chelper.android.util.CustomTheme
+import yancey.chelper.android.util.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 
 abstract class BaseComposeActivity : ComponentActivity() {

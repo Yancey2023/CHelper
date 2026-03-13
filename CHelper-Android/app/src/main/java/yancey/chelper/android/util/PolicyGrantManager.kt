@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https:></https:>//www.gnu.org/licenses/>.
  */
-package yancey.chelper.android.common.util
+package yancey.chelper.android.util
 
 import java.io.File
 

@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="grey_lite">#FFAAAAAA</color>
-    <color name="grey">#FF444444</color>
-    <color name="red">#FFCC4444</color>
     <color name="main_color">#ffea5947</color>
-
     <color name="background">#F3F3F3</color>
-    <color name="background_component">#AAFFFFFF</color>
-    <color name="background_component_no_translate">#FDFDFD</color>
-    <color name="text_main">@color/black</color>
-    <color name="text_bond">@color/black</color>
-    <color name="text_secondary">@color/grey</color>
-    <color name="text_hint">@color/grey</color>
-    <color name="line">#FFF3F3F3</color>
-    <color name="icon_main">@color/grey</color>
     <color name="scroll_bar">#99444444</color>
+    <color name="text_main">#FF000000</color>
 </resources>

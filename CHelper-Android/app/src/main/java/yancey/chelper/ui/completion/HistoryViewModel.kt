@@ -23,7 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import yancey.chelper.android.common.util.HistoryManager
+import yancey.chelper.android.util.HistoryManager
 
 class HistoryViewModel : ViewModel() {
     var contents by mutableStateOf<List<String>>(listOf())

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.widget;
+package yancey.chelper.android.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;

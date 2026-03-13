@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="background">#1E1F22</color>
-    <color name="background_component">#AA2b2d30</color>
-    <color name="background_component_no_translate">#282A2D</color>
-    <color name="text_main">#FFDDDDDD</color>
-    <color name="text_bond">@color/white</color>
-    <color name="text_secondary">@color/grey_lite</color>
-    <color name="text_hint">@color/grey_lite</color>
-    <color name="line">#FF222222</color>
-    <color name="icon_main">@color/grey_lite</color>
     <color name="scroll_bar">#99969696</color>
+    <color name="text_main">#FFDDDDDD</color>
 </resources>

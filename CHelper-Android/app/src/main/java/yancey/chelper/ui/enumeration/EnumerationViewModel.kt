@@ -27,7 +27,7 @@ import androidx.lifecycle.ViewModel
 import com.hjq.toast.Toaster
 import redempt.crunch.data.Pair
 import redempt.crunch.exceptions.ExpressionCompilationException
-import yancey.chelper.android.common.util.MonitorUtil
+import yancey.chelper.android.util.MonitorUtil
 
 class DataVariable {
     var name by mutableStateOf(TextFieldState())

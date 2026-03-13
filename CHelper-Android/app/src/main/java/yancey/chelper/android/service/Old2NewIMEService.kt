@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.common.service
+package yancey.chelper.android.service
 
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
@@ -28,8 +28,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import yancey.chelper.android.common.util.SettingsDataStore
-import yancey.chelper.android.window.util.ComposeLifecycleOwner
+import yancey.chelper.android.util.SettingsDataStore
+import yancey.chelper.android.window.ComposeLifecycleOwner
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.old2new.Old2NewIMEScreen
