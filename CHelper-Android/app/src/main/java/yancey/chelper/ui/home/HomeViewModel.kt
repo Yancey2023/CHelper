@@ -55,6 +55,7 @@ class HomeViewModel : ViewModel() {
     private lateinit var skipXiaomiClipboardPermissionTipsFile: File
     private lateinit var skipAnnouncementFile: File
     private lateinit var skipVersionFile: File
+    private var isInit = false
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE?.state ?: PolicyGrantManager.State.AGREE
@@ -73,8 +74,9 @@ class HomeViewModel : ViewModel() {
             context.dataDir.resolve("ignore_announcement.txt")
         this.skipVersionFile =
             context.dataDir.resolve("ignore_version.txt")
-        if (policyGrantState == PolicyGrantManager.State.AGREE) {
+        if (policyGrantState == PolicyGrantManager.State.AGREE && !isInit) {
             showAnnouncementDialog()
+            isInit = true
         }
     }
 
