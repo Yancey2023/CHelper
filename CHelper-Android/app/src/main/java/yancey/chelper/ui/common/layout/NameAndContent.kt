@@ -146,13 +146,15 @@ fun CollectionName(name: String) {
 fun SettingsItem(
     name: String,
     description: String?,
-    checked: Boolean,
+    checked: Boolean?,
     onCheckedChange: (Boolean) -> Unit
 ) {
     NameAndContent(name = name, description = description) {
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
+        if (checked != null) {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
     }
 }

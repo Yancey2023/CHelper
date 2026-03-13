@@ -211,6 +211,7 @@
     <string name="layout_settings_completion_settings">命令补全</string>
     <string name="layout_settings_choose_cpack">命令分支</string>
     <string name="layout_settings_current_cpack">当前命令分支：%s</string>
+    <string name="layout_settings_unknown_branch">未知</string>
     <string name="layout_setting_checking_by_selection">根据光标位置提供补全提示</string>
     <string name="layout_setting_checking_by_selection_description">如果关闭，就只提供命令尾部的补全提示</string>
     <string name="layout_setting_is_hide_window_when_copying">复制后隐藏悬浮窗</string>

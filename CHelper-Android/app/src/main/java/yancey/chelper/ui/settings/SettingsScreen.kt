@@ -67,25 +67,25 @@ fun SettingsScreen(
     var isShowInputFloatingWindowSizeDialog by remember { mutableStateOf(false) }
     var isShowChooseCpackBranchDialog by remember { mutableStateOf(false) }
     val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val cpackBranch by settingsDataStore.cpackBranch()
-        .collectAsState(initial = "release-experiment")
+        .collectAsState(initial = null)
     val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val isSavingWhenPausing by settingsDataStore.isSavingWhenPausing()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val isCrowded by settingsDataStore.isCrowded()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val isShowErrorReason by settingsDataStore.isShowErrorReason()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val isSyntaxHighlight by settingsDataStore.isSyntaxHighlight()
-        .collectAsState(initial = false)
+        .collectAsState(initial = null)
     val floatingWindowSize by settingsDataStore.floatingWindowSize()
-        .collectAsState(initial = 40)
+        .collectAsState(initial = null)
     val floatingWindowAlpha by settingsDataStore.floatingWindowAlpha()
-        .collectAsState(initial = 1.0f)
+        .collectAsState(initial = null)
     var cpackBranchesWithTranslate by remember {
         mutableStateOf(
             arrayOf(
@@ -192,19 +192,21 @@ fun SettingsScreen(
             }
             CollectionName(stringResource(R.string.layout_settings_completion_settings))
             Collection {
-                val currentCpackBranchTranslation = remember(cpackBranchesWithTranslate) {
-                    for (pair in cpackBranchesWithTranslate) {
-                        if (cpackBranch == pair.second) {
-                            return@remember pair.first
+                val currentCpackBranchTranslation =
+                    remember(cpackBranch, cpackBranchesWithTranslate) {
+                        for (pair in cpackBranchesWithTranslate) {
+                            if (cpackBranch == pair.second) {
+                                return@remember pair.first
+                            }
                         }
+                        return@remember cpackBranch
                     }
-                    return@remember cpackBranch
-                }
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_cpack),
                     description = stringResource(
                         R.string.layout_settings_current_cpack,
                         currentCpackBranchTranslation
+                            ?: stringResource(R.string.layout_settings_unknown_branch)
                     )
                 ) {
                     isShowChooseCpackBranchDialog = true
@@ -306,9 +308,9 @@ fun SettingsScreen(
             }
         )
     }
-    if (isShowInputFloatingWindowSizeDialog) {
+    if (isShowInputFloatingWindowSizeDialog && floatingWindowSize != null) {
         val textFieldState = rememberTextFieldState(
-            initialText = floatingWindowSize.toString()
+            initialText = floatingWindowSize!!.toString()
         )
         InputStringDialog(
             onDismissRequest = { isShowInputFloatingWindowSizeDialog = false },
@@ -330,9 +332,9 @@ fun SettingsScreen(
             }
         )
     }
-    if (isShowInputFloatingWindowAlphaDialog) {
+    if (isShowInputFloatingWindowAlphaDialog && floatingWindowAlpha != null) {
         val textFieldState = rememberTextFieldState(
-            initialText = (floatingWindowAlpha * 100).toInt().toString()
+            initialText = (floatingWindowAlpha!! * 100).toInt().toString()
         )
         InputStringDialog(
             onDismissRequest = { isShowInputFloatingWindowAlphaDialog = false },
