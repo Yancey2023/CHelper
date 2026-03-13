@@ -25,9 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import yancey.chelper.android.common.util.SettingsDataStore
+import yancey.chelper.android.window.util.ComposeLifecycleOwner
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.old2new.Old2NewIMEScreen
@@ -44,12 +46,27 @@ class Old2NewIMEService : InputMethodService() {
     private var newCommand: String? = null
     private var lastIsUndo = false
     private var settingsDataStore = SettingsDataStore(this)
+    private lateinit var composeLifecycleOwner: ComposeLifecycleOwner
 
     override fun onCreate() {
         super.onCreate()
         isSystemDarkMode =
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         refreshTheme()
+        composeLifecycleOwner = ComposeLifecycleOwner().apply {
+            attachToDecorView(window.window?.decorView)
+            onCreate()
+            onStart()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        composeLifecycleOwner.apply {
+            onStop()
+            onDestroy()
+            detachFromDecorView(window.window?.decorView)
+        }
     }
 
     override fun onCreateInputView(): View {
@@ -69,6 +86,7 @@ class Old2NewIMEService : InputMethodService() {
 
     override fun onWindowShown() {
         super.onWindowShown()
+        composeLifecycleOwner.onResume()
         refreshTheme()
         if (currentInputConnection == null) {
             return
@@ -91,6 +109,11 @@ class Old2NewIMEService : InputMethodService() {
         if (lastIsUndo) {
             this.text = newCommand!!
         }
+    }
+
+    override fun onWindowHidden() {
+        super.onWindowHidden()
+        composeLifecycleOwner.onPause()
     }
 
     private var text: String
@@ -135,18 +158,17 @@ class Old2NewIMEService : InputMethodService() {
         }
 
     private fun refreshTheme() {
-        val themeId = runBlocking {
-            settingsDataStore.themeId().first()
+        composeLifecycleOwner.lifecycleScope.launch {
+            theme = when (settingsDataStore.themeId().first()) {
+                "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
+                "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
+                else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
+            }
+            val newNightMode =
+                if (theme == CHelperTheme.Theme.Dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            resources.configuration.uiMode =
+                (newNightMode or (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()))
         }
-        theme = when (themeId) {
-            "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
-            "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
-            else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
-        }
-        val newNightMode =
-            if (theme == CHelperTheme.Theme.Dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
-        resources.configuration.uiMode =
-            (newNightMode or (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()))
     }
 
 }
