@@ -56,7 +56,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
@@ -66,6 +65,8 @@ import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.ChoosingDialog
+import yancey.chelper.ui.common.dialog.CustomDialog
+import yancey.chelper.ui.common.dialog.DialogContainer
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.DividerVertical
@@ -520,93 +521,94 @@ private fun LineCopyDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(CHelperTheme.colors.backgroundComponentNoTranslate)
+    CustomDialog(onDismissRequest = onDismiss) {
+        DialogContainer(
+            backgroundNoTranslate = true
         ) {
-            // 标题
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp, 10.dp),
-                text = "逐行复制 (${currentIndex + 1}/${commands.size})",
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            // 当前命令预览
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp, 8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(CHelperTheme.colors.backgroundComponent)
-                    .padding(12.dp)
-            ) {
+            Column(modifier = Modifier)
+            {
+                // 标题
                 Text(
-                    text = if (currentIndex < commands.size) commands[currentIndex] else "",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp, 10.dp),
+                    text = "逐行复制 (${currentIndex + 1}/${commands.size})",
                     style = TextStyle(
-                        color = CHelperTheme.colors.textMain,
-                        fontSize = 14.sp
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
                     )
                 )
-            }
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp, 4.dp, 0.dp, 8.dp),
-                text = "已自动复制到剪贴板",
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    color = CHelperTheme.colors.textSecondary
-                )
-            )
-            Divider(0.dp)
-            // 底部按钮行
-            Row(Modifier.height(45.dp)) {
+                // 当前命令预览
                 Box(
-                    Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .clickable { onDismiss() }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp, 8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(CHelperTheme.colors.backgroundComponent)
+                        .padding(12.dp)
                 ) {
                     Text(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = "关闭",
+                        text = if (currentIndex < commands.size) commands[currentIndex] else "",
                         style = TextStyle(
-                            fontSize = 20.sp,
-                            color = CHelperTheme.colors.mainColor,
-                            textAlign = TextAlign.Center
+                            color = CHelperTheme.colors.textMain,
+                            fontSize = 14.sp
                         )
                     )
                 }
-                DividerVertical(0.dp)
-                Box(
-                    Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .clickable {
-                            if (currentIndex < commands.size - 1) {
-                                currentIndex++
-                            } else {
-                                onDismiss()
-                            }
-                        }
-                ) {
-                    Text(
-                        modifier = Modifier.align(Alignment.Center),
-                        text = if (currentIndex < commands.size - 1) "下一条 ▸" else "全部完成 ✓",
-                        style = TextStyle(
-                            fontSize = 20.sp,
-                            color = CHelperTheme.colors.mainColor,
-                            textAlign = TextAlign.Center
-                        )
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp, 4.dp, 0.dp, 8.dp),
+                    text = "已自动复制到剪贴板",
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        color = CHelperTheme.colors.textSecondary
                     )
+                )
+                Divider(0.dp)
+                // 底部按钮行
+                Row(Modifier.height(45.dp)) {
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .clickable { onDismiss() }
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = "关闭",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                color = CHelperTheme.colors.mainColor,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+                    }
+                    DividerVertical(0.dp)
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .clickable {
+                                if (currentIndex < commands.size - 1) {
+                                    currentIndex++
+                                } else {
+                                    onDismiss()
+                                }
+                            }
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = if (currentIndex < commands.size - 1) "下一条 ▸" else "全部完成 ✓",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                color = CHelperTheme.colors.mainColor,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+                    }
                 }
             }
         }

@@ -40,8 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.hjq.toast.Toaster
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -59,11 +57,10 @@ fun CaptchaDialog(
     onDismissRequest: () -> Unit,
     onSuccess: (String) -> Unit
 ) {
-    Dialog(
+    CustomDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
+        properties = CustomDialogProperties(
+            usePlatformDefaultWidth = false
         )
     ) {
         CaptchaDialogContent(action, onDismissRequest, onSuccess)
@@ -201,12 +198,12 @@ private fun CaptchaDialogContent(
                                         android.onSuccess(data.special_code);
                                     }
                                 };
-                                
+
                                 // Method 2: URL Callback
                                 window.androidCallback = function(data) {
                                     window.handleCaptcha(data);
                                 };
-                                
+
                                 // Method 1: Window Message
                                 window.addEventListener('message', function(event) {
                                     if (event.data && event.data.type === 'captcha_result') {

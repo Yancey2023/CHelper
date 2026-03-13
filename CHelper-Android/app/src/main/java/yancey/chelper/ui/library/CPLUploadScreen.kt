@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,17 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
+import yancey.chelper.ui.common.dialog.CustomDialog
+import yancey.chelper.ui.common.dialog.CustomDialogProperties
+import yancey.chelper.ui.common.dialog.DialogContainer
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Button
 import yancey.chelper.ui.common.widget.Switch
@@ -158,67 +158,71 @@ fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
         LocalLibraryManager.INSTANCE?.ensureInit()
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(CHelperTheme.colors.backgroundComponentNoTranslate)
-                .padding(16.dp)
+    CustomDialog(
+        onDismissRequest = onDismiss,
+        properties = CustomDialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        DialogContainer(
+            backgroundNoTranslate = true
         ) {
-            Text(
-                text = "选择本地库",
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    color = CHelperTheme.colors.textMain,
-                    textAlign = TextAlign.Center
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-            )
-
             Column(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                libraries.forEachIndexed { index, lib ->
-                    Text(
-                        text = lib.name ?: "未命名",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(index) }
-                            .padding(vertical = 12.dp),
-                        style = TextStyle(color = CHelperTheme.colors.textMain)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(CHelperTheme.colors.line)
-                    )
-                }
-                if (libraries.isEmpty()) {
-                    Text(
-                        text = "本地无指令库",
-                        style = TextStyle(color = CHelperTheme.colors.textHint)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.CenterEnd
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "取消",
+                    text = "选择本地库",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        color = CHelperTheme.colors.textMain,
+                        textAlign = TextAlign.Center
+                    ),
                     modifier = Modifier
-                        .clickable { onDismiss() }
-                        .padding(8.dp),
-                    style = TextStyle(color = CHelperTheme.colors.mainColor)
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
                 )
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    libraries.forEachIndexed { index, lib ->
+                        Text(
+                            text = lib.name ?: "未命名",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(index) }
+                                .padding(vertical = 12.dp),
+                            style = TextStyle(color = CHelperTheme.colors.textMain)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(CHelperTheme.colors.line)
+                        )
+                    }
+                    if (libraries.isEmpty()) {
+                        Text(
+                            text = "本地无指令库",
+                            style = TextStyle(color = CHelperTheme.colors.textHint)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text(
+                        text = "取消",
+                        modifier = Modifier
+                            .clickable { onDismiss() }
+                            .padding(8.dp),
+                        style = TextStyle(color = CHelperTheme.colors.mainColor)
+                    )
+                }
             }
         }
     }
