@@ -220,7 +220,7 @@
     <string name="layout_setting_is_saving_when_pausing">进入应用后自动恢复上次输入的命令</string>
     <string name="layout_setting_is_saving_when_pausing_description">如果开启，仅恢复文字，不恢复撤回和恢复按钮所需要的历史记录</string>
     <string name="layout_setting_is_crowed">紧凑模式</string>
-    <string name="layout_setting_is_crowed_description">在横屏下可以获得更好的体验，悬浮窗模式需要重新打开悬浮窗才可以生效</string>
+    <string name="layout_setting_is_crowed_description">在横屏下可以获得更好的体验</string>
     <string name="layout_setting_is_show_error_reason">显示命令错误原因</string>
     <string name="layout_setting_is_show_error_reason_description">不显示命令错误原因可以让第一个补全提示的位置比较稳定，方便使用补全提示</string>
     <string name="layout_setting_is_syntax_highlight">语法高亮</string>
