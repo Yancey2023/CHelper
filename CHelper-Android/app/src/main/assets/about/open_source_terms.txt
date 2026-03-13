@@ -6,8 +6,8 @@ Open Source Software Licensed under the Apache License Version 2.0:
 1. androidx
 Copyright (C) 2018 The Android Open Source Project
 
-2. gson
-Copyright 2008 Google Inc.
+2. kotlinx.serialization
+Copyright 2017 JetBrains s.r.o.
 
 3. okhttp
 Copyright 2019 Square, Inc.

@@ -98,26 +98,24 @@ kotlin {
 }
 
 dependencies {
-    // https://github.com/google/gson
-    implementation("com.google.code.gson:gson:2.13.2")
     // https://github.com/boxbeam/Crunch
     implementation("com.github.Redempt:Crunch:2.0.3")
     // https://github.com/androidx/androidx
     implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("androidx.activity:activity-ktx:1.12.4")
-    implementation("androidx.activity:activity-compose:1.12.4")
+    implementation("androidx.activity:activity:1.13.0")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.navigation:navigation-compose:2.9.7")
-    implementation("androidx.datastore:datastore:1.2.0")
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation("androidx.datastore:datastore:1.2.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.compose.ui:ui:1.10.4")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.10.4")
-    implementation("androidx.compose.foundation:foundation:1.10.4")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.10.4")
+    implementation("androidx.compose.ui:ui:1.10.5")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.10.5")
+    implementation("androidx.compose.foundation:foundation:1.10.5")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.10.5")
+    // https://github.com/Kotlin/kotlinx.serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     // https://github.com/square/okhttp
     implementation(platform("com.squareup.okhttp3:okhttp-bom:5.3.2"))
     implementation("com.squareup.okhttp3:okhttp")
@@ -136,7 +134,7 @@ dependencies {
     // https://github.com/getActivity/EasyWindow
     implementation("com.github.getActivity:EasyWindow:13.2")
     // https://www.umeng.com
-    implementation("com.umeng.umsdk:common:9.8.9")
+    implementation("com.umeng.umsdk:common:9.9.0")
     implementation("com.umeng.umsdk:asms:1.8.7.2")
     // noinspection Aligned16KB
     implementation("com.umeng.umsdk:apm:2.0.6")
