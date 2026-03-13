@@ -292,6 +292,7 @@ fun FloatingWindowNavHost(
                 viewModel.viewModelScope.launch {
                     LocalLibraryManager.INSTANCE!!.ensureInit()
                     viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
+                    viewModel.isInit = true
                 }
             }
             LocalLibraryListScreen(navController = navController)
