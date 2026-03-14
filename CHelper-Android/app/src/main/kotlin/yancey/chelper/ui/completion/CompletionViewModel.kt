@@ -119,6 +119,8 @@ class CompletionViewModel : ViewModel() {
                 if (isUpdateErrorReason) {
                     errorReasons = null
                 }
+                // 清除语法高亮
+                syntaxHighlightTokens = null
                 // 通知内核
                 it?.onTextChanged(selectedString.text, 0)
                 // 更新补全提示
