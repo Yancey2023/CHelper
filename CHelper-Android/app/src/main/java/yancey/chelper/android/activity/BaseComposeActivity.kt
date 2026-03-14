@@ -25,6 +25,7 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.getValue
@@ -40,7 +41,6 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import yancey.chelper.android.util.CustomTheme
 import yancey.chelper.data.SettingsDataStore
@@ -57,7 +57,31 @@ abstract class BaseComposeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         isSystemDarkMode =
             (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        refreshTheme()
+        lifecycleScope.launch {
+            settingsDataStore.themeId().collect { themeId ->
+                val isDarkBefore =
+                    (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                when (themeId) {
+                    "MODE_NIGHT_NO" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    "MODE_NIGHT_YES" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                }
+                theme = when (themeId) {
+                    "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
+                    "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
+                    else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
+                }
+                val isDarkMode = theme == CHelperTheme.Theme.Dark
+                if (isDarkBefore != isDarkMode) {
+                    WindowInsetsControllerCompat(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !isDarkMode
+                        isAppearanceLightNavigationBars = !isDarkMode
+                    }
+                    resources.configuration.uiMode =
+                        if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+                }
+            }
+        }
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(
@@ -76,34 +100,6 @@ abstract class BaseComposeActivity : ComponentActivity() {
         if (backgroundUpdateTimes != updateTimes) {
             backgroundUpdateTimes = updateTimes
             backgroundBitmap = CustomTheme.INSTANCE.backgroundBitmap.imageBitmap
-        }
-        refreshTheme()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        refreshTheme()
-    }
-
-    protected fun refreshTheme() {
-        val isDarkBefore =
-            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        lifecycleScope.launch {
-            val themeId = settingsDataStore.themeId().first()
-            theme = when (themeId) {
-                "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
-                "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
-                else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
-            }
-            val isDarkMode = theme == CHelperTheme.Theme.Dark
-            if (isDarkBefore != isDarkMode) {
-                WindowInsetsControllerCompat(window, window.decorView).apply {
-                    isAppearanceLightStatusBars = !isDarkMode
-                    isAppearanceLightNavigationBars = !isDarkMode
-                }
-                resources.configuration.uiMode =
-                    if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
-            }
         }
     }
 

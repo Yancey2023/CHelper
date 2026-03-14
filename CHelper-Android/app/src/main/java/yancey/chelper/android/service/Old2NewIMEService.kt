@@ -26,11 +26,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.android.window.ComposeLifecycleOwner
 import yancey.chelper.core.CHelperCore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.old2new.Old2NewIMEScreen
 
@@ -52,7 +51,19 @@ class Old2NewIMEService : InputMethodService() {
         super.onCreate()
         isSystemDarkMode =
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        refreshTheme()
+        composeLifecycleOwner.lifecycleScope.launch {
+            settingsDataStore.themeId().collect { themeId ->
+                theme = when (themeId) {
+                    "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
+                    "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
+                    else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
+                }
+                val newNightMode =
+                    if (theme == CHelperTheme.Theme.Dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+                resources.configuration.uiMode =
+                    (newNightMode or (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()))
+            }
+        }
         composeLifecycleOwner = ComposeLifecycleOwner().apply {
             attachToDecorView(window.window?.decorView)
             onCreate()
@@ -87,7 +98,6 @@ class Old2NewIMEService : InputMethodService() {
     override fun onWindowShown() {
         super.onWindowShown()
         composeLifecycleOwner.onResume()
-        refreshTheme()
         if (currentInputConnection == null) {
             return
         }
@@ -156,19 +166,5 @@ class Old2NewIMEService : InputMethodService() {
             inputConnection.setSelection(0, beforeLength + selectedLength + afterLength)
             inputConnection.commitText(text, text.length)
         }
-
-    private fun refreshTheme() {
-        composeLifecycleOwner.lifecycleScope.launch {
-            theme = when (settingsDataStore.themeId().first()) {
-                "MODE_NIGHT_NO" -> CHelperTheme.Theme.Light
-                "MODE_NIGHT_YES" -> CHelperTheme.Theme.Dark
-                else -> if (isSystemDarkMode) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light
-            }
-            val newNightMode =
-                if (theme == CHelperTheme.Theme.Dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
-            resources.configuration.uiMode =
-                (newNightMode or (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()))
-        }
-    }
 
 }

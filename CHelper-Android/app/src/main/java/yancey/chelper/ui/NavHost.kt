@@ -129,7 +129,6 @@ fun NavHost(
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
     isShowSavingBackgroundDialog: MutableState<Boolean> = mutableStateOf(false),
-    onChooseTheme: () -> Unit,
     shutdown: () -> Unit
 ) {
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
@@ -166,7 +165,6 @@ fun NavHost(
             SettingsScreen(
                 chooseBackground = chooseBackground,
                 restoreBackground = restoreBackground,
-                onChooseTheme = onChooseTheme,
             )
         }
         composable<Old2NewScreenKey> {

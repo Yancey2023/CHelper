@@ -73,7 +73,6 @@ class HomeActivity : BaseComposeActivity() {
                 chooseBackground = this::chooseBackground,
                 restoreBackground = this::restoreBackground,
                 isShowSavingBackgroundDialog = isShowSavingBackgroundDialog,
-                onChooseTheme = this::refreshTheme,
                 shutdown = this::finishAffinity,
             )
         }

@@ -39,7 +39,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
-import yancey.chelper.android.util.CustomTheme
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.ChoosingDialog
@@ -56,7 +55,6 @@ import yancey.chelper.ui.common.widget.Divider
 fun SettingsScreen(
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
-    onChooseTheme: () -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -294,8 +292,6 @@ fun SettingsScreen(
             onChoose = {
                 coroutineScope.launch {
                     settingsDataStore.setThemeId(it)
-                    CustomTheme.refreshTheme(it)
-                    onChooseTheme()
                 }
             })
     }
@@ -378,7 +374,6 @@ fun SettingsScreenLightThemePreview() {
         SettingsScreen(
             chooseBackground = {},
             restoreBackground = {},
-            onChooseTheme = {},
         )
     }
 }
@@ -393,7 +388,6 @@ fun SettingsScreenDarkThemePreview() {
         SettingsScreen(
             chooseBackground = {},
             restoreBackground = {},
-            onChooseTheme = {},
         )
     }
 }

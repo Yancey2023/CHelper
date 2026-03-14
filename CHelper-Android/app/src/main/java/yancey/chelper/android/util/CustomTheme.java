@@ -20,14 +20,10 @@ package yancey.chelper.android.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatDelegate;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,8 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import yancey.chelper.R;
 
 public class CustomTheme {
 
@@ -63,51 +57,6 @@ public class CustomTheme {
                 MonitorUtil.generateCustomLog(e, "IOException");
             }
         }
-    }
-
-    public int invokeBackground(@Nullable View view, int lastUpdateTimes) {
-        int updateTimes = backgroundBitmap.getUpdateTimes();
-        if (lastUpdateTimes == updateTimes) {
-            return updateTimes;
-        }
-        if (view == null) {
-            Log.w(TAG, "fail to draw background beacause view is null");
-            return updateTimes;
-        }
-        if (backgroundBitmap.isSourceFileMiss()) {
-            view.setBackgroundResource(R.color.background);
-            return updateTimes;
-        }
-        if (view.getWidth() == 0 || view.getHeight() == 0) {
-            view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    invokeBackground0(view);
-                    view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
-            });
-            return updateTimes;
-        }
-        invokeBackground0(view);
-        return updateTimes;
-    }
-
-    public int invokeBackgroundForce(@Nullable View view) {
-        return invokeBackground(view, 0);
-    }
-
-    private void invokeBackground0(@NonNull View view) {
-        if (backgroundBitmap.isSourceFileMiss()) {
-            view.setBackgroundResource(R.color.background);
-            return;
-        }
-        int targetWidth = view.getWidth();
-        int targetHeight = view.getHeight();
-        if (targetWidth == 0 || targetHeight == 0) {
-            Log.w(TAG, "fail to draw background beacause view is not ready");
-            return;
-        }
-        view.setBackground(new BitmapDrawable(view.getResources(), backgroundBitmap.getBitmap(targetWidth, targetHeight)));
     }
 
     public void setBackGroundDrawableWithoutSave(@Nullable Bitmap bitmap) {
@@ -133,17 +82,6 @@ public class CustomTheme {
 
     public static void init(File file) {
         INSTANCE = new CustomTheme(new File(file, "background.png"));
-    }
-
-    public static void refreshTheme(String themeId) {
-        switch (themeId) {
-            case "MODE_NIGHT_NO" ->
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            case "MODE_NIGHT_YES" ->
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            default ->
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        }
     }
 
 }
