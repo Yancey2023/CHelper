@@ -30,19 +30,12 @@ import yancey.chelper.network.library.data.LibraryFunction
 @Suppress("unused")
 interface CommandLabPublicService {
     @Serializable
-    class GetFunctionsResponse {
-        @SerialName("list")
-        var functions: MutableList<LibraryFunction?>? = null
-
-        @SerialName("pageNum")
-        var currentPage: Int? = null
-
-        @SerialName("pageSize")
-        var perPage: Int? = null
-
-        @SerialName("total")
-        var totalCount: Int? = null
-    }
+    class GetFunctionsResponse(
+        @SerialName("list") var functions: MutableList<LibraryFunction?>? = null,
+        @SerialName("pageNum") var currentPage: Int? = null,
+        @SerialName("pageSize") var perPage: Int? = null,
+        @SerialName("total") var totalCount: Int? = null,
+    )
 
     @GET("library")
     suspend fun getFunctions(

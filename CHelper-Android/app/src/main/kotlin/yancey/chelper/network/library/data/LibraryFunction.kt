@@ -34,33 +34,22 @@ import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
 @Suppress("unused")
-class LibraryFunction {
-    var id: Int? = null // 函数ID
-    var uuid: String? = null // 函数UUID
-    var name: String? = null // 函数名称
-    var content: String? = null // 函数内容
-
-    @Serializable(with = AuthorSerializer::class)
-    var author: String? = null // 作者
-
-    var note: String? = null // 说明
-    var tags: List<String>? = null // 标签
-    var version: String? = null // 版本号
-
-    @SerialName("created_at")
-    var createdAt: String? = null // 创建时间，例：2025-02-03 18:45:43
-    var preview: String? = null // 命令预览
-
-    @SerialName("like_count")
-    var likeCount: Int? = null // 点赞总数
-
-    @SerialName("is_liked")
-    var isLiked: Boolean? = null // 当前设备是否已点赞
-
-    var hasPublicVersion: Boolean? = null // 是否已有公开版本（仅私有库返回）
-
+class LibraryFunction(
+    var id: Int? = null,// 函数ID
+    var uuid: String? = null,// 函数UUID
+    var name: String? = null,// 函数名称
+    var content: String? = null, // 函数内容
+    @Serializable(with = AuthorSerializer::class) var author: String? = null, // 作者
+    var note: String? = null, // 说明
+    var tags: List<String>? = null,// 标签
+    var version: String? = null, // 版本号
+    @SerialName("created_at") var createdAt: String? = null, // 创建时间，例：2025-02-03 18:45:43
+    var preview: String? = null, // 命令预览
+    @SerialName("like_count") var likeCount: Int? = null, // 点赞总数
+    @SerialName("is_liked") var isLiked: Boolean? = null, // 当前设备是否已点赞
+    var hasPublicVersion: Boolean? = null, // 是否已有公开版本（仅私有库返回）
     var isPublish: Boolean? = null // 当前是否为公开状态（仅私有库返回）
-}
+)
 
 object AuthorSerializer : KSerializer<String?> {
     override val descriptor: SerialDescriptor =

@@ -23,14 +23,11 @@ import kotlinx.serialization.Serializable
 
 @Suppress("unused")
 @Serializable
-class BaseResult<T> {
-    var status: Int? = null
-    var data: T? = null
-
-    @SerialName("error_type")
-    var errorType: String? = null
+class BaseResult<T>(
+    var status: Int? = null,
+    var data: T? = null,
+    @SerialName("error_type") var errorType: String? = null,
     var message: String? = null
-
+) {
     fun isSuccess() = status == 0
-
 }

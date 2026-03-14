@@ -58,6 +58,7 @@ object ServiceManager {
     @JvmStatic
     fun init(context: Context) {
         val json = Json {
+            encodeDefaults = true
             ignoreUnknownKeys = true
         }
         val builder = OkHttpClient.Builder()

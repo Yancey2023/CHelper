@@ -54,13 +54,13 @@ object LoginUtil {
      * 本地持久化的用户数据
      */
     @Serializable
-    private class SavedUserData {
-        var mail: String? = null
-        var password: String? = null
-        var token: String? = null
-        var lastLoginTimestamp: Long? = null
+    private class SavedUserData(
+        var mail: String? = null,
+        var password: String? = null,
+        var token: String? = null,
+        var lastLoginTimestamp: Long? = null,
         var user: CommandLabUserService.User? = null
-    }
+    )
 
     /**
      * 初始化登录工具，从本地文件恢复登录状态
@@ -69,7 +69,8 @@ object LoginUtil {
         this.file = file
         if (file.exists()) {
             try {
-                val savedData = Json.decodeFromString<SavedUserData>(file.readBytes().decodeToString())
+                val savedData =
+                    Json.decodeFromString<SavedUserData>(file.readBytes().decodeToString())
                 savedMail = savedData.mail
                 savedPassword = savedData.password
                 currentToken = savedData.token

@@ -44,12 +44,10 @@ interface CommandLabUserService {
     // -------------------------------------------------------------
 
     @Serializable
-    class GuestAuthRequest {
-        var fingerprint: String? = null
-
-        @SerialName("auth_code")
-        var authCode: String? = null
-    }
+    class GuestAuthRequest(
+        var fingerprint: String? = null,
+        @SerialName("auth_code") var authCode: String? = null
+    )
 
     @POST("guest/login")
     fun guestLogin(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
@@ -70,14 +68,13 @@ interface CommandLabUserService {
      * 发送邮箱验证码请求体
      */
     @Serializable
-    class SendCodeRequest {
-        @SerialName("special_code")
-        var specialCode: String? = null
-        var type: Int? = null  // 0=注册, 1=更新密码, 2=找回密码
-        var email: String? = null
-        var phone: String? = null
+    class SendCodeRequest(
+        @SerialName("special_code") var specialCode: String? = null,
+        var type: Int? = null,  // 0=注册, 1=更新密码, 2=找回密码
+        var email: String? = null,
+        var phone: String? = null,
         var lang: String? = "zh-CN"
-
+    ) {
         companion object {
             const val TYPE_REGISTER = 0
             const val TYPE_UPDATE_PASSWORD = 1
@@ -100,18 +97,15 @@ interface CommandLabUserService {
      * 注册请求体
      */
     @Serializable
-    class RegisterRequest {
-        @SerialName("special_code")
-        var specialCode: String? = null
-        var code: String? = null
-        var email: String? = null
-        var phone: String? = null
-        var nickname: String? = null
-        var password: String? = null
-
-        @SerialName("android_id")
-        var androidId: String? = null
-    }
+    class RegisterRequest(
+        @SerialName("special_code") var specialCode: String? = null,
+        var code: String? = null,
+        var email: String? = null,
+        var phone: String? = null,
+        var nickname: String? = null,
+        var password: String? = null,
+        @SerialName("android_id") var androidId: String? = null
+    )
 
     /**
      * 提交注册
@@ -125,52 +119,36 @@ interface CommandLabUserService {
      * 登录请求体
      */
     @Serializable
-    class LoginRequest {
-        @JvmField
-        var account: String? = null
-
-        @JvmField
+    class LoginRequest(
+        var account: String? = null,
         var password: String? = null
-    }
+    )
 
     /**
      * 用户信息
      */
     @Serializable
-    class User {
-        var id: Int? = null
-        var email: String? = null
-        var nickname: String? = null
-
-        @SerialName("is_guest")
-        var isGuest: Boolean? = null
-
-        @SerialName("is_admin")
-        var isAdmin: Boolean? = null
-
-        @SerialName("is_moderator")
-        var isModerator: Boolean? = null
-
-        @SerialName("is_verified")
-        var isVerified: Boolean? = null
-
-        @SerialName("created_at")
-        var createdAt: String? = null
-
-        @SerialName("gravatar_url")
-        var gravatarUrl: String? = null
-    }
+    class User(
+        var id: Int? = null,
+        var email: String? = null,
+        var nickname: String? = null,
+        @SerialName("is_guest") var isGuest: Boolean? = null,
+        @SerialName("is_admin") var isAdmin: Boolean? = null,
+        @SerialName("is_moderator") var isModerator: Boolean? = null,
+        @SerialName("is_verified") var isVerified: Boolean? = null,
+        @SerialName("created_at") var createdAt: String? = null,
+        @SerialName("gravatar_url") var gravatarUrl: String? = null,
+    )
 
     /**
      * 登录响应
      */
     @Serializable
-    class LoginResponse {
-        @SerialName("user_id")
-        var userId: Int? = null // Added from upstream
-        var token: String? = null
+    class LoginResponse(
+        @SerialName("user_id") var userId: Int? = null, // Added from upstream
+        var token: String? = null,
         var user: User? = null
-    }
+    )
 
     /**
      * 正式用户登录
@@ -184,18 +162,16 @@ interface CommandLabUserService {
     // -------------------------------------------------------------
 
     @Serializable
-    class UploadLibraryRequest {
-        var content: String? = null
-
+    class UploadLibraryRequest(
+        var content: String? = null,
         // 上传固定为私有草稿，发布走 /release 接口
-        @SerialName("is_publish")
-        var isPublish: Boolean = false
-    }
+        @SerialName("is_publish") var isPublish: Boolean = false
+    )
 
     @Serializable
-    class UploadLibraryResponse {
+    class UploadLibraryResponse(
         var uuid: String? = null
-    }
+    )
 
     @POST("library/upload")
     fun uploadLibrary(@Body request: UploadLibraryRequest): Call<BaseResult<UploadLibraryResponse?>>
@@ -251,10 +227,10 @@ interface CommandLabUserService {
     // -------------------------------------------------------------
 
     @Serializable
-    class QuotaResponse {
-        var used: Int? = null
+    class QuotaResponse(
+        var used: Int? = null,
         var limit: Int? = null
-    }
+    )
 
     /**
      * 查询私有库配额：已用数量和上限

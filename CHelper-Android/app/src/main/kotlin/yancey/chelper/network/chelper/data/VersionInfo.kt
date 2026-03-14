@@ -23,14 +23,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Suppress("unused")
-class VersionInfo {
-    @SerialName("version_code")
-    var versionCode: Int? = null
-
-    @SerialName("version_name")
-    var versionName: String? = null
-
-    @Suppress("unused")
-    var link: String? = null
-    var changelog: String? = null
-}
+class VersionInfo(
+    @SerialName("version_code") var versionCode: Int? = null,
+    @SerialName("version_name") var versionName: String? = null,
+    var link: String? = null,
+    var changelog: String? = null,
+)

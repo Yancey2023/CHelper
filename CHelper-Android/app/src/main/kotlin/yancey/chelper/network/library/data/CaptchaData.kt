@@ -30,11 +30,10 @@ import kotlinx.serialization.Serializable
  */
 @Suppress("unused")
 @Serializable
-class CaptchaTokenRequest {
-    @SerialName("special_code")
-    var specialCode: String? = null
+class CaptchaTokenRequest(
+    @SerialName("special_code") var specialCode: String? = null,
     var action: String? = null
-
+) {
     companion object {
         // 预定义的 action 值
         const val ACTION_REGISTER = "注册账号"
@@ -48,26 +47,22 @@ class CaptchaTokenRequest {
  */
 @Suppress("unused")
 @Serializable
-class CaptchaTokenResponse {
-    @SerialName("verification_token")
-    var verificationToken: String? = null
-    var action: String? = null
-
-    @SerialName("special_code")
-    var specialCode: String? = null
-}
+class CaptchaTokenResponse(
+    @SerialName("verification_token") var verificationToken: String? = null,
+    var action: String? = null,
+    @SerialName("special_code") var specialCode: String? = null
+)
 
 /**
  * 验证状态响应
  */
 @Suppress("unused")
 @Serializable
-class CaptchaStatusResponse {
-    @SerialName("special_code")
-    var specialCode: String? = null
-    var status: String? = null
+class CaptchaStatusResponse(
+    @SerialName("special_code") var specialCode: String? = null,
+    var status: String? = null,
     var action: String? = null
-
+) {
     companion object {
         const val STATUS_PENDING = "pending"
         const val STATUS_CHALLENGING = "challenging"

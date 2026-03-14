@@ -21,14 +21,15 @@ package yancey.chelper.network.chelper.data
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Announcement {
-    var isEnable: Boolean? = null
-    var isForce: Boolean? = null
-    var isBigDialog: Boolean? = null
-    var isEnableCommandLab: Boolean? = null
-    var publicLibraryMinVersion: Int? = null
-    var title: String? = null
+class Announcement(
+    var isEnable: Boolean? = null,
+    var isForce: Boolean? = null,
+    var isBigDialog: Boolean? = null,
+    var isEnableCommandLab: Boolean? = null,
+    var publicLibraryMinVersion: Int? = null,
+    var title: String? = null,
     var message: String? = null
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
