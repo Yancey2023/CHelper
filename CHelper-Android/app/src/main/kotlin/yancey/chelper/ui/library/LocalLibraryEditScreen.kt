@@ -59,25 +59,20 @@ import yancey.chelper.ui.common.widget.TextField
 fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), id: Int? = null) {
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+    val localLibraryFunction by localCommandLabDataStore.localLibraryFunction(id)
         .collectAsState(initial = null)
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    LaunchedEffect(localLibraryFunctions, id) {
+    LaunchedEffect(localLibraryFunction, id) {
         viewModel.id = id
-        if (id != null) {
-            viewModel.viewModelScope.launch {
-                val libraryFunction = localLibraryFunctions?.get(id)
-                libraryFunction?.let {
-                    viewModel.name.setTextAndPlaceCursorAtEnd(it.name ?: "")
-                    viewModel.version.setTextAndPlaceCursorAtEnd(it.version ?: "")
-                    viewModel.author.setTextAndPlaceCursorAtEnd(it.author ?: "")
-                    viewModel.description.setTextAndPlaceCursorAtEnd(it.note ?: "")
-                    viewModel.tags.setTextAndPlaceCursorAtEnd(
-                        it.tags?.joinToString(separator = ",") ?: ""
-                    )
-                    viewModel.commands.setTextAndPlaceCursorAtEnd(it.content ?: "")
-                }
-            }
+        localLibraryFunction?.let {
+            viewModel.name.setTextAndPlaceCursorAtEnd(it.name ?: "")
+            viewModel.version.setTextAndPlaceCursorAtEnd(it.version ?: "")
+            viewModel.author.setTextAndPlaceCursorAtEnd(it.author ?: "")
+            viewModel.description.setTextAndPlaceCursorAtEnd(it.note ?: "")
+            viewModel.tags.setTextAndPlaceCursorAtEnd(
+                it.tags?.joinToString(separator = ",") ?: ""
+            )
+            viewModel.commands.setTextAndPlaceCursorAtEnd(it.content ?: "")
         }
     }
     RootViewWithHeaderAndCopyright(
@@ -206,7 +201,10 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
                         }
 
                         EditMode.UPDATE -> {
-                            localCommandLabDataStore.updateLocalLibraryFunction(id!!, libraryFunction)
+                            localCommandLabDataStore.updateLocalLibraryFunction(
+                                id!!,
+                                libraryFunction
+                            )
                         }
                     }
                     onBackPressedDispatcher?.onBackPressed()

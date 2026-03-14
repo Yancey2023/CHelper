@@ -134,12 +134,9 @@ fun LocalLibraryShowScreen(library: LibraryFunction?) {
 fun LocalLibraryShowScreen(id: Int? = null) {
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+    val localLibraryFunction by localCommandLabDataStore.localLibraryFunction(id)
         .collectAsState(initial = null)
-    val library = remember(localLibraryFunctions, id) {
-        return@remember if (id == null) null else localLibraryFunctions?.get(id)
-    }
-    LocalLibraryShowScreen(library = library)
+    LocalLibraryShowScreen(library = localLibraryFunction)
 }
 
 @Preview

@@ -78,6 +78,13 @@ class LocalCommandLabDataStore(private val context: Context) {
     fun localLibraryFunctions(): Flow<List<LibraryFunction>> =
         context.localLibraryDataStore.data.map { it.functions }
 
+    fun localLibraryFunction(id: Int?): Flow<LibraryFunction?> =
+        context.localLibraryDataStore.data.map {
+            if (id != null && id in it.functions.indices) {
+                it.functions[id]
+            } else null
+        }
+
     suspend fun addLocalLibraryFunction(function: LibraryFunction) {
         context.localLibraryDataStore.updateData { it.copy(functions = it.functions + function) }
     }
