@@ -72,23 +72,25 @@ class CompletionViewModel : ViewModel() {
             return
         }
         isResumed = true
-        if (file!!.exists()) {
-            try {
-                viewModelScope.launch {
-                    command = withContext(Dispatchers.IO) {
-                        DataInputStream(BufferedInputStream(file!!.inputStream())).use { dataInputStream ->
-                            return@withContext TextFieldState(
-                                dataInputStream.readUTF(),
-                                TextRange(
-                                    dataInputStream.readInt(),
-                                    dataInputStream.readInt()
+        file.let {
+            if (it?.exists() ?: return) {
+                try {
+                    viewModelScope.launch {
+                        command = withContext(Dispatchers.IO) {
+                            DataInputStream(BufferedInputStream(it.inputStream())).use { dataInputStream ->
+                                return@withContext TextFieldState(
+                                    dataInputStream.readUTF(),
+                                    TextRange(
+                                        dataInputStream.readInt(),
+                                        dataInputStream.readInt()
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
-                }
-            } catch (_: IOException) {
+                } catch (_: IOException) {
 
+                }
             }
         }
     }
@@ -98,91 +100,93 @@ class CompletionViewModel : ViewModel() {
         isSyntaxHighlight: Boolean,
         isShowErrorReason: Boolean
     ) {
-        val selectedString = SelectedString(
-            command.text.toString(),
-            min(command.selection.start, command.selection.end),
-            max(command.selection.start, command.selection.end)
-        )
-        val isSyntaxHighlight = isSyntaxHighlight && command.text.length < 200
-        val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
-        if (selectedString.text.isEmpty()) {
-            // 输入内容为空
-            lastInput = selectedString
-            // 显示欢迎词
-            structure = "欢迎使用CHelper"
-            // 显示作者信息
-            paramHint = "作者：Yancey"
-            // 更新错误原因
-            if (isUpdateErrorReason) {
-                errorReasons = null
+        core.let {
+            val selectedString = SelectedString(
+                command.text.toString(),
+                min(command.selection.start, command.selection.end),
+                max(command.selection.start, command.selection.end)
+            )
+            val isSyntaxHighlight = isSyntaxHighlight && command.text.length < 200
+            val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
+            if (selectedString.text.isEmpty()) {
+                // 输入内容为空
+                lastInput = selectedString
+                // 显示欢迎词
+                structure = "欢迎使用CHelper"
+                // 显示作者信息
+                paramHint = "作者：Yancey"
+                // 更新错误原因
+                if (isUpdateErrorReason) {
+                    errorReasons = null
+                }
+                // 通知内核
+                it?.onTextChanged(selectedString.text, 0)
+                // 更新补全提示
+                suggestionsSize = it?.suggestionsSize ?: 0
+                suggestionsUpdateTimes++
+                return
             }
-            // 通知内核
-            if (core != null) {
-                core!!.onTextChanged(selectedString.text, 0)
+            if (it == null) {
+                return
             }
-            // 更新补全提示
-            suggestionsSize = core?.getSuggestionsSize() ?: 0
+            if (selectedString.text == lastInput.text) {
+                if (selectedString.selectionStart == lastInput.selectionStart) {
+                    return
+                }
+                lastInput = selectedString
+                // 文本内容不变和光标都改变了
+                // 如果关闭了"根据光标位置提供补全提示"，就什么都不做
+                if (!isCheckingBySelection) {
+                    return
+                }
+                // 通知内核
+                it.onSelectionChanged(selectedString.selectionStart)
+            } else {
+                lastInput = selectedString
+                // 文本内容和光标都改变了
+                // 如果关闭了"根据光标位置提供补全提示"，就在通知内核时把光标位置当成在文本最后面
+                val selectionStart = if (isCheckingBySelection) {
+                    selectedString.selectionStart
+                } else {
+                    selectedString.text.length
+                }
+                // 通知内核
+                it.onTextChanged(selectedString.text, selectionStart)
+                // 更新颜色
+                syntaxHighlightTokens = if (isSyntaxHighlight) {
+                    it.syntaxToken
+                } else {
+                    null
+                }
+                // 更新命令语法结构
+                structure = it.structure
+                // 更新错误原因
+                if (isUpdateErrorReason) {
+                    errorReasons = it.errorReasons
+                }
+            }
+            // 更新命令参数介绍
+            paramHint = it.paramHint
+            // 更新补全提示列表
+            suggestionsSize = it.suggestionsSize
             suggestionsUpdateTimes++
-            return
         }
-        if (core == null) {
-            return
-        }
-        if (selectedString.text == lastInput.text) {
-            if (selectedString.selectionStart == lastInput.selectionStart) {
-                return
-            }
-            lastInput = selectedString
-            // 文本内容不变和光标都改变了
-            // 如果关闭了"根据光标位置提供补全提示"，就什么都不做
-            if (!isCheckingBySelection) {
-                return
-            }
-            // 通知内核
-            core!!.onSelectionChanged(selectedString.selectionStart)
-        } else {
-            lastInput = selectedString
-            // 文本内容和光标都改变了
-            // 如果关闭了"根据光标位置提供补全提示"，就在通知内核时把光标位置当成在文本最后面
-            val selectionStart = if (isCheckingBySelection) {
-                selectedString.selectionStart
-            } else {
-                selectedString.text.length
-            }
-            // 通知内核
-            core!!.onTextChanged(selectedString.text, selectionStart)
-            // 更新颜色
-            syntaxHighlightTokens = if (isSyntaxHighlight) {
-                core!!.getSyntaxToken()
-            } else {
-                null
-            }
-            // 更新命令语法结构
-            structure = core!!.getStructure()
-            // 更新错误原因
-            if (isUpdateErrorReason) {
-                errorReasons = core!!.getErrorReasons()
-            }
-        }
-        // 更新命令参数介绍
-        paramHint = core!!.getParamHint()
-        // 更新补全提示列表
-        suggestionsSize = core!!.getSuggestionsSize()
-        suggestionsUpdateTimes++
     }
 
     fun onItemClick(which: Int) {
-        if (core == null) {
-            return
-        }
-        val result = core!!.onSuggestionClick(which)
-        if (result != null) {
-            command.edit {
-                replace(0, length, result.text)
-                selection = TextRange(
-                    result.selection,
-                    result.selection
-                )
+        core.let {
+            if (it == null) {
+                return
+            }
+            val result = it.onSuggestionClick(which)
+            if (result != null) {
+                command.edit {
+                    replace(0, length, result.text)
+                    selection = TextRange(
+                        result.selection,
+                        result.selection
+                    )
+                }
             }
         }
     }
@@ -200,25 +204,30 @@ class CompletionViewModel : ViewModel() {
             return
         }
         var cpackPath: String? = null
-        for (filename in context.assets.list("cpack")!!) {
-            if (filename!!.startsWith(cpackBranch)) {
+        for (filename in context.assets.list("cpack") ?: return) {
+            if (filename.startsWith(cpackBranch)) {
                 cpackPath = "cpack/$filename"
             }
         }
-        if (core == null || core!!.path != cpackPath) {
-            var newCore: CHelperCore? = null
-            try {
-                newCore = CHelperCore.fromAssets(context.assets, cpackPath)
-            } catch (throwable: Throwable) {
-                Toaster.show("资源包加载失败")
-                Log.w("CompletionViewModel", "fail to load resource pack", throwable)
-                MonitorUtil.generateCustomLog(throwable, "LoadResourcePackException")
-            }
-            if (newCore != null) {
-                core?.close()
-                core = newCore
-                lastInput = SelectedString("", 0, 0)
-                onSelectionChanged(isCheckingBySelection, isSyntaxHighlight, isShowErrorReason)
+        if (cpackPath == null) {
+            return
+        }
+        core.let {
+            if (it == null || it.path != cpackPath) {
+                var newCore: CHelperCore? = null
+                try {
+                    newCore = CHelperCore.fromAssets(context.assets, cpackPath)
+                } catch (throwable: Throwable) {
+                    Toaster.show("资源包加载失败")
+                    Log.w("CompletionViewModel", "fail to load resource pack", throwable)
+                    MonitorUtil.generateCustomLog(throwable, "LoadResourcePackException")
+                }
+                if (newCore != null) {
+                    it?.close()
+                    core = newCore
+                    lastInput = SelectedString("", 0, 0)
+                    onSelectionChanged(isCheckingBySelection, isSyntaxHighlight, isShowErrorReason)
+                }
             }
         }
     }
