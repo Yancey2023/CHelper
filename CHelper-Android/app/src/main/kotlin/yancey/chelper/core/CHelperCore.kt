@@ -22,7 +22,6 @@ import android.content.Context
 import android.content.res.AssetManager
 import com.hjq.toast.Toaster
 import java.io.Closeable
-import java.util.Objects
 
 /**
  * 软件的内核，与c++代码交互
@@ -47,10 +46,10 @@ class CHelperCore private constructor(
      * @param path         资源包路径
      */
     init {
-        try {
-            pointer = create0(assetManager, path)
-        } catch (e: Throwable) {
-            pointer = 0
+        pointer = try {
+            create0(assetManager, path)
+        } catch (_: Throwable) {
+            0
         }
         if (pointer == 0L) {
             throw RuntimeException("fail to init CHelper Core: $path")
@@ -207,7 +206,7 @@ class CHelperCore private constructor(
          * @return 软件内核
          */
         fun fromAssets(assetManager: AssetManager, path: String): CHelperCore {
-            return CHelperCore(Objects.requireNonNull<AssetManager>(assetManager), path)
+            return CHelperCore(assetManager, path)
         }
 
         /**
@@ -231,7 +230,7 @@ class CHelperCore private constructor(
                 return ""
             }
             if (!isOld2NewInit) {
-                if (old2newInit0(context.getAssets(), "old2new/old2new.dat")) {
+                if (old2newInit0(context.assets, "old2new/old2new.dat")) {
                     isOld2NewInit = true
                 }
                 if (!isOld2NewInit) {
