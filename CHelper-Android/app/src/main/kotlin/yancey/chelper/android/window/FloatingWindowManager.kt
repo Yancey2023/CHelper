@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.rememberLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
@@ -71,8 +72,7 @@ class FloatingWindowManager(
     private var iconViewWindow: EasyWindow<*>? = null
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
-    private var iconView: ImageView? = null
-    private var navController: androidx.navigation.NavController? = null
+    private var navController: NavController? = null
 
     val isUsingFloatingWindow: Boolean
         /**
@@ -171,7 +171,6 @@ class FloatingWindowManager(
             }
         }
         mainView.addView(composeView)
-        this@FloatingWindowManager.iconView = iconView
         iconViewWindow = EasyWindow.with(application)
             .setContentView(iconView)
             .setWindowDraggableRule(MovingWindowDraggableRule())
@@ -237,7 +236,6 @@ class FloatingWindowManager(
             composeLifecycleOwner = null
             floatBackPressedOwner = null
             navController = null
-            iconView = null
             mainViewWindow!!.recycle()
             mainViewWindow = null
         }
