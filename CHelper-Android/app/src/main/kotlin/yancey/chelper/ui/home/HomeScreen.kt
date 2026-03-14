@@ -63,6 +63,7 @@ import yancey.chelper.ui.EnumerationScreenKey
 import yancey.chelper.ui.LocalLibraryListScreenKey
 import yancey.chelper.ui.Old2NewIMEGuideScreenKey
 import yancey.chelper.ui.Old2NewScreenKey
+import yancey.chelper.ui.PublicLibraryListScreenKey
 import yancey.chelper.ui.RawtextScreenKey
 import yancey.chelper.ui.SettingsScreenKey
 import yancey.chelper.ui.ShowTextScreenKey
@@ -190,18 +191,14 @@ fun HomeScreen(
                     NameAndAction(stringResource(R.string.layout_home_experimental_feature_local_library)) {
                         navController.navigate(LocalLibraryListScreenKey)
                     }
-                    Divider()
-                    NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
-                        // 因为目前还有bug，暂时不开放
+                    if (isShowPublicLibrary) {
+                        Divider()
+                        NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
+                            viewModel.checkCommandLabVersion(publicLibraryMinVersion) {
+                                navController.navigate(PublicLibraryListScreenKey)
+                            }
+                        }
                     }
-//                    if (isShowPublicLibrary) {
-//                        Divider()
-//                        NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
-//                            viewModel.checkCommandLabVersion(publicLibraryMinVersion) {
-//                                navController.navigate(PublicLibraryListScreenKey)
-//                            }
-//                        }
-//                    }
                     Divider()
                     NameAndAction(stringResource(R.string.layout_home_experimental_feature_raw_json_studio)) {
                         navController.navigate(RawtextScreenKey)
