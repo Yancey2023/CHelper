@@ -68,9 +68,9 @@ fun LocalLibraryShowScreen(library: LibraryFunction?) {
                 ?.filter { !it.isEmpty() }
                 ?.map {
                     if (it.startsWith("#")) {
-                        true to it.substring(1).trim()
+                        false to it.substring(1).trim()
                     } else {
-                        false to it
+                        true to it
                     }
                 }
                 ?.filter { !it.second.isEmpty() }
