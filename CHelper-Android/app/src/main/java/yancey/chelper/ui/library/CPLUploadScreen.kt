@@ -14,20 +14,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.android.util.LocalLibraryManager
+import yancey.chelper.data.LocalCommandLabDataStore
+import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.CustomDialog
@@ -44,6 +46,11 @@ fun CPLUploadScreen(
     viewModel: CPLUploadViewModel = viewModel(),
     navController: NavHostController
 ) {
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
+    val libraries by localCommandLabDataStore.localLibraryFunctions()
+        .collectAsState(initial = emptyList())
+
     var showImportDialog by remember { mutableStateOf(false) }
     var showCaptchaDialog by remember { mutableStateOf(false) }
     var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
@@ -141,9 +148,10 @@ fun CPLUploadScreen(
 
     if (showImportDialog) {
         ImportLocalLibraryDialog(
+            libraries = libraries,
             onDismiss = { showImportDialog = false },
             onSelect = { id ->
-                viewModel.loadFromLocal(id)
+                viewModel.loadFromLocal(libraries[id])
                 showImportDialog = false
             }
         )
@@ -151,13 +159,11 @@ fun CPLUploadScreen(
 }
 
 @Composable
-fun ImportLocalLibraryDialog(onDismiss: () -> Unit, onSelect: (Int) -> Unit) {
-    val libraries = remember { LocalLibraryManager.INSTANCE?.getFunctions() ?: mutableListOf() }
-
-    LaunchedEffect(Unit) {
-        LocalLibraryManager.INSTANCE?.ensureInit()
-    }
-
+fun ImportLocalLibraryDialog(
+    libraries: List<LibraryFunction>,
+    onDismiss: () -> Unit,
+    onSelect: (Int) -> Unit
+) {
     CustomDialog(
         onDismissRequest = onDismiss,
         properties = CustomDialogProperties(usePlatformDefaultWidth = false)

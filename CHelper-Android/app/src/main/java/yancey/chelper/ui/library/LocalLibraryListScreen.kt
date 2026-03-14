@@ -33,13 +33,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,7 +55,7 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import yancey.chelper.R
-import yancey.chelper.android.util.LocalLibraryManager
+import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LibraryEditScreenKey
 import yancey.chelper.ui.LocalLibraryShowScreenKey
@@ -70,13 +72,17 @@ fun LocalLibraryListScreen(
     viewModel: LocalLibraryListViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
+    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+        .collectAsState(initial = null)
     val clipboard = LocalClipboard.current
     val filteredLibraries =
-        remember(viewModel.isInit, viewModel.keyword.text, viewModel.libraries) {
+        remember(localLibraryFunctions, viewModel.keyword.text) {
             if (viewModel.keyword.text.isEmpty()) {
-                viewModel.libraries ?: listOf()
+                localLibraryFunctions ?: listOf()
             } else {
-                viewModel.libraries?.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
+                localLibraryFunctions?.filter { it.name != null && it.name!!.contains(viewModel.keyword.text) }
                     ?: listOf()
             }
         }
@@ -192,8 +198,7 @@ fun LocalLibraryListScreen(
                             val text = getItemAt(0).text.toString()
                             try {
                                 val libraries = Json.decodeFromString<List<LibraryFunction>>(text)
-                                viewModel.libraries?.addAll(libraries)
-                                LocalLibraryManager.INSTANCE!!.save()
+                                localCommandLabDataStore.addLocalLibraryFunctions(libraries)
                                 Toaster.show("导入成功")
                             } catch (_: Throwable) {
                                 Toaster.show("导入失败")
@@ -205,8 +210,8 @@ fun LocalLibraryListScreen(
         )
     }
     if (viewModel.isShowExportDialog) {
-        val output = remember(viewModel.libraries) {
-            Json.encodeToString(viewModel.libraries?.toList())
+        val output = remember(localLibraryFunctions) {
+            Json.encodeToString(localLibraryFunctions?.toList())
         }
         IsConfirmDialog(
             onDismissRequest = { viewModel.isShowExportDialog = false },
@@ -233,16 +238,7 @@ fun LocalLibraryListScreen(
 @Composable
 fun LocalLibraryListScreenLightThemePreview() {
     val viewModel = remember {
-        LocalLibraryListViewModel().apply {
-            libraries = mutableStateListOf<LibraryFunction>().apply {
-                for (i in 0..100) {
-                    add(LibraryFunction().apply {
-                        name = "Library $i"
-                        note = "Description $i"
-                    })
-                }
-            }
-        }
+        LocalLibraryListViewModel()
     }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
         LocalLibraryListScreen(viewModel = viewModel)
@@ -253,16 +249,7 @@ fun LocalLibraryListScreenLightThemePreview() {
 @Composable
 fun LocalLibraryListScreenDarkThemePreview() {
     val viewModel = remember {
-        LocalLibraryListViewModel().apply {
-            libraries = mutableStateListOf<LibraryFunction>().apply {
-                for (i in 0..100) {
-                    add(LibraryFunction().apply {
-                        name = "Library $i"
-                        note = "Description $i"
-                    })
-                }
-            }
-        }
+        LocalLibraryListViewModel()
     }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
         LocalLibraryListScreen(viewModel = viewModel)

@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import yancey.chelper.android.util.SettingsDataStore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.android.window.ComposeLifecycleOwner
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.common.CHelperTheme

@@ -32,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 
@@ -61,7 +60,7 @@ class LibrarySearchViewModel : ViewModel() {
         }
     }
 
-    fun search() {
+    fun search(localLibraryFunctions: List<LibraryFunction>?) {
         val q = keyword.text.toString().trim()
         if (q.isEmpty()) {
             // 清空搜索结果
@@ -72,17 +71,20 @@ class LibrarySearchViewModel : ViewModel() {
             return
         }
 
-        loadFunctions(q, resetPage = true)
+        loadFunctions(localLibraryFunctions, searchStr = q, resetPage = true)
     }
 
-    fun loadMore() {
+    fun loadMore(localLibraryFunctions: List<LibraryFunction>?) {
         val q = keyword.text.toString().trim()
         if (q.isEmpty() || !hasMore || isLoading) return
         currentPage++
-        loadFunctions(q, resetPage = false)
+        loadFunctions(localLibraryFunctions, searchStr = q, resetPage = false)
     }
 
-    private fun loadFunctions(searchStr: String, resetPage: Boolean) {
+    private fun loadFunctions(
+        localLibraryFunctions: List<LibraryFunction>?,
+        searchStr: String, resetPage: Boolean
+    ) {
         if (isLoading) return
 
         searchJob?.cancel()
@@ -103,7 +105,7 @@ class LibrarySearchViewModel : ViewModel() {
 
                     // 私有与本地过滤只在第一页加载时查一次即可
                     if (resetPage) {
-                        launch { fetchLocalAndPrivateLibraries(searchStr) }
+                        launch { fetchLocalAndPrivateLibraries(localLibraryFunctions, searchStr) }
                     }
 
                     publicJob.join()
@@ -151,14 +153,15 @@ class LibrarySearchViewModel : ViewModel() {
     /**
      * 加载第一栏数据，从本地和云端私有库过滤
      */
-    private suspend fun fetchLocalAndPrivateLibraries(searchStr: String) {
+    private suspend fun fetchLocalAndPrivateLibraries(
+        localLibraryFunctions: List<LibraryFunction>?,
+        searchStr: String
+    ) {
         val searchLower = searchStr.lowercase()
         val tempMatches = mutableListOf<LibraryFunction>()
 
         // 扫描本地库 (转换为 LibraryFunction 做格式统一，我们借用 name, note 等字段)
-        LocalLibraryManager.INSTANCE?.ensureInit()
-        val localList = LocalLibraryManager.INSTANCE?.getFunctions()
-        localList?.forEach { localFunc ->
+        localLibraryFunctions?.forEach { localFunc ->
             val nameMatch = localFunc.name?.lowercase()?.contains(searchLower) == true
             val tagsMatch = localFunc.tags?.any { it.lowercase().contains(searchLower) } == true
             val noteMatch = localFunc.note?.lowercase()?.contains(searchLower) == true

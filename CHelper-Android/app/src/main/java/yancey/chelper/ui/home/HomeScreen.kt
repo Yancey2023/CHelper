@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.android.util.PolicyGrantManager
-import yancey.chelper.android.util.SettingsDataStore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.AboutScreenKey
 import yancey.chelper.ui.CompletionScreenKey
@@ -63,7 +63,6 @@ import yancey.chelper.ui.EnumerationScreenKey
 import yancey.chelper.ui.LocalLibraryListScreenKey
 import yancey.chelper.ui.Old2NewIMEGuideScreenKey
 import yancey.chelper.ui.Old2NewScreenKey
-import yancey.chelper.ui.PublicLibraryListScreenKey
 import yancey.chelper.ui.RawtextScreenKey
 import yancey.chelper.ui.SettingsScreenKey
 import yancey.chelper.ui.ShowTextScreenKey

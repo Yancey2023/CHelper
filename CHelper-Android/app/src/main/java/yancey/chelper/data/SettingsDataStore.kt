@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package yancey.chelper.android.util
+package yancey.chelper.data
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
@@ -43,7 +43,7 @@ private val Context.settingsDataStore: DataStore<Settings> by dataStore(
     fileName = "settings.json",
     serializer = SettingsSerializer,
     produceMigrations = {
-        listOf(MigrationToV73(it))
+        listOf(MigrationToV74(it))
     }
 )
 
@@ -184,45 +184,56 @@ class SettingsDataStore(private val context: Context) {
 }
 
 /**
- * 0.3.15 版本之后，软件设置从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
+ * 0.4.0 版本之后，软件设置存储从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
  */
-class MigrationToV73(private val context: Context) : DataMigration<Settings> {
+class MigrationToV74(private val context: Context) : DataMigration<Settings> {
     override suspend fun shouldMigrate(currentData: Settings): Boolean {
         return context.dataDir.resolve("settings").resolve("settings.json").exists()
     }
 
     override suspend fun migrate(currentData: Settings): Settings {
-        val oldSettings = Json.decodeFromString<JsonObject>(
-            context.dataDir.resolve("settings").resolve("settings.json").readBytes()
-                .decodeToString()
-        )
-        var cpackBranch = (oldSettings["cpackPath"] as? JsonPrimitive)?.content
-        if (cpackBranch == null ||
-            !(cpackBranch == "release-vanilla" ||
-                    cpackBranch == "release-experiment" ||
-                    cpackBranch == "beta-vanilla" ||
-                    cpackBranch == "beta-experiment" ||
-                    cpackBranch == "netease-vanilla" ||
-                    cpackBranch == "netease-experiment")
-        ) {
-            cpackBranch = null
+        return try {
+            val oldSettings = Json.decodeFromString<JsonObject>(
+                context.dataDir.resolve("settings").resolve("settings.json").readBytes()
+                    .decodeToString()
+            )
+            var cpackBranch = (oldSettings["cpackPath"] as? JsonPrimitive)?.content
+            if (cpackBranch == null ||
+                !(cpackBranch == "release-vanilla" ||
+                        cpackBranch == "release-experiment" ||
+                        cpackBranch == "beta-vanilla" ||
+                        cpackBranch == "beta-experiment" ||
+                        cpackBranch == "netease-vanilla" ||
+                        cpackBranch == "netease-experiment")
+            ) {
+                cpackBranch = null
+            }
+            currentData.copy(
+                isEnableUpdateNotifications = (oldSettings["isEnableUpdateNotifications"] as? JsonPrimitive)?.booleanOrNull,
+                themeId = (oldSettings["themeId"] as? JsonPrimitive)?.content,
+                floatingWindowAlpha = (oldSettings["floatingWindowAlpha"] as? JsonPrimitive)?.floatOrNull,
+                floatingWindowSize = (oldSettings["floatingWindowSize"] as? JsonPrimitive)?.intOrNull,
+                isCheckingBySelection = (oldSettings["isCheckingBySelection"] as? JsonPrimitive)?.booleanOrNull,
+                isHideWindowWhenCopying = (oldSettings["isHideWindowWhenCopying"] as? JsonPrimitive)?.booleanOrNull,
+                isSavingWhenPausing = (oldSettings["isSavingWhenPausing"] as? JsonPrimitive)?.booleanOrNull,
+                isCrowded = (oldSettings["isCrowed"] as? JsonPrimitive)?.booleanOrNull,// 之前的配置文件中 crowded 名字拼写错了
+                isShowErrorReason = (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
+                isSyntaxHighlight = (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
+                cpackBranch = cpackBranch,
+            )
+        } catch (_: Throwable) {
+            currentData
         }
-        return currentData.copy(
-            isEnableUpdateNotifications = (oldSettings["isEnableUpdateNotifications"] as? JsonPrimitive)?.booleanOrNull,
-            themeId = (oldSettings["themeId"] as? JsonPrimitive)?.content,
-            floatingWindowAlpha = (oldSettings["floatingWindowAlpha"] as? JsonPrimitive)?.floatOrNull,
-            floatingWindowSize = (oldSettings["floatingWindowSize"] as? JsonPrimitive)?.intOrNull,
-            isCheckingBySelection = (oldSettings["isCheckingBySelection"] as? JsonPrimitive)?.booleanOrNull,
-            isHideWindowWhenCopying = (oldSettings["isHideWindowWhenCopying"] as? JsonPrimitive)?.booleanOrNull,
-            isSavingWhenPausing = (oldSettings["isSavingWhenPausing"] as? JsonPrimitive)?.booleanOrNull,
-            isCrowded = (oldSettings["isCrowed"] as? JsonPrimitive)?.booleanOrNull,// 之前的配置文件中 crowded 名字拼写错了
-            isShowErrorReason = (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
-            isSyntaxHighlight = (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
-            cpackBranch = cpackBranch,
-        )
     }
 
     override suspend fun cleanUp() {
-        context.dataDir.resolve("settings").resolve("settings.json").delete()
+        val oldFile = context.dataDir.resolve("settings").resolve("settings.json")
+        if (oldFile.exists()) {
+            oldFile.delete()
+        }
+        val oldDir = context.dataDir.resolve("settings")
+        if (oldDir.exists() && oldDir.listFiles()?.isEmpty() == true) {
+            oldDir.delete()
+        }
     }
 }

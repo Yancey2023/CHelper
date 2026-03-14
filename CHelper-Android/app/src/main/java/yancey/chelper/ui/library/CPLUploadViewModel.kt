@@ -11,8 +11,8 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
 
 class CPLUploadViewModel : ViewModel() {
@@ -26,16 +26,14 @@ class CPLUploadViewModel : ViewModel() {
     var isPublic by mutableStateOf(true)
     var isLoading by mutableStateOf(false)
 
-    fun loadFromLocal(id: Int) {
+    fun loadFromLocal(library: LibraryFunction) {
         viewModelScope.launch {
             try {
-                LocalLibraryManager.INSTANCE!!.ensureInit()
-                val function = LocalLibraryManager.INSTANCE!!.getFunctions()[id]
-                name.setTextAndPlaceCursorAtEnd(function.name ?: "")
-                version.setTextAndPlaceCursorAtEnd(function.version ?: "")
-                description.setTextAndPlaceCursorAtEnd(function.note ?: "")
-                tags.setTextAndPlaceCursorAtEnd(function.tags?.joinToString(",") ?: "")
-                commands.setTextAndPlaceCursorAtEnd(function.content ?: "")
+                name.setTextAndPlaceCursorAtEnd(library.name ?: "")
+                version.setTextAndPlaceCursorAtEnd(library.version ?: "")
+                description.setTextAndPlaceCursorAtEnd(library.note ?: "")
+                tags.setTextAndPlaceCursorAtEnd(library.tags?.joinToString(",") ?: "")
+                commands.setTextAndPlaceCursorAtEnd(library.content ?: "")
             } catch (e: Exception) {
                 e.printStackTrace()
             }

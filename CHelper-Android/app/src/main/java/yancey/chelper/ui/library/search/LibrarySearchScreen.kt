@@ -37,7 +37,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -46,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -55,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.R
+import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LocalLibraryShowScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
@@ -71,6 +75,11 @@ fun LibrarySearchScreen(
     viewModel: LibrarySearchViewModel = viewModel(),
     navController: NavHostController
 ) {
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
+    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+        .collectAsState(initial = null)
+
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
@@ -79,7 +88,7 @@ fun LibrarySearchScreen(
     LaunchedEffect(initialKeyword) {
         viewModel.setInitialKeyword(initialKeyword)
         if (!initialKeyword.isNullOrBlank()) {
-            viewModel.search()
+            viewModel.search(localLibraryFunctions)
         } else {
             // 如果没带关键字，自动弹起键盘给输入框焦点
             focusRequester.requestFocus()
@@ -96,7 +105,7 @@ fun LibrarySearchScreen(
     }
     LaunchedEffect(shouldLoadMore) {
         snapshotFlow { shouldLoadMore.value }
-            .collect { if (it) viewModel.loadMore() }
+            .collect { if (it) viewModel.loadMore(localLibraryFunctions) }
     }
 
     RootViewWithHeaderAndCopyright(
@@ -134,7 +143,7 @@ fun LibrarySearchScreen(
                     modifier = Modifier
                         .clickable {
                             focusManager.clearFocus()
-                            viewModel.search()
+                            viewModel.search(localLibraryFunctions)
                         }
                         .padding(5.dp)
                 )

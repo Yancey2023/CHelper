@@ -24,13 +24,11 @@ import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
 import yancey.chelper.android.util.CustomTheme
-import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
-import java.io.File
 
 class CHelperApplication : Application() {
     override fun onCreate() {
@@ -38,7 +36,7 @@ class CHelperApplication : Application() {
         // 隐私政策管理初始化
         PolicyGrantManager.init(
             assets.open("about/privacy_policy.txt").bufferedReader().use { it.readText() },
-            File(dataDir, "lastReadContent.txt")
+            dataDir.resolve("lastReadContent.txt")
         )
         // 用于数据分析和性能监控的第三方库初始化
         MonitorUtil.init(this)
@@ -64,7 +62,5 @@ class CHelperApplication : Application() {
 
         // 自定义主题初始化
         CustomTheme.init(dataDir.resolve("theme"))
-        // 本地命令库初始化
-        LocalLibraryManager.init(dataDir.resolve("localLibrary").resolve("data.json"))
     }
 }

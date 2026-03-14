@@ -33,8 +33,12 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,7 +46,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
-import yancey.chelper.android.util.LocalLibraryManager
+import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
@@ -53,21 +57,26 @@ import yancey.chelper.ui.common.widget.TextField
 
 @Composable
 fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), id: Int? = null) {
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
+    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+        .collectAsState(initial = null)
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    LaunchedEffect(viewModel, id) {
+    LaunchedEffect(localLibraryFunctions, id) {
         viewModel.id = id
         if (id != null) {
             viewModel.viewModelScope.launch {
-                LocalLibraryManager.INSTANCE!!.ensureInit()
-                val libraryFunction = LocalLibraryManager.INSTANCE!!.getFunctions()[id]
-                viewModel.name.setTextAndPlaceCursorAtEnd(libraryFunction.name ?: "")
-                viewModel.version.setTextAndPlaceCursorAtEnd(libraryFunction.version ?: "")
-                viewModel.author.setTextAndPlaceCursorAtEnd(libraryFunction.author ?: "")
-                viewModel.description.setTextAndPlaceCursorAtEnd(libraryFunction.note ?: "")
-                viewModel.tags.setTextAndPlaceCursorAtEnd(
-                    libraryFunction.tags?.joinToString(separator = ",") ?: ""
-                )
-                viewModel.commands.setTextAndPlaceCursorAtEnd(libraryFunction.content ?: "")
+                val libraryFunction = localLibraryFunctions?.get(id)
+                libraryFunction?.let {
+                    viewModel.name.setTextAndPlaceCursorAtEnd(it.name ?: "")
+                    viewModel.version.setTextAndPlaceCursorAtEnd(it.version ?: "")
+                    viewModel.author.setTextAndPlaceCursorAtEnd(it.author ?: "")
+                    viewModel.description.setTextAndPlaceCursorAtEnd(it.note ?: "")
+                    viewModel.tags.setTextAndPlaceCursorAtEnd(
+                        it.tags?.joinToString(separator = ",") ?: ""
+                    )
+                    viewModel.commands.setTextAndPlaceCursorAtEnd(it.content ?: "")
+                }
             }
         }
     }
@@ -191,18 +200,15 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
                         viewModel.tags.text.toString().split(",").map { it.trim() }
                             .filter { !it.isEmpty() }.toList()
                     libraryFunction.content = viewModel.commands.text.toString()
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    val functions = LocalLibraryManager.INSTANCE!!.getFunctions()
                     when (viewModel.mode) {
                         EditMode.ADD -> {
-                            functions.add(libraryFunction)
+                            localCommandLabDataStore.addLocalLibraryFunction(libraryFunction)
                         }
 
                         EditMode.UPDATE -> {
-                            functions[id!!] = libraryFunction
+                            localCommandLabDataStore.updateLocalLibraryFunction(id!!, libraryFunction)
                         }
                     }
-                    LocalLibraryManager.INSTANCE!!.save()
                     onBackPressedDispatcher?.onBackPressed()
                 }
             }
@@ -219,10 +225,7 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
             content = stringResource(R.string.layout_library_edit_is_confirm_delete),
             onConfirm = {
                 viewModel.viewModelScope.launch {
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    val functions = LocalLibraryManager.INSTANCE!!.getFunctions()
-                    functions.removeAt(id!!)
-                    LocalLibraryManager.INSTANCE!!.save()
+                    localCommandLabDataStore.removeLocalLibraryFunction(id!!)
                     onBackPressedDispatcher?.onBackPressed()
                 }
             }

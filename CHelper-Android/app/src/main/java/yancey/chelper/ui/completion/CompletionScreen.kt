@@ -61,7 +61,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.R
-import yancey.chelper.android.util.SettingsDataStore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.android.widget.CommandEditText
 import yancey.chelper.core.SelectedString
 import yancey.chelper.core.Theme

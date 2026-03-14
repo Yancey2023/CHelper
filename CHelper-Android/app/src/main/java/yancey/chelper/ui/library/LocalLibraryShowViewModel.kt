@@ -26,4 +26,5 @@ import yancey.chelper.network.library.data.LibraryFunction
 
 class LocalLibraryShowViewModel : ViewModel() {
     var library by mutableStateOf(LibraryFunction())
+    var id by mutableStateOf<Int?>(null)
 }

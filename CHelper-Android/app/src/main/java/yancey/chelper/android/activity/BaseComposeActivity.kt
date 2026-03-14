@@ -43,7 +43,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import yancey.chelper.android.util.CustomTheme
-import yancey.chelper.android.util.SettingsDataStore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
 
 abstract class BaseComposeActivity : ComponentActivity() {

@@ -27,15 +27,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import yancey.chelper.android.util.LocalLibraryManager
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.ui.about.AboutScreen
@@ -48,9 +45,7 @@ import yancey.chelper.ui.library.CPLUploadScreen
 import yancey.chelper.ui.library.CPLUserScreen
 import yancey.chelper.ui.library.LocalLibraryEditScreen
 import yancey.chelper.ui.library.LocalLibraryListScreen
-import yancey.chelper.ui.library.LocalLibraryListViewModel
 import yancey.chelper.ui.library.LocalLibraryShowScreen
-import yancey.chelper.ui.library.LocalLibraryShowViewModel
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
 import yancey.chelper.ui.library.search.LibrarySearchScreen
@@ -187,27 +182,11 @@ fun NavHost(
             EnumerationScreen()
         }
         composable<LocalLibraryListScreenKey> {
-            val viewModel: LocalLibraryListViewModel = viewModel()
-            LaunchedEffect(viewModel) {
-                viewModel.viewModelScope.launch {
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
-                    viewModel.isInit = true
-                }
-            }
             LocalLibraryListScreen(navController = navController)
         }
         composable<LocalLibraryShowScreenKey> { navBackStackEntry ->
             val localLibraryShow: LocalLibraryShowScreenKey = navBackStackEntry.toRoute()
-            val viewModel: LocalLibraryShowViewModel = viewModel()
-            LaunchedEffect(viewModel, localLibraryShow.id) {
-                viewModel.viewModelScope.launch {
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    viewModel.library =
-                        LocalLibraryManager.INSTANCE!!.getFunctions()[localLibraryShow.id]
-                }
-            }
-            LocalLibraryShowScreen(viewModel = viewModel)
+            LocalLibraryShowScreen(id = localLibraryShow.id)
         }
         composable<LibraryEditScreenKey> { navBackStackEntry ->
             val localLibraryEdit: LibraryEditScreenKey = navBackStackEntry.toRoute()
@@ -297,27 +276,11 @@ fun FloatingWindowNavHost(
             EnumerationScreen()
         }
         composable<LocalLibraryListScreenKey> {
-            val viewModel: LocalLibraryListViewModel = viewModel()
-            LaunchedEffect(viewModel) {
-                viewModel.viewModelScope.launch {
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    viewModel.libraries = LocalLibraryManager.INSTANCE!!.getFunctions()
-                    viewModel.isInit = true
-                }
-            }
             LocalLibraryListScreen(navController = navController)
         }
         composable<LocalLibraryShowScreenKey> { navBackStackEntry ->
             val localLibraryShow: LocalLibraryShowScreenKey = navBackStackEntry.toRoute()
-            val viewModel: LocalLibraryShowViewModel = viewModel()
-            LaunchedEffect(viewModel, localLibraryShow.id) {
-                viewModel.viewModelScope.launch {
-                    LocalLibraryManager.INSTANCE!!.ensureInit()
-                    viewModel.library =
-                        LocalLibraryManager.INSTANCE!!.getFunctions()[localLibraryShow.id]
-                }
-            }
-            LocalLibraryShowScreen(viewModel = viewModel)
+            LocalLibraryShowScreen(id = localLibraryShow.id)
         }
         composable<LibraryEditScreenKey> { navBackStackEntry ->
             val localLibraryEdit: LibraryEditScreenKey = navBackStackEntry.toRoute()

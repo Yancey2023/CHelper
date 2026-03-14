@@ -32,20 +32,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
+import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -54,11 +57,12 @@ import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
 @Composable
-fun LocalLibraryShowScreen(viewModel: LocalLibraryShowViewModel = viewModel()) {
-    RootViewWithHeaderAndCopyright(title = viewModel.library.name ?: "加载中") {
+fun LocalLibraryShowScreen(library: LibraryFunction?) {
+    val coroutineScope = rememberCoroutineScope()
+    RootViewWithHeaderAndCopyright(title = library?.name ?: "加载中") {
         val clipboard = LocalClipboard.current
-        val contents: List<Pair<Boolean, String>> = remember(viewModel.library) {
-            viewModel.library.content
+        val contents: List<Pair<Boolean, String>> = remember(library) {
+            library?.content
                 ?.split("\n")
                 ?.map { it.trim() }
                 ?.filter { !it.isEmpty() }
@@ -103,7 +107,7 @@ fun LocalLibraryShowScreen(viewModel: LocalLibraryShowViewModel = viewModel()) {
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
                                     .clickable {
-                                        viewModel.viewModelScope.launch {
+                                        coroutineScope.launch {
                                             clipboard.setClipEntry(
                                                 ClipEntry(
                                                     ClipData.newPlainText(
@@ -126,11 +130,22 @@ fun LocalLibraryShowScreen(viewModel: LocalLibraryShowViewModel = viewModel()) {
     }
 }
 
+@Composable
+fun LocalLibraryShowScreen(id: Int? = null) {
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
+    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
+        .collectAsState(initial = null)
+    val library = remember(localLibraryFunctions, id) {
+        return@remember if (id == null) null else localLibraryFunctions?.get(id)
+    }
+    LocalLibraryShowScreen(library = library)
+}
+
 @Preview
 @Composable
 fun LibraryShowScreenLightThemePreview() {
-    val viewModel: LocalLibraryShowViewModel = viewModel()
-    viewModel.library = LibraryFunction().apply {
+    val library = LibraryFunction().apply {
         name = "Library"
         author = "Author"
         content = buildString {
@@ -141,15 +156,14 @@ fun LibraryShowScreenLightThemePreview() {
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        LocalLibraryShowScreen(viewModel = viewModel)
+        LocalLibraryShowScreen(library = library)
     }
 }
 
 @Preview
 @Composable
 fun LibraryShowScreenDarkThemePreview() {
-    val viewModel: LocalLibraryShowViewModel = viewModel()
-    viewModel.library = LibraryFunction().apply {
+    val library = LibraryFunction().apply {
         name = "Library"
         author = "Author"
         content = buildString {
@@ -160,6 +174,6 @@ fun LibraryShowScreenDarkThemePreview() {
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        LocalLibraryShowScreen(viewModel = viewModel)
+        LocalLibraryShowScreen(library = library)
     }
 }
