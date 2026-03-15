@@ -94,7 +94,6 @@ fun CustomDialog(
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
                         if (dismissOnClickOutside) {
-                            visible = false
                             onDismissRequest()
                         }
                     }
