@@ -379,89 +379,96 @@ fun CompletionScreen(
                 .fillMaxSize()
                 .background(CHelperTheme.colors.backgroundComponent)
         ) {
-            if (!isCrowded) {
-                CompletionScreenTopBar(viewModel.structure, viewModel.paramHint, errorReason)
-            }
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                items(if (isCrowded) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
-                    if (isCrowded) {
-                        if (suggestionIndex == 0) {
-                            CompletionScreenTopBar(
-                                viewModel.structure,
-                                viewModel.paramHint,
-                                errorReason,
-                                14.sp
-                            )
-                        } else {
-                            val realIndex = suggestionIndex - 1
-                            val suggestionText =
-                                remember(viewModel.suggestionsUpdateTimes, realIndex) {
-                                    val suggestion = viewModel.core?.getSuggestion(realIndex)
-                                    if (suggestion != null && suggestion.description != null) {
-                                        (suggestion.name ?: "") + " - " + suggestion.description!!
-                                    } else {
-                                        suggestion?.name ?: ""
+                if (!isCrowded) {
+                    CompletionScreenTopBar(viewModel.structure, viewModel.paramHint, errorReason)
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                ) {
+                    items(if (isCrowded) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
+                        if (isCrowded) {
+                            if (suggestionIndex == 0) {
+                                CompletionScreenTopBar(
+                                    viewModel.structure,
+                                    viewModel.paramHint,
+                                    errorReason,
+                                    14.sp
+                                )
+                            } else {
+                                val realIndex = suggestionIndex - 1
+                                val suggestionText =
+                                    remember(viewModel.suggestionsUpdateTimes, realIndex) {
+                                        val suggestion = viewModel.core?.getSuggestion(realIndex)
+                                        if (suggestion != null && suggestion.description != null) {
+                                            (suggestion.name
+                                                ?: "") + " - " + suggestion.description!!
+                                        } else {
+                                            suggestion?.name ?: ""
+                                        }
                                     }
-                                }
-                            Text(
+                                Text(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(onClick = {
+                                            viewModel.onItemClick(realIndex)
+                                            viewModel.onSelectionChanged(
+                                                isCheckingBySelection,
+                                                isSyntaxHighlight,
+                                                isShowErrorReason
+                                            )
+                                        })
+                                        .padding(5.dp),
+                                    text = suggestionText,
+                                    style = TextStyle(
+                                        fontSize = 14.sp
+                                    )
+                                )
+                            }
+                        } else {
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
                                     .clickable(onClick = {
-                                        viewModel.onItemClick(realIndex)
+                                        viewModel.onItemClick(suggestionIndex)
                                         viewModel.onSelectionChanged(
                                             isCheckingBySelection,
                                             isSyntaxHighlight,
                                             isShowErrorReason
                                         )
                                     })
-                                    .padding(5.dp),
-                                text = suggestionText,
-                                style = TextStyle(
-                                    fontSize = 14.sp
-                                )
-                            )
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .clickable(onClick = {
-                                    viewModel.onItemClick(suggestionIndex)
-                                    viewModel.onSelectionChanged(
-                                        isCheckingBySelection,
-                                        isSyntaxHighlight,
-                                        isShowErrorReason
+                                    .padding(5.dp)
+                            ) {
+                                val suggestion =
+                                    remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
+                                        viewModel.core?.getSuggestion(suggestionIndex)
+                                    }
+                                suggestion?.name?.let {
+                                    Text(
+                                        text = it,
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        style = TextStyle(
+                                            fontSize = 14.sp
+                                        )
                                     )
-                                })
-                                .padding(5.dp)
-                        ) {
-                            val suggestion =
-                                remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
-                                    viewModel.core?.getSuggestion(suggestionIndex)
                                 }
-                            suggestion?.name?.let {
-                                Text(
-                                    text = it,
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    style = TextStyle(
-                                        fontSize = 14.sp
+                                suggestion?.description?.let {
+                                    Text(
+                                        text = it,
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 14.sp
+                                        )
                                     )
-                                )
-                            }
-                            suggestion?.description?.let {
-                                Text(
-                                    text = it,
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 14.sp
-                                    )
-                                )
+                                }
                             }
                         }
                     }
