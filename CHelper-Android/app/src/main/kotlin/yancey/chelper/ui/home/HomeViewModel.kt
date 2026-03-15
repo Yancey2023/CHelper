@@ -32,8 +32,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.BuildConfig
 import yancey.chelper.android.util.PolicyGrantManager
-import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.android.window.FloatingWindowManager
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.chelper.data.Announcement
 import yancey.chelper.network.chelper.data.VersionInfo
@@ -136,30 +136,33 @@ class HomeViewModel : ViewModel() {
         }
         viewModelScope.launch {
             try {
-                announcement = ServiceManager.CHELPER_SERVICE!!.getAnnouncement()
-                settingsDataStore.setIsShowPublicLibrary(announcement!!.isEnableCommandLab ?: true)
-                if (announcement!!.publicLibraryMinVersion != null) {
-                    settingsDataStore.setPublicLibraryMinVersion(announcement!!.publicLibraryMinVersion!!)
-                }
-                var isShow = true
-                val isForce = announcement!!.isForce ?: false
-                if (!isForce) {
-                    isShow = announcement!!.isEnable ?: false
-                    if (isShow) {
-                        val ignoreAnnouncement = withContext(Dispatchers.IO) {
-                            return@withContext skipAnnouncementFile.inputStream().bufferedReader()
-                                .use { it.readText() }
-                        }
-                        val announcementHashCode = announcement.hashCode().toString()
-                        if (announcementHashCode == ignoreAnnouncement) {
-                            isShow = false
+                ServiceManager.CHELPER_SERVICE!!.getAnnouncement().let { it ->
+                    announcement = it
+                    settingsDataStore.setIsShowPublicLibrary(it.isEnableCommandLab ?: true)
+                    it.publicLibraryMinVersion?.let {
+                        settingsDataStore.setPublicLibraryMinVersion(it)
+                    }
+                    var isShow = true
+                    val isForce = it.isForce ?: false
+                    if (!isForce) {
+                        isShow = it.isEnable ?: false
+                        if (isShow) {
+                            val ignoreAnnouncement = withContext(Dispatchers.IO) {
+                                return@withContext skipAnnouncementFile.inputStream()
+                                    .bufferedReader()
+                                    .use { it.readText() }
+                            }
+                            val announcementHashCode = announcement.hashCode().toString()
+                            if (announcementHashCode == ignoreAnnouncement) {
+                                isShow = false
+                            }
                         }
                     }
-                }
-                if (isShow) {
-                    isShowAnnouncementDialog = true
-                } else {
-                    checkUpdate()
+                    if (isShow) {
+                        isShowAnnouncementDialog = true
+                    } else {
+                        checkUpdate()
+                    }
                 }
             } catch (_: Exception) {
 
@@ -183,14 +186,16 @@ class HomeViewModel : ViewModel() {
     fun checkUpdate() {
         viewModelScope.launch {
             try {
-                latestVersionInfo = ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo()
-                if (latestVersionInfo!!.versionName != BuildConfig.VERSION_NAME) {
-                    val ignoreVersion = withContext(Dispatchers.IO) {
-                        skipVersionFile.bufferedReader()
-                            .use { it.readText() }
-                    }
-                    if (latestVersionInfo!!.versionName != ignoreVersion) {
-                        isShowUpdateNotificationsDialog = true
+                ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo().let { it ->
+                    latestVersionInfo = it
+                    if (it.versionName != BuildConfig.VERSION_NAME) {
+                        val ignoreVersion = withContext(Dispatchers.IO) {
+                            skipVersionFile.bufferedReader()
+                                .use { it.readText() }
+                        }
+                        if (it.versionName != ignoreVersion) {
+                            isShowUpdateNotificationsDialog = true
+                        }
                     }
                 }
             } catch (_: Exception) {
@@ -202,9 +207,11 @@ class HomeViewModel : ViewModel() {
     fun ignoreLatestVersion() {
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {
-                    skipVersionFile.outputStream()
-                        .write(latestVersionInfo!!.versionName!!.toByteArray())
+                latestVersionInfo?.versionName?.let {
+                    withContext(Dispatchers.IO) {
+                        skipVersionFile.outputStream()
+                            .write(it.toByteArray())
+                    }
                 }
             } catch (_: Exception) {
 
