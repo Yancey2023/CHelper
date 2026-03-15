@@ -76,7 +76,7 @@ class FloatingWindowManager(
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
     private var navController: NavController? = null
-    protected var theme by mutableStateOf(CHelperTheme.Theme.Light)
+    private var theme by mutableStateOf(CHelperTheme.Theme.Light)
 
     val isUsingFloatingWindow: Boolean
         /**
