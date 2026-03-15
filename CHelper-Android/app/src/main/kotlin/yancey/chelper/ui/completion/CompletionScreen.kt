@@ -385,7 +385,11 @@ fun CompletionScreen(
                     .weight(1f)
             ) {
                 if (!isCrowded) {
-                    CompletionScreenTopBar(viewModel.structure, viewModel.paramHint, errorReason)
+                    CompletionScreenTopBar(
+                        viewModel.structure,
+                        viewModel.paramHint,
+                        if (isShowErrorReason) errorReason else null
+                    )
                 }
                 LazyColumn(
                     modifier = Modifier
@@ -398,7 +402,7 @@ fun CompletionScreen(
                                 CompletionScreenTopBar(
                                     viewModel.structure,
                                     viewModel.paramHint,
-                                    errorReason,
+                                    if (isShowErrorReason) errorReason else null,
                                     14.sp
                                 )
                             } else {
