@@ -457,8 +457,8 @@ fun PublicLibraryShowScreen(
                                             .align(Alignment.CenterVertically)
                                             .weight(1f),
                                         style = TextStyle(
-                                            // 注释行用主题色，指令行用普通文字色
-                                            color = if (!isCommand) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
+                                            // 指令行用主题色，注释行用普通文字色
+                                            color = if (isCommand) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
                                         )
                                     )
                                     // 只有指令行显示复制按钮
