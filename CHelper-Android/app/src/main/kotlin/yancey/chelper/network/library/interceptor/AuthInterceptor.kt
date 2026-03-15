@@ -18,6 +18,7 @@
 
 package yancey.chelper.network.library.interceptor
 
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import yancey.chelper.network.library.util.GuestAuthUtil
@@ -48,7 +49,9 @@ class AuthInterceptor private constructor() : Interceptor {
             // 添加 Authorization Header (From upstream)
             if (!isAuthEndpoint(request.url.encodedPath)) {
                 // 获取 token（正式用户优先，否则访客）
-                val token = getToken()
+                val token = runBlocking {
+                    getToken()
+                }
 
                 if (!token.isNullOrEmpty()) {
                     builder.addHeader("Authorization", "Bearer $token")
@@ -81,10 +84,10 @@ class AuthInterceptor private constructor() : Interceptor {
      * 
      * 优先级：正式用户 > 访客
      */
-    private fun getToken(): String? {
+    private suspend fun getToken(): String? {
         // 尝试正式用户 token
         try {
-            LoginUtil.token?.let { return it }
+            LoginUtil.getToken()?.let { return it }
         } catch (_: Exception) {
         }
 

@@ -146,12 +146,12 @@ class CPLUserViewModel : ViewModel() {
                     this.specialCode = specialCode
                     this.type = CommandLabUserService.SendCodeRequest.TYPE_REGISTER
                 }
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendCode(request).execute()
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendCode(request)
                 withContext(Dispatchers.Main) {
-                    if (response.body()?.isSuccess() == true) {
+                    if (response.isSuccess() == true) {
                         Toaster.show("验证码已发送")
                     } else {
-                        Toaster.show("发送失败: ${response.body()?.message}")
+                        Toaster.show("发送失败: ${response.message}")
                     }
                 }
             } catch (e: Exception) {
@@ -190,14 +190,14 @@ class CPLUserViewModel : ViewModel() {
                     this.androidId = GuestAuthUtil.getFingerprint()
                 }
 
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.register(request).execute()
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.register(request)
                 withContext(Dispatchers.Main) {
-                    if (response.body()?.isSuccess() == true) {
+                    if (response.isSuccess() == true) {
                         Toaster.show("注册成功，请登录")
                         currentTab = UserTab.LOGIN
                         loginAccount.setTextAndPlaceCursorAtEnd(registerAccount.text.toString())
                     } else {
-                        Toaster.show("注册失败: ${response.body()?.message}")
+                        Toaster.show("注册失败: ${response.message}")
                     }
                 }
             } catch (e: Exception) {
@@ -223,13 +223,10 @@ class CPLUserViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.getMyLibraries(
-                    pageNum = myLibrariesPage
-                ).execute()
-
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.getMyLibraries(pageNum = myLibrariesPage)
                 withContext(Dispatchers.Main) {
-                    if (response.body()?.isSuccess() == true) {
-                        val data = response.body()!!.data
+                    if (response.isSuccess()) {
+                        val data = response.data
                         if (data != null && !data.functions.isNullOrEmpty()) {
                             val existingIds = myLibraries.mapNotNull { it.id }.toSet()
                             data.functions!!.filterNotNull()

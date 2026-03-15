@@ -182,8 +182,7 @@ class LibrarySearchViewModel : ViewModel() {
 
         // 2. 扫描云端私有库
         try {
-            val response =
-                ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries()?.execute()?.body()
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries()
             if (response?.isSuccess() == true && response.data != null) {
                 val privateList = response.data!!.functions?.filterNotNull() ?: emptyList()
                 privateList.forEach { privateFunc ->

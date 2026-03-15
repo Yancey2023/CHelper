@@ -20,7 +20,6 @@ package yancey.chelper.network.library.service
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -50,13 +49,13 @@ interface CommandLabUserService {
     )
 
     @POST("guest/login")
-    fun guestLogin(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
+    suspend fun guestLogin(@Body request: GuestAuthRequest): BaseResult<LoginResponse?>
 
     @POST("guest/register")
-    fun guestRegister(@Body request: GuestAuthRequest): Call<BaseResult<LoginResponse?>>
+    suspend fun guestRegister(@Body request: GuestAuthRequest): BaseResult<LoginResponse?>
 
     @POST("guest/migrate")
-    fun guestMigrate(@Body request: GuestAuthRequest): Call<BaseResult<Void?>>
+    suspend fun guestMigrate(@Body request: GuestAuthRequest): BaseResult<Void?>
 
     // -------------------------------------------------------------
     // Official User System
@@ -88,7 +87,7 @@ interface CommandLabUserService {
      * 需要先完成人机验证获取 special_code
      */
     @POST("register/sendCode")
-    fun sendCode(@Body request: SendCodeRequest): Call<BaseResult<Void?>>
+    suspend fun sendCode(@Body request: SendCodeRequest): BaseResult<Void?>
 
     /**
      * 注册请求体
@@ -111,7 +110,7 @@ interface CommandLabUserService {
      * 提交注册
      */
     @POST("register")
-    fun register(@Body request: RegisterRequest): Call<BaseResult<Void?>>
+    suspend fun register(@Body request: RegisterRequest): BaseResult<Void?>
 
     // 登录相关
 
@@ -154,7 +153,7 @@ interface CommandLabUserService {
      * 正式用户登录
      */
     @POST("register/login")
-    fun login(@Body request: LoginRequest): Call<BaseResult<LoginResponse?>>
+    suspend fun login(@Body request: LoginRequest): BaseResult<LoginResponse?>
 
 
     // -------------------------------------------------------------
@@ -174,17 +173,17 @@ interface CommandLabUserService {
     )
 
     @POST("library/upload")
-    fun uploadLibrary(@Body request: UploadLibraryRequest): Call<BaseResult<UploadLibraryResponse?>>
+    suspend fun uploadLibrary(@Body request: UploadLibraryRequest): BaseResult<UploadLibraryResponse?>
 
     /**
      * Get user's own libraries (My Cloud)
      */
     @GET("library")
-    fun getMyLibraries(
+    suspend fun getMyLibraries(
         @Query("type") type: Int = 1,
         @Query("pageNum") pageNum: Int = 1,
         @Query("pageSize") pageSize: Int = 100
-    ): Call<BaseResult<CommandLabPublicService.GetFunctionsResponse?>>
+    ): BaseResult<CommandLabPublicService.GetFunctionsResponse?>
 
     /**
      * Get private library detail

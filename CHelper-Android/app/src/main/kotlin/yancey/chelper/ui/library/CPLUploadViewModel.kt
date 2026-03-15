@@ -72,17 +72,16 @@ class CPLUploadViewModel : ViewModel() {
                     this.content = finalContent
                 }
 
-                val response =
-                    ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request).execute()
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request)
 
-                if (response.body()?.isSuccess() == true) {
+                if (response.isSuccess()) {
                     withContext(Dispatchers.Main) {
                         Toaster.show("上传成功，请在我的云端库中发布到公开市场")
                         onSuccess()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toaster.show("上传失败: ${response.body()?.message}")
+                        Toaster.show("上传失败: ${response.message}")
                     }
                 }
             } catch (e: Exception) {

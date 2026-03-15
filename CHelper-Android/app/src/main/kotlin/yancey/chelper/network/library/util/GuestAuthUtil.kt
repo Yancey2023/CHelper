@@ -141,14 +141,13 @@ object GuestAuthUtil {
      * 
      * @return 是否成功登录
      */
-    @Synchronized
-    fun ensureLoggedIn(): Boolean {
+    suspend fun ensureLoggedIn(): Boolean {
         // 已经登录了
         if (isLoggedIn()) return true
 
         // 尝试正式用户自动登录
         try {
-            if (LoginUtil.token != null) return true
+            if (LoginUtil.getToken() != null) return true
         } catch (_: Exception) {
         }
 
@@ -159,7 +158,7 @@ object GuestAuthUtil {
     /**
      * 尝试访客认证（先登录，失败则注册）
      */
-    private fun tryGuestAuth(): Boolean {
+    private suspend fun tryGuestAuth(): Boolean {
         val fingerprint = cachedFingerprint ?: return false
 
         // 先尝试登录
@@ -174,7 +173,7 @@ object GuestAuthUtil {
     /**
      * 访客登录
      */
-    private fun guestLogin(fingerprint: String): Boolean {
+    private suspend fun guestLogin(fingerprint: String): Boolean {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
 
@@ -183,12 +182,9 @@ object GuestAuthUtil {
                 this.authCode = authCode
             }
 
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE
-                ?.guestLogin(request)
-                ?.execute()
-
-            if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
-                val data = response.body()!!.data!!
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.guestLogin(request)
+            if (response.isSuccess() && response.data != null) {
+                val data = response.data!!
                 guestToken = data.token
                 guestUser = data.user
                 true
@@ -204,7 +200,7 @@ object GuestAuthUtil {
     /**
      * 访客注册
      */
-    private fun guestRegister(fingerprint: String): Boolean {
+    private suspend fun guestRegister(fingerprint: String): Boolean {
         return try {
             val authCode = generateAuthCode(fingerprint) ?: return false
 
@@ -213,12 +209,9 @@ object GuestAuthUtil {
                 this.authCode = authCode
             }
 
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE
-                ?.guestRegister(request)
-                ?.execute()
-
-            if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
-                val data = response.body()!!.data!!
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.guestRegister(request)
+            if (response.isSuccess() && response.data != null) {
+                val data = response.data!!
                 guestToken = data.token
                 guestUser = data.user
                 true

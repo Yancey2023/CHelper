@@ -93,53 +93,51 @@ object LoginUtil {
      * 
      * 如果令牌过期（超过 60 秒），会自动重新登录获取新令牌
      */
-    @get:Throws(IOException::class)
-    val token: String?
-        get() {
-            if (savedMail == null || savedPassword == null) {
-                return null
-            }
-
-            // 令牌在 60 秒内有效，直接返回
-            if (currentToken != null && lastLoginTimestamp != null
-                && System.currentTimeMillis() - lastLoginTimestamp!! < 60000
-            ) {
-                return currentToken
-            }
-
-            // 重新登录获取新令牌
-            val request = LoginRequest().apply {
-                account = savedMail
-                password = savedPassword
-            }
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)?.execute()
-
-            if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
-                val data = response.body()!!.data!!
-                currentToken = data.token
-                currentUser = data.user
-                lastLoginTimestamp = System.currentTimeMillis()
-                saveToFile()
-                return currentToken
-            }
-
+    @Throws(IOException::class)
+    suspend fun getToken(): String? {
+        if (savedMail == null || savedPassword == null) {
             return null
         }
+
+        // 令牌在 60 秒内有效，直接返回
+        if (currentToken != null && lastLoginTimestamp != null
+            && System.currentTimeMillis() - lastLoginTimestamp!! < 60000
+        ) {
+            return currentToken
+        }
+
+        // 重新登录获取新令牌
+        val request = LoginRequest().apply {
+            account = savedMail
+            password = savedPassword
+        }
+        val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)
+
+        if (response?.isSuccess() == true && response.data != null) {
+            val data = response.data!!
+            currentToken = data.token
+            currentUser = data.user
+            lastLoginTimestamp = System.currentTimeMillis()
+            saveToFile()
+            return currentToken
+        }
+
+        return null
+    }
 
     /**
      * 执行登录
      */
-    fun login(mail: String, password: String): Result<CommandLabUserService.LoginResponse> {
-        val request = LoginRequest().apply {
-            this.account = mail
-            this.password = password
-        }
-
+    suspend fun login(mail: String, password: String): Result<CommandLabUserService.LoginResponse> {
         return try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)?.execute()
-
-            if (response?.body()?.isSuccess() == true && response.body()?.data != null) {
-                val data = response.body()!!.data!!
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.login(
+                LoginRequest(
+                    account = mail,
+                    password = password,
+                )
+            )
+            if (response.isSuccess() && response.data != null) {
+                val data = response.data!!
                 savedMail = mail
                 savedPassword = password
                 currentToken = data.token
@@ -148,7 +146,7 @@ object LoginUtil {
                 saveToFile()
                 Result.success(data)
             } else {
-                Result.failure(Exception(response?.body()?.message ?: "登录失败"))
+                Result.failure(Exception(response.message ?: "登录失败"))
             }
         } catch (e: Exception) {
             Result.failure(e)
