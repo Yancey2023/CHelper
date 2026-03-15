@@ -168,7 +168,9 @@ object LoginUtil {
     /**
      * 保存登录状态到本地文件
      */
+    @Throws(IOException::class)
     private fun saveToFile() {
+        file?.parentFile?.mkdirs()
         val savedData = SavedUserData().apply {
             mail = savedMail
             password = savedPassword
