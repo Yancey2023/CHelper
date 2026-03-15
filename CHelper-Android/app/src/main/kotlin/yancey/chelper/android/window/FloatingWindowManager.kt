@@ -73,6 +73,7 @@ class FloatingWindowManager(
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
     private var navController: NavController? = null
+    private var themeId = "MODE_NIGHT_FOLLOW_SYSTEM"
 
     val isUsingFloatingWindow: Boolean
         /**
@@ -124,13 +125,6 @@ class FloatingWindowManager(
             isFocusableInTouchMode = true
         }
         val composeView = ComposeView(context).apply {
-            val settingsDataStore = SettingsDataStore(context)
-            var themeId = "MODE_NIGHT_FOLLOW_SYSTEM"
-            composeLifecycleOwner?.lifecycleScope?.launch {
-                settingsDataStore.themeId().collect {
-                    themeId = it
-                }
-            }
             setContent {
                 val backgroundBitmap =
                     BackgroundStore.INSTANCE?.backgroundBitmapFlow?.collectAsState(initial = null)
@@ -195,10 +189,16 @@ class FloatingWindowManager(
             )
             .setWindowAnim(0)
             .setWindowAlpha(floatingWindowAlpha)
+        val settingsDataStore = SettingsDataStore(context)
         composeLifecycleOwner = ComposeLifecycleOwner().apply {
             attachToDecorView(mainViewWindow!!.rootLayout)
             onCreate()
             onStart()
+            lifecycleScope.launch {
+                settingsDataStore.themeId().collect {
+                    themeId = it
+                }
+            }
         }
         floatBackPressedOwner = FloatWindowBackPressedOwner(composeLifecycleOwner!!.lifecycle)
         mainView.requestFocus()// 修复：不获取到焦点无法获取返回键事件
