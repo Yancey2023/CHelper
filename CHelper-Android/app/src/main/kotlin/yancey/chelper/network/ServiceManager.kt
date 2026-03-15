@@ -28,7 +28,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import yancey.chelper.BuildConfig
-import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.network.chelper.service.CHelperService
 import yancey.chelper.network.library.interceptor.AuthInterceptor
 import yancey.chelper.network.library.interceptor.RateLimitInterceptor
@@ -68,7 +67,6 @@ object ServiceManager {
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         }
-        MonitorUtil.monitHttp(builder)
         CLIENT = builder.build()
         CHELPER_RETROFIT = Retrofit.Builder()
             .baseUrl("https://www.yanceymc.cn/api/chelper/")

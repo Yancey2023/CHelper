@@ -19,12 +19,9 @@
 package yancey.chelper.android.util
 
 import android.app.Application
-import com.efs.sdk.net.OkHttpInterceptor
-import com.efs.sdk.net.OkHttpListener
 import com.umeng.analytics.MobclickAgent
 import com.umeng.commonsdk.UMConfigure
 import com.umeng.umcrash.UMCrash
-import okhttp3.OkHttpClient
 import yancey.chelper.BuildConfig
 
 object MonitorUtil {
@@ -74,13 +71,5 @@ object MonitorUtil {
             return
         }
         UMCrash.generateCustomLog(e, type)
-    }
-
-    fun monitHttp(builder: OkHttpClient.Builder) {
-        if (BuildConfig.DEBUG) {
-            return
-        }
-        builder.eventListenerFactory(OkHttpListener.get())
-            .addNetworkInterceptor(OkHttpInterceptor())
     }
 }
