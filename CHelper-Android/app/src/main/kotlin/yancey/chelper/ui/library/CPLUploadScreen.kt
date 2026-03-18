@@ -31,7 +31,6 @@ import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.CustomDialog
-import yancey.chelper.ui.common.dialog.CustomDialogProperties
 import yancey.chelper.ui.common.dialog.DialogContainer
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Button
@@ -140,13 +139,8 @@ fun ImportLocalLibraryDialog(
     onDismiss: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    CustomDialog(
-        onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        DialogContainer(
-            backgroundNoTranslate = true
-        ) {
+    CustomDialog(onDismissRequest = onDismiss) {
+        DialogContainer(backgroundNoTranslate = true) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
