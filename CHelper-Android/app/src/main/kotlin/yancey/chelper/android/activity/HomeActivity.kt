@@ -120,7 +120,7 @@ class HomeActivity : BaseComposeActivity() {
                             BitmapFactory.decodeStream(it)
                         }
                     } ?: throw IOException("无法打开图片")
-                    BackgroundStore.INSTANCE?.setBackGroundDrawable(bitmap)
+                    BackgroundStore.INSTANCE.setBackGroundDrawable(bitmap)
                 }
             } catch (e: Exception) {
                 Toaster.show(e.message ?: "未知错误")
@@ -133,7 +133,7 @@ class HomeActivity : BaseComposeActivity() {
 
     private fun restoreBackground() {
         try {
-            BackgroundStore.INSTANCE?.setBackGroundDrawable(null)
+            BackgroundStore.INSTANCE.setBackGroundDrawable(null)
         } catch (e: IOException) {
             Toaster.show(e.message)
             MonitorUtil.generateCustomLog(e, "ResetBackgroundException")

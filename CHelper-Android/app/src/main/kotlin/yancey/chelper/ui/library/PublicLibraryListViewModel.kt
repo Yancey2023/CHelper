@@ -59,14 +59,14 @@ class PublicLibraryListViewModel : ViewModel() {
 
             try {
                 val response = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunctions(
+                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
                         pageNum = currentPage,
                         pageSize = 20,
                         keyword = search?.takeIf { it.isNotBlank() }
                     )
                 }
 
-                if (response?.isSuccess() == true && response.data != null) {
+                if (response.isSuccess() && response.data != null) {
                     val data = response.data!!
                     val functions = data.functions?.filterNotNull() ?: emptyList()
                     libraries.addAll(functions)
@@ -77,7 +77,7 @@ class PublicLibraryListViewModel : ViewModel() {
                     totalPages = if (size > 0) (total + size - 1) / size else 1
                     hasMore = currentPage < totalPages
                 } else {
-                    errorMessage = response?.message ?: "加载失败"
+                    errorMessage = response.message ?: "加载失败"
                 }
             } catch (e: Exception) {
                 errorMessage = "网络错误: ${e.message}"

@@ -72,7 +72,7 @@ class CPLUploadViewModel : ViewModel() {
                     this.content = finalContent
                 }
 
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.uploadLibrary(request)
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadLibrary(request)
 
                 if (response.isSuccess()) {
                     withContext(Dispatchers.Main) {

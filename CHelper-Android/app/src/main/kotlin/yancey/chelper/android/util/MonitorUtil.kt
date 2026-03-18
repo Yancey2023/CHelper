@@ -33,7 +33,7 @@ object MonitorUtil {
             return
         }
         MonitorUtil.application = application
-        if (PolicyGrantManager.INSTANCE!!.state == PolicyGrantManager.State.AGREE) {
+        if (PolicyGrantManager.INSTANCE.state == PolicyGrantManager.State.AGREE) {
             UMConfigure.init(
                 application,
                 "6836aa2bbc47b67d8374e464",

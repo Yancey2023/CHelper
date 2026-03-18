@@ -107,10 +107,10 @@ abstract class BaseComposeActivity : ComponentActivity() {
                 setParentCompositionContext(parent)
                 setContent {
                     val backgroundBitmap =
-                        BackgroundStore.INSTANCE?.backgroundBitmapFlow?.collectAsState(
+                        BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(
                             initial = null
                         )
-                    CHelperTheme(theme, backgroundBitmap?.value) {
+                    CHelperTheme(theme, backgroundBitmap.value) {
                         content()
                     }
                 }

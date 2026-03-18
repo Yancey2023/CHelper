@@ -58,7 +58,7 @@ class HomeViewModel : ViewModel() {
     private var isInit = false
 
     init {
-        this.policyGrantState = PolicyGrantManager.INSTANCE?.state ?: PolicyGrantManager.State.AGREE
+        this.policyGrantState = PolicyGrantManager.INSTANCE.state
     }
 
     fun init(
@@ -128,7 +128,7 @@ class HomeViewModel : ViewModel() {
 
     fun agreePolicy() {
         this.policyGrantState = PolicyGrantManager.State.AGREE
-        PolicyGrantManager.INSTANCE?.agree()
+        PolicyGrantManager.INSTANCE.agree()
         showAnnouncementDialog()
     }
 
@@ -138,7 +138,7 @@ class HomeViewModel : ViewModel() {
         }
         viewModelScope.launch {
             try {
-                ServiceManager.CHELPER_SERVICE!!.getAnnouncement().let { it ->
+                ServiceManager.CHELPER_SERVICE.getAnnouncement().let { it ->
                     announcement = it
                     settingsDataStore.setIsShowPublicLibrary(it.isEnableCommandLab ?: true)
                     it.publicLibraryMinVersion?.let {
@@ -188,7 +188,7 @@ class HomeViewModel : ViewModel() {
     fun checkUpdate() {
         viewModelScope.launch {
             try {
-                ServiceManager.CHELPER_SERVICE!!.getLatestVersionInfo().let { it ->
+                ServiceManager.CHELPER_SERVICE.getLatestVersionInfo().let { it ->
                     latestVersionInfo = it
                     if (it.versionName != BuildConfig.VERSION_NAME) {
                         val ignoreVersion = withContext(Dispatchers.IO) {

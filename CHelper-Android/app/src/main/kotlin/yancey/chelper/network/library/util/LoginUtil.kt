@@ -111,9 +111,9 @@ object LoginUtil {
             account = savedMail
             password = savedPassword
         }
-        val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.login(request)
+        val response = ServiceManager.COMMAND_LAB_USER_SERVICE.login(request)
 
-        if (response?.isSuccess() == true && response.data != null) {
+        if (response.isSuccess() && response.data != null) {
             val data = response.data!!
             currentToken = data.token
             currentUser = data.user
@@ -130,7 +130,7 @@ object LoginUtil {
      */
     suspend fun login(mail: String, password: String): Result<CommandLabUserService.LoginResponse> {
         return try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.login(
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.login(
                 LoginRequest(
                     account = mail,
                     password = password,

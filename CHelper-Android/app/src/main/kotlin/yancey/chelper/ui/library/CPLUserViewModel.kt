@@ -146,7 +146,7 @@ class CPLUserViewModel : ViewModel() {
                     this.specialCode = specialCode
                     this.type = CommandLabUserService.SendCodeRequest.TYPE_REGISTER
                 }
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.sendCode(request)
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.sendCode(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccess()) {
                         Toaster.show("验证码已发送")
@@ -190,7 +190,7 @@ class CPLUserViewModel : ViewModel() {
                     this.androidId = GuestAuthUtil.getFingerprint()
                 }
 
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.register(request)
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.register(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccess()) {
                         Toaster.show("注册成功，请登录")
@@ -223,7 +223,7 @@ class CPLUserViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.getMyLibraries(pageNum = myLibrariesPage)
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getMyLibraries(pageNum = myLibrariesPage)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccess()) {
                         val data = response.data
@@ -258,13 +258,13 @@ class CPLUserViewModel : ViewModel() {
     fun deleteLibrary(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
+                val result = ServiceManager.COMMAND_LAB_USER_SERVICE.deleteLibrary(id)
                 withContext(Dispatchers.Main) {
-                    if (result?.isSuccess() == true) {
+                    if (result.isSuccess()) {
                         myLibraries.removeAll { it.id == id }
                         Toaster.show("删除成功")
                     } else {
-                        Toaster.show("删除失败: ${result?.message}")
+                        Toaster.show("删除失败: ${result.message}")
                     }
                 }
             } catch (e: Exception) {

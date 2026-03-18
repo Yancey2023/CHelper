@@ -131,8 +131,8 @@ class FloatingWindowManager(
         val composeView = ComposeView(context).apply {
             setContent {
                 val backgroundBitmap =
-                    BackgroundStore.INSTANCE?.backgroundBitmapFlow?.collectAsState(initial = null)
-                CHelperTheme(theme, backgroundBitmap?.value) {
+                    BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(initial = null)
+                CHelperTheme(theme, backgroundBitmap.value) {
                     val lifecycleOwner = rememberLifecycleOwner()
                     val navigationEventDispatcher = remember { NavigationEventDispatcher() }
                     val navigationEventOwner =

@@ -26,7 +26,9 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -91,6 +93,10 @@ object SettingsSerializer : Serializer<Settings> {
 }
 
 class SettingsDataStore(private val context: Context) {
+
+    fun init() {
+        runBlocking { context.settingsDataStore.data.first() }
+    }
 
     fun isEnableUpdateNotifications(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isEnableUpdateNotifications ?: true }

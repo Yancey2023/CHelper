@@ -23,9 +23,10 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
-import yancey.chelper.data.BackgroundStore
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.util.PolicyGrantManager
+import yancey.chelper.data.BackgroundStore
+import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
@@ -38,7 +39,7 @@ class CHelperApplication : Application() {
             assets.open("about/privacy_policy.txt").bufferedReader().use { it.readText() },
             dataDir.resolve("lastReadContent.txt")
         )
-        // 用于数据分析和性能监控的第三方库初始化
+        // 用于数据分析和性能监控的第三方库初始化，依赖于 PolicyGrantManager
         MonitorUtil.init(this)
         // Toast初始化
         Toaster.init(this)
@@ -59,7 +60,8 @@ class CHelperApplication : Application() {
         }
         // 访客认证初始化（用于自动访客登录）
         GuestAuthUtil.init(this)
-
+        // 设置初始化
+        SettingsDataStore(this).init()
         // 自定义主题初始化
         BackgroundStore.init(dataDir.resolve("theme"))
     }

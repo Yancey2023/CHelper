@@ -182,7 +182,7 @@ object GuestAuthUtil {
                 this.authCode = authCode
             }
 
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.guestLogin(request)
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.guestLogin(request)
             if (response.isSuccess() && response.data != null) {
                 val data = response.data!!
                 guestToken = data.token
@@ -209,7 +209,7 @@ object GuestAuthUtil {
                 this.authCode = authCode
             }
 
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE!!.guestRegister(request)
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.guestRegister(request)
             if (response.isSuccess() && response.data != null) {
                 val data = response.data!!
                 guestToken = data.token

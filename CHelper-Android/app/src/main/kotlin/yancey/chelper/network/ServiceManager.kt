@@ -39,15 +39,15 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object ServiceManager {
-    var CLIENT: OkHttpClient? = null
-    var CHELPER_RETROFIT: Retrofit? = null
-    var COMMAND_LAB_RETROFIT: Retrofit? = null
-    var CHELPER_SERVICE: CHelperService? = null
+    lateinit var CLIENT: OkHttpClient
+    lateinit var CHELPER_RETROFIT: Retrofit
+    lateinit var COMMAND_LAB_RETROFIT: Retrofit
+    lateinit var CHELPER_SERVICE: CHelperService
 
-    var COMMAND_LAB_PUBLIC_SERVICE: CommandLabPublicService? = null
-    var COMMAND_LAB_USER_SERVICE: CommandLabUserService? = null
+    lateinit var COMMAND_LAB_PUBLIC_SERVICE: CommandLabPublicService
+    lateinit var COMMAND_LAB_USER_SERVICE: CommandLabUserService
 
-    var CAPTCHA_SERVICE: CaptchaService? = null
+    lateinit var CAPTCHA_SERVICE: CaptchaService
 
     var LAB_BASE_URL = "https://abyssous.site/"
 
@@ -70,7 +70,7 @@ object ServiceManager {
         CLIENT = builder.build()
         CHELPER_RETROFIT = Retrofit.Builder()
             .baseUrl("https://www.yanceymc.cn/api/chelper/")
-            .client(CLIENT!!)
+            .client(CLIENT)
             .addConverterFactory(
                 json.asConverterFactory(
                     "application/json; charset=utf-8".toMediaType()
@@ -79,18 +79,18 @@ object ServiceManager {
             .build()
         COMMAND_LAB_RETROFIT = Retrofit.Builder()
             .baseUrl(LAB_BASE_URL)
-            .client(CLIENT!!)
+            .client(CLIENT)
             .addConverterFactory(
                 json.asConverterFactory(
                     "application/json; charset=utf-8".toMediaType()
                 )
             )
             .build()
-        CHELPER_SERVICE = CHELPER_RETROFIT!!.create(CHelperService::class.java)
+        CHELPER_SERVICE = CHELPER_RETROFIT.create(CHelperService::class.java)
         COMMAND_LAB_PUBLIC_SERVICE =
-            COMMAND_LAB_RETROFIT!!.create(CommandLabPublicService::class.java)
-        COMMAND_LAB_USER_SERVICE = COMMAND_LAB_RETROFIT!!.create(CommandLabUserService::class.java)
-        CAPTCHA_SERVICE = COMMAND_LAB_RETROFIT!!.create(CaptchaService::class.java)
+            COMMAND_LAB_RETROFIT.create(CommandLabPublicService::class.java)
+        COMMAND_LAB_USER_SERVICE = COMMAND_LAB_RETROFIT.create(CommandLabUserService::class.java)
+        CAPTCHA_SERVICE = COMMAND_LAB_RETROFIT.create(CaptchaService::class.java)
 
         // 初始化 WAF Helper
         WafHelper.init(context)

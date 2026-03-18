@@ -116,9 +116,9 @@ private fun CaptchaDialogContent(
                 this.action = action
             }
             val response = withContext(Dispatchers.IO) {
-                ServiceManager.CAPTCHA_SERVICE?.requestToken(request)
+                ServiceManager.CAPTCHA_SERVICE.requestToken(request)
             }
-            if (response?.isSuccess() == true && response.data?.verificationToken != null) {
+            if (response.isSuccess() && response.data?.verificationToken != null) {
                 val token = response.data!!.verificationToken
                 val baseUrl = ServiceManager.LAB_BASE_URL.removeSuffix("/")
                 captchaUrl = "$baseUrl/captcha/verifing?token=$token&callback=androidCallback"
@@ -133,8 +133,8 @@ private fun CaptchaDialogContent(
                         }
                         delay(1500)
                         try {
-                            val status = ServiceManager.CAPTCHA_SERVICE?.getStatus(specialCode)
-                            if (status?.isSuccess() == true && status.data != null) {
+                            val status = ServiceManager.CAPTCHA_SERVICE.getStatus(specialCode)
+                            if (status.isSuccess() && status.data != null) {
                                 if (status.data!!.status == CaptchaStatusResponse.STATUS_VERIFIED) {
                                     val serverCode = status.data!!.specialCode
                                     withContext(Dispatchers.Main) { handleSuccess(serverCode) }
@@ -149,7 +149,7 @@ private fun CaptchaDialogContent(
                     }
                 }
             } else {
-                handleFailure(response?.message ?: "获取验证凭证失败")
+                handleFailure(response.message ?: "获取验证凭证失败")
             }
         } catch (e: CancellationException) {
             // Dialog 被关闭时 LaunchedEffect 正常取消，不做任何处理

@@ -44,18 +44,18 @@ class PublicLibraryShowViewModel : ViewModel() {
             errorMessage = null
 
             try {
-                val response: BaseResult<LibraryFunction?>? = withContext(Dispatchers.IO) {
+                val response: BaseResult<LibraryFunction?> = withContext(Dispatchers.IO) {
                     if (isPrivate) {
-                        ServiceManager.COMMAND_LAB_USER_SERVICE?.getPrivateFunction(id)
+                        ServiceManager.COMMAND_LAB_USER_SERVICE.getPrivateFunction(id)
                     } else {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(id)
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunction(id)
                     }
                 }
 
-                if (response?.isSuccess() == true && response.data != null) {
+                if (response.isSuccess() && response.data != null) {
                     library = response.data!!
                 } else {
-                    errorMessage = response?.message ?: "加载失败"
+                    errorMessage = response.message ?: "加载失败"
                 }
             } catch (e: Exception) {
                 errorMessage = "网络错误: ${e.message}"
@@ -69,15 +69,15 @@ class PublicLibraryShowViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE?.releaseToPublic(
+                    ServiceManager.COMMAND_LAB_USER_SERVICE.releaseToPublic(
                         id,
                         mapOf("special_code" to specialCode)
                     )
                 }
-                actionMessage = if (result?.isSuccess() == true) {
+                actionMessage = if (result.isSuccess()) {
                     "已提交发布申请"
                 } else {
-                    result?.message ?: "操作失败"
+                    result.message ?: "操作失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
@@ -89,12 +89,12 @@ class PublicLibraryShowViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE?.syncToPublic(id)
+                    ServiceManager.COMMAND_LAB_USER_SERVICE.syncToPublic(id)
                 }
-                actionMessage = if (result?.isSuccess() == true) {
+                actionMessage = if (result.isSuccess()) {
                     "已提交同步申请"
                 } else {
-                    result?.message ?: "同步失败"
+                    result.message ?: "同步失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
@@ -106,13 +106,13 @@ class PublicLibraryShowViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
+                    ServiceManager.COMMAND_LAB_USER_SERVICE.deleteLibrary(id)
                 }
-                actionMessage = if (result?.isSuccess() == true) {
+                actionMessage = if (result.isSuccess()) {
                     onSuccess()
                     "删除成功"
                 } else {
-                    result?.message ?: "删除失败"
+                    result.message ?: "删除失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
