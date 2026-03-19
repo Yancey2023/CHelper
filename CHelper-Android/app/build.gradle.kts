@@ -132,7 +132,7 @@ dependencies {
     // https://github.com/getActivity/Toaster
     implementation("com.github.getActivity:Toaster:13.8")
     // https://github.com/getActivity/EasyWindow
-    implementation("com.github.getActivity:EasyWindow:13.2")
+    implementation("com.github.getActivity:EasyWindow:13.5")
     // https://www.umeng.com
     implementation("com.umeng.umsdk:common:9.9.0")
     implementation("com.umeng.umsdk:asms:1.8.7.2")
