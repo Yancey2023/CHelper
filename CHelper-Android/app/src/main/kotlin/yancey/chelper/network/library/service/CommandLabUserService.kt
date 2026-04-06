@@ -113,7 +113,7 @@ interface CommandLabUserService {
      * 提交注册
      */
     @POST("register")
-    suspend fun register(@Body request: RegisterRequest): BaseResult<Void?>
+    suspend fun register(@Body request: RegisterRequest): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     // 登录相关
 
@@ -209,13 +209,13 @@ interface CommandLabUserService {
     suspend fun updateLibrary(
         @Path("id") id: Int,
         @Body request: UpdateLibraryRequest
-    ): BaseResult<Void?>
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     @PUT("users/{id}")
     suspend fun updateProfile(
         @Path("id") id: Int,
         @Body request: yancey.chelper.network.library.data.UpdateProfileRequest
-    ): BaseResult<Void?>
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
      * Get user's own libraries (My Cloud)
@@ -243,7 +243,7 @@ interface CommandLabUserService {
     suspend fun releaseToPublic(
         @Path("id") id: Int,
         @Body body: Map<String, String>
-    ): BaseResult<Void?>
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
      * 同步私有库到公开库
@@ -252,7 +252,7 @@ interface CommandLabUserService {
     @POST("library/{id}/sync")
     suspend fun syncToPublic(
         @Path("id") id: Int
-    ): BaseResult<Void?>
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
      * 删除私有库
@@ -261,7 +261,7 @@ interface CommandLabUserService {
     @DELETE("library/{id}")
     suspend fun deleteLibrary(
         @Path("id") id: Int
-    ): BaseResult<Void?>
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     // -------------------------------------------------------------
     // Quota

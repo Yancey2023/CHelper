@@ -117,12 +117,9 @@ fun CPLUploadScreen(
             },
             onConfirmUpload = {
                 showPreviewScreen = false
-                captchaCallback = { code ->
-                    viewModel.upload(code) {
-                        navController.popBackStack()
-                    }
+                viewModel.upload(null) {
+                    navController.popBackStack()
                 }
-                showCaptchaDialog = true
             }
         )
         return
@@ -236,13 +233,14 @@ fun CPLUploadScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
+            val emptyErrorText = stringResource(R.string.upload_empty_error)
             Button(
                 text = stringResource(if (viewModel.isLoading) R.string.upload_btn_uploading else R.string.upload_btn_preview),
                 onClick = {
                     if (!viewModel.isLoading) {
                         val content = viewModel.commands.text.toString()
                         if (viewModel.name.text.isBlank() || content.isBlank()) {
-                            com.hjq.toast.Toaster.show(context.getString(R.string.upload_empty_error))
+                            com.hjq.toast.Toaster.show(emptyErrorText)
                             return@Button
                         }
                         validationResult = validateMCDContent(content)

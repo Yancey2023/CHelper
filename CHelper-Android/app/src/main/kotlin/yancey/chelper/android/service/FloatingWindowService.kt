@@ -58,7 +58,7 @@ class FloatingWindowService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, FloatingWindowService::class.java)
-            context.startForegroundService(intent)
+            androidx.core.content.ContextCompat.startForegroundService(context, intent)
         }
 
         fun stop(context: Context) {

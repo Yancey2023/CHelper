@@ -277,7 +277,7 @@ fun UserProfileView(
             Button(
                 text = "上传新指令",
                 onClick = {
-                    navController.navigate(CPLUploadScreenKey)
+                    navController.navigate(CPLUploadScreenKey())
                 },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
