@@ -18,7 +18,6 @@
 
 package yancey.chelper.network.library.data
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -28,7 +27,6 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
@@ -75,7 +73,6 @@ data class AuthorInfo(
  * @property hasPublicVersion 指示该私有库是否拥有对应的公开版本
  * @property isPublish 指示该函数是否已发布（针对公开/私有状态）
  */
-@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @Suppress("unused")
 class LibraryFunction(
@@ -87,14 +84,14 @@ class LibraryFunction(
     var note: String? = null,
     var tags: List<String>? = null,
     var version: String? = null,
-    @Serializable(with = LenientStringSerializer::class) @JsonNames("create_time", "createTime") var createdAt: String? = null,
+    @Serializable(with = LenientStringSerializer::class) @SerialName("create_time") var createdAt: String? = null,
     var preview: String? = null,
-    @JsonNames("like_count", "likeCount") var likeCount: Int? = null,
-    @JsonNames("is_liked", "isLiked") var isLiked: Boolean? = null,
-    @JsonNames("has_public_version", "hasPublicVersion") var hasPublicVersion: Boolean? = null,
-    @JsonNames("is_publish", "isPublish") var isPublish: Boolean? = null,
-    @JsonNames("is_owner", "isOwner") var isOwner: Boolean? = null,
-    @JsonNames("chain_data", "chainData") var chainData: kotlinx.serialization.json.JsonElement? = null
+    @SerialName("like_count") var likeCount: Int? = null,
+    @SerialName("is_liked") var isLiked: Boolean? = null,
+    @SerialName("has_public_version") var hasPublicVersion: Boolean? = null,
+    @SerialName("is_publish") var isPublish: Boolean? = null,
+    @SerialName("is_owner") var isOwner: Boolean? = null,
+    @SerialName("chain_data") var chainData: kotlinx.serialization.json.JsonElement? = null
 ) {
     /**
      * 获取作者的展示名称，主要用于向后兼容。
