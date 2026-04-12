@@ -34,10 +34,17 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * author 字段在 API 中有两种格式:
- *  - 旧式: 纯字符串 "作者名"
- *  - 新式: { "id": 123, "name": "作者名", "tier": 1 }
- * 这个结构体统一承接两种，后向兼容旧 MCD 数据
+ * 表示作者信息的数据模型。
+ *
+ * API 中存在两种格式：
+ * - 旧式格式：纯字符串 "作者名"
+ * - 新式格式：JSON 对象 `{ "id": 123, "name": "作者名", "tier": 1 }`
+ *
+ * 此结构体统一承接两种格式，实现对旧版 MCD 数据的向后兼容。
+ *
+ * @property id 作者的用户 ID
+ * @property name 作者的名称
+ * @property tier 作者的等级或段位
  */
 @Serializable
 data class AuthorInfo(
@@ -46,6 +53,24 @@ data class AuthorInfo(
     var tier: Int? = null
 )
 
+/**
+ * 命令库函数的数据模型，表示单个命令库文件的详细信息。
+ *
+ * @property id 函数在数据库中的自增 ID
+ * @property uuid 函数的全局唯一标识符
+ * @property name 函数名称
+ * @property content 函数的具体内容或代码
+ * @property author 函数作者的信息，使用自定义的 [AuthorSerializer] 进行解析
+ * @property note 附加的说明或备注信息
+ * @property tags 该函数关联的标签列表
+ * @property version 该函数适用的版本信息
+ * @property createdAt 函数的创建时间，使用 [LenientStringSerializer] 支持格式兼容
+ * @property preview 函数的预览内容，通常是部分截断的代码
+ * @property likeCount 获得的点赞总数
+ * @property isLiked 当前登录用户是否已点赞该函数
+ * @property hasPublicVersion 指示该私有库是否拥有对应的公开版本
+ * @property isPublish 指示该函数是否已发布（针对公开/私有状态）
+ */
 @Serializable
 @Suppress("unused")
 class LibraryFunction(
@@ -64,7 +89,11 @@ class LibraryFunction(
     var hasPublicVersion: Boolean? = null,
     var isPublish: Boolean? = null
 ) {
-    /** 向后兼容：取 author 的展示名 */
+    /**
+     * 获取作者的展示名称，主要用于向后兼容。
+     *
+     * @return 作者的名称，如果不存在则返回 null
+     */
     val authorName: String?
         get() = author?.name
 }

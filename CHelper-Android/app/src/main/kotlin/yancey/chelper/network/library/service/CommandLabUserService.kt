@@ -33,30 +33,53 @@ import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
 
 /**
- * CommandLab 用户系统 API
- * -by Akanyi
- * 包含注册、登录、用户资料管理等功能
+ * CommandLab 用户系统 API 接口。
+ *
+ * 包含注册、登录、用户资料管理以及用户个人命令库管理等相关功能。
  */
 @Suppress("unused")
 interface CommandLabUserService {
-
 
     // -------------------------------------------------------------
     // Guest System
     // -------------------------------------------------------------
 
+    /**
+     * 访客系统认证请求的数据模型。
+     *
+     * @property fingerprint 设备指纹标识
+     * @property authCode 用于验证的授权码
+     */
     @Serializable
     class GuestAuthRequest(
         var fingerprint: String? = null,
         @SerialName("auth_code") var authCode: String? = null
     )
 
+    /**
+     * 访客登录。
+     *
+     * @param request 包含设备信息的认证请求
+     * @return 返回包含访客 Token 及简要用户信息的登录响应
+     */
     @POST("guest/login")
     suspend fun guestLogin(@Body request: GuestAuthRequest): BaseResult<LoginResponse?>
 
+    /**
+     * 访客注册。
+     *
+     * @param request 包含设备信息的认证请求
+     * @return 返回包含新访客 Token 及简要用户信息的登录响应
+     */
     @POST("guest/register")
     suspend fun guestRegister(@Body request: GuestAuthRequest): BaseResult<LoginResponse?>
 
+    /**
+     * 访客数据迁移至正式账号。
+     *
+     * @param request 包含认证信息的请求数据
+     * @return 无返回数据的成功响应
+     */
     @POST("guest/migrate")
     suspend fun guestMigrate(@Body request: GuestAuthRequest): BaseResult<Void?>
 
@@ -67,36 +90,53 @@ interface CommandLabUserService {
     // 注册相关
 
     /**
-     * 发送邮箱验证码请求体
+     * 发送验证码的请求体数据模型。
+     *
+     * @property specialCode 进行人机验证后获取的唯一标识码
+     * @property type 验证码类型：0=注册, 1=更新密码, 2=找回密码
+     * @property email 接收验证码的邮箱地址
+     * @property phone 接收验证码的手机号码
+     * @property lang 语言偏好设置，默认为 "zh-CN"
      */
     @Serializable
     class SendCodeRequest(
         @SerialName("special_code") var specialCode: String? = null,
-        var type: Int? = null,  // 0=注册, 1=更新密码, 2=找回密码
+        var type: Int? = null,
         var email: String? = null,
         var phone: String? = null,
         var lang: String? = "zh-CN"
     ) {
         companion object {
+            /** 注册类型验证码 */
             const val TYPE_REGISTER = 0
+            /** 更新密码类型验证码 */
             const val TYPE_UPDATE_PASSWORD = 1
+            /** 重置密码类型验证码 */
             const val TYPE_RESET_PASSWORD = 2
         }
     }
 
     /**
-     * 发送邮箱验证码
+     * 发送验证码。
      * 
-     * 需要先完成人机验证获取 special_code
+     * 调用此接口前需要先完成人机验证以获取 special_code。
+     *
+     * @param request 包含目标邮箱/手机以及验证会话信息的请求体
+     * @return 无返回数据的成功响应
      */
     @POST("register/sendCode")
     suspend fun sendCode(@Body request: SendCodeRequest): BaseResult<Void?>
 
     /**
-     * 注册请求体
-     */
-    /**
-     * 注册请求体
+     * 注册账号的请求体数据模型。
+     *
+     * @property specialCode 完成人机验证后获取的特殊标识码
+     * @property code 收到的验证码
+     * @property email 注册邮箱
+     * @property phone 注册手机号
+     * @property nickname 设定的用户昵称
+     * @property password 设定的账号密码
+     * @property androidId 设备的 Android ID
      */
     @Serializable
     class RegisterRequest(
@@ -110,7 +150,10 @@ interface CommandLabUserService {
     )
 
     /**
-     * 提交注册
+     * 提交注册请求。
+     *
+     * @param request 包含验证码和用户注册信息的请求体
+     * @return 包含系统分配信息等注册结果的 JSON 响应
      */
     @POST("register")
     suspend fun register(@Body request: RegisterRequest): BaseResult<kotlinx.serialization.json.JsonElement?>
@@ -118,7 +161,10 @@ interface CommandLabUserService {
     // 登录相关
 
     /**
-     * 登录请求体
+     * 正式账号登录的请求体数据模型。
+     *
+     * @property account 登录账号（邮箱或手机号等）
+     * @property password 登录密码
      */
     @Serializable
     class LoginRequest(
@@ -127,7 +173,7 @@ interface CommandLabUserService {
     )
 
     /**
-     * 用户信息
+     * 用户详细信息的数据模型。
      */
     @Serializable
     class User(
@@ -143,17 +189,24 @@ interface CommandLabUserService {
     )
 
     /**
-     * 登录响应
+     * 登录成功的响应数据模型。
+     *
+     * @property userId 登录用户的 ID
+     * @property token 用户的鉴权 Token
+     * @property user 包含用户详细信息的对象
      */
     @Serializable
     class LoginResponse(
-        @SerialName("user_id") var userId: Int? = null, // Added from upstream
+        @SerialName("user_id") var userId: Int? = null,
         var token: String? = null,
         var user: User? = null
     )
 
     /**
-     * 正式用户登录
+     * 执行正式用户登录。
+     *
+     * @param request 包含账号密码信息的请求体
+     * @return 包含 Token 和用户信息的登录成功响应
      */
     @POST("register/login")
     suspend fun login(@Body request: LoginRequest): BaseResult<LoginResponse?>
@@ -163,11 +216,22 @@ interface CommandLabUserService {
     // Avatar
     // -------------------------------------------------------------
 
+    /**
+     * 上传头像的响应数据模型。
+     *
+     * @property avatarUrl 上传成功后获取的图片 URL
+     */
     @Serializable
     class UploadAvatarResponse(
         @SerialName("avatar_url") var avatarUrl: String? = null
     )
 
+    /**
+     * 上传用户头像文件。
+     *
+     * @param file 包含图片数据的 Multipart 请求段
+     * @return 包含上传后图片地址的响应结果
+     */
     @Multipart
     @POST("avatar")
     suspend fun uploadAvatar(
@@ -178,21 +242,46 @@ interface CommandLabUserService {
     // Library Management
     // -------------------------------------------------------------
 
+    /**
+     * 上传新建命令库的请求体数据模型。
+     *
+     * @property content 命令库的具体内容/代码
+     * @property isPublish 标识是否直接发布（目前上传固定为私有草稿，发布走单独接口）
+     */
     @Serializable
     class UploadLibraryRequest(
         var content: String? = null,
-        // 上传固定为私有草稿，发布走 /release 接口
         @SerialName("is_publish") var isPublish: Boolean = false
     )
 
+    /**
+     * 上传新建命令库的响应数据模型。
+     *
+     * @property uuid 新建命令库分配的唯一 UUID
+     */
     @Serializable
     class UploadLibraryResponse(
         var uuid: String? = null
     )
 
+    /**
+     * 上传新建命令库（保存至个人云端草稿）。
+     *
+     * @param request 包含代码内容的请求体
+     * @return 返回包含新分配 UUID 的响应结果
+     */
     @POST("library/upload")
     suspend fun uploadLibrary(@Body request: UploadLibraryRequest): BaseResult<UploadLibraryResponse?>
 
+    /**
+     * 编辑更新命令库的请求体数据模型。
+     *
+     * @property name 命令库名称
+     * @property content 命令库代码内容
+     * @property note 相关说明或备注信息
+     * @property tags 关联的标签列表
+     * @property version 适用的版本信息
+     */
     @Serializable
     class UpdateLibraryRequest(
         var name: String? = null,
@@ -203,7 +292,11 @@ interface CommandLabUserService {
     )
 
     /**
-     * 编辑更新命令库
+     * 编辑更新现有的命令库。
+     *
+     * @param id 命令库的自增 ID
+     * @param request 包含要更新属性的请求体
+     * @return 指示操作结果的响应
      */
     @PUT("library/{id}")
     suspend fun updateLibrary(
@@ -211,6 +304,13 @@ interface CommandLabUserService {
         @Body request: UpdateLibraryRequest
     ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
+    /**
+     * 更新用户个人公开资料。
+     *
+     * @param id 用户自身的 ID
+     * @param request 包含昵称、主页等资料更新项的请求体
+     * @return 指示操作结果的响应
+     */
     @PUT("users/{id}")
     suspend fun updateProfile(
         @Path("id") id: Int,
@@ -218,7 +318,12 @@ interface CommandLabUserService {
     ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
-     * Get user's own libraries (My Cloud)
+     * 获取用户自己的私有命令库列表（我的云端）。
+     *
+     * @param type 类型，默认值为 1 表示私有库
+     * @param pageNum 查询的页码
+     * @param pageSize 每页条数上限
+     * @return 包含命令库分页数据的响应结果
      */
     @GET("library")
     suspend fun getMyLibraries(
@@ -228,7 +333,10 @@ interface CommandLabUserService {
     ): BaseResult<CommandLabPublicService.GetFunctionsResponse?>
 
     /**
-     * Get private library detail
+     * 获取用户自己私有命令库的详细内容。
+     *
+     * @param id 私有命令库的 ID
+     * @return 包含库详情数据的响应结果
      */
     @GET("library/detail/{id}")
     suspend fun getPrivateFunction(
@@ -236,8 +344,13 @@ interface CommandLabUserService {
     ): BaseResult<LibraryFunction?>
 
     /**
-     * 发布私有库到公开市场（需要人机验证）
-     * /publish 是管理员接口，普通用户走 /release
+     * 将私有库发布至公开市场。
+     *
+     * 需要先完成人机验证以获得授权凭证。
+     *
+     * @param id 目标命令库的 ID
+     * @param body 包含验证凭证（如 special_code）的请求体
+     * @return 指示发布结果的响应
      */
     @POST("library/{id}/release")
     suspend fun releaseToPublic(
@@ -246,8 +359,12 @@ interface CommandLabUserService {
     ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
-     * 同步私有库到公开库
-     * 限制: 3次/小时
+     * 同步用户的私有库内容至已发布的公开库。
+     *
+     * 注意：该接口可能有调用频率限制（如 3次/小时）。
+     *
+     * @param id 目标命令库的 ID
+     * @return 指示同步结果的响应
      */
     @POST("library/{id}/sync")
     suspend fun syncToPublic(
@@ -255,8 +372,12 @@ interface CommandLabUserService {
     ): BaseResult<kotlinx.serialization.json.JsonElement?>
 
     /**
-     * 删除私有库
-     * 管理员可删除任意库，普通用户仅可删除自己的私有库
+     * 删除私有库。
+     *
+     * 普通用户仅可删除自己的私有库，管理员可删除任意库。
+     *
+     * @param id 目标命令库的 ID
+     * @return 指示删除结果的响应
      */
     @DELETE("library/{id}")
     suspend fun deleteLibrary(
@@ -267,6 +388,12 @@ interface CommandLabUserService {
     // Quota
     // -------------------------------------------------------------
 
+    /**
+     * 用户存储配额的响应数据模型。
+     *
+     * @property used 已使用的私有库数量
+     * @property limit 用户私有库的存储数量上限
+     */
     @Serializable
     class QuotaResponse(
         var used: Int? = null,
@@ -274,7 +401,9 @@ interface CommandLabUserService {
     )
 
     /**
-     * 查询私有库配额：已用数量和上限
+     * 查询当前用户的私有库配额信息（已用数量和上限）。
+     *
+     * @return 包含存储配额数据的响应结果
      */
     @GET("library/quota")
     suspend fun getQuota(): BaseResult<QuotaResponse?>
