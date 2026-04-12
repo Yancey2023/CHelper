@@ -1,5 +1,5 @@
 /**
-* It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Yancey
  *
  * This program is free software: you can redistribute it and/or modify
