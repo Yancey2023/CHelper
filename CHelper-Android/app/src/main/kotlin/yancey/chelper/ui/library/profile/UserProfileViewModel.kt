@@ -22,10 +22,28 @@ class UserProfileViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set
 
+    var publicLibraries by mutableStateOf<List<LibraryFunction>>(emptyList())
+        private set
+
+    var isLoadingPublic by mutableStateOf(false)
+        private set
+
+    var publicPageNum by mutableStateOf(1)
+        private set
+
+    var hasMorePublic by mutableStateOf(true)
+        private set
+
     var privateLibraries by mutableStateOf<List<LibraryFunction>>(emptyList())
         private set
 
     var isLoadingPrivate by mutableStateOf(false)
+        private set
+
+    var privatePageNum by mutableStateOf(1)
+        private set
+
+    var hasMorePrivate by mutableStateOf(true)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
@@ -65,7 +83,16 @@ class UserProfileViewModel : ViewModel() {
             } finally {
                 isLoading = false
             }
+
+            publicLibraries = emptyList()
+            publicPageNum = 1
+            hasMorePublic = true
+            loadPublicLibraries()
+
             if (currentUserId == id) {
+                privateLibraries = emptyList()
+                privatePageNum = 1
+                hasMorePrivate = true
                 loadPrivateLibraries()
             }
         }
@@ -74,21 +101,62 @@ class UserProfileViewModel : ViewModel() {
     fun refresh() {
         if (viewUserId != -1) {
             loadProfile(viewUserId)
-            if (currentUserId == viewUserId) {
-                loadPrivateLibraries()
+        }
+    }
+
+    fun loadPublicLibraries(loadMore: Boolean = false) {
+        if (isLoadingPublic || (!hasMorePublic && loadMore)) return
+        isLoadingPublic = true
+        viewModelScope.launch {
+            try {
+                val res = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunctions(
+                    pageNum = publicPageNum,
+                    pageSize = 20,
+                    keyword = null,
+                    type = 0,
+                    authorId = viewUserId
+                )
+                val responseData = res?.data
+                if (res?.status == 0 && responseData != null) {
+                    val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
+                    if (publicPageNum == 1) {
+                        publicLibraries = newLibs
+                    } else {
+                        publicLibraries = publicLibraries + newLibs
+                    }
+                    if (newLibs.size < 20) {
+                        hasMorePublic = false
+                    } else {
+                        publicPageNum++
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore silent errors for pagination
+            } finally {
+                isLoadingPublic = false
             }
         }
     }
 
-    fun loadPrivateLibraries() {
-        if (isLoadingPrivate) return
+    fun loadPrivateLibraries(loadMore: Boolean = false) {
+        if (isLoadingPrivate || (!hasMorePrivate && loadMore)) return
         isLoadingPrivate = true
         viewModelScope.launch {
             try {
-                val res = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries(type = 1, pageNum = 1, pageSize = 300)
+                val res = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries(type = 1, pageNum = privatePageNum, pageSize = 20)
                 val responseData = res?.data
                 if (res?.status == 0 && responseData != null) {
-                    privateLibraries = responseData.functions?.filterNotNull() ?: emptyList()
+                    val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
+                    if (privatePageNum == 1) {
+                        privateLibraries = newLibs
+                    } else {
+                        privateLibraries = privateLibraries + newLibs
+                    }
+                    if (newLibs.size < 20) {
+                        hasMorePrivate = false
+                    } else {
+                        privatePageNum++
+                    }
                 } else {
                     updateErrorMessage = res?.message ?: "拉取私有云库失败"
                 }
@@ -107,8 +175,7 @@ class UserProfileViewModel : ViewModel() {
                 if (res?.status == 0) {
                     updateSuccessMessage = if(isPublic) "下架成功" else "删除成功"
                     if (isPublic) {
-                        val updatedList = userProfile?.recentFunctions?.filter { it.id != libraryId }
-                        userProfile = userProfile?.copy(recentFunctions = updatedList)
+                        publicLibraries = publicLibraries.filter { it.id != libraryId }
                     } else {
                         privateLibraries = privateLibraries.filter { it.id != libraryId }
                     }

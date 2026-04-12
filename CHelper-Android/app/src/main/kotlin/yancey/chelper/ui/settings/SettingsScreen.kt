@@ -89,10 +89,17 @@ fun SettingsScreen(
         .collectAsState(initial = null)
     val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
         .collectAsState(initial = null)
-    val tagClickBehavior by settingsDataStore.tagClickBehavior()
+    var tagClickBehavior by remember { mutableStateOf("search") }
+    var ambiguousLineDefault by remember { mutableStateOf("comment") }
+    val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
+        .collectAsState(initial = false)
+    // DataStore flow -> 本地变量同步（首次加载时拿到持久化值）
+    val tagClickBehaviorFlow by settingsDataStore.tagClickBehavior()
         .collectAsState(initial = "search")
-    val ambiguousLineDefault by settingsDataStore.ambiguousLineDefault()
+    val ambiguousLineDefaultFlow by settingsDataStore.ambiguousLineDefault()
         .collectAsState(initial = "comment")
+    LaunchedEffect(tagClickBehaviorFlow) { tagClickBehavior = tagClickBehaviorFlow }
+    LaunchedEffect(ambiguousLineDefaultFlow) { ambiguousLineDefault = ambiguousLineDefaultFlow }
     var cpackBranchesWithTranslate by remember {
         mutableStateOf(
             arrayOf(
@@ -307,6 +314,17 @@ fun SettingsScreen(
                 ) {
                     isShowChooseAmbiguousLineDialog = true
                 }
+                Divider()
+                SettingsItem(
+                    name = "隐藏正文元数据预览",
+                    description = "隐藏 MCD 可视化中 @name、@version 等元信息区",
+                    checked = isHideMetadataPreview,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsHideMetadataPreview(it)
+                        }
+                    },
+                )
             }
         }
     }
@@ -426,6 +444,7 @@ fun SettingsScreen(
                 "进入详情页" to "detail"
             ),
             onChoose = {
+                tagClickBehavior = it
                 coroutineScope.launch {
                     settingsDataStore.setTagClickBehavior(it)
                 }
@@ -439,6 +458,7 @@ fun SettingsScreen(
                 "当作指令" to "command"
             ),
             onChoose = {
+                ambiguousLineDefault = it
                 coroutineScope.launch {
                     settingsDataStore.setAmbiguousLineDefault(it)
                 }

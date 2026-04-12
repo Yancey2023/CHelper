@@ -253,12 +253,12 @@ private fun copyToClipboard(context: Context, text: String) {
 }
 
 @Composable
-fun MCDContentView(content: String?, modifier: Modifier = Modifier, ambiguousDefault: String = "comment") {
+fun MCDContentView(content: String?, modifier: Modifier = Modifier, ambiguousDefault: String = "comment", showMetadata: Boolean = true) {
     val parsed = remember(content, ambiguousDefault) { parseMCD(content, ambiguousDefault) }
 
     Column(modifier = modifier) {
-        // 元数据区
-        if (parsed.metaInfo.isNotEmpty()) {
+        // 元数据区（可通过设置隐藏）
+        if (showMetadata && parsed.metaInfo.isNotEmpty()) {
             MetaSection(parsed.metaInfo)
             Spacer(Modifier.height(8.dp))
         }

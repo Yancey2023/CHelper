@@ -68,7 +68,8 @@ interface CommandLabPublicService {
         @Query("page_num") pageNum: Int,
         @Query("page_size") pageSize: Int,
         @Query("keyword") keyword: String?,
-        @Query("type") type: Int = 0
+        @Query("type") type: Int = 0,
+        @Query("author_id") authorId: Int? = null
     ): BaseResult<GetFunctionsResponse?>
 
     /**

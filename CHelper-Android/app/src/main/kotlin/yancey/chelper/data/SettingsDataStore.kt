@@ -65,6 +65,7 @@ data class Settings(
     val publicLibraryMinVersion: Int? = null,
     val tagClickBehavior: String? = null,
     val ambiguousLineDefault: String? = null,
+    val isHideMetadataPreview: Boolean? = null,
 )
 
 object SettingsSerializer : Serializer<Settings> {
@@ -204,6 +205,13 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setAmbiguousLineDefault(value: String) {
         context.settingsDataStore.updateData { it.copy(ambiguousLineDefault = value) }
+    }
+
+    fun isHideMetadataPreview(): Flow<Boolean> =
+        context.settingsDataStore.data.map { it.isHideMetadataPreview ?: false }
+
+    suspend fun setIsHideMetadataPreview(value: Boolean) {
+        context.settingsDataStore.updateData { it.copy(isHideMetadataPreview = value) }
     }
 }
 

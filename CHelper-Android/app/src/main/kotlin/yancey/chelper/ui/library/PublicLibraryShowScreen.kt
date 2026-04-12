@@ -77,6 +77,7 @@ import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.CPLUploadScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
+import yancey.chelper.ui.UserProfileScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.ChoosingDialog
@@ -99,10 +100,12 @@ fun PublicLibraryShowScreen(
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
 
-    // 读取设置：无法推断行的默认处理方式
+    // 读取设置
     val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
     val ambiguousLineDefault = settingsDataStore.ambiguousLineDefault()
         .collectAsState(initial = "comment")
+    val isHideMetadataPreview = settingsDataStore.isHideMetadataPreview()
+        .collectAsState(initial = false)
 
     // 对话框状态
     var showMainMenu by remember { mutableStateOf(false) }
@@ -341,8 +344,18 @@ fun PublicLibraryShowScreen(
                         ) {
                             // 作者
                             viewModel.library.authorName?.let { author ->
+                                val authorId = viewModel.library.author?.id
                                 Row(
-                                    modifier = Modifier.padding(bottom = 4.dp),
+                                    modifier = Modifier
+                                        .padding(bottom = 4.dp)
+                                        .then(
+                                            if (authorId != null) Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .clickable {
+                                                    navController?.navigate(UserProfileScreenKey(id = authorId))
+                                                }
+                                            else Modifier
+                                        ),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
@@ -355,11 +368,40 @@ fun PublicLibraryShowScreen(
                                     Text(
                                         text = author,
                                         style = TextStyle(
-                                            color = CHelperTheme.colors.textMain,
+                                            color = if (authorId != null) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
                                         )
                                     )
+                                    // 作者专属头衔徽章
+                                    viewModel.library.author?.userTitle?.takeIf { it.isNotBlank() }?.let { title ->
+                                        Spacer(Modifier.width(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.12f))
+                                                .padding(horizontal = 6.dp, vertical = 1.dp)
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                style = TextStyle(
+                                                    fontSize = 10.sp,
+                                                    color = CHelperTheme.colors.mainColor,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            )
+                                        }
+                                    }
+                                    // 可点击进入主页的箭头指示
+                                    if (authorId != null) {
+                                        Spacer(Modifier.width(4.dp))
+                                        Image(
+                                            painter = painterResource(id = R.drawable.external_link),
+                                            contentDescription = "进入主页",
+                                            modifier = Modifier.size(12.dp),
+                                            colorFilter = ColorFilter.tint(CHelperTheme.colors.mainColor)
+                                        )
+                                    }
                                 }
                             }
                             // 版本
@@ -537,7 +579,8 @@ fun PublicLibraryShowScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 15.dp),
-                                ambiguousDefault = ambiguousLineDefault.value
+                                ambiguousDefault = ambiguousLineDefault.value,
+                                showMetadata = !isHideMetadataPreview.value
                             )
                         }
 

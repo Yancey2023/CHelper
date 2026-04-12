@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
@@ -47,6 +48,25 @@ fun UserProfileScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
     var actionDialogTarget by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
+    val listState = rememberLazyListState()
+
+    val layoutInfo = listState.layoutInfo
+    val totalItemsNumber = layoutInfo.totalItemsCount
+    val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+
+    LaunchedEffect(lastVisibleItemIndex, totalItemsNumber) {
+        if (totalItemsNumber > 0 && lastVisibleItemIndex >= totalItemsNumber - 3) {
+            if (selectedTab == 0 || viewModel.currentUserId != paramId) {
+                if (viewModel.hasMorePublic && !viewModel.isLoadingPublic) {
+                    viewModel.loadPublicLibraries(true)
+                }
+            } else {
+                if (viewModel.hasMorePrivate && !viewModel.isLoadingPrivate) {
+                    viewModel.loadPrivateLibraries(true)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(paramId) {
         viewModel.loadProfile(paramId)
@@ -119,6 +139,7 @@ fun UserProfileScreen(
             val user = viewModel.userProfile!!
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(bottom = 60.dp)
             ) {
                 item {
@@ -173,7 +194,13 @@ fun UserProfileScreen(
                 }
 
                 if (selectedTab == 0 || viewModel.currentUserId != paramId) {
-                    if (user.recentFunctions.isNullOrEmpty()) {
+                    if (viewModel.isLoadingPublic && viewModel.publicLibraries.isEmpty()) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                                Text("加载中...", style = TextStyle(color = CHelperTheme.colors.mainColor))
+                            }
+                        }
+                    } else if (viewModel.publicLibraries.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier.fillMaxWidth().padding(32.dp),
@@ -183,7 +210,7 @@ fun UserProfileScreen(
                             }
                         }
                     } else {
-                        items(user.recentFunctions!!) { func ->
+                        items(viewModel.publicLibraries) { func ->
                             ProfileLibraryItem(
                                 library = func,
                                 isOwner = viewModel.currentUserId == paramId,
@@ -198,9 +225,16 @@ fun UserProfileScreen(
                                 }
                             }
                         }
+                        if (viewModel.isLoadingPublic) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    Text("加载更多中...", style = TextStyle(color = CHelperTheme.colors.mainColor, fontSize = 12.sp))
+                                }
+                            }
+                        }
                     }
                 } else {
-                    if (viewModel.isLoadingPrivate) {
+                    if (viewModel.isLoadingPrivate && viewModel.privateLibraries.isEmpty()) {
                         item {
                             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Text("加载中...", style = TextStyle(color = CHelperTheme.colors.mainColor))
@@ -225,6 +259,13 @@ fun UserProfileScreen(
                             ) {
                                 func.id?.let {
                                     navController?.navigate(PublicLibraryShowScreenKey(id = it, isPrivate = true))
+                                }
+                            }
+                        }
+                        if (viewModel.isLoadingPrivate) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    Text("加载更多中...", style = TextStyle(color = CHelperTheme.colors.mainColor, fontSize = 12.sp))
                                 }
                             }
                         }
