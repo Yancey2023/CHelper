@@ -76,16 +76,16 @@ fun UserProfileScreen(
         )
     }
 
-    if (actionDialogTarget != null) {
+    actionDialogTarget?.let { (targetId, isPublic) ->
         yancey.chelper.ui.common.dialog.IsConfirmDialog(
-            title = if (actionDialogTarget!!.second) "下架公开库" else "删除私有库",
-            content = if (actionDialogTarget!!.second) "确定要下架这个公开市场的命令库吗？私有云库内的原始文本不会受影响。" else "确定要从云端删除这个私有库草稿吗？此操作不可逆。",
+            title = if (isPublic) "下架公开库" else "删除私有库",
+            content = if (isPublic) "确定要下架这个公开市场的命令库吗？私有云库内的原始文本不会受影响。" else "确定要从云端删除这个私有库草稿吗？此操作不可逆。",
             onDismissRequest = { actionDialogTarget = null },
             cancelText = "取消",
             onCancel = { actionDialogTarget = null },
             confirmText = "确定",
             onConfirm = {
-                viewModel.deleteOrUnpublishLibrary(actionDialogTarget!!.first, actionDialogTarget!!.second)
+                viewModel.deleteOrUnpublishLibrary(targetId, isPublic)
                 actionDialogTarget = null
             }
         )

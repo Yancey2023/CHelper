@@ -67,7 +67,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.serialization.json.Json
 import com.hjq.toast.Toaster
@@ -115,6 +114,14 @@ fun PublicLibraryShowScreen(
         viewModel.actionMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.actionMessage = null
+        }
+    }
+
+    // 删除成功后安全返回上一页——在 Composition 上下文中执行 popBackStack 避免时序崩溃
+    LaunchedEffect(viewModel.deleteSuccess) {
+        if (viewModel.deleteSuccess) {
+            viewModel.deleteSuccess = false
+            navController?.popBackStack()
         }
     }
 
@@ -198,9 +205,7 @@ fun PublicLibraryShowScreen(
             onChoose = { action ->
                 if (action == "confirm") {
                     viewModel.library.id?.let {
-                        viewModel.deleteLibrary(it, onSuccess = {
-                            navController?.popBackStack()
-                        })
+                        viewModel.deleteLibrary(it)
                     }
                 }
                 showDeleteConfirmDialog = false

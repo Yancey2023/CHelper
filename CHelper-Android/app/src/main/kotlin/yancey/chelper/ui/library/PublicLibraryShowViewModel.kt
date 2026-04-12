@@ -37,6 +37,9 @@ class PublicLibraryShowViewModel : ViewModel() {
     var actionMessage by mutableStateOf<String?>(null)
     var isPrivate by mutableStateOf(false)
 
+    /** 删除成功后置 true，由 Screen 层观察此状态来安全执行 popBackStack */
+    var deleteSuccess by mutableStateOf(false)
+
     /** 当前是否展示原始源码视图（false = 可视化 UI） */
     var showRawSource by mutableStateOf(false)
 
@@ -146,17 +149,17 @@ class PublicLibraryShowViewModel : ViewModel() {
         }
     }
 
-    fun deleteLibrary(id: Int, onSuccess: () -> Unit = {}) {
+    fun deleteLibrary(id: Int) {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
                     ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
                 }
-                actionMessage = if (result?.isSuccess() == true) {
-                    onSuccess()
-                    "删除成功"
+                if (result?.isSuccess() == true) {
+                    actionMessage = "删除成功"
+                    deleteSuccess = true
                 } else {
-                    result?.message ?: "删除失败"
+                    actionMessage = result?.message ?: "删除失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
