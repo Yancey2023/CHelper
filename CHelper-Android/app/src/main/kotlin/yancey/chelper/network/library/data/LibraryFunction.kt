@@ -33,6 +33,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -128,7 +129,7 @@ object AuthorSerializer : KSerializer<AuthorInfo?> {
                     id = jsonElement["id"]?.jsonPrimitive?.intOrNull,
                     name = jsonElement["name"]?.jsonPrimitive?.content,
                     tier = jsonElement["tier"]?.jsonPrimitive?.intOrNull,
-                    userTitle = jsonElement["user_title"]?.jsonPrimitive?.content
+                    userTitle = jsonElement["user_title"]?.jsonPrimitive?.contentOrNull
                 )
             }
             // 旧版 API 直接返回字符串作者名
