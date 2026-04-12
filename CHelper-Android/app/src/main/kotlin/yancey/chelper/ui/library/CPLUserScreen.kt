@@ -39,6 +39,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -387,6 +388,9 @@ fun LoginRegisterView(
     viewModel: CPLUserViewModel,
     onCaptchaRequest: (String, (String) -> Unit) -> Unit
 ) {
+    var isLoginPasswordVisible by remember { mutableStateOf(false) }
+    var isRegisterPasswordVisible by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -451,7 +455,17 @@ fun LoginRegisterView(
                             .height(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
                         leadingIcon = { Icon(R.drawable.ic_lock, Modifier.size(20.dp)) },
-                        // TODO: Add toggle password visibility using trailingIcon
+                        trailingIcon = {
+                            Icon(
+                                id = if (isLoginPasswordVisible) R.drawable.eye else R.drawable.eye_off,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { isLoginPasswordVisible = !isLoginPasswordVisible }
+                                    .padding(14.dp),
+                                contentDescription = "显示/隐藏密码"
+                            )
+                        },
+                        outputTransformation = if (isLoginPasswordVisible) null else OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
@@ -514,7 +528,18 @@ fun LoginRegisterView(
                             .fillMaxWidth()
                             .height(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        leadingIcon = { Icon(R.drawable.ic_lock, Modifier.size(20.dp)) }
+                        leadingIcon = { Icon(R.drawable.ic_lock, Modifier.size(20.dp)) },
+                        trailingIcon = {
+                            Icon(
+                                id = if (isRegisterPasswordVisible) R.drawable.eye else R.drawable.eye_off,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { isRegisterPasswordVisible = !isRegisterPasswordVisible }
+                                    .padding(14.dp),
+                                contentDescription = "显示/隐藏密码"
+                            )
+                        },
+                        outputTransformation = if (isRegisterPasswordVisible) null else OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
