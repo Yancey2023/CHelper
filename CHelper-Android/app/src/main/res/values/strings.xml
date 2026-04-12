@@ -227,4 +227,35 @@
     <string name="layout_setting_is_show_error_reason_description">不显示命令错误原因可以让第一个补全提示的位置比较稳定，方便使用补全提示</string>
     <string name="layout_setting_is_syntax_highlight">语法高亮</string>
     <string name="layout_setting_is_syntax_highlight_description">使用彩色文本显示命令，目前的代码实现性能较差，对长文本将临时自动关闭语法高亮</string>
+    <!--    use in CPLUploadScreen    -->
+    <string name="upload_title">上传指令库</string>
+    <string name="upload_preview_title">上传预览</string>
+    <string name="upload_import_local">从本地导入</string>
+    <string name="upload_field_name">名称</string>
+    <string name="upload_field_version">版本</string>
+    <string name="upload_field_description">简介</string>
+    <string name="upload_field_tags">标签 (逗号分隔)</string>
+    <string name="upload_field_commands_v1">指令内容 (MCD 格式)</string>
+    <string name="upload_field_commands_v2">指令内容 (MCD v2 格式，可用 > 状态行)</string>
+    <string name="upload_v2_title">MCD v2 格式</string>
+    <string name="upload_v2_description">启用后支持方块类型、条件、延迟等状态行</string>
+    <string name="upload_wiki_link">查看 MCD 语法 Wiki</string>
+    <string name="upload_wiki_full_link">查看完整 MCD 语法文档</string>
+    <string name="upload_btn_preview">预览并上传</string>
+    <string name="upload_btn_uploading">上传中…</string>
+    <string name="upload_btn_back">返回修改</string>
+    <string name="upload_btn_confirm">确认上传</string>
+    <string name="upload_btn_fix_required">请先修正问题行</string>
+    <string name="upload_validation_error">%d 行无法推断</string>
+    <string name="upload_validation_ok">全部 %d 行可推断</string>
+    <string name="upload_syntax_help">语法帮助</string>
+    <string name="upload_quick_help_title">函数体语法速查</string>
+    <string name="upload_error_summary">以下行无法推断类型（既不是英文/斜杠开头的指令，也没有 # 注释标记）：</string>
+    <string name="upload_fix_ambiguous">一键将这些行标记为注释 (#)</string>
+    <string name="upload_empty_error">名称和内容不能为空</string>
+    <string name="upload_import_dialog_title">选择本地库</string>
+    <string name="upload_import_empty">本地无指令库</string>
+    <string name="upload_import_unnamed">未命名</string>
+    <string name="common_cancel">取消</string>
+
 </resources>

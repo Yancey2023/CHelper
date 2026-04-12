@@ -33,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
 
 class LibrarySearchViewModel : ViewModel() {
@@ -173,7 +174,7 @@ class LibrarySearchViewModel : ViewModel() {
                         tags = localFunc.tags
                         // 将本地包 ID 转为负数，防止和远端冲突，并在 UI 中做区分
                         id = -(localFunc.id ?: 0)
-                        author = "[本地包]"
+                        author = AuthorInfo(name = "[本地包]")
                         version = localFunc.version
                     }
                 )
@@ -192,7 +193,7 @@ class LibrarySearchViewModel : ViewModel() {
                     val noteMatch = privateFunc.note?.lowercase()?.contains(searchLower) == true
 
                     if (nameMatch || tagsMatch || noteMatch) {
-                        privateFunc.author = "[我的私有库]" // 标记
+                        privateFunc.author = AuthorInfo(name = "[我的私有库]") // 标记
                         tempMatches.add(privateFunc)
                     }
                 }

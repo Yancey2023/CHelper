@@ -16,8 +16,8 @@ android {
         applicationId = "yancey.chelper"
         minSdk = 24
         targetSdk = 36
-        versionCode = 78
-        versionName = "0.4.4"
+        versionCode = 81
+        versionName = "0.4.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -114,6 +114,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.10.5")
     implementation("androidx.compose.foundation:foundation:1.10.5")
     debugImplementation("androidx.compose.ui:ui-tooling:1.10.5")
+    // https://github.com/coil-kt/coil
+    implementation("io.coil-kt:coil-compose:2.7.0")
     // https://github.com/Kotlin/kotlinx.serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     // https://github.com/square/okhttp

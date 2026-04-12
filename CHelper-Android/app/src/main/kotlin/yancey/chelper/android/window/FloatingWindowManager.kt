@@ -56,6 +56,7 @@ import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.FloatingWindowNavHost
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.android.service.FloatingWindowService
 
 class FloatWindowBackPressedOwner(override val lifecycle: Lifecycle) :
     OnBackPressedDispatcherOwner {
@@ -98,6 +99,7 @@ class FloatingWindowManager(
         floatingWindowIconAlpha: Float,
         floatingWindowScreenAlpha: Float,
     ) {
+        FloatingWindowService.start(application)
         val iconSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             floatingWindowIconSize.toFloat(),
@@ -232,6 +234,7 @@ class FloatingWindowManager(
      * 关闭悬浮窗
      */
     fun stopFloatingWindow() {
+        FloatingWindowService.stop(application)
         mainViewWindow.let {
             if (it != null) {
                 composeLifecycleOwner?.apply {

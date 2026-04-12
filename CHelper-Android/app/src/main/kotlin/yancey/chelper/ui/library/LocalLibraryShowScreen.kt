@@ -50,6 +50,7 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.data.LocalCommandLabDataStore
+import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -146,7 +147,7 @@ fun LocalLibraryShowScreen(id: Int? = null) {
 fun LibraryShowScreenLightThemePreview() {
     val library = LibraryFunction().apply {
         name = "Library"
-        author = "Author"
+        author = AuthorInfo(name = "Author")
         content = buildString {
             for (i in 1..10) {
                 append("# Content${i * 2 - 1}\n")
@@ -164,7 +165,7 @@ fun LibraryShowScreenLightThemePreview() {
 fun LibraryShowScreenDarkThemePreview() {
     val library = LibraryFunction().apply {
         name = "Library"
-        author = "Author"
+        author = AuthorInfo(name = "Author")
         content = buildString {
             for (i in 1..10) {
                 append("# Content${i * 2 - 1}\n")

@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.library
 
+import yancey.chelper.network.library.data.AuthorInfo
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,7 +68,7 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
         localLibraryFunction?.let {
             viewModel.name.setTextAndPlaceCursorAtEnd(it.name ?: "")
             viewModel.version.setTextAndPlaceCursorAtEnd(it.version ?: "")
-            viewModel.author.setTextAndPlaceCursorAtEnd(it.author ?: "")
+            viewModel.author.setTextAndPlaceCursorAtEnd(it.authorName ?: "")
             viewModel.description.setTextAndPlaceCursorAtEnd(it.note ?: "")
             viewModel.tags.setTextAndPlaceCursorAtEnd(
                 it.tags?.joinToString(separator = ",") ?: ""
@@ -186,15 +187,30 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
             Spacer(Modifier.height(15.dp))
             Button(stringResource(R.string.layout_library_edit_save)) {
                 viewModel.viewModelScope.launch {
-                    val libraryFunction = LibraryFunction()
-                    libraryFunction.name = viewModel.name.text.toString()
-                    libraryFunction.version = viewModel.version.text.toString()
-                    libraryFunction.author = viewModel.author.text.toString()
-                    libraryFunction.note = viewModel.description.text.toString()
-                    libraryFunction.tags =
-                        viewModel.tags.text.toString().split(",").map { it.trim() }
-                            .filter { !it.isEmpty() }.toList()
-                    libraryFunction.content = viewModel.commands.text.toString()
+                    val oldFunc = localLibraryFunction
+                    val libraryFunction = LibraryFunction().apply {
+                        // 还原原有属性防止擦除
+                        this.id = oldFunc?.id
+                        uuid = oldFunc?.uuid
+                        createdAt = oldFunc?.createdAt
+                        likeCount = oldFunc?.likeCount
+                        isLiked = oldFunc?.isLiked
+                        hasPublicVersion = oldFunc?.hasPublicVersion
+                        isPublish = oldFunc?.isPublish
+                        isOwner = oldFunc?.isOwner
+                        chainData = oldFunc?.chainData
+                        
+                        // 覆盖新属性
+                        name = viewModel.name.text.toString()
+                        version = viewModel.version.text.toString()
+                        author = (oldFunc?.author ?: AuthorInfo()).apply {
+                            this.name = viewModel.author.text.toString()
+                        }
+                        note = viewModel.description.text.toString()
+                        tags = viewModel.tags.text.toString().split(",").map { it.trim() }
+                            .filter { it.isNotEmpty() }.toList()
+                        content = viewModel.commands.text.toString()
+                    }
                     when (viewModel.mode) {
                         EditMode.ADD -> {
                             localCommandLabDataStore.addLocalLibraryFunction(libraryFunction)

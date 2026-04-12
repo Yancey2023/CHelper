@@ -65,6 +65,8 @@ fun SettingsScreen(
     var isShowInputFloatingWindowScreenAlphaDialog by remember { mutableStateOf(false) }
     var isShowInputFloatingWindowIconSizeDialog by remember { mutableStateOf(false) }
     var isShowChooseCpackBranchDialog by remember { mutableStateOf(false) }
+    var isShowChooseTagClickDialog by remember { mutableStateOf(false) }
+    var isShowChooseAmbiguousLineDialog by remember { mutableStateOf(false) }
     val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
         .collectAsState(initial = null)
     val cpackBranch by settingsDataStore.cpackBranch()
@@ -87,6 +89,17 @@ fun SettingsScreen(
         .collectAsState(initial = null)
     val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
         .collectAsState(initial = null)
+    var tagClickBehavior by remember { mutableStateOf("search") }
+    var ambiguousLineDefault by remember { mutableStateOf("comment") }
+    val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
+        .collectAsState(initial = false)
+    // DataStore flow -> 本地变量同步（首次加载时拿到持久化值）
+    val tagClickBehaviorFlow by settingsDataStore.tagClickBehavior()
+        .collectAsState(initial = "search")
+    val ambiguousLineDefaultFlow by settingsDataStore.ambiguousLineDefault()
+        .collectAsState(initial = "comment")
+    LaunchedEffect(tagClickBehaviorFlow) { tagClickBehavior = tagClickBehaviorFlow }
+    LaunchedEffect(ambiguousLineDefaultFlow) { ambiguousLineDefault = ambiguousLineDefaultFlow }
     var cpackBranchesWithTranslate by remember {
         mutableStateOf(
             arrayOf(
@@ -286,6 +299,33 @@ fun SettingsScreen(
                     },
                 )
             }
+            CollectionName("命令库设置")
+            Collection {
+                NameAndAction(
+                    name = "Tag 点击行为",
+                    description = "当前: ${if (tagClickBehavior == "search") "搜索该 Tag" else "进入详情页"}",
+                ) {
+                    isShowChooseTagClickDialog = true
+                }
+                Divider()
+                NameAndAction(
+                    name = "无法推断行的默认处理",
+                    description = "当前: ${if (ambiguousLineDefault == "comment") "当作注释" else "当作指令"}",
+                ) {
+                    isShowChooseAmbiguousLineDialog = true
+                }
+                Divider()
+                SettingsItem(
+                    name = "隐藏正文元数据预览",
+                    description = "隐藏 MCD 可视化中 @name、@version 等元信息区",
+                    checked = isHideMetadataPreview,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsHideMetadataPreview(it)
+                        }
+                    },
+                )
+            }
         }
     }
     if (isShowChooseThemeDialog) {
@@ -393,6 +433,34 @@ fun SettingsScreen(
             onChoose = {
                 coroutineScope.launch {
                     settingsDataStore.setCpackBranch(it)
+                }
+            })
+    }
+    if (isShowChooseTagClickDialog) {
+        ChoosingDialog(
+            onDismissRequest = { isShowChooseTagClickDialog = false },
+            data = arrayOf(
+                "搜索该 Tag" to "search",
+                "进入详情页" to "detail"
+            ),
+            onChoose = {
+                tagClickBehavior = it
+                coroutineScope.launch {
+                    settingsDataStore.setTagClickBehavior(it)
+                }
+            })
+    }
+    if (isShowChooseAmbiguousLineDialog) {
+        ChoosingDialog(
+            onDismissRequest = { isShowChooseAmbiguousLineDialog = false },
+            data = arrayOf(
+                "当作注释" to "comment",
+                "当作指令" to "command"
+            ),
+            onChoose = {
+                ambiguousLineDefault = it
+                coroutineScope.launch {
+                    settingsDataStore.setAmbiguousLineDefault(it)
                 }
             })
     }

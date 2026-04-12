@@ -18,12 +18,14 @@ package yancey.chelper.ui.library
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +57,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import yancey.chelper.R
+import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import coil.compose.AsyncImage
+import androidx.compose.foundation.border
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -66,7 +75,12 @@ import yancey.chelper.ui.common.widget.Text
 fun PublicLibraryListScreen(
     viewModel: PublicLibraryListViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
+    isFloatingWindow: Boolean = false,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
+    val tagClickBehavior = settingsDataStore.tagClickBehavior()
+        .collectAsState(initial = "search")
     val listState = rememberLazyListState()
 
     // 初始加载
@@ -89,20 +103,22 @@ fun PublicLibraryListScreen(
         title = stringResource(R.string.layout_library_list_title_public),
         headerRight = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    id = R.drawable.folder,
-                    modifier =
-                        Modifier
-                            .clickable {
-                                navController.navigate(
-                                    yancey.chelper.ui.CPLUserScreenKey
-                                )
-                            }
-                            .padding(5.dp)
-                            .size(24.dp),
-                    contentDescription = "用户中心"
-                )
-                Spacer(Modifier.width(10.dp))
+                if (!isFloatingWindow) {
+                    Icon(
+                        id = R.drawable.folder,
+                        modifier =
+                            Modifier
+                                .clickable {
+                                    navController.navigate(
+                                        yancey.chelper.ui.CPLUserScreenKey
+                                    )
+                                }
+                                .padding(5.dp)
+                                .size(24.dp),
+                        contentDescription = "用户中心"
+                    )
+                    Spacer(Modifier.width(10.dp))
+                }
                 Icon(
                     id = R.drawable.refresh,
                     modifier =
@@ -195,11 +211,6 @@ fun PublicLibraryListScreen(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .padding(15.dp, 0.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    color = CHelperTheme.colors.backgroundComponent
-                                )
                     ) {
                         itemsIndexed(viewModel.libraries) { _, library ->
                             PublicLibraryItem(
@@ -212,12 +223,20 @@ fun PublicLibraryListScreen(
                                     }
                                 },
                                 onTagClick = { tag ->
-                                    navController.navigate(
-                                        yancey.chelper.ui.LibrarySearchScreenKey(tag)
-                                    )
+                                    if (tagClickBehavior.value == "detail") {
+                                        // 按设置：点 tag 相当于点击卡片，进入详情
+                                        library.id?.let { id ->
+                                            navController.navigate(
+                                                PublicLibraryShowScreenKey(id = id)
+                                            )
+                                        }
+                                    } else {
+                                        navController.navigate(
+                                            yancey.chelper.ui.LibrarySearchScreenKey(tag)
+                                        )
+                                    }
                                 }
                             )
-                            Divider(padding = 0.dp)
                         }
 
                         // 加载更多指示器
@@ -255,110 +274,189 @@ private fun PublicLibraryItem(
     onClick: () -> Unit,
     onTagClick: (String) -> Unit = {}
 ) {
-    Row(
+    // 热门或高Tier创作者加主题色亮边与背景高亮
+    val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
+
+    Column(
         modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 15.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha=0.08f) else CHelperTheme.colors.backgroundComponent)
+            .run { if (isFeatured) this.border(1.dp, CHelperTheme.colors.mainColor.copy(alpha=0.3f), RoundedCornerShape(10.dp)) else this }
             .clickable(onClick = onClick)
-            .padding(20.dp, 10.dp)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = library.name ?: "未命名",
-                modifier = Modifier.fillMaxWidth(),
-                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            )
-            Row {
-                library.author?.let { author ->
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(14.dp, 12.dp)
+            ) {
+                // 标题行 + 版本号
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "作者: $author",
-                        style =
-                            TextStyle(
-                                color = CHelperTheme.colors.textSecondary,
-                                fontSize = 12.sp
-                            )
+                        text = library.name ?: "未命名",
+                        modifier = Modifier.weight(1f, fill = false),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 1
                     )
-                }
-                library.likeCount?.let { likes ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    library.version?.takeIf { it.isNotBlank() }?.let { ver ->
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = " · ",
-                            style =
-                                TextStyle(
-                                    color = CHelperTheme.colors.textSecondary,
-                                    fontSize = 12.sp
-                                )
-                        )
-                        Image(
-                            painter = painterResource(R.drawable.ic_heart),
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
-                        )
-                        Text(
-                            text = " $likes",
-                            style =
-                                TextStyle(
-                                    color = CHelperTheme.colors.textSecondary,
-                                    fontSize = 12.sp
-                                )
+                            text = "v$ver",
+                            style = TextStyle(
+                                fontSize = 11.sp,
+                                color = CHelperTheme.colors.textSecondary
+                            )
                         )
                     }
                 }
-            }
-            library.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
-                FlowRow(modifier = Modifier.padding(top = 4.dp)) {
-                    tags.take(3).forEach { tag ->
-                        Box(
-                            modifier =
-                                Modifier
-                                    .padding(end = 6.dp, bottom = 4.dp)
+
+                Spacer(Modifier.height(4.dp))
+
+                // 作者 + 点赞
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    library.author?.let { author ->
+                        AsyncImage(
+                            model = "https://abyssous.site/avatar/${author.id}",
+                            contentDescription = "Avatar",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(CHelperTheme.colors.backgroundComponent),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_user),
+                            error = painterResource(id = R.drawable.ic_user)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = author.name ?: "Unknown",
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
+                        if ((author.tier ?: 0) >= 2) {
+                            Spacer(Modifier.width(4.dp))
+                            Image(
+                                painter = painterResource(R.drawable.ic_verified_advanced),
+                                contentDescription = "Advanced",
+                                modifier = Modifier.size(12.dp)
+                            )
+                        } else if ((author.tier ?: 0) >= 1) {
+                            Spacer(Modifier.width(4.dp))
+                            Image(
+                                painter = painterResource(R.drawable.ic_verified_normal),
+                                contentDescription = "Normal",
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    } ?: library.authorName?.let { author ->
+                        Text(
+                            text = author,
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
+                    }
+                    library.likeCount?.let { likes ->
+                        if (library.authorName != null) {
+                            Text(
+                                text = " · ",
+                                style = TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp
+                                )
+                            )
+                        }
+                        Image(
+                            painter = painterResource(
+                                if (isFeatured) R.drawable.heart_filled else R.drawable.ic_heart
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            colorFilter = ColorFilter.tint(
+                                if (isFeatured) CHelperTheme.colors.mainColor
+                                else CHelperTheme.colors.textSecondary
+                            )
+                        )
+                        Text(
+                            text = " $likes",
+                            style = TextStyle(
+                                color = if (isFeatured) CHelperTheme.colors.mainColor
+                                else CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
+                    }
+                }
+
+                // 标签
+                library.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+                    FlowRow(
+                        modifier = Modifier.padding(top = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        tags.take(3).forEach { tag ->
+                            Box(
+                                modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(CHelperTheme.colors.background)
                                     .clickable { onTagClick(tag) }
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = tag,
-                                style =
-                                    TextStyle(
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style = TextStyle(
                                         color = CHelperTheme.colors.mainColor,
                                         fontSize = 11.sp
                                     )
-                            )
+                                )
+                            }
                         }
-                    }
-                    if (tags.size > 3) {
-                        Text(
-                            text = "...",
-                            style =
-                                TextStyle(
+                        if (tags.size > 3) {
+                            Text(
+                                text = "+${tags.size - 3}",
+                                style = TextStyle(
                                     color = CHelperTheme.colors.textSecondary,
                                     fontSize = 11.sp
                                 ),
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
                     }
                 }
-            }
-            library.note?.takeIf { it.isNotBlank() }?.let { note ->
-                Text(
-                    text = note,
-                    modifier = Modifier.fillMaxWidth(),
-                    style =
-                        TextStyle(
+
+                // 备注
+                library.note?.takeIf { it.isNotBlank() }?.let { note ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = note,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = TextStyle(
                             color = CHelperTheme.colors.textSecondary,
                             fontSize = 12.sp
                         ),
-                    maxLines = 2
-                )
+                        maxLines = 2
+                    )
+                }
             }
+
+            // 右侧箭头
+            Icon(
+                id = R.drawable.arrow_right,
+                contentDescription = "查看详情",
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 12.dp)
+                    .size(18.dp)
+            )
         }
-        Icon(
-            id = R.drawable.arrow_right,
-            contentDescription = "查看详情",
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .size(20.dp)
-        )
     }
 }
 
@@ -372,7 +470,7 @@ fun PublicLibraryListScreenLightThemePreview() {
                     LibraryFunction().apply {
                         id = i
                         name = "Library $i"
-                        author = "Author $i"
+                        author = AuthorInfo(name = "Author $i")
                         note = "Description for library $i"
                         likeCount = i * 10
                     }
@@ -395,7 +493,7 @@ fun PublicLibraryListScreenDarkThemePreview() {
                     LibraryFunction().apply {
                         id = i
                         name = "Library $i"
-                        author = "Author $i"
+                        author = AuthorInfo(name = "Author $i")
                         note = "This is a longer description for library $i"
                         likeCount = i * 5
                     }

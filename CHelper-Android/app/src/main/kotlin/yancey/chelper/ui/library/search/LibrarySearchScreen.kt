@@ -58,8 +58,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.R
-import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
+import coil.compose.AsyncImage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.border
+import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.ui.LocalLibraryShowScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
@@ -199,7 +204,7 @@ fun LibrarySearchScreen(
                                             onClick = {
                                                 lib.id?.let { id ->
                                                     // 根据标识判断是本地包还是私有库
-                                                    if (lib.author == "[本地包]") {
+                                                    if (lib.authorName == "[本地包]") {
                                                         navController.navigate(
                                                             LocalLibraryShowScreenKey(
                                                                 id = id
@@ -309,9 +314,13 @@ private fun SearchLibraryItem(
     isPrivateOrLocal: Boolean,
     onClick: () -> Unit
 ) {
+    val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha=0.08f) else Color.Transparent)
+            .run { if (isFeatured) this.border(1.dp, CHelperTheme.colors.mainColor.copy(alpha=0.3f), RoundedCornerShape(8.dp)) else this }
             .clickable(onClick = onClick)
             .padding(20.dp, 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -327,7 +336,7 @@ private fun SearchLibraryItem(
                     )
                 )
                 // 如果是特殊标致给个 Tag
-                if (isPrivateOrLocal && !library.author.isNullOrBlank()) {
+                if (isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
                     Spacer(Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -336,7 +345,7 @@ private fun SearchLibraryItem(
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = library.author!!,
+                            text = library.authorName!!,
                             style = TextStyle(
                                 fontSize = 10.sp,
                                 color = CHelperTheme.colors.mainColor
@@ -347,9 +356,46 @@ private fun SearchLibraryItem(
             }
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!isPrivateOrLocal && !library.author.isNullOrBlank()) {
+                if (!isPrivateOrLocal && library.author != null) {
+                    val author = library.author!!
+                    AsyncImage(
+                        model = "https://abyssous.site/avatar/${author.id}",
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(CHelperTheme.colors.backgroundComponent),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(id = R.drawable.ic_user),
+                        error = painterResource(id = R.drawable.ic_user)
+                    )
+                    Spacer(Modifier.width(4.dp))
                     Text(
-                        text = "作者: ${library.author}",
+                        text = author.name ?: "Unknown",
+                        style = TextStyle(
+                            color = CHelperTheme.colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    )
+                    if ((author.tier ?: 0) >= 2) {
+                        Spacer(Modifier.width(4.dp))
+                        Image(
+                            painter = painterResource(R.drawable.ic_verified_advanced),
+                            contentDescription = "Advanced",
+                            modifier = Modifier.size(12.dp)
+                        )
+                    } else if ((author.tier ?: 0) >= 1) {
+                        Spacer(Modifier.width(4.dp))
+                        Image(
+                            painter = painterResource(R.drawable.ic_verified_normal),
+                            contentDescription = "Normal",
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                } else if (!isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
+                    Text(
+                        text = "作者: ${library.authorName}",
                         style = TextStyle(
                             color = CHelperTheme.colors.textSecondary,
                             fontSize = 12.sp

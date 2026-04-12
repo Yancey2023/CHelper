@@ -26,6 +26,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -484,6 +487,8 @@ fun CompletionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(CHelperTheme.colors.background)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     ToolbarItem(
                         id = R.drawable.arrow_back_up,
@@ -518,6 +523,13 @@ fun CompletionScreen(
                         description = stringResource(R.string.layout_completion_local_library),
                         onClick = {
                             navController.navigate(LocalLibraryListScreenKey)
+                        }
+                    )
+                    ToolbarItem(
+                        id = R.drawable.book,
+                        description = "网络库",
+                        onClick = {
+                            navController.navigate(yancey.chelper.ui.PublicLibraryListScreenKey)
                         }
                     )
                     ToolbarItem(

@@ -18,58 +18,152 @@
 
 package yancey.chelper.network.library.data
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
+/**
+ * 表示作者信息的数据模型。
+ *
+ * API 中存在两种格式：
+ * - 旧式格式：纯字符串 "作者名"
+ * - 新式格式：JSON 对象 `{ "id": 123, "name": "作者名", "tier": 1 }`
+ *
+ * 此结构体统一承接两种格式，实现对旧版 MCD 数据的向后兼容。
+ *
+ * @property id 作者的用户 ID
+ * @property name 作者的名称
+ * @property tier 作者的等级或段位
+ */
+@Serializable
+data class AuthorInfo(
+    var id: Int? = null,
+    var name: String? = null,
+    var tier: Int? = null,
+    @kotlinx.serialization.SerialName("user_title") var userTitle: String? = null
+)
+
+/**
+ * 命令库函数的数据模型，表示单个命令库文件的详细信息。
+ *
+ * @property id 函数在数据库中的自增 ID
+ * @property uuid 函数的全局唯一标识符
+ * @property name 函数名称
+ * @property content 函数的具体内容或代码
+ * @property author 函数作者的信息，使用自定义的 [AuthorSerializer] 进行解析
+ * @property note 附加的说明或备注信息
+ * @property tags 该函数关联的标签列表
+ * @property version 该函数适用的版本信息
+ * @property createdAt 函数的创建时间，使用 [LenientStringSerializer] 支持格式兼容
+ * @property preview 函数的预览内容，通常是部分截断的代码
+ * @property likeCount 获得的点赞总数
+ * @property isLiked 当前登录用户是否已点赞该函数
+ * @property hasPublicVersion 指示该私有库是否拥有对应的公开版本
+ * @property isPublish 指示该函数是否已发布（针对公开/私有状态）
+ */
 @Serializable
 @Suppress("unused")
 class LibraryFunction(
-    var id: Int? = null,// 函数ID
-    var uuid: String? = null,// 函数UUID
-    var name: String? = null,// 函数名称
-    var content: String? = null, // 函数内容
-    @Serializable(with = AuthorSerializer::class) var author: String? = null, // 作者
-    var note: String? = null, // 说明
-    var tags: List<String>? = null,// 标签
-    var version: String? = null, // 版本号
-    @SerialName("created_at") var createdAt: String? = null, // 创建时间，例：2025-02-03 18:45:43
-    var preview: String? = null, // 命令预览
-    @SerialName("like_count") var likeCount: Int? = null, // 点赞总数
-    @SerialName("is_liked") var isLiked: Boolean? = null, // 当前设备是否已点赞
-    var hasPublicVersion: Boolean? = null, // 是否已有公开版本（仅私有库返回）
-    var isPublish: Boolean? = null // 当前是否为公开状态（仅私有库返回）
-)
+    var id: Int? = null,
+    var uuid: String? = null,
+    var name: String? = null,
+    var content: String? = null,
+    @Serializable(with = AuthorSerializer::class) var author: AuthorInfo? = null,
+    var note: String? = null,
+    var tags: List<String>? = null,
+    var version: String? = null,
+    @Serializable(with = LenientStringSerializer::class) @SerialName("create_time") var createdAt: String? = null,
+    var preview: String? = null,
+    @SerialName("like_count") var likeCount: Int? = null,
+    @SerialName("is_liked") var isLiked: Boolean? = null,
+    @SerialName("has_public_version") var hasPublicVersion: Boolean? = null,
+    @SerialName("is_publish") var isPublish: Boolean? = null,
+    @SerialName("is_owner") var isOwner: Boolean? = null,
+    @SerialName("chain_data") var chainData: kotlinx.serialization.json.JsonElement? = null
+) {
+    /**
+     * 获取作者的展示名称，主要用于向后兼容。
+     *
+     * @return 作者的名称，如果不存在则返回 null
+     */
+    val authorName: String?
+        get() = author?.name
+}
 
-object AuthorSerializer : KSerializer<String?> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("author", PrimitiveKind.STRING)
+/**
+ * 兼容新旧两种 author JSON 格式的序列化器。
+ * - JsonObject { id, name, tier } → AuthorInfo(id, name, tier)
+ * - 纯字符串 "xxx" → AuthorInfo(name = "xxx")
+ * - null → null
+ */
+object AuthorSerializer : KSerializer<AuthorInfo?> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("AuthorInfo") {
+        element<Int?>("id")
+        element<String?>("name")
+        element<Int?>("tier")
+        element<String?>("user_title")
+    }
 
-    override fun deserialize(decoder: Decoder): String? {
+    override fun deserialize(decoder: Decoder): AuthorInfo? {
         require(decoder is JsonDecoder) { "This serializer can only be used with JSON" }
         val jsonElement = decoder.decodeJsonElement()
         return when {
-            jsonElement is JsonObject -> jsonElement["name"]?.jsonPrimitive?.content
             jsonElement is JsonNull -> null
-            jsonElement.jsonPrimitive.isString -> jsonElement.jsonPrimitive.content
+            jsonElement is JsonObject -> {
+                AuthorInfo(
+                    id = jsonElement["id"]?.jsonPrimitive?.intOrNull,
+                    name = jsonElement["name"]?.jsonPrimitive?.content,
+                    tier = jsonElement["tier"]?.jsonPrimitive?.intOrNull,
+                    userTitle = jsonElement["user_title"]?.jsonPrimitive?.contentOrNull
+                )
+            }
+            // 旧版 API 直接返回字符串作者名
+            jsonElement.jsonPrimitive.isString -> AuthorInfo(name = jsonElement.jsonPrimitive.content)
             else -> null
         }
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
+    override fun serialize(encoder: Encoder, value: AuthorInfo?) {
+        if (value != null) {
+            encoder.encodeString(value.name ?: "")
+        }
+    }
+}
+
+/**
+ * 宽松的字符串序列化器，允许接收数字或布尔并转换为字符串
+ */
+object LenientStringSerializer : KSerializer<String?> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("LenientString")
+
+    override fun deserialize(decoder: Decoder): String? {
+        require(decoder is JsonDecoder) { "This serializer can only be used with JSON" }
+        val jsonElement = decoder.decodeJsonElement()
+        return if (jsonElement is JsonNull) {
+            null
+        } else {
+            jsonElement.jsonPrimitive.content
+        }
+    }
+
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: String?) {
         if (value != null) {
             encoder.encodeString(value)
+        } else {
+            encoder.encodeNull()
         }
     }
 }

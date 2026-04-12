@@ -31,6 +31,8 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
@@ -64,6 +66,7 @@ class CPLUserViewModel : ViewModel() {
     // User State
     var currentUser by mutableStateOf<CommandLabUserService.User?>(null)
     var isGuest by mutableStateOf(false)
+    var isUploadingAvatar by mutableStateOf(false)
 
     // My Cloud Libraries
     val myLibraries = mutableStateListOf<LibraryFunction>()
@@ -270,6 +273,47 @@ class CPLUserViewModel : ViewModel() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toaster.show("网络错误: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun uploadAvatar(bytes: ByteArray, filename: String, mimeType: String) {
+        if (isUploadingAvatar) return
+        isUploadingAvatar = true
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val mediaType = mimeType.toMediaTypeOrNull()
+                val requestBody = bytes.toRequestBody(mediaType)
+                val ext = when (mimeType) {
+                    "image/png" -> "png"
+                    "image/webp" -> "webp"
+                    "image/gif" -> "gif"
+                    else -> "jpg"
+                }
+                val part = okhttp3.MultipartBody.Part.createFormData("file", "avatar.$ext", requestBody)
+                val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.uploadAvatar(part)
+                withContext(Dispatchers.Main) {
+                    if (result?.isSuccess() == true) {
+                        Toaster.show("头像上传成功")
+                        val newUrl = result.data?.avatarUrl
+                        if (newUrl != null) {
+                            currentUser?.gravatarUrl = newUrl
+                            val temp = currentUser
+                            currentUser = null
+                            currentUser = temp
+                        }
+                    } else {
+                        Toaster.show("上传头像失败: ${result?.message ?: "未知错误"}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toaster.show("上传网络错误: ${e.message}")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isUploadingAvatar = false
                 }
             }
         }

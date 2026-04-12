@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package yancey.chelper.network.library.util
 import yancey.chelper.network.library.data.LibraryFunction
 
 fun libraryToStr(library: LibraryFunction): String {
-    return "@author = " + library.author!! + '\n' +
+    return "@author = " + (library.authorName ?: "") + '\n' +
             "@name = " + library.name!! + '\n' +
             "@note = " + library.note!! + '\n' +
             "@version = " + library.version!! + '\n' +

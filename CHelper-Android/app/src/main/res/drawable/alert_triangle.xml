@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Tabler Icons: alert-triangle -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,9L12,13"
+        android:strokeColor="#000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,17L12.01,17"
+        android:strokeColor="#000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M10.363,3.591L1.818,18.003C1.306,18.887 1.956,20 2.978,20L21.022,20C22.044,20 22.694,18.887 22.182,18.003L13.637,3.591C13.121,2.698 11.879,2.698 10.363,3.591Z"
+        android:strokeColor="#000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+</vector>

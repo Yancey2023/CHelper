@@ -178,6 +178,6 @@ object LoginUtil {
             lastLoginTimestamp = this@LoginUtil.lastLoginTimestamp
             user = currentUser
         }
-        file?.outputStream()?.write(Json.encodeToString(savedData).toByteArray())
+        file?.outputStream()?.use { it.write(Json.encodeToString(savedData).toByteArray()) }
     }
 }

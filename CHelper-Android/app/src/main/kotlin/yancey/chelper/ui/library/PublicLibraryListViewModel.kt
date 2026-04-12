@@ -41,11 +41,15 @@ class PublicLibraryListViewModel : ViewModel() {
     var currentPage by mutableIntStateOf(1)
     var totalPages by mutableIntStateOf(1)
     var hasMore by mutableStateOf(true)
+    private var forceRefresh = false
 
     private var searchJob: Job? = null
 
     fun loadFunctions(search: String? = null, resetPage: Boolean = true) {
         if (isLoading) return
+        // 如果已经有数据且不是用户手动刷新，跳过重复拉取
+        if (resetPage && libraries.isNotEmpty() && !forceRefresh) return
+        forceRefresh = false
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -94,6 +98,7 @@ class PublicLibraryListViewModel : ViewModel() {
     }
 
     fun refresh() {
+        forceRefresh = true
         loadFunctions(null, resetPage = true)
     }
 }

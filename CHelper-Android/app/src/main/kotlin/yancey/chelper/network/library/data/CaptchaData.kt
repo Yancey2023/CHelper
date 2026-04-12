@@ -22,11 +22,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 人机验证相关的数据模型
- */
-
-/**
- * 请求验证凭证的请求体
+ * 请求验证凭证的请求体。
+ *
+ * @property specialCode 验证请求的唯一标识码
+ * @property action 执行的操作类型
  */
 @Suppress("unused")
 @Serializable
@@ -34,16 +33,25 @@ class CaptchaTokenRequest(
     @SerialName("special_code") var specialCode: String? = null,
     var action: String? = null
 ) {
+    /**
+     * 伴生对象，包含预定义的 action 常量值。
+     */
     companion object {
-        // 预定义的 action 值
+        /** 注册账号操作 */
         const val ACTION_REGISTER = "注册账号"
+        /** 更新密码操作 */
         const val ACTION_UPDATE_PASSWORD = "更新密码"
+        /** 弃用账号操作 */
         const val ACTION_DELETE_ACCOUNT = "弃用账号"
     }
 }
 
 /**
- * 请求验证凭证的响应
+ * 请求验证凭证的响应。
+ *
+ * @property verificationToken 验证凭证的 token
+ * @property action 执行的操作类型
+ * @property specialCode 验证请求的唯一标识码
  */
 @Suppress("unused")
 @Serializable
@@ -54,7 +62,11 @@ class CaptchaTokenResponse(
 )
 
 /**
- * 验证状态响应
+ * 验证状态响应。
+ *
+ * @property specialCode 验证请求的唯一标识码
+ * @property status 当前的验证状态
+ * @property action 执行的操作类型
  */
 @Suppress("unused")
 @Serializable
@@ -63,11 +75,19 @@ class CaptchaStatusResponse(
     var status: String? = null,
     var action: String? = null
 ) {
+    /**
+     * 伴生对象，包含预定义的验证状态常量值。
+     */
     companion object {
+        /** 等待验证 */
         const val STATUS_PENDING = "pending"
+        /** 正在进行挑战 */
         const val STATUS_CHALLENGING = "challenging"
+        /** 验证通过 */
         const val STATUS_VERIFIED = "verified"
+        /** 验证失败 */
         const val STATUS_FAILED = "failed"
+        /** 已使用 */
         const val STATUS_USED = "used"
     }
 }

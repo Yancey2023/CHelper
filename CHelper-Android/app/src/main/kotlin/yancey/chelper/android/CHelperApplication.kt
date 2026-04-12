@@ -19,6 +19,9 @@
 package yancey.chelper.android
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -64,5 +67,26 @@ class CHelperApplication : Application() {
         SettingsDataStore(this).init()
         // 自定义主题初始化
         BackgroundStore.init(dataDir.resolve("theme"))
+
+        // 悬浮窗前台服务通知渠道
+        createFloatingWindowNotificationChannel()
+    }
+
+    private fun createFloatingWindowNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                FLOATING_WINDOW_CHANNEL_ID,
+                "悬浮窗服务",
+                NotificationManager.IMPORTANCE_LOW // 低优先级，不发声不震动
+            ).apply {
+                description = "CHelper 悬浮窗运行时的常驻通知"
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    companion object {
+        const val FLOATING_WINDOW_CHANNEL_ID = "floating_window_channel"
     }
 }

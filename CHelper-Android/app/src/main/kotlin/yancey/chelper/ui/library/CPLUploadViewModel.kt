@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
+import kotlinx.serialization.json.Json
 
 class CPLUploadViewModel : ViewModel() {
 
@@ -21,9 +22,26 @@ class CPLUploadViewModel : ViewModel() {
     val version = TextFieldState()
     val description = TextFieldState()
     val tags = TextFieldState()
-    val commands = TextFieldState() // The commands content
+    val commands = TextFieldState()
 
     var isLoading by mutableStateOf(false)
+    var useV2 by mutableStateOf(false)
+    var editId by mutableStateOf(-1)
+    var editUuid by mutableStateOf("")
+
+    fun loadFromCloudJson(json: String?, id: Int) {
+        if (json.isNullOrEmpty() || id <= 0) return
+        this.editId = id
+        try {
+            val lib = Json.decodeFromString<LibraryFunction>(json)
+            this.editUuid = lib.uuid ?: ""
+            loadFromLocal(lib)
+            // 简单处理 v2 开关状态回显：若 content 包含 @mcd_version=2
+            useV2 = lib.content?.contains("@mcd_version=2") == true || lib.content?.contains("@mcd_version= 2") == true
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     fun loadFromLocal(library: LibraryFunction) {
         viewModelScope.launch {
@@ -32,11 +50,60 @@ class CPLUploadViewModel : ViewModel() {
                 version.setTextAndPlaceCursorAtEnd(library.version ?: "")
                 description.setTextAndPlaceCursorAtEnd(library.note ?: "")
                 tags.setTextAndPlaceCursorAtEnd(library.tags?.joinToString(",") ?: "")
-                commands.setTextAndPlaceCursorAtEnd(library.content ?: "")
+                
+                // 剔除已存在的元数据头，只保留命令体
+                var rawContent = library.content ?: ""
+                val functionStartIdx = rawContent.indexOf("###Function###")
+                if (functionStartIdx != -1) {
+                    var body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
+                    val functionEndIdx = body.indexOf("###End###")
+                    if (functionEndIdx != -1) {
+                        body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
+                    }
+                    commands.setTextAndPlaceCursorAtEnd(body.trim())
+                } else {
+                    // Fallback: strip @ 属性行
+                    val lines = rawContent.lines()
+                    val startIndex = lines.indexOfFirst { !it.trim().startsWith("@") && it.trim().isNotEmpty() }
+                    val body = if (startIndex != -1) {
+                        lines.subList(startIndex, lines.size).joinToString("\n").trim()
+                    } else {
+                        rawContent
+                    }
+                    commands.setTextAndPlaceCursorAtEnd(body)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+    }
+
+    /**
+     * 构建完整 MCD 文本（含元数据头 + 函数体），供预览和上传共用
+     */
+    fun buildFullMCD(): String {
+        val mcdBuilder = StringBuilder()
+        mcdBuilder.append("@name=${name.text}\n")
+        mcdBuilder.append("@version=${version.text}\n")
+
+        val tagList = tags.text.toString()
+            .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (tagList.isNotEmpty()) {
+            mcdBuilder.append("@tags=${tagList.joinToString(",")}\n")
+        }
+
+        mcdBuilder.append("@note=${description.text}\n")
+        if (useV2) {
+            mcdBuilder.append("@mcd_version=2\n")
+        }
+        if (editUuid.isNotEmpty()) {
+            mcdBuilder.append("@uuid=${editUuid}\n")
+        }
+        mcdBuilder.append("\n")
+        mcdBuilder.append("###Function###\n")
+        mcdBuilder.append(commands.text.toString())
+        mcdBuilder.append("\n###End###")
+        return mcdBuilder.toString()
     }
 
     fun upload(specialCode: String?, onSuccess: () -> Unit) {
@@ -48,40 +115,43 @@ class CPLUploadViewModel : ViewModel() {
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // 拼接 MCD 格式，@author 由服务器自动填充用户昵称
-                val mcdBuilder = StringBuilder()
-                mcdBuilder.append("@name=${this@CPLUploadViewModel.name.text}\n")
-                mcdBuilder.append("@version=${this@CPLUploadViewModel.version.text}\n")
-
-                val tagList = this@CPLUploadViewModel.tags.text.toString()
+                val finalContent = buildFullMCD()
+                val tagList = tags.text.toString()
                     .split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (tagList.isNotEmpty()) {
-                    mcdBuilder.append("@tags=${tagList.joinToString(",")}\n")
-                }
 
-                mcdBuilder.append("@note=${this@CPLUploadViewModel.description.text}\n")
-                mcdBuilder.append("\n")
-                mcdBuilder.append("###Function###\n")
-                mcdBuilder.append(this@CPLUploadViewModel.commands.text.toString())
-                mcdBuilder.append("\n###End###")
-
-                val finalContent = mcdBuilder.toString()
-
-                // 上传固定为私有草稿
-                val request = CommandLabUserService.UploadLibraryRequest().apply {
-                    this.content = finalContent
-                }
-
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadLibrary(request)
-
-                if (response.isSuccess()) {
+                if (editId > 0) {
+                    val request = CommandLabUserService.UpdateLibraryRequest().apply {
+                        this.name = this@CPLUploadViewModel.name.text.toString()
+                        this.version = this@CPLUploadViewModel.version.text.toString().ifEmpty { "1.0.0" }
+                        this.note = this@CPLUploadViewModel.description.text.toString()
+                        this.tags = tagList
+                        this.content = finalContent
+                    }
+                    val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.updateLibrary(editId, request)
                     withContext(Dispatchers.Main) {
-                        Toaster.show("上传成功，请在我的云端库中发布到公开市场")
-                        onSuccess()
+                        isLoading = false
+                        if (result?.isSuccess() == true) {
+                            Toaster.show("更新成功")
+                            onSuccess()
+                        } else {
+                            Toaster.show(result?.message ?: "更新失败")
+                        }
                     }
                 } else {
+                    // 上传固定为私有草稿
+                    val request = CommandLabUserService.UploadLibraryRequest().apply {
+                        this.content = finalContent
+                        this.isPublish = false
+                    }
+                    val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.uploadLibrary(request)
                     withContext(Dispatchers.Main) {
-                        Toaster.show("上传失败: ${response.message}")
+                        isLoading = false
+                        if (result?.isSuccess() == true) {
+                            Toaster.show("上传成功")
+                            onSuccess()
+                        } else {
+                            Toaster.show(result?.message ?: "上传失败")
+                        }
                     }
                 }
             } catch (e: Exception) {

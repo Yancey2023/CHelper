@@ -28,34 +28,34 @@ import yancey.chelper.network.library.data.CaptchaTokenRequest
 import yancey.chelper.network.library.data.CaptchaTokenResponse
 
 /**
- * 人机验证 API 接口
+ * 人机验证 API 接口。
  * 
- * 用于在敏感操作（注册、修改密码等）前验证用户是否为真人
+ * 用于在敏感操作（如注册、修改密码等）前验证用户是否为真人。
  */
 interface CaptchaService {
 
     /**
-     * 请求验证凭证
+     * 请求验证凭证。
      * 
-     * 流程：
-     * 客户端生成 special_code (UUID)
-     * 调用此接口获取 verification_token
-     * 用 verification_token 加载验证页面
-     * 验证成功后，special_code 用于后续业务请求
+     * 验证流程：
+     * 1. 客户端生成 `special_code`（UUID）。
+     * 2. 调用此接口获取 `verification_token`。
+     * 3. 客户端使用 `verification_token` 加载验证页面。
+     * 4. 验证成功后，使用 `special_code` 进行后续业务请求。
      * 
-     * @param request 包含 special_code 和 action
-     * @return 包含 verification_token 的响应
+     * @param request 包含验证会话唯一标识符和操作类型的请求体数据
+     * @return 包含 `verification_token` 等信息的验证响应，如果请求失败可能为空
      */
     @POST("captcha")
     suspend fun requestToken(@Body request: CaptchaTokenRequest): BaseResult<CaptchaTokenResponse?>
 
     /**
-     * 查询验证状态
+     * 查询验证状态。
      * 
-     * 用于轮询检查用户是否完成人机验证
+     * 用于轮询检查用户是否在网页端完成了人机验证。
      * 
      * @param specialCode 验证会话的唯一标识符
-     * @return 验证状态 (pending/challenging/verified/failed/used)
+     * @return 当前验证状态响应（包含 pending, challenging, verified, failed, used 等状态），如果请求失败可能为空
      */
     @GET("captcha/status")
     suspend fun getStatus(

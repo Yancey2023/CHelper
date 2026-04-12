@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Akanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,15 @@ package yancey.chelper.network.library.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * 网络请求的基础返回结果包装类。
+ *
+ * @param T 数据实体的类型
+ * @property status 状态码（0 通常表示成功）
+ * @property data 返回的具体数据
+ * @property errorType 错误类型标识（当请求失败时存在）
+ * @property message 返回的提示信息或错误描述
+ */
 @Suppress("unused")
 @Serializable
 class BaseResult<T>(
@@ -29,5 +38,10 @@ class BaseResult<T>(
     @SerialName("error_type") var errorType: String? = null,
     var message: String? = null
 ) {
+    /**
+     * 判断当前请求是否成功。
+     *
+     * @return 如果状态码为 0 则返回 true，否则返回 false
+     */
     fun isSuccess() = status == 0
 }

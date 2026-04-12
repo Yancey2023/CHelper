@@ -49,6 +49,8 @@ import yancey.chelper.ui.library.LocalLibraryShowScreen
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
 import yancey.chelper.ui.library.search.LibrarySearchScreen
+import yancey.chelper.ui.library.score.LeaderboardScreen
+import yancey.chelper.ui.library.profile.UserProfileScreen
 import yancey.chelper.ui.old2new.Old2NewIMEGuideScreen
 import yancey.chelper.ui.old2new.Old2NewScreen
 import yancey.chelper.ui.rawtext.RawtextScreen
@@ -120,7 +122,18 @@ data class LibrarySearchScreenKey(
 object CPLUserScreenKey
 
 @Serializable
-object CPLUploadScreenKey
+data class CPLUploadScreenKey(
+    val editLibraryId: Int = -1,
+    val editLibraryJson: String? = null
+)
+
+@Serializable
+object LeaderboardScreenKey
+
+@Serializable
+data class UserProfileScreenKey(
+    val id: Int
+)
 
 @Composable
 fun NavHost(
@@ -221,8 +234,20 @@ fun NavHost(
         composable<CPLUserScreenKey> {
             CPLUserScreen(navController = navController)
         }
-        composable<CPLUploadScreenKey> {
-            CPLUploadScreen(navController = navController)
+        composable<CPLUploadScreenKey> { backStackEntry ->
+            val customKey = backStackEntry.toRoute<CPLUploadScreenKey>()
+            CPLUploadScreen(
+                navController = navController,
+                editLibraryId = customKey.editLibraryId,
+                editLibraryJson = customKey.editLibraryJson
+            )
+        }
+        composable<LeaderboardScreenKey> {
+            LeaderboardScreen(navController)
+        }
+        composable<UserProfileScreenKey> { backStackEntry ->
+            val customKey = backStackEntry.toRoute<UserProfileScreenKey>()
+            UserProfileScreen(customKey.id, navController)
         }
     }
     if (isShowSavingBackgroundDialog.value) {
@@ -296,6 +321,17 @@ fun FloatingWindowNavHost(
                 title = showText.title,
                 content = showText.content
             )
+        }
+        composable<PublicLibraryListScreenKey> {
+            PublicLibraryListScreen(navController = navController, isFloatingWindow = true)
+        }
+        composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
+            val customKey = navBackStackEntry.toRoute<PublicLibraryShowScreenKey>()
+            PublicLibraryShowScreen(customKey.id, customKey.isPrivate, navController)
+        }
+        composable<LibrarySearchScreenKey> { navBackStackEntry ->
+            val customKey = navBackStackEntry.toRoute<LibrarySearchScreenKey>()
+            LibrarySearchScreen(navController = navController, initialKeyword = customKey.initialKeyword)
         }
     }
 }

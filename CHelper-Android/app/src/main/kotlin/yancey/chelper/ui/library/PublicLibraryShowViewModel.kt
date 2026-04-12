@@ -37,6 +37,16 @@ class PublicLibraryShowViewModel : ViewModel() {
     var actionMessage by mutableStateOf<String?>(null)
     var isPrivate by mutableStateOf(false)
 
+    // 点赞状态独立于 library 对象，防止点赞触发命令可视化的完整重绘
+    var likeCount by mutableStateOf(0)
+    var isLiked by mutableStateOf(false)
+
+    /** 删除成功后置 true，由 Screen 层观察此状态来安全执行 popBackStack */
+    var deleteSuccess by mutableStateOf(false)
+
+    /** 当前是否展示原始源码视图（false = 可视化 UI） */
+    var showRawSource by mutableStateOf(false)
+
     fun loadFunction(id: Int, isPrivate: Boolean) {
         this.isPrivate = isPrivate
         viewModelScope.launch {
@@ -44,18 +54,20 @@ class PublicLibraryShowViewModel : ViewModel() {
             errorMessage = null
 
             try {
-                val response: BaseResult<LibraryFunction?> = withContext(Dispatchers.IO) {
+                val response: BaseResult<LibraryFunction?>? = withContext(Dispatchers.IO) {
                     if (isPrivate) {
-                        ServiceManager.COMMAND_LAB_USER_SERVICE.getPrivateFunction(id)
+                        ServiceManager.COMMAND_LAB_USER_SERVICE?.getPrivateFunction(id)
                     } else {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunction(id)
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(id)
                     }
                 }
 
-                if (response.isSuccess() && response.data != null) {
+                if (response?.isSuccess() == true && response.data != null) {
                     library = response.data!!
+                    likeCount = library.likeCount ?: 0
+                    isLiked = library.isLiked == true
                 } else {
-                    errorMessage = response.message ?: "加载失败"
+                    errorMessage = response?.message ?: "加载失败"
                 }
             } catch (e: Exception) {
                 errorMessage = "网络错误: ${e.message}"
@@ -65,19 +77,51 @@ class PublicLibraryShowViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 切换点赞状态。调 like API 后刷新本地计数。
+     * like 接口是 toggle 行为：已赞则取消、未赞则点赞。
+     */
+    fun toggleLike(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.like(id)
+                }
+                if (result?.isSuccess() == true && result.data != null) {
+                    val likeData = result.data!!
+                    likeCount = likeData.likeCount ?: likeCount
+                    isLiked = likeData.isLiked == true
+                    actionMessage = if (isLiked) "已点赞" else "已取消点赞"
+                } else {
+                    actionMessage = result?.message ?: "操作失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    /** Release 成功后后端返回的公有版 ID，Screen 层观察此值来决定是否导航 */
+    var releasedPublicId by mutableStateOf<Int?>(null)
+
     fun releaseToPublic(id: Int, specialCode: String = "") {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE.releaseToPublic(
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.releaseToPublic(
                         id,
                         mapOf("special_code" to specialCode)
                     )
                 }
-                actionMessage = if (result.isSuccess()) {
-                    "已提交发布申请"
+                if (result?.isSuccess() == true) {
+                    // 后端自动审核通过时返回 {"public_id": <int>}
+                    val publicId = (result.data as? kotlinx.serialization.json.JsonObject)
+                        ?.get("public_id")
+                        ?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull() }
+                    releasedPublicId = publicId
+                    actionMessage = result.message ?: "已提交发布申请"
                 } else {
-                    result.message ?: "操作失败"
+                    actionMessage = result?.message ?: "操作失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
@@ -89,12 +133,12 @@ class PublicLibraryShowViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE.syncToPublic(id)
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.syncToPublic(id)
                 }
-                actionMessage = if (result.isSuccess()) {
+                actionMessage = if (result?.isSuccess() == true) {
                     "已提交同步申请"
                 } else {
-                    result.message ?: "同步失败"
+                    result?.message ?: "同步失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
@@ -102,17 +146,17 @@ class PublicLibraryShowViewModel : ViewModel() {
         }
     }
 
-    fun deleteLibrary(id: Int, onSuccess: () -> Unit = {}) {
+    fun deleteLibrary(id: Int) {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE.deleteLibrary(id)
+                    ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(id)
                 }
-                actionMessage = if (result.isSuccess()) {
-                    onSuccess()
-                    "删除成功"
+                if (result?.isSuccess() == true) {
+                    actionMessage = "删除成功"
+                    deleteSuccess = true
                 } else {
-                    result.message ?: "删除失败"
+                    actionMessage = result?.message ?: "删除失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
