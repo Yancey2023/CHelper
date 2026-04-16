@@ -98,6 +98,7 @@ class FloatingWindowManager(
         floatingWindowIconSize: Int,
         floatingWindowIconAlpha: Float,
         floatingWindowScreenAlpha: Float,
+        isFloatingWindowFontAlphaSync: Boolean,
     ) {
         FloatingWindowService.start(application)
         val iconSize = TypedValue.applyDimension(
@@ -134,7 +135,7 @@ class FloatingWindowManager(
             setContent {
                 val backgroundBitmap =
                     BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(initial = null)
-                CHelperTheme(theme, backgroundBitmap.value) {
+                CHelperTheme(theme, backgroundBitmap.value, screenAlphaOverride = if (isFloatingWindowFontAlphaSync) 1.0f else floatingWindowScreenAlpha) {
                     val lifecycleOwner = rememberLifecycleOwner()
                     val navigationEventDispatcher = remember { NavigationEventDispatcher() }
                     val navigationEventOwner =
@@ -188,7 +189,7 @@ class FloatingWindowManager(
                         or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
             )
             .setWindowAnim(0)
-            .setWindowAlpha(floatingWindowScreenAlpha)
+            .setWindowAlpha(if (isFloatingWindowFontAlphaSync) floatingWindowScreenAlpha else 1.0f)
         val settingsDataStore = SettingsDataStore(context)
         composeLifecycleOwner = ComposeLifecycleOwner().apply {
             attachToDecorView(mainViewWindow!!.rootLayout)

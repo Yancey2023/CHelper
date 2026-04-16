@@ -89,6 +89,8 @@ fun SettingsScreen(
         .collectAsState(initial = null)
     val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
         .collectAsState(initial = null)
+    val isFloatingWindowFontAlphaSync by settingsDataStore.isFloatingWindowFontAlphaSync()
+        .collectAsState(initial = null)
     var tagClickBehavior by remember { mutableStateOf("search") }
     var ambiguousLineDefault by remember { mutableStateOf("comment") }
     val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
@@ -203,6 +205,17 @@ fun SettingsScreen(
                 ) {
                     isShowInputFloatingWindowScreenAlphaDialog = true
                 }
+                Divider()
+                SettingsItem(
+                    name = "悬浮窗字体是否跟随透明",
+                    description = "开启后字体随窗口一同透明；关闭后仅背景透明，字体保持清晰",
+                    checked = isFloatingWindowFontAlphaSync,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsFloatingWindowFontAlphaSync(it)
+                        }
+                    },
+                )
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_icon_size),

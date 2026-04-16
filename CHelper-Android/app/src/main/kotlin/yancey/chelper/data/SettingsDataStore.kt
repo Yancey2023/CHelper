@@ -68,6 +68,7 @@ data class Settings(
     val tagClickBehavior: String? = null,
     val ambiguousLineDefault: String? = null,
     val isHideMetadataPreview: Boolean? = null,
+    val isFloatingWindowFontAlphaSync: Boolean? = null,
 )
 
 object SettingsSerializer : Serializer<Settings> {
@@ -116,6 +117,9 @@ class SettingsDataStore(private val context: Context) {
     fun floatingWindowIconSize(): Flow<Int> =
         context.settingsDataStore.data.map { it.floatingWindowSize ?: 40 }
 
+    fun isFloatingWindowFontAlphaSync(): Flow<Boolean> =
+        context.settingsDataStore.data.map { it.isFloatingWindowFontAlphaSync ?: true }
+
     fun isCheckingBySelection(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isCheckingBySelection ?: true }
 
@@ -161,6 +165,10 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setFloatingWindowIconSize(value: Int) {
         context.settingsDataStore.updateData { it.copy(floatingWindowSize = value) }
+    }
+
+    suspend fun setIsFloatingWindowFontAlphaSync(value: Boolean) {
+        context.settingsDataStore.updateData { it.copy(isFloatingWindowFontAlphaSync = value) }
     }
 
     suspend fun setIsCheckingBySelection(value: Boolean) {
@@ -258,6 +266,7 @@ class SettingsMigrationToV74(private val context: Context) : DataMigration<Setti
                 isShowErrorReason = (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
                 isSyntaxHighlight = (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
                 cpackBranch = cpackBranch,
+                isFloatingWindowFontAlphaSync = (oldSettings["isFloatingWindowFontAlphaSync"] as? JsonPrimitive)?.booleanOrNull,
             )
         } catch (_: Throwable) {
             currentData
