@@ -90,6 +90,7 @@ class HomeViewModel : ViewModel() {
         floatingWindowIconSize: Int,
         floatingWindowIconAlpha: Float,
         floatingWindowScreenAlpha: Float,
+        isFloatingWindowFontAlphaSync: Boolean,
     ) {
         if (!XXPermissions.isGrantedPermission(
                 context,
@@ -114,6 +115,7 @@ class HomeViewModel : ViewModel() {
             floatingWindowIconSize,
             floatingWindowIconAlpha,
             floatingWindowScreenAlpha,
+            isFloatingWindowFontAlphaSync,
         )
     }
 

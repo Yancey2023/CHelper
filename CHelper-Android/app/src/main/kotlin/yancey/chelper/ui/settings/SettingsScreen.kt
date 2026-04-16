@@ -67,6 +67,7 @@ fun SettingsScreen(
     var isShowChooseCpackBranchDialog by remember { mutableStateOf(false) }
     var isShowChooseTagClickDialog by remember { mutableStateOf(false) }
     var isShowChooseAmbiguousLineDialog by remember { mutableStateOf(false) }
+    var isShowInputSyntaxHighlightMaxLengthDialog by remember { mutableStateOf(false) }
     val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
         .collectAsState(initial = null)
     val cpackBranch by settingsDataStore.cpackBranch()
@@ -89,10 +90,14 @@ fun SettingsScreen(
         .collectAsState(initial = null)
     val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
         .collectAsState(initial = null)
+    val isFloatingWindowFontAlphaSync by settingsDataStore.isFloatingWindowFontAlphaSync()
+        .collectAsState(initial = null)
     var tagClickBehavior by remember { mutableStateOf("search") }
     var ambiguousLineDefault by remember { mutableStateOf("comment") }
     val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
         .collectAsState(initial = false)
+    val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
+        .collectAsState(initial = null)
     // DataStore flow -> 本地变量同步（首次加载时拿到持久化值）
     val tagClickBehaviorFlow by settingsDataStore.tagClickBehavior()
         .collectAsState(initial = "search")
@@ -204,6 +209,17 @@ fun SettingsScreen(
                     isShowInputFloatingWindowScreenAlphaDialog = true
                 }
                 Divider()
+                SettingsItem(
+                    name = "悬浮窗字体是否跟随透明",
+                    description = "开启后字体随窗口一同透明；关闭后仅背景透明，字体保持清晰",
+                    checked = isFloatingWindowFontAlphaSync,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsFloatingWindowFontAlphaSync(it)
+                        }
+                    },
+                )
+                Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_icon_size),
                     description = stringResource(R.string.layout_settings_floating_window_icon_size_description),
@@ -298,6 +314,13 @@ fun SettingsScreen(
                         }
                     },
                 )
+                Divider()
+                NameAndAction(
+                    name = "高亮自动关闭阈值",
+                    description = "当前限制: ${syntaxHighlightMaxLength ?: 4000} 字符 (为防卡死)",
+                ) {
+                    isShowInputSyntaxHighlightMaxLengthDialog = true
+                }
             }
             CollectionName("命令库设置")
             Collection {
@@ -463,6 +486,30 @@ fun SettingsScreen(
                     settingsDataStore.setAmbiguousLineDefault(it)
                 }
             })
+    }
+    if (isShowInputSyntaxHighlightMaxLengthDialog && syntaxHighlightMaxLength != null) {
+        val textFieldState = rememberTextFieldState(
+            initialText = syntaxHighlightMaxLength!!.toString()
+        )
+        InputStringDialog(
+            onDismissRequest = { isShowInputSyntaxHighlightMaxLengthDialog = false },
+            title = "请输入高亮自动关闭阈值 (0-100000)",
+            textFieldState = textFieldState,
+            onConfirm = {
+                try {
+                    var integer = textFieldState.text.toString().toInt()
+                    if (integer < 0) {
+                        integer = 0
+                    } else if (integer > 100000) {
+                        integer = 100000
+                    }
+                    coroutineScope.launch {
+                        settingsDataStore.setSyntaxHighlightMaxLength(integer)
+                    }
+                } catch (_: NumberFormatException) {
+                }
+            }
+        )
     }
 }
 

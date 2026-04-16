@@ -84,7 +84,9 @@ import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.DividerVertical
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
+import yancey.chelper.ui.library.mcd.ChainItem
 import yancey.chelper.ui.library.mcd.MCDContentView
+import yancey.chelper.ui.library.mcd.parseMCD
 
 @Composable
 fun PublicLibraryShowScreen(
@@ -194,7 +196,14 @@ fun PublicLibraryShowScreen(
             data = manageItems,
             onChoose = { action ->
                 when (action) {
-                    "release" -> showCaptchaDialog = true
+                    "release" -> {
+                        val user = yancey.chelper.network.library.util.LoginUtil.currentUser
+                        if (user != null && (user.tier ?: 0) >= 2) {
+                            viewModel.library.id?.let { viewModel.releaseToPublic(it, "") }
+                        } else {
+                            showCaptchaDialog = true
+                        }
+                    }
                     "view_public" -> navController?.navigate(
                         PublicLibraryShowScreenKey(
                             id = id,
@@ -249,19 +258,16 @@ fun PublicLibraryShowScreen(
 
     // 逐行复制对话框
     if (showLineCopyDialog) {
-        val commands = remember(viewModel.library) {
-            val lines = viewModel.library.content
-                ?.split("\n")
-                ?.map { it.trim() }
-                ?: emptyList()
-            // 跳过元数据区：以 @ 开头的行和空行，直到遇到第一行实际命令内容
-            val startIndex = lines.indexOfFirst { it.isNotEmpty() && !it.startsWith("@") }
-            val body = if (startIndex >= 0) lines.subList(startIndex, lines.size) else emptyList()
-            body.filter {
-                it.isNotEmpty() &&
-                        !it.startsWith("#") &&
-                        !it.equals("###Function###", ignoreCase = true) &&
-                        !it.equals("###End###", ignoreCase = true)
+        val commands = remember(viewModel.library, ambiguousLineDefault.value) {
+            val parsed = parseMCD(viewModel.library.content, ambiguousLineDefault.value)
+            parsed.chains.flatMap { chain ->
+                chain.items.mapNotNull { item ->
+                    when (item) {
+                        is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
+                        is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
+                        is ChainItem.Comment -> null
+                    }
+                }
             }
         }
         if (commands.isEmpty()) {

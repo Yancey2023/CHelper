@@ -99,6 +99,8 @@ fun HomeScreen(
         .collectAsState(initial = 1.0f)
     val floatingWindowScreenAlpha by settingsDataStore.floatingWindowScreenAlpha()
         .collectAsState(initial = 1.0f)
+    val isFloatingWindowFontAlphaSync by settingsDataStore.isFloatingWindowFontAlphaSync()
+        .collectAsState(initial = true)
     val publicLibraryMinVersion by settingsDataStore.publicLibraryMinVersion()
         .collectAsState(initial = 0)
     RootView {
@@ -164,6 +166,7 @@ fun HomeScreen(
                                     floatingWindowIconSize,
                                     floatingWindowIconAlpha,
                                     floatingWindowScreenAlpha,
+                                    isFloatingWindowFontAlphaSync,
                                 )
                             }
                         }
@@ -255,6 +258,7 @@ fun HomeScreen(
                     floatingWindowIconSize,
                     floatingWindowIconAlpha,
                     floatingWindowScreenAlpha,
+                    isFloatingWindowFontAlphaSync,
                 )
             },
             onConfirm = {
@@ -264,6 +268,7 @@ fun HomeScreen(
                     floatingWindowIconSize,
                     floatingWindowIconAlpha,
                     floatingWindowScreenAlpha,
+                    isFloatingWindowFontAlphaSync,
                 )
             }
         )

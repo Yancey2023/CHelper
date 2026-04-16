@@ -1,7 +1,9 @@
 package yancey.chelper.network.library.data
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 /**
  * 用户公开资料的数据模型。

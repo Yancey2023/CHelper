@@ -128,6 +128,8 @@ class CommandEditText : AppCompatEditText {
         setText(null)
     }
 
+    private class SpanInfo(val color: Int, val start: Int, val end: Int)
+
     /**
      * 设置文本颜色
      * 
@@ -141,52 +143,84 @@ class CommandEditText : AppCompatEditText {
         if (text == null || (tokens != null && tokens.isNotEmpty() && text.length != tokens.size)) {
             return
         }
+        
         lastTokens = tokens
-        val isSpannableStringBuilder: Boolean
-        val spannableStringBuilder: SpannableStringBuilder?
-        if (text is SpannableStringBuilder) {
-            text.getSpans(
-                0,
-                text.length,
-                ForegroundColorSpan::class.java
-            ).forEach {
-                text.removeSpan(it)
+        
+        if (theme == null || tokens == null || tokens.isEmpty()) {
+            if (text is SpannableStringBuilder) {
+                text.getSpans(0, text.length, ForegroundColorSpan::class.java).forEach {
+                    text.removeSpan(it)
+                }
             }
-            if (theme == null || tokens == null || tokens.isEmpty()) {
-                return
-            }
-            isSpannableStringBuilder = true
-            spannableStringBuilder = text
-        } else {
-            if (theme == null || tokens == null || tokens.isEmpty()) {
-                return
-            }
-            isSpannableStringBuilder = false
-            spannableStringBuilder = SpannableStringBuilder(text)
+            return
         }
+
         val normalColor = context.getColor(R.color.text_main)
+        val targetSpans = mutableListOf<SpanInfo>()
+        
         var lastIndex = 0
         var lastColor = theme!!.getColorByToken(tokens[0], normalColor)
         for (i in 1..<tokens.size) {
             val color = theme!!.getColorByToken(tokens[i], normalColor)
             if (color != lastColor) {
-                spannableStringBuilder.setSpan(
-                    ForegroundColorSpan(lastColor),
-                    lastIndex,
-                    i,
-                    Spanned.SPAN_INCLUSIVE_INCLUSIVE
-                )
+                if (lastColor != normalColor) { // 普通颜色没必要加Span，可以节省Span对象数，如果是整段清除的话下面会处理
+                    targetSpans.add(SpanInfo(lastColor, lastIndex, i))
+                }
                 lastIndex = i
                 lastColor = color
             }
         }
-        spannableStringBuilder.setSpan(
-            ForegroundColorSpan(lastColor),
-            lastIndex,
-            tokens.size,
-            Spanned.SPAN_INCLUSIVE_INCLUSIVE
-        )
-        if (!isSpannableStringBuilder) {
+        if (lastColor != normalColor) {
+            targetSpans.add(SpanInfo(lastColor, lastIndex, tokens.size))
+        }
+
+        if (text is SpannableStringBuilder) {
+            val existSpans = text.getSpans(0, text.length, ForegroundColorSpan::class.java)
+            val matchedSpans = BooleanArray(targetSpans.size)
+            
+            for (span in existSpans) {
+                val spanStart = text.getSpanStart(span)
+                val spanEnd = text.getSpanEnd(span)
+                val color = span.foregroundColor
+                
+                var found = false
+                for (j in targetSpans.indices) {
+                    if (!matchedSpans[j]) {
+                        val target = targetSpans[j]
+                        if (target.start == spanStart && target.end == spanEnd && target.color == color) {
+                            matchedSpans[j] = true
+                            found = true
+                            break
+                        }
+                    }
+                }
+                
+                if (!found) {
+                    text.removeSpan(span)
+                }
+            }
+            
+            for (j in targetSpans.indices) {
+                if (!matchedSpans[j]) {
+                    val target = targetSpans[j]
+                    text.setSpan(
+                        ForegroundColorSpan(target.color),
+                        target.start,
+                        target.end,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+        } else {
+            val spannableStringBuilder = SpannableStringBuilder(text)
+            for (target in targetSpans) {
+                spannableStringBuilder.setSpan(
+                    ForegroundColorSpan(target.color),
+                    target.start,
+                    target.end,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
             val selectionStart = getSelectionStart()
             val selectionEnd = getSelectionEnd()
             setText(spannableStringBuilder)

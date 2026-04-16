@@ -294,9 +294,9 @@ class CPLUserViewModel : ViewModel() {
                 }
                 val part =
                     okhttp3.MultipartBody.Part.createFormData("file", "avatar.$ext", requestBody)
-                val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.uploadAvatar(part)
+                val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadAvatar(part)
                 withContext(Dispatchers.Main) {
-                    if (result?.isSuccess() == true) {
+                    if (result.isSuccess() == true) {
                         Toaster.show("头像上传成功")
                         val newUrl = result.data?.avatarUrl
                         if (newUrl != null) {
@@ -306,7 +306,7 @@ class CPLUserViewModel : ViewModel() {
                             currentUser = temp
                         }
                     } else {
-                        Toaster.show("上传头像失败: ${result?.message ?: "未知错误"}")
+                        Toaster.show("上传头像失败: ${result.message ?: "未知错误"}")
                     }
                 }
             } catch (e: Exception) {

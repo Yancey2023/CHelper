@@ -58,6 +58,7 @@ class CompletionViewModel : ViewModel() {
     var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
     var core: CHelperCore? = null
     var lastInput: SelectedString = SelectedString("", 0, 0)
+    var syntaxHighlightMaxLength = 20000
     private var copyHistoryDataStore: CopyHistoryDataStore? = null
     private var file: File? = null
     private var isResumed = false
@@ -108,7 +109,7 @@ class CompletionViewModel : ViewModel() {
                 min(command.selection.start, command.selection.end),
                 max(command.selection.start, command.selection.end)
             )
-            val isSyntaxHighlight = isSyntaxHighlight && command.text.length < 200
+            val isSyntaxHighlight = isSyntaxHighlight && command.text.length < syntaxHighlightMaxLength
             val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
             if (selectedString.text.isEmpty()) {
                 // 输入内容为空

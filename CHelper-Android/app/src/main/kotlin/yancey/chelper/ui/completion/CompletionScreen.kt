@@ -340,6 +340,12 @@ fun CompletionScreen(
         .collectAsState(initial = false)
     val isShowErrorReason by settingsDataStore.isShowErrorReason()
         .collectAsState(initial = false)
+    val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
+        .collectAsState(initial = 20000)
+
+    LaunchedEffect(viewModel, syntaxHighlightMaxLength) {
+        viewModel.syntaxHighlightMaxLength = syntaxHighlightMaxLength
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.init(context)
