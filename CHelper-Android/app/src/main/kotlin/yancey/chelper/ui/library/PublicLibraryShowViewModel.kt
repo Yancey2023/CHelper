@@ -55,15 +55,15 @@ class PublicLibraryShowViewModel : ViewModel() {
             errorMessage = null
 
             try {
-                val response: BaseResult<LibraryFunction?>? = withContext(Dispatchers.IO) {
+                val response: BaseResult<LibraryFunction?> = withContext(Dispatchers.IO) {
                     if (isPrivate) {
-                        ServiceManager.COMMAND_LAB_USER_SERVICE?.getPrivateFunction(id)
+                        ServiceManager.COMMAND_LAB_USER_SERVICE.getPrivateFunction(id)
                     } else {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunction(id)
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunction(id)
                     }
                 }
 
-                if (response?.isSuccess() == true && response.data != null) {
+                if (response.isSuccess() && response.data != null) {
                     library = response.data!!
                     likeCount = library.likeCount ?: 0
                     isLiked = library.isLiked == true
@@ -86,15 +86,15 @@ class PublicLibraryShowViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.like(id)
+                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.like(id)
                 }
-                if (result?.isSuccess() == true && result.data != null) {
+                if (result.isSuccess() && result.data != null) {
                     val likeData = result.data!!
                     likeCount = likeData.likeCount ?: likeCount
                     isLiked = likeData.isLiked == true
                     actionMessage = if (isLiked) "已点赞" else "已取消点赞"
                 } else {
-                    actionMessage = result?.message ?: "操作失败"
+                    actionMessage = result.message ?: "操作失败"
                 }
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"

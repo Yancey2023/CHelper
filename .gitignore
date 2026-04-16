@@ -13,3 +13,4 @@ __pycache__/
 
 # script
 release.py
+CHelper-Android/gradle/gradle-daemon-jvm.properties
