@@ -61,7 +61,7 @@ class PolicyGrantManager private constructor(
     }
 
     companion object {
-        var INSTANCE: PolicyGrantManager? = null
+        lateinit var INSTANCE: PolicyGrantManager
         fun init(privacyPolicy: String, lastReadContentFile: File) {
             INSTANCE = PolicyGrantManager(privacyPolicy, lastReadContentFile)
         }

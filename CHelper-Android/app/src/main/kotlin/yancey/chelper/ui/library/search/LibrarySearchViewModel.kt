@@ -127,14 +127,14 @@ class LibrarySearchViewModel : ViewModel() {
      * 加载第二栏数据，从远端获取市场公开库
      */
     private suspend fun fetchPublicLibraries(searchStr: String) {
-        val response = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getFunctions(
+        val response = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
             pageNum = currentPage,
             pageSize = 20,
             keyword = searchStr
         )
 
         withContext(Dispatchers.Main) {
-            if (response?.isSuccess() == true && response.data != null) {
+            if (response.isSuccess() && response.data != null) {
                 val data = response.data!!
                 val functions = data.functions?.filterNotNull() ?: emptyList()
                 publicLibraries.addAll(functions)
@@ -145,7 +145,7 @@ class LibrarySearchViewModel : ViewModel() {
                 hasMore = currentPage < totalPages
             } else {
                 if (publicLibraries.isEmpty()) {
-                    errorMessage = response?.message ?: "加载公开库失败"
+                    errorMessage = response.message ?: "加载公开库失败"
                 }
             }
         }
@@ -183,8 +183,8 @@ class LibrarySearchViewModel : ViewModel() {
 
         // 2. 扫描云端私有库
         try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries()
-            if (response?.isSuccess() == true && response.data != null) {
+            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getMyLibraries()
+            if (response.isSuccess() && response.data != null) {
                 val privateList = response.data!!.functions?.filterNotNull() ?: emptyList()
                 privateList.forEach { privateFunc ->
                     val nameMatch = privateFunc.name?.lowercase()?.contains(searchLower) == true

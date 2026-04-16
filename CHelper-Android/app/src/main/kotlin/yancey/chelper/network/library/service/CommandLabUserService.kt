@@ -24,11 +24,11 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
-import retrofit2.http.Multipart
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
@@ -110,8 +110,10 @@ interface CommandLabUserService {
         companion object {
             /** 注册类型验证码 */
             const val TYPE_REGISTER = 0
+
             /** 更新密码类型验证码 */
             const val TYPE_UPDATE_PASSWORD = 1
+
             /** 重置密码类型验证码 */
             const val TYPE_RESET_PASSWORD = 2
         }

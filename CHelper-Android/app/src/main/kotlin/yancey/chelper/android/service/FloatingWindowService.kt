@@ -36,13 +36,14 @@ class FloatingWindowService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = NotificationCompat.Builder(this, CHelperApplication.FLOATING_WINDOW_CHANNEL_ID)
-            .setContentTitle("CHelper 悬浮窗运行中")
-            .setContentText("点击悬浮窗图标可展开命令助手")
-            .setSmallIcon(R.drawable.pack_icon)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+        val notification =
+            NotificationCompat.Builder(this, CHelperApplication.FLOATING_WINDOW_CHANNEL_ID)
+                .setContentTitle("CHelper 悬浮窗运行中")
+                .setContentText("点击悬浮窗图标可展开命令助手")
+                .setSmallIcon(R.drawable.pack_icon)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
 
         startForeground(NOTIFICATION_ID, notification)
         return START_STICKY

@@ -29,9 +29,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -52,7 +51,7 @@ data class AuthorInfo(
     var id: Int? = null,
     var name: String? = null,
     var tier: Int? = null,
-    @kotlinx.serialization.SerialName("user_title") var userTitle: String? = null
+    @SerialName("user_title") var userTitle: String? = null
 )
 
 /**
@@ -74,7 +73,6 @@ data class AuthorInfo(
  * @property isPublish 指示该函数是否已发布（针对公开/私有状态）
  */
 @Serializable
-@Suppress("unused")
 class LibraryFunction(
     var id: Int? = null,
     var uuid: String? = null,

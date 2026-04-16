@@ -20,6 +20,7 @@ package yancey.chelper.ui.library.search
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,7 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -57,14 +61,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.R
-import yancey.chelper.network.library.data.LibraryFunction
 import coil.compose.AsyncImage
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.border
+import yancey.chelper.R
 import yancey.chelper.data.LocalCommandLabDataStore
+import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.LocalLibraryShowScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
@@ -319,8 +319,14 @@ private fun SearchLibraryItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha=0.08f) else Color.Transparent)
-            .run { if (isFeatured) this.border(1.dp, CHelperTheme.colors.mainColor.copy(alpha=0.3f), RoundedCornerShape(8.dp)) else this }
+            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f) else Color.Transparent)
+            .run {
+                if (isFeatured) this.border(
+                    1.dp,
+                    CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
+                    RoundedCornerShape(8.dp)
+                ) else this
+            }
             .clickable(onClick = onClick)
             .padding(20.dp, 12.dp),
         verticalAlignment = Alignment.CenterVertically

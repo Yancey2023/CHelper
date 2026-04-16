@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,12 +45,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +59,6 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -70,8 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.serialization.json.Json
-import com.hjq.toast.Toaster
-import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
@@ -140,7 +136,9 @@ fun PublicLibraryShowScreen(
             viewModel.releasedPublicId = null
             navController?.navigate(PublicLibraryShowScreenKey(id = publicId)) {
                 // 把当前私有版详情页从栈里弹掉，防止 back 回去看到旧数据
-                popUpTo(navController.currentDestination?.id ?: return@navigate) { inclusive = true }
+                popUpTo(navController.currentDestination?.id ?: return@navigate) {
+                    inclusive = true
+                }
             }
         }
     }
@@ -163,11 +161,14 @@ fun PublicLibraryShowScreen(
                     "line_copy" -> showLineCopyDialog = true
                     "copy_all" -> {
                         viewModel.library.content?.let { mcd ->
-                            val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             clip.setPrimaryClip(ClipData.newPlainText("MCD", mcd))
-                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
+
                     "toggle_view" -> viewModel.showRawSource = !viewModel.showRawSource
                 }
             }
@@ -203,7 +204,8 @@ fun PublicLibraryShowScreen(
 
                     "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
                     "edit" -> {
-                        val libJson = Json.encodeToString(LibraryFunction.serializer(), viewModel.library)
+                        val libJson =
+                            Json.encodeToString(LibraryFunction.serializer(), viewModel.library)
                         navController?.navigate(
                             CPLUploadScreenKey(
                                 editLibraryId = id,
@@ -211,6 +213,7 @@ fun PublicLibraryShowScreen(
                             )
                         )
                     }
+
                     "delete" -> showDeleteConfirmDialog = true
                     "back" -> showMainMenu = true
                 }
@@ -374,24 +377,29 @@ fun PublicLibraryShowScreen(
                                         )
                                     )
                                     // 作者专属头衔徽章
-                                    viewModel.library.author?.userTitle?.takeIf { it.isNotBlank() }?.let { title ->
-                                        Spacer(Modifier.width(6.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.12f))
-                                                .padding(horizontal = 6.dp, vertical = 1.dp)
-                                        ) {
-                                            Text(
-                                                text = title,
-                                                style = TextStyle(
-                                                    fontSize = 10.sp,
-                                                    color = CHelperTheme.colors.mainColor,
-                                                    fontWeight = FontWeight.Medium
+                                    viewModel.library.author?.userTitle?.takeIf { it.isNotBlank() }
+                                        ?.let { title ->
+                                            Spacer(Modifier.width(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(
+                                                        CHelperTheme.colors.mainColor.copy(
+                                                            alpha = 0.12f
+                                                        )
+                                                    )
+                                                    .padding(horizontal = 6.dp, vertical = 1.dp)
+                                            ) {
+                                                Text(
+                                                    text = title,
+                                                    style = TextStyle(
+                                                        fontSize = 10.sp,
+                                                        color = CHelperTheme.colors.mainColor,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
-                                    }
                                     // 可点击进入主页的箭头指示
                                     if (authorId != null) {
                                         Spacer(Modifier.width(4.dp))
@@ -445,7 +453,9 @@ fun PublicLibraryShowScreen(
                                                     .background(CHelperTheme.colors.background)
                                                     .clickable {
                                                         navController?.navigate(
-                                                            yancey.chelper.ui.LibrarySearchScreenKey(tag)
+                                                            yancey.chelper.ui.LibrarySearchScreenKey(
+                                                                tag
+                                                            )
                                                         )
                                                     }
                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -539,7 +549,9 @@ fun PublicLibraryShowScreen(
                                 text = if (viewModel.showRawSource) "切换到可视化" else "切换到源码",
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
-                                    .clickable { viewModel.showRawSource = !viewModel.showRawSource }
+                                    .clickable {
+                                        viewModel.showRawSource = !viewModel.showRawSource
+                                    }
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                                 style = TextStyle(
                                     fontSize = 12.sp,

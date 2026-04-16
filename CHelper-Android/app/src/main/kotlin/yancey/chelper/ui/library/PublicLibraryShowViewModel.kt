@@ -19,6 +19,7 @@
 package yancey.chelper.ui.library
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -38,7 +39,7 @@ class PublicLibraryShowViewModel : ViewModel() {
     var isPrivate by mutableStateOf(false)
 
     // 点赞状态独立于 library 对象，防止点赞触发命令可视化的完整重绘
-    var likeCount by mutableStateOf(0)
+    var likeCount by mutableIntStateOf(0)
     var isLiked by mutableStateOf(false)
 
     /** 删除成功后置 true，由 Screen 层观察此状态来安全执行 popBackStack */

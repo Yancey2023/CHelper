@@ -1,20 +1,34 @@
 package yancey.chelper.ui.library.profile
 
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.*
-import androidx.compose.foundation.Image
-import yancey.chelper.ui.common.widget.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -37,6 +52,7 @@ import yancey.chelper.network.library.data.UserProfileData
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
+import yancey.chelper.ui.common.widget.Text
 
 @Composable
 fun UserProfileScreen(
@@ -46,7 +62,7 @@ fun UserProfileScreen(
 ) {
     val context = LocalContext.current
     var showEditDialog by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     var actionDialogTarget by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
     val listState = rememberLazyListState()
 
@@ -133,7 +149,10 @@ fun UserProfileScreen(
             }
         } else if (viewModel.errorMessage != null && viewModel.userProfile == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Error: ${viewModel.errorMessage}", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                Text(
+                    "Error: ${viewModel.errorMessage}",
+                    style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                )
             }
         } else if (viewModel.userProfile != null) {
             val user = viewModel.userProfile!!
@@ -196,17 +215,30 @@ fun UserProfileScreen(
                 if (selectedTab == 0 || viewModel.currentUserId != paramId) {
                     if (viewModel.isLoadingPublic && viewModel.publicLibraries.isEmpty()) {
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                                Text("加载中...", style = TextStyle(color = CHelperTheme.colors.mainColor))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "加载中...",
+                                    style = TextStyle(color = CHelperTheme.colors.mainColor)
+                                )
                             }
                         }
                     } else if (viewModel.publicLibraries.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("该用户还没有公开发布过任何命令库。", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                                Text(
+                                    "该用户还没有公开发布过任何命令库。",
+                                    style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                                )
                             }
                         }
                     } else {
@@ -227,8 +259,19 @@ fun UserProfileScreen(
                         }
                         if (viewModel.isLoadingPublic) {
                             item {
-                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                    Text("加载更多中...", style = TextStyle(color = CHelperTheme.colors.mainColor, fontSize = 12.sp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "加载更多中...",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.mainColor,
+                                            fontSize = 12.sp
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -236,14 +279,30 @@ fun UserProfileScreen(
                 } else {
                     if (viewModel.isLoadingPrivate && viewModel.privateLibraries.isEmpty()) {
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                                Text("加载中...", style = TextStyle(color = CHelperTheme.colors.mainColor))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "加载中...",
+                                    style = TextStyle(color = CHelperTheme.colors.mainColor)
+                                )
                             }
                         }
                     } else if (viewModel.privateLibraries.isEmpty()) {
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                                Text("云库中暂未缓存任何私有记录。", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "云库中暂未缓存任何私有记录。",
+                                    style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                                )
                             }
                         }
                     } else {
@@ -258,14 +317,30 @@ fun UserProfileScreen(
                                 }
                             ) {
                                 func.id?.let {
-                                    navController?.navigate(PublicLibraryShowScreenKey(id = it, isPrivate = true))
+                                    navController?.navigate(
+                                        PublicLibraryShowScreenKey(
+                                            id = it,
+                                            isPrivate = true
+                                        )
+                                    )
                                 }
                             }
                         }
                         if (viewModel.isLoadingPrivate) {
                             item {
-                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                                    Text("加载更多中...", style = TextStyle(color = CHelperTheme.colors.mainColor, fontSize = 12.sp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "加载更多中...",
+                                        style = TextStyle(
+                                            color = CHelperTheme.colors.mainColor,
+                                            fontSize = 12.sp
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -299,9 +374,9 @@ private fun ProfileHeader(user: UserProfileData) {
             placeholder = painterResource(id = R.drawable.ic_user),
             error = painterResource(id = R.drawable.ic_user)
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         Text(
             text = user.nickname ?: "User",
             style = TextStyle(
@@ -310,9 +385,9 @@ private fun ProfileHeader(user: UserProfileData) {
                 color = CHelperTheme.colors.textMain
             )
         )
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             val tier = user.tier ?: 0
             val badgeName = "Tier $tier"
@@ -367,7 +442,7 @@ private fun ProfileHeader(user: UserProfileData) {
                 )
             }
         }
-        
+
         if (!user.signature.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -380,15 +455,16 @@ private fun ProfileHeader(user: UserProfileData) {
                 )
             )
         }
-        
+
         if (!user.homepage.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.clickable { 
+                modifier = Modifier.clickable {
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(user.homepage))
+                        val intent = Intent(Intent.ACTION_VIEW, user.homepage!!.toUri())
                         context.startActivity(intent)
-                    } catch (e: Exception) {}
+                    } catch (_: Exception) {
+                    }
                 },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -405,7 +481,7 @@ private fun ProfileHeader(user: UserProfileData) {
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -414,16 +490,30 @@ private fun ProfileHeader(user: UserProfileData) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${user.totalPublicFunctions ?: 0}",
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CHelperTheme.colors.textMain)
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CHelperTheme.colors.textMain
+                    )
                 )
-                Text("公开作品", style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textSecondary))
+                Text(
+                    "公开作品",
+                    style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textSecondary)
+                )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${user.totalLikes ?: 0}",
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CHelperTheme.colors.textMain)
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CHelperTheme.colors.textMain
+                    )
                 )
-                Text("累计获赞", style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textSecondary))
+                Text(
+                    "累计获赞",
+                    style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textSecondary)
+                )
             }
         }
     }
@@ -444,14 +534,24 @@ private fun ProfileLibraryItem(
             .padding(horizontal = 20.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(CHelperTheme.colors.backgroundComponent)
-            .run { if ((library.likeCount ?: 0) >= 10 && !isPrivate) this.border(1.dp, CHelperTheme.colors.mainColor.copy(alpha=0.3f), RoundedCornerShape(8.dp)) else this }
+            .run {
+                if ((library.likeCount ?: 0) >= 10 && !isPrivate) this.border(
+                    1.dp,
+                    CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
+                    RoundedCornerShape(8.dp)
+                ) else this
+            }
             .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = library.name ?: "未命名",
-                style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, color = CHelperTheme.colors.textMain),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = CHelperTheme.colors.textMain
+                ),
                 modifier = Modifier.weight(1f),
                 maxLines = 1
             )
@@ -459,7 +559,11 @@ private fun ProfileLibraryItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .background(if (library.hasPublicVersion == true) CHelperTheme.colors.mainColor.copy(alpha=0.2f) else CHelperTheme.colors.background)
+                        .background(
+                            if (library.hasPublicVersion == true) CHelperTheme.colors.mainColor.copy(
+                                alpha = 0.2f
+                            ) else CHelperTheme.colors.background
+                        )
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     Text(
@@ -473,7 +577,10 @@ private fun ProfileLibraryItem(
                 Spacer(modifier = Modifier.width(6.dp))
             }
             library.version?.takeIf { it.isNotBlank() }?.let { ver ->
-                Text(text = "v$ver", style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary))
+                Text(
+                    text = "v$ver",
+                    style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary)
+                )
             }
         }
         library.note?.takeIf { it.isNotBlank() }?.let { note ->

@@ -39,8 +39,10 @@ class CaptchaTokenRequest(
     companion object {
         /** 注册账号操作 */
         const val ACTION_REGISTER = "注册账号"
+
         /** 更新密码操作 */
         const val ACTION_UPDATE_PASSWORD = "更新密码"
+
         /** 弃用账号操作 */
         const val ACTION_DELETE_ACCOUNT = "弃用账号"
     }
@@ -53,7 +55,6 @@ class CaptchaTokenRequest(
  * @property action 执行的操作类型
  * @property specialCode 验证请求的唯一标识码
  */
-@Suppress("unused")
 @Serializable
 class CaptchaTokenResponse(
     @SerialName("verification_token") var verificationToken: String? = null,
@@ -81,12 +82,16 @@ class CaptchaStatusResponse(
     companion object {
         /** 等待验证 */
         const val STATUS_PENDING = "pending"
+
         /** 正在进行挑战 */
         const val STATUS_CHALLENGING = "challenging"
+
         /** 验证通过 */
         const val STATUS_VERIFIED = "verified"
+
         /** 验证失败 */
         const val STATUS_FAILED = "failed"
+
         /** 已使用 */
         const val STATUS_USED = "used"
     }

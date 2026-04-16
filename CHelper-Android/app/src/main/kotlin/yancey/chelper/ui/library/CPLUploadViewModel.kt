@@ -3,6 +3,7 @@ package yancey.chelper.ui.library
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -11,10 +12,10 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
-import kotlinx.serialization.json.Json
 
 class CPLUploadViewModel : ViewModel() {
 
@@ -26,7 +27,7 @@ class CPLUploadViewModel : ViewModel() {
 
     var isLoading by mutableStateOf(false)
     var useV2 by mutableStateOf(false)
-    var editId by mutableStateOf(-1)
+    var editId by mutableIntStateOf(-1)
     var editUuid by mutableStateOf("")
 
     fun loadFromCloudJson(json: String?, id: Int) {
@@ -37,7 +38,8 @@ class CPLUploadViewModel : ViewModel() {
             this.editUuid = lib.uuid ?: ""
             loadFromLocal(lib)
             // 简单处理 v2 开关状态回显：若 content 包含 @mcd_version=2
-            useV2 = lib.content?.contains("@mcd_version=2") == true || lib.content?.contains("@mcd_version= 2") == true
+            useV2 =
+                lib.content?.contains("@mcd_version=2") == true || lib.content?.contains("@mcd_version= 2") == true
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -50,12 +52,13 @@ class CPLUploadViewModel : ViewModel() {
                 version.setTextAndPlaceCursorAtEnd(library.version ?: "")
                 description.setTextAndPlaceCursorAtEnd(library.note ?: "")
                 tags.setTextAndPlaceCursorAtEnd(library.tags?.joinToString(",") ?: "")
-                
+
                 // 剔除已存在的元数据头，只保留命令体
-                var rawContent = library.content ?: ""
+                val rawContent = library.content ?: ""
                 val functionStartIdx = rawContent.indexOf("###Function###")
                 if (functionStartIdx != -1) {
-                    var body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
+                    var body = rawContent.substring(functionStartIdx + "###Function###".length)
+                        .trimStart('\n', '\r')
                     val functionEndIdx = body.indexOf("###End###")
                     if (functionEndIdx != -1) {
                         body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
@@ -64,7 +67,8 @@ class CPLUploadViewModel : ViewModel() {
                 } else {
                     // Fallback: strip @ 属性行
                     val lines = rawContent.lines()
-                    val startIndex = lines.indexOfFirst { !it.trim().startsWith("@") && it.trim().isNotEmpty() }
+                    val startIndex =
+                        lines.indexOfFirst { !it.trim().startsWith("@") && it.trim().isNotEmpty() }
                     val body = if (startIndex != -1) {
                         lines.subList(startIndex, lines.size).joinToString("\n").trim()
                     } else {
@@ -122,12 +126,14 @@ class CPLUploadViewModel : ViewModel() {
                 if (editId > 0) {
                     val request = CommandLabUserService.UpdateLibraryRequest().apply {
                         this.name = this@CPLUploadViewModel.name.text.toString()
-                        this.version = this@CPLUploadViewModel.version.text.toString().ifEmpty { "1.0.0" }
+                        this.version =
+                            this@CPLUploadViewModel.version.text.toString().ifEmpty { "1.0.0" }
                         this.note = this@CPLUploadViewModel.description.text.toString()
                         this.tags = tagList
                         this.content = finalContent
                     }
-                    val result = ServiceManager.COMMAND_LAB_USER_SERVICE?.updateLibrary(editId, request)
+                    val result =
+                        ServiceManager.COMMAND_LAB_USER_SERVICE?.updateLibrary(editId, request)
                     withContext(Dispatchers.Main) {
                         isLoading = false
                         if (result?.isSuccess() == true) {

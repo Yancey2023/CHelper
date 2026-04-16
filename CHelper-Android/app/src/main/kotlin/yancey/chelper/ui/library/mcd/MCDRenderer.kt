@@ -16,7 +16,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -41,7 +39,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.R
@@ -126,10 +123,12 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
         if (tline.startsWith("@")) {
             val splitIdx = tline.indexOf('=')
             if (splitIdx > 0) {
-                metaInfo.add(MCDMeta(
-                    key = tline.substring(1, splitIdx).trim(),
-                    value = tline.substring(splitIdx + 1).trim()
-                ))
+                metaInfo.add(
+                    MCDMeta(
+                        key = tline.substring(1, splitIdx).trim(),
+                        value = tline.substring(splitIdx + 1).trim()
+                    )
+                )
             }
             continue
         }
@@ -182,7 +181,8 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
                 pendingConditional = cond == "?"          // _ 或空都是无条件
                 pendingAlwaysActive = rs != "!"           // 只有显式 ! 才需要红石
                 pendingNeedsRedstone = rs == "!"
-                pendingTickDelay = if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
+                pendingTickDelay =
+                    if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
             } else {
                 // 正则不匹配时的兜底：全缺省
                 pendingBlockType = BlockType.CHAIN
@@ -253,7 +253,12 @@ private fun copyToClipboard(context: Context, text: String) {
 }
 
 @Composable
-fun MCDContentView(content: String?, modifier: Modifier = Modifier, ambiguousDefault: String = "comment", showMetadata: Boolean = true) {
+fun MCDContentView(
+    content: String?,
+    modifier: Modifier = Modifier,
+    ambiguousDefault: String = "comment",
+    showMetadata: Boolean = true
+) {
     val parsed = remember(content, ambiguousDefault) { parseMCD(content, ambiguousDefault) }
 
     Column(modifier = modifier) {

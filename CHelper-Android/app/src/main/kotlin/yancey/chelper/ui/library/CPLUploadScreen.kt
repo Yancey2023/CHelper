@@ -1,5 +1,6 @@
 package yancey.chelper.ui.library
 
+import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import yancey.chelper.R
@@ -56,8 +59,8 @@ import yancey.chelper.ui.library.mcd.LineType
 import yancey.chelper.ui.library.mcd.MCDContentView
 import yancey.chelper.ui.library.mcd.MCDValidationResult
 import yancey.chelper.ui.library.mcd.validateMCDContent
-import androidx.compose.runtime.LaunchedEffect
 
+@SuppressLint("UseKtx")
 @Composable
 fun CPLUploadScreen(
     viewModel: CPLUploadViewModel = viewModel(),
@@ -140,9 +143,17 @@ fun CPLUploadScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(state = viewModel.name, hint = stringResource(R.string.upload_field_name), modifier = Modifier.fillMaxWidth())
+            TextField(
+                state = viewModel.name,
+                hint = stringResource(R.string.upload_field_name),
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(10.dp))
-            TextField(state = viewModel.version, hint = stringResource(R.string.upload_field_version), modifier = Modifier.fillMaxWidth())
+            TextField(
+                state = viewModel.version,
+                hint = stringResource(R.string.upload_field_version),
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(10.dp))
             TextField(
                 state = viewModel.description,
@@ -199,7 +210,7 @@ fun CPLUploadScreen(
                     .clickable {
                         val intent = android.content.Intent(
                             android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://abyssous.site/wiki")
+                            "https://abyssous.site/wiki".toUri()
                         )
                         context.startActivity(intent)
                     }
@@ -304,7 +315,10 @@ private fun MCDPreviewScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = stringResource(R.string.upload_validation_error, validationResult.errorCount),
+                            text = stringResource(
+                                R.string.upload_validation_error,
+                                validationResult.errorCount
+                            ),
                             style = TextStyle(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
@@ -321,7 +335,10 @@ private fun MCDPreviewScreen(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = stringResource(R.string.upload_validation_ok, validationResult.lines.size),
+                            text = stringResource(
+                                R.string.upload_validation_ok,
+                                validationResult.lines.size
+                            ),
                             style = TextStyle(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
@@ -386,31 +403,32 @@ private fun MCDPreviewScreen(
                     )
                     Spacer(Modifier.height(6.dp))
 
-                    validationResult.lines.filter { it.type == LineType.AMBIGUOUS }.forEach { line ->
-                        Row(
-                            modifier = Modifier.padding(vertical = 1.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = "L${line.lineNumber}",
-                                style = TextStyle(
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFFD32F2F)
-                                ),
-                                modifier = Modifier.width(32.dp)
-                            )
-                            Text(
-                                text = line.rawText,
-                                style = TextStyle(
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFFD32F2F)
-                                ),
-                                maxLines = 1
-                            )
+                    validationResult.lines.filter { it.type == LineType.AMBIGUOUS }
+                        .forEach { line ->
+                            Row(
+                                modifier = Modifier.padding(vertical = 1.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    text = "L${line.lineNumber}",
+                                    style = TextStyle(
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = Color(0xFFD32F2F)
+                                    ),
+                                    modifier = Modifier.width(32.dp)
+                                )
+                                Text(
+                                    text = line.rawText,
+                                    style = TextStyle(
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = Color(0xFFD32F2F)
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
                         }
-                    }
 
                     Spacer(Modifier.height(8.dp))
 
@@ -593,7 +611,7 @@ private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
                 .clickable {
                     val intent = android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
-                        android.net.Uri.parse("https://abyssous.site/wiki")
+                        "https://abyssous.site/wiki".toUri()
                     )
                     helpContext.startActivity(intent)
                 }

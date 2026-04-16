@@ -18,6 +18,9 @@
 
 package yancey.chelper.ui.library
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,13 +36,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,29 +54,24 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.CPLUploadScreenKey
-import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.UserProfileScreenKey
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.PickVisualMediaRequest
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Button
-import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextFieldWithIcon
@@ -188,19 +184,21 @@ fun UserProfileView(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .background(if(viewModel.isUploadingAvatar) CHelperTheme.colors.backgroundComponentNoTranslate else CHelperTheme.colors.backgroundComponent)
+                            .background(if (viewModel.isUploadingAvatar) CHelperTheme.colors.backgroundComponentNoTranslate else CHelperTheme.colors.backgroundComponent)
                             .clickable { onUploadAvatarClick() }
                     ) {
                         AsyncImage(
                             model = user.gravatarUrl ?: "https://abyssous.site/avatar/${user.id}",
                             contentDescription = "Avatar",
-                            modifier = Modifier.fillMaxSize().alpha(if(viewModel.isUploadingAvatar) 0.5f else 1f),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .alpha(if (viewModel.isUploadingAvatar) 0.5f else 1f),
                             contentScale = ContentScale.Crop,
                             placeholder = painterResource(id = R.drawable.ic_user),
                             error = painterResource(id = R.drawable.ic_user)
                         )
                     }
-                    
+
                     Box(
                         modifier = Modifier
                             .size(20.dp)
@@ -239,7 +237,10 @@ fun UserProfileView(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(4.dp, RoundedCornerShape(16.dp))
-                .background(CHelperTheme.colors.backgroundComponentNoTranslate, RoundedCornerShape(16.dp))
+                .background(
+                    CHelperTheme.colors.backgroundComponentNoTranslate,
+                    RoundedCornerShape(16.dp)
+                )
                 .clickable {
                     user.id?.let {
                         navController.navigate(UserProfileScreenKey(id = it))
@@ -263,9 +264,11 @@ fun UserProfileView(
         }
 
         Spacer(Modifier.weight(1f))
-        
+
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Button(
@@ -465,7 +468,13 @@ fun LoginRegisterView(
                                 contentDescription = "显示/隐藏密码"
                             )
                         },
-                        outputTransformation = if (isLoginPasswordVisible) null else OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
+                        outputTransformation = if (isLoginPasswordVisible) null else OutputTransformation {
+                            replace(
+                                0,
+                                length,
+                                "\u2022".repeat(length)
+                            )
+                        }
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
@@ -534,12 +543,20 @@ fun LoginRegisterView(
                                 id = if (isRegisterPasswordVisible) R.drawable.eye else R.drawable.eye_off,
                                 modifier = Modifier
                                     .size(48.dp)
-                                    .clickable { isRegisterPasswordVisible = !isRegisterPasswordVisible }
+                                    .clickable {
+                                        isRegisterPasswordVisible = !isRegisterPasswordVisible
+                                    }
                                     .padding(14.dp),
                                 contentDescription = "显示/隐藏密码"
                             )
                         },
-                        outputTransformation = if (isRegisterPasswordVisible) null else OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
+                        outputTransformation = if (isRegisterPasswordVisible) null else OutputTransformation {
+                            replace(
+                                0,
+                                length,
+                                "\u2022".repeat(length)
+                            )
+                        }
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(

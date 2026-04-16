@@ -18,7 +18,6 @@
 
 package yancey.chelper.ui.library
 
-import yancey.chelper.network.library.data.AuthorInfo
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.data.LocalCommandLabDataStore
+import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
@@ -199,7 +199,7 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
                         isPublish = oldFunc?.isPublish
                         isOwner = oldFunc?.isOwner
                         chainData = oldFunc?.chainData
-                        
+
                         // 覆盖新属性
                         name = viewModel.name.text.toString()
                         version = viewModel.version.text.toString()

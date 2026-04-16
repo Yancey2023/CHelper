@@ -1,16 +1,17 @@
 package yancey.chelper.ui.library.profile
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import yancey.chelper.network.library.util.LoginUtil
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.data.UpdateProfileRequest
 import yancey.chelper.network.library.data.UserProfileData
-import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.util.LoginUtil
 
 class UserProfileViewModel : ViewModel() {
     var userProfile by mutableStateOf<UserProfileData?>(null)
@@ -28,7 +29,7 @@ class UserProfileViewModel : ViewModel() {
     var isLoadingPublic by mutableStateOf(false)
         private set
 
-    var publicPageNum by mutableStateOf(1)
+    var publicPageNum by mutableIntStateOf(1)
         private set
 
     var hasMorePublic by mutableStateOf(true)
@@ -40,7 +41,7 @@ class UserProfileViewModel : ViewModel() {
     var isLoadingPrivate by mutableStateOf(false)
         private set
 
-    var privatePageNum by mutableStateOf(1)
+    var privatePageNum by mutableIntStateOf(1)
         private set
 
     var hasMorePrivate by mutableStateOf(true)
@@ -49,7 +50,7 @@ class UserProfileViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var viewUserId by mutableStateOf<Int>(-1)
+    var viewUserId by mutableStateOf(-1)
         private set
 
     var isUpdating by mutableStateOf(false)
@@ -57,7 +58,7 @@ class UserProfileViewModel : ViewModel() {
 
     var updateErrorMessage by mutableStateOf<String?>(null)
         private set
-        
+
     var updateSuccessMessage by mutableStateOf<String?>(null)
         private set
 
@@ -119,10 +120,10 @@ class UserProfileViewModel : ViewModel() {
                 val responseData = res?.data
                 if (res?.status == 0 && responseData != null) {
                     val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
-                    if (publicPageNum == 1) {
-                        publicLibraries = newLibs
+                    publicLibraries = if (publicPageNum == 1) {
+                        newLibs
                     } else {
-                        publicLibraries = publicLibraries + newLibs
+                        publicLibraries + newLibs
                     }
                     if (newLibs.size < 20) {
                         hasMorePublic = false
@@ -143,14 +144,18 @@ class UserProfileViewModel : ViewModel() {
         isLoadingPrivate = true
         viewModelScope.launch {
             try {
-                val res = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries(type = 1, pageNum = privatePageNum, pageSize = 20)
+                val res = ServiceManager.COMMAND_LAB_USER_SERVICE?.getMyLibraries(
+                    type = 1,
+                    pageNum = privatePageNum,
+                    pageSize = 20
+                )
                 val responseData = res?.data
                 if (res?.status == 0 && responseData != null) {
                     val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
-                    if (privatePageNum == 1) {
-                        privateLibraries = newLibs
+                    privateLibraries = if (privatePageNum == 1) {
+                        newLibs
                     } else {
-                        privateLibraries = privateLibraries + newLibs
+                        privateLibraries + newLibs
                     }
                     if (newLibs.size < 20) {
                         hasMorePrivate = false
@@ -173,7 +178,7 @@ class UserProfileViewModel : ViewModel() {
             try {
                 val res = ServiceManager.COMMAND_LAB_USER_SERVICE?.deleteLibrary(libraryId)
                 if (res?.status == 0) {
-                    updateSuccessMessage = if(isPublic) "下架成功" else "删除成功"
+                    updateSuccessMessage = if (isPublic) "下架成功" else "删除成功"
                     if (isPublic) {
                         publicLibraries = publicLibraries.filter { it.id != libraryId }
                     } else {
@@ -188,7 +193,13 @@ class UserProfileViewModel : ViewModel() {
         }
     }
 
-    fun updateProfile(nickname: String, avatarUrl: String?, homepage: String?, signature: String?, onComplete: () -> Unit) {
+    fun updateProfile(
+        nickname: String,
+        avatarUrl: String?,
+        homepage: String?,
+        signature: String?,
+        onComplete: () -> Unit
+    ) {
         if (isUpdating) return
         isUpdating = true
         updateErrorMessage = null

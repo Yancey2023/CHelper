@@ -30,7 +30,6 @@ import kotlinx.serialization.Serializable
  * @property errorType 错误类型标识（当请求失败时存在）
  * @property message 返回的提示信息或错误描述
  */
-@Suppress("unused")
 @Serializable
 class BaseResult<T>(
     var status: Int? = null,

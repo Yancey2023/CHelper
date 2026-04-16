@@ -48,9 +48,9 @@ import yancey.chelper.ui.library.LocalLibraryListScreen
 import yancey.chelper.ui.library.LocalLibraryShowScreen
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
-import yancey.chelper.ui.library.search.LibrarySearchScreen
-import yancey.chelper.ui.library.score.LeaderboardScreen
 import yancey.chelper.ui.library.profile.UserProfileScreen
+import yancey.chelper.ui.library.score.LeaderboardScreen
+import yancey.chelper.ui.library.search.LibrarySearchScreen
 import yancey.chelper.ui.old2new.Old2NewIMEGuideScreen
 import yancey.chelper.ui.old2new.Old2NewScreen
 import yancey.chelper.ui.rawtext.RawtextScreen
@@ -331,7 +331,10 @@ fun FloatingWindowNavHost(
         }
         composable<LibrarySearchScreenKey> { navBackStackEntry ->
             val customKey = navBackStackEntry.toRoute<LibrarySearchScreenKey>()
-            LibrarySearchScreen(navController = navController, initialKeyword = customKey.initialKeyword)
+            LibrarySearchScreen(
+                navController = navController,
+                initialKeyword = customKey.initialKeyword
+            )
         }
     }
 }

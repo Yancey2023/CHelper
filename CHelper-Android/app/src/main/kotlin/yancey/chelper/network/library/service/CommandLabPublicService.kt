@@ -33,7 +33,6 @@ import yancey.chelper.network.library.data.LibraryFunction
 /**
  * 命令库公开 API 接口，负责与命令库相关的非敏感操作，如获取命令库列表、详情、点赞以及查看用户公开资料和排行榜等。
  */
-@Suppress("unused")
 interface CommandLabPublicService {
 
     /**
@@ -93,8 +92,10 @@ interface CommandLabPublicService {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     class LibraryLikeResponse {
-        @JsonNames("like_count", "likeCount") var likeCount: Int? = null
-        @JsonNames("is_liked", "isLiked") var isLiked: Boolean? = null
+        @JsonNames("like_count", "likeCount")
+        var likeCount: Int? = null
+        @JsonNames("is_liked", "isLiked")
+        var isLiked: Boolean? = null
     }
 
     /**

@@ -33,10 +33,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.android.util.MonitorUtil
-import yancey.chelper.data.CopyHistoryDataStore
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.core.ErrorReason
 import yancey.chelper.core.SelectedString
+import yancey.chelper.data.CopyHistoryDataStore
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -72,12 +72,12 @@ class CompletionViewModel : ViewModel() {
             return
         }
         isResumed = true
-        file.let {
-            if (it?.exists() ?: return) {
-                try {
-                    viewModelScope.launch {
-                        command = withContext(Dispatchers.IO) {
-                            DataInputStream(BufferedInputStream(it.inputStream())).use { dataInputStream ->
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    file?.let { file ->
+                        if (file.exists()) {
+                            DataInputStream(BufferedInputStream(file.inputStream())).use { dataInputStream ->
                                 return@withContext TextFieldState(
                                     dataInputStream.readUTF(),
                                     TextRange(
@@ -86,11 +86,13 @@ class CompletionViewModel : ViewModel() {
                                     )
                                 )
                             }
+                        } else {
+                            return@withContext null
                         }
                     }
-                } catch (_: IOException) {
+                }?.let { command = it }
+            } catch (_: IOException) {
 
-                }
             }
         }
     }

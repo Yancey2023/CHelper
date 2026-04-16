@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -135,7 +136,7 @@ data class CustomDialogProperties(
 @Composable
 fun DialogContainer(
     modifier: Modifier = Modifier,
-    cornerSize: androidx.compose.ui.unit.Dp = 10.dp,
+    cornerSize: Dp = 10.dp,
     backgroundNoTranslate: Boolean = false,
     content: @Composable () -> Unit
 ) {

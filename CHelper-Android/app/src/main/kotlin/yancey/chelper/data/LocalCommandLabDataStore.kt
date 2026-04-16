@@ -117,7 +117,8 @@ class LocalCommandLabDataStore(private val context: Context) {
 /**
  * 0.4.1 版本之后，私有命令库存储从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
  */
-class LocalLibraryDataMigrationToV75(private val context: Context) : DataMigration<LocalLibraryData> {
+class LocalLibraryDataMigrationToV75(private val context: Context) :
+    DataMigration<LocalLibraryData> {
     override suspend fun shouldMigrate(currentData: LocalLibraryData): Boolean {
         return context.dataDir.resolve("localLibrary").resolve("data.json").exists()
     }

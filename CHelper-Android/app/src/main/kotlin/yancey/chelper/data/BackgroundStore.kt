@@ -88,10 +88,10 @@ class BackgroundStore(private val file: File) {
     companion object {
         private const val TAG = "CustomTheme"
 
-        var INSTANCE: BackgroundStore? = null
+        lateinit var INSTANCE: BackgroundStore
 
-        fun init(file: File?) {
-            INSTANCE = BackgroundStore(File(file, "background.png"))
+        fun init(file: File) {
+            INSTANCE = BackgroundStore(file.resolve("background.png"))
         }
     }
 }
