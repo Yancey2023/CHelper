@@ -72,6 +72,14 @@ interface CommandLabPublicService {
     ): BaseResult<GetFunctionsResponse?>
 
     /**
+     * 猜你喜欢 / 推荐命令库列表
+     */
+    @GET("library/recommend")
+    suspend fun getRecommendedLibrary(
+        @Query("limit") limit: Int = 15
+    ): BaseResult<GetFunctionsResponse?>
+
+    /**
      * 获取指定命令库函数的详细信息。
      *
      * @param id 命令库函数的唯一标识 ID

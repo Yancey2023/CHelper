@@ -27,12 +27,15 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.common.CHelperTheme
 
+import androidx.compose.ui.text.style.TextOverflow
+
 @Composable
 fun Text(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = TextStyle(),
     maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip
 ) {
     BasicText(
         text = text,
@@ -41,6 +44,7 @@ fun Text(
             color = if (style.color == Color.Unspecified) CHelperTheme.colors.textMain else style.color,
             fontSize = if (style.fontSize == TextUnit.Unspecified) 16.sp else style.fontSize
         ),
-        maxLines = maxLines
+        maxLines = maxLines,
+        overflow = overflow
     )
 }

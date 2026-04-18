@@ -58,7 +58,8 @@ enum class BlockType(val label: String, val lightColor: Color, val darkColor: Co
     // 颜色参照 MC 命令方块的原版色调
     IMPULSE("脉冲", Color(0xFFFF9933), Color(0xFFCC7A29)),
     CHAIN("连锁", Color(0xFF4FC1A6), Color(0xFF3A9C83)),
-    REPEAT("循环", Color(0xFF9966FF), Color(0xFF7A52CC))
+    REPEAT("循环", Color(0xFF9966FF), Color(0xFF7A52CC)),
+    CHAT("手动键入", Color(0xFF607D8B), Color(0xFF455A64))
 }
 
 /** v2 格式的命令方块，携带方块类型和状态信息 */
@@ -119,6 +120,29 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
         val tline = line.trim()
         if (tline.isEmpty()) continue
 
+        // 杂项标记 ###Function### / ###End###
+        if (tline.startsWith("###") && tline.endsWith("###")) continue
+
+        // 若当前等待的是 CHAT 状态，则无论下面是什么前缀，都当成指令文本吃掉
+        if (isV2 && hasPendingState && pendingBlockType == BlockType.CHAT) {
+            // 确保有容纳容器
+            if (currentChain == null) {
+                currentChain = MCDChain(name = "分离的指令")
+                chains.add(currentChain)
+            }
+            val block = MCDBlock(
+                type = pendingBlockType,
+                conditional = false,
+                alwaysActive = true,
+                needsRedstone = false,
+                tickDelay = 0,
+                command = tline
+            )
+            currentChain.items.add(ChainItem.Block(block))
+            hasPendingState = false
+            continue
+        }
+
         // 元数据行
         if (tline.startsWith("@")) {
             val splitIdx = tline.indexOf('=')
@@ -132,9 +156,6 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
             }
             continue
         }
-
-        // 杂项标记 ###Function### / ###End###
-        if (tline.startsWith("###") && tline.endsWith("###")) continue
 
         // v2 链分割符 ---链名---
         if (tline.startsWith("---") && tline.endsWith("---")) {
@@ -162,7 +183,7 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
         if (isV2 && tline.startsWith(">")) {
             // 捕获组: (1)type (2)cond (3)rs (4)tick
             val stateRegex = Regex(
-                """^>\s*([ICR_])?([?_])?([!_])?(?:t(\d+|_))?\s*$""",
+                """^>\s*([ICRH_])?([?_])?([!_])?(?:t(\d+|_))?\s*$""",
                 RegexOption.IGNORE_CASE
             )
             val match = stateRegex.matchEntire(tline)
@@ -173,16 +194,25 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
                 pendingBlockType = when (effectiveType) {
                     "I" -> BlockType.IMPULSE
                     "R" -> BlockType.REPEAT
+                    "H" -> BlockType.CHAT
                     else -> BlockType.CHAIN
                 }
-                val cond = match.groupValues[2]
-                val rs = match.groupValues[3]
-                val tick = match.groupValues[4]
-                pendingConditional = cond == "?"          // _ 或空都是无条件
-                pendingAlwaysActive = rs != "!"           // 只有显式 ! 才需要红石
-                pendingNeedsRedstone = rs == "!"
-                pendingTickDelay =
-                    if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
+                
+                if (pendingBlockType == BlockType.CHAT) {
+                    pendingConditional = false
+                    pendingAlwaysActive = true
+                    pendingNeedsRedstone = false
+                    pendingTickDelay = 0
+                } else {
+                    val cond = match.groupValues[2]
+                    val rs = match.groupValues[3]
+                    val tick = match.groupValues[4]
+                    pendingConditional = cond == "?"          // _ 或空都是无条件
+                    pendingAlwaysActive = rs != "!"           // 只有显式 ! 才需要红石
+                    pendingNeedsRedstone = rs == "!"
+                    pendingTickDelay =
+                        if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
+                }
             } else {
                 // 正则不匹配时的兜底：全缺省
                 pendingBlockType = BlockType.CHAIN
@@ -447,10 +477,12 @@ private fun BlockItem(block: MCDBlock) {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Badge(block.type.label, blockColor)
-            if (block.conditional) Badge("条件", Color(0xFFE65100))
-            if (block.alwaysActive) Badge("保持开启", Color(0xFF2E7D32))
-            if (block.needsRedstone) Badge("红石控制", Color(0xFFB71C1C))
-            if (block.tickDelay > 0) Badge("${block.tickDelay} 延迟", Color(0xFF1565C0))
+            if (block.type != BlockType.CHAT) {
+                if (block.conditional) Badge("条件", Color(0xFFE65100))
+                if (block.alwaysActive) Badge("保持开启", Color(0xFF2E7D32))
+                if (block.needsRedstone) Badge("红石控制", Color(0xFFB71C1C))
+                if (block.tickDelay > 0) Badge("${block.tickDelay} 延迟", Color(0xFF1565C0))
+            }
         }
 
         // 指令内容 + 复制按钮

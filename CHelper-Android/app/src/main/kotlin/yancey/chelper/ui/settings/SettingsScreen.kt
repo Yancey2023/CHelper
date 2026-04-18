@@ -67,6 +67,7 @@ fun SettingsScreen(
     var isShowChooseCpackBranchDialog by remember { mutableStateOf(false) }
     var isShowChooseTagClickDialog by remember { mutableStateOf(false) }
     var isShowChooseAmbiguousLineDialog by remember { mutableStateOf(false) }
+    var isShowChooseLibraryHomeRecommendDialog by remember { mutableStateOf(false) }
     var isShowInputSyntaxHighlightMaxLengthDialog by remember { mutableStateOf(false) }
     val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
         .collectAsState(initial = null)
@@ -96,6 +97,8 @@ fun SettingsScreen(
     var ambiguousLineDefault by remember { mutableStateOf("comment") }
     val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
         .collectAsState(initial = false)
+    val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
+        .collectAsState(initial = true)
     val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
         .collectAsState(initial = null)
     // DataStore flow -> 本地变量同步（首次加载时拿到持久化值）
@@ -325,6 +328,13 @@ fun SettingsScreen(
             CollectionName("命令库设置")
             Collection {
                 NameAndAction(
+                    name = "命令库默认主页流",
+                    description = "当前: ${if (isPublicLibraryHomeRecommend) "猜你喜欢" else "按时间最新发布"}",
+                ) {
+                    isShowChooseLibraryHomeRecommendDialog = true
+                }
+                Divider()
+                NameAndAction(
                     name = "Tag 点击行为",
                     description = "当前: ${if (tagClickBehavior == "search") "搜索该 Tag" else "进入详情页"}",
                 ) {
@@ -484,6 +494,19 @@ fun SettingsScreen(
                 ambiguousLineDefault = it
                 coroutineScope.launch {
                     settingsDataStore.setAmbiguousLineDefault(it)
+                }
+            })
+    }
+    if (isShowChooseLibraryHomeRecommendDialog) {
+        ChoosingDialog(
+            onDismissRequest = { isShowChooseLibraryHomeRecommendDialog = false },
+            data = arrayOf(
+                "猜你喜欢" to "true",
+                "按时间最新发布" to "false"
+            ),
+            onChoose = {
+                coroutineScope.launch {
+                    settingsDataStore.setPublicLibraryHomeRecommend(it == "true")
                 }
             })
     }

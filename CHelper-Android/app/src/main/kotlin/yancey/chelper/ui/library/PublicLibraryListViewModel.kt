@@ -45,7 +45,7 @@ class PublicLibraryListViewModel : ViewModel() {
 
     private var searchJob: Job? = null
 
-    fun loadFunctions(search: String? = null, resetPage: Boolean = true) {
+    fun loadFunctions(search: String? = null, resetPage: Boolean = true, isRecommend: Boolean = false) {
         if (isLoading) return
         // 如果已经有数据且不是用户手动刷新，跳过重复拉取
         if (resetPage && libraries.isNotEmpty() && !forceRefresh) return
@@ -63,11 +63,15 @@ class PublicLibraryListViewModel : ViewModel() {
 
             try {
                 val response = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
-                        pageNum = currentPage,
-                        pageSize = 20,
-                        keyword = search?.takeIf { it.isNotBlank() }
-                    )
+                    if (isRecommend && search.isNullOrBlank()) {
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getRecommendedLibrary(limit = 15)
+                    } else {
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
+                            pageNum = currentPage,
+                            pageSize = 20,
+                            keyword = search?.takeIf { it.isNotBlank() }
+                        )
+                    }
                 }
 
                 if (response.isSuccess() && response.data != null) {
@@ -91,14 +95,14 @@ class PublicLibraryListViewModel : ViewModel() {
         }
     }
 
-    fun loadMore() {
+    fun loadMore(isRecommend: Boolean = false) {
         if (!hasMore || isLoading) return
         currentPage++
-        loadFunctions(null, resetPage = false)
+        loadFunctions(null, resetPage = false, isRecommend = isRecommend)
     }
 
-    fun refresh() {
+    fun refresh(isRecommend: Boolean = false) {
         forceRefresh = true
-        loadFunctions(null, resetPage = true)
+        loadFunctions(null, resetPage = true, isRecommend = isRecommend)
     }
 }

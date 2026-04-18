@@ -31,6 +31,7 @@ import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.network.ServiceManager
+import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 
@@ -55,6 +56,8 @@ class CHelperApplication : Application() {
                 resources.displayMetrics
             ).toInt()
         )
+        // 游龙悬浮窗单例初始化
+        LoongFlowWindowManager.init(this)
         // 网络服务初始化
         ServiceManager.init(this)
         LoginUtil.init(dataDir.resolve("library").resolve("user.json")) { throwable ->

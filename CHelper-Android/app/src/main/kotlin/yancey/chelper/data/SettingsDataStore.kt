@@ -70,6 +70,7 @@ data class Settings(
     val isHideMetadataPreview: Boolean? = null,
     val isFloatingWindowFontAlphaSync: Boolean? = null,
     val syntaxHighlightMaxLength: Int? = null,
+    val publicLibraryHomeRecommend: Boolean? = null,
 )
 
 object SettingsSerializer : Serializer<Settings> {
@@ -150,6 +151,13 @@ class SettingsDataStore(private val context: Context) {
 
     fun publicLibraryMinVersion(): Flow<Int> =
         context.settingsDataStore.data.map { it.publicLibraryMinVersion ?: 0 }
+
+    fun isPublicLibraryHomeRecommend(): Flow<Boolean> =
+        context.settingsDataStore.data.map { it.publicLibraryHomeRecommend ?: true }
+
+    suspend fun setPublicLibraryHomeRecommend(value: Boolean) {
+        context.settingsDataStore.updateData { it.copy(publicLibraryHomeRecommend = value) }
+    }
 
     suspend fun setIsEnableUpdateNotifications(value: Boolean) {
         context.settingsDataStore.updateData { it.copy(isEnableUpdateNotifications = value) }
@@ -276,6 +284,7 @@ class SettingsMigrationToV74(private val context: Context) : DataMigration<Setti
                 cpackBranch = cpackBranch,
                 isFloatingWindowFontAlphaSync = (oldSettings["isFloatingWindowFontAlphaSync"] as? JsonPrimitive)?.booleanOrNull,
                 syntaxHighlightMaxLength = (oldSettings["syntaxHighlightMaxLength"] as? JsonPrimitive)?.intOrNull,
+                publicLibraryHomeRecommend = (oldSettings["publicLibraryHomeRecommend"] as? JsonPrimitive)?.booleanOrNull,
             )
         } catch (_: Throwable) {
             currentData

@@ -55,27 +55,27 @@ class CPLUploadViewModel : ViewModel() {
 
                 // 剔除已存在的元数据头，只保留命令体
                 val rawContent = library.content ?: ""
+                var body = ""
                 val functionStartIdx = rawContent.indexOf("###Function###")
                 if (functionStartIdx != -1) {
-                    var body = rawContent.substring(functionStartIdx + "###Function###".length)
-                        .trimStart('\n', '\r')
+                    body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
                     val functionEndIdx = body.indexOf("###End###")
                     if (functionEndIdx != -1) {
                         body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
                     }
-                    commands.setTextAndPlaceCursorAtEnd(body.trim())
                 } else {
-                    // Fallback: strip @ 属性行
-                    val lines = rawContent.lines()
-                    val startIndex =
-                        lines.indexOfFirst { !it.trim().startsWith("@") && it.trim().isNotEmpty() }
-                    val body = if (startIndex != -1) {
-                        lines.subList(startIndex, lines.size).joinToString("\n").trim()
-                    } else {
-                        rawContent
-                    }
-                    commands.setTextAndPlaceCursorAtEnd(body)
+                    body = rawContent
                 }
+                
+                // 深度清理可能在 Fallback 中被误留、或本身就存在于正文中的旧版本元数据标签
+                // (注意：不能把 @a 这种 MC 原生目标选择器滤掉)
+                val cleanLines = body.lines().filter { line ->
+                    val t = line.trim()
+                    !(t.startsWith("@name=") || t.startsWith("@version=") || 
+                      t.startsWith("@tags=") || t.startsWith("@note=") || 
+                      t.startsWith("@mcd_version=") || t.startsWith("@uuid="))
+                }
+                commands.setTextAndPlaceCursorAtEnd(cleanLines.joinToString("\n").trim())
             } catch (e: Exception) {
                 e.printStackTrace()
             }

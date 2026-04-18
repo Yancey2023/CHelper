@@ -72,6 +72,9 @@ class FloatWindowNavigationEventOwner(override val navigationEventDispatcher: Na
 class FloatingWindowManager(
     private val application: Application,
 ) {
+    /** 游龙独立悬浮窗管理器——通过 Application 级单例获取 */
+    val loongFlowManager: LoongFlowWindowManager get() = LoongFlowWindowManager.INSTANCE
+
     private var mainViewWindow: EasyWindow<*>? = null
     private var iconViewWindow: EasyWindow<*>? = null
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null

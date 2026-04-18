@@ -204,6 +204,18 @@ fun HomeScreen(
                         }
                     }
                     Divider()
+                    NameAndAction("游龙导出") {
+                        if (!XXPermissions.isGrantedPermission(
+                                context,
+                                PermissionLists.getSystemAlertWindowPermission()
+                            )
+                        ) {
+                            viewModel.isShowPermissionRequestWindow = true
+                        } else {
+                            floatingWindowManager?.loongFlowManager?.showExport(context)
+                        }
+                    }
+                    Divider()
                     NameAndAction(stringResource(R.string.layout_home_experimental_feature_raw_json_studio)) {
                         navController.navigate(RawtextScreenKey)
                     }

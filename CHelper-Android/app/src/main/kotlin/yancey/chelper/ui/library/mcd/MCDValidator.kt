@@ -50,6 +50,7 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
 
     val lines = rawCommands.split(Regex("\\r?\\n"))
     val results = mutableListOf<MCDLineResult>()
+    var pendingChat = false
 
     for ((idx, line) in lines.withIndex()) {
         val tline = line.trim()
@@ -58,15 +59,23 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
         // 空行跳过
         if (tline.isEmpty()) continue
 
-        // @元数据行
-        if (tline.startsWith("@")) {
-            results.add(MCDLineResult(lineNum, tline, LineType.META))
-            continue
-        }
-
         // ###标记行###
         if (tline.startsWith("###") && tline.endsWith("###")) {
             results.add(MCDLineResult(lineNum, tline, LineType.MARKER))
+            pendingChat = false
+            continue
+        }
+
+        // 处理 H 状态的强制文本
+        if (pendingChat) {
+            results.add(MCDLineResult(lineNum, tline, LineType.COMMAND))
+            pendingChat = false
+            continue
+        }
+
+        // @元数据行
+        if (tline.startsWith("@")) {
+            results.add(MCDLineResult(lineNum, tline, LineType.META))
             continue
         }
 
@@ -84,6 +93,9 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
 
         // v2 状态行 >
         if (tline.startsWith(">")) {
+            if (Regex("""^>\s*H\s*$""", RegexOption.IGNORE_CASE).matches(tline)) {
+                pendingChat = true
+            }
             results.add(MCDLineResult(lineNum, tline, LineType.STATE_LINE))
             continue
         }

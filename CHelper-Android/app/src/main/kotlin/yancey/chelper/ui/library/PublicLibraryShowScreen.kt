@@ -145,144 +145,6 @@ fun PublicLibraryShowScreen(
         }
     }
 
-    // 主菜单对话框
-    if (showMainMenu) {
-        val menuItems = buildList {
-            if (isPrivate) add("管理 ▸" to "manage")
-            add("逐行复制" to "line_copy")
-            add("复制全部 MCD 源码" to "copy_all")
-            add((if (viewModel.showRawSource) "查看可视化" else "查看源码") to "toggle_view")
-            add("关闭" to "close")
-        }.toTypedArray()
-        ChoosingDialog(
-            onDismissRequest = { showMainMenu = false },
-            data = menuItems,
-            onChoose = { action ->
-                when (action) {
-                    "manage" -> showManageMenu = true
-                    "line_copy" -> showLineCopyDialog = true
-                    "copy_all" -> {
-                        viewModel.library.content?.let { mcd ->
-                            val clip =
-                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clip.setPrimaryClip(ClipData.newPlainText("MCD", mcd))
-                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-
-                    "toggle_view" -> viewModel.showRawSource = !viewModel.showRawSource
-                }
-            }
-        )
-    }
-
-    // 管理子菜单对话框
-    if (showManageMenu) {
-        val hasPublic = viewModel.library.hasPublicVersion == true
-        val manageItems = buildList {
-            if (hasPublic) {
-                add("查看公开版本" to "view_public")
-                add("同步到公开库" to "sync")
-            } else {
-                add("发布到公开市场" to "release")
-            }
-            add("编辑" to "edit")
-            add("删除私有库" to "delete")
-            add("◂ 返回" to "back")
-        }.toTypedArray()
-        ChoosingDialog(
-            onDismissRequest = { showManageMenu = false },
-            data = manageItems,
-            onChoose = { action ->
-                when (action) {
-                    "release" -> {
-                        val user = yancey.chelper.network.library.util.LoginUtil.currentUser
-                        if (user != null && (user.tier ?: 0) >= 2) {
-                            viewModel.library.id?.let { viewModel.releaseToPublic(it, "") }
-                        } else {
-                            showCaptchaDialog = true
-                        }
-                    }
-                    "view_public" -> navController?.navigate(
-                        PublicLibraryShowScreenKey(
-                            id = id,
-                            isPrivate = false
-                        )
-                    )
-
-                    "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
-                    "edit" -> {
-                        val libJson =
-                            Json.encodeToString(LibraryFunction.serializer(), viewModel.library)
-                        navController?.navigate(
-                            CPLUploadScreenKey(
-                                editLibraryId = id,
-                                editLibraryJson = libJson
-                            )
-                        )
-                    }
-
-                    "delete" -> showDeleteConfirmDialog = true
-                    "back" -> showMainMenu = true
-                }
-            }
-        )
-    }
-
-    if (showDeleteConfirmDialog) {
-        ChoosingDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            data = arrayOf("确认删除 (不可恢复)" to "confirm", "取消" to "cancel"),
-            onChoose = { action ->
-                if (action == "confirm") {
-                    viewModel.library.id?.let {
-                        viewModel.deleteLibrary(it)
-                    }
-                }
-                showDeleteConfirmDialog = false
-            }
-        )
-    }
-
-    // 发布验证码流程
-    if (showCaptchaDialog) {
-        CaptchaDialog(
-            action = "publish",
-            onDismissRequest = { showCaptchaDialog = false },
-            onSuccess = { specialCode ->
-                viewModel.library.id?.let { viewModel.releaseToPublic(it, specialCode) }
-            }
-        )
-    }
-
-    // 逐行复制对话框
-    if (showLineCopyDialog) {
-        val commands = remember(viewModel.library, ambiguousLineDefault.value) {
-            val parsed = parseMCD(viewModel.library.content, ambiguousLineDefault.value)
-            parsed.chains.flatMap { chain ->
-                chain.items.mapNotNull { item ->
-                    when (item) {
-                        is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
-                        is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
-                        is ChainItem.Comment -> null
-                    }
-                }
-            }
-        }
-        if (commands.isEmpty()) {
-            LaunchedEffect(Unit) {
-                Toast.makeText(context, "没有可复制的命令", Toast.LENGTH_SHORT).show()
-                showLineCopyDialog = false
-            }
-        } else {
-            LineCopyDialog(
-                commands = commands,
-                onDismiss = { showLineCopyDialog = false }
-            )
-        }
-    }
-
     RootViewWithHeaderAndCopyright(
         title = viewModel.library.name ?: "加载中",
         headerRight = {
@@ -338,6 +200,7 @@ fun PublicLibraryShowScreen(
                 else -> {
                     Column(
                         modifier = Modifier
+                            .fillMaxSize()
                             .padding(vertical = 10.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
@@ -606,6 +469,152 @@ fun PublicLibraryShowScreen(
                     }
                 }
             }
+        }
+    }
+
+    // 所有 dialog 必须在 RootView 之后声明，因为上游 CustomDialog 是纯 Box 覆盖层而非真 popup，
+    // Compose 中后声明的节点 z-order 更高，放前面会被 RootView 压住导致点击穿透不到 dialog。
+
+    // 主菜单对话框
+    if (showMainMenu) {
+        val menuItems = buildList {
+            if (isPrivate) add("管理 ▸" to "manage")
+            add("逐行复制" to "line_copy")
+            add("复制全部 MCD 源码" to "copy_all")
+            add((if (viewModel.showRawSource) "查看可视化" else "查看源码") to "toggle_view")
+            add("游龙导入" to "loongflow_import")
+            add("关闭" to "close")
+        }.toTypedArray()
+        ChoosingDialog(
+            onDismissRequest = { showMainMenu = false },
+            data = menuItems,
+            onChoose = { action ->
+                when (action) {
+                    "manage" -> showManageMenu = true
+                    "line_copy" -> showLineCopyDialog = true
+                    "copy_all" -> {
+                        viewModel.library.content?.let { mcd ->
+                            val clip =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clip.setPrimaryClip(ClipData.newPlainText("MCD", mcd))
+                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+
+                    "toggle_view" -> viewModel.showRawSource = !viewModel.showRawSource
+                    "loongflow_import" -> {
+                        yancey.chelper.android.window.LoongFlowWindowManager.INSTANCE
+                            .showImport(context, viewModel.library)
+                    }
+                }
+            }
+        )
+    }
+
+    // 管理子菜单对话框
+    if (showManageMenu) {
+        val hasPublic = viewModel.library.hasPublicVersion == true
+        val manageItems = buildList {
+            if (hasPublic) {
+                add("查看公开版本" to "view_public")
+                add("同步到公开库" to "sync")
+            } else {
+                add("发布到公开市场" to "release")
+            }
+            add("编辑" to "edit")
+            add("删除私有库" to "delete")
+            add("◂ 返回" to "back")
+        }.toTypedArray()
+        ChoosingDialog(
+            onDismissRequest = { showManageMenu = false },
+            data = manageItems,
+            onChoose = { action ->
+                when (action) {
+                    "release" -> {
+                        val user = yancey.chelper.network.library.util.LoginUtil.currentUser
+                        if (user != null && (user.tier ?: 0) >= 2) {
+                            viewModel.library.id?.let { viewModel.releaseToPublic(it, "") }
+                        } else {
+                            showCaptchaDialog = true
+                        }
+                    }
+                    "view_public" -> navController?.navigate(
+                        PublicLibraryShowScreenKey(
+                            id = id,
+                            isPrivate = false
+                        )
+                    )
+
+                    "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
+                    "edit" -> {
+                        val libJson =
+                            Json.encodeToString(LibraryFunction.serializer(), viewModel.library)
+                        navController?.navigate(
+                            CPLUploadScreenKey(
+                                editLibraryId = id,
+                                editLibraryJson = libJson
+                            )
+                        )
+                    }
+
+                    "delete" -> showDeleteConfirmDialog = true
+                    "back" -> showMainMenu = true
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirmDialog) {
+        ChoosingDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            data = arrayOf("确认删除 (不可恢复)" to "confirm", "取消" to "cancel"),
+            onChoose = { action ->
+                if (action == "confirm") {
+                    viewModel.library.id?.let {
+                        viewModel.deleteLibrary(it)
+                    }
+                }
+                showDeleteConfirmDialog = false
+            }
+        )
+    }
+
+    // 发布验证码流程
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = "publish",
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { specialCode ->
+                viewModel.library.id?.let { viewModel.releaseToPublic(it, specialCode) }
+            }
+        )
+    }
+
+    // 逐行复制对话框
+    if (showLineCopyDialog) {
+        val commands = remember(viewModel.library, ambiguousLineDefault.value) {
+            val parsed = parseMCD(viewModel.library.content, ambiguousLineDefault.value)
+            parsed.chains.flatMap { chain ->
+                chain.items.mapNotNull { item ->
+                    when (item) {
+                        is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
+                        is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
+                        is ChainItem.Comment -> null
+                    }
+                }
+            }
+        }
+        if (commands.isEmpty()) {
+            LaunchedEffect(Unit) {
+                Toast.makeText(context, "没有可复制的命令", Toast.LENGTH_SHORT).show()
+                showLineCopyDialog = false
+            }
+        } else {
+            LineCopyDialog(
+                commands = commands,
+                onDismiss = { showLineCopyDialog = false }
+            )
         }
     }
 }

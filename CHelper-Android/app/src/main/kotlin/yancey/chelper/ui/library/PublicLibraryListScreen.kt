@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -78,10 +79,14 @@ fun PublicLibraryListScreen(
     val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
     val tagClickBehavior = settingsDataStore.tagClickBehavior()
         .collectAsState(initial = "search")
+    val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
+        .collectAsState(initial = true)
     val listState = rememberLazyListState()
 
-    // 初始加载
-    LaunchedEffect(Unit) { viewModel.loadFunctions() }
+    // 初始加载及偏好切换触发重新加载
+    LaunchedEffect(isPublicLibraryHomeRecommend) {
+        viewModel.refresh(isRecommend = isPublicLibraryHomeRecommend)
+    }
 
     // 监听滚动到底部，自动加载更多
     val shouldLoadMore = remember {
@@ -93,7 +98,7 @@ fun PublicLibraryListScreen(
     }
 
     LaunchedEffect(shouldLoadMore) {
-        snapshotFlow { shouldLoadMore.value }.collect { if (it) viewModel.loadMore() }
+        snapshotFlow { shouldLoadMore.value }.collect { if (it) viewModel.loadMore(isRecommend = isPublicLibraryHomeRecommend) }
     }
 
     RootViewWithHeaderAndCopyright(
@@ -120,7 +125,7 @@ fun PublicLibraryListScreen(
                     id = R.drawable.refresh,
                     modifier =
                         Modifier
-                            .clickable { viewModel.refresh() }
+                            .clickable { viewModel.refresh(isRecommend = isPublicLibraryHomeRecommend) }
                             .padding(5.dp)
                             .size(24.dp),
                     contentDescription = "刷新"
@@ -179,7 +184,7 @@ fun PublicLibraryListScreen(
                             Spacer(Modifier.height(10.dp))
                             Text(
                                 text = "点击重试",
-                                modifier = Modifier.clickable { viewModel.refresh() },
+                                modifier = Modifier.clickable { viewModel.refresh(isRecommend = isPublicLibraryHomeRecommend) },
                                 style = TextStyle(color = CHelperTheme.colors.mainColor)
                             )
                         }
