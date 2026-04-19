@@ -330,11 +330,26 @@ fun FloatingWindowNavHost(
             PublicLibraryShowScreen(customKey.id, customKey.isPrivate, navController)
         }
         composable<LibrarySearchScreenKey> { navBackStackEntry ->
-            val customKey = navBackStackEntry.toRoute<LibrarySearchScreenKey>()
-            LibrarySearchScreen(
+            val args: LibrarySearchScreenKey = navBackStackEntry.toRoute()
+            LibrarySearchScreen(navController = navController, initialKeyword = args.initialKeyword)
+        }
+        composable<CPLUserScreenKey> {
+            CPLUserScreen(navController = navController)
+        }
+        composable<CPLUploadScreenKey> { backStackEntry ->
+            val customKey = backStackEntry.toRoute<CPLUploadScreenKey>()
+            CPLUploadScreen(
                 navController = navController,
-                initialKeyword = customKey.initialKeyword
+                editLibraryId = customKey.editLibraryId,
+                editLibraryJson = customKey.editLibraryJson
             )
+        }
+        composable<LeaderboardScreenKey> {
+            LeaderboardScreen(navController)
+        }
+        composable<UserProfileScreenKey> { backStackEntry ->
+            val customKey = backStackEntry.toRoute<UserProfileScreenKey>()
+            UserProfileScreen(customKey.id, navController)
         }
     }
 }
