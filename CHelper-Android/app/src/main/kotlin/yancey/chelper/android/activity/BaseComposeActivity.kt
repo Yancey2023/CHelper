@@ -20,7 +20,9 @@ package yancey.chelper.android.activity
 
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -99,11 +101,17 @@ abstract class BaseComposeActivity : ComponentActivity() {
 
         if (existingComposeView != null) {
             with(existingComposeView) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+                }
                 setParentCompositionContext(parent)
                 setContent(content)
             }
         } else {
             ComposeView(this).apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+                }
                 setParentCompositionContext(parent)
                 setContent {
                     val backgroundBitmap =

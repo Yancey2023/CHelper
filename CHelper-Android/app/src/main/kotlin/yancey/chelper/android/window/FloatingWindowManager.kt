@@ -21,6 +21,7 @@ package yancey.chelper.android.window
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
@@ -132,6 +133,9 @@ class FloatingWindowManager(
             isFocusableInTouchMode = true
         }
         val composeView = ComposeView(context).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+            }
             setContent {
                 val backgroundBitmap =
                     BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(initial = null)
