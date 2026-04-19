@@ -18,11 +18,12 @@
 
 package yancey.chelper.ui.home
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hjq.device.compat.DeviceOs
 import com.hjq.permissions.XXPermissions
@@ -41,7 +42,7 @@ import yancey.chelper.network.chelper.data.Announcement
 import yancey.chelper.network.chelper.data.VersionInfo
 import java.io.File
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var policyGrantState by mutableStateOf(PolicyGrantManager.State.NOT_READ)
     var announcement by mutableStateOf<Announcement?>(null)
     var latestVersionInfo by mutableStateOf<VersionInfo?>(null)
@@ -51,38 +52,23 @@ class HomeViewModel : ViewModel() {
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
     var isShowCommandLabVersionDialog by mutableStateOf(false)
-    private lateinit var settingsDataStore: SettingsDataStore
-    private var floatingWindowManager: FloatingWindowManager? = null
+    private val settingsDataStore = SettingsDataStore(application.applicationContext)
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
-    private lateinit var skipXiaomiClipboardPermissionTipsFile: File
-    private lateinit var skipAnnouncementFile: File
-    private lateinit var skipVersionFile: File
-    private var isInit = false
+    private val skipXiaomiClipboardPermissionTipsFile: File =
+        application.dataDir.resolve(SKIP_XIAOMI_CLIPBOARD_PERMISSION_TIPS_FILENAME)
+    private val skipAnnouncementFile: File =
+        application.dataDir.resolve(SKIP_ANNOUNCEMENT_FILENAME)
+    private val skipVersionFile: File =
+        application.dataDir.resolve(SKIP_VERSION_FILENAME)
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
-    }
-
-    fun init(
-        context: Context,
-        settingsDataStore: SettingsDataStore,
-        floatingWindowManager: FloatingWindowManager?
-    ) {
-        this.settingsDataStore = settingsDataStore
-        this.floatingWindowManager = floatingWindowManager
-        this.skipXiaomiClipboardPermissionTipsFile =
-            context.dataDir.resolve("xiaomi_clipboard_permission_no_tips.txt")
-        this.skipAnnouncementFile =
-            context.dataDir.resolve("ignore_announcement.txt")
-        this.skipVersionFile =
-            context.dataDir.resolve("ignore_version.txt")
-        if (policyGrantState == PolicyGrantManager.State.AGREE && !isInit) {
+        if (policyGrantState == PolicyGrantManager.State.AGREE) {
             showAnnouncementDialog()
-            isInit = true
         }
     }
 
-    fun isUsingFloatingWindow(): Boolean {
+    fun isUsingFloatingWindow(floatingWindowManager: FloatingWindowManager?): Boolean {
         return floatingWindowManager?.isUsingFloatingWindow == true
     }
 
@@ -93,6 +79,7 @@ class HomeViewModel : ViewModel() {
         floatingWindowIconAlpha: Float,
         floatingWindowScreenAlpha: Float,
         isFloatingWindowFontAlphaSync: Boolean,
+        floatingWindowManager: FloatingWindowManager?,
     ) {
         if (!XXPermissions.isGrantedPermission(
                 context,
@@ -105,7 +92,8 @@ class HomeViewModel : ViewModel() {
         if (!isSkipXiaomiClipboardPermissionTips) {
             if (isNeedToShowXiaomiClipboardPermissionTips == null) {
                 isNeedToShowXiaomiClipboardPermissionTips =
-                    !skipXiaomiClipboardPermissionTipsFile.exists() && (DeviceOs.isHyperOs() || DeviceOs.isMiui())
+                    !skipXiaomiClipboardPermissionTipsFile.exists() &&
+                            (DeviceOs.isHyperOs() || DeviceOs.isMiui())
             }
             if (isNeedToShowXiaomiClipboardPermissionTips!!) {
                 isShowXiaomiClipboardPermissionTips = true
@@ -123,10 +111,15 @@ class HomeViewModel : ViewModel() {
 
     fun dismissShowXiaomiClipboardPermissionTipsForever() {
         this.isNeedToShowXiaomiClipboardPermissionTips = false
-        skipXiaomiClipboardPermissionTipsFile.outputStream().write("".toByteArray())
+        try {
+            skipXiaomiClipboardPermissionTipsFile.parentFile?.mkdirs()
+            skipXiaomiClipboardPermissionTipsFile.outputStream().use { it.write("".toByteArray()) }
+        } catch (_: Exception) {
+
+        }
     }
 
-    fun stopFloatingWindow() {
+    fun stopFloatingWindow(floatingWindowManager: FloatingWindowManager?) {
         floatingWindowManager?.stopFloatingWindow()
     }
 
@@ -250,5 +243,12 @@ class HomeViewModel : ViewModel() {
 
     fun dismissCommandLabVersionDialog() {
         isShowCommandLabVersionDialog = false
+    }
+
+    companion object {
+        private const val SKIP_XIAOMI_CLIPBOARD_PERMISSION_TIPS_FILENAME =
+            "xiaomi_clipboard_permission_no_tips.txt"
+        private const val SKIP_ANNOUNCEMENT_FILENAME = "ignore_announcement.txt"
+        private const val SKIP_VERSION_FILENAME = "ignore_version.txt"
     }
 }

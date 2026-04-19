@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -86,9 +85,6 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
-    LaunchedEffect(viewModel, settingsDataStore, floatingWindowManager) {
-        viewModel.init(context, settingsDataStore, floatingWindowManager)
-    }
     val isShowPublicLibrary by settingsDataStore.isShowPublicLibrary()
         .collectAsState(initial = false)
     val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
@@ -144,7 +140,7 @@ fun HomeScreen(
                     NameAndAction(
                         name = stringResource(R.string.layout_home_command_completion_app_mode),
                         onClick = {
-                            if (viewModel.isUsingFloatingWindow()) {
+                            if (viewModel.isUsingFloatingWindow(floatingWindowManager)) {
                                 Toaster.show("你必须关闭悬浮窗模式才可以进入应用模式")
                             } else {
                                 navController.navigate(CompletionScreenKey)
@@ -155,8 +151,8 @@ fun HomeScreen(
                     NameAndAction(
                         name = stringResource(R.string.layout_home_command_completion_floating_window_mode),
                         onClick = {
-                            if (viewModel.isUsingFloatingWindow()) {
-                                viewModel.stopFloatingWindow()
+                            if (viewModel.isUsingFloatingWindow(floatingWindowManager)) {
+                                viewModel.stopFloatingWindow(floatingWindowManager)
                             } else {
                                 viewModel.startFloatingWindow(
                                     context,
@@ -165,6 +161,7 @@ fun HomeScreen(
                                     floatingWindowIconAlpha,
                                     floatingWindowScreenAlpha,
                                     isFloatingWindowFontAlphaSync,
+                                    floatingWindowManager,
                                 )
                             }
                         }
@@ -269,6 +266,7 @@ fun HomeScreen(
                     floatingWindowIconAlpha,
                     floatingWindowScreenAlpha,
                     isFloatingWindowFontAlphaSync,
+                    floatingWindowManager,
                 )
             },
             onConfirm = {
@@ -279,6 +277,7 @@ fun HomeScreen(
                     floatingWindowIconAlpha,
                     floatingWindowScreenAlpha,
                     isFloatingWindowFontAlphaSync,
+                    floatingWindowManager,
                 )
             }
         )
