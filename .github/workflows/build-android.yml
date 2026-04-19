@@ -29,7 +29,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Grant execute permission for gradlew
         working-directory: ${{ github.workspace }}/CHelper-Android
