@@ -20,6 +20,8 @@ package yancey.chelper.ui.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,6 +64,8 @@ import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
+import androidx.compose.foundation.layout.heightIn
+import yancey.chelper.ui.common.dialog.CustomDialog
 
 @Composable
 fun MessageScreen(
@@ -220,23 +224,22 @@ fun MessageScreen(
     if (selectedMessageForAction != null) {
         val msg = selectedMessageForAction!!
         val isUnreadMsg = msg.isRead != true
-        val options = mutableListOf<Pair<String, String>>()
-        if (isUnreadMsg) options.add("标记已读" to "read")
-        options.add("删除" to "delete")
-        options.add("取消" to "cancel")
 
-        ChoosingDialog(
-            onDismissRequest = { selectedMessageForAction = null },
-            data = options.toTypedArray(),
-            onChoose = { action ->
+        MessageDetailDialog(
+            message = msg,
+            onDismiss = { selectedMessageForAction = null },
+            onRead = {
                 val id = msg.id
-                selectedMessageForAction = null
-                if (id != null) {
-                    when (action) {
-                        "read" -> viewModel.markAsRead(id)
-                        "delete" -> viewModel.deleteMessage(id)
-                    }
+                if (id != null && isUnreadMsg) {
+                    viewModel.markAsRead(id)
                 }
+            },
+            onDelete = {
+                val id = msg.id
+                if (id != null) {
+                    viewModel.deleteMessage(id)
+                }
+                selectedMessageForAction = null
             }
         )
     }
@@ -356,4 +359,125 @@ private fun MessageItem(
             }
         }
     }
+    }
+
+@Composable
+private fun MessageDetailDialog(
+    message: SiteMessage,
+    onDismiss: () -> Unit,
+    onRead: () -> Unit,
+    onDelete: () -> Unit
+) {
+    CustomDialog(
+        onDismissRequest = {
+            onRead() // dismissing also automatically marks as read ideally
+            onDismiss()
+        }
+    ) {
+        yancey.chelper.ui.common.dialog.DialogContainer(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 20.dp)
+            ) {
+            // Header
+            Text(
+                text = message.title ?: "消息详情",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = CHelperTheme.colors.textMain
+                )
+            )
+            
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = message.createdAt ?: "",
+                    style = TextStyle(
+                        color = CHelperTheme.colors.textSecondary,
+                        fontSize = 12.sp
+                    )
+                )
+
+                // 消息类型
+                message.msgType?.let { type ->
+                    val label = when (type) {
+                        "system" -> "系统"
+                        "review" -> "审核"
+                        "notice" -> "通知"
+                        else -> type
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(CHelperTheme.colors.mainColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = label,
+                            style = TextStyle(
+                                color = CHelperTheme.colors.mainColor,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // 滚动消息体
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = message.content ?: "无内容",
+                    style = TextStyle(
+                        color = CHelperTheme.colors.textMain,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
+                    )
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "删除",
+                    modifier = Modifier
+                        .clickable { onDelete() }
+                        .padding(8.dp),
+                    style = TextStyle(color = CHelperTheme.colors.textErrorReason)
+                )
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text = "关闭",
+                    modifier = Modifier
+                        .clickable {
+                            onRead()
+                            onDismiss()
+                        }
+                        .padding(8.dp),
+                    style = TextStyle(color = CHelperTheme.colors.mainColor, fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+        }
+    }
 }
+
