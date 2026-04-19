@@ -86,26 +86,6 @@ fun CPLUploadScreen(
     var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
     var validationResult by remember { mutableStateOf<MCDValidationResult?>(null) }
 
-    if (showCaptchaDialog) {
-        CaptchaDialog(
-            action = "publish",
-            onDismissRequest = { showCaptchaDialog = false },
-            onSuccess = { code -> captchaCallback(code) }
-        )
-    }
-
-    if (showLowCodeHelper) {
-        LowCodeV2HelperDialog(
-            rawContent = viewModel.commands.text.toString(),
-            onDismiss = { showLowCodeHelper = false },
-            onApply = { newContent ->
-                viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
-                showLowCodeHelper = false
-                com.hjq.toast.Toaster.show("已应用标记！")
-            }
-        )
-    }
-
     // ━━━ 预览界面（覆盖式，全屏） ━━━
     if (showPreviewScreen && validationResult != null) {
         MCDPreviewScreen(
@@ -139,11 +119,9 @@ fun CPLUploadScreen(
                 }
             }
         )
-        return
-    }
-
-    // ━━━ 编辑界面 ━━━
-    RootViewWithHeaderAndCopyright(title = stringResource(R.string.upload_title)) {
+    } else {
+        // ━━━ 编辑界面 ━━━
+        RootViewWithHeaderAndCopyright(title = stringResource(R.string.upload_title)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -362,6 +340,27 @@ fun CPLUploadScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
+    } // End of else block
+
+    // ━━━ 根级弹窗层（最后渲染，保证在最顶层） ━━━
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = "publish",
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { code -> captchaCallback(code) }
+        )
+    }
+
+    if (showLowCodeHelper) {
+        LowCodeV2HelperDialog(
+            rawContent = viewModel.commands.text.toString(),
+            onDismiss = { showLowCodeHelper = false },
+            onApply = { newContent ->
+                viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
+                showLowCodeHelper = false
+                com.hjq.toast.Toaster.show("已应用标记！")
+            }
+        )
     }
 
     if (showImportDialog) {
