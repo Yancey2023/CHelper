@@ -157,7 +157,7 @@ fun LowCodeV2HelperDialog(
 private fun DialogActionBar(
     targetLines: List<Pair<Int, String>>,
     lines: List<String>,
-    results: Map<Int, yancey.chelper.ui.library.mcd.MCDValidationResult.LineResult?>,
+    results: Map<Int, yancey.chelper.ui.library.mcd.MCDLineResult?>,
     lineStates: androidx.compose.runtime.MutableState<MutableMap<Int, String>>,
     onDismiss: () -> Unit,
     onApply: (String) -> Unit

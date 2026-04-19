@@ -33,7 +33,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -53,6 +55,7 @@ import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Switch
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextField
+import yancey.chelper.ui.library.mcd.LineType
 
 import yancey.chelper.ui.library.mcd.MCDContentView
 import yancey.chelper.ui.library.mcd.MCDValidationResult
