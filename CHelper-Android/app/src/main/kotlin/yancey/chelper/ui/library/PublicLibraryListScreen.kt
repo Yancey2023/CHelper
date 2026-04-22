@@ -131,7 +131,7 @@ fun PublicLibraryListScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (!isFloatingWindow) {
                     Icon(
-                        id = R.drawable.folder,
+                        id = R.drawable.ic_user,
                         modifier =
                             Modifier
                                 .clickable {

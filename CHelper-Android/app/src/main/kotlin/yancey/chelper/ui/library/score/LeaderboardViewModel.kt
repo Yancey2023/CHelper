@@ -29,11 +29,11 @@ class LeaderboardViewModel : ViewModel() {
         errorMessage = null
         viewModelScope.launch {
             try {
-                val res = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE?.getLeaderboard()
-                if (res?.status == 0 && res.data?.leaderboard != null) {
+                val res = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getLeaderboard()
+                if (res.status == 0 && res.data?.leaderboard != null) {
                     leaderboard = res.data!!.leaderboard!!
                 } else {
-                    errorMessage = res?.message ?: "拉取榜单失败"
+                    errorMessage = res.message ?: "拉取榜单失败"
                 }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "网络错误"

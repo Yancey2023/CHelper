@@ -363,5 +363,8 @@ fun FloatingWindowNavHost(
             val customKey = backStackEntry.toRoute<UserProfileScreenKey>()
             UserProfileScreen(customKey.id, navController)
         }
+        composable<MessageScreenKey> {
+            MessageScreen()
+        }
     }
 }
