@@ -28,9 +28,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +44,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Icon
@@ -289,25 +294,76 @@ fun MCDContentView(
     ambiguousDefault: String = "comment",
     showMetadata: Boolean = true
 ) {
-    val parsed = remember(content, ambiguousDefault) { parseMCD(content, ambiguousDefault) }
+    val parsed by produceState<ParsedMCD?>(initialValue = null, content, ambiguousDefault) {
+        value = null
+        value = withContext(Dispatchers.Default) {
+            parseMCD(content, ambiguousDefault)
+        }
+    }
 
-    Column(modifier = modifier) {
+    if (parsed == null) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(CHelperTheme.colors.backgroundComponent)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "解析中...",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = CHelperTheme.colors.textSecondary
+                )
+            )
+        }
+        return
+    }
+    val parsedData = parsed ?: return
+
+    LazyColumn(modifier = modifier) {
         // 元数据区（可通过设置隐藏）
-        if (showMetadata && parsed.metaInfo.isNotEmpty()) {
-            MetaSection(parsed.metaInfo)
-            Spacer(Modifier.height(8.dp))
+        if (showMetadata && parsedData.metaInfo.isNotEmpty()) {
+            item(key = "meta") {
+                MetaSection(parsedData.metaInfo)
+                Spacer(Modifier.height(8.dp))
+            }
         }
 
         // 链前游离注释
-        parsed.rootComments.forEach { comment ->
+        itemsIndexed(
+            items = parsedData.rootComments,
+            key = { index, _ -> "root_comment_$index" }
+        ) { _, comment ->
             CommentItem(comment)
             Spacer(Modifier.height(4.dp))
         }
 
         // 命令链
-        parsed.chains.forEach { chain ->
-            ChainView(chain)
-            Spacer(Modifier.height(12.dp))
+        parsedData.chains.forEachIndexed { chainIndex, chain ->
+            val shouldShowHeader = chain.name != "分离的指令" && chain.name != "默认主链"
+            if (shouldShowHeader) {
+                item(key = "chain_header_$chainIndex") {
+                    ChainHeader(chain.name)
+                }
+            }
+
+            itemsIndexed(
+                items = chain.items,
+                key = { itemIndex, _ -> "chain_${chainIndex}_item_$itemIndex" }
+            ) { _, item ->
+                when (item) {
+                    is ChainItem.Comment -> CommentItem(item.text)
+                    is ChainItem.RawCommand -> RawCommandItem(item.command)
+                    is ChainItem.Block -> BlockItem(item.block)
+                }
+                Spacer(Modifier.height(4.dp))
+            }
+
+            item(key = "chain_space_$chainIndex") {
+                Spacer(Modifier.height(12.dp))
+            }
         }
     }
 }
@@ -377,39 +433,25 @@ private fun CommentItem(text: String) {
 }
 
 @Composable
-private fun ChainView(chain: MCDChain) {
-    Column {
-        // 只有非默认链名才显示标题
-        if (chain.name != "分离的指令" && chain.name != "默认主链") {
-            Row(
-                modifier = Modifier.padding(bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    id = R.drawable.share,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = chain.name,
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = CHelperTheme.colors.textMain
-                    )
-                )
-            }
-        }
-
-        chain.items.forEach { item ->
-            when (item) {
-                is ChainItem.Comment -> CommentItem(item.text)
-                is ChainItem.RawCommand -> RawCommandItem(item.command)
-                is ChainItem.Block -> BlockItem(item.block)
-            }
-            Spacer(Modifier.height(4.dp))
-        }
+private fun ChainHeader(name: String) {
+    Row(
+        modifier = Modifier.padding(bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            id = R.drawable.share,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = name,
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = CHelperTheme.colors.textMain
+            )
+        )
     }
 }
 

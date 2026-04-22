@@ -203,7 +203,6 @@ fun PublicLibraryShowScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(vertical = 10.dp)
-                            .verticalScroll(rememberScrollState())
                     ) {
                         // ━━━ 元信息卡片 ━━━
                         @OptIn(ExperimentalLayoutApi::class)
@@ -434,39 +433,44 @@ fun PublicLibraryShowScreen(
                         Spacer(Modifier.height(4.dp))
 
                         // ━━━ 内容区：可视化 / 原始源码 ━━━
-                        if (viewModel.showRawSource) {
-                            // 原始源码视图
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 15.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(CHelperTheme.colors.backgroundComponent)
-                                    .padding(12.dp)
-                                    .horizontalScroll(rememberScrollState())
-                            ) {
-                                Text(
-                                    text = viewModel.library.content ?: "",
-                                    style = TextStyle(
-                                        fontSize = 12.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = CHelperTheme.colors.textMain
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            if (viewModel.showRawSource) {
+                                // 原始源码视图
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 15.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(CHelperTheme.colors.backgroundComponent)
+                                        .padding(12.dp)
+                                        .verticalScroll(rememberScrollState())
+                                        .horizontalScroll(rememberScrollState())
+                                ) {
+                                    Text(
+                                        text = viewModel.library.content ?: "",
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            color = CHelperTheme.colors.textMain
+                                        )
                                     )
+                                }
+                            } else {
+                                // MCD 可视化视图
+                                MCDContentView(
+                                    content = viewModel.library.content,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 15.dp),
+                                    ambiguousDefault = ambiguousLineDefault.value,
+                                    showMetadata = !isHideMetadataPreview.value
                                 )
                             }
-                        } else {
-                            // MCD 可视化视图
-                            MCDContentView(
-                                content = viewModel.library.content,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 15.dp),
-                                ambiguousDefault = ambiguousLineDefault.value,
-                                showMetadata = !isHideMetadataPreview.value
-                            )
                         }
-
-                        Spacer(Modifier.height(20.dp))
                     }
                 }
             }
