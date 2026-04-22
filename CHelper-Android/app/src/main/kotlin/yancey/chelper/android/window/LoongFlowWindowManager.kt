@@ -183,7 +183,7 @@ class LoongFlowWindowManager(
      */
     fun movePanel(deltaX: Float, deltaY: Float) {
         val panel = panelWindow ?: return
-        val params = panel.windowParams ?: return
+        val params = panel.windowParams
         params.x += deltaX.toInt()
         params.y += deltaY.toInt()
         panel.update()
@@ -206,6 +206,7 @@ class LoongFlowWindowManager(
     //  内部实现
     // ─────────────────────────────────────────
 
+    @Suppress("DEPRECATION")
     private fun showPanel(context: Context, mode: LoongFlowMode, library: LibraryFunction?) {
         val metrics = application.resources.displayMetrics
         val isLandscape = metrics.widthPixels > metrics.heightPixels

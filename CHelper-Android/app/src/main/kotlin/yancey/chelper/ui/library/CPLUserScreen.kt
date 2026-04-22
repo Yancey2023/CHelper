@@ -86,15 +86,7 @@ fun CPLUserScreen(
     var captchaAction by remember { mutableStateOf("") }
     var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
-    if (showCaptchaDialog) {
-        CaptchaDialog(
-            action = captchaAction,
-            onDismissRequest = { showCaptchaDialog = false },
-            onSuccess = { code -> captchaCallback(code) }
-        )
-    }
-
-    // Helper for Captcha
+    // Moved CaptchaDialog to end    // Helper for Captcha
     fun showCaptcha(action: String, onSuccess: (String) -> Unit) {
         captchaAction = action
         captchaCallback = onSuccess
@@ -143,6 +135,14 @@ fun CPLUserScreen(
                 })
             }
         }
+    }
+
+    if (showCaptchaDialog) {
+        CaptchaDialog(
+            action = captchaAction,
+            onDismissRequest = { showCaptchaDialog = false },
+            onSuccess = { code -> captchaCallback(code) }
+        )
     }
 }
 
@@ -242,13 +242,43 @@ fun UserProfileView(
                     }
                 }
                 .padding(20.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.CenterStart
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
                 Icon(id = R.drawable.ic_user, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "进入创作者主页 (云库管理)",
+                    style = TextStyle(
+                        color = CHelperTheme.colors.textMain,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+
+        // 站内信入口
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp))
+                .background(
+                    CHelperTheme.colors.backgroundComponentNoTranslate,
+                    RoundedCornerShape(16.dp)
+                )
+                .clickable {
+                    navController.navigate(yancey.chelper.ui.MessageScreenKey)
+                }
+                .padding(20.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
+                Icon(id = R.drawable.ic_mail, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "站内信",
                     style = TextStyle(
                         color = CHelperTheme.colors.textMain,
                         fontSize = 18.sp,

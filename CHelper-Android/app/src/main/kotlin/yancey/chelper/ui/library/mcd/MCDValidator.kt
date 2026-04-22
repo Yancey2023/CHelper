@@ -123,3 +123,45 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
         errorCount = errorCount
     )
 }
+
+/**
+ * 低代码辅助功能：为未标记 MCDv2 状态的常规指令行自动加上默认的 `> C` (连锁) 标记。
+ * 注释和空行不破坏先前存在的状态标记。
+ */
+fun autoPrefixMCDv2States(rawCommands: String): String {
+    val results = validateMCDContent(rawCommands)
+    val lines = rawCommands.split(Regex("\\r?\\n"))
+    
+    val lineTypeByNum = results.lines.associateBy { it.lineNumber }
+    val output = mutableListOf<String>()
+    
+    var lastEffectiveType: LineType? = null
+    
+    for ((idx, line) in lines.withIndex()) {
+        val lineNum = idx + 1
+        val result = lineTypeByNum[lineNum]
+        
+        if (result == null) {
+            // 空行
+            output.add(line)
+            continue
+        }
+        
+        if (result.type == LineType.COMMAND) {
+            if (lastEffectiveType != LineType.STATE_LINE) {
+                // 如果当前是一个指令，且上面最近一个有效实体不是状态行，则补全
+                output.add("> C")
+            }
+            output.add(line)
+            lastEffectiveType = LineType.COMMAND
+        } else {
+            output.add(line)
+            // 注释、空行、元数据不改变上下文的执行链路状态挂载判定
+            if (result.type != LineType.COMMENT && result.type != LineType.META) {
+                lastEffectiveType = result.type
+            }
+        }
+    }
+    
+    return output.joinToString("\n")
+}

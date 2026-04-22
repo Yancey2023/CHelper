@@ -43,13 +43,15 @@ class PublicLibraryListViewModel : ViewModel() {
     var hasMore by mutableStateOf(true)
     private var forceRefresh = false
     private var initializedRecommendMode: Boolean? = null
+    var isRecommendMode by mutableStateOf(false)
+    var currentLoadedMode: Boolean? = null
 
     private var searchJob: Job? = null
 
     fun ensureInitialized(isRecommend: Boolean) {
         if (initializedRecommendMode == isRecommend) return
         initializedRecommendMode = isRecommend
-        refresh(isRecommend = isRecommend)
+        isRecommendMode = isRecommend
     }
 
     fun loadFunctions(search: String? = null, resetPage: Boolean = true, isRecommend: Boolean = false) {
@@ -71,7 +73,7 @@ class PublicLibraryListViewModel : ViewModel() {
             try {
                 val response = withContext(Dispatchers.IO) {
                     if (isRecommend && search.isNullOrBlank()) {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getRecommendedLibrary(limit = 15)
+                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getRecommendedLibrary(limit = 15, pageNum = currentPage, pageSize = 20)
                     } else {
                         ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
                             pageNum = currentPage,
@@ -90,7 +92,14 @@ class PublicLibraryListViewModel : ViewModel() {
                     val size = data.perPage ?: 20
                     // Calculate total pages: ceil(total / size)
                     totalPages = if (size > 0) (total + size - 1) / size else 1
-                    hasMore = currentPage < totalPages
+                    
+                    // 对于猜你喜欢模式：如果后端没有返回正确的 total 限制（纯随机），
+                    // 返回条数不为空就允许继续加载下页，否则按照普通模式页数走
+                    hasMore = if (isRecommend) {
+                        functions.isNotEmpty()
+                    } else {
+                        currentPage < totalPages
+                    }
                 } else {
                     errorMessage = response.message ?: "加载失败"
                 }

@@ -413,4 +413,41 @@ interface CommandLabUserService {
      */
     @GET("library/quota")
     suspend fun getQuota(): BaseResult<QuotaResponse?>
+
+    // -------------------------------------------------------------
+    // Message (站内信)
+    // -------------------------------------------------------------
+
+    /**
+     * 获取我的站内信收件箱。
+     */
+    @Headers("Cache-Control: no-cache")
+    @GET("message/")
+    suspend fun getMessages(
+        @Query("page") page: Int = 1,
+        @Query("page_size") pageSize: Int = 20,
+        @Query("unread_only") unreadOnly: Boolean = false
+    ): BaseResult<yancey.chelper.network.library.data.MessageListResponse?>
+
+    /**
+     * 获取未读站内信数量。
+     */
+    @GET("message/unread-count")
+    suspend fun getUnreadCount(): BaseResult<yancey.chelper.network.library.data.UnreadCountResponse?>
+
+    /**
+     * 将某条站内信标记为已读。
+     */
+    @PUT("message/{id}/read")
+    suspend fun markMessageRead(
+        @Path("id") id: Int
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+
+    /**
+     * 软删除（隐藏）一条站内信。
+     */
+    @DELETE("message/{id}")
+    suspend fun deleteMessage(
+        @Path("id") id: Int
+    ): BaseResult<kotlinx.serialization.json.JsonElement?>
 }

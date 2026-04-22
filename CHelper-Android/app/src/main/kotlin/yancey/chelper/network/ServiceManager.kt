@@ -63,6 +63,7 @@ object ServiceManager {
             .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
             .addInterceptor(BrotliInterceptor)
             .addInterceptor(RateLimitInterceptor(2))
+            .addInterceptor(yancey.chelper.network.library.interceptor.WafInterceptor())
             .addInterceptor(AuthInterceptor.INSTANCE)
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))

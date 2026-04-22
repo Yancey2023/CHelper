@@ -99,34 +99,6 @@ fun UserProfileScreen(
         onDispose { }
     }
 
-    if (showEditDialog && viewModel.userProfile != null) {
-        EditProfileDialog(
-            user = viewModel.userProfile!!,
-            isUpdating = viewModel.isUpdating,
-            onDismiss = { showEditDialog = false },
-            onSave = { nickname, avatar, homepage, signature ->
-                viewModel.updateProfile(nickname, avatar, homepage, signature) {
-                    showEditDialog = false
-                }
-            }
-        )
-    }
-
-    actionDialogTarget?.let { (targetId, isPublic) ->
-        yancey.chelper.ui.common.dialog.IsConfirmDialog(
-            title = if (isPublic) "下架公开库" else "删除私有库",
-            content = if (isPublic) "确定要下架这个公开市场的命令库吗？私有云库内的原始文本不会受影响。" else "确定要从云端删除这个私有库草稿吗？此操作不可逆。",
-            onDismissRequest = { actionDialogTarget = null },
-            cancelText = "取消",
-            onCancel = { actionDialogTarget = null },
-            confirmText = "确定",
-            onConfirm = {
-                viewModel.deleteOrUnpublishLibrary(targetId, isPublic)
-                actionDialogTarget = null
-            }
-        )
-    }
-
     RootViewWithHeaderAndCopyright(
         title = "创作者主页",
         headerRight = {
@@ -348,6 +320,34 @@ fun UserProfileScreen(
                 }
             }
         }
+    }
+
+    if (showEditDialog && viewModel.userProfile != null) {
+        EditProfileDialog(
+            user = viewModel.userProfile!!,
+            isUpdating = viewModel.isUpdating,
+            onDismiss = { showEditDialog = false },
+            onSave = { nickname, avatar, homepage, signature ->
+                viewModel.updateProfile(nickname, avatar, homepage, signature) {
+                    showEditDialog = false
+                }
+            }
+        )
+    }
+
+    actionDialogTarget?.let { (targetId, isPublic) ->
+        yancey.chelper.ui.common.dialog.IsConfirmDialog(
+            title = if (isPublic) "下架公开库" else "删除私有库",
+            content = if (isPublic) "确定要下架这个公开市场的命令库吗？私有云库内的原始文本不会受影响。" else "确定要从云端删除这个私有库草稿吗？此操作不可逆。",
+            onDismissRequest = { actionDialogTarget = null },
+            cancelText = "取消",
+            onCancel = { actionDialogTarget = null },
+            confirmText = "确定",
+            onConfirm = {
+                viewModel.deleteOrUnpublishLibrary(targetId, isPublic)
+                actionDialogTarget = null
+            }
+        )
     }
 }
 

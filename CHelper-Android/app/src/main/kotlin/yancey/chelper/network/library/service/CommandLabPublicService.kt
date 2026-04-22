@@ -76,7 +76,9 @@ interface CommandLabPublicService {
      */
     @GET("library/recommend")
     suspend fun getRecommendedLibrary(
-        @Query("limit") limit: Int = 15
+        @Query("limit") limit: Int = 15,
+        @Query("page_num") pageNum: Int? = null,
+        @Query("page_size") pageSize: Int? = null
     ): BaseResult<GetFunctionsResponse?>
 
     /**
