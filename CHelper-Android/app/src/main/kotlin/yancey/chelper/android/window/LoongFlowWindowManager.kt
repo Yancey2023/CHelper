@@ -34,13 +34,7 @@ import yancey.chelper.ui.loongflow.LoongFlowPanel
 import yancey.chelper.ui.loongflow.LoongFlowViewModel
 
 /**
- * 游龙悬浮窗管理器。
- *
- * 核心差异于 FloatingWindowManager：
- * - 窗口为非全屏的米窗样式浮动面板（屏幕 80%×65%），而非全屏覆盖
- * - 支持拖拽到屏幕边缘收缩为迷你气泡
- * - 不走 Navigation 路由，使用内部状态机控制 step 流转
- * - 可获焦点（导出模式需要粘贴输入）
+ * 游龙悬浮窗管理器
  */
 class LoongFlowWindowManager(
     private val application: Application,
@@ -70,7 +64,7 @@ class LoongFlowWindowManager(
 
     /**
      * 以导入模式启动游龙面板。
-     * 从 PublicLibraryShowScreen 菜单触发，携带当前查看的命令库数据。
+     * 从 PublicLibraryShowScreen 菜单触发，携带当前查看的命令库数据
      */
     fun showImport(context: Context, library: LibraryFunction) {
         // 如果已经在显示，先关掉旧的
@@ -84,8 +78,8 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 以导出模式启动游龙面板。
-     * 从 HomeScreen / 悬浮窗菜单触发，不依赖任何现有库数据。
+     * 以导出模式启动游龙面板
+     * 从 HomeScreen / 悬浮窗菜单触发，不依赖任何现有库数据
      */
     fun showExport(context: Context) {
         if (isShowing) dismiss()
@@ -98,8 +92,8 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 面板 → 气泡：收缩为迷你气泡。
-     * 面板隐藏但不销毁（保留 ViewModel 状态），气泡显示在屏幕右侧边缘。
+     * 面板 → 气泡：收缩为迷你气泡
+     * 面板隐藏但不销毁（保留 ViewModel 状态），气泡显示在屏幕右侧边缘
      */
     fun minimizeToBubble() {
         panelWindow?.let { panel ->
@@ -110,7 +104,7 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 气泡 → 面板：从气泡展开回面板。
+     * 气泡 → 面板：从气泡展开回面板
      */
     fun expandFromBubble() {
         hideBubble()
@@ -121,7 +115,7 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 彻底关闭游龙所有窗口并释放资源。
+     * 彻底关闭游龙所有窗口并释放资源
      */
     fun dismiss() {
         hideBubble()
@@ -143,21 +137,21 @@ class LoongFlowWindowManager(
     private var isCompactMode = false
 
     /**
-     * 切换小窗流尺寸（正常/精简）。
-     * 为了防止缩小时底层 WindowManager 与 Compose 视图测量脱节导致裁切问题，
-     * 此处采用【保存 ViewModel 状态 -> 销毁旧窗口 -> 按新参数重建新窗口】的方式。
+     * 切换小窗流尺寸（正常/精简）
+     * 为了防止缩小时底层 WindowManager 与 Compose 视图测量脱节导致裁切问题
+     * 此处保存 ViewModel 状态，销毁旧窗口，按新参数重建新窗口
      */
     fun toggleSize() {
         val vm = viewModel ?: return
         val currentMode = vm.mode
         isCompactMode = !isCompactMode
 
-        // 记录此时的位置，方便原地重建（可选，这里演示还是居中，或按原坐标？）
+        // 记录此时的位置，方便原地重建
         val oldParams = panelWindow?.windowParams
         val oldX = oldParams?.x ?: 0
         val oldY = oldParams?.y ?: 0
 
-        // 彻底回收旧的 Panel，但【不要清空 viewModel】
+        // 回收旧的 Panel，但不清空 viewModel
         panelWindow?.let { panel ->
             composeLifecycleOwner?.apply {
                 onStop()
@@ -179,7 +173,7 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 根据拖拽增量移动面板位置。
+     * 根据拖拽增量移动面板位置
      */
     fun movePanel(deltaX: Float, deltaY: Float) {
         val panel = panelWindow ?: return
@@ -190,7 +184,7 @@ class LoongFlowWindowManager(
     }
 
     /**
-     * 拖拽结束时检测面板是否靠近屏幕边缘，如果是则触发最小化。
+     * 拖拽结束时检测面板是否靠近屏幕边缘，如果是则触发最小化
      */
     fun checkEdgeMinimize() {
         val params = panelWindow?.windowParams ?: return
@@ -202,9 +196,7 @@ class LoongFlowWindowManager(
         }
     }
 
-    // ─────────────────────────────────────────
     //  内部实现
-    // ─────────────────────────────────────────
 
     @Suppress("DEPRECATION")
     private fun showPanel(context: Context, mode: LoongFlowMode, library: LibraryFunction?) {

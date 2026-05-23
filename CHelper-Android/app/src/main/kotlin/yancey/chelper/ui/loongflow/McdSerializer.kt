@@ -2,9 +2,9 @@
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Akanyi
  *
- * MCD v2 序列化器。
- * 将录入的命令方块数据反向输出为标准 MCD v2 文本格式，
- * 同时支持将已有的 ParsedMCD AST（含 v1 源）升级序列化为 v2。
+ * MCD v2 序列化器
+ * 将录入的命令方块数据反向输出为标准 MCD v2 文本格式
+ * 同时支持将已有的 ParsedMCD AST（含 v1 源）升级序列化为 v2
  */
 
 package yancey.chelper.ui.loongflow
@@ -15,7 +15,7 @@ import yancey.chelper.ui.library.mcd.MCDBlock
 import yancey.chelper.ui.library.mcd.ParsedMCD
 
 /**
- * 将一组手动录入的命令方块序列化为 MCD v2 格式文本。
+ * 将一组手动录入的命令方块序列化为 MCD v2 格式文本
  *
  * @param chainName 链名称，会写入 ---链名--- 分隔符
  * @param blocks 录入的命令方块列表
@@ -47,8 +47,8 @@ fun serializeBlocksToMCDv2(
 }
 
 /**
- * 将已解析的 ParsedMCD AST 重新序列化为 MCD v2 格式。
- * 如果原始源是 v1（纯命令列表），会自动为每条命令补上默认的连锁状态行。
+ * 将已解析的 ParsedMCD AST 重新序列化为 MCD v2 格式
+ * 如果原始源是 v1（纯命令列表），会自动为每条命令补上默认的连锁状态行
  */
 fun serializeParsedToMCDv2(parsed: ParsedMCD): String {
     val sb = StringBuilder()

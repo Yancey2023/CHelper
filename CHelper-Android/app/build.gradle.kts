@@ -58,6 +58,14 @@ android {
         jniLibs.directories.add("libs")
     }
 
+    // beta 跟 release 用同一份 Umeng / MonitorUtil 实现，免得维护两份。
+    // 不能直接走 buildType "继承"——那只继承构建配置，sourceSet 是相互独立的。
+    sourceSets {
+        getByName("beta") {
+            kotlin.srcDir("src/release/kotlin")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -67,6 +75,12 @@ android {
         buildConfig = true
         resValues = true
         viewBinding = true
+    }
+
+    // 单测里调到 android.util.Log 之类 stub 时返回默认值，避免抛 "not mocked" 异常。
+    // 仅影响 testDebugUnitTest，对 instrumented test 和运行时无任何作用。
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 
     ndkVersion = "29.0.14206865"
@@ -121,14 +135,14 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
-    implementation("androidx.navigation:navigation-compose:2.9.7")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation("androidx.datastore:datastore:1.2.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.compose.ui:ui:1.10.6")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.10.6")
-    implementation("androidx.compose.foundation:foundation:1.10.6")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.10.6")
+    implementation("androidx.compose.ui:ui:1.11.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.11.0")
+    implementation("androidx.compose.foundation:foundation:1.11.0")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.11.0")
     // https://github.com/coil-kt/coil
     implementation("io.coil-kt:coil-compose:2.7.0")
     // https://github.com/Kotlin/kotlinx.serialization
@@ -151,10 +165,17 @@ dependencies {
     // https://github.com/getActivity/EasyWindow
     implementation("com.github.getActivity:EasyWindow:15.0")
     // https://www.umeng.com
-    implementation("com.umeng.umsdk:common:9.9.1")
-    implementation("com.umeng.umsdk:asms:1.8.7.2")
+    // 只在 release / beta 引入 Umeng 三件套——debug 不需要崩溃上报，
+    // 省下几千个类的 dex 化时间，本地构建快很多。
+    // 对应的 MonitorUtil 实现在 src/release/kotlin（debug 用 src/debug/kotlin 的 no-op stub）。
+    releaseImplementation("com.umeng.umsdk:common:9.9.1")
+    releaseImplementation("com.umeng.umsdk:asms:1.8.7.2")
     // noinspection Aligned16KB
-    implementation("com.umeng.umsdk:apm:2.0.8")
+    releaseImplementation("com.umeng.umsdk:apm:2.0.8")
+    "betaImplementation"("com.umeng.umsdk:common:9.9.1")
+    "betaImplementation"("com.umeng.umsdk:asms:1.8.7.2")
+    // noinspection Aligned16KB
+    "betaImplementation"("com.umeng.umsdk:apm:2.0.8")
     // https://github.com/junit-team/junit4
     testImplementation("junit:junit:4.13.2")
     // https://github.com/androidx/androidx

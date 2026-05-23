@@ -1,7 +1,7 @@
 /**
- * MCD 内容验证器。
- * 逐行分析 MCD 内容，推断每行的类型，并标记无法确定类型的"问题行"。
- * 用于上传预览界面，在用户提交前展示解析结果。
+ * MCD 内容验证器
+ * 逐行分析 MCD 内容，推断每行的类型，并标记无法确定类型的"问题行"
+ * 用于上传预览界面，在用户提交前展示解析结果
  */
 
 package yancey.chelper.ui.library.mcd
@@ -9,9 +9,9 @@ package yancey.chelper.ui.library.mcd
 import androidx.compose.ui.graphics.Color
 
 /**
- * 行的推断类型：解析器能自信地归入的类别。
- * AMBIGUOUS 表示无法推断——既不是英文/斜杠开头的命令，也没有 # 注释标记，
- * 也不属于任何已知 MCD 语法要素。
+ * 行的推断类型：解析器能自信地归入的类别
+ * AMBIGUOUS 表示无法推断——既不是英文/斜杠开头的命令，也没有 # 注释标记
+ * 也不属于任何已知 MCD 语法要素
  */
 enum class LineType(val label: String, val color: Color) {
     META("元数据", Color(0xFF7B1FA2)),
@@ -39,7 +39,7 @@ data class MCDValidationResult(
 )
 
 /**
- * 验证 MCD 内容，逐行推断类型。
+ * 验证 MCD 内容，逐行推断类型
  * @param rawCommands 用户输入的命令区内容（不含 @元数据头，只有 ###Function### 和 ###End### 之间的内容）
  * @return 验证结果
  */
@@ -125,8 +125,8 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
 }
 
 /**
- * 低代码辅助功能：为未标记 MCDv2 状态的常规指令行自动加上默认的 `> C` (连锁) 标记。
- * 注释和空行不破坏先前存在的状态标记。
+ * 低代码辅助功能：为未标记 MCDv2 状态的常规指令行自动加上默认的 >C(连锁) 标记
+ * 注释和空行不破坏先前存在的状态标记
  */
 fun autoPrefixMCDv2States(rawCommands: String): String {
     val results = validateMCDContent(rawCommands)

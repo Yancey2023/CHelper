@@ -22,16 +22,19 @@ import android.app.Application
 import com.umeng.analytics.MobclickAgent
 import com.umeng.commonsdk.UMConfigure
 import com.umeng.umcrash.UMCrash
-import yancey.chelper.BuildConfig
 
+/**
+ * release / beta 包的崩溃 & 行为埋点实现，依赖友盟 SDK。
+ *
+ * 之所以放在 release sourceSet 而非 main——
+ * 让 debug 包能完全不引入 Umeng 三件套（common/asms/apm），从而省下大概几千个类的
+ * dex 化和打包时间，构建提速明显。debug 用同包同名同 API 的 no-op 版本顶上。
+ */
 object MonitorUtil {
     private var application: Application? = null
     private var isInit = false
 
     fun init(application: Application?) {
-        if (BuildConfig.DEBUG) {
-            return
-        }
         MonitorUtil.application = application
         if (PolicyGrantManager.INSTANCE.state == PolicyGrantManager.State.AGREE) {
             UMConfigure.init(
@@ -50,9 +53,6 @@ object MonitorUtil {
     }
 
     fun onAgreePolicyGrant() {
-        if (BuildConfig.DEBUG) {
-            return
-        }
         if (isInit) {
             return
         }
@@ -67,9 +67,6 @@ object MonitorUtil {
     }
 
     fun generateCustomLog(e: Throwable?, type: String?) {
-        if (BuildConfig.DEBUG) {
-            return
-        }
         UMCrash.generateCustomLog(e, type)
     }
 }

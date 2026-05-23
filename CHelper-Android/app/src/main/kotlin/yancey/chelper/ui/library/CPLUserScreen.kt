@@ -61,10 +61,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.ui.CPLUploadScreenKey
 import yancey.chelper.ui.UserProfileScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.CaptchaDialog
@@ -74,19 +76,30 @@ import yancey.chelper.ui.common.widget.Button
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextFieldWithIcon
+import yancey.chelper.ui.library.profile.EditProfileDialog
 
 @Composable
 fun CPLUserScreen(
     viewModel: CPLUserViewModel = viewModel(),
-    navController: NavHostController
+    navController: NavHostController = rememberNavController(),
+    isTab: Boolean = false
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        viewModel.refreshUserState()
+    }
+
     // Captcha State
     var showCaptchaDialog by remember { mutableStateOf(false) }
     var captchaAction by remember { mutableStateOf("") }
     var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
 
-    // Moved CaptchaDialog to end    // Helper for Captcha
+    // 编辑个人资料 dialog 的开关。集中后头像、昵称、主页、签名都从这里改
+    var showEditProfileDialog by remember { mutableStateOf(false) }
+
+    // Helper for Captcha
     fun showCaptcha(action: String, onSuccess: (String) -> Unit) {
         captchaAction = action
         captchaCallback = onSuccess
@@ -111,8 +124,18 @@ fun CPLUserScreen(
         }
     )
 
+    // 启动系统选图。dialog 内的"从相册选择"和头像圆点击都走这里
+    val triggerPickAvatar: () -> Unit = {
+        if (!viewModel.isUploadingAvatar) {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
+    }
+
     RootViewWithHeaderAndCopyright(
-        title = "用户中心",
+        title = stringResource(R.string.layout_user_profile_title),
+        showBack = !isTab,
     ) {
         Box(
             modifier = Modifier
@@ -120,13 +143,16 @@ fun CPLUserScreen(
                 .background(CHelperTheme.colors.background)
         ) {
             if (viewModel.currentUser != null && !viewModel.isGuest) {
-                UserProfileView(viewModel, navController) {
-                    if (!viewModel.isUploadingAvatar) {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                UserProfileView(
+                    viewModel = viewModel,
+                    navController = navController,
+                    onUploadAvatarClick = triggerPickAvatar,
+                    onEditProfileClick = {
+                        // 没拉过 userProfile 时点开会显示加载占位，先触发拉取
+                        if (viewModel.userProfile == null) viewModel.loadUserProfile()
+                        showEditProfileDialog = true
                     }
-                }
+                )
             } else if (viewModel.isGuest) {
                 GuestUserProfileView(viewModel, navController)
             } else {
@@ -144,13 +170,49 @@ fun CPLUserScreen(
             onSuccess = { code -> captchaCallback(code) }
         )
     }
+
+    // 编辑资料对话框：依赖 userProfile（昵称/主页/签名/tier）。没加载完先提示等。
+    if (showEditProfileDialog) {
+        val profile = viewModel.userProfile
+        if (profile == null) {
+            // 拉取中——用一个极简的对话框占位，避免空白卡顿让用户疑惑
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showEditProfileDialog = false }) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(CHelperTheme.colors.backgroundComponent)
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "正在加载资料…",
+                        style = TextStyle(color = CHelperTheme.colors.textMain)
+                    )
+                }
+            }
+        } else {
+            EditProfileDialog(
+                user = profile,
+                isUpdating = viewModel.isUpdatingProfile,
+                onDismiss = { showEditProfileDialog = false },
+                onSave = { nickname, avatar, homepage, signature ->
+                    viewModel.updateProfile(nickname, avatar, homepage, signature) {
+                        showEditProfileDialog = false
+                    }
+                },
+                onPickAvatarImage = triggerPickAvatar,
+                isUploadingAvatar = viewModel.isUploadingAvatar,
+                currentAvatarUrl = viewModel.currentUser?.gravatarUrl ?: profile.avatarUrl
+            )
+        }
+    }
 }
 
 @Composable
 fun UserProfileView(
     viewModel: CPLUserViewModel,
     navController: NavHostController,
-    onUploadAvatarClick: () -> Unit
+    onUploadAvatarClick: () -> Unit,
+    onEditProfileClick: () -> Unit
 ) {
     val user = viewModel.currentUser ?: return
 
@@ -228,6 +290,44 @@ fun UserProfileView(
 
         Spacer(Modifier.height(24.dp))
 
+        // 编辑个人资料：把"上传头像 / 改昵称 / 改主页 / 改签名"集中到一处。
+        // 头像点击仍然能直接触发上传（快捷路径），但完整资料维护走这个卡片更直观。
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(16.dp))
+                .background(
+                    CHelperTheme.colors.backgroundComponentNoTranslate,
+                    RoundedCornerShape(16.dp)
+                )
+                .clickable { onEditProfileClick() }
+                .padding(20.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
+                Icon(id = R.drawable.pencil, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "编辑个人资料",
+                        style = TextStyle(
+                            color = CHelperTheme.colors.textMain,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Text(
+                        text = "上传头像、修改昵称、主页与签名",
+                        style = TextStyle(
+                            color = CHelperTheme.colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -290,28 +390,18 @@ fun UserProfileView(
 
         Spacer(Modifier.weight(1f))
 
-        Row(
+        // 退出登录：单独占一行的危险按钮，跟资料/导航入口拉开距离，避免误触。
+        // 原本下面还有"上传新指令"按钮，已经移除——上传入口在"我的库" header 和顶部快捷区都能直接找到，
+        // 账户中心专注做账户管理而不是内容创作
+        Button(
+            text = "退出登录",
+            onClick = { viewModel.logout() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                text = "退出登录",
-                onClick = { viewModel.logout() },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                enabled = true
-            )
-            Button(
-                text = "上传新指令",
-                onClick = {
-                    navController.navigate(CPLUploadScreenKey())
-                },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
-            )
-        }
+            shape = RoundedCornerShape(12.dp),
+            enabled = true
+        )
     }
 }
 

@@ -40,25 +40,37 @@ import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
 @Composable
-fun Header(title: String, right: @Composable () -> Unit = {}) {
+fun Header(
+    title: String,
+    showBack: Boolean = true,
+    onBack: (() -> Unit)? = null,
+    right: @Composable () -> Unit = {}
+) {
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp)
-            .background(CHelperTheme.colors.backgroundComponent),
+            .background(CHelperTheme.colors.backgroundComponent)
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            id = R.drawable.chevron_left,
-            modifier = Modifier
-                .clickable(onClick = {
-                    onBackPressedDispatcher?.onBackPressed()
-                })
-                .padding(5.dp)
-                .size(24.dp),
-            contentDescription = stringResource(R.string.common_icon_back_content_description)
-        )
+        if (showBack) {
+            Icon(
+                id = R.drawable.chevron_left,
+                modifier = Modifier
+                    .clickable(onClick = {
+                        // 优先使用自定义 onBack（用于 tab 模式下显式返回上一级路由），
+                        // 否则走系统返回派发，行为和原来一致
+                        if (onBack != null) onBack() else onBackPressedDispatcher?.onBackPressed()
+                    })
+                    .padding(5.dp)
+                    .size(24.dp),
+                contentDescription = stringResource(R.string.common_icon_back_content_description)
+            )
+        } else {
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(5.dp))
+        }
         Text(
             text = title,
             modifier = Modifier

@@ -130,7 +130,7 @@ fun ExportWizard(
 }
 
 /**
- * Step 0: 链配置——设置链名称、作者名
+ * 链配置——设置链名称、作者名
  */
 @Composable
 private fun ExportStepConfig(viewModel: LoongFlowViewModel) {
@@ -235,7 +235,7 @@ private fun ConfigTextField(
 }
 
 /**
- * Step 1: 逐条录入——核心交互界面
+ * 逐条录入
  */
 @Composable
 private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
@@ -478,13 +478,13 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
 }
 
 /**
- * Step 2: MCD v2 预览 & 导出操作
+ * 预览与导出
  */
 @Composable
 private fun ExportStepPreview(viewModel: LoongFlowViewModel) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
-            text = "MCD v2 预览",
+            text = "MCDv2 预览",
             style = TextStyle(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,

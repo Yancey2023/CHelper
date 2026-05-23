@@ -40,13 +40,13 @@ class AuthInterceptor private constructor() : Interceptor {
         if (request.url.host == "abyssous.site") {
             val builder = request.newBuilder()
 
-            // 添加 WAF Cookie (From HEAD)
+            // 添加 WAF Cookie
             val wafCookie = yancey.chelper.network.library.util.WafHelper.getCookie()
             if (!wafCookie.isNullOrEmpty()) {
                 builder.addHeader("Cookie", wafCookie)
             }
 
-            // 添加 Authorization Header (From upstream)
+            // 添加 Authorization Header
             if (!isAuthEndpoint(request.url.encodedPath)) {
                 // 获取 token（正式用户优先，否则访客）
                 val token = runBlocking {
@@ -91,7 +91,7 @@ class AuthInterceptor private constructor() : Interceptor {
         } catch (_: Exception) {
         }
 
-        // 尝试访客 token（需要先初始化 GuestAuthUtil）
+        // 尝试访客 token
         GuestAuthUtil.guestToken?.let { return it }
 
         // 尝试自动访客登录/注册

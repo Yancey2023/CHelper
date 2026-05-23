@@ -36,8 +36,6 @@ class RateLimitInterceptor(
 
     private val lastRequestTime = AtomicLong(0)
 
-    // 简单的漏桶/令牌桶实现
-    // 这里简化为：确保两次请求间隔不小于 1000 / limit 毫秒
 
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

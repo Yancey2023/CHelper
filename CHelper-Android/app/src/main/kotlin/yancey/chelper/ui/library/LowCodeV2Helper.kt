@@ -1,3 +1,21 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package yancey.chelper.ui.library
 
 import androidx.compose.foundation.background
@@ -38,12 +56,12 @@ import yancey.chelper.ui.common.widget.Switch
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.library.mcd.LineType
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 低代码 V2 状态标记辅助工具
-// 独立模块：扫描 MCD 脚本中缺少 > 前缀状态行的命令，
-// 提供可视化的方块类型 / 条件 / 红石 / Tick 延迟配置面板，
-// 一键生成合规的 MCD v2 前缀语法并注入回原文。
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/*
+ * V2 状态标记辅助工具
+ * 扫描 MCD 脚本中缺少前缀状态行的命令
+ * 提供可视化的配置
+ * 一键生成合规的前缀语法并注入回原文
+ */
 
 @Composable
 fun LowCodeV2HelperDialog(
@@ -256,7 +274,7 @@ private fun LowCodeLineItem(
         }
         Spacer(Modifier.height(10.dp))
 
-        // 方块类型选择芯片
+        // 方块类型选择
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             LowCodeChip("连锁(C)", isC) { onStateChange(buildState(">C", isCond, isRed, delay)) }
             LowCodeChip("脉冲(I)", isI) { onStateChange(buildState(">I", isCond, isRed, delay)) }
@@ -330,7 +348,7 @@ internal fun buildState(base: String, cond: Boolean, red: Boolean, delay: String
 }
 
 /**
- * 方块类型选择芯片，选中时高亮
+ * 方块类型选择，选中时高亮
  */
 @Composable
 private fun LowCodeChip(text: String, selected: Boolean, onClick: () -> Unit) {

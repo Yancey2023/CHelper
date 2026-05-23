@@ -2,8 +2,8 @@
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Akanyi
  *
- * LoongFlow 米窗风格主面板。
- * 包含拖拽暗示条、标题栏、模式内容区、右下角 resize 手柄的顶层 Composable 容器。
+ * LoongFlow 主面板
+ * 包含拖拽暗示条，标题栏，模式内容区
  */
 
 package yancey.chelper.ui.loongflow
@@ -39,7 +39,7 @@ import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Text
 
 /**
- * 游龙面板——米窗风格的顶层布局。
+ * 游龙面板的顶层布局
  *
  * @param mode 工作模式（导入/导出）
  * @param library 导入模式时携带的命令库数据，导出模式为 null
@@ -78,7 +78,7 @@ fun LoongFlowPanel(
             .background(CHelperTheme.colors.background.copy(alpha = 0.94f))
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ═══ 拖拽层 ═══
+            // 拖拽层
             // 将拖拽事件放在标题栏和暗示条这一层，或者让拖拽暗示条+标题栏部分接收拖拽事件
             Column(
                 modifier = Modifier
@@ -95,7 +95,7 @@ fun LoongFlowPanel(
                         }
                     }
             ) {
-                // ═══ 拖拽暗示条 ═══
+                // 拖拽暗示条
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,7 +113,7 @@ fun LoongFlowPanel(
                     )
                 }
 
-                // ═══ 标题栏 ═══
+                // 标题栏
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -219,7 +219,7 @@ fun LoongFlowPanel(
                 }
             } // 结束外层 Column 包裹 title row 的 drag layer
 
-            // ═══ 内容区 ═══
+            // 内容区
             Box(modifier = Modifier.weight(1f)) {
                 when (mode) {
                     LoongFlowMode.IMPORT -> {

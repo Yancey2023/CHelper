@@ -91,7 +91,7 @@ object LoginUtil {
     /**
      * 获取 JWT 令牌
      * 
-     * 如果令牌过期（超过 60 秒），会自动重新登录获取新令牌
+     * 如果令牌过期（超过 600 秒），会自动重新登录获取新令牌
      */
     @Throws(IOException::class)
     suspend fun getToken(): String? {
@@ -99,9 +99,9 @@ object LoginUtil {
             return null
         }
 
-        // 令牌在 60 秒内有效，直接返回
+        // 令牌在 600 秒内有效，直接返回
         if (currentToken != null && lastLoginTimestamp != null
-            && System.currentTimeMillis() - lastLoginTimestamp!! < 60000
+            && System.currentTimeMillis() - lastLoginTimestamp!! < 600000
         ) {
             return currentToken
         }

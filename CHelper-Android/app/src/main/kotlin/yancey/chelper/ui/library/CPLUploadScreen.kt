@@ -1,3 +1,21 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package yancey.chelper.ui.library
 
 import android.annotation.SuppressLint
@@ -48,6 +66,7 @@ import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.CustomDialog
 import yancey.chelper.ui.common.dialog.CustomDialogProperties
 import yancey.chelper.ui.common.dialog.DialogContainer
+import yancey.chelper.ui.common.dialog.IsConfirmDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Button
 import yancey.chelper.ui.common.widget.Icon
@@ -78,10 +97,11 @@ fun CPLUploadScreen(
     var showCaptchaDialog by remember { mutableStateOf(false) }
     var showPreviewScreen by remember { mutableStateOf(false) }
     var showLowCodeHelper by remember { mutableStateOf(false) }
+    var showV2DowngradeConfirm by remember { mutableStateOf(false) }
     var captchaCallback by remember { mutableStateOf<(String) -> Unit>({}) }
     var validationResult by remember { mutableStateOf<MCDValidationResult?>(null) }
 
-    // ━━━ 预览界面（覆盖式，全屏） ━━━
+    // 预览界面（覆盖式，全屏）
     if (showPreviewScreen && validationResult != null) {
         MCDPreviewScreen(
             fullMCDContent = viewModel.buildFullMCD(),
@@ -115,8 +135,13 @@ fun CPLUploadScreen(
             }
         )
     } else {
-        // ━━━ 编辑界面 ━━━
-        RootViewWithHeaderAndCopyright(title = stringResource(R.string.upload_title)) {
+        // 编辑界面
+        // 标题分两种语义：editId>0 → 编辑云端命令库（更新已有云端记录）；
+        // editId<=0 → 上传一条新的指令库到云端。两者背后都是云端写入，但用词
+        // 必须能让用户区分"我是在改云端旧的"和"我是在新增云端的"，
+        // 也跟左侧的 LocalLibraryEditScreen（本地命令库）做出明确区隔。
+        val titleRes = if (editLibraryId > 0) R.string.upload_title_edit_cloud else R.string.upload_title
+        RootViewWithHeaderAndCopyright(title = stringResource(titleRes)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -129,7 +154,7 @@ fun CPLUploadScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                // ================= 基础信息卡片 =================
+                // 基础信息卡片
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -177,7 +202,7 @@ fun CPLUploadScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ================= 脚本内容卡片 =================
+            // 脚本内容卡片
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -230,7 +255,6 @@ fun CPLUploadScreen(
                             }
                         }
 
-                        // 将原本突兀的大按钮变成了轻量级的文字行动点
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -315,7 +339,14 @@ fun CPLUploadScreen(
                         Spacer(Modifier.width(8.dp))
                         Switch(
                             checked = viewModel.useV2,
-                            onCheckedChange = { viewModel.useV2 = it }
+                            onCheckedChange = { newValue ->
+                                if (!newValue && viewModel.useV2) {
+                                    // 从 v2 切到 v1：弹确认框
+                                    showV2DowngradeConfirm = true
+                                } else {
+                                    viewModel.useV2 = newValue
+                                }
+                            }
                         )
                     }
                 }
@@ -343,31 +374,10 @@ fun CPLUploadScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
+        } // End of RootView
     } // End of else block
 
-    // ━━━ 根级弹窗层（最后渲染，保证在最顶层） ━━━
-    if (showCaptchaDialog) {
-        CaptchaDialog(
-            action = "publish",
-            onDismissRequest = { showCaptchaDialog = false },
-            onSuccess = { code -> captchaCallback(code) }
-        )
-    }
-
-    if (showLowCodeHelper) {
-        LowCodeV2HelperDialog(
-            rawContent = viewModel.commands.text.toString(),
-            onDismiss = { showLowCodeHelper = false },
-            onApply = { newContent ->
-                viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
-                showLowCodeHelper = false
-                com.hjq.toast.Toaster.show("已应用标记！")
-            }
-        )
-    }
-    } // End of else block
-
-    // ━━━ 根级弹窗层（最后渲染，保证在最顶层） ━━━
+    // 根级弹窗层（最后渲染，保证在最顶层）
     if (showCaptchaDialog) {
         CaptchaDialog(
             action = "publish",
@@ -398,12 +408,22 @@ fun CPLUploadScreen(
             }
         )
     }
+
+    if (showV2DowngradeConfirm) {
+        IsConfirmDialog(
+            onDismissRequest = { showV2DowngradeConfirm = false },
+            title = "切换到 V1 语法",
+            content = "V1 语法的渲染效果远低于 V2，不支持命令链可视化和状态标记。确定要降级吗？",
+            confirmText = "确定降级",
+            onConfirm = {
+                viewModel.useV2 = false
+                showV2DowngradeConfirm = false
+            }
+        )
+    }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 预览界面
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 @Composable
 private fun MCDPreviewScreen(
     fullMCDContent: String,
@@ -414,7 +434,7 @@ private fun MCDPreviewScreen(
 ) {
     var showQuickHelp by remember { mutableStateOf(false) }
 
-    // 系统返回键 → 返回编辑
+    // 系统返回键，返回编辑
     BackHandler { onBack() }
 
     RootViewWithHeaderAndCopyright(title = stringResource(R.string.upload_preview_title)) {
@@ -423,7 +443,7 @@ private fun MCDPreviewScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // ━━━ 状态栏 ━━━
+            // 状态栏
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -502,14 +522,14 @@ private fun MCDPreviewScreen(
                 }
             }
 
-            // ━━━ 快速帮助（折叠） ━━━
+            // 快速帮助（折叠）
             if (showQuickHelp) {
                 QuickSyntaxHelp(
                     modifier = Modifier.padding(horizontal = 15.dp, vertical = 4.dp)
                 )
             }
 
-            // ━━━ 错误行汇总 + 一键修复 ━━━
+            // 错误行汇总，一键修复
             if (validationResult.hasErrors) {
                 Column(
                     modifier = Modifier
@@ -575,7 +595,7 @@ private fun MCDPreviewScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ━━━ 可视化渲染预览（含元数据） ━━━
+            // 渲染预览（含元数据）
             MCDContentView(
                 content = fullMCDContent,
                 modifier = Modifier
@@ -585,7 +605,7 @@ private fun MCDPreviewScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ━━━ 底部操作栏 ━━━
+            // 底部操作栏
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -663,10 +683,7 @@ private fun MCDPreviewScreen(
     }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 快速语法帮助（仅函数体内的语法）
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+// 快速语法帮助
 @Composable
 private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
     val helpContext = LocalContext.current
@@ -692,12 +709,12 @@ private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
             "execute ..." to "指令行（英文字母或 / 开头）",
             "#注释文字" to "注释行（不执行，仅说明）",
             "---链名---" to "命令链分隔符（v2）",
-            "> C" to "连锁方块状态（v2）",
-            "> I" to "脉冲方块状态（v2）",
-            "> R" to "循环方块状态（v2）",
-            "> C?" to "加 ? = 条件方块",
-            "> C!" to "加 ! = 红石驱动",
-            "> Ct5" to "加 t+数字 = 延迟 Tick"
+            ">C" to "连锁方块状态（v2）",
+            ">I" to "脉冲方块状态（v2）",
+            ">R" to "循环方块状态（v2）",
+            ">C?" to "加 ? = 条件方块",
+            ">C!" to "加 ! = 红石驱动",
+            ">Ct5" to "加 t+数字 = 延迟 Tick"
         )
 
         items.forEach { (syntax, desc) ->
@@ -761,10 +778,7 @@ private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
     }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 本地导入选择对话框
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 @Composable
 fun ImportLocalLibraryDialog(
     libraries: List<LibraryFunction>,

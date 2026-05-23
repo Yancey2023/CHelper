@@ -29,15 +29,15 @@ import java.util.concurrent.TimeUnit
 
 /**
  * 拦截 EdgeOne WAF 质询 (200 OK + HTML + tst_status 脚本)
- * 如果遇到此类拦截响应，则挂起当前请求，唤起 WafHelper 用 WebView 进行 JS 质询认证，
- * 携带拿到后的 Cookie 自动重试原请求，对上层透明。
+ * 如果遇到此类拦截响应，则挂起当前请求，唤起 WafHelper 用 WebView 进行 JS 质询认证
+ * 携带拿到后的 Cookie 自动重试原请求，对上层透明
  */
 class WafInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         
-        // 1. 如果已有 Cookie，先确保它是最新的（AuthInterceptor 中也会加，但这里也可以加保底）
+        //如果已有 Cookie，先确保它是最新的
         val existingCookie = WafHelper.getCookie()
         if (!existingCookie.isNullOrEmpty() && request.header("Cookie") == null) {
             request = request.newBuilder().header("Cookie", existingCookie).build()
@@ -45,7 +45,7 @@ class WafInterceptor : Interceptor {
 
         var response = chain.proceed(request)
         
-        // 2. 检查是否为 WAF 页面
+        // 是否为 WAF 页面
         if (isWafChallenge(response)) {
             Log.w("WafInterceptor", "WAF challenge detected on ${request.url}. Starting refresh process...")
             response.close() // 清理被拦截的响应
@@ -58,7 +58,7 @@ class WafInterceptor : Interceptor {
                 latch.countDown()
             }
             
-            // 最多等待 15 秒（WebView 加载和执行 JS 可能比较慢）
+            // 最多等待 15 秒
             latch.await(15, TimeUnit.SECONDS)
             
             if (refreshSuccess) {
@@ -89,10 +89,8 @@ class WafInterceptor : Interceptor {
         val contentType = response.header("Content-Type") ?: ""
         if (!contentType.contains("text/html", ignoreCase = true)) return false
         
-        // EdgeOne 通常会带以下 Header 之一
         val server = response.header("server") ?: ""
         if (!server.contains("TencentEdgeOne", ignoreCase = true)) {
-            // 如果不仅看 Server，还可以直接嗅探 body
         }
         
         // 读取部分 Body 嗅探特征字符串

@@ -1,6 +1,6 @@
 /**
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
- * Copyright (C) 2026  Yancey
+ * Copyright (C) 2026  Yancey & Ankanyi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -163,7 +163,7 @@ class CommandEditText : AppCompatEditText {
         for (i in 1..<tokens.size) {
             val color = theme!!.getColorByToken(tokens[i], normalColor)
             if (color != lastColor) {
-                if (lastColor != normalColor) { // 普通颜色没必要加Span，可以节省Span对象数，如果是整段清除的话下面会处理
+                if (lastColor != normalColor) { // 普通颜色没必要加Span，可以节省Span对象数
                     targetSpans.add(SpanInfo(lastColor, lastIndex, i))
                 }
                 lastIndex = i

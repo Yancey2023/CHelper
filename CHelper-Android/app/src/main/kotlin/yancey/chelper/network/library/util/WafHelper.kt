@@ -51,7 +51,6 @@ object WafHelper {
      */
     fun refreshCookie(callback: ((Boolean) -> Unit)? = null) {
         if (isRefreshing.getAndSet(true)) {
-            // 如果正在刷新，直接返回失败或等待（这里简单处理为失败，避免并发复杂性）
             callback?.invoke(false)
             return
         }
@@ -85,14 +84,12 @@ object WafHelper {
         val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
-        // settings.databaseEnabled = true // Deprecated in API 24
         settings.userAgentString = USER_AGENT
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
-        // 设置 CookieManager
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
-        cookieManager.setAcceptThirdPartyCookies(webView, true) // minSdk 24 >= 21
+        cookieManager.setAcceptThirdPartyCookies(webView, true)
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
