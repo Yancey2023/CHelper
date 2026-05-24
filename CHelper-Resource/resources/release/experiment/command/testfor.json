@@ -1,23 +1,19 @@
 {
-    "name": [
-        "testfor"
-    ],
-    "description": "检测并统计符合指定条件的实体",
-    "start": [
-        "victim"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "victim",
-            "description": "计数的目标",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        }
-    ],
-    "ast": [
-        ["victim", "LF"]
-    ]
+  "name": [
+    "testfor"
+  ],
+  "description": "检测并统计符合指定条件的实体",
+  "syntax": [
+    "/testfor <victim: target>"
+  ],
+  "node": {
+    "<victim: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "计数的目标",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

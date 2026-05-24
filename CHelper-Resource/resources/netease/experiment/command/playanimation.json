@@ -1,65 +1,51 @@
 {
-    "name": [
-        "playanimation"
-    ],
-    "description": "用于使一个或多个实体运行一次性动画",
-    "start": [
-        "entity"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "entity",
-            "description": "目标",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "animation",
-            "brief": "动画",
-            "description": "当前要播放的动画",
-            "ignoreError": true,
-            "key": "animation"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "nextState",
-            "brief": "结束状态",
-            "description": "动画播放完毕后的状态",
-            "ignoreError": true,
-            "key": "animationController"
-        },
-        {
-            "type": "FLOAT",
-            "id": "blendOutTime",
-            "brief": "渐变时间",
-            "description": "动画渐变的持续时间"
-        },
-        {
-            "type": "STRING",
-            "id": "stopExpression",
-            "brief": "终止条件",
-            "description": "动画播放终止的条件，应为Molang表达式",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "controller",
-            "description": "动画控制器",
-            "canContainSpace": true,
-            "ignoreLater": false
-        }
-    ],
-    "ast": [
-        ["entity", "animation"],
-        ["animation", "nextState", "LF"],
-        ["nextState", "blendOutTime", "LF"],
-        ["blendOutTime", "stopExpression", "LF"],
-        ["stopExpression", "controller", "LF"],
-        ["controller", "LF"]
-    ]
+  "name": [
+    "playanimation"
+  ],
+  "description": "用于使一个或多个实体运行一次性动画",
+  "syntax": [
+    "/playanimation <entity: target> <animation: string> [next_state: string] [blend_out_time: float] [stop_expression: string] [controller: string]"
+  ],
+  "node": {
+    "<entity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<animation: string>": {
+      "type": "NORMAL_ID",
+      "brief": "动画",
+      "description": "当前要播放的动画",
+      "ignoreError": true,
+      "key": "animation"
+    },
+    "[next_state: string]": {
+      "type": "NORMAL_ID",
+      "brief": "结束状态",
+      "description": "动画播放完毕后的状态",
+      "ignoreError": true,
+      "key": "animationController"
+    },
+    "[blend_out_time: float]": {
+      "type": "FLOAT",
+      "brief": "渐变时间",
+      "description": "动画渐变的持续时间"
+    },
+    "[stop_expression: string]": {
+      "type": "STRING",
+      "brief": "终止条件",
+      "description": "动画播放终止的条件，应为Molang表达式",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[controller: string]": {
+      "type": "STRING",
+      "description": "动画控制器",
+      "canContainSpace": true,
+      "ignoreLater": false
+    }
+  }
 }

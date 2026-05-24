@@ -1,30 +1,23 @@
 {
-    "name": [
-        "?",
-        "help"
-    ],
-    "description": "列出所有可用命令",
-    "start": [
-        "LF",
-        "command",
-        "page"
-    ],
-    "node": [
-        {
-            "type": "COMMAND_NAME",
-            "id": "command",
-            "brief": "命令名",
-            "description": "要提供帮助的命令名称"
-        },
-        {
-            "type": "INTEGER",
-            "id": "page",
-            "brief": "页码",
-            "description": "要展示的命令列表的页码（小于1的数字会被视为1，大于总页数会被默认为展示最后一页）"
-        }
-    ],
-    "ast": [
-        ["command", "LF"],
-        ["page", "LF"]
-    ]
+  "name": [
+    "?",
+    "help"
+  ],
+  "description": "列出所有可用命令",
+  "syntax": [
+    "/? <page: int>",
+    "/? [command: CommandName]"
+  ],
+  "node": {
+    "<page: int>": {
+      "type": "INTEGER",
+      "brief": "页码",
+      "description": "要展示的命令列表的页码（小于1的数字会被视为1，大于总页数会被默认为展示最后一页）"
+    },
+    "[command: CommandName]": {
+      "type": "COMMAND_NAME",
+      "brief": "命令名",
+      "description": "要提供帮助的命令名称"
+    }
+  }
 }

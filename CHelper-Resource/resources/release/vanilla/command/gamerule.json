@@ -1,48 +1,34 @@
 {
-    "name": [
-        "gamerule"
-    ],
-    "description": "设置或查询游戏规则",
-    "start": [
-        "gameRuleBoolean",
-        "gameRuleInteger"
-    ],
-    "node": [
-        {
-            "type": "NORMAL_ID",
-            "id": "gameRuleBoolean",
-            "brief": "游戏规则",
-            "description": "要设置或查询的游戏规则",
-            "ignoreError": true,
-            "key": "gameRuleBoolean"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "valueBoolean",
-            "brief": "值",
-            "description": "将游戏规则设置的值",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "gameRuleInteger",
-            "brief": "游戏规则",
-            "description": "要设置或查询的游戏规则",
-            "ignoreError": true,
-            "key": "gameRuleInteger"
-        },
-        {
-            "type": "INTEGER",
-            "id": "valueInteger",
-            "brief": "值",
-            "description": "将游戏规则设置的值"
-        }
-    ],
-    "ast": [
-        ["gameRuleBoolean", "valueBoolean", "LF"],
-        ["valueBoolean", "LF"],
-        ["gameRuleInteger", "valueInteger", "LF"],
-        ["valueInteger", "LF"]
-    ]
+  "name": [
+    "gamerule"
+  ],
+  "description": "设置或查询游戏规则",
+  "syntax": [
+    "/gamerule",
+    "/gamerule <rule: BoolGameRule> [value: Boolean]",
+    "/gamerule <rule: IntGameRule> [value: int]"
+  ],
+  "node": {
+    "[value: Boolean]|[value: int]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "将游戏规则设置的值",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "<rule: BoolGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": true,
+      "key": "gameRuleBoolean"
+    },
+    "<rule: IntGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": true,
+      "key": "gameRuleInteger"
+    }
+  }
 }

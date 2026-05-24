@@ -1,68 +1,57 @@
 {
-    "name": [
-        "fog"
-    ],
-    "description": "更改玩家的迷雾效果",
-    "start": [
-        "victim"
-    ],
-    "node": [
+  "name": [
+    "fog"
+  ],
+  "description": "更改玩家的迷雾效果",
+  "syntax": [
+    "/fog <victim: target> <mode: delete> <userProvidedId: string>",
+    "/fog <victim: target> push <fogId: string> <userProvidedId: string>"
+  ],
+  "node": {
+    "<victim: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "修改玩家迷雾效果的目标",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<mode: delete>": {
+      "type": "NORMAL_ID",
+      "description": "删除模式",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TARGET_SELECTOR",
-            "id": "victim",
-            "description": "修改玩家迷雾效果的目标",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
+          "name": "pop",
+          "description": "只移除第一个"
         },
         {
-            "type": "TEXT",
-            "id": "push",
-            "description": "更改玩家的迷雾效果",
-            "data": {
-                "name": "push",
-                "description": "更改玩家的迷雾效果"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "fogId",
-            "brief": "方块",
-            "description": "修改的迷雾ID",
-            "ignoreError": true,
-            "key": "fog"
-        },
-        {
-            "type": "STRING",
-            "id": "userProvidedId",
-            "brief": "迷雾名称",
-            "description": "迷雾设置的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "mode",
-            "description": "删除模式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "pop",
-                    "description": "只移除第一个"
-                },
-                {
-                    "name": "remove",
-                    "description": "移除全部"
-                }
-            ]
+          "name": "remove",
+          "description": "移除全部"
         }
-    ],
-    "ast": [
-        ["victim", "push", "mode"],
-        ["push", "fogId"],
-        ["fogId", "userProvidedId"],
-        ["userProvidedId", "LF"],
-        ["mode", "userProvidedId"]
-    ]
+      ]
+    },
+    "<userProvidedId: string>": {
+      "type": "STRING",
+      "brief": "迷雾名称",
+      "description": "迷雾设置的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "push": {
+      "type": "TEXT",
+      "description": "更改玩家的迷雾效果",
+      "data": {
+        "name": "push",
+        "description": "更改玩家的迷雾效果"
+      }
+    },
+    "<fogId: string>": {
+      "type": "NORMAL_ID",
+      "brief": "迷雾ID",
+      "description": "修改的迷雾ID",
+      "ignoreError": true,
+      "key": "fog"
+    }
+  }
 }

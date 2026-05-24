@@ -1,38 +1,36 @@
 {
-    "name": [
-        "enchant"
-    ],
-    "description": "为一位玩家手持的物品添加魔咒",
-    "start": [
-        "player"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "目标实体",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "enchantment",
-            "brief": "魔咒",
-            "description": "添加至实体手持物品的魔咒",
-            "ignoreError": true,
-            "key": "enchantType"
-        },
-        {
-            "type": "INTEGER",
-            "id": "level",
-            "description": "魔咒等级"
-        }
-    ],
-    "ast": [
-        ["player", "enchantment"],
-        ["enchantment", "level", "LF"],
-        ["level", "LF"]
-    ]
+  "name": [
+    "enchant"
+  ],
+  "description": "为一位玩家手持的物品添加魔咒",
+  "syntax": [
+    "/enchant <player: target> <enchantmentId: int> [level: int]",
+    "/enchant <player: target> <enchantmentName: Enchant> [level: int]"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<enchantmentId: int>": {
+      "type": "INTEGER",
+      "brief": "魔咒",
+      "description": "添加至实体手持物品的魔咒"
+    },
+    "[level: int]": {
+      "type": "INTEGER",
+      "description": "魔咒等级"
+    },
+    "<enchantmentName: Enchant>": {
+      "type": "NORMAL_ID",
+      "brief": "魔咒",
+      "description": "添加至实体手持物品的魔咒",
+      "ignoreError": true,
+      "key": "enchantType"
+    }
+  }
 }

@@ -1,120 +1,101 @@
 {
-    "name": [
-        "script"
-    ],
-    "description": "调试GameTest框架选项",
-    "start": [
-        "debugger", "profiler", "watchdog"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "debugger",
-            "description": "调试GameTest框架选项",
-            "data": {
-                "name": "debugger",
-                "description": "调试器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "profiler",
-            "description": "调试GameTest框架选项",
-            "data": {
-                "name": "profiler",
-                "description": "分析器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "watchdog",
-            "description": "调试GameTest框架选项",
-            "data": {
-                "name": "watchdog",
-                "description": "监视器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "close",
-            "description": "监视器选项",
-            "data": {
-                "name": "close",
-                "description": "关闭调试器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "connect",
-            "description": "监视器选项",
-            "data": {
-                "name": "connect",
-                "description": "将调试器的指定端口连接至指定主机"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "listen",
-            "description": "监视器选项",
-            "data": {
-                "name": "listen",
-                "description": "监听调试器的指定端口"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "start",
-            "description": "分析器选项",
-            "data": {
-                "name": "start",
-                "description": "启用跟踪脚本性能的分析器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "stop",
-            "description": "分析器选项",
-            "data": {
-                "name": "stop",
-                "description": "禁用分析器"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "exportstats",
-            "description": "监视器选项",
-            "data": {
-                "name": "exportstats",
-                "description": "导出监视器的统计信息文件"
-            }
-        },
-        {
-            "type": "STRING",
-            "id": "host",
-            "description": "主机名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "INTEGER",
-            "id": "port",
-            "brief": "调试器端口",
-            "description": "调试器端口，可用端口范围为1024-65535",
-            "min": 1024,
-            "max": 65535
-        }
-    ],
-    "ast": [
-        ["debugger", "close", "connect", "listen"],
-        ["close", "LF"],
-        ["connect", "host", "LF"],
-        ["listen", "port"],
-        ["host", "port", "LF"],
-        ["port", "LF"],
-        ["profiler", "start", "stop"],
-        ["start", "LF"],
-        ["stop", "LF"],
-        ["watchdog", "exportstats"],
-        ["exportstats", "LF"]
-    ]
+  "name": [
+    "script"
+  ],
+  "description": "调试GameTest框架选项",
+  "syntax": [
+    "/script debugger close",
+    "/script debugger connect [host: string] [port: int]",
+    "/script debugger listen <port: int>",
+    "/script profiler start",
+    "/script profiler stop",
+    "/script watchdog exportstats"
+  ],
+  "node": {
+    "debugger": {
+      "type": "TEXT",
+      "description": "调试GameTest框架选项",
+      "data": {
+        "name": "debugger",
+        "description": "调试器"
+      }
+    },
+    "close": {
+      "type": "TEXT",
+      "description": "关闭调试器",
+      "data": {
+        "name": "close",
+        "description": "关闭调试器"
+      }
+    },
+    "connect": {
+      "type": "TEXT",
+      "description": "连接调试器至指定主机",
+      "data": {
+        "name": "connect",
+        "description": "将调试器的指定端口连接至指定主机"
+      }
+    },
+    "[host: string]": {
+      "type": "STRING",
+      "description": "主机名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[port: int]|<port: int>": {
+      "type": "INTEGER",
+      "brief": "调试器端口",
+      "description": "调试器端口，可用端口范围为1024-65535",
+      "min": 1024,
+      "max": 65535
+    },
+    "listen": {
+      "type": "TEXT",
+      "description": "监听调试器端口",
+      "data": {
+        "name": "listen",
+        "description": "监听调试器的指定端口"
+      }
+    },
+    "profiler": {
+      "type": "TEXT",
+      "description": "分析器",
+      "data": {
+        "name": "profiler",
+        "description": "分析器"
+      }
+    },
+    "start": {
+      "type": "TEXT",
+      "description": "启用分析器",
+      "data": {
+        "name": "start",
+        "description": "启用跟踪脚本性能的分析器"
+      }
+    },
+    "stop": {
+      "type": "TEXT",
+      "description": "禁用分析器",
+      "data": {
+        "name": "stop",
+        "description": "禁用分析器"
+      }
+    },
+    "watchdog": {
+      "type": "TEXT",
+      "description": "监视器",
+      "data": {
+        "name": "watchdog",
+        "description": "监视器"
+      }
+    },
+    "exportstats": {
+      "type": "TEXT",
+      "description": "导出监视器统计",
+      "data": {
+        "name": "exportstats",
+        "description": "导出监视器的统计信息文件"
+      }
+    }
+  }
 }

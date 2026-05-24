@@ -1,51 +1,43 @@
 {
-    "name": [
-        "packstack"
-    ],
-    "description": "显示资源包和行为包数据。",
-    "start": [
-        "stackType"
-    ],
-    "node": [
+  "name": [
+    "packstack"
+  ],
+  "description": "显示资源包和行为包数据。",
+  "syntax": [
+    "/packstack <stackType: stackType> [verbose: verbose] [exclude-vanilla: exclude-vanilla]"
+  ],
+  "node": {
+    "<stackType: stackType>": {
+      "type": "NORMAL_ID",
+      "brief": "包的类型",
+      "description": "包的类型",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "NORMAL_ID",
-            "id": "stackType",
-            "brief": "包的类型",
-            "description": "包的类型",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "client",
-                    "description": "客户端"
-                },
-                {
-                    "name": "server",
-                    "description": "服务端"
-                }
-            ]
+          "name": "client",
+          "description": "资源包"
         },
         {
-            "type": "TEXT",
-            "id": "verbose",
-            "description": "是否显示未启用的包和包的详细信息",
-            "data": {
-                "name": "verbose",
-                "description": "是否显示未启用的包和包的详细信息"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "exclude_vanilla",
-            "description": "是否排除原版包",
-            "data": {
-                "name": "exclude_vanilla",
-                "description": "是否排除原版包"
-            }
+          "name": "server",
+          "description": "行为包和脚本模块"
         }
-    ],
-    "ast": [
-        ["stackType", "verbose", "LF"],
-        ["verbose", "exclude_vanilla", "LF"],
-        ["exclude_vanilla", "LF"]
-    ]
+      ]
+    },
+    "[verbose: verbose]": {
+      "type": "TEXT",
+      "description": "显示未启用的包和包的详细信息",
+      "data": {
+        "name": "verbose",
+        "description": "显示未启用的包和包的详细信息"
+      }
+    },
+    "[exclude-vanilla: exclude-vanilla]": {
+      "type": "TEXT",
+      "description": "排除原版包",
+      "data": {
+        "name": "exclude-vanilla",
+        "description": "排除原版包"
+      }
+    }
+  }
 }

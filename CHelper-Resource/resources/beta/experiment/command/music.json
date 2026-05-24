@@ -1,126 +1,82 @@
 {
-    "name": [
-        "music"
-    ],
-    "description": "控制音乐",
-    "start": [
-        "play",
-        "queue",
-        "stop",
-        "volume"
-    ],
-    "node": [
+  "name": [
+    "music"
+  ],
+  "description": "控制音乐",
+  "syntax": [
+    "/music play <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
+    "/music queue <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
+    "/music stop [fadeSeconds: float]",
+    "/music volume <volume: float>"
+  ],
+  "node": {
+    "play": {
+      "type": "TEXT",
+      "description": "播放音乐",
+      "data": {
+        "name": "play",
+        "description": "播放音乐"
+      }
+    },
+    "<trackName: string>": {
+      "type": "STRING",
+      "brief": "播放音乐名",
+      "description": "必须为音乐名或record.<music_name>或music.game.<music_name>",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[volume: float]|<volume: float>": {
+      "type": "FLOAT",
+      "description": "音乐音量",
+      "min": 0,
+      "max": 1
+    },
+    "[fadeSeconds: float]": {
+      "type": "FLOAT",
+      "brief": "渐变时间",
+      "description": "音乐淡入/淡出时间",
+      "min": 0,
+      "max": 10
+    },
+    "[repeatMode: MusicRepeatMode]": {
+      "type": "NORMAL_ID",
+      "brief": "是否循环播放",
+      "description": "是否循环播放音乐",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "play",
-            "description": "播放音乐",
-            "data": {
-                "name": "play",
-                "description": "播放音乐"
-            }
+          "name": "loop",
+          "description": "循环播放音乐"
         },
         {
-            "type": "STRING",
-            "id": "trackName",
-            "brief": "播放音乐名",
-            "description": "必须为音乐名或record.<music_name>或music.game.<music_name>",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "trackNameWithSuggestion",
-            "brief": "播放音乐名",
-            "description": "必须为音乐名或record.<music_name>或music.game.<music_name>",
-            "ignoreError": true,
-            "key": "music"
-        },
-        {
-            "type": "FLOAT",
-            "id": "volumeValue1",
-            "description": "音乐音量",
-            "min": 0,
-            "max": 1
-        },
-        {
-            "type": "FLOAT",
-            "id": "fadeSeconds",
-            "brief": "渐变时间",
-            "description": "音乐淡入/淡出时间",
-            "min": 0,
-            "max": 10
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "repeatMode",
-            "brief": "是否循环播放",
-            "description": "是否循环播放音乐",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "loop",
-                    "description": "循环播放音乐"
-                },
-                {
-                    "name": "play_once",
-                    "description": "不循环播放音乐"
-                }
-            ]
-        },
-        {
-            "type": "TEXT",
-            "id": "queue",
-            "description": "将音乐添加到队列中",
-            "data": {
-                "name": "queue",
-                "description": "将音乐添加到队列中"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "stop",
-            "description": "停止播放音乐",
-            "data": {
-                "name": "stop",
-                "description": "停止播放音乐"
-            }
-        },
-        {
-            "type": "FLOAT",
-            "id": "stopFadeSeconds",
-            "brief": "淡出时间",
-            "description": "音乐淡入/淡出时间",
-            "min": 0,
-            "max": 10
-        },
-        {
-            "type": "TEXT",
-            "id": "volume",
-            "description": "调整音乐音量",
-            "data": {
-                "name": "volume",
-                "description": "调整音乐音量"
-            }
-        },
-        {
-            "type": "FLOAT",
-            "id": "volumeValue2",
-            "description": "音乐音量",
-            "min": 0,
-            "max": 1
+          "name": "play_once",
+          "description": "不循环播放音乐"
         }
-    ],
-    "ast": [
-        ["play", "trackName", "trackNameWithSuggestion"],
-        ["trackName", "volumeValue1"],
-        ["trackNameWithSuggestion", "volumeValue1"],
-        ["volumeValue1", "fadeSeconds", "LF"],
-        ["fadeSeconds", "repeatMode", "LF"],
-        ["repeatMode", "LF"],
-        ["queue", "trackName"],
-        ["stop", "stopFadeSeconds", "LF"],
-        ["stopFadeSeconds", "LF"],
-        ["volume", "volumeValue2"],
-        ["volumeValue2", "LF"]
-    ]
+      ]
+    },
+    "queue": {
+      "type": "TEXT",
+      "description": "将音乐添加到队列中",
+      "data": {
+        "name": "queue",
+        "description": "将音乐添加到队列中"
+      }
+    },
+    "stop": {
+      "type": "TEXT",
+      "description": "停止播放音乐",
+      "data": {
+        "name": "stop",
+        "description": "停止播放音乐"
+      }
+    },
+    "volume": {
+      "type": "TEXT",
+      "description": "调整音乐音量",
+      "data": {
+        "name": "volume",
+        "description": "调整音乐音量"
+      }
+    }
+  }
 }

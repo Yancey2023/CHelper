@@ -1,88 +1,64 @@
 {
-    "name": [
-        "camerashake"
-    ],
-    "description": "对玩家视野施以一定强度和时间的摇晃效果",
-    "start": [
-        "add",
-        "stop"
-    ],
-    "node": [
+  "name": [
+    "camerashake"
+  ],
+  "description": "对玩家视野施以一定强度和时间的摇晃效果",
+  "syntax": [
+    "/camerashake add <player: target> [intensity: float] [seconds: float] [shakeType: CameraShakeType]",
+    "/camerashake stop [player: target]"
+  ],
+  "node": {
+    "add": {
+      "type": "TEXT",
+      "description": "给玩家添加视野摇晃效果",
+      "data": {
+        "name": "add",
+        "description": "给玩家添加视野摇晃效果"
+      }
+    },
+    "<player: target>|[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "要施以视野摇晃效果的玩家(默认为命令执行者)",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[intensity: float]": {
+      "type": "FLOAT",
+      "brief": "摇晃强度",
+      "description": "视野摇晃的强度",
+      "min": 0,
+      "max": 4
+    },
+    "[seconds: float]": {
+      "type": "FLOAT",
+      "brief": "摇晃时长",
+      "description": "视野摇晃的时长"
+    },
+    "[shakeType: CameraShakeType]": {
+      "type": "NORMAL_ID",
+      "brief": "摇晃种类",
+      "description": "视野摇晃方向的种类",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "add",
-            "description": "给玩家添加视野摇晃效果",
-            "data": {
-                "name": "add",
-                "description": "给玩家添加视野摇晃效果"
-            }
+          "name": "positional",
+          "description": "坐标摇晃"
         },
         {
-            "type": "TARGET_SELECTOR",
-            "id": "addSelector",
-            "description": "要施以视野摇晃效果的玩家(默认为命令执行者)",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "FLOAT",
-            "id": "intensity",
-            "brief": "摇晃强度",
-            "description": "视野摇晃的强度",
-            "min": 0,
-            "max": 4
-        },
-        {
-            "type": "FLOAT",
-            "id": "seconds",
-            "brief": "摇晃时长",
-            "description": "视野摇晃的时长"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "shakeType",
-            "brief": "摇晃种类",
-            "description": "视野摇晃方向的种类",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "positional",
-                    "description": "坐标摇晃"
-                },
-                {
-                    "name": "rotational",
-                    "description": "角度摇晃"
-                }
-            ]
-        },
-        {
-            "type": "TEXT",
-            "id": "stop",
-            "description": "停止视野摇晃",
-            "data": {
-                "name": "stop",
-                "description": "停止视野摇晃"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "stopSelector",
-            "description": "要停止视野摇晃的玩家(默认为命令执行者)",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
+          "name": "rotational",
+          "description": "角度摇晃"
         }
-    ],
-    "ast": [
-        ["add", "addSelector"],
-        ["addSelector", "intensity", "LF"],
-        ["intensity", "seconds", "LF"],
-        ["seconds", "shakeType", "LF"],
-        ["shakeType", "LF"],
-        ["stop", "stopSelector", "LF"],
-        ["stopSelector", "LF"]
-    ]
+      ]
+    },
+    "stop": {
+      "type": "TEXT",
+      "description": "停止视野摇晃",
+      "data": {
+        "name": "stop",
+        "description": "停止视野摇晃"
+      }
+    }
+  }
 }

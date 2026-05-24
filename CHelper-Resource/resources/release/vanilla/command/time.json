@@ -1,105 +1,92 @@
 {
-    "name": [
-        "time"
-    ],
-    "description": "更改或查询世界的游戏时间",
-    "start": [
-        "add",
-        "query",
-        "set"
-    ],
-    "node": [
+  "name": [
+    "time"
+  ],
+  "description": "更改或查询世界的游戏时间",
+  "syntax": [
+    "/time add <amount: int>",
+    "/time query <time: TimeQuery>",
+    "/time set <amount: int>",
+    "/time set <time: TimeSpec>"
+  ],
+  "node": {
+    "add": {
+      "type": "TEXT",
+      "description": "增加时间",
+      "data": {
+        "name": "add",
+        "description": "增加时间"
+      }
+    },
+    "<amount: int>": {
+      "type": "INTEGER",
+      "description": "时间值"
+    },
+    "query": {
+      "type": "TEXT",
+      "description": "查询时间",
+      "data": {
+        "name": "query",
+        "description": "查询时间"
+      }
+    },
+    "set": {
+      "type": "TEXT",
+      "description": "设置时间",
+      "data": {
+        "name": "set",
+        "description": "设置时间"
+      }
+    },
+    "<time: TimeQuery>": {
+      "type": "NORMAL_ID",
+      "description": "要查询的时间",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "add",
-            "description": "增加时间",
-            "data": {
-                "name": "add",
-                "description": "增加时间"
-            }
+          "name": "daytime",
+          "description": "查询自当天日出后流逝的游戏刻数"
         },
         {
-            "type": "INTEGER",
-            "id": "amount",
-            "description": "时间值"
+          "name": "gametime",
+          "description": "查询世界总共流逝的游戏刻数"
         },
         {
-            "type": "TEXT",
-            "id": "query",
-            "description": "查询时间",
-            "data": {
-                "name": "query",
-                "description": "查询时间"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "timeQuery",
-            "description": "查询的内容",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "daytime",
-                    "description": "查询自当天日出后流逝的游戏刻数"
-                },
-                {
-                    "name": "gametime",
-                    "description": "查询世界总共流逝的游戏刻数"
-                },
-                {
-                    "name": "day",
-                    "description": "查询已流逝的游戏天数"
-                }
-            ]
-        },
-        {
-            "type": "TEXT",
-            "id": "set",
-            "description": "设置时间",
-            "data": {
-                "name": "set",
-                "description": "设置时间"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "timeSpec",
-            "description": " 时间",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "day",
-                    "description": "白天(1000t)"
-                },
-                {
-                    "name": "noon",
-                    "description": "中午(6000t)"
-                },
-                {
-                    "name": "sunset",
-                    "description": "中午(12000t)"
-                },
-                {
-                    "name": "night",
-                    "description": "晚上(13000t)"
-                },
-                {
-                    "name": "midnight",
-                    "description": "午夜(18000t)"
-                },
-                {
-                    "name": "sunrise",
-                    "description": "日出(23000t)"
-                }
-            ]
+          "name": "day",
+          "description": "查询已流逝的游戏天数"
         }
-    ],
-    "ast": [
-        ["add", "amount"],
-        ["amount", "LF"],
-        ["query", "timeQuery"],
-        ["timeQuery", "LF"],
-        ["set", "amount", "timeSpec"],
-        ["timeSpec", "LF"]
-    ]
+      ]
+    },
+    "<time: TimeSpec>": {
+      "type": "NORMAL_ID",
+      "description": "要设置的时间",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "day",
+          "description": "白天(1000t)"
+        },
+        {
+          "name": "noon",
+          "description": "中午(6000t)"
+        },
+        {
+          "name": "sunset",
+          "description": "日落(12000t)"
+        },
+        {
+          "name": "night",
+          "description": "晚上(13000t)"
+        },
+        {
+          "name": "midnight",
+          "description": "午夜(18000t)"
+        },
+        {
+          "name": "sunrise",
+          "description": "日出(23000t)"
+        }
+      ]
+    }
+  }
 }

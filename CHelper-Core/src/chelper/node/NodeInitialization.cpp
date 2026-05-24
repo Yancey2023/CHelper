@@ -142,19 +142,139 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodePerCommand> {
         static void init(NodePerCommand &node, const CPack &cpack) {
-            for (const auto &item: node.wrappedNodes) {
-                Profile::push(R"(init node {}: "{}")", FORMAT_ARG(getNodeTypeName(item.nodeTypeId)), FORMAT_ARG(item.getNodeSerializable().id.value_or("UNKNOWN")));
-                initNode(item.innerNode, cpack);
+            // init node definitions
+            for (auto &definition: node.nodes.nodes) {
+                Profile::push(R"(init node {}: "{}")",
+                              FORMAT_ARG(getNodeTypeName(definition.nodeTypeId)),
+                              FORMAT_ARG(reinterpret_cast<NodeSerializable *>(definition.data)->id.value_or("UNKNOWN")));
+                initNode(definition, cpack);
                 Profile::pop();
             }
-            for (const auto &item: node.wrappedNodes) {
-                if (item.nextNodes.empty()) [[unlikely]] {
-                    Profile::push("dismiss child node ids, the parent node is {} (in command {})",
-                                  FORMAT_ARG(item.getNodeSerializable().id.value_or("UNKNOWN")),
-                                  FORMAT_ARG(utf8::utf16to8(fmt::format(u"", fmt::join(node.name, u",")))));
-                    throw std::runtime_error("dismiss child node ids");
+
+            // token -> definition lookup, splitting "idA|idB" into alternatives
+            std::vector<std::pair<std::string_view, NodeWithType *>> idMap;
+            for (auto &item: node.nodes.nodes) {
+                auto *serializable = reinterpret_cast<NodeSerializable *>(item.data);
+                if (!serializable->id.has_value()) {
+                    continue;
+                }
+                const auto &id = serializable->id.value();
+                for (size_t start = 0, end; start < id.size(); start = end + 1) {
+                    int findStart = start;
+                    if (id[start] == '[') {
+                        end = id.find(']', start);
+                        if (end == std::string::npos) {
+                            Profile::push(R"(unknown node id syntax: {})", FORMAT_ARG(id));
+                            throw std::runtime_error("unknown node id syntax");
+                        }
+                        findStart = end + 1;
+                    } else if (id[start] == '<') {
+                        end = id.find('>', start);
+                        if (end == std::string::npos) {
+                            Profile::push(R"(unknown node id syntax: {})", FORMAT_ARG(id));
+                            throw std::runtime_error("unknown node id syntax");
+                        }
+                        findStart = end + 1;
+                    }
+                    end = std::min(id.find('|', findStart), id.size());
+                    if (end > start) {
+                        idMap.emplace_back(std::string_view(id.data() + start, end - start), &item);
+                    }
                 }
             }
+
+            // Sort by token length (longest first) to avoid prefix ambiguity
+            std::sort(idMap.begin(), idMap.end(), [](const auto &a, const auto &b) {
+                return a.first.size() > b.first.size();
+            });
+
+            // flat trie: [0]=root, [i>0] maps to wrappedNodes[i-1]
+            struct TrieNode {
+                NodeWithType *definition = nullptr;
+                std::vector<size_t> children;
+                bool needsLf = false; // can end here (syntax ends or next token is optional)
+            };
+            std::vector<TrieNode> trie(1);
+            bool hasOptionalFirst = false;
+
+            for (const auto &syntaxUtf16: node.syntax) {
+                std::string syntax = utf8::utf16to8(syntaxUtf16);
+                size_t position = syntax.find(u' ');
+                if (position == std::string::npos) {
+                    continue;
+                }
+                hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';
+
+                size_t current = 0;
+                while (position < syntax.size()) {
+                    while (position < syntax.size() && syntax[position] == u' ') {
+                        ++position;
+                    }
+                    if (position >= syntax.size()) {
+                        break;
+                    }
+                    size_t tokenStartPos = position;
+                    NodeWithType *definition = nullptr;
+                    for (auto &[tokenView, definitionView]: idMap) {
+                        if (position + tokenView.size() <= syntax.size() && std::string_view(syntax.data() + position, tokenView.size()) == tokenView) {
+                            definition = definitionView;
+                            position += tokenView.size();
+                            break;
+                        }
+                    }
+                    if (!definition) {
+                        Profile::push(R"(unknown syntax token: {}...)", FORMAT_ARG(std::string_view(syntax.data() + position, syntax.size() - position)));
+                        throw std::runtime_error("unknown syntax token");
+                    }
+                    // optional token ([...]) means the predecessor can end here
+                    if (syntax[tokenStartPos] == u'[' && current != 0) {
+                        trie[current].needsLf = true;
+                    }
+                    size_t childIndex = SIZE_MAX;
+                    for (auto child: trie[current].children) {
+                        if (trie[child].definition == definition) {
+                            childIndex = child;
+                            break;
+                        }
+                    }
+                    if (childIndex == SIZE_MAX) {
+                        trie.push_back({definition});
+                        childIndex = trie.size() - 1;
+                        trie[current].children.push_back(childIndex);
+                    }
+                    current = childIndex;
+                }
+                if (current) {
+                    trie[current].needsLf = true;
+                }
+            }
+
+            // materialize wrappedNodes (trie[0] excluded)
+            node.wrappedNodes.reserve(trie.size() - 1);
+            for (size_t i = 1; i < trie.size(); ++i) {
+                node.wrappedNodes.emplace_back(*trie[i].definition);
+            }
+
+            // connect nextNodes (1-based trie -> 0-based wrappedNodes)
+            for (size_t i = 1; i < trie.size(); ++i) {
+                auto &wrappedNode = node.wrappedNodes[i - 1];
+                for (auto child: trie[i].children) {
+                    wrappedNode.nextNodes.push_back(&node.wrappedNodes[child - 1]);
+                }
+                if (trie[i].needsLf) {
+                    wrappedNode.nextNodes.push_back(NodeLF::getInstance());
+                }
+            }
+
+            // start nodes
+            node.startNodes.clear();
+            for (auto child: trie[0].children) {
+                node.startNodes.push_back(&node.wrappedNodes[child - 1]);
+            }
+            if (hasOptionalFirst) {
+                node.startNodes.push_back(NodeLF::getInstance());
+            }
+
 #ifdef CHelperDebug
             for (const auto &item: node.wrappedNodes) {
                 bool flag1 = item.innerNode.nodeTypeId == NodeTypeId::POSITION ||

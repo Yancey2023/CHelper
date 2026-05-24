@@ -1,106 +1,84 @@
 {
-    "name": [
-        "volumearea"
-    ],
-    "description": "在当前维度中添加、移除或列出功能域",
-    "start": [
-        "add",
-        "list",
-        "remove",
-        "remove",
-        "remove_all"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "add",
-            "description": "在指定范围内添加功能域",
-            "data": {
-                "name": "add",
-                "description": "在指定范围内添加功能域"
-            }
-        },
-        {
-            "type": "STRING",
-            "id": "identifier",
-            "brief": "标识符的名称",
-            "description": "标识符的名称",
-            "canContainSpace": false,
-            "ignoreLater": false
-        },
-        {
-            "type": "POSITION",
-            "id": "from",
-            "brief": "位置",
-            "description": "功能域的位置"
-        },
-        {
-            "type": "POSITION",
-            "id": "to",
-            "brief": "位置",
-            "description": "功能域的位置"
-        },
-        {
-            "type": "STRING",
-            "id": "name",
-            "brief": "名称",
-            "description": "功能域的名称",
-            "canContainSpace": false,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "list",
-            "description": "列出当前维度中的功能域",
-            "data": {
-                "name": "list",
-                "description": "列出当前维度中的功能域"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "all-dimensions",
-            "description": "列出当前已定义的所有功能域(如不填则默认为仅显示本维度常加载区域)",
-            "data": {
-                "name": "all-dimensions",
-                "description": "列出当前已定义的所有功能域(如不填则默认为仅显示本维度常加载区域)"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "remove",
-            "description": "移除指定的功能域",
-            "data": {
-                "name": "remove",
-                "description": "移除指定的功能域"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "位置",
-            "description": "功能域的位置"
-        },
-        {
-            "type": "TEXT",
-            "id": "remove_all",
-            "description": "移除所有功能域",
-            "data": {
-                "name": "remove_all",
-                "description": "移除所有功能域"
-            }
-        }
-    ],
-    "ast": [
-        ["add", "identifier"],
-        ["identifier", "from"],
-        ["from", "to"],
-        ["to", "name"],
-        ["name", "LF"],
-        ["list", "all-dimensions"],
-        ["all-dimensions", "LF"],
-        ["remove", "name", "position"],
-        ["position", "LF"],
-        ["remove_all", "LF"]
-    ]
+  "name": [
+    "volumearea"
+  ],
+  "description": "在当前维度中添加、移除或列出功能域",
+  "syntax": [
+    "/volumearea add <identifier: string> <from: x y z> <to: x y z> [name: string]",
+    "/volumearea list [all-dimensions: VolumeAreaAllDimensions]",
+    "/volumearea remove <name: string>",
+    "/volumearea remove <position: x y z>",
+    "/volumearea remove_all"
+  ],
+  "node": {
+    "add": {
+      "type": "TEXT",
+      "description": "在指定范围内添加功能域",
+      "data": {
+        "name": "add",
+        "description": "在指定范围内添加功能域"
+      }
+    },
+    "<identifier: string>": {
+      "type": "STRING",
+      "brief": "标识符的名称",
+      "description": "标识符的名称",
+      "canContainSpace": false,
+      "ignoreLater": false
+    },
+    "<from: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "功能域的位置"
+    },
+    "<to: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "功能域的位置"
+    },
+    "[name: string]|<name: string>": {
+      "type": "STRING",
+      "brief": "名称",
+      "description": "功能域的名称",
+      "canContainSpace": false,
+      "ignoreLater": false
+    },
+    "list": {
+      "type": "TEXT",
+      "description": "列出当前维度中的功能域",
+      "data": {
+        "name": "list",
+        "description": "列出当前维度中的功能域"
+      }
+    },
+    "[all-dimensions: VolumeAreaAllDimensions]": {
+      "type": "TEXT",
+      "description": "列出当前已定义的所有功能域(如不填则默认为仅显示本维度功能域)",
+      "data": {
+        "name": "all-dimensions",
+        "description": "列出当前已定义的所有功能域(如不填则默认为仅显示本维度功能域)"
+      }
+    },
+    "remove": {
+      "type": "TEXT",
+      "description": "移除指定的功能域",
+      "data": {
+        "name": "remove",
+        "description": "移除指定的功能域"
+      }
+    },
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "功能域的位置"
+    },
+    "remove_all": {
+      "type": "TEXT",
+      "description": "移除所有功能域",
+      "data": {
+        "name": "remove_all",
+        "description": "移除所有功能域"
+      }
+    }
+  }
 }

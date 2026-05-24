@@ -341,6 +341,7 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::PER_COMMAND;
             std::vector<std::u16string> name;
             std::optional<std::u16string> description;
+            std::vector<std::u16string> syntax;
             FreeableNodeWithTypes nodes;
             std::vector<NodeWrapped> wrappedNodes;
             std::vector<NodeWrapped *> startNodes;

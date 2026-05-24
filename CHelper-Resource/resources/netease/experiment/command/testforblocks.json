@@ -1,51 +1,41 @@
 {
-    "name": [
-        "testforblocks"
-    ],
-    "description": "测试两个区域中的方块是否相同",
-    "start": [
-        "begin"
-    ],
-    "node": [
+  "name": [
+    "testforblocks"
+  ],
+  "description": "测试两个区域中的方块是否相同",
+  "syntax": [
+    "/testforblocks <begin: x y z> <end: x y z> <destination: x y z> [masked|all]"
+  ],
+  "node": {
+    "<begin: x y z>": {
+      "type": "POSITION",
+      "brief": "源坐标1",
+      "description": "作为样式基准的区域（源区域）的两个对角方块的第一个"
+    },
+    "<end: x y z>": {
+      "type": "POSITION",
+      "brief": "源坐标2",
+      "description": "作为样式基准的区域（源区域）的两个对角方块的第二个"
+    },
+    "<destination: x y z>": {
+      "type": "POSITION",
+      "brief": "待检查区域坐标",
+      "description": "待检查区域（目标区域）的下西北角（具有最小坐标值的边角）"
+    },
+    "[masked|all]": {
+      "type": "NORMAL_ID",
+      "description": "测试模式",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "POSITION",
-            "id": "begin",
-            "brief": "源坐标1",
-            "description": "作为样式基准的区域（源区域）的两个对角方块的第一个"
+          "name": "masked",
+          "description": "源区域的空气方块可匹配目标区域的任意方块"
         },
         {
-            "type": "POSITION",
-            "id": "end",
-            "brief": "源坐标1",
-            "description": "作为样式基准的区域（源区域）的两个对角方块的第二个"
-        },
-        {
-            "type": "POSITION",
-            "id": "destination",
-            "brief": "待检查区域坐标",
-            "description": "待检查区域（目标区域）的下西北角（具有最小坐标值的边角）"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "mode",
-            "description": "测试模式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "masked",
-                    "description": " 源区域的空气方块可匹配目标区域的任意方块"
-                },
-                {
-                    "name": "all",
-                    "description": " 两个区域的所有方块必须完全相同"
-                }
-            ]
+          "name": "all",
+          "description": "两个区域的所有方块必须完全相同"
         }
-    ],
-    "ast": [
-        ["begin", "end"],
-        ["end", "destination"],
-        ["destination", "mode", "LF"],
-        ["mode", "LF"]
-    ]
+      ]
+    }
+  }
 }

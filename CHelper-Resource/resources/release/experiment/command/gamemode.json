@@ -1,32 +1,27 @@
 {
-    "name": [
-        "gamemode"
-    ],
-    "description": "设置玩家的游戏模式",
-    "start": [
-        "gameMode"
-    ],
-    "node": [
-        {
-            "type": "NORMAL_ID",
-            "id": "gameMode",
-            "brief": "游戏模式",
-            "description": "玩家的新游戏模式",
-            "ignoreError": true,
-            "key": "gameMode"
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "目标实体",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        }
-    ],
-    "ast": [
-        ["gameMode", "player", "LF"],
-        ["player", "LF"]
-    ]
+  "name": [
+    "gamemode"
+  ],
+  "description": "设置玩家的游戏模式",
+  "syntax": [
+    "/gamemode <gameMode: GameMode> [player: target]",
+    "/gamemode <gameMode: int> [player: target]"
+  ],
+  "node": {
+    "<gameMode: GameMode>|<gameMode: int>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏模式",
+      "description": "玩家的新游戏模式",
+      "ignoreError": true,
+      "key": "gameMode"
+    },
+    "[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

@@ -1,101 +1,86 @@
 {
-    "name": [
-        "titleraw"
-    ],
-    "description": "控制屏幕标题(JSON)",
-    "start": [
-        "player"
-    ],
-    "node": [
+  "name": [
+    "titleraw"
+  ],
+  "description": "控制屏幕标题(JSON)",
+  "syntax": [
+    "/titleraw <player: target> <titleLocation: TitleRawSet> <raw json titleText: json>",
+    "/titleraw <player: target> clear",
+    "/titleraw <player: target> reset",
+    "/titleraw <player: target> times <fadeIn: int> <stay: int> <fadeOut: int>"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要显示或清除屏幕标题的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<titleLocation: TitleRawSet>": {
+      "type": "NORMAL_ID",
+      "description": "文字的位置",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "要显示或清除屏幕标题的玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
+          "name": "title",
+          "description": "向指定玩家显示屏幕标题，或将当前屏幕标题改变为指定文本。标题淡出后，清空副标题，但不重置淡入、持续、淡出时间"
         },
         {
-            "type": "NORMAL_ID",
-            "id": "clearMode",
-            "brief": "清除模式",
-            "description": "清除指定玩家屏幕标题或副标题",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "clear",
-                    "description": "清除指定玩家屏幕标题"
-                },
-                {
-                    "name": "reset",
-                    "description": "将指定玩家的副标题清空，同时将淡入、持续、淡出时间设为默认值"
-                }
-            ]
+          "name": "subtitle",
+          "description": "若指定玩家的屏幕上有标题显示，则将其副标题改为指定文本；否则，将指定文本作为指定玩家下一屏幕标题的副标题"
         },
         {
-            "type": "NORMAL_ID",
-            "id": "titleLocation",
-            "description": "文字的位置",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "title",
-                    "description": "向指定玩家显示屏幕标题，或将当前屏幕标题改变为指定文本。标题淡出后，清空副标题，但不重置淡入、持续、淡出时间"
-                },
-                {
-                    "name": "subtitle",
-                    "description": "若指定玩家的屏幕上有标题显示，则将其副标题改为指定文本；否则，将指定文本作为指定玩家下一屏幕标题的副标题"
-                },
-                {
-                    "name": "actionbar",
-                    "description": "在指定玩家的动作栏上方显示指定文本"
-                }
-            ]
-        },
-        {
-            "type": "JSON",
-            "id": "raw_json",
-            "brief": "JSON文本",
-            "description": "要显示的文本",
-            "key": "rawtext"
-        },
-        {
-            "type": "TEXT",
-            "id": "times",
-            "description": "更改指定玩家屏幕标题的淡入、持续、淡出时间",
-            "data": {
-                "name": "times",
-                "description": "更改指定玩家屏幕标题的淡入、持续、淡出时间"
-            }
-        },
-        {
-            "type": "INTEGER",
-            "id": "fadeIn",
-            "brief": "淡入时长",
-            "description": "幕标题的淡入时间的时长（单位为游戏刻）"
-        },
-        {
-            "type": "INTEGER",
-            "id": "stay",
-            "brief": "持续时长",
-            "description": "幕标题的持续时间的时长（单位为游戏刻）"
-        },
-        {
-            "type": "INTEGER",
-            "id": "fadeOut",
-            "brief": "淡出时长",
-            "description": "幕标题的淡出时间的时长（单位为游戏刻）"
+          "name": "actionbar",
+          "description": "在指定玩家的动作栏上方显示指定文本"
         }
-    ],
-    "ast": [
-        ["player", "clearMode", "titleLocation", "times"],
-        ["clearMode", "LF"],
-        ["titleLocation", "raw_json"],
-        ["raw_json", "LF"],
-        ["times", "fadeIn"],
-        ["fadeIn", "stay"],
-        ["stay", "fadeOut"],
-        ["fadeOut", "LF"]
-    ]
+      ]
+    },
+    "<raw json titleText: json>": {
+      "type": "JSON",
+      "brief": "JSON文本",
+      "description": "要显示的文本",
+      "key": "rawtext"
+    },
+    "clear": {
+      "type": "TEXT",
+      "description": "清除指定玩家屏幕标题",
+      "data": {
+        "name": "clear",
+        "description": "清除指定玩家屏幕标题"
+      }
+    },
+    "reset": {
+      "type": "TEXT",
+      "description": "将指定玩家的副标题清空，同时将淡入、持续、淡出时间设为默认值",
+      "data": {
+        "name": "reset",
+        "description": "将指定玩家的副标题清空，同时将淡入、持续、淡出时间设为默认值"
+      }
+    },
+    "times": {
+      "type": "TEXT",
+      "description": "更改指定玩家屏幕标题的淡入、持续、淡出时间",
+      "data": {
+        "name": "times",
+        "description": "更改指定玩家屏幕标题的淡入、持续、淡出时间"
+      }
+    },
+    "<fadeIn: int>": {
+      "type": "INTEGER",
+      "brief": "淡入时长",
+      "description": "幕标题的淡入时间的时长（单位为游戏刻）"
+    },
+    "<stay: int>": {
+      "type": "INTEGER",
+      "brief": "持续时长",
+      "description": "幕标题的持续时间的时长（单位为游戏刻）"
+    },
+    "<fadeOut: int>": {
+      "type": "INTEGER",
+      "brief": "淡出时长",
+      "description": "幕标题的淡出时间的时长（单位为游戏刻）"
+    }
+  }
 }

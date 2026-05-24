@@ -1,70 +1,67 @@
 {
-    "name": [
-        "difficulty"
-    ],
-    "description": "设定难度等级",
-    "start": [
-        "difficulty"
-    ],
-    "node": [
+  "name": [
+    "difficulty"
+  ],
+  "description": "设定难度等级",
+  "syntax": [
+    "/difficulty <difficulty: Difficulty>",
+    "/difficulty <difficulty: int>"
+  ],
+  "node": {
+    "<difficulty: Difficulty>|<difficulty: int>": {
+      "type": "NORMAL_ID",
+      "description": "难度等级",
+      "ignoreError": true,
+      "contents": [
         {
-            "type": "NORMAL_ID",
-            "id": "difficulty",
-            "description": "难度等级",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "peaceful",
-                    "description": "和平难度"
-                },
-                {
-                    "name": "easy",
-                    "description": "简单难度"
-                },
-                {
-                    "name": "normal",
-                    "description": "普通难度"
-                },
-                {
-                    "name": "hard",
-                    "description": "困难难度"
-                },
-                {
-                    "name": "p",
-                    "description": "和平难度"
-                },
-                {
-                    "name": "e",
-                    "description": "简单难度"
-                },
-                {
-                    "name": "n",
-                    "description": "普通难度"
-                },
-                {
-                    "name": "h",
-                    "description": "困难难度"
-                },
-                {
-                    "name": "0",
-                    "description": "和平难度"
-                },
-                {
-                    "name": "1",
-                    "description": "简单难度"
-                },
-                {
-                    "name": "2",
-                    "description": "普通难度"
-                },
-                {
-                    "name": "3",
-                    "description": "困难难度"
-                }
-            ]
+          "name": "peaceful",
+          "description": "和平难度"
+        },
+        {
+          "name": "easy",
+          "description": "简单难度"
+        },
+        {
+          "name": "normal",
+          "description": "普通难度"
+        },
+        {
+          "name": "hard",
+          "description": "困难难度"
+        },
+        {
+          "name": "p",
+          "description": "和平难度"
+        },
+        {
+          "name": "e",
+          "description": "简单难度"
+        },
+        {
+          "name": "n",
+          "description": "普通难度"
+        },
+        {
+          "name": "h",
+          "description": "困难难度"
+        },
+        {
+          "name": "0",
+          "description": "和平难度"
+        },
+        {
+          "name": "1",
+          "description": "简单难度"
+        },
+        {
+          "name": "2",
+          "description": "普通难度"
+        },
+        {
+          "name": "3",
+          "description": "困难难度"
         }
-    ],
-    "ast": [
-        ["difficulty", "LF"]
-    ]
+      ]
+    }
+  }
 }

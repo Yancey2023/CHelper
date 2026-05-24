@@ -1,23 +1,19 @@
 {
-    "name": [
-        "kill"
-    ],
-    "description": "杀死/清除实体（玩家、生物等）",
-    "start": [
-        "target"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "target",
-            "description": "要杀死/清除的目标实体",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        }
-    ],
-    "ast": [
-        ["target", "LF"]
-    ]
+  "name": [
+    "kill"
+  ],
+  "description": "杀死/清除实体（玩家、生物等）",
+  "syntax": [
+    "/kill [target: target]"
+  ],
+  "node": {
+    "[target: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "要杀死/清除的目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }
