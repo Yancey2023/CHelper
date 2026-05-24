@@ -110,7 +110,7 @@ struct serialization::Codec<CHelper::Node::FreeableNodeWithTypes> : BaseCodec<CH
     }
 };// namespace serialization
 
-CODEC_REGISTER_JSON_KEY(CHelper::Node::NodePerCommand, name, description, node, start, ast);
+CODEC_REGISTER_JSON_KEY(CHelper::Node::NodePerCommand, name, description, syntax, node);
 CODEC_REGISTER_JSON_KEY(CHelper::Node::NodeJsonElement, id, node, start);
 
 template<>
@@ -180,26 +180,24 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
         Codec<decltype(t.name)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::name_(), t.name);
         //description
         Codec<decltype(t.description)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::description_(), t.description);
-        //node
-        Codec<decltype(t.nodes)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::node_(), t.nodes);
-        //start
-        std::vector<std::string> startIds;
-        startIds.reserve(t.startNodes.size());
-        for (const auto &item: t.startNodes) {
-            startIds.push_back(item->getNodeSerializable().id.value());
-        }
-        Codec<decltype(startIds)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::start_(), startIds);
-        //ast
-        std::vector<std::vector<std::string>> ast;
-        for (const auto &item: t.wrappedNodes) {
-            std::vector<std::string> ast1;
-            ast1.push_back(item.getNodeSerializable().id.value());
-            for (const auto &item2: item.nextNodes) {
-                ast1.push_back(item2->getNodeSerializable().id.value());
+        //syntax
+        Codec<decltype(t.syntax)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::syntax_(), t.syntax);
+        //node (as JSON object keyed by node id)
+        typename JsonValueType::ValueType nodeObject;
+        nodeObject.SetObject();
+        nodeObject.MemberReserve(static_cast<rapidjson::SizeType>(t.wrappedNodes.size()), allocator);
+        for (const auto &wrappedNode: t.wrappedNodes) {
+            const auto &nodeId = wrappedNode.getNodeSerializable().id;
+            if (!nodeId.has_value()) [[unlikely]] {
+                continue;
             }
-            ast.push_back(std::move(ast1));
+            typename JsonValueType::ValueType nodeValue;
+            Codec<decltype(wrappedNode.innerNode)>::template to_json<typename JsonValueType::ValueType>(allocator, nodeValue, wrappedNode.innerNode);
+            nodeValue.RemoveMember("id");
+            typename JsonValueType::ValueType key(nodeId.value().c_str(), allocator);
+            nodeObject.AddMember(std::move(key), std::move(nodeValue), allocator);
         }
-        Codec<decltype(ast)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::ast_(), ast);
+        jsonValue.AddMember(typename JsonValueType::ValueType(details::JsonKey<Type, typename JsonValueType::Ch>::node_(), allocator), std::move(nodeObject), allocator);
     }
 
     template<class JsonValueType>
@@ -214,92 +212,127 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
         //description
         CHelper::Profile::next("loading node description");
         Codec<decltype(t.description)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::description_(), t.description);
-        //node
+        //syntax
+        CHelper::Profile::next("loading node syntax");
+        Codec<decltype(t.syntax)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::syntax_(), t.syntax);
+        //node (as JSON object keyed by node id)
         const typename JsonValueType::ConstMemberIterator nodeIter = jsonValue.FindMember(details::JsonKey<Type, typename JsonValueType::Ch>::node_());
-        if (nodeIter != jsonValue.MemberEnd()) [[likely]] {
-            Codec<decltype(t.nodes)>::template from_json<typename JsonValueType::ValueType>(nodeIter->value, t.nodes);
-            t.wrappedNodes.reserve(t.nodes.nodes.size());
-            for (auto &node: t.nodes.nodes) {
-                t.wrappedNodes.emplace_back(node);
-            }
+        if (nodeIter == jsonValue.MemberEnd()) [[unlikely]] {
+            throw exceptions::JsonSerializationKeyException(details::JsonKey<Type, typename JsonValueType::Ch>::node_());
         }
-        //start
-        CHelper::Profile::next("loading start nodes");
-        std::vector<std::string> startNodeIds;
-        Codec<decltype(startNodeIds)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::start_(), startNodeIds);
-        t.startNodes.reserve(startNodeIds.size());
-        for (const auto &startNodeId: startNodeIds) {
-            CHelper::Profile::next(R"(linking startNode "{}" to nodes)", FORMAT_ARG(startNodeId));
-            if (startNodeId == "LF") [[unlikely]] {
-                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
-                continue;
-            }
-            bool flag = true;
-            for (auto &node1: t.wrappedNodes) {
-                if (node1.getNodeSerializable().id == startNodeId) [[unlikely]] {
-                    t.startNodes.push_back(&node1);
-                    flag = false;
-                    break;
-                }
-            }
-            if (flag) [[unlikely]] {
-                CHelper::Profile::push(R"("unknown node id -> {} (in command \"{}\")", FORMAT_ARG(startNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                throw std::runtime_error("unknown node id");
-            }
+        if (!nodeIter->value.IsObject()) [[unlikely]] {
+            throw exceptions::JsonSerializationTypeException("object", getJsonTypeStr(jsonValue.GetType()));
         }
-        //ast
-        const typename JsonValueType::ConstMemberIterator jsonAstIter = jsonValue.FindMember(details::JsonKey<Type, typename JsonValueType::Ch>::ast_());
-        if (jsonAstIter != jsonValue.MemberEnd()) [[likely]] {
-            CHelper::Profile::next("loading ast");
-            std::vector<std::vector<std::string>> ast;
-            Codec<decltype(ast)>::template from_json<typename JsonValueType::ValueType>(jsonAstIter->value, ast);
-            for (const auto &childNodes: ast) {
-                CHelper::Profile::next("linking child nodes to parent node");
-                if (childNodes.empty()) [[unlikely]] {
-                    CHelper::Profile::push(R"("dismiss parent node id (in command "{}"))", FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                    throw std::runtime_error("dismiss parent node id");
+        const auto &nodeObject = nodeIter->value;
+        t.nodes.nodes.reserve(nodeObject.MemberCount());
+        for (auto it = nodeObject.MemberBegin(); it != nodeObject.MemberEnd(); ++it) {
+            std::string nodeId;
+            Codec<std::string>::template from_json<typename JsonValueType::ValueType>(it->name, nodeId);
+            t.nodes.nodes.emplace_back();
+            Codec<CHelper::Node::NodeWithType>::template from_json<typename JsonValueType::ValueType>(it->value, t.nodes.nodes.back());
+            reinterpret_cast<CHelper::Node::NodeSerializable *>(t.nodes.nodes.back().data)->id = std::make_optional(std::move(nodeId));
+        }
+        //build wrappedNodes/startNodes from syntax strings (only for JSON — binary stores pre-parsed)
+        if (!t.syntax.empty()) {
+            CHelper::Profile::next("building syntax trie");
+            //id map: token string -> node definition
+            std::vector<std::pair<std::string_view, CHelper::Node::NodeWithType *>> idMap;
+            for (auto &item: t.nodes.nodes) {
+                auto *serializable = reinterpret_cast<CHelper::Node::NodeSerializable *>(item.data);
+                if (!serializable->id.has_value()) {
+                    continue;
                 }
-                auto parentNodeId = childNodes.at(0);
-                CHelper::Profile::next(R"("linking child nodes to parent node "{}"))", FORMAT_ARG(parentNodeId));
-                if (childNodes.size() == 1) [[unlikely]] {
-                    CHelper::Profile::push(R"("dismiss parent node id, the parent node is {} (in command "{}"))", FORMAT_ARG(parentNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                    throw std::runtime_error("dismiss parent node id");
+                const auto &id = serializable->id.value();
+                for (size_t start = 0, end; start < id.size(); start = end + 1) {
+                    const size_t findStart = (id[start] == '[' || id[start] == '<') ? id.find(id[start] == '[' ? ']' : '>', start) + 1 : start;
+                    end = std::min(id.find('|', findStart), id.size());
+                    if (end > start) {
+                        idMap.emplace_back(std::string_view(id.data() + start, end - start), &item);
+                    }
                 }
-                CHelper::Node::NodeWrapped *parentNode = nullptr;
-                for (auto &node1: t.wrappedNodes) {
-                    if (node1.getNodeSerializable().id == parentNodeId) [[unlikely]] {
-                        parentNode = &node1;
+            }
+            std::sort(idMap.begin(), idMap.end(), [](const auto &a, const auto &b) {
+                return a.first.size() > b.first.size();
+            });
+            //flat trie: [0]=root, [i>0] maps to wrappedNodes[i-1]
+            struct TrieNode {
+                CHelper::Node::NodeWithType *definition = nullptr;
+                std::vector<size_t> children;
+                bool needsLf = false;
+            };
+            std::vector<TrieNode> trie(1);
+            bool hasOptionalFirst = false;
+            for (const auto &syntaxUtf16: t.syntax) {
+                const std::string syntax = utf8::utf16to8(syntaxUtf16);
+                size_t position = syntax.find(u' ');
+                if (position == std::string::npos) {
+                    continue;
+                }
+                hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';
+                size_t current = 0;
+                while (position < syntax.size()) {
+                    while (position < syntax.size() && syntax[position] == u' ') {
+                        ++position;
+                    }
+                    if (position >= syntax.size()) {
                         break;
                     }
-                }
-                if (parentNode == nullptr) [[unlikely]] {
-                    CHelper::Profile::push(R"("unknown node id -> {} (in command "{}"))", FORMAT_ARG(parentNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}",fmt::join(t.name, u",")))));
-                    throw std::runtime_error("unknown node id");
-                }
-                if (!parentNode->nextNodes.empty()) [[unlikely]] {
-                    CHelper::Profile::push(R"(repeating parent node -> {} (in command "{}"))", FORMAT_ARG(parentNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                    throw std::runtime_error("repeating parent node");
-                }
-                parentNode->nextNodes.reserve(childNodes.size() - 1);
-                for_each(childNodes.begin() + 1, childNodes.end(), [&](const auto &childNodeId) {
-                    CHelper::Profile::next(R"(linking child nodes "{}" to parent node "{} (in command "{}"))", FORMAT_ARG(childNodeId), FORMAT_ARG(parentNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                    if (childNodeId == "LF") [[unlikely]] {
-                        parentNode->nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
-                        return;
-                    }
-                    CHelper::Node::NodeWrapped *childNode = nullptr;
-                    for (auto &node: t.wrappedNodes) {
-                        if (node.getNodeSerializable().id == childNodeId) [[unlikely]] {
-                            childNode = &node;
+                    const size_t tokenStartPos = position;
+                    CHelper::Node::NodeWithType *definition = nullptr;
+                    for (auto &[tokenView, definitionView]: idMap) {
+                        if (position + tokenView.size() <= syntax.size() &&
+                            std::string_view(syntax.data() + position, tokenView.size()) == tokenView) {
+                            definition = definitionView;
+                            position += tokenView.size();
                             break;
                         }
                     }
-                    if (childNode == nullptr) [[unlikely]] {
-                        CHelper::Profile::push(R"("unknown node id -> {} (in command "{}"))", FORMAT_ARG(childNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                        throw std::runtime_error("unknown node id");
+                    if (!definition) [[unlikely]] {
+                        throw std::runtime_error("unknown syntax token");
                     }
-                    parentNode->nextNodes.push_back(childNode);
-                });
+                    if (syntax[tokenStartPos] == u'[' && current != 0) {
+                        trie[current].needsLf = true;
+                    }
+                    size_t childIndex = SIZE_MAX;
+                    for (const auto child: trie[current].children) {
+                        if (trie[child].definition == definition) {
+                            childIndex = child;
+                            break;
+                        }
+                    }
+                    if (childIndex == SIZE_MAX) {
+                        trie.push_back({definition});
+                        childIndex = trie.size() - 1;
+                        trie[current].children.push_back(childIndex);
+                    }
+                    current = childIndex;
+                }
+                if (current) {
+                    trie[current].needsLf = true;
+                }
+            }
+            //materialize wrappedNodes (trie[0] excluded)
+            t.wrappedNodes.reserve(trie.size() - 1);
+            for (size_t i = 1; i < trie.size(); ++i) {
+                t.wrappedNodes.emplace_back(*trie[i].definition);
+            }
+            //connect nextNodes
+            for (size_t i = 1; i < trie.size(); ++i) {
+                auto &wrappedNode = t.wrappedNodes[i - 1];
+                for (const auto child: trie[i].children) {
+                    wrappedNode.nextNodes.push_back(&t.wrappedNodes[child - 1]);
+                }
+                if (trie[i].needsLf) {
+                    wrappedNode.nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
+                }
+            }
+            //populate startNodes
+            t.startNodes.clear();
+            for (const auto child: trie[0].children) {
+                t.startNodes.push_back(&t.wrappedNodes[child - 1]);
+            }
+            if (hasOptionalFirst) {
+                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
             }
         }
         CHelper::Profile::pop();
@@ -312,18 +345,42 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
         Codec<decltype(t.name)>::template to_binary<isNeedConvert>(ostream, t.name);
         //description
         Codec<decltype(t.description)>::template to_binary<isNeedConvert>(ostream, t.description);
+        //syntax
+        Codec<decltype(t.syntax)>::template to_binary<isNeedConvert>(ostream, t.syntax);
         //node
         Codec<decltype(t.nodes)>::template to_binary<isNeedConvert>(ostream, t.nodes);
-        //start
-        Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, static_cast<uint32_t>(t.startNodes.size()));
-        for (const auto &item: t.startNodes) {
-            Codec<std::string>::template to_binary<isNeedConvert>(ostream, item->getNodeSerializable().id.value());
+        //pre-parsed wrappedNodes graph (definition index + nextNodes indices)
+        const uint32_t wrappedCount = static_cast<uint32_t>(t.wrappedNodes.size());
+        Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, wrappedCount);
+        for (const auto &wrappedNode: t.wrappedNodes) {
+            int32_t defIdx = -1;
+            for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
+                if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
+                    defIdx = static_cast<int32_t>(i);
+                    break;
+                }
+            }
+            Codec<int32_t>::template to_binary<isNeedConvert>(ostream, defIdx);
+            const uint32_t nextCount = static_cast<uint32_t>(wrappedNode.nextNodes.size());
+            Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, nextCount);
+            for (const auto *next: wrappedNode.nextNodes) {
+                if (next == CHelper::Node::NodeLF::getInstance()) {
+                    Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, UINT32_MAX);
+                } else {
+                    const auto idx = static_cast<uint32_t>(next - t.wrappedNodes.data());
+                    Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, idx);
+                }
+            }
         }
-        //ast
-        for (const auto &item: t.wrappedNodes) {
-            Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, static_cast<uint32_t>(item.nextNodes.size()));
-            for (const auto &item2: item.nextNodes) {
-                Codec<std::string>::template to_binary<isNeedConvert>(ostream, item2->getNodeSerializable().id.value());
+        //startNodes indices
+        const uint32_t startCount = static_cast<uint32_t>(t.startNodes.size());
+        Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, startCount);
+        for (const auto *start: t.startNodes) {
+            if (start == CHelper::Node::NodeLF::getInstance()) {
+                Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, UINT32_MAX);
+            } else {
+                const auto idx = static_cast<uint32_t>(start - t.wrappedNodes.data());
+                Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, idx);
             }
         }
     }
@@ -338,60 +395,67 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
         }
         //description
         Codec<decltype(t.description)>::template from_binary<isNeedConvert>(istream, t.description);
-        //node
+        //syntax (preserved for JSON round-trip)
+        Codec<decltype(t.syntax)>::template from_binary<isNeedConvert>(istream, t.syntax);
+        //node definitions
         Codec<decltype(t.nodes)>::template from_binary<isNeedConvert>(istream, t.nodes);
-        t.wrappedNodes.reserve(t.nodes.nodes.size());
-        for (auto &node: t.nodes.nodes) {
-            t.wrappedNodes.emplace_back(node);
-        }
-        //start
-        uint32_t startNodeIdSize;
-        Codec<uint32_t>::template from_binary<isNeedConvert>(istream, startNodeIdSize);
-        t.startNodes.reserve(static_cast<size_t>(startNodeIdSize));
-        for (size_t i = 0; i < startNodeIdSize; ++i) {
-            std::string startNodeId;
-            Codec<decltype(startNodeId)>::template from_binary<isNeedConvert>(istream, startNodeId);
-            if (startNodeId == "LF") [[unlikely]] {
-                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
-                continue;
-            }
-            bool flag = true;
-            for (auto &node: t.wrappedNodes) {
-                if (node.getNodeSerializable().id == startNodeId) [[unlikely]] {
-                    t.startNodes.push_back(&node);
-                    flag = false;
-                    break;
-                }
-            }
-            if (flag) [[unlikely]] {
-                CHelper::Profile::push(R"("unknown node id -> {} (in command "{}"))", FORMAT_ARG(startNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                throw std::runtime_error("unknown node id");
+        //pre-parsed wrappedNodes graph
+        uint32_t wrappedCount;
+        Codec<uint32_t>::template from_binary<isNeedConvert>(istream, wrappedCount);
+        struct WrappedEntry {
+            int32_t defIdx;
+            std::vector<uint32_t> nextIndices;
+        };
+        std::vector<WrappedEntry> entries(wrappedCount);
+        for (uint32_t i = 0; i < wrappedCount; ++i) {
+            Codec<int32_t>::template from_binary<isNeedConvert>(istream, entries[i].defIdx);
+            uint32_t nextCount;
+            Codec<uint32_t>::template from_binary<isNeedConvert>(istream, nextCount);
+            entries[i].nextIndices.resize(nextCount);
+            for (uint32_t j = 0; j < nextCount; ++j) {
+                Codec<uint32_t>::template from_binary<isNeedConvert>(istream, entries[i].nextIndices[j]);
             }
         }
-        //ast
-        for (auto &parentNode: t.wrappedNodes) {
-            uint32_t childNodeSize;
-            Codec<uint32_t>::template from_binary<isNeedConvert>(istream, childNodeSize);
-            parentNode.nextNodes.reserve(static_cast<size_t>(childNodeSize));
-            for (size_t j = 0; j < childNodeSize; ++j) {
-                std::string childNodeId;
-                Codec<decltype(childNodeId)>::template from_binary<isNeedConvert>(istream, childNodeId);
-                if (childNodeId == "LF") [[unlikely]] {
-                    parentNode.nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
-                    continue;
-                }
-                CHelper::Node::NodeWrapped *childNode = nullptr;
-                for (auto &node1: t.wrappedNodes) {
-                    if (node1.getNodeSerializable().id == childNodeId) [[unlikely]] {
-                        childNode = &node1;
-                        break;
+        //startNodes indices
+        uint32_t startCount;
+        Codec<uint32_t>::template from_binary<isNeedConvert>(istream, startCount);
+        std::vector<uint32_t> startIndices(startCount);
+        for (uint32_t i = 0; i < startCount; ++i) {
+            Codec<uint32_t>::template from_binary<isNeedConvert>(istream, startIndices[i]);
+        }
+        //build wrappedNodes (reserve to prevent reallocation during pointer fixup)
+        t.wrappedNodes.reserve(wrappedCount);
+        for (uint32_t i = 0; i < wrappedCount; ++i) {
+            if (entries[i].defIdx < 0 || static_cast<size_t>(entries[i].defIdx) >= t.nodes.nodes.size()) [[unlikely]] {
+                throw std::runtime_error("invalid node definition index");
+            }
+            t.wrappedNodes.emplace_back(t.nodes.nodes[entries[i].defIdx]);
+        }
+        //resolve nextNodes pointers
+        for (uint32_t i = 0; i < wrappedCount; ++i) {
+            auto &wrappedNode = t.wrappedNodes[i];
+            for (auto targetIdx: entries[i].nextIndices) {
+                if (targetIdx == UINT32_MAX) {
+                    wrappedNode.nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
+                } else {
+                    if (targetIdx >= wrappedCount) [[unlikely]] {
+                        throw std::runtime_error("invalid wrapped node index");
                     }
+                    wrappedNode.nextNodes.push_back(&t.wrappedNodes[targetIdx]);
                 }
-                if (childNode == nullptr) [[unlikely]] {
-                    CHelper::Profile::push(R"("unknown node id -> {} (in command "{}"))", FORMAT_ARG(childNodeId), FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(t.name, u",")))));
-                    throw std::runtime_error("unknown node id");
+            }
+        }
+        //resolve startNodes pointers
+        t.startNodes.clear();
+        t.startNodes.reserve(startCount);
+        for (auto idx: startIndices) {
+            if (idx == UINT32_MAX) {
+                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
+            } else {
+                if (idx >= wrappedCount) [[unlikely]] {
+                    throw std::runtime_error("invalid start node index");
                 }
-                parentNode.nextNodes.push_back(childNode);
+                t.startNodes.push_back(&t.wrappedNodes[idx]);
             }
         }
     }
@@ -508,7 +572,7 @@ CODEC(CHelper::Node::RepeatData, id, breakNodes, repeatNodes, isEnd)
 CODEC_NODE(CHelper::Node::NodeRepeat, key)
 CODEC_NODE(CHelper::Node::NodeString, canContainSpace, ignoreLater)
 CODEC_NODE(CHelper::Node::NodeTargetSelector, isMustPlayer, isMustNPC, isOnlyOne, isWildcard)
-CODEC_NODE(CHelper::Node::NodeText, tokenTypes, data)
+CODEC_NODE(CHelper::Node::NodeText, data)
 CODEC_NODE(CHelper::Node::NodeBoolean, descriptionTrue, descriptionFalse)
 CODEC_NODE(CHelper::Node::NodeJsonBoolean, descriptionTrue, descriptionFalse)
 CODEC_NODE(CHelper::Node::NodeFloat, min, max)

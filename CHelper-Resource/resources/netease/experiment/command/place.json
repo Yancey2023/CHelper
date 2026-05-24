@@ -1,111 +1,95 @@
 {
-    "name": [
-        "place"
-    ],
-    "description": "以指定位置为生成原点，放置已配置的地物、结构地物、结构模板或结构池",
-    "start": [
-        "jigsaw", "structure"
-    ],
-    "node": [
+  "name": [
+    "place"
+  ],
+  "description": "以指定位置为生成原点，放置已配置的地物、结构地物、结构模板或结构池",
+  "syntax": [
+    "/place jigsaw [pool: string] [jigsawTarget: string] maxDepth [pos: x y z] [keepJigsaws: Boolean]",
+    "/place jigsaw [pool: string] [jigsawTarget: string] maxDepth [pos: x y z]",
+    "/place jigsaw [pool: string] [jigsawTarget: string] maxDepth",
+    "/place structure [structure_feature: string] [pos1: x y z] [ignoreStartHeight: Boolean] [keepJigsaws: Boolean]",
+    "/place structure [structure_feature: string] [pos1: x y z] [ignoreStartHeight: Boolean]",
+    "/place structure [structure_feature: string] [pos1: x y z]",
+    "/place structure [structure_feature: string]"
+  ],
+  "node": {
+    "jigsaw": {
+      "type": "TEXT",
+      "description": "放置结构池并展开至指定深度",
+      "data": {
+        "name": "jigsaw",
+        "description": "放置结构池并展开至指定深度"
+      }
+    },
+    "[pool: string]": {
+      "type": "STRING",
+      "brief": "结构池",
+      "description": "要放置的结构池(文件路径)",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[jigsawTarget: string]": {
+      "type": "STRING",
+      "brief": "起始拼图方块",
+      "description": "放置结构池时的结构中的起始拼图方块",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "maxDepth": {
+      "type": "TEXT",
+      "description": "要展开拼图方块的最大深度(1~7)",
+      "data": {
+        "name": "maxDepth",
+        "description": "要展开拼图方块的最大深度(1~7)"
+      }
+    },
+    "[pos: x y z]": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "放置时使用的生成原点"
+    },
+    "[keepJigsaws: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "被放置结构是否保留拼图方块，默认为false",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "structure": {
+      "type": "TEXT",
+      "description": "放置结构地物",
+      "data": {
+        "name": "structure",
+        "description": "放置结构地物"
+      }
+    },
+    "[structure_feature: string]": {
+      "type": "NORMAL_ID",
+      "brief": "结构地物",
+      "description": "要放置的结构地物",
+      "ignoreError": true,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "jigsaw",
-            "description": "放置结构池并展开至指定深度",
-            "data": {
-                "name": "jigsaw",
-                "description": "放置结构池并展开至指定深度"
-            }
+          "name": "minecraft:trail_ruins",
+          "description": "古迹废墟"
         },
         {
-            "type": "TEXT",
-            "id": "structure",
-            "description": "放置结构地物",
-            "data": {
-                "name": "structure",
-                "description": "放置结构地物"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "structure_feature",
-            "brief": "结构地物",
-            "description": "要放置的结构地物",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "minecraft:trail_ruins",
-                    "description": "古迹废墟"
-                },
-                {
-                    "name": "minecraft:trial_chambers",
-                    "description": "试炼密室"
-                }
-            ]
-        },
-        {
-            "type": "STRING",
-            "id": "pool",
-            "brief": "结构池",
-            "description": "要放置的结构池(文件路径)",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "jigsawTarget",
-            "brief": "起始拼图方块",
-            "description": "放置结构池时的结构中的起始拼图方块",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "maxDepth",
-            "description": "要展开拼图方块的最大深度(1~7)",
-            "data": {
-                "name": "maxDepth",
-                "description": "要展开拼图方块的最大深度(1~7)"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "pos",
-            "brief": "位置",
-            "description": "放置时使用的生成原点"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "keepJigsaws",
-            "brief": "值",
-            "description": "被放置结构是否保留拼图方块，默认为false",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "POSITION",
-            "id": "pos1",
-            "brief": "位置",
-            "description": "放置时使用的生成原点"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "ignoreStartHeight",
-            "brief": "值",
-            "description": "放置结构时是否忽略起始高度",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
+          "name": "minecraft:trial_chambers",
+          "description": "试炼密室"
         }
-    ],
-    "ast": [
-        ["jigsaw", "pool"],
-        ["pool", "jigsawTarget"],
-        ["jigsawTarget", "maxDepth"],
-        ["maxDepth", "pos", "LF"],
-        ["pos", "keepJigsaws", "LF"],
-        ["keepJigsaws", "LF"],
-        ["structure", "structure_feature"],
-        ["structure_feature", "pos1", "LF"],
-        ["pos1", "ignoreStartHeight", "LF"],
-        ["ignoreStartHeight", "keepJigsaws", "LF"]
-    ]
+      ]
+    },
+    "[pos1: x y z]": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "放置时使用的生成原点"
+    },
+    "[ignoreStartHeight: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "放置结构时是否忽略起始高度",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    }
+  }
 }

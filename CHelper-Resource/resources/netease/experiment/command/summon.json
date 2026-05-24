@@ -1,106 +1,73 @@
 {
-    "name": [
-        "summon"
-    ],
-    "description": "召唤一个实体",
-    "start": [
-        "entityType"
-    ],
-    "node": [
-        {
-            "type": "NAMESPACE_ID",
-            "id": "entityType",
-            "brief": "实体类型",
-            "description": "要被召唤的实体类型",
-            "ignoreError": true,
-            "key": "entity"
-        },
-        {
-            "type": "POSITION",
-            "id": "spawnPos1",
-            "brief": "实体召唤位置",
-            "description": "该实体的召唤位置。如果未指定，默认为命令执行位置"
-        },
-        {
-            "type": "POSITION",
-            "id": "spawnPos2",
-            "brief": "实体召唤位置",
-            "description": "该实体的召唤位置。如果未指定，默认为命令执行位置"
-        },
-        {
-            "type": "RELATIVE_FLOAT",
-            "id": "yRot",
-            "brief": "ry",
-            "description": "该实体的垂直旋转角度",
-            "canUseCaretNotation": false
-        },
-        {
-            "type": "RELATIVE_FLOAT",
-            "id": "xRot",
-            "brief": "rx",
-            "description": "该实体的水平旋转角度",
-            "canUseCaretNotation": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "spawnEvent",
-            "brief": "实体生成事件",
-            "description": "该实体的召唤时附带的游戏内事件",
-            "ignoreError": true,
-            "key": "entityEvent"
-        },
-        {
-            "type": "STRING",
-            "id": "nameTag1",
-            "brief": "实体名",
-            "description": "该实体的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "nameTag2",
-            "brief": "实体名",
-            "description": "该实体的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "facing",
-            "description": "朝向某个实体或坐标",
-            "data": {
-                "name": "facing",
-                "description": "朝向某个实体或坐标"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "lookAtEntity",
-            "description": "该实体朝向的实体",
-            "isOnlyOne": true,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "朝向的坐标",
-            "description": "该实体朝向的坐标"
-        }
-    ],
-    "ast": [
-        ["entityType", "spawnPos1", "nameTag1", "LF"],
-        ["spawnPos1", "yRot", "facing", "LF"],
-        ["yRot", "xRot", "LF"],
-        ["xRot", "spawnEvent", "LF"],
-        ["spawnEvent", "nameTag2", "LF"],
-        ["nameTag2", "LF"],
-        ["nameTag1", "spawnPos2", "LF"],
-        ["spawnPos2", "LF"],
-        ["facing", "lookAtEntity", "position"],
-        ["lookAtEntity", "spawnEvent"],
-        ["position", "spawnEvent"]
-    ]
+  "name": [
+    "summon"
+  ],
+  "description": "召唤一个实体",
+  "syntax": [
+    "/summon <entityType: EntityType> <nameTag: string> [spawnPos: x y z]",
+    "/summon <entityType: EntityType> [spawnPos: x y z] [yRot: value] [xRot: value] [spawnEvent: string] [nameTag: string]",
+    "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtEntity: target> [spawnEvent: string] [nameTag: string]",
+    "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtPosition: x y z> [spawnEvent: string] [nameTag: string]"
+  ],
+  "node": {
+    "<entityType: EntityType>": {
+      "type": "NAMESPACE_ID",
+      "brief": "实体类型",
+      "description": "要被召唤的实体类型",
+      "ignoreError": true,
+      "key": "entity"
+    },
+    "<nameTag: string>|[nameTag: string]": {
+      "type": "STRING",
+      "brief": "实体名",
+      "description": "该实体的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[spawnPos: x y z]": {
+      "type": "POSITION",
+      "brief": "实体召唤位置",
+      "description": "该实体的召唤位置。如果未指定，默认为命令执行位置"
+    },
+    "[yRot: value]": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "ry",
+      "description": "该实体的水平旋转角度(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
+      "canUseCaretNotation": false
+    },
+    "[xRot: value]": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "rx",
+      "description": "该实体的垂直旋转角度(竖直上方为-90.0，至竖直下方90.0)",
+      "canUseCaretNotation": false
+    },
+    "[spawnEvent: string]": {
+      "type": "NORMAL_ID",
+      "brief": "实体生成事件",
+      "description": "该实体的召唤时附带的游戏内事件",
+      "ignoreError": true,
+      "key": "entityEvent"
+    },
+    "facing": {
+      "type": "TEXT",
+      "description": "朝向某个实体或坐标",
+      "data": {
+        "name": "facing",
+        "description": "朝向某个实体或坐标"
+      }
+    },
+    "<lookAtEntity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "该实体朝向的实体",
+      "isOnlyOne": true,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<lookAtPosition: x y z>": {
+      "type": "POSITION",
+      "brief": "朝向的坐标",
+      "description": "该实体朝向的坐标"
+    }
+  }
 }

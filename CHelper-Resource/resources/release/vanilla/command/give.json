@@ -1,30 +1,24 @@
 {
-    "name": [
-        "give"
-    ],
-    "description": "给予实体一种指定数量的物品",
-    "start": [
-        "player"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "被给予物品的玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "ITEM",
-            "id": "item",
-            "description": "要给予实体的物品",
-            "nodeItemType": 0
-        }
-    ],
-    "ast": [
-        ["player", "item"],
-        ["item", "LF"]
-    ]
+  "name": [
+    "give"
+  ],
+  "description": "给予实体一种指定数量的物品",
+  "syntax": [
+    "/give <player: target> <itemName: Item> [amount: int] [data: int] [components: json]"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "被给予物品的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<itemName: Item> [amount: int] [data: int] [components: json]": {
+      "type": "ITEM",
+      "description": "要给予实体的物品",
+      "nodeItemType": 0
+    }
+  }
 }

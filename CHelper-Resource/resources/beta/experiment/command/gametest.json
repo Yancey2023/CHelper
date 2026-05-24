@@ -1,185 +1,134 @@
 {
-    "name": [
-        "gametest"
-    ],
-    "description": "基于测试代码与测试结构配对的服务端测试自动化工具",
-    "start": [
-        "runthis",
-        "run",
-        "runset",
-        "clearall",
-        "pos",
-        "create",
-        "runthese"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "runthis",
-            "description": "执行或重新执行15格半径内的GameTest结构方块",
-            "data": {
-                "name": "runthis",
-                "description": "执行或重新执行15格半径内的GameTest结构方块"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "run",
-            "description": "执行一个特定的GameTest",
-            "data": {
-                "name": "run",
-                "description": "执行一个特定的GameTest"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "runset",
-            "description": "创建和执行所有GameTest",
-            "data": {
-                "name": "runset",
-                "description": "创建和执行所有GameTest"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "runsetuntilfail",
-            "description": "创建和执行所有GameTest，直到某个执行失败",
-            "data": {
-                "name": "runsetutilfail",
-                "description": "创建和执行所有GameTest，直到某个执行失败"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "clearall",
-            "description": "清除所有的GameTest",
-            "data": {
-                "name": "clearall",
-                "description": "清除所有的GameTest"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "pos",
-            "description": "在200格半径范围内寻找最近的GameTest结构方块",
-            "data": {
-                "name": "pos",
-                "description": "在200格半径范围内寻找最近的GameTest结构方块"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "create",
-            "description": "创建GameTest",
-            "data": {
-                "name": "create",
-                "description": "创建GameTest"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "runthese",
-            "description": "在200格半径范围内执行GameTest",
-            "data": {
-                "name": "runthese",
-                "description": "在200格半径范围内执行GameTest"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "stopall",
-            "description": "停止执行所有GameTest",
-            "data": {
-                "name": "stopall",
-                "description": "停止执行所有GameTest"
-            }
-        },
-        {
-            "type": "STRING",
-            "id": "runTestName",
-            "brief": "名称",
-            "description": "GameTest的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "runRepeatTestName",
-            "brief": "名称",
-            "description": "GameTest的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "tagTag",
-            "brief": "标签",
-            "description": "GameTest的标签",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "createTestName",
-            "brief": "名称",
-            "description": "GameTest的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "INTEGER",
-            "id": "width",
-            "description": "宽度"
-        },
-        {
-            "type": "INTEGER",
-            "id": "height",
-            "description": "高度"
-        },
-        {
-            "type": "INTEGER",
-            "id": "depth",
-            "description": "深度"
-        },
-        {
-            "type": "INTEGER",
-            "id": "rotationSteps",
-            "description": "旋转"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "stopOnFailure",
-            "brief": "失败时是否停止",
-            "description": "在测试失败的时候是否停止测试",
-            "descriptionTrue": "在测试失败的时候停止测试",
-            "descriptionFalse": "忽略测试失败，依然进行测试"
-        },
-        {
-            "type": "INTEGER",
-            "id": "repeatCount",
-            "description": "重复次数",
-            "min": 1
-        }
-    ],
-    "ast": [
-        ["runthis", "LF"],
-        ["run", "runTestName", "runRepeatTestName"],
-        ["runTestName", "rotationSteps", "LF"],
-        ["rotationSteps", "LF"],
-        ["runRepeatTestName", "stopOnFailure"],
-        ["stopOnFailure", "repeatCount"],
-        ["repeatCount", "rotationSteps", "LF"],
-        ["runset", "tagTag", "LF"],
-        ["tagTag", "rotationSteps", "LF"],
-        ["runsetuntilfail", "tagTag", "LF"],
-        ["clearall", "LF"],
-        ["pos", "LF"],
-        ["create", "createTestName"],
-        ["createTestName", "width", "LF"],
-        ["width", "height", "LF"],
-        ["height", "depth", "LF"],
-        ["depth", "LF"],
-        ["runthese", "LF"],
-        ["stopall", "LF"]
-    ]
+  "name": [
+    "gametest"
+  ],
+  "description": "基于测试代码与测试结构配对的服务端测试自动化工具",
+  "syntax": [
+    "/gametest clearall",
+    "/gametest create <testName: string> [width: int] [height: int] [depth: int]",
+    "/gametest pos",
+    "/gametest run <testName: string> <stopOnFailure: Boolean> <repeatCount: int> [rotationSteps: int]",
+    "/gametest run <testName: string> [rotationSteps: int]",
+    "/gametest runset [tag: string] [rotationSteps: int]",
+    "/gametest runsetuntilfail [tag: string] [rotationSteps: int]",
+    "/gametest runthese",
+    "/gametest runthis",
+    "/gametest stopall"
+  ],
+  "node": {
+    "clearall": {
+      "type": "TEXT",
+      "description": "清除所有的GameTest",
+      "data": {
+        "name": "clearall",
+        "description": "清除所有的GameTest"
+      }
+    },
+    "create": {
+      "type": "TEXT",
+      "description": "创建GameTest",
+      "data": {
+        "name": "create",
+        "description": "创建GameTest"
+      }
+    },
+    "<testName: string>": {
+      "type": "STRING",
+      "brief": "名称",
+      "description": "GameTest的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[width: int]": {
+      "type": "INTEGER",
+      "description": "宽度"
+    },
+    "[height: int]": {
+      "type": "INTEGER",
+      "description": "高度"
+    },
+    "[depth: int]": {
+      "type": "INTEGER",
+      "description": "深度"
+    },
+    "pos": {
+      "type": "TEXT",
+      "description": "在200格半径范围内寻找最近的GameTest结构方块",
+      "data": {
+        "name": "pos",
+        "description": "在200格半径范围内寻找最近的GameTest结构方块"
+      }
+    },
+    "run": {
+      "type": "TEXT",
+      "description": "执行一个特定的GameTest",
+      "data": {
+        "name": "run",
+        "description": "执行一个特定的GameTest"
+      }
+    },
+    "<stopOnFailure: Boolean>": {
+      "type": "BOOLEAN",
+      "brief": "失败时是否停止",
+      "description": "在测试失败的时候是否停止测试",
+      "descriptionTrue": "在测试失败的时候停止测试",
+      "descriptionFalse": "忽略测试失败，依然进行测试"
+    },
+    "<repeatCount: int>": {
+      "type": "INTEGER",
+      "description": "重复次数",
+      "min": 1
+    },
+    "[rotationSteps: int]": {
+      "type": "INTEGER",
+      "description": "旋转"
+    },
+    "runset": {
+      "type": "TEXT",
+      "description": "创建和执行所有GameTest",
+      "data": {
+        "name": "runset",
+        "description": "创建和执行所有GameTest"
+      }
+    },
+    "[tag: string]": {
+      "type": "STRING",
+      "brief": "名称",
+      "description": "GameTest的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "runsetuntilfail": {
+      "type": "TEXT",
+      "description": "创建和执行所有GameTest，直到某个执行失败",
+      "data": {
+        "name": "runsetuntilfail",
+        "description": "创建和执行所有GameTest，直到某个执行失败"
+      }
+    },
+    "runthese": {
+      "type": "TEXT",
+      "description": "在200格半径范围内执行GameTest",
+      "data": {
+        "name": "runthese",
+        "description": "在200格半径范围内执行GameTest"
+      }
+    },
+    "runthis": {
+      "type": "TEXT",
+      "description": "执行或重新执行15格半径内的GameTest结构方块",
+      "data": {
+        "name": "runthis",
+        "description": "执行或重新执行15格半径内的GameTest结构方块"
+      }
+    },
+    "stopall": {
+      "type": "TEXT",
+      "description": "停止执行所有GameTest",
+      "data": {
+        "name": "stopall",
+        "description": "停止执行所有GameTest"
+      }
+    }
+  }
 }

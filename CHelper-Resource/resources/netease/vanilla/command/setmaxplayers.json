@@ -1,22 +1,18 @@
 {
-    "name": [
-        "setmaxplayers"
-    ],
-    "description": "设置可加入多人游戏的玩家数量上限",
-    "start": [
-        "maxPlayers"
-    ],
-    "node": [
-        {
-            "type": "INTEGER",
-            "id": "maxPlayers",
-            "brief": "玩家数量上限值",
-            "description": "要设置的玩家数量上限值",
-            "min": 0,
-            "max": 40
-        }
-    ],
-    "ast": [
-        ["maxPlayers", "LF"]
-    ]
+  "name": [
+    "setmaxplayers"
+  ],
+  "description": "设置可加入多人游戏的玩家数量上限",
+  "syntax": [
+    "/setmaxplayers <maxPlayers: int>"
+  ],
+  "node": {
+    "<maxPlayers: int>": {
+      "type": "INTEGER",
+      "brief": "玩家数量上限值",
+      "description": "要设置的玩家数量上限值",
+      "min": 0,
+      "max": 40
+    }
+  }
 }

@@ -1,36 +1,31 @@
 {
-    "name": [
-        "xp"
-    ],
-    "description": "给予玩家经验",
-    "start": [
-        "amount"
-    ],
-    "node": [
+  "name": [
+    "xp"
+  ],
+  "description": "给予玩家经验",
+  "syntax": [
+    "/xp <amount: int> [player: target]",
+    "/xp <amount: int>L [player: target]"
+  ],
+  "node": {
+    "<amount: int>L|<amount: int>": {
+      "type": "INTEGER_WITH_UNIT",
+      "brief": "经验值数量",
+      "description": "给予玩家的经验值数量",
+      "units": [
         {
-            "type": "INTEGER_WITH_UNIT",
-            "id": "amount",
-            "brief": "经验值数量",
-            "description": "给予玩家的经验值数量",
-            "units": [
-                {
-                    "name": "L",
-                    "description": "一个经验等级"
-                }
-            ]
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "命令作用的目标",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
+          "name": "L",
+          "description": "一个经验等级"
         }
-    ],
-    "ast": [
-        ["amount", "player", "LF"],
-        ["player", "LF"]
-    ]
+      ]
+    },
+    "[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "命令作用的目标",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

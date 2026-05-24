@@ -1,32 +1,26 @@
 {
-    "name": [
-        "stopsound"
-    ],
-    "description": "停止声音播放",
-    "start": [
-        "player"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "声音的接收者",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "sound",
-            "brief": "声音",
-            "description": "要停止的声音",
-            "ignoreError": true,
-            "key": "sound"
-        }
-    ],
-    "ast": [
-        ["player", "sound", "LF"],
-        ["sound", "LF"]
-    ]
+  "name": [
+    "stopsound"
+  ],
+  "description": "停止声音播放",
+  "syntax": [
+    "/stopsound <player: target> [sound: string]"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "声音的接收者",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[sound: string]": {
+      "type": "NORMAL_ID",
+      "brief": "声音",
+      "description": "要停止的声音",
+      "ignoreError": true,
+      "key": "sound"
+    }
+  }
 }

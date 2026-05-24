@@ -1,95 +1,82 @@
 {
-    "name": [
-        "teleport",
-        "tp"
-    ],
-    "description": "传送实体到指定地点，并修改其旋转角度",
-    "start": [
-        "victim",
-        "destinationTarget",
-        "destinationPosition"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "victim",
-            "description": "要被传送的实体",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "checkForBlocks",
-            "brief": "是否检测目的地方块遮挡情况",
-            "description": "是否检测目的地方块遮挡情况",
-            "descriptionTrue": "只当目的地没有实体无法存在其中的方块遮挡时，传送才会生效",
-            "descriptionFalse": "不进行检查，直接进行传送"
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "destinationTarget",
-            "description": "要被传送到的实体",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "POSITION",
-            "id": "destinationPosition",
-            "brief": "目的地坐标",
-            "description": "要被传送到的坐标"
-        },
-        {
-            "type": "RELATIVE_FLOAT",
-            "id": "yRot",
-            "brief": "ry",
-            "description": "实体传送后的y轴旋转角度",
-            "canUseCaretNotation": false
-        },
-        {
-            "type": "RELATIVE_FLOAT",
-            "id": "xRot",
-            "brief": "rx",
-            "description": "实体传送后的x轴旋转角度",
-            "canUseCaretNotation": false
-        },
-        {
-            "type": "TEXT",
-            "id": "facing",
-            "description": "使被传送的实体面向某个坐标或另一个实体",
-            "data": {
-                "name": "facing",
-                "description": "使被传送的实体面向某个坐标或另一个实体"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "lookAtPosition",
-            "brief": "朝向的坐标",
-            "description": "实体传送后朝向的坐标"
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "lookAtEntity",
-            "description": "该实体朝向的实体",
-            "isMustPlayer": false,
-            "isOnlyOne": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        }
-    ],
-    "ast": [
-        ["destinationTarget", "checkForBlocks", "LF"],
-        ["checkForBlocks", "LF"],
-        ["victim", "destinationTarget", "destinationPosition"],
-        ["destinationPosition", "checkForBlocks", "yRot", "facing", "LF"],
-        ["yRot", "xRot"],
-        ["xRot", "checkForBlocks", "LF"],
-        ["facing", "lookAtPosition", "lookAtEntity"],
-        ["lookAtPosition", "checkForBlocks"],
-        ["lookAtEntity", "checkForBlocks"]
-    ]
+  "name": [
+    "teleport",
+    "tp"
+  ],
+  "description": "传送实体到指定地点，并修改其旋转角度",
+  "syntax": [
+    "/teleport <destination: target>",
+    "/teleport <destination: x y z> [checkForBlocks: Boolean]",
+    "/teleport <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean]",
+    "/teleport <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean]",
+    "/teleport <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean]",
+    "/teleport <victim: target> <destination: target> [checkForBlocks: Boolean]",
+    "/teleport <victim: target> <destination: x y z> [checkForBlocks: Boolean]",
+    "/teleport <victim: target> <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean]",
+    "/teleport <victim: target> <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean]",
+    "/teleport <victim: target> <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean]"
+  ],
+  "node": {
+    "<destination: x y z>": {
+      "type": "POSITION",
+      "brief": "目的地坐标",
+      "description": "要被传送到的坐标"
+    },
+    "<destination: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要被传送到的实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[yRot: value]": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "ry",
+      "description": "实体传送后的水平旋转角度(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
+      "canUseCaretNotation": false
+    },
+    "[checkForBlocks: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否检测目的地方块遮挡情况",
+      "description": "是否检测目的地方块遮挡情况",
+      "descriptionTrue": "只当目的地没有实体无法存在其中的方块遮挡时，传送才会生效",
+      "descriptionFalse": "不进行检查，直接进行传送"
+    },
+    "[xRot: value]": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "rx",
+      "description": "实体传送后的垂直旋转角度(竖直上方为-90.0，至竖直下方90.0)",
+      "canUseCaretNotation": false
+    },
+    "facing": {
+      "type": "TEXT",
+      "description": "使被传送的实体面向某个坐标或另一个实体",
+      "data": {
+        "name": "facing",
+        "description": "使被传送的实体面向某个坐标或另一个实体"
+      }
+    },
+    "<lookAtEntity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "该实体朝向的实体",
+      "isMustPlayer": false,
+      "isOnlyOne": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<lookAtPosition: x y z>": {
+      "type": "POSITION",
+      "brief": "朝向的坐标",
+      "description": "实体传送后朝向的坐标"
+    },
+    "<victim: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要被传送的实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

@@ -1,183 +1,141 @@
 {
-    "name": [
-        "place"
-    ],
-    "description": "以指定位置为生成原点，放置已配置的地物、结构地物、结构模板或结构池",
-    "start": [
-        "feature", "featurerule", "jigsaw", "structure"
-    ],
-    "node": [
+  "name": ["place"],
+  "description": "以指定位置为生成原点，放置已配置的地物、结构地物、结构模板或结构池",
+  "syntax": [
+    "/place feature <feature: features> [position: x y z]",
+    "/place featurerule <featurerule: featureRules> [position: x y z]",
+    "/place jigsaw <pool: filepath> <jigsawTarget: string> <maxDepth: int> [pos: x y z] [keepJigsaws: Boolean] [includeEntities: Boolean] [liquidSettings: LiquidSettings]",
+    "/place structure <structure: string> [pos: x y z] [ignoreStartHeight: Boolean] [keepJigsaws: Boolean] [includeEntities: Boolean] [liquidSettings: LiquidSettings]"
+  ],
+  "node": {
+    "feature": {
+      "type": "TEXT",
+      "description": "放置地物",
+      "data": {
+        "name": "feature",
+        "description": "放置地物"
+      }
+    },
+    "<feature: features>": {
+      "type": "NORMAL_ID",
+      "brief": "地物",
+      "description": "要放置的地物名称",
+      "ignoreError": true,
+      "key": "feature"
+    },
+    "[position: x y z]": {
+      "type": "POSITION",
+      "brief": "生成原点",
+      "description": "放置时使用的生成原点"
+    },
+    "featurerule": {
+      "type": "TEXT",
+      "description": "要设置的地物规则",
+      "data": {
+        "name": "featurerule",
+        "description": "要设置的地物规则"
+      }
+    },
+    "<featurerule: featureRules>": {
+      "type": "NORMAL_ID",
+      "id": "feature_rules",
+      "brief": "地物规则",
+      "description": "要设置了地物规则",
+      "ignoreError": true,
+      "key": "featureRule"
+    },
+    "jigsaw": {
+      "type": "TEXT",
+      "description": "放置结构池并展开至指定深度",
+      "data": {
+        "name": "jigsaw",
+        "description": "放置结构池并展开至指定深度"
+      }
+    },
+    "<pool: filepath>": {
+      "type": "STRING",
+      "brief": "结构池",
+      "description": "要放置的结构池(文件路径)",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "<jigsawTarget: string>": {
+      "type": "STRING",
+      "brief": "起始拼图方块",
+      "description": "放置结构池时的结构中的起始拼图方块",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "<maxDepth: int>": {
+      "type": "INTEGER",
+      "brief": "深度",
+      "description": "要展开拼图方块的最大深度(1~7)"
+    },
+    "[pos: x y z]": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "放置时使用的生成原点"
+    },
+    "[ignoreStartHeight: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "放置结构时是否忽略起始高度，默认为false",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "[keepJigsaws: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "被放置结构是否保留拼图方块，默认为false",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "[includeEntities: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "指定被放置结构是否包含实体，默认为false",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "[liquidSettings: LiquidSettings]": {
+      "type": "NORMAL_ID",
+      "brief": "流体处理方式",
+      "description": "指定流体处理方式",
+      "ignoreError": true,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "feature",
-            "description": "放置地物",
-            "data": {
-                "name": "feature",
-                "description": "放置地物"
-            }
+          "name": "apply_waterlogging",
+          "description": "允许含水"
         },
         {
-            "type": "TEXT",
-            "id": "featurerule",
-            "description": "要设置的地物规则",
-            "data": {
-                "name": "featurerule",
-                "description": "要设置的地物规则"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "jigsaw",
-            "description": "放置结构池并展开至指定深度",
-            "data": {
-                "name": "jigsaw",
-                "description": "放置结构池并展开至指定深度"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "structure",
-            "description": "放置结构地物",
-            "data": {
-                "name": "structure",
-                "description": "放置结构地物"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "features",
-            "brief": "地物",
-            "description": "要放置的地物名称",
-            "ignoreError": true,
-            "key": "feature"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "feature_rules",
-            "brief": "地物规则",
-            "description": "要设置了地物规则",
-            "ignoreError": true,
-            "key": "featureRule"
-        },
-        {
-            "type": "POSITION",
-            "id": "position1",
-            "brief": "生成原点",
-            "description": "放置时使用的生成原点"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "structure_feature",
-            "brief": "结构地物",
-            "description": "要放置的结构地物",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "minecraft:trail_ruins",
-                    "description": "古迹废墟"
-                },
-                {
-                    "name": "minecraft:trial_chambers",
-                    "description": "试炼密室"
-                }
-            ]
-        },
-        {
-            "type": "STRING",
-            "id": "pool",
-            "brief": "结构池",
-            "description": "要放置的结构池(文件路径)",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "STRING",
-            "id": "jigsawTarget",
-            "brief": "起始拼图方块",
-            "description": "放置结构池时的结构中的起始拼图方块",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "maxDepth",
-            "description": "要展开拼图方块的最大深度(1~7)",
-            "data": {
-                "name": "maxDepth",
-                "description": "要展开拼图方块的最大深度(1~7)"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "pos",
-            "brief": "位置",
-            "description": "放置时使用的生成原点"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "keepJigsaws",
-            "brief": "值",
-            "description": "被放置结构是否保留拼图方块，默认为false",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "includeEntities",
-            "brief": "值",
-            "description": "指定被放置结构是否包含实体，默认为false",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "POSITION",
-            "id": "pos1",
-            "brief": "位置",
-            "description": "放置时使用的生成原点"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "ignoreStartHeight",
-            "brief": "值",
-            "description": "放置结构时是否忽略起始高度",
-            "descriptionFalse": "设置为false",
-            "descriptionTrue": "设置为true"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "liquidSettings",
-            "brief": "流体处理方式",
-            "description": "指定流体处理方式",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "apply_waterlogging",
-                    "description": "允许含水"
-                },
-                {
-                    "name": "ignore_waterlogging",
-                    "description": " 忽略含水"
-                }
-            ]
+          "name": "ignore_waterlogging",
+          "description": "忽略含水"
         }
-    ],
-    "ast": [
-        ["feature", "features"],
-        ["features", "position1", "LF"],
-        ["position1", "LF"],
-        ["featurerule", "feature_rules"],
-        ["feature_rules", "position1", "LF"],
-        ["jigsaw", "pool"],
-        ["pool", "jigsawTarget"],
-        ["jigsawTarget", "maxDepth"],
-        ["maxDepth", "pos", "LF"],
-        ["pos", "keepJigsaws", "LF"],
-        ["keepJigsaws", "includeEntities", "LF"],
-        ["includeEntities", "liquidSettings", "LF"],
-        ["liquidSettings", "LF"],
-        ["structure", "structure_feature"],
-        ["structure_feature", "pos1", "LF"],
-        ["pos1", "ignoreStartHeight", "LF"],
-        ["ignoreStartHeight", "keepJigsaws", "LF"]
-    ]
+      ]
+    },
+    "structure": {
+      "type": "TEXT",
+      "description": "放置结构地物",
+      "data": {
+        "name": "structure",
+        "description": "放置结构地物"
+      }
+    },
+    "<structure: string>": {
+      "type": "NORMAL_ID",
+      "brief": "结构地物",
+      "description": "要放置的结构地物",
+      "ignoreError": true,
+      "contents": [
+        {
+          "name": "minecraft:trail_ruins",
+          "description": "古迹废墟"
+        },
+        {
+          "name": "minecraft:trial_chambers",
+          "description": "试炼密室"
+        }
+      ]
+    }
+  }
 }

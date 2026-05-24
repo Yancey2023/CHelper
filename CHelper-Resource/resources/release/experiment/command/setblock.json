@@ -1,49 +1,42 @@
 {
-    "name": [
-        "setblock"
-    ],
-    "description": "将指定位置的方块更改为另一个方块",
-    "start": [
-        "position"
-    ],
-    "node": [
+  "name": [
+    "setblock"
+  ],
+  "description": "将指定位置的方块更改为另一个方块",
+  "syntax": [
+    "/setblock <position: x y z> <tileName: Block> <blockStates: block states> [replace|destroy|keep]",
+    "/setblock <position: x y z> <tileName: Block> [replace|destroy|keep]"
+  ],
+  "node": {
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "要被更改方块的位置"
+    },
+    "<tileName: Block>|<tileName: Block> <blockStates: block states>": {
+      "type": "BLOCK",
+      "nodeBlockType": 0,
+      "description": "更改后的新方块"
+    },
+    "[replace|destroy|keep]": {
+      "type": "NORMAL_ID",
+      "brief": "更改方式",
+      "description": "方块更改的处理方式",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "位置",
-            "description": "要被更改方块的位置"
+          "name": "destroy",
+          "description": "原方块正常掉落物品，有破坏方块的粒子效果和声音"
         },
         {
-            "type": "BLOCK",
-            "id": "block",
-            "nodeBlockType": 0,
-            "description": "更改后的新方块"
+          "name": "keep",
+          "description": "仅当原方块是空气方块时才进行更改"
         },
         {
-            "type": "NORMAL_ID",
-            "id": "mode",
-            "brief": "更改方式",
-            "description": "方块更改的处理方式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "destroy",
-                    "description": "原方块正常掉落物品，有破坏方块的粒子效果和声音"
-                },
-                {
-                    "name": "keep",
-                    "description": "仅当原方块是空气方块时才进行更改"
-                },
-                {
-                    "name": "replace",
-                    "description": "原方块不掉落物品，且不播放方块被破坏的音效"
-                }
-            ]
+          "name": "replace",
+          "description": "原方块不掉落物品，且不播放方块被破坏的音效"
         }
-    ],
-    "ast": [
-        ["position", "block"],
-        ["block", "mode", "LF"],
-        ["mode", "LF"]
-    ]
+      ]
+    }
+  }
 }

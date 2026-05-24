@@ -1,20 +1,16 @@
 {
-    "name": [
-        "execute"
-    ],
-    "description": "在改变执行者、执行位置和角度，添加限制条件，并储存其输出值的情况下执行另一条命令",
-    "start": [
-        "executeParam"
-    ],
-    "node": [
-        {
-            "type": "REPEAT",
-            "id": "executeParam",
-            "description": "子命令",
-            "key": "execute"
-        }
-    ],
-    "ast": [
-        ["executeParam", "LF"]
-    ]
+  "name": [
+    "execute"
+  ],
+  "description": "在改变执行者、执行位置和角度，添加限制条件，并储存其输出值的情况下执行另一条命令",
+  "syntax": [
+    "/execute <execute: ExecuteChainedOption_0>"
+  ],
+  "node": {
+    "<execute: ExecuteChainedOption_0>": {
+      "type": "REPEAT",
+      "description": "子命令",
+      "key": "execute"
+    }
+  }
 }

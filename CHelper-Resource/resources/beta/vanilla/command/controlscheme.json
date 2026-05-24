@@ -1,52 +1,43 @@
 {
-    "name": [
-        "controlscheme"
-    ],
-    "description": "修改相机预设的控制方案",
-    "start": [
-        "player"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "被修改控制方案的玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "TEXT",
-            "id": "clear",
-            "description": "清除控制方案",
-            "data": {
-                "name": "clear",
-                "description": "清除控制方案"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "set",
-            "description": "设定控制方案",
-            "data": {
-                "name": "set",
-                "description": "设定控制方案"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "controlScheme",
-            "brief": "控制方案",
-            "description": "控制方案",
-            "ignoreError": true,
-            "key": "controlScheme"
-        }
-    ],
-    "ast": [
-        ["player", "set", "clear"],
-        ["clear", "LF"],
-        ["set", "controlScheme"],
-        ["controlScheme", "LF"]
-    ]
+  "name": [
+    "controlscheme"
+  ],
+  "description": "修改相机预设的控制方案",
+  "syntax": [
+    "/controlscheme <players: target> clear",
+    "/controlscheme <players: target> set <control scheme: controlscheme>"
+  ],
+  "node": {
+    "<players: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "被修改控制方案的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "clear": {
+      "type": "TEXT",
+      "description": "清除控制方案",
+      "data": {
+        "name": "clear",
+        "description": "清除控制方案"
+      }
+    },
+    "set": {
+      "type": "TEXT",
+      "description": "设定控制方案",
+      "data": {
+        "name": "set",
+        "description": "设定控制方案"
+      }
+    },
+    "<control scheme: controlscheme>": {
+      "type": "NORMAL_ID",
+      "brief": "控制方案",
+      "description": "控制方案",
+      "ignoreError": true,
+      "key": "controlScheme"
+    }
+  }
 }

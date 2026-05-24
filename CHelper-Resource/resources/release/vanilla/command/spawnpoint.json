@@ -1,31 +1,24 @@
 {
-    "name": [
-        "spawnpoint"
-    ],
-    "description": "为特定玩家设置出生点",
-    "start": [
-        "player",
-        "LF"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "被更改出生点的玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "POSITION",
-            "id": "spawnPos",
-            "brief": "出生坐标",
-            "description": "玩家新的出生点的坐标"
-        }
-    ],
-    "ast": [
-        ["player", "spawnPos", "LF"],
-        ["spawnPos", "LF"]
-    ]
+  "name": [
+    "spawnpoint"
+  ],
+  "description": "为特定玩家设置出生点",
+  "syntax": [
+    "/spawnpoint [player: target] [spawnPos: x y z]"
+  ],
+  "node": {
+    "[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "被更改出生点的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[spawnPos: x y z]": {
+      "type": "POSITION",
+      "brief": "出生坐标",
+      "description": "玩家新的出生点的坐标"
+    }
+  }
 }

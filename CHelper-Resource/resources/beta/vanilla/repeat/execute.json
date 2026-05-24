@@ -298,13 +298,13 @@
             {
                 "type": "RELATIVE_FLOAT",
                 "brief": "rx",
-                "description": "命令执行朝向的绕x轴旋转度数(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
+                "description": "命令执行朝向的绕x轴旋转度数(竖直上方为-90.0，至竖直下方90.0)",
                 "canUseCaretNotation": false
             },
             {
                 "type": "RELATIVE_FLOAT",
                 "brief": "ry",
-                "description": "命令执行朝向的绕y轴旋转度数(-180.0表示北，竖直上方为-90.0,竖直下方为90.0)",
+                "description": "命令执行朝向的绕y轴旋转度数(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
                 "canUseCaretNotation": false
             }
         ],

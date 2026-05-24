@@ -1,113 +1,76 @@
 {
-    "name": [
-        "clone"
-    ],
-    "description": "在指定区域之间复制方块结构",
-    "start": [
-        "begin"
-    ],
-    "node": [
+  "name": [
+    "clone"
+  ],
+  "description": "在指定区域之间复制方块结构",
+  "syntax": [
+    "/clone <begin: x y z> <end: x y z> <destination: x y z> [maskMode: MaskMode] [cloneMode: CloneMode]",
+    "/clone <begin: x y z> <end: x y z> <destination: x y z> filtered <cloneMode: CloneMode> <tileName: Block> [blockStates: block states]"
+  ],
+  "node": {
+    "<begin: x y z>": {
+      "type": "POSITION",
+      "brief": "源坐标1",
+      "description": "源区域的两组对角方块坐标"
+    },
+    "<end: x y z>": {
+      "type": "POSITION",
+      "brief": "源坐标2",
+      "description": "源区域的两组对角方块坐标"
+    },
+    "<destination: x y z>": {
+      "type": "POSITION",
+      "brief": "目标区域的坐标",
+      "description": "目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标"
+    },
+    "[maskMode: MaskMode]": {
+      "type": "NORMAL_ID",
+      "brief": "标记模式",
+      "description": "是否过滤被复制方块",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "POSITION",
-            "id": "begin",
-            "brief": "源坐标1",
-            "description": "源区域的两组对角方块坐标"
+          "name": "masked",
+          "description": "仅复制非空气方块。会保持目的区域中原本会被替换为空气的方块不变"
         },
         {
-            "type": "POSITION",
-            "id": "end",
-            "brief": "源坐标2",
-            "description": "源区域的两组对角方块坐标"
-        },
-        {
-            "type": "POSITION",
-            "id": "destination",
-            "brief": "目标区域的坐标",
-            "description": "目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "maskMode",
-            "brief": "标记模式",
-            "description": "是否过滤被复制方块",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "masked",
-                    "description": "仅复制非空气方块。会保持目的区域中原本会被替换为空气的方块不变"
-                },
-                {
-                    "name": "replace",
-                    "description": "复制所有方块，用源区域的方块覆盖目标区域中的所有方块"
-                }
-            ]
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "cloneMode1",
-            "brief": "复制模式",
-            "description": "对源区域的操作",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "force",
-                    "description": "强制复制，即使源区域与目标区域有重叠"
-                },
-                {
-                    "name": "move",
-                    "description": "将源区域复制到目标区域，并将源区域替换为空气"
-                },
-                {
-                    "name": "normal",
-                    "description": "不执行force与move"
-                }
-            ]
-        },
-        {
-            "type": "TEXT",
-            "id": "filtered",
-            "description": "使命令只复制指定方块，需要额外指定一个方块",
-            "data": {
-                "name": "filtered",
-                "description": "使命令只复制指定方块，需要额外指定一个方块"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "cloneMode2",
-            "brief": "复制模式",
-            "description": "对源区域的操作",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "force",
-                    "description": "强制复制，即使源区域与目标区域有重叠"
-                },
-                {
-                    "name": "move",
-                    "description": "将源区域复制到目标区域，并将源区域替换为空气"
-                },
-                {
-                    "name": "normal",
-                    "description": "不执行force与move"
-                }
-            ]
-        },
-        {
-            "type": "BLOCK",
-            "id": "block",
-            "description": "要复制的方块",
-            "nodeBlockType": 0
+          "name": "replace",
+          "description": "复制所有方块，用源区域的方块覆盖目标区域中的所有方块"
         }
-    ],
-    "ast": [
-        ["begin", "end"],
-        ["end", "destination"],
-        ["destination", "maskMode", "filtered", "LF"],
-        ["maskMode", "cloneMode1", "LF"],
-        ["cloneMode1", "LF"],
-        ["filtered", "cloneMode2"],
-        ["cloneMode2", "block"],
-        ["block", "LF"]
-    ]
+      ]
+    },
+    "[cloneMode: CloneMode]|<cloneMode: CloneMode>": {
+      "type": "NORMAL_ID",
+      "brief": "复制模式",
+      "description": "对源区域的操作",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "force",
+          "description": "强制复制，即使源区域与目标区域有重叠"
+        },
+        {
+          "name": "move",
+          "description": "将源区域复制到目标区域，并将源区域替换为空气"
+        },
+        {
+          "name": "normal",
+          "description": "不执行force与move"
+        }
+      ]
+    },
+    "filtered": {
+      "type": "TEXT",
+      "description": "使命令只复制指定方块，需要额外指定一个方块",
+      "data": {
+        "name": "filtered",
+        "description": "使命令只复制指定方块，需要额外指定一个方块"
+      }
+    },
+    "<tileName: Block> [blockStates: block states]": {
+      "type": "BLOCK",
+      "description": "要复制的方块",
+      "nodeBlockType": 0
+    }
+  }
 }

@@ -1,31 +1,25 @@
 {
-    "name": [
-        "tellraw"
-    ],
-    "description": "向一个或多个玩家发送一条JSON文本消息",
-    "start": [
-        "target"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "target",
-            "description": "私聊消息的接收玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "JSON",
-            "id": "raw json message",
-            "brief": "JSON文本",
-            "description": "要发送的消息",
-            "key": "rawtext"
-        }
-    ],
-    "ast": [
-        ["target", "raw json message"],
-        ["raw json message", "LF"]
-    ]
+  "name": [
+    "tellraw"
+  ],
+  "description": "向一个或多个玩家发送一条JSON文本消息",
+  "syntax": [
+    "/tellraw <target: target> <raw json message: json>"
+  ],
+  "node": {
+    "<target: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "接收JSON文本消息的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<raw json message: json>": {
+      "type": "JSON",
+      "brief": "JSON文本",
+      "description": "要发送的消息",
+      "key": "rawtext"
+    }
+  }
 }

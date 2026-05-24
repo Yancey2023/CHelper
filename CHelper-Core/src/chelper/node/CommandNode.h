@@ -213,7 +213,6 @@ namespace CHelper {
         class NodeText : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::TEXT;
-            std::optional<std::vector<TokenType::TokenType>> tokenTypes;// TODO 这个似乎是历史遗留
             std::shared_ptr<NormalId> data;
             std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> getTextASTNode;
 
@@ -342,9 +341,10 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::PER_COMMAND;
             std::vector<std::u16string> name;
             std::optional<std::u16string> description;
+            std::vector<std::u16string> syntax;
             FreeableNodeWithTypes nodes;
-            std::vector<Node::NodeWrapped> wrappedNodes;
-            std::vector<Node::NodeWrapped *> startNodes;
+            std::vector<NodeWrapped> wrappedNodes;
+            std::vector<NodeWrapped *> startNodes;
 
             NodePerCommand() = default;
         };
