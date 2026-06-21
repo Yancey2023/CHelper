@@ -286,19 +286,31 @@ fun parseMCD(
         )
         if (isEnableMcdHighlight && context != null && !cpackBranch.isNullOrEmpty()) {
             try {
-                yancey.chelper.core.CHelperCore.fromAssets(context.assets, "cpack/$cpackBranch").use { core ->
-                    chains.forEach { chain ->
-                        chain.items.forEach { item ->
-                            when (item) {
-                                is ChainItem.Block -> {
-                                    core.onTextChanged(item.block.command, 0)
-                                    item.block.syntaxHighlightTokens = core.syntaxToken
+                var cpackPath: String? = null
+                val cpackList = context.assets.list("cpack")
+                if (cpackList != null) {
+                    for (filename in cpackList) {
+                        if (filename.startsWith(cpackBranch)) {
+                            cpackPath = "cpack/$filename"
+                            break
+                        }
+                    }
+                }
+                if (cpackPath != null) {
+                    yancey.chelper.core.CHelperCore.fromAssets(context.assets, cpackPath).use { core ->
+                        chains.forEach { chain ->
+                            chain.items.forEach { item ->
+                                when (item) {
+                                    is ChainItem.Block -> {
+                                        core.onTextChanged(item.block.command, 0)
+                                        item.block.syntaxHighlightTokens = core.syntaxToken
+                                    }
+                                    is ChainItem.RawCommand -> {
+                                        core.onTextChanged(item.command, 0)
+                                        item.syntaxHighlightTokens = core.syntaxToken
+                                    }
+                                    else -> {}
                                 }
-                                is ChainItem.RawCommand -> {
-                                    core.onTextChanged(item.command, 0)
-                                    item.syntaxHighlightTokens = core.syntaxToken
-                                }
-                                else -> {}
                             }
                         }
                     }
