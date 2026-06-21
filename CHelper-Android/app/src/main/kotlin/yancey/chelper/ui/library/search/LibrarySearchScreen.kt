@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -90,6 +92,7 @@ fun LibrarySearchScreen(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
+    var isFocusedBefore by remember { mutableStateOf(false) }
 
     // 初始带关键字搜索
     LaunchedEffect(initialKeyword) {
@@ -132,7 +135,13 @@ fun LibrarySearchScreen(
                     modifier = Modifier
                         .weight(1f)
                         .height(40.dp)
-                        .focusRequester(focusRequester),
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusState ->
+                            if (isFocusedBefore && !focusState.isFocused) {
+                                viewModel.search(localLibraryFunctions)
+                            }
+                            isFocusedBefore = focusState.isFocused
+                        },
                     contentAlignment = Alignment.CenterStart,
                     hint = "搜索命令库或标签...",
                     horizontalPadding = 20.dp,
