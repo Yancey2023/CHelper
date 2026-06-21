@@ -1,5 +1,24 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package yancey.chelper.ui.library
 
+import android.util.Log
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.getValue
@@ -13,9 +32,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.network.library.service.CommandLabUserService
+import yancey.chelper.network.library.util.CloudLibraryCache
 
 class CPLUploadViewModel : ViewModel() {
 
@@ -46,11 +67,14 @@ class CPLUploadViewModel : ViewModel() {
             val lib = Json.decodeFromString<LibraryFunction>(json)
             this.editUuid = lib.uuid ?: ""
             loadFromLocal(lib)
-            // 简单处理 v2 开关状态回显：若 content 包含 @mcd_version=2
+            // v2 开关状态回显，若 content 包含 @mcd_version=2
             useV2 =
                 lib.content?.contains("@mcd_version=2") == true || lib.content?.contains("@mcd_version= 2") == true
         } catch (e: Exception) {
-            e.printStackTrace()
+            // 云端草稿格式异常时之前完全静默——用户点编辑没反应还以为没生效。
+            // 这里至少 logcat 留底 + 远端上报，便于反查
+            Log.e("CPLUploadViewModel", "解析云端草稿失败", e)
+            MonitorUtil.generateCustomLog(e, "CloudDraftParseError")
         }
     }
 
@@ -65,19 +89,25 @@ class CPLUploadViewModel : ViewModel() {
                 // 剔除已存在的元数据头，只保留命令体
                 val rawContent = library.content ?: ""
                 var body = ""
-                val functionStartIdx = rawContent.indexOf("###Function###")
-                if (functionStartIdx != -1) {
-                    body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
-                    val functionEndIdx = body.indexOf("###End###")
-                    if (functionEndIdx != -1) {
-                        body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
+                try {
+                    val functionStartIdx = rawContent.indexOf("###Function###")
+                    if (functionStartIdx != -1) {
+                        body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
+                        val functionEndIdx = body.indexOf("###End###")
+                        if (functionEndIdx != -1) {
+                            body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
+                        }
+                    } else {
+                        body = rawContent
                     }
-                } else {
+                } catch (e: Exception) {
+                    // 元数据头剥离失败时回退用整段原始内容，仍然继续。
+                    // 不阻断流程，但要把异常上报，否则就是"看似正常但 body 没剥干净"
+                    Log.w("CPLUploadViewModel", "元数据头剥离失败，回退原始内容", e)
+                    MonitorUtil.generateCustomLog(e, "MCDStripHeaderError")
                     body = rawContent
                 }
                 
-                // 深度清理可能在 Fallback 中被误留、或本身就存在于正文中的旧版本元数据标签
-                // (注意：不能把 @a 这种 MC 原生目标选择器滤掉)
                 val cleanLines = body.lines().filter { line ->
                     val t = line.trim()
                     !(t.startsWith("@name=") || t.startsWith("@version=") || 
@@ -86,7 +116,9 @@ class CPLUploadViewModel : ViewModel() {
                 }
                 commands.setTextAndPlaceCursorAtEnd(cleanLines.joinToString("\n").trim())
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("CPLUploadViewModel", "加载本地内容失败", e)
+                MonitorUtil.generateCustomLog(e, "LoadLocalLibraryError")
+                Toaster.show("加载内容失败: ${e.message}")
             }
         }
     }
@@ -146,6 +178,9 @@ class CPLUploadViewModel : ViewModel() {
                     withContext(Dispatchers.Main) {
                         isLoading = false
                         if (result.isSuccess()) {
+                            // 云端库内容变了：把"我的云端库"缓存清掉，
+                            // 用户返回 LocalLibraryListScreen 时会重新拉一次，看到刚改完的数据
+                            CloudLibraryCache.invalidateLibraries()
                             Toaster.show("更新成功")
                             onSuccess()
                         } else {
@@ -162,6 +197,8 @@ class CPLUploadViewModel : ViewModel() {
                     withContext(Dispatchers.Main) {
                         isLoading = false
                         if (result.isSuccess()) {
+                            // 同上：新建一条云端库也属于列表变更
+                            CloudLibraryCache.invalidateLibraries()
                             Toaster.show("上传成功")
                             onSuccess()
                         } else {
@@ -171,8 +208,9 @@ class CPLUploadViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    Log.e("CPLUploadViewModel", "上传命令库失败", e)
+                    MonitorUtil.generateCustomLog(e, "UploadLibraryError")
                     Toaster.show("网络错误: ${e.message}")
-                    e.printStackTrace()
                 }
             } finally {
                 withContext(Dispatchers.Main) {

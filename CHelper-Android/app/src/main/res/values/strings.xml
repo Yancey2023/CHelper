@@ -41,6 +41,7 @@
     <string name="dialog_policy_grant_confirm">确认</string>
 
     <!--    use in PolicyGrantDialog    -->
+    <string name="layout_user_profile_title">个人主页</string>
     <string name="layout_about_title">关于</string>
     <string name="layout_about_current_version">当前版本</string>
     <string name="layout_about_author">作者</string>
@@ -101,8 +102,8 @@
     <string name="layout_home_about_app_mode">关于</string>
 
     <!--    use in LocalLibraryEditView and PublicLibraryEditView    -->
-    <string name="layout_library_edit_title_add">添加</string>
-    <string name="layout_library_edit_title_edit">编辑</string>
+    <string name="layout_library_edit_title_add">新建本地命令库</string>
+    <string name="layout_library_edit_title_edit">编辑本地命令库</string>
     <string name="layout_library_edit_title_upload_with_need_review">上传（需审核）</string>
     <string name="layout_library_edit_title_update_with_need_review">更新（需审核）</string>
     <string name="layout_library_edit_name_label">名字：</string>
@@ -229,6 +230,7 @@
     <string name="layout_setting_is_syntax_highlight_description">使用彩色文本显示命令，目前的代码实现性能较差，对长文本将临时自动关闭语法高亮</string>
     <!--    use in CPLUploadScreen    -->
     <string name="upload_title">上传指令库</string>
+    <string name="upload_title_edit_cloud">编辑云端命令库</string>
     <string name="upload_preview_title">上传预览</string>
     <string name="upload_import_local">从本地导入</string>
     <string name="upload_field_name">名称</string>

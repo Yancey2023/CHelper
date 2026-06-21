@@ -2,9 +2,8 @@
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Akanyi
  *
- * MCD (Minecraft Command Data) 可视化渲染器。
- * 参考 Web 端 renderMCDToUI() 的解析逻辑，用 Compose 还原命令方块链 UI。
- * 支持 v1 (纯指令列表) 和 v2 (带状态行/链分隔符的结构化格式) 两种格式。
+ * MCD (Minecraft Command Data) 可视化渲染器
+ * 支持 v1 (纯指令列表) 和 v2 (带状态行/链分隔符的结构化格式) 两种格式
  */
 
 package yancey.chelper.ui.library.mcd
@@ -12,6 +11,7 @@ package yancey.chelper.ui.library.mcd
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,8 +28,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,13 +45,12 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
+import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 数据模型：解析后的 MCD AST
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 数据模型
 
 /** 元数据行，例如 @author = xxx */
 data class MCDMeta(val key: String, val value: String)
@@ -67,7 +64,7 @@ enum class BlockType(val label: String, val lightColor: Color, val darkColor: Co
     CHAT("手动键入", Color(0xFF607D8B), Color(0xFF455A64))
 }
 
-/** v2 格式的命令方块，携带方块类型和状态信息 */
+/** v2 格式的命令方块 */
 data class MCDBlock(
     val type: BlockType = BlockType.CHAIN,
     val conditional: Boolean = false,
@@ -98,188 +95,194 @@ data class ParsedMCD(
     val isV2: Boolean = false
 )
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 解析器
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD {
     if (content.isNullOrBlank()) return ParsedMCD()
 
-    val lines = content.split(Regex("\\r?\n"))
-    val metaInfo = mutableListOf<MCDMeta>()
-    val rootComments = mutableListOf<String>()
-    val chains = mutableListOf<MCDChain>()
-    var currentChain: MCDChain? = null
+    return try {
+        val lines = content.split(Regex("\\r?\n"))
+        val metaInfo = mutableListOf<MCDMeta>()
+        val rootComments = mutableListOf<String>()
+        val chains = mutableListOf<MCDChain>()
+        var currentChain: MCDChain? = null
 
-    // 先扫一遍确认是否是 v2
-    val isV2 = lines.any { it.trim().startsWith("@mcd_version=2") }
+        // 确认是否是 v2
+        val isV2 = lines.any { it.trim().startsWith("@mcd_version=2") }
 
-    var pendingBlockType = BlockType.CHAIN
-    var pendingConditional = false
-    var pendingAlwaysActive = true
-    var pendingNeedsRedstone = false
-    var pendingTickDelay = 0
-    var hasPendingState = false
+        var pendingBlockType = BlockType.CHAIN
+        var pendingConditional = false
+        var pendingAlwaysActive = true
+        var pendingNeedsRedstone = false
+        var pendingTickDelay = 0
+        var hasPendingState = false
 
-    for (line in lines) {
-        val tline = line.trim()
-        if (tline.isEmpty()) continue
+        for (line in lines) {
+            val tline = line.trim()
+            if (tline.isEmpty()) continue
 
-        // 杂项标记 ###Function### / ###End###
-        if (tline.startsWith("###") && tline.endsWith("###")) continue
+            // 杂项标记 ###Function### / ###End###
+            if (tline.startsWith("###") && tline.endsWith("###")) continue
 
-        // 若当前等待的是 CHAT 状态，则无论下面是什么前缀，都当成指令文本吃掉
-        if (isV2 && hasPendingState && pendingBlockType == BlockType.CHAT) {
+            // 若当前等待的是 CHAT 状态，则无论下面是什么前缀，都当成指令文本
+            if (isV2 && hasPendingState && pendingBlockType == BlockType.CHAT) {
+                // 确保有容纳容器
+                if (currentChain == null) {
+                    currentChain = MCDChain(name = "分离的指令")
+                    chains.add(currentChain)
+                }
+                val block = MCDBlock(
+                    type = pendingBlockType,
+                    conditional = false,
+                    alwaysActive = true,
+                    needsRedstone = false,
+                    tickDelay = 0,
+                    command = tline
+                )
+                currentChain.items.add(ChainItem.Block(block))
+                hasPendingState = false
+                continue
+            }
+
+            // 元数据行
+            if (tline.startsWith("@")) {
+                val splitIdx = tline.indexOf('=')
+                if (splitIdx > 0) {
+                    metaInfo.add(
+                        MCDMeta(
+                            key = tline.substring(1, splitIdx).trim(),
+                            value = tline.substring(splitIdx + 1).trim()
+                        )
+                    )
+                }
+                continue
+            }
+
+            // v2 链分割符 ---链名---
+            if (tline.startsWith("---") && tline.endsWith("---")) {
+                val chainName = tline.replace("---", "").trim().ifEmpty { "未命名命令链" }
+                currentChain = MCDChain(name = chainName)
+                chains.add(currentChain)
+                hasPendingState = false
+                continue
+            }
+
+            // 注释行（# 和 // 两种格式）
+            if (tline.startsWith("#")) {
+                val commentText = tline.substring(1).trim()
+                if (currentChain != null) {
+                    currentChain.items.add(ChainItem.Comment(commentText))
+                } else {
+                    rootComments.add(commentText)
+                }
+                continue
+            }
+            if (tline.startsWith("//")) continue
+
+            // v2 状态行 > 开头
+            if (isV2 && tline.startsWith(">")) {
+                val stateRegex = Regex(
+                    """^>\s*([ICRH_])?([?_])?([!_])?(?:t(\d+|_))?\s*$""",
+                    RegexOption.IGNORE_CASE
+                )
+                val match = stateRegex.matchEntire(tline)
+                if (match != null) {
+                    val rawType = (match.groupValues[1].ifEmpty { "C" }).uppercase()
+                    // _ 占位符视为缺省值 C
+                    val effectiveType = if (rawType == "_") "C" else rawType
+                    pendingBlockType = when (effectiveType) {
+                        "I" -> BlockType.IMPULSE
+                        "R" -> BlockType.REPEAT
+                        "H" -> BlockType.CHAT
+                        else -> BlockType.CHAIN
+                    }
+                    
+                    if (pendingBlockType == BlockType.CHAT) {
+                        pendingConditional = false
+                        pendingAlwaysActive = true
+                        pendingNeedsRedstone = false
+                        pendingTickDelay = 0
+                    } else {
+                        val cond = match.groupValues[2]
+                        val rs = match.groupValues[3]
+                        val tick = match.groupValues[4]
+                        pendingConditional = cond == "?"          // _ 或空都是无条件
+                        pendingAlwaysActive = rs != "!"           // 只有显式 ! 才需要红石
+                        pendingNeedsRedstone = rs == "!"
+                        pendingTickDelay =
+                            if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
+                    }
+                } else {
+                    pendingBlockType = BlockType.CHAIN
+                    pendingConditional = false
+                    pendingAlwaysActive = true
+                    pendingNeedsRedstone = false
+                    pendingTickDelay = 0
+                }
+                hasPendingState = true
+                continue
+            }
+
             // 确保有容纳容器
             if (currentChain == null) {
                 currentChain = MCDChain(name = "分离的指令")
                 chains.add(currentChain)
             }
-            val block = MCDBlock(
-                type = pendingBlockType,
-                conditional = false,
-                alwaysActive = true,
-                needsRedstone = false,
-                tickDelay = 0,
-                command = tline
-            )
-            currentChain.items.add(ChainItem.Block(block))
-            hasPendingState = false
-            continue
-        }
 
-        // 元数据行
-        if (tline.startsWith("@")) {
-            val splitIdx = tline.indexOf('=')
-            if (splitIdx > 0) {
-                metaInfo.add(
-                    MCDMeta(
-                        key = tline.substring(1, splitIdx).trim(),
-                        value = tline.substring(splitIdx + 1).trim()
+            // 正式的命令指令
+            if (isV2) {
+                val block = if (hasPendingState) {
+                    MCDBlock(
+                        type = pendingBlockType,
+                        conditional = pendingConditional,
+                        alwaysActive = pendingAlwaysActive,
+                        needsRedstone = pendingNeedsRedstone,
+                        tickDelay = pendingTickDelay,
+                        command = tline
                     )
-                )
-            }
-            continue
-        }
-
-        // v2 链分割符 ---链名---
-        if (tline.startsWith("---") && tline.endsWith("---")) {
-            val chainName = tline.replace("---", "").trim().ifEmpty { "未命名命令链" }
-            currentChain = MCDChain(name = chainName)
-            chains.add(currentChain)
-            hasPendingState = false
-            continue
-        }
-
-        // 注释行（# 和 // 两种格式）
-        if (tline.startsWith("#")) {
-            val commentText = tline.substring(1).trim()
-            if (currentChain != null) {
-                currentChain.items.add(ChainItem.Comment(commentText))
-            } else {
-                rootComments.add(commentText)
-            }
-            continue
-        }
-        if (tline.startsWith("//")) continue
-
-        // v2 状态行 > 开头，正则精确匹配，支持 _ 占位符
-        // 格式: > [ICR_][?_][!_][tN|t_]
-        if (isV2 && tline.startsWith(">")) {
-            // 捕获组: (1)type (2)cond (3)rs (4)tick
-            val stateRegex = Regex(
-                """^>\s*([ICRH_])?([?_])?([!_])?(?:t(\d+|_))?\s*$""",
-                RegexOption.IGNORE_CASE
-            )
-            val match = stateRegex.matchEntire(tline)
-            if (match != null) {
-                val rawType = (match.groupValues[1].ifEmpty { "C" }).uppercase()
-                // _ 占位符视为缺省值 C
-                val effectiveType = if (rawType == "_") "C" else rawType
-                pendingBlockType = when (effectiveType) {
-                    "I" -> BlockType.IMPULSE
-                    "R" -> BlockType.REPEAT
-                    "H" -> BlockType.CHAT
-                    else -> BlockType.CHAIN
-                }
-                
-                if (pendingBlockType == BlockType.CHAT) {
-                    pendingConditional = false
-                    pendingAlwaysActive = true
-                    pendingNeedsRedstone = false
-                    pendingTickDelay = 0
                 } else {
-                    val cond = match.groupValues[2]
-                    val rs = match.groupValues[3]
-                    val tick = match.groupValues[4]
-                    pendingConditional = cond == "?"          // _ 或空都是无条件
-                    pendingAlwaysActive = rs != "!"           // 只有显式 ! 才需要红石
-                    pendingNeedsRedstone = rs == "!"
-                    pendingTickDelay =
-                        if (tick.isNotEmpty() && tick != "_") tick.toIntOrNull() ?: 0 else 0
+                    MCDBlock(command = tline)
                 }
+                currentChain.items.add(ChainItem.Block(block))
+                hasPendingState = false
             } else {
-                // 正则不匹配时的兜底：全缺省
-                pendingBlockType = BlockType.CHAIN
-                pendingConditional = false
-                pendingAlwaysActive = true
-                pendingNeedsRedstone = false
-                pendingTickDelay = 0
-            }
-            hasPendingState = true
-            continue
-        }
-
-        // 确保有容纳容器
-        if (currentChain == null) {
-            currentChain = MCDChain(name = "分离的指令")
-            chains.add(currentChain)
-        }
-
-        // 正式的命令指令
-        if (isV2) {
-            val block = if (hasPendingState) {
-                MCDBlock(
-                    type = pendingBlockType,
-                    conditional = pendingConditional,
-                    alwaysActive = pendingAlwaysActive,
-                    needsRedstone = pendingNeedsRedstone,
-                    tickDelay = pendingTickDelay,
-                    command = tline
-                )
-            } else {
-                // 省略 > 时默认按连锁处理
-                MCDBlock(command = tline)
-            }
-            currentChain.items.add(ChainItem.Block(block))
-            hasPendingState = false
-        } else {
-            // v1: 行首是英文字母或斜杠才视为指令
-            val firstChar = tline.firstOrNull()
-            if (firstChar != null && (firstChar.isLetter() && firstChar.code < 128 || firstChar == '/')) {
-                currentChain.items.add(ChainItem.RawCommand(tline))
-            } else {
-                // 无法推断的行：根据用户设置决定 fallback
-                if (ambiguousDefault == "command") {
+                // v1: 行首是英文字母或斜杠才视为指令
+                val firstChar = tline.firstOrNull()
+                if (firstChar != null && (firstChar.isLetter() && firstChar.code < 128 || firstChar == '/')) {
                     currentChain.items.add(ChainItem.RawCommand(tline))
                 } else {
-                    currentChain.items.add(ChainItem.Comment(tline))
+                    // 无法推断的行：根据用户设置决定 fallback
+                    if (ambiguousDefault == "command") {
+                        currentChain.items.add(ChainItem.RawCommand(tline))
+                    } else {
+                        currentChain.items.add(ChainItem.Comment(tline))
+                    }
                 }
             }
         }
-    }
 
-    return ParsedMCD(
-        metaInfo = metaInfo,
-        rootComments = rootComments,
-        chains = chains,
-        isV2 = isV2
-    )
+        ParsedMCD(
+            metaInfo = metaInfo,
+            rootComments = rootComments,
+            chains = chains,
+            isV2 = isV2
+        )
+    } catch (e: Exception) {
+        // 之前是 e.printStackTrace()，release 版 logcat 看不到也没上报，
+        // 这里改成完整 Log.e + Umeng 上报，避免"解析悄悄炸"成为线上盲区。
+        // 仍然返回错误占位结构而不是抛出，以保住界面不至于整体 measure 阶段崩。
+        Log.e("MCDRenderer", "MCD 解析失败", e)
+        MonitorUtil.generateCustomLog(e, "MCDParseError")
+        ParsedMCD(
+            metaInfo = listOf(MCDMeta(key = "error", value = "解析失败: ${e.message}")),
+            rootComments = emptyList(),
+            chains = emptyList(),
+            isV2 = false
+        )
+    }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Compose 渲染
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 private fun copyToClipboard(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -322,37 +325,31 @@ fun MCDContentView(
     }
     val parsedData = parsed ?: return
 
-    LazyColumn(modifier = modifier) {
+    // 不用 LazyColumn——调用方常把本组件嵌进 verticalScroll 容器（例如 MCDPreviewScreen），
+    // LazyColumn 在无限高度约束下会直接抛 IllegalStateException 让进入预览时闪退。
+    // 单条命令库的 chain/item 数量都在百级以内，普通 Column 性能完全够用。
+    // 调用方需要滚动时自己用 verticalScroll 包一层即可。
+    Column(modifier = modifier) {
         // 元数据区（可通过设置隐藏）
         if (showMetadata && parsedData.metaInfo.isNotEmpty()) {
-            item(key = "meta") {
-                MetaSection(parsedData.metaInfo)
-                Spacer(Modifier.height(8.dp))
-            }
+            MetaSection(parsedData.metaInfo)
+            Spacer(Modifier.height(8.dp))
         }
 
         // 链前游离注释
-        itemsIndexed(
-            items = parsedData.rootComments,
-            key = { index, _ -> "root_comment_$index" }
-        ) { _, comment ->
+        parsedData.rootComments.forEach { comment ->
             CommentItem(comment)
             Spacer(Modifier.height(4.dp))
         }
 
         // 命令链
-        parsedData.chains.forEachIndexed { chainIndex, chain ->
+        parsedData.chains.forEach { chain ->
             val shouldShowHeader = chain.name != "分离的指令" && chain.name != "默认主链"
             if (shouldShowHeader) {
-                item(key = "chain_header_$chainIndex") {
-                    ChainHeader(chain.name)
-                }
+                ChainHeader(chain.name)
             }
 
-            itemsIndexed(
-                items = chain.items,
-                key = { itemIndex, _ -> "chain_${chainIndex}_item_$itemIndex" }
-            ) { _, item ->
+            chain.items.forEach { item ->
                 when (item) {
                     is ChainItem.Comment -> CommentItem(item.text)
                     is ChainItem.RawCommand -> RawCommandItem(item.command)
@@ -361,9 +358,7 @@ fun MCDContentView(
                 Spacer(Modifier.height(4.dp))
             }
 
-            item(key = "chain_space_$chainIndex") {
-                Spacer(Modifier.height(12.dp))
-            }
+            Spacer(Modifier.height(12.dp))
         }
     }
 }

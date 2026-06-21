@@ -1,48 +1,42 @@
 {
-    "name": [
-        "mobevent"
-    ],
-    "description": "控制或查询允许运行的生物事件",
-    "start": [
-        "event"
-    ],
-    "node": [
+  "name": [
+    "mobevent"
+  ],
+  "description": "控制或查询允许运行的生物事件",
+  "syntax": [
+    "/mobevent <event: MobEvent> [value: Boolean]"
+  ],
+  "node": {
+    "<event: MobEvent>": {
+      "type": "NORMAL_ID",
+      "brief": "事件",
+      "description": "要控制或查询的事件",
+      "ignoreError": true,
+      "contents": [
         {
-            "type": "NORMAL_ID",
-            "id": "event",
-            "brief": "事件",
-            "description": "要控制或查询的事件",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "minecraft:ender_dragon_event",
-                    "description": "初次进入末地时生成末影龙"
-                },
-                {
-                    "name": "minecraft:pillager_patrols_event",
-                    "description": "用于生成灾厄巡逻队"
-                },
-                {
-                    "name": "minecraft:wandering_trader_event",
-                    "description": "用于生成流浪商人"
-                },
-                {
-                    "name": "events_enabled",
-                    "description": "禁用此选项时，不会发生任何事件；启用此选项时，只会发生启用的事件"
-                }
-            ]
+          "name": "minecraft:ender_dragon_event",
+          "description": "初次进入末地时生成末影龙"
         },
         {
-            "type": "BOOLEAN",
-            "id": "value",
-            "brief": "是否启用事件",
-            "description": "是否启用事件（如果忽略，则显示当前启用状态）",
-            "descriptionFalse": "禁用事件",
-            "descriptionTrue": "启用事件"
+          "name": "minecraft:pillager_patrols_event",
+          "description": "用于生成灾厄巡逻队"
+        },
+        {
+          "name": "minecraft:wandering_trader_event",
+          "description": "用于生成流浪商人"
+        },
+        {
+          "name": "events_enabled",
+          "description": "禁用此选项时，不会发生任何事件；启用此选项时，只会发生启用的事件"
         }
-    ],
-    "ast": [
-        ["event", "value", "LF"],
-        ["value", "LF"]
-    ]
+      ]
+    },
+    "[value: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否启用事件",
+      "description": "是否启用事件（如果忽略，则显示当前启用状态）",
+      "descriptionFalse": "禁用事件",
+      "descriptionTrue": "启用事件"
+    }
+  }
 }

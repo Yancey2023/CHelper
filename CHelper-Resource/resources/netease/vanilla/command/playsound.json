@@ -1,60 +1,46 @@
 {
-    "name": [
-        "playsound"
-    ],
-    "description": "播放一段声音",
-    "start": [
-        "sound"
-    ],
-    "node": [
-        {
-            "type": "NORMAL_ID",
-            "id": "sound",
-            "brief": "声音",
-            "description": "要播放的声音",
-            "ignoreError": true,
-            "key": "sound"
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "目标",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "方位",
-            "description": "声音发出的方位"
-        },
-        {
-            "type": "FLOAT",
-            "id": "volume",
-            "brief": "范围",
-            "description": "声音能被听见的距离"
-        },
-        {
-            "type": "FLOAT",
-            "id": "pitch",
-            "brief": "音调",
-            "description": "声音的音调"
-        },
-        {
-            "type": "FLOAT",
-            "id": "minimumVolume",
-            "brief": "范围外音量",
-            "description": "在声音可闻范围外的目标能听到的音量"
-        }
-    ],
-    "ast": [
-        ["sound", "player", "LF"],
-        ["player", "position", "LF"],
-        ["position", "volume", "LF"],
-        ["volume", "pitch", "LF"],
-        ["pitch", "minimumVolume", "LF"],
-        ["minimumVolume", "LF"]
-    ]
+  "name": [
+    "playsound"
+  ],
+  "description": "播放一段声音",
+  "syntax": [
+    "/playsound <sound: string> [player: target] [position: x y z] [volume: float] [pitch: float] [minimumVolume: float]"
+  ],
+  "node": {
+    "<sound: string>": {
+      "type": "NORMAL_ID",
+      "brief": "声音",
+      "description": "要播放的声音",
+      "ignoreError": true,
+      "key": "sound"
+    },
+    "[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[position: x y z]": {
+      "type": "POSITION",
+      "brief": "方位",
+      "description": "声音发出的方位"
+    },
+    "[volume: float]": {
+      "type": "FLOAT",
+      "brief": "范围",
+      "description": "声音能被听见的距离"
+    },
+    "[pitch: float]": {
+      "type": "FLOAT",
+      "brief": "音调",
+      "description": "声音的音调"
+    },
+    "[minimumVolume: float]": {
+      "type": "FLOAT",
+      "brief": "范围外音量",
+      "description": "在声音可闻范围外的目标能听到的音量"
+    }
+  }
 }

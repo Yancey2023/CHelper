@@ -1,61 +1,49 @@
 {
-    "name": [
-        "locate"
-    ],
-    "description": "在聊天框中为命令执行者显示给定类型结构或生物群系的最近坐标和距离",
-    "start": [
-        "biome",
-        "structure"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "biome",
-            "description": "定位生物群系",
-            "data": {
-                "name": "biome",
-                "description": "定位生物群系"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "structure",
-            "description": "定位结构",
-            "data": {
-                "name": "structure",
-                "description": "定位结构"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "structureId",
-            "brief": "结构",
-            "description": "要定位的结构的命名空间ID",
-            "ignoreError": true,
-            "key": "structure"
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "useNewChunksOnly",
-            "brief": "是否仅定位在尚未生成的区块中的结构",
-            "description": "是否仅定位在尚未生成的区块中的结构",
-            "descriptionTrue": "仅定位在尚未生成的区块中的最近结构",
-            "descriptionFalse": "定位最近结构"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "biomeId",
-            "brief": "生物群系",
-            "description": "要定位的生物群系的命名空间ID",
-            "ignoreError": true,
-            "key": "biome"
-        }
-    ],
-    "ast": [
-        ["biome", "biomeId"],
-        ["biomeId", "LF"],
-        ["structure", "structureId"],
-        ["structureId", "useNewChunksOnly", "LF"],
-        ["useNewChunksOnly", "LF"]
-    ]
+  "name": [
+    "locate"
+  ],
+  "description": "在聊天框中为命令执行者显示给定类型结构或生物群系的最近坐标和距离",
+  "syntax": [
+    "/locate biome <biome: Biome>",
+    "/locate structure <structure: Structure> [useNewChunksOnly: Boolean]"
+  ],
+  "node": {
+    "biome": {
+      "type": "TEXT",
+      "description": "定位生物群系",
+      "data": {
+        "name": "biome",
+        "description": "定位生物群系"
+      }
+    },
+    "<biome: Biome>": {
+      "type": "NORMAL_ID",
+      "brief": "生物群系",
+      "description": "要定位的生物群系的命名空间ID",
+      "ignoreError": true,
+      "key": "biome"
+    },
+    "structure": {
+      "type": "TEXT",
+      "description": "定位结构",
+      "data": {
+        "name": "structure",
+        "description": "定位结构"
+      }
+    },
+    "<structure: Structure>": {
+      "type": "NORMAL_ID",
+      "brief": "结构",
+      "description": "要定位的结构的命名空间ID",
+      "ignoreError": true,
+      "key": "structure"
+    },
+    "[useNewChunksOnly: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否仅定位在尚未生成的区块中的结构",
+      "description": "是否仅定位在尚未生成的区块中的结构",
+      "descriptionTrue": "仅定位在尚未生成的区块中的最近结构",
+      "descriptionFalse": "定位最近结构"
+    }
+  }
 }

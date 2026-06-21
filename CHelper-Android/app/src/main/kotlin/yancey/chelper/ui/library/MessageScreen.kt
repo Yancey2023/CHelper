@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import yancey.chelper.R
 import yancey.chelper.network.library.data.SiteMessage
+import yancey.chelper.network.library.data.formatUnixTime
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -97,7 +98,7 @@ fun MessageScreen(
         title = "站内信",
         headerRight = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 只看未读 toggle（eye=已开启过滤，eye_off=显示全部）
+                // 只看未读
                 Icon(
                     id = if (viewModel.showUnreadOnly) R.drawable.eye else R.drawable.eye_off,
                     modifier = Modifier
@@ -262,7 +263,7 @@ private fun MessageItem(
                 else CHelperTheme.colors.backgroundComponent
             )
             .clickable {
-                // 点击自动标记已读并展开操作
+                // 点击标记已读并展开
                 if (isUnread) onRead()
                 onClickAction()
             }
@@ -297,7 +298,7 @@ private fun MessageItem(
 
             Spacer(Modifier.width(8.dp))
 
-            // 消息类型标签
+            // 消息类型
             message.msgType?.let { type ->
                 val label = when (type) {
                     "system" -> "系统"
@@ -342,7 +343,7 @@ private fun MessageItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = message.createdAt ?: "",
+                text = message.createdAt.formatUnixTime(),
                 style = TextStyle(
                     color = CHelperTheme.colors.textSecondary,
                     fontSize = 11.sp
@@ -370,7 +371,7 @@ private fun MessageDetailDialog(
 ) {
     CustomDialog(
         onDismissRequest = {
-            onRead() // dismissing also automatically marks as read ideally
+            onRead()
             onDismiss()
         }
     ) {
@@ -382,7 +383,7 @@ private fun MessageDetailDialog(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
-            // Header
+            
             Text(
                 text = message.title ?: "消息详情",
                 style = TextStyle(
@@ -400,7 +401,7 @@ private fun MessageDetailDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = message.createdAt ?: "",
+                    text = message.createdAt.formatUnixTime(),
                     style = TextStyle(
                         color = CHelperTheme.colors.textSecondary,
                         fontSize = 12.sp

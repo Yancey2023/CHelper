@@ -1,156 +1,113 @@
 {
-    "name": [
-        "tickingarea"
-    ],
-    "description": "添加、删除或列出常加载区域",
-    "start": [
-        "add",
-        "remove",
-        "remove_all",
-        "preloadText",
-        "list"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "add",
-            "description": "添加常加载区域",
-            "data": {
-                "name": "add",
-                "description": "添加常加载区域"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "from",
-            "brief": "坐标1",
-            "description": "用于定义矩形常加载区域的两个对角坐标的第一个"
-        },
-        {
-            "type": "POSITION",
-            "id": "to",
-            "brief": "坐标2",
-            "description": "用于定义矩形常加载区域的两个对角坐标的第二个"
-        },
-        {
-            "type": "STRING",
-            "id": "addName",
-            "brief": "常加载区域名称",
-            "description": "常加载区域的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "BOOLEAN",
-            "id": "preload",
-            "brief": "是否预加载",
-            "description": "常加载区域是否预加载,若不填则默认为false",
-            "descriptionTrue": "预加载",
-            "descriptionFalse": "不预加载"
-        },
-        {
-            "type": "TEXT",
-            "id": "circle",
-            "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域",
-            "data": {
-                "name": "circle",
-                "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域"
-            }
-        },
-        {
-            "id": "center",
-            "type": "POSITION",
-            "brief": "中心坐标",
-            "description": "用于定义圆形常加载区域的圆心的坐标"
-        },
-        {
-            "id": "radius",
-            "type": "INTEGER",
-            "brief": "半径",
-            "description": "圆形常加载区域的半径作为从中心到圆周的区块数"
-        },
-        {
-            "type": "TEXT",
-            "id": "remove",
-            "description": "删除常加载区域",
-            "data": {
-                "name": "remove",
-                "description": "删除常加载区域"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "坐标",
-            "description": "要选择的常加载区域所包含的坐标"
-        },
-        {
-            "type": "STRING",
-            "id": "removeName",
-            "brief": "常加载区域名称",
-            "description": "常加载区域的名称",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "remove_all",
-            "description": " 删除本维度中所有已定义的常加载区域",
-            "data": {
-                "name": "remove_all",
-                "description": " 删除本维度中所有已定义的常加载区域"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "preloadText",
-            "description": "设置或显示常加载区域是否预加载",
-            "data": {
-                "name": "preload",
-                "description": "设置或显示常加载区域是否预加载"
-            }
-        },
-        {
-            "type": "POSITION",
-            "id": "preloadPosition",
-            "brief": "坐标",
-            "description": "要选择的常加载区域所包含的坐标"
-        },
-        {
-            "type": "TEXT",
-            "id": "list",
-            "description": "显示当前维度或所有维度的常加载区域",
-            "data": {
-                "name": "list",
-                "description": "显示当前维度或所有维度的常加载区域"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "all-dimensions",
-            "description": "列出所有维度中的常加载区域(如不填则默认为仅显示本维度常加载区域)",
-            "data": {
-                "name": "all-dimensions",
-                "description": "列出所有维度中的常加载区域(如不填则默认为仅显示本维度常加载区域)"
-            }
-        }
-    ],
-    "ast": [
-        ["add", "from", "circle"],
-        ["from", "to"],
-        ["to", "addName", "LF"],
-        ["addName", "preload", "LF"],
-        ["preload", "LF"],
-        ["circle", "center"],
-        ["center", "radius"],
-        ["radius", "addName"],
-        ["remove", "position", "removeName"],
-        ["position", "LF"],
-        ["removeName", "LF"],
-        ["remove_all", "LF"],
-        ["preloadText", "addName", "preloadPosition"],
-        ["preloadPosition", "preload"],
-        ["list", "all-dimensions", "LF"],
-        ["all-dimensions", "LF"]
-    ]
+  "name": [
+    "tickingarea"
+  ],
+  "description": "添加、删除或列出常加载区域",
+  "syntax": [
+    "/tickingarea add <from: x y z> <to: x y z> [name: string] [preload: Boolean]",
+    "/tickingarea add circle <center: x y z> <radius: int> [name: string] [preload: Boolean]",
+    "/tickingarea list [all-dimensions: AllDimensions]",
+    "/tickingarea preload <name: string> [preload: Boolean]",
+    "/tickingarea preload <position: x y z> [preload: Boolean]",
+    "/tickingarea remove <name: string>",
+    "/tickingarea remove <position: x y z>",
+    "/tickingarea remove_all"
+  ],
+  "node": {
+    "add": {
+      "type": "TEXT",
+      "description": "添加常加载区域",
+      "data": {
+        "name": "add",
+        "description": "添加常加载区域"
+      }
+    },
+    "<from: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标1",
+      "description": "用于定义矩形常加载区域的两个对角坐标的第一个"
+    },
+    "<to: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标2",
+      "description": "用于定义矩形常加载区域的两个对角坐标的第二个"
+    },
+    "[name: string]|<name: string>": {
+      "type": "STRING",
+      "brief": "常加载区域名称",
+      "description": "常加载区域的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[preload: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否预加载",
+      "description": "常加载区域是否预加载,若不填则默认为false",
+      "descriptionTrue": "预加载",
+      "descriptionFalse": "不预加载"
+    },
+    "circle": {
+      "type": "TEXT",
+      "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域",
+      "data": {
+        "name": "circle",
+        "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域"
+      }
+    },
+    "<center: x y z>": {
+      "type": "POSITION",
+      "brief": "中心坐标",
+      "description": "用于定义圆形常加载区域的圆心的坐标"
+    },
+    "<radius: int>": {
+      "type": "INTEGER",
+      "brief": "半径",
+      "description": "圆形常加载区域的半径作为从中心到圆周的区块数"
+    },
+    "list": {
+      "type": "TEXT",
+      "description": "显示当前维度或所有维度的常加载区域",
+      "data": {
+        "name": "list",
+        "description": "显示当前维度或所有维度的常加载区域"
+      }
+    },
+    "[all-dimensions: AllDimensions]": {
+      "type": "TEXT",
+      "description": "列出所有维度中的常加载区域(如不填则默认为仅显示本维度常加载区域)",
+      "data": {
+        "name": "all-dimensions",
+        "description": "列出所有维度中的常加载区域(如不填则默认为仅显示本维度常加载区域)"
+      }
+    },
+    "preload": {
+      "type": "TEXT",
+      "description": "设置或显示常加载区域是否预加载",
+      "data": {
+        "name": "preload",
+        "description": "设置或显示常加载区域是否预加载"
+      }
+    },
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标",
+      "description": "要选择的常加载区域所包含的坐标"
+    },
+    "remove": {
+      "type": "TEXT",
+      "description": "删除常加载区域",
+      "data": {
+        "name": "remove",
+        "description": "删除常加载区域"
+      }
+    },
+    "remove_all": {
+      "type": "TEXT",
+      "description": "删除本维度中所有已定义的常加载区域",
+      "data": {
+        "name": "remove_all",
+        "description": "删除本维度中所有已定义的常加载区域"
+      }
+    }
+  }
 }

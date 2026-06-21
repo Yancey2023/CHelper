@@ -1,22 +1,18 @@
 {
-    "name": [
-        "me"
-    ],
-    "description": "显示一条关于你自己的信息",
-    "start": [
-        "message"
-    ],
-    "node": [
-        {
-            "type": "STRING",
-            "id": "message",
-            "brief": "信息",
-            "description": "要显示的信息",
-            "canContainSpace": true,
-            "ignoreLater": true
-        }
-    ],
-    "ast": [
-        ["message", "LF"]
-    ]
+  "name": [
+    "me"
+  ],
+  "description": "显示一条关于你自己的信息",
+  "syntax": [
+    "/me <message: message>"
+  ],
+  "node": {
+    "<message: message>": {
+      "type": "STRING",
+      "brief": "信息",
+      "description": "要显示的信息",
+      "canContainSpace": true,
+      "ignoreLater": true
+    }
+  }
 }

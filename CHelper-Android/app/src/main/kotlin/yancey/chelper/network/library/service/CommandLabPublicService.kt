@@ -31,12 +31,12 @@ import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
 
 /**
- * 命令库公开 API 接口，负责与命令库相关的非敏感操作，如获取命令库列表、详情、点赞以及查看用户公开资料和排行榜等。
+ * 命令库公开 API 接口，负责与命令库相关的非敏感操作，如获取命令库列表、详情、点赞以及查看用户公开资料和排行榜等
  */
 interface CommandLabPublicService {
 
     /**
-     * 获取命令库列表的响应数据结构。
+     * 获取命令库列表的响应数据结构
      *
      * @property functions 命令库函数的列表
      * @property currentPage 当前请求的页码
@@ -53,7 +53,7 @@ interface CommandLabPublicService {
     )
 
     /**
-     * 获取公开的命令库函数列表。
+     * 获取公开的命令库函数列表
      *
      * @param pageNum 请求的页码
      * @param pageSize 每页包含的条目数
@@ -109,7 +109,7 @@ interface CommandLabPublicService {
     }
 
     /**
-     * 对指定的命令库函数进行点赞或取消点赞操作。
+     * 对指定的命令库函数进行点赞或取消点赞操作
      *
      * @param id 命令库函数的唯一标识 ID
      * @return 包含最新点赞状态和点赞总数的响应结果
@@ -120,7 +120,7 @@ interface CommandLabPublicService {
     ): BaseResult<LibraryLikeResponse?>
 
     /**
-     * 获取命令库排行榜数据。
+     * 获取命令库排行榜数据
      *
      * @return 包含排行榜用户列表的响应结果
      */
@@ -128,7 +128,7 @@ interface CommandLabPublicService {
     suspend fun getLeaderboard(): BaseResult<yancey.chelper.network.library.data.LeaderboardData?>
 
     /**
-     * 获取指定用户的公开资料信息。
+     * 获取指定用户的公开资料信息
      *
      * @param id 用户的唯一标识 ID
      * @return 包含该用户公开资料的响应结果

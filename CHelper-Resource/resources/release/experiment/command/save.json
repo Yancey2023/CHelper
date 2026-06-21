@@ -1,34 +1,30 @@
 {
-    "name": [
-        "save"
-    ],
-    "description": "准备备份、查询存档状态或恢复存档",
-    "start": [
-        "saveMode"
-    ],
-    "node": [
+  "name": [
+    "save"
+  ],
+  "description": "准备备份、查询存档状态或恢复存档",
+  "syntax": [
+    "/save [saveMode: string]"
+  ],
+  "node": {
+    "[saveMode: string]": {
+      "type": "NORMAL_ID",
+      "description": "保存模式",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "NORMAL_ID",
-            "id": "saveMode",
-            "description": "保存模式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "hold",
-                    "description": "禁用服务器的对存档文件的写入（玩家、统计、进度数据除外），以便于从外部复制存档文件作为备份。"
-                },
-                {
-                    "name": "query",
-                    "description": "显示每个存档文件的路径和其应被截断的字节量，以冒号分隔。"
-                },
-                {
-                    "name": "resume",
-                    "description": "恢复启用服务器对存档文件的写入。"
-                }
-            ]
+          "name": "hold",
+          "description": "禁用服务器的对存档文件的写入（玩家、统计、进度数据除外），以便于从外部复制存档文件作为备份。"
+        },
+        {
+          "name": "query",
+          "description": "显示每个存档文件的路径和其应被截断的字节量，以冒号分隔。"
+        },
+        {
+          "name": "resume",
+          "description": "恢复启用服务器对存档文件的写入。"
         }
-    ],
-    "ast": [
-        ["saveMode", "LF"]
-    ]
+      ]
+    }
+  }
 }

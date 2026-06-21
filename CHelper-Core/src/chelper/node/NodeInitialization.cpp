@@ -142,19 +142,14 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodePerCommand> {
         static void init(NodePerCommand &node, const CPack &cpack) {
-            for (const auto &item: node.wrappedNodes) {
-                Profile::push(R"(init node {}: "{}")", FORMAT_ARG(getNodeTypeName(item.nodeTypeId)), FORMAT_ARG(item.getNodeSerializable().id.value_or("UNKNOWN")));
-                initNode(item.innerNode, cpack);
+            for (auto &definition: node.nodes.nodes) {
+                Profile::push(R"(init node {}: "{}")",
+                              FORMAT_ARG(getNodeTypeName(definition.nodeTypeId)),
+                              FORMAT_ARG(reinterpret_cast<NodeSerializable *>(definition.data)->id.value_or("UNKNOWN")));
+                initNode(definition, cpack);
                 Profile::pop();
             }
-            for (const auto &item: node.wrappedNodes) {
-                if (item.nextNodes.empty()) [[unlikely]] {
-                    Profile::push("dismiss child node ids, the parent node is {} (in command {})",
-                                  FORMAT_ARG(item.getNodeSerializable().id.value_or("UNKNOWN")),
-                                  FORMAT_ARG(utf8::utf16to8(fmt::format(u"", fmt::join(node.name, u",")))));
-                    throw std::runtime_error("dismiss child node ids");
-                }
-            }
+
 #ifdef CHelperDebug
             for (const auto &item: node.wrappedNodes) {
                 bool flag1 = item.innerNode.nodeTypeId == NodeTypeId::POSITION ||

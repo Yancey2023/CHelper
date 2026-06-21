@@ -189,15 +189,13 @@ fun HomeScreen(
                 }
                 CollectionName(stringResource(R.string.layout_home_experimental_feature))
                 Collection {
-                    NameAndAction(stringResource(R.string.layout_home_experimental_feature_local_library)) {
-                        navController.navigate(LocalLibraryListScreenKey)
-                    }
-                    if (isShowPublicLibrary) {
-                        Divider()
-                        NameAndAction(stringResource(R.string.layout_home_experimental_feature_public_library)) {
+                    NameAndAction("命令库") {
+                        if (isShowPublicLibrary) {
                             viewModel.checkCommandLabVersion(publicLibraryMinVersion) {
-                                navController.navigate(PublicLibraryListScreenKey)
+                                navController.navigate(yancey.chelper.ui.LibraryMainScreenKey)
                             }
+                        } else {
+                            navController.navigate(yancey.chelper.ui.LibraryMainScreenKey)
                         }
                     }
                     Divider()

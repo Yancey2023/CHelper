@@ -1,23 +1,19 @@
 {
-    "name": [
-        "op"
-    ],
-    "description": "授予玩家管理员权限",
-    "start": [
-        "player"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "player",
-            "description": "要被授予管理员权限的玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        }
-    ],
-    "ast": [
-        ["player", "LF"]
-    ]
+  "name": [
+    "op"
+  ],
+  "description": "授予玩家管理员权限",
+  "syntax": [
+    "/op <player: target>"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要被授予管理员权限的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

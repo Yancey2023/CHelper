@@ -103,6 +103,9 @@ object AboutScreenKey
 object PublicLibraryListScreenKey
 
 @Serializable
+object LibraryMainScreenKey
+
+@Serializable
 data class PublicLibraryShowScreenKey(
     val id: Int,
     val isPrivate: Boolean = false
@@ -228,6 +231,9 @@ fun NavHost(
         composable<PublicLibraryListScreenKey> {
             PublicLibraryListScreen(navController = navController)
         }
+        composable<LibraryMainScreenKey> {
+            yancey.chelper.ui.library.LibraryMainScreen(navController = navController, isFloatingWindow = false)
+        }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
             PublicLibraryShowScreen(
@@ -336,6 +342,9 @@ fun FloatingWindowNavHost(
         }
         composable<PublicLibraryListScreenKey> {
             PublicLibraryListScreen(navController = navController, isFloatingWindow = true)
+        }
+        composable<LibraryMainScreenKey> {
+            yancey.chelper.ui.library.LibraryMainScreen(navController = navController, isFloatingWindow = true)
         }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val customKey = navBackStackEntry.toRoute<PublicLibraryShowScreenKey>()

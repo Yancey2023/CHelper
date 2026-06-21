@@ -1,27 +1,21 @@
 {
-    "name": [
-        "testforblock"
-    ],
-    "description": "探测某个方块是否在特定位置",
-    "start": [
-        "position"
-    ],
-    "node": [
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "坐标",
-            "description": "待探测的方块的坐标"
-        },
-        {
-            "type": "BLOCK",
-            "id": "block",
-            "description": "要探测的方块类型",
-            "nodeBlockType": 0
-        }
-    ],
-    "ast": [
-        ["position", "block"],
-        ["block", "LF"]
-    ]
+  "name": [
+    "testforblock"
+  ],
+  "description": "探测某个方块是否在特定位置",
+  "syntax": [
+    "/testforblock <position: x y z> <tileName: Block> [blockStates: block states]"
+  ],
+  "node": {
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标",
+      "description": "待探测的方块的坐标"
+    },
+    "<tileName: Block>|<tileName: Block> [blockStates: block states]": {
+      "type": "BLOCK",
+      "description": "要探测的方块类型",
+      "nodeBlockType": 0
+    }
+  }
 }

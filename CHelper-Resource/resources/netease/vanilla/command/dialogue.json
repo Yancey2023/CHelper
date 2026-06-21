@@ -1,92 +1,59 @@
 {
-    "name": [
-        "dialogue"
-    ],
-    "description": "为玩家打开NPC的对话框",
-    "start": [
-        "change",
-        "open"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "change",
-            "description": "改变场景",
-            "data": {
-                "name": "change",
-                "description": "改变场景"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "description": "要打开的NPC目标，必须为一个NPC",
-            "id": "changeNpc",
-            "isOnlyOne": true,
-            "isMustPlayer": false,
-            "isMustNPC": true,
-            "isWildcard": false
-        },
-        {
-            "type": "STRING",
-            "id": "changeSceneName",
-            "brief": "场景名",
-            "description": "从导入的行为包中对话文件显示的场景",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "changePlayers",
-            "description": "打开NPC对话框的目标玩家，必须为一个玩家",
-            "isOnlyOne": true,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "TEXT",
-            "id": "open",
-            "description": "打开场景",
-            "data": {
-                "name": "open",
-                "description": "打开场景"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "openNpc",
-            "description": "要打开的NPC目标，必须为一个NPC",
-            "isOnlyOne": true,
-            "isMustPlayer": false,
-            "isMustNPC": true,
-            "isWildcard": false
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "openPlayer",
-            "description": "打开NPC对话框的目标玩家，必须为一个玩家",
-            "isOnlyOne": true,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "STRING",
-            "id": "openSceneName",
-            "brief": "场景名",
-            "description": "从导入的行为包中对话文件显示的场景",
-            "canContainSpace": true,
-            "ignoreLater": false
-        }
-    ],
-    "ast": [
-        ["change", "changeNpc"],
-        ["changeNpc", "changeSceneName"],
-        ["changeSceneName", "changePlayers", "LF"],
-        ["changePlayers", "LF"],
-        ["open", "openNpc"],
-        ["openNpc", "openPlayer"],
-        ["openPlayer", "openSceneName", "LF"],
-        ["openSceneName", "LF"]
-    ]
+  "name": [
+    "dialogue"
+  ],
+  "description": "为玩家打开NPC的对话框",
+  "syntax": [
+    "/dialogue change <npc: target> <sceneName: string> [players: target]",
+    "/dialogue open <npc: target> <player: target> [sceneName: string]"
+  ],
+  "node": {
+    "change": {
+      "type": "TEXT",
+      "description": "改变场景",
+      "data": {
+        "name": "change",
+        "description": "改变场景"
+      }
+    },
+    "<npc: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要打开的NPC目标，必须为一个NPC",
+      "isOnlyOne": true,
+      "isMustPlayer": false,
+      "isMustNPC": true,
+      "isWildcard": false
+    },
+    "<sceneName: string>|[sceneName: string]": {
+      "type": "STRING",
+      "brief": "场景名",
+      "description": "从导入的行为包中对话文件显示的场景",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[players: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "打开NPC对话框的目标玩家，必须为一个玩家",
+      "isOnlyOne": true,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "open": {
+      "type": "TEXT",
+      "description": "打开场景",
+      "data": {
+        "name": "open",
+        "description": "打开场景"
+      }
+    },
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "打开NPC对话框的目标玩家，必须为一个玩家",
+      "isOnlyOne": true,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
 }

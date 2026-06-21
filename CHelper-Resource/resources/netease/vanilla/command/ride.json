@@ -1,174 +1,150 @@
 {
-    "name": [
-        "ride"
-    ],
-    "description": "用于使实体骑乘其他实体、停止实体的骑乘/使坐骑逐出自己的骑手、召唤坐骑/骑手",
-    "start": [
-        "riders"
-    ],
-    "node": [
+  "name": [
+    "ride"
+  ],
+  "description": "用于使实体骑乘其他实体、停止实体的骑乘/使坐骑逐出自己的骑手、召唤坐骑/骑手",
+  "syntax": [
+    "/ride <riders: target> start_riding <ride: target> [teleportRules: TeleportRules] [howToFill: FillType]",
+    "/ride <riders: target> stop_riding",
+    "/ride <riders: target> summon_ride <entityType: EntityType> [rideRules: RideRules] [spawnEvent: string] [nameTag: string]",
+    "/ride <rides: target> evict_riders",
+    "/ride <rides: target> summon_rider <entityType: EntityType> [spawnEvent: string] [nameTag: string]"
+  ],
+  "node": {
+    "<riders: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "乘客",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "start_riding": {
+      "type": "TEXT",
+      "description": "让指定的骑手骑乘指定的坐骑",
+      "data": {
+        "name": "start_riding",
+        "description": "让指定的骑手骑乘指定的坐骑"
+      }
+    },
+    "<ride: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "坐骑",
+      "isOnlyOne": true,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[teleportRules: TeleportRules]": {
+      "type": "NORMAL_ID",
+      "brief": "传送规则",
+      "description": "传送规则",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "TARGET_SELECTOR",
-            "id": "riders",
-            "description": "骑手",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
+          "name": "teleport_ride",
+          "description": "传送坐骑至骑手"
         },
         {
-            "type": "TEXT",
-            "id": "start_riding",
-            "description": "让指定的骑手骑乘指定的坐骑",
-            "data": {
-                "name": "start_riding",
-                "description": "让指定的骑手骑乘指定的坐骑"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "stop_riding",
-            "description": "让指定的骑手停止骑乘",
-            "data": {
-                "name": "stop_riding",
-                "description": "让指定的骑手停止骑乘"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "evict_riders",
-            "description": "让指定的坐骑逐出它的骑手",
-            "data": {
-                "name": "evict_riders",
-                "description": "让指定的坐骑逐出它的骑手"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "summon_rider",
-            "description": "在每个没有被骑乘也没有骑乘别的实体的坐骑的位置召唤一个实体，然后让它们骑乘到坐骑上",
-            "data": {
-                "name": "summon_rider",
-                "description": "在每个没有被骑乘也没有骑乘别的实体的坐骑的位置召唤一个实体，然后让它们骑乘到坐骑上"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "summon_ride",
-            "description": "在每个骑手的位置召唤一个实体，然后让骑手骑乘它们",
-            "data": {
-                "name": "summon_ride",
-                "description": "在每个骑手的位置召唤一个实体，然后让骑手骑乘它们"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "ride",
-            "description": "坐骑",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "teleportRules",
-            "brief": "传送规则",
-            "description": "传送规则",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "teleport_ride",
-                    "description": "传送坐骑至骑手"
-                },
-                {
-                    "name": "teleport_rider",
-                    "description": "传送骑手至坐骑"
-                }
-            ]
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "howToFill",
-            "description": "骑乘模式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "if_group_fits",
-                    "description": "只会在所有骑手都满足骑乘要求时才会让他们建立骑乘关系"
-                },
-                {
-                    "name": "until_full",
-                    "description": "会为每一个满足骑乘要求的骑手建立骑乘关系"
-                }
-            ]
-        },
-        {
-            "type": "NAMESPACE_ID",
-            "id": "entityType1",
-            "description": "召唤的实体",
-            "ignoreError": true,
-            "key": "entity"
-        },
-        {
-            "type": "NAMESPACE_ID",
-            "id": "entityType2",
-            "description": "召唤的实体",
-            "ignoreError": true,
-            "key": "entity"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "spawnEvent",
-            "brief": "事件",
-            "description": "实体生成时自带的事件",
-            "ignoreError": true,
-            "key": "entityEvent"
-        },
-        {
-            "type": "STRING",
-            "id": "nameTag",
-            "brief": "实体名",
-            "description": "实体生成时的名字",
-            "canContainSpace": true,
-            "ignoreLater": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "rideRules",
-            "brief": "召唤模式",
-            "description": "召唤实体模式",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "skip_riders",
-                    "description": "仅会为没有坐骑的骑手召唤实体"
-                },
-                {
-                    "name": "no_ride_change",
-                    "description": "会为没有坐骑且没有被骑乘的骑手召唤实体"
-                },
-                {
-                    "name": "reassign_rides",
-                    "description": "会为所有实体召唤实体"
-                }
-            ]
+          "name": "teleport_rider",
+          "description": "传送骑手至坐骑"
         }
-    ],
-    "ast": [
-        ["riders", "start_riding", "stop_riding", "evict_riders", "summon_rider", "summon_ride"],
-        ["start_riding", "ride"],
-        ["ride", "teleportRules", "LF"],
-        ["teleportRules", "howToFill", "LF"],
-        ["howToFill", "LF"],
-        ["stop_riding", "LF"],
-        ["evict_riders", "LF"],
-        ["summon_rider", "entityType1"],
-        ["entityType1", "spawnEvent", "LF"],
-        ["spawnEvent", "nameTag", "LF"],
-        ["nameTag", "LF"],
-        ["summon_ride", "entityType2"],
-        ["entityType2", "rideRules"],
-        ["rideRules", "spawnEvent"]
-    ]
+      ]
+    },
+    "[howToFill: FillType]": {
+      "type": "NORMAL_ID",
+      "description": "骑乘模式",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "if_group_fits",
+          "description": "只会在所有骑手都满足骑乘要求时才会让他们建立骑乘关系"
+        },
+        {
+          "name": "until_full",
+          "description": "会为每一个满足骑乘要求的骑手建立骑乘关系"
+        }
+      ]
+    },
+    "stop_riding": {
+      "type": "TEXT",
+      "description": "让指定的骑手停止骑乘",
+      "data": {
+        "name": "stop_riding",
+        "description": "让指定的骑手停止骑乘"
+      }
+    },
+    "summon_ride": {
+      "type": "TEXT",
+      "description": "在每个骑手的位置召唤一个实体，然后让骑手骑乘它们",
+      "data": {
+        "name": "summon_ride",
+        "description": "在每个骑手的位置召唤一个实体，然后让骑手骑乘它们"
+      }
+    },
+    "<entityType: EntityType>": {
+      "type": "NAMESPACE_ID",
+      "description": "召唤的实体",
+      "ignoreError": true,
+      "key": "entity"
+    },
+    "[rideRules: RideRules]": {
+      "type": "NORMAL_ID",
+      "brief": "召唤模式",
+      "description": "召唤实体模式",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "skip_riders",
+          "description": "仅会为没有坐骑的骑手召唤实体"
+        },
+        {
+          "name": "no_ride_change",
+          "description": "会为没有坐骑且没有被骑乘的骑手召唤实体"
+        },
+        {
+          "name": "reassign_rides",
+          "description": "会为所有实体召唤实体"
+        }
+      ]
+    },
+    "[spawnEvent: string]": {
+      "type": "NORMAL_ID",
+      "brief": "事件",
+      "description": "实体生成时自带的事件",
+      "ignoreError": true,
+      "key": "entityEvent"
+    },
+    "[nameTag: string]": {
+      "type": "STRING",
+      "brief": "实体名",
+      "description": "实体生成时的名字",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "<rides: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "坐骑",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "evict_riders": {
+      "type": "TEXT",
+      "description": "让指定的坐骑逐出它的骑手",
+      "data": {
+        "name": "evict_riders",
+        "description": "让指定的坐骑逐出它的骑手"
+      }
+    },
+    "summon_rider": {
+      "type": "TEXT",
+      "description": "在每个没有被骑乘也没有骑乘别的实体的坐骑的位置召唤一个实体，然后让它们骑乘到坐骑上",
+      "data": {
+        "name": "summon_rider",
+        "description": "在每个没有被骑乘也没有骑乘别的实体的坐骑的位置召唤一个实体，然后让它们骑乘到坐骑上"
+      }
+    }
+  }
 }

@@ -33,7 +33,7 @@ import yancey.chelper.ui.common.widget.Text
  * 活跃步骤显示实心圆点 + 主色标签，未完成步骤显示空心外观 + 浅色标签。
  * 步骤间以短横线连接。
  *
- * 例: ● 选择命令 ─── ○ 逐条复制
+ * 例: ● 选择命令 - ○ 逐条复制
  *
  * @param steps 步骤标签列表
  * @param currentStep 当前活跃步骤的索引 (0-indexed)

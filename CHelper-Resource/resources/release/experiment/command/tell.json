@@ -1,34 +1,28 @@
 {
-    "name": [
-        "msg",
-        "tell",
-        "w"
-    ],
-    "description": "将一条私聊信息发送给一个或多个玩家",
-    "start": [
-        "target"
-    ],
-    "node": [
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "target",
-            "description": "私聊消息的接收玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "canContainSpace": true,
-            "brief": "消息",
-            "description": "要发送的消息",
-            "ignoreLater": true,
-            "id": "message",
-            "type": "STRING"
-        }
-    ],
-    "ast": [
-        ["target", "message"],
-        ["message", "LF"]
-    ]
+  "name": [
+    "msg",
+    "tell",
+    "w"
+  ],
+  "description": "将一条私聊信息发送给一个或多个玩家",
+  "syntax": [
+    "/msg <target: target> <message: message>"
+  ],
+  "node": {
+    "<target: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "私聊消息的接收玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<message: message>": {
+      "type": "STRING",
+      "canContainSpace": true,
+      "brief": "消息",
+      "description": "要发送的消息",
+      "ignoreLater": true
+    }
+  }
 }

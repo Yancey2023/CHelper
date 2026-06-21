@@ -179,7 +179,6 @@ fun LibrarySearchScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(15.dp, 0.dp)
                     ) {
                         // Section 1: 本地与私有
                         if (viewModel.localAndPrivateLibraries.isNotEmpty()) {
@@ -191,47 +190,30 @@ fun LibrarySearchScreen(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    modifier = Modifier.padding(bottom = 5.dp)
+                                    modifier = Modifier.padding(bottom = 5.dp, start = 15.dp, end = 15.dp)
                                 )
                             }
-                            item {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(CHelperTheme.colors.backgroundComponent)
-                                ) {
-                                    viewModel.localAndPrivateLibraries.forEachIndexed { index, lib ->
-                                        SearchLibraryItem(
-                                            library = lib,
-                                            isPrivateOrLocal = true,
-                                            onClick = {
-                                                lib.id?.let { id ->
-                                                    // 根据标识判断是本地包还是私有库
-                                                    if (lib.authorName == "[本地包]") {
-                                                        navController.navigate(
-                                                            LocalLibraryShowScreenKey(
-                                                                id = id
-                                                            )
-                                                        )
-                                                    } else {
-                                                        navController.navigate(
-                                                            PublicLibraryShowScreenKey(
-                                                                id = id,
-                                                                isPrivate = true
-                                                            )
-                                                        )
-                                                    }
-                                                }
+                            itemsIndexed(viewModel.localAndPrivateLibraries) { _, lib ->
+                                SearchLibraryItem(
+                                    library = lib,
+                                    isPrivateOrLocal = true,
+                                    onClick = {
+                                        lib.id?.let { id ->
+                                            // 根据标识判断是本地包还是私有库
+                                            if (lib.authorName == "[本地包]") {
+                                                navController.navigate(
+                                                    LocalLibraryShowScreenKey(id = id)
+                                                )
+                                            } else {
+                                                navController.navigate(
+                                                    PublicLibraryShowScreenKey(id = id, isPrivate = true)
+                                                )
                                             }
-                                        )
-                                        if (index < viewModel.localAndPrivateLibraries.size - 1) {
-                                            Divider(padding = 0.dp)
                                         }
                                     }
-                                }
-                                Spacer(Modifier.height(20.dp))
+                                )
                             }
+                            item { Spacer(Modifier.height(10.dp)) }
                         }
 
                         // Section 2: 公开市场
@@ -244,48 +226,21 @@ fun LibrarySearchScreen(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    modifier = Modifier.padding(bottom = 5.dp)
-                                )
-                            }
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
-                                        .background(CHelperTheme.colors.backgroundComponent)
-                                    // 为了美观预留一点内边距效果，目前用 Divider 分割
+                                    modifier = Modifier.padding(bottom = 5.dp, start = 15.dp, end = 15.dp)
                                 )
                             }
 
                             itemsIndexed(viewModel.publicLibraries) { _, library ->
-                                Box(modifier = Modifier.background(CHelperTheme.colors.backgroundComponent)) {
-                                    Column {
-                                        SearchLibraryItem(
-                                            library = library,
-                                            isPrivateOrLocal = false,
-                                            onClick = {
-                                                library.id?.let { id ->
-                                                    navController.navigate(
-                                                        PublicLibraryShowScreenKey(
-                                                            id = id,
-                                                            isPrivate = false
-                                                        )
-                                                    )
-                                                }
-                                            }
-                                        )
-                                        Divider(padding = 0.dp)
+                                SearchLibraryItem(
+                                    library = library,
+                                    isPrivateOrLocal = false,
+                                    onClick = {
+                                        library.id?.let { id ->
+                                            navController.navigate(
+                                                PublicLibraryShowScreenKey(id = id, isPrivate = false)
+                                            )
+                                        }
                                     }
-                                }
-                            }
-
-                            // 闭合背景
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(10.dp)
-                                        .background(CHelperTheme.colors.background)
                                 )
                             }
                         }
@@ -312,6 +267,7 @@ fun LibrarySearchScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SearchLibraryItem(
     library: LibraryFunction,
@@ -319,133 +275,167 @@ private fun SearchLibraryItem(
     onClick: () -> Unit
 ) {
     val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f) else Color.Transparent)
+            .padding(horizontal = 15.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f) else CHelperTheme.colors.backgroundComponent)
             .run {
                 if (isFeatured) this.border(
                     1.dp,
                     CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
-                    RoundedCornerShape(8.dp)
+                    RoundedCornerShape(10.dp)
                 ) else this
             }
             .clickable(onClick = onClick)
-            .padding(20.dp, 12.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = library.name ?: "未命名",
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = CHelperTheme.colors.textMain
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f).padding(14.dp, 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = library.name ?: "未命名",
+                        modifier = Modifier.weight(1f, fill = false),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = CHelperTheme.colors.textMain
+                        ),
+                        maxLines = 1
                     )
-                )
-                // 如果是特殊标致给个 Tag
-                if (isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(CHelperTheme.colors.mainColor.copy(alpha = 0.2f))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    ) {
+                    library.version?.takeIf { it.isNotBlank() }?.let { ver ->
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = library.authorName!!,
+                            text = "v$ver",
                             style = TextStyle(
-                                fontSize = 10.sp,
-                                color = CHelperTheme.colors.mainColor
+                                fontSize = 11.sp,
+                                color = CHelperTheme.colors.textSecondary
                             )
                         )
                     }
-                }
-            }
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!isPrivateOrLocal && library.author != null) {
-                    val author = library.author!!
-                    AsyncImage(
-                        model = "https://abyssous.site/avatar/${author.id}",
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(CircleShape)
-                            .background(CHelperTheme.colors.backgroundComponent),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.ic_user),
-                        error = painterResource(id = R.drawable.ic_user)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = author.name ?: "Unknown",
-                        style = TextStyle(
-                            color = CHelperTheme.colors.textSecondary,
-                            fontSize = 12.sp
-                        )
-                    )
-                    if ((author.tier ?: 0) >= 2) {
-                        Spacer(Modifier.width(4.dp))
-                        Image(
-                            painter = painterResource(R.drawable.ic_verified_advanced),
-                            contentDescription = "Advanced",
-                            modifier = Modifier.size(12.dp)
-                        )
-                    } else if ((author.tier ?: 0) >= 1) {
-                        Spacer(Modifier.width(4.dp))
-                        Image(
-                            painter = painterResource(R.drawable.ic_verified_normal),
-                            contentDescription = "Normal",
-                            modifier = Modifier.size(12.dp)
-                        )
+                    if (isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.2f))
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = library.authorName!!,
+                                style = TextStyle(
+                                    fontSize = 10.sp,
+                                    color = CHelperTheme.colors.mainColor
+                                )
+                            )
+                        }
                     }
-                    Spacer(Modifier.width(10.dp))
-                } else if (!isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
-                    Text(
-                        text = "作者: ${library.authorName}",
-                        style = TextStyle(
-                            color = CHelperTheme.colors.textSecondary,
-                            fontSize = 12.sp
-                        )
-                    )
-                    Spacer(Modifier.width(10.dp))
                 }
-
-                library.likeCount?.let { likes ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_heart),
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!isPrivateOrLocal && library.author != null) {
+                        val author = library.author!!
+                        AsyncImage(
+                            model = "https://abyssous.site/avatar/${author.id}",
+                            contentDescription = "Avatar",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(CHelperTheme.colors.backgroundComponent),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_user),
+                            error = painterResource(id = R.drawable.ic_user)
                         )
-                        Spacer(Modifier.width(2.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "$likes",
+                            text = author.name ?: "Unknown",
                             style = TextStyle(
                                 color = CHelperTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                         )
+                        if ((author.tier ?: 0) >= 2) {
+                            Spacer(Modifier.width(4.dp))
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(R.drawable.ic_verified_advanced),
+                                contentDescription = "Advanced",
+                                modifier = Modifier.size(12.dp)
+                            )
+                        } else if ((author.tier ?: 0) >= 1) {
+                            Spacer(Modifier.width(4.dp))
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(R.drawable.ic_verified_normal),
+                                contentDescription = "Normal",
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    } else if (!isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
+                        Text(
+                            text = "作者: ${library.authorName}",
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textSecondary,
+                                fontSize = 12.sp
+                            )
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
+
+                    library.likeCount?.let { likes ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(R.drawable.ic_heart),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
+                            )
+                            Spacer(Modifier.width(2.dp))
+                            Text(
+                                text = "$likes",
+                                style = TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp
+                                )
+                            )
+                        }
                     }
                 }
-            }
-            library.note?.takeIf { it.isNotBlank() }?.let { note ->
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = note.replace("\n", " "),
-                    style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 12.sp),
-                    maxLines = 1
-                )
+                
+                if (!library.tags.isNullOrEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    androidx.compose.foundation.layout.FlowRow(
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
+                    ) {
+                        library.tags!!.take(3).forEach { tag ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(CHelperTheme.colors.background)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style = TextStyle(
+                                        color = CHelperTheme.colors.textSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                library.note?.takeIf { it.isNotBlank() }?.let { note ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = note.replace("\n", " "),
+                        style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 12.sp),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
             }
         }
-        Icon(
-            id = R.drawable.arrow_right,
-            contentDescription = "查看详情",
-            modifier = Modifier.size(20.dp)
-        )
     }
 }

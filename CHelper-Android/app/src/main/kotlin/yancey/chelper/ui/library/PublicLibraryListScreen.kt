@@ -37,16 +37,25 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -74,22 +83,42 @@ fun PublicLibraryListScreen(
     viewModel: PublicLibraryListViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
     isFloatingWindow: Boolean = false,
+    isTab: Boolean = false
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
     val tagClickBehavior = settingsDataStore.tagClickBehavior()
         .collectAsState(initial = "search")
-    val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
-        .collectAsState(initial = true)
+    // 用 nullable 初始值区分"DataStore 还没读到"和"读到 false"。
+    // 之前用 collectAsState(initial = true) 等价于"还没读到默认按猜你喜欢拉"，
+    // 但用户在设置里改成"最新发布"时，第一次合成 UI 已经用假值 true 触发了 switchMode(true)
+    // → refresh 起飞、isLoading=true，真实值 false 到达再切 switchMode(false) 会被
+    // loadFunctions 的 isLoading 拦截，结果 toggle 改了、信息流仍是猜你喜欢。
+    val isPublicLibraryHomeRecommend by produceState<Boolean?>(
+        initialValue = null,
+        settingsDataStore
+    ) {
+        settingsDataStore.isPublicLibraryHomeRecommend().collect {
+            android.util.Log.d("CPL_Tab", "DataStore emit: $it (previous: $value)")
+            value = it
+        }
+    }
     val listState = rememberLazyListState()
 
-    // 初始加载及偏好切换触发重新加载
-    viewModel.ensureInitialized(isRecommend = isPublicLibraryHomeRecommend)
-
-    LaunchedEffect(viewModel.isRecommendMode) {
-        if (viewModel.currentLoadedMode != viewModel.isRecommendMode || viewModel.libraries.isEmpty()) {
-            viewModel.currentLoadedMode = viewModel.isRecommendMode
-            viewModel.refresh(isRecommend = viewModel.isRecommendMode)
+    // 首次进入按设置初始化模式；之后用户在 tab 内的切换即为最终态，
+    // 不要在每次重新进入页面时强行覆盖回设置默认（之前的 bug：切回云端总是变成猜你喜欢）
+    LaunchedEffect(isPublicLibraryHomeRecommend) {
+        val realValue = isPublicLibraryHomeRecommend
+        android.util.Log.d("CPL_Tab", "LaunchedEffect triggered: realValue=$realValue, currentLoadedMode=${viewModel.currentLoadedMode}, isRecommendMode=${viewModel.isRecommendMode}")
+        if (realValue == null) {
+            android.util.Log.d("CPL_Tab", "realValue is null, skipping")
+            return@LaunchedEffect
+        }
+        if (viewModel.currentLoadedMode == null) {
+            android.util.Log.d("CPL_Tab", "First load, calling switchMode(isRecommend=$realValue)")
+            viewModel.switchMode(isRecommend = realValue)
+        } else {
+            android.util.Log.d("CPL_Tab", "Already loaded (currentLoadedMode=${viewModel.currentLoadedMode}), NOT calling switchMode")
         }
     }
 
@@ -113,11 +142,13 @@ fun PublicLibraryListScreen(
     }
 
     // 监听滚动到底部，自动加载更多
+    // libraries.isNotEmpty() 防止空列表时 shouldLoadMore 立即为 true，
+    // 抢先 loadMore 占住 isLoading 锁，导致后续 switchMode -> refresh 被拦截
     val shouldLoadMore = remember {
         derivedStateOf {
             val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             val totalItems = listState.layoutInfo.totalItemsCount
-            lastVisibleItem >= totalItems - 3 && !viewModel.isLoading && viewModel.hasMore
+            lastVisibleItem >= totalItems - 3 && !viewModel.isLoading && viewModel.hasMore && viewModel.libraries.isNotEmpty()
         }
     }
 
@@ -125,36 +156,35 @@ fun PublicLibraryListScreen(
         snapshotFlow { shouldLoadMore.value }.collect { if (it) viewModel.loadMore(isRecommend = viewModel.isRecommendMode) }
     }
 
+    // 全屏共用的"刷新图标旋转角度"。infiniteRepeatable 一启动就常驻，
+    // 在 isLoading 期间通过 Modifier.rotate 应用到对应图标上即可
+    val spinTransition = rememberInfiniteTransition(label = "refreshSpin")
+    val spinAngle by spinTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900, easing = LinearEasing)
+        ),
+        label = "refreshSpinAngle"
+    )
+
     RootViewWithHeaderAndCopyright(
         title = stringResource(R.string.layout_library_list_title_public),
+        // tab 模式下也展示返回箭头，但走 navController.popBackStack（回到上一个路由），
+        // 而不是系统返回派发，避免误退到外部
+        showBack = if (isTab) true else !isTab,
+        onBack = if (isTab) ({ navController.popBackStack() }) else null,
         headerRight = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!isFloatingWindow) {
-                    Icon(
-                        id = R.drawable.ic_user,
-                        modifier =
-                            Modifier
-                                .clickable {
-                                    navController.navigate(
-                                        yancey.chelper.ui.CPLUserScreenKey
-                                    )
-                                }
-                                .padding(5.dp)
-                                .size(24.dp),
-                        contentDescription = "用户中心"
-                    )
-                    Spacer(Modifier.width(10.dp))
-                }
-                Icon(
-                    id = R.drawable.refresh,
-                    modifier =
-                        Modifier
-                            .clickable { viewModel.refresh(isRecommend = viewModel.isRecommendMode) }
-                            .padding(5.dp)
-                            .size(24.dp),
-                    contentDescription = "刷新"
-                )
-            }
+            Icon(
+                id = R.drawable.refresh,
+                modifier =
+                    Modifier
+                        .clickable { viewModel.refresh(isRecommend = viewModel.isRecommendMode) }
+                        .padding(5.dp)
+                        .size(24.dp)
+                        .rotate(if (viewModel.isLoading) spinAngle else 0f),
+                contentDescription = "刷新"
+            )
         }
     ) {
         Column {
@@ -193,6 +223,17 @@ fun PublicLibraryListScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val isRecommend = viewModel.isRecommendMode
+                // Tab 背景色动画：300ms 平滑过渡
+                val latestBg by animateColorAsState(
+                    targetValue = if (!isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent,
+                    animationSpec = tween(300),
+                    label = "latestTabBg"
+                )
+                val recommendBg by animateColorAsState(
+                    targetValue = if (isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent,
+                    animationSpec = tween(300),
+                    label = "recommendTabBg"
+                )
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -202,8 +243,14 @@ fun PublicLibraryListScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (!isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent)
-                            .clickable { viewModel.isRecommendMode = false }
+                            .background(latestBg)
+                            // 切到"最新发布"：直接走 switchMode，会自动用缓存或拉取，
+                            // 不需要用户再去点刷新
+                            .clickable {
+                                if (viewModel.isRecommendMode) {
+                                    viewModel.switchMode(isRecommend = false)
+                                }
+                            }
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {
                         Text(
@@ -218,12 +265,13 @@ fun PublicLibraryListScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent)
-                            .clickable { 
+                            .background(recommendBg)
+                            .clickable {
+                                // 已经在猜你喜欢里：再点 = 重新洗一批；否则切过去
                                 if (viewModel.isRecommendMode) {
                                     viewModel.refresh(isRecommend = true)
                                 } else {
-                                    viewModel.isRecommendMode = true 
+                                    viewModel.switchMode(isRecommend = true)
                                 }
                             }
                             .padding(horizontal = 16.dp, vertical = 6.dp)
@@ -242,7 +290,9 @@ fun PublicLibraryListScreen(
                                 Image(
                                     painter = painterResource(R.drawable.refresh),
                                     contentDescription = "刷新猜你喜欢",
-                                    modifier = Modifier.size(12.dp), 
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .rotate(if (viewModel.isLoading) spinAngle else 0f),
                                     colorFilter = ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
                                 )
                             }
@@ -304,8 +354,12 @@ fun PublicLibraryListScreen(
                             Modifier
                                 .fillMaxSize()
                     ) {
-                        itemsIndexed(viewModel.libraries) { _, library ->
+                        itemsIndexed(
+                            viewModel.libraries,
+                            key = { _, library -> library.id ?: System.identityHashCode(library) }
+                        ) { _, library ->
                             PublicLibraryItem(
+                                modifier = Modifier.animateItem(),
                                 library = library,
                                 onClick = {
                                     library.id?.let { id ->
@@ -334,6 +388,18 @@ fun PublicLibraryListScreen(
                         // 加载更多指示器
                         if (viewModel.isLoading) {
                             item {
+                                // 呼吸式脉冲：Reverse 保证 0.3→1→0.3 平滑往返，
+                                // 默认的 Restart 会让 alpha 从 1 瞬间跳回 0.3，视觉上一闪一闪
+                                val infiniteTransition = rememberInfiniteTransition(label = "loading")
+                                val alpha by infiniteTransition.animateFloat(
+                                    initialValue = 0.3f,
+                                    targetValue = 1f,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(800, easing = LinearEasing),
+                                        repeatMode = RepeatMode.Reverse
+                                    ),
+                                    label = "loadingAlpha"
+                                )
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -346,7 +412,7 @@ fun PublicLibraryListScreen(
                                             TextStyle(
                                                 color =
                                                     CHelperTheme.colors
-                                                        .textSecondary
+                                                        .textSecondary.copy(alpha = alpha)
                                             )
                                     )
                                 }
@@ -362,6 +428,7 @@ fun PublicLibraryListScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PublicLibraryItem(
+    modifier: Modifier = Modifier,
     library: LibraryFunction,
     onClick: () -> Unit,
     onTagClick: (String) -> Unit = {}
@@ -370,7 +437,7 @@ private fun PublicLibraryItem(
     val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(10.dp))

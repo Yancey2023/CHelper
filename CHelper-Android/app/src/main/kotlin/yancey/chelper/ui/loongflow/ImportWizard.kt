@@ -2,8 +2,9 @@
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Akanyi
  *
- * 导入向导 UI：从命令库 MCD 数据逐条复制命令到剪贴板。
- * 分两步：选择命令 → 逐条复制。
+ * 导入向导 UI
+ * 从命令库 MCD 数据逐条复制命令到剪贴板
+ * 选择命令，逐条复制
  */
 
 package yancey.chelper.ui.loongflow
@@ -121,7 +122,7 @@ fun ImportWizard(
 }
 
 /**
- * Step 0: 命令列表勾选界面
+ * 命令列表勾选界面
  */
 @Composable
 private fun ImportStepSelect(viewModel: LoongFlowViewModel) {
@@ -246,7 +247,7 @@ private fun ImportStepSelect(viewModel: LoongFlowViewModel) {
 }
 
 /**
- * Step 1: 逐条复制界面
+ * 逐条复制
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -360,7 +361,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                 // 完整解析的 MCDv2 标签卡片化呈现
                 ctx.blockData?.let { bd ->
                     if (bd.type != yancey.chelper.ui.library.mcd.BlockType.CHAT) {
-                        // 1. 条件制约
+                        // 条件制约
                         if (bd.conditional) {
                             Text(
                                 text = "条件制约",
@@ -376,7 +377,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                             )
                         }
 
-                        // 2. 动力来源
+                        // 红石控制
                         if (bd.needsRedstone) {
                             Text(
                                 text = "红石控制",
@@ -386,7 +387,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFFD32F2F), // 红色警示色
+                                    color = Color(0xFFD32F2F), 
                                     fontWeight = FontWeight.Medium
                                 )
                             )
@@ -399,13 +400,13 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFF388E3C), // 绿色畅通色
+                                    color = Color(0xFF388E3C), 
                                     fontWeight = FontWeight.Medium
                                 )
                             )
                         }
 
-                        // 3. 延迟 Tick
+                        // 延迟
                         if (bd.tickDelay > 0) {
                             Text(
                                 text = "延迟 ${bd.tickDelay} 刻",
@@ -415,7 +416,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFF1976D2), // 蓝色信息色
+                                    color = Color(0xFF1976D2), 
                                     fontWeight = FontWeight.Medium
                                 )
                             )

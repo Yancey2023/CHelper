@@ -203,12 +203,9 @@ private fun CaptchaDialogContent(
                                     }
                                 };
 
-                                // Method 2: URL Callback
                                 window.androidCallback = function(data) {
                                     window.handleCaptcha(data);
                                 };
-
-                                // Method 1: Window Message
                                 window.addEventListener('message', function(event) {
                                     if (event.data && event.data.type === 'captcha_result') {
                                         window.handleCaptcha(event.data);

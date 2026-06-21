@@ -1,52 +1,44 @@
 {
-    "name": [
-        "weather"
-    ],
-    "description": "更改游戏中的天气",
-    "start": [
-        "weather",
-        "query"
-    ],
-    "node": [
+  "name": [
+    "weather"
+  ],
+  "description": "更改游戏中的天气",
+  "syntax": [
+    "/weather <clear|rain|thunder> [duration: int]",
+    "/weather query"
+  ],
+  "node": {
+    "<clear|rain|thunder>": {
+      "type": "NORMAL_ID",
+      "description": "天气",
+      "ignoreError": false,
+      "contents": [
         {
-            "type": "NORMAL_ID",
-            "id": "weather",
-            "description": "天气",
-            "ignoreError": false,
-            "contents": [
-                {
-                    "name": "clear",
-                    "description": "将天气设为晴天"
-                },
-                {
-                    "name": "rain",
-                    "description": "将天气设为雨天（寒冷的生物群系会下雪）"
-                },
-                {
-                    "name": "thunder",
-                    "description": "将天气设为雷暴雨（寒冷的生物群系会下雷暴雪）"
-                }
-            ]
+          "name": "clear",
+          "description": "将天气设为晴天"
         },
         {
-            "type": "INTEGER",
-            "id": "duration",
-            "brief": "持续时间",
-            "description": "以游戏刻为单位的天气持续时间(未指定或设为0，天气时长将在300秒到900秒中随机取值)"
+          "name": "rain",
+          "description": "将天气设为雨天（寒冷的生物群系会下雪）"
         },
         {
-            "type": "TEXT",
-            "id": "query",
-            "description": "查询目前的天气情况",
-            "data": {
-                "name": "query",
-                "description": "查询目前的天气情况"
-            }
+          "name": "thunder",
+          "description": "将天气设为雷暴雨（寒冷的生物群系会下雷暴雪）"
         }
-    ],
-    "ast": [
-        ["weather", "duration", "LF"],
-        ["duration", "LF"],
-        ["query", "LF"]
-    ]
+      ]
+    },
+    "[duration: int]": {
+      "type": "INTEGER",
+      "brief": "持续时间",
+      "description": "以游戏刻为单位的天气持续时间(未指定或设为0，天气时长将在300秒到900秒中随机取值)"
+    },
+    "query": {
+      "type": "TEXT",
+      "description": "查询目前的天气情况",
+      "data": {
+        "name": "query",
+        "description": "查询目前的天气情况"
+      }
+    }
+  }
 }

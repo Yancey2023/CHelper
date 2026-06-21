@@ -37,25 +37,22 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     private val clipboardManager by lazy {
         appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
-    // ═══════════════════════════════════
-    //  共享状态
-    // ═══════════════════════════════════
+
+    // 共享状态
     var mode by mutableStateOf(LoongFlowMode.IMPORT)
     var toastMessage by mutableStateOf<String?>(null)
 
-    // ═══════════════════════════════════
-    //  导入模式状态 (MCD → 剪贴板)
-    // ═══════════════════════════════════
+    // 导入模式状态 (MCD → 剪贴板)
     data class ImportCommandCtx(
         val command: String,
         val chainName: String?,
         val blockData: yancey.chelper.ui.library.mcd.MCDBlock?
     ) {
         val blockTypeName: String get() = when (blockData?.type) {
-            yancey.chelper.ui.library.mcd.BlockType.IMPULSE -> "脉冲"
-            yancey.chelper.ui.library.mcd.BlockType.CHAIN -> "连锁"
-            yancey.chelper.ui.library.mcd.BlockType.REPEAT -> "循环"
-            yancey.chelper.ui.library.mcd.BlockType.CHAT -> "手动输入"
+            BlockType.IMPULSE -> "脉冲"
+            BlockType.CHAIN -> "连锁"
+            BlockType.REPEAT -> "循环"
+            BlockType.CHAT -> "手动输入"
             null -> "纯命令"
         }
     }
@@ -67,9 +64,7 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     var isImportComplete by mutableStateOf(false)
     var libraryName by mutableStateOf("")
 
-    // ═══════════════════════════════════
-    //  导出模式状态 (剪贴板 → MCD)
-    // ═══════════════════════════════════
+    // 导出模式状态 (剪贴板 → MCD)
     var exportStep by mutableIntStateOf(0)       // 0=链配置, 1=逐条录入, 2=预览导出
     var chainName by mutableStateOf("未命名命令链")
     var authorName by mutableStateOf("")
@@ -92,9 +87,7 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
 
     var exportMcdText by mutableStateOf("")
 
-    // ═══════════════════════════════════
-    //  导入模式操作
-    // ═══════════════════════════════════
+    // 导入模式操作
 
     /**
      * 初始化导入模式，解析 MCD 内容并提取可执行命令列表。
@@ -192,9 +185,7 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // ═══════════════════════════════════
-    //  导出模式操作
-    // ═══════════════════════════════════
+    // 导出模式操作
 
     /**
      * 初始化导出模式。

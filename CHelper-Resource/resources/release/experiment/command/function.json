@@ -1,22 +1,18 @@
 {
-    "name": [
-        "function"
-    ],
-    "description": "运行行为包内的1个函数",
-    "start": [
-        "name"
-    ],
-    "node": [
-        {
-            "type": "STRING",
-            "id": "name",
-            "brief": "函数名",
-            "description": "要执行的函数或函数标签",
-            "canContainSpace": true,
-            "ignoreLater": true
-        }
-    ],
-    "ast": [
-        ["name", "LF"]
-    ]
+  "name": [
+    "function"
+  ],
+  "description": "运行行为包内的1个函数",
+  "syntax": [
+    "/function <name: filepath>"
+  ],
+  "node": {
+    "<name: filepath>": {
+      "type": "STRING",
+      "brief": "函数名",
+      "description": "要执行的函数或函数标签",
+      "canContainSpace": true,
+      "ignoreLater": true
+    }
+  }
 }

@@ -61,7 +61,7 @@ fun BlockTypeSelector(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ── 方块类型 ──
+        // 方块类型
         PropertyRow(label = "方块类型") {
             BlockType.entries.forEach { type ->
                 val isSelected = type == selectedType
@@ -80,7 +80,7 @@ fun BlockTypeSelector(
             }
         }
 
-        // ── 条件模式 ──
+        // 条件模式
         PropertyRow(label = "条件模式") {
             SelectableChip(
                 text = "无条件",
@@ -97,7 +97,7 @@ fun BlockTypeSelector(
             )
         }
 
-        // ── 红石控制 ──
+        // 红石控制
         PropertyRow(label = "红石控制") {
             SelectableChip(
                 text = "保持开启",
@@ -114,7 +114,7 @@ fun BlockTypeSelector(
             )
         }
 
-        // ── 延迟刻 ──
+        // 延迟刻
         PropertyRow(label = "延迟刻") {
             Box(
                 modifier = Modifier

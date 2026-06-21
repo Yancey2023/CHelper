@@ -1,235 +1,148 @@
 {
-    "name": [
-        "loot"
-    ],
-    "description": "将指定的战利品放入物品栏或世界",
-    "start": [
-        "give",
-        "insert",
-        "spawn",
-        "replace"
-    ],
-    "node": [
-        {
-            "type": "TEXT",
-            "id": "give",
-            "description": "给予玩家物品，忽略空物品堆",
-            "data": {
-                "name": "give",
-                "description": "给予玩家物品，忽略空物品堆"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "insert",
-            "description": "将物品分配到容器方块中，忽略空物品堆",
-            "data": {
-                "name": "insert",
-                "description": "将物品分配到容器方块中，忽略空物品堆"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "spawn",
-            "description": "生成物品实体，忽略空物品堆",
-            "data": {
-                "name": "spawn",
-                "description": "生成物品实体，忽略空物品堆"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "replace",
-            "description": "将物品分配到容器方块或多个实体中",
-            "data": {
-                "name": "replace",
-                "description": "将物品分配到容器方块或多个实体中"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "mine",
-            "description": "模拟使用指定工具挖掘指定位置的方块",
-            "data": {
-                "name": "mine",
-                "description": "模拟使用指定工具挖掘指定位置的方块"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "block",
-            "description": "将物品分配到容器方块中",
-            "data": {
-                "name": "block",
-                "description": "将物品分配到容器方块中"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "entity",
-            "description": "将物品分配到多个实体中",
-            "data": {
-                "name": "entity",
-                "description": "将物品分配到多个实体中"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "kill",
-            "description": "通过模拟杀死实体来获得物品",
-            "data": {
-                "name": "kill",
-                "description": "通过模拟杀死实体来获得物品"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "loot",
-            "description": "通过获得战利品来获得物品",
-            "data": {
-                "name": "loot",
-                "description": "通过获得战利品来获得物品"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "givePlayer",
-            "description": "要给予物品的一个或多个玩家",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "POSITION",
-            "id": "insertPosition",
-            "brief": "容器方块位置",
-            "description": "容器方块位置"
-        },
-        {
-            "type": "POSITION",
-            "id": "spawnPosition",
-            "brief": "物品生成位置",
-            "description": "要生成物品的位置"
-        },
-        {
-            "type": "POSITION",
-            "id": "replacePosition",
-            "brief": "容器方块位置",
-            "description": "容器方块位置"
-        },
-        {
-            "type": "TEXT",
-            "id": "slot.container",
-            "description": "容器",
-            "data": {
-                "name": "slot.container",
-                "description": "容器"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "replaceEntity",
-            "description": "要修改的一个或多个实体",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "slotType",
-            "brief": "物品栏",
-            "description": "要修改的物品栏",
-            "ignoreError": true,
-            "key": "entitySlot"
-        },
-        {
-            "type": "INTEGER",
-            "id": "slotId",
-            "brief": "槽位",
-            "description": "要修改的物品栏槽位"
-        },
-        {
-            "type": "INTEGER",
-            "id": "count",
-            "brief": "连续槽位数",
-            "description": "要填充的连续槽位数"
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "killEntity",
-            "brief": "要模拟杀死的实体",
-            "description": "要模拟杀死的实体",
-            "isOnlyOne": false,
-            "isMustPlayer": false,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "STRING",
-            "id": "tool",
-            "description": "工具",
-            "canContainSpace": false,
-            "ignoreLater": false
-        },
-        {
-            "type": "TEXT",
-            "id": "mainhand",
-            "description": "主手",
-            "data": {
-                "name": "mainhand",
-                "description": "主手"
-            }
-        },
-        {
-            "type": "TEXT",
-            "id": "offhand",
-            "description": "副手",
-            "data": {
-                "name": "offhand",
-                "description": "副手"
-            }
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "lootTable",
-            "brief": "战利品表",
-            "description": "使用的战利品表",
-            "ignoreError": true,
-            "key": "lootTable"
-        },
-        {
-            "type": "POSITION",
-            "id": "TargetBlockPosition",
-            "brief": "位置",
-            "description": "方块坐标"
-        }
-    ],
-    "ast": [
-        ["give", "givePlayer"],
-        ["givePlayer", "kill", "loot", "mine"],
-        ["insert", "insertPosition"],
-        ["insertPosition", "kill", "loot", "mine"],
-        ["spawn", "spawnPosition"],
-        ["spawnPosition", "kill", "loot", "mine"],
-        ["replace", "block", "entity"],
-        ["block", "replacePosition"],
-        ["replacePosition", "slot.container"],
-        ["slot.container", "slotId"],
-        ["entity", "replaceEntity"],
-        ["replaceEntity", "slotType"],
-        ["slotType", "slotId"],
-        ["slotId", "kill", "loot", "count"],
-        ["count", "kill", "loot"],
-        ["kill", "killEntity"],
-        ["killEntity", "tool", "mainhand", "offhand", "LF"],
-        ["mine", "TargetBlockPosition"],
-        ["TargetBlockPosition", "tool", "mainhand", "offhand", "LF"],
-        ["loot", "lootTable"],
-        ["lootTable", "tool", "mainhand", "offhand", "LF"],
-        ["tool", "LF"],
-        ["mainhand", "LF"],
-        ["offhand", "LF"]
-    ]
+  "name": [
+    "loot"
+  ],
+  "description": "将指定的战利品放入物品栏或世界",
+  "syntax": [
+    "/loot give <players: target> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot give <players: target> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot insert <position: x y z> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot insert <position: x y z> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot replace block <position: x y z> slot.container <slotId: int> <count: int> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot replace block <position: x y z> slot.container <slotId: int> <count: int> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot replace block <position: x y z> slot.container <slotId: int> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot replace block <position: x y z> slot.container <slotId: int> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot replace entity <entity: target> <slotType: EntityEquipmentSlot> <slotId: int> <count: int> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot replace entity <entity: target> <slotType: EntityEquipmentSlot> <slotId: int> <count: int> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot replace entity <entity: target> <slotType: EntityEquipmentSlot> <slotId: int> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot replace entity <entity: target> <slotType: EntityEquipmentSlot> <slotId: int> loot <loot_table: string> [<tool>|mainhand|offhand: string]",
+    "/loot spawn <position: x y z> kill <entity: target> [<tool>|mainhand|offhand: string]",
+    "/loot spawn <position: x y z> loot <loot_table: string> [<tool>|mainhand|offhand: string]"
+  ],
+  "node": {
+    "give": {
+      "type": "TEXT",
+      "description": "给予玩家物品，忽略空物品堆",
+      "data": {
+        "name": "give",
+        "description": "给予玩家物品，忽略空物品堆"
+      }
+    },
+    "<players: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要给予物品的一个或多个玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "kill": {
+      "type": "TEXT",
+      "description": "通过模拟杀死实体来获得物品",
+      "data": {
+        "name": "kill",
+        "description": "通过模拟杀死实体来获得物品"
+      }
+    },
+    "<entity: target>": {
+      "type": "TARGET_SELECTOR",
+      "brief": "要模拟杀死的实体",
+      "description": "要模拟杀死的实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "[<tool>|mainhand|offhand: string]": {
+      "type": "STRING",
+      "description": "工具",
+      "canContainSpace": false,
+      "ignoreLater": false
+    },
+    "loot": {
+      "type": "TEXT",
+      "description": "通过获得战利品来获得物品",
+      "data": {
+        "name": "loot",
+        "description": "通过获得战利品来获得物品"
+      }
+    },
+    "<loot_table: string>": {
+      "type": "NORMAL_ID",
+      "brief": "战利品表",
+      "description": "使用的战利品表",
+      "ignoreError": true,
+      "key": "lootTable"
+    },
+    "insert": {
+      "type": "TEXT",
+      "description": "将物品分配到容器方块中，忽略空物品堆",
+      "data": {
+        "name": "insert",
+        "description": "将物品分配到容器方块中，忽略空物品堆"
+      }
+    },
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "位置"
+    },
+    "replace": {
+      "type": "TEXT",
+      "description": "将物品分配到容器方块或多个实体中",
+      "data": {
+        "name": "replace",
+        "description": "将物品分配到容器方块或多个实体中"
+      }
+    },
+    "block": {
+      "type": "TEXT",
+      "description": "将物品分配到容器方块中",
+      "data": {
+        "name": "block",
+        "description": "将物品分配到容器方块中"
+      }
+    },
+    "slot.container": {
+      "type": "TEXT",
+      "description": "容器",
+      "data": {
+        "name": "slot.container",
+        "description": "容器"
+      }
+    },
+    "<slotId: int>": {
+      "type": "INTEGER",
+      "brief": "槽位",
+      "description": "要修改的物品栏槽位"
+    },
+    "<count: int>": {
+      "type": "INTEGER",
+      "brief": "连续槽位数",
+      "description": "要填充的连续槽位数"
+    },
+    "entity": {
+      "type": "TEXT",
+      "description": "将物品分配到多个实体中",
+      "data": {
+        "name": "entity",
+        "description": "将物品分配到多个实体中"
+      }
+    },
+    "<slotType: EntityEquipmentSlot>": {
+      "type": "NORMAL_ID",
+      "brief": "物品栏",
+      "description": "要修改的物品栏",
+      "ignoreError": true,
+      "key": "entitySlot"
+    },
+    "spawn": {
+      "type": "TEXT",
+      "description": "生成物品实体，忽略空物品堆",
+      "data": {
+        "name": "spawn",
+        "description": "生成物品实体，忽略空物品堆"
+      }
+    }
+  }
 }

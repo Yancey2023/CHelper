@@ -1,29 +1,23 @@
 {
-    "name": [
-        "particle"
-    ],
-    "description": "在指定位置显示粒子效果",
-    "start": [
-        "effect"
-    ],
-    "node": [
-        {
-            "type": "NORMAL_ID",
-            "id": "effect",
-            "brief": "粒子类型",
-            "description": "要创造的粒子类型",
-            "ignoreError": true,
-            "key": "particleEmitter"
-        },
-        {
-            "type": "POSITION",
-            "id": "position",
-            "brief": "位置",
-            "description": "创造粒子的位置"
-        }
-    ],
-    "ast": [
-        ["effect", "position", "LF"],
-        ["position", "LF"]
-    ]
+  "name": [
+    "particle"
+  ],
+  "description": "在指定位置显示粒子效果",
+  "syntax": [
+    "/particle <effect: string> [position: x y z]"
+  ],
+  "node": {
+    "<effect: string>": {
+      "type": "NORMAL_ID",
+      "brief": "粒子类型",
+      "description": "要创造的粒子类型",
+      "ignoreError": true,
+      "key": "particleEmitter"
+    },
+    "[position: x y z]": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "创造粒子的位置"
+    }
+  }
 }

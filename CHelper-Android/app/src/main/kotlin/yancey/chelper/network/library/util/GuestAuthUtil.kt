@@ -110,7 +110,7 @@ object GuestAuthUtil {
      * 
      * 使用 SHA256withECDSA 算法对 fingerprint 进行签名
      */
-    private fun generateAuthCode(fingerprint: String): String? {
+    fun generateAuthCode(fingerprint: String): String? {
         return try {
             initPrivateKey()
             val key = privateKey ?: return null

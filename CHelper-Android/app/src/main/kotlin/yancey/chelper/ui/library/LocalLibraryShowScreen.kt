@@ -18,117 +18,38 @@
 
 package yancey.chelper.ui.library
 
-import android.content.ClipData
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.hjq.toast.Toaster
-import kotlinx.coroutines.launch
-import yancey.chelper.R
 import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
-import yancey.chelper.ui.common.widget.Divider
-import yancey.chelper.ui.common.widget.Icon
-import yancey.chelper.ui.common.widget.Text
+import yancey.chelper.ui.library.mcd.MCDContentView
 
 @Composable
 fun LocalLibraryShowScreen(library: LibraryFunction?) {
-    val coroutineScope = rememberCoroutineScope()
     RootViewWithHeaderAndCopyright(title = library?.name ?: "加载中") {
-        val clipboard = LocalClipboard.current
-        val contents: List<Pair<Boolean, String>> = remember(library) {
-            library?.content
-                ?.split("\n")
-                ?.map { it.trim() }
-                ?.filter { !it.isEmpty() }
-                ?.map {
-                    if (it.startsWith("#")) {
-                        false to it.substring(1).trim()
-                    } else {
-                        true to it
-                    }
-                }
-                ?.filter { !it.second.isEmpty() }
-                ?: listOf()
-        }
-        Column(modifier = Modifier.padding(vertical = 10.dp)) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 15.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(color = CHelperTheme.colors.backgroundComponent)
-            ) {
-                items(contents) { content ->
-                    Row(
-                        modifier = Modifier
-                            .padding(20.dp, 10.dp)
-                            .defaultMinSize(minHeight = 24.dp)
-                    ) {
-                        Text(
-                            text = content.second,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.CenterVertically)
-                                .weight(1f),
-                            style = TextStyle(
-                                color = if (content.first) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
-                            )
-                        )
-                        if (content.first) {
-                            Icon(
-                                id = R.drawable.copy,
-                                contentDescription = stringResource(R.string.common_icon_copy_content_description),
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .clickable {
-                                        coroutineScope.launch {
-                                            clipboard.setClipEntry(
-                                                ClipEntry(
-                                                    ClipData.newPlainText(
-                                                        null,
-                                                        content.second
-                                                    )
-                                                )
-                                            )
-                                            Toaster.show("已复制")
-                                        }
-                                    }
-                                    .padding(start = 5.dp)
-                                    .size(24.dp)
-                            )
-                        }
-                    }
-                    Divider(padding = 0.dp)
-                }
-            }
+        // MCDContentView 现在不再自带 LazyColumn，需要外层提供滚动；
+        // 这里用 verticalScroll 给整个内容区一个垂直滚动通道
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 15.dp, vertical = 10.dp)
+        ) {
+            MCDContentView(content = library?.content)
         }
     }
 }
@@ -149,10 +70,11 @@ fun LibraryShowScreenLightThemePreview() {
         name = "Library"
         author = AuthorInfo(name = "Author")
         content = buildString {
-            for (i in 1..10) {
-                append("# Content${i * 2 - 1}\n")
-                append("Content${i * 2}\n")
-            }
+            appendLine("@name=TestLibrary")
+            appendLine("@version=1.0.0")
+            appendLine("# This is a comment")
+            appendLine("/say Hello")
+            appendLine("/tp @s 0 0 0")
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
@@ -167,10 +89,11 @@ fun LibraryShowScreenDarkThemePreview() {
         name = "Library"
         author = AuthorInfo(name = "Author")
         content = buildString {
-            for (i in 1..10) {
-                append("# Content${i * 2 - 1}\n")
-                append("Content${i * 2}\n")
-            }
+            appendLine("@name=TestLibrary")
+            appendLine("@version=1.0.0")
+            appendLine("# This is a comment")
+            appendLine("/say Hello")
+            appendLine("/tp @s 0 0 0")
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {

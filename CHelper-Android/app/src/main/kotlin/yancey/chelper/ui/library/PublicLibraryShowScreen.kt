@@ -68,6 +68,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import yancey.chelper.R
 import yancey.chelper.network.library.data.AuthorInfo
@@ -111,6 +112,7 @@ fun PublicLibraryShowScreen(
     var showLineCopyDialog by remember { mutableStateOf(false) }
     var showCaptchaDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showReportDialog by remember { mutableStateOf(false) }
 
     viewModel.ensureLoaded(id, isPrivate)
 
@@ -204,7 +206,7 @@ fun PublicLibraryShowScreen(
                             .fillMaxSize()
                             .padding(vertical = 10.dp)
                     ) {
-                        // ━━━ 元信息卡片 ━━━
+                        // 元信息卡片
                         @OptIn(ExperimentalLayoutApi::class)
                         Column(
                             modifier = Modifier
@@ -399,7 +401,7 @@ fun PublicLibraryShowScreen(
 
                         Spacer(Modifier.height(10.dp))
 
-                        // ━━━ 视图切换指示条 ━━━
+                        // 视图切换指示条
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -432,7 +434,7 @@ fun PublicLibraryShowScreen(
 
                         Spacer(Modifier.height(4.dp))
 
-                        // ━━━ 内容区：可视化 / 原始源码 ━━━
+                        // 内容区：可视化 / 原始源码
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -461,14 +463,20 @@ fun PublicLibraryShowScreen(
                                 }
                             } else {
                                 // MCD 可视化视图
-                                MCDContentView(
-                                    content = viewModel.library.content,
+                                // MCDContentView 已不再自带 LazyColumn，这里包一层 verticalScroll
+                                // 让长命令库内容能继续滚动
+                                Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(horizontal = 15.dp),
-                                    ambiguousDefault = ambiguousLineDefault.value,
-                                    showMetadata = !isHideMetadataPreview.value
-                                )
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(horizontal = 15.dp)
+                                ) {
+                                    MCDContentView(
+                                        content = viewModel.library.content,
+                                        ambiguousDefault = ambiguousLineDefault.value,
+                                        showMetadata = !isHideMetadataPreview.value
+                                    )
+                                }
                             }
                         }
                     }
@@ -477,8 +485,8 @@ fun PublicLibraryShowScreen(
         }
     }
 
-    // 所有 dialog 必须在 RootView 之后声明，因为上游 CustomDialog 是纯 Box 覆盖层而非真 popup，
-    // Compose 中后声明的节点 z-order 更高，放前面会被 RootView 压住导致点击穿透不到 dialog。
+    // 所有dialog必须在RootView后声明，因为CustomDialog是纯Box覆盖层而非真popup
+    // Compose中后声明的节点z-order更高，放前面会被RootView压住导致点击穿透不到dialog
 
     // 主菜单对话框
     if (showMainMenu) {
@@ -488,6 +496,8 @@ fun PublicLibraryShowScreen(
             add("复制全部 MCD 源码" to "copy_all")
             add((if (viewModel.showRawSource) "查看可视化" else "查看源码") to "toggle_view")
             add("游龙导入" to "loongflow_import")
+            // 公有库才显示举报：私有库是用户自己的，没必要给自己的库做举报入口
+            if (!isPrivate) add("举报" to "report")
             add("关闭" to "close")
         }.toTypedArray()
         ChoosingDialog(
@@ -512,6 +522,7 @@ fun PublicLibraryShowScreen(
                         yancey.chelper.android.window.LoongFlowWindowManager.INSTANCE
                             .showImport(context, viewModel.library)
                     }
+                    "report" -> showReportDialog = true
                 }
             }
         )
@@ -623,11 +634,47 @@ fun PublicLibraryShowScreen(
             )
         }
     }
+
+    if (showReportDialog) {
+        // 用 uuid 作为 target_id，保证不同版本（同 uuid 的私有/公开）能在后端聚合
+        // 这里只举报公有库，所以 target_type=library 没问题
+        val targetUuid = viewModel.library.uuid
+        val targetName = viewModel.library.name
+        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+        yancey.chelper.ui.common.dialog.ReportDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = "举报命令库",
+            targetDescription = targetName,
+            onConfirm = { reason ->
+                if (targetUuid.isNullOrBlank()) {
+                    com.hjq.toast.Toaster.show("无法定位举报目标")
+                    return@ReportDialog
+                }
+                coroutineScope.launch {
+                    try {
+                        val request = yancey.chelper.network.library.service.CommandLabUserService
+                            .ReportRequest().apply {
+                                targetType = "library"
+                                targetId = targetUuid
+                                this.reason = reason
+                            }
+                        val resp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            yancey.chelper.network.ServiceManager.COMMAND_LAB_USER_SERVICE
+                                .submitReport(request)
+                        }
+                        com.hjq.toast.Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
+                    } catch (e: Exception) {
+                        com.hjq.toast.Toaster.show("网络错误: ${e.message}")
+                    }
+                }
+            }
+        )
+    }
 }
 
 /**
- * 逐行复制对话框：逐条展示命令并自动复制到剪贴板。
- * 用户点击"下一条"前进并复制下一条，点击"完成"关闭。
+ * 逐行复制对话框：逐条展示命令并自动复制到剪贴板
+ * 用户点击下一条前进并复制下一条，点击完成关闭
  */
 @Composable
 private fun LineCopyDialog(

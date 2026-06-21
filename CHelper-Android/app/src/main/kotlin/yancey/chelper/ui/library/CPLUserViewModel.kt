@@ -35,7 +35,10 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.data.UpdateProfileRequest
+import yancey.chelper.network.library.data.UserProfileData
 import yancey.chelper.network.library.service.CommandLabUserService
+import yancey.chelper.network.library.util.CloudLibraryCache
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 
@@ -68,6 +71,11 @@ class CPLUserViewModel : ViewModel() {
     var isGuest by mutableStateOf(false)
     var isUploadingAvatar by mutableStateOf(false)
 
+    // 个人公开资料：登录回包没有 signature / homepage / userTitle 这些字段，
+    // 编辑面板需要拿这条记录做 form 初值。account 中心和"编辑资料"按钮都用它。
+    var userProfile by mutableStateOf<UserProfileData?>(null)
+    var isUpdatingProfile by mutableStateOf(false)
+
     // My Cloud Libraries
     val myLibraries = mutableStateListOf<LibraryFunction>()
     var myLibrariesPage by mutableIntStateOf(1)
@@ -82,12 +90,98 @@ class CPLUserViewModel : ViewModel() {
             currentUser = LoginUtil.currentUser
             isGuest = false
             loadMyLibraries(true)
+            loadUserProfile()
         } else if (GuestAuthUtil.isLoggedIn()) {
             currentUser = GuestAuthUtil.guestUser
             isGuest = true
+            userProfile = null
         } else {
             currentUser = null
             isGuest = false
+            userProfile = null
+        }
+    }
+
+    /**
+     * 把自己完整的公开资料拉一份回来——给"编辑资料"对话框做初值。
+     * 失败静默，不挡用户继续浏览页面。
+     */
+    fun loadUserProfile() {
+        val uid = currentUser?.id ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val resp = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getUserProfile(uid)
+                if (resp.isSuccess()) {
+                    withContext(Dispatchers.Main) {
+                        userProfile = resp.data
+                    }
+                }
+            } catch (_: Exception) {
+                // 拉不到就算了，对话框会显示"加载中"，用户可以重试
+            }
+        }
+    }
+
+    /**
+     * 走 PUT users/{id}，跟 UserProfileViewModel 同一个接口；
+     * 但这边是"在账户中心改自己的资料"，所以 uid 固定取 currentUser.id。
+     *
+     * 成功后做了几件事：
+     * 1. 重拉 userProfile，刷新本地副本；
+     * 2. 把昵称同步回 currentUser（顶部"账户中心"显示就跟着变了，
+     *    免得用户保存完看着旧昵称以为没生效）；
+     * 3. 失效"我的云端库"缓存——LocalLibraryListScreen 顶上的用户卡片是吃这份缓存的，
+     *    不失效的话回到那里会看到旧昵称/旧头像。
+     */
+    fun updateProfile(
+        nickname: String,
+        avatarUrl: String?,
+        homepage: String?,
+        signature: String?,
+        onComplete: () -> Unit
+    ) {
+        if (isUpdatingProfile) return
+        val uid = currentUser?.id ?: run {
+            Toaster.show("尚未登录")
+            return
+        }
+        isUpdatingProfile = true
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val req = UpdateProfileRequest(
+                    nickname = nickname.ifBlank { null },
+                    avatarUrl = avatarUrl?.ifBlank { null },
+                    homepage = homepage?.ifBlank { null },
+                    signature = signature?.ifBlank { null }
+                )
+                val res = ServiceManager.COMMAND_LAB_USER_SERVICE.updateProfile(uid, req)
+                withContext(Dispatchers.Main) {
+                    if (res.status == 0) {
+                        Toaster.show("资料已更新")
+                        currentUser?.let { u ->
+                            if (!req.nickname.isNullOrBlank()) u.nickname = req.nickname
+                            if (!req.avatarUrl.isNullOrBlank()) u.gravatarUrl = req.avatarUrl
+                            // 触发重组：var by mutableStateOf 的 set 不会因为可变字段内容变化重新发布
+                            val tmp = currentUser
+                            currentUser = null
+                            currentUser = tmp
+                        }
+                        loadUserProfile()
+                        CloudLibraryCache.invalidateAll()
+                        onComplete()
+                    } else {
+                        Toaster.show("更新失败: ${res.message ?: "未知错误"}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toaster.show("网络错误: ${e.message}")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isUpdatingProfile = false
+                }
+            }
         }
     }
 
@@ -119,11 +213,18 @@ class CPLUserViewModel : ViewModel() {
     private fun migrateGuestData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // TODO: Implement migration logic using GuestAuthUtil signature generation
-                // For now we just skip or implement if needed
                 val fingerprint = GuestAuthUtil.getFingerprint() ?: return@launch
-                // val authCode = GuestAuthUtil.generateAuthCode(fingerprint) // Need public access to this or new method
-                // ServiceManager.COMMAND_LAB_USER_SERVICE.guestMigrate(...)
+                val authCode = GuestAuthUtil.generateAuthCode(fingerprint) ?: return@launch
+                
+                val request = yancey.chelper.network.library.service.CommandLabUserService.GuestAuthRequest().apply {
+                    this.fingerprint = fingerprint
+                    this.authCode = authCode
+                }
+                
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.guestMigrate(request)
+                if (response.isSuccess()) {
+                    GuestAuthUtil.clearGuestSession()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -255,7 +356,7 @@ class CPLUserViewModel : ViewModel() {
 
     fun logout() {
         LoginUtil.logout()
-        GuestAuthUtil.clearGuestSession() // Optional: clear guest session too? maybe revert to guest
+        GuestAuthUtil.clearGuestSession()
         refreshUserState()
     }
 
@@ -305,6 +406,9 @@ class CPLUserViewModel : ViewModel() {
                             currentUser = null
                             currentUser = temp
                         }
+                        // 资料和"我的库"卡片都在吃 userProfile / cloud cache，得一起刷一下
+                        loadUserProfile()
+                        CloudLibraryCache.invalidateAll()
                     } else {
                         Toaster.show("上传头像失败: ${result.message ?: "未知错误"}")
                     }

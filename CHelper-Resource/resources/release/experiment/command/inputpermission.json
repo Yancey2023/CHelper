@@ -1,90 +1,75 @@
 {
-    "name": [
-        "inputpermission"
-    ],
-    "description": "对玩家的权限状态进行指定操作",
-    "start": [
-        "query",
-        "set"
-    ],
-    "node": [
+  "name": [
+    "inputpermission"
+  ],
+  "description": "对玩家的权限状态进行指定操作",
+  "syntax": [
+    "/inputpermission query <targets: target> <permission: permission> [state: state]",
+    "/inputpermission set <targets: target> <permission: permission> <state: state>"
+  ],
+  "node": {
+    "query": {
+      "type": "TEXT",
+      "description": "查询目标的指定权限的状态",
+      "data": {
+        "name": "query",
+        "description": "查询目标的指定权限的状态"
+      }
+    },
+    "<targets: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "权限的拥有者",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<permission: permission>": {
+      "type": "NORMAL_ID",
+      "brief": "操作所作用的权限",
+      "description": "操作所作用的权限",
+      "ignoreError": true,
+      "key": "inputPermission"
+    },
+    "[state: state]": {
+      "type": "NORMAL_ID",
+      "brief": "权限的状态",
+      "description": "权限的状态",
+      "ignoreError": true,
+      "contents": [
         {
-            "type": "TEXT",
-            "id": "query",
-            "description": "查询目标的指定权限的状态",
-            "data": {
-                "name": "query",
-                "description": "查询目标的指定权限的状态"
-            }
+          "name": "enabled",
+          "description": "启用"
         },
         {
-            "type": "TEXT",
-            "id": "set",
-            "description": "修改目标的指定权限的状态",
-            "data": {
-                "name": "set",
-                "description": "修改目标的指定权限的状态"
-            }
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "queryTargets",
-            "description": "权限的拥有者",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "TARGET_SELECTOR",
-            "id": "setTargets",
-            "description": "权限的拥有者",
-            "isOnlyOne": false,
-            "isMustPlayer": true,
-            "isMustNPC": false,
-            "isWildcard": false
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "queryPermission",
-            "brief": "操作所作用的权限",
-            "description": "操作所作用的权限",
-            "ignoreError": true,
-            "key": "inputPermission"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "setPermission",
-            "brief": "操作所作用的权限",
-            "description": "操作所作用的权限",
-            "ignoreError": true,
-            "key": "inputPermission"
-        },
-        {
-            "type": "NORMAL_ID",
-            "id": "state",
-            "brief": "权限的状态",
-            "description": "权限的状态",
-            "ignoreError": true,
-            "contents": [
-                {
-                    "name": "enabled",
-                    "description": "启用"
-                },
-                {
-                    "name": "disabled",
-                    "description": "禁用"
-                }
-            ]
+          "name": "disabled",
+          "description": "禁用"
         }
-    ],
-    "ast": [
-        ["query", "queryTargets"],
-        ["queryTargets", "queryPermission"],
-        ["queryPermission", "state", "LF"],
-        ["state", "LF"],
-        ["set", "setTargets"],
-        ["setTargets", "setPermission"],
-        ["setPermission", "state"]
-    ]
+      ]
+    },
+    "set": {
+      "type": "TEXT",
+      "description": "修改目标的指定权限的状态",
+      "data": {
+        "name": "set",
+        "description": "修改目标的指定权限的状态"
+      }
+    },
+    "<state: state>": {
+      "type": "NORMAL_ID",
+      "brief": "权限的状态",
+      "description": "权限的状态",
+      "ignoreError": true,
+      "contents": [
+        {
+          "name": "enabled",
+          "description": "启用"
+        },
+        {
+          "name": "disabled",
+          "description": "禁用"
+        }
+      ]
+    }
+  }
 }
