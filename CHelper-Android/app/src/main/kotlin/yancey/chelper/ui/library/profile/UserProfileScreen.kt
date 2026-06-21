@@ -94,6 +94,7 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     // 仅在浏览他人主页时启用举报入口；自己看自己的页面不显示
     var showReportDialog by remember { mutableStateOf(false) }
@@ -486,7 +487,6 @@ fun UserProfileScreen(
 
     if (showReportDialog && viewModel.userProfile != null) {
         val target = viewModel.userProfile!!
-        val coroutineScope = rememberCoroutineScope()
         ReportDialog(
             onDismissRequest = { showReportDialog = false },
             title = "举报用户",

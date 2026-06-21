@@ -99,6 +99,8 @@ fun SettingsScreen(
     var ambiguousLineDefault by remember { mutableStateOf("comment") }
     val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
         .collectAsState(initial = false)
+    val isEnableMcdHighlight by settingsDataStore.isEnableMcdHighlight()
+        .collectAsState(initial = true)
     val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
         .collectAsState(initial = true)
     val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
@@ -361,6 +363,17 @@ fun SettingsScreen(
                     onCheckedChange = {
                         coroutineScope.launch {
                             settingsDataStore.setIsHideMetadataPreview(it)
+                        }
+                    },
+                )
+                Divider()
+                SettingsItem(
+                    name = "[实验性] 命令块语法高亮",
+                    description = "支持命令库在 v2 渲染时为命令块附加语法高亮",
+                    checked = isEnableMcdHighlight,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsEnableMcdHighlight(it)
                         }
                     },
                 )

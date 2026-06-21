@@ -26,3 +26,5 @@ keystore.properties
 .vscode/
 .vscode/*
 .claude/
+build_test.ps1
+*.bak

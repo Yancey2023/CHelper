@@ -110,6 +110,7 @@ fun PublicLibraryShowScreen(
     viewModel: PublicLibraryShowViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
     // 读取设置
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
@@ -654,7 +655,6 @@ fun PublicLibraryShowScreen(
         // 这里只举报公有库，所以 target_type=library 没问题
         val targetUuid = viewModel.library.uuid
         val targetName = viewModel.library.name
-        val coroutineScope = rememberCoroutineScope()
         ReportDialog(
             onDismissRequest = { showReportDialog = false },
             title = "举报命令库",

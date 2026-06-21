@@ -19,6 +19,7 @@
 package yancey.chelper.ui.common.widget
 
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +32,26 @@ import yancey.chelper.ui.common.CHelperTheme
 @Composable
 fun Text(
     text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = TextStyle(),
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip
+) {
+    BasicText(
+        text = text,
+        modifier = modifier,
+        style = style.copy(
+            color = if (style.color == Color.Unspecified) CHelperTheme.colors.textMain else style.color,
+            fontSize = if (style.fontSize == TextUnit.Unspecified) 16.sp else style.fontSize
+        ),
+        maxLines = maxLines,
+        overflow = overflow
+    )
+}
+
+@Composable
+fun Text(
+    text: AnnotatedString,
     modifier: Modifier = Modifier,
     style: TextStyle = TextStyle(),
     maxLines: Int = Int.MAX_VALUE,
