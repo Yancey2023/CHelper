@@ -18,7 +18,6 @@
 
 package yancey.chelper.ui.completion
 
-import PublicLibraryListScreenKey
 import android.app.Application
 import android.content.ClipData
 import android.util.TypedValue
@@ -73,6 +72,7 @@ import yancey.chelper.core.Theme
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.HistoryScreenKey
 import yancey.chelper.ui.LocalLibraryListScreenKey
+import yancey.chelper.ui.PublicLibraryListScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootView
 import yancey.chelper.ui.common.widget.Icon

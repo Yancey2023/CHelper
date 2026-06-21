@@ -18,7 +18,6 @@
 
 package yancey.chelper.ui.home
 
-import LibraryMainScreenKey
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -60,6 +59,7 @@ import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.AboutScreenKey
 import yancey.chelper.ui.CompletionScreenKey
 import yancey.chelper.ui.EnumerationScreenKey
+import yancey.chelper.ui.LibraryMainScreenKey
 import yancey.chelper.ui.Old2NewIMEGuideScreenKey
 import yancey.chelper.ui.Old2NewScreenKey
 import yancey.chelper.ui.RawtextScreenKey
