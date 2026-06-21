@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
@@ -215,12 +216,14 @@ class CPLUserViewModel : ViewModel() {
             try {
                 val fingerprint = GuestAuthUtil.getFingerprint() ?: return@launch
                 val authCode = GuestAuthUtil.generateAuthCode(fingerprint) ?: return@launch
-                
-                val request = yancey.chelper.network.library.service.CommandLabUserService.GuestAuthRequest().apply {
-                    this.fingerprint = fingerprint
-                    this.authCode = authCode
-                }
-                
+
+                val request =
+                    CommandLabUserService.GuestAuthRequest()
+                        .apply {
+                            this.fingerprint = fingerprint
+                            this.authCode = authCode
+                        }
+
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE.guestMigrate(request)
                 if (response.isSuccess()) {
                     GuestAuthUtil.clearGuestSession()
@@ -394,7 +397,7 @@ class CPLUserViewModel : ViewModel() {
                     else -> "jpg"
                 }
                 val part =
-                    okhttp3.MultipartBody.Part.createFormData("file", "avatar.$ext", requestBody)
+                    MultipartBody.Part.createFormData("file", "avatar.$ext", requestBody)
                 val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadAvatar(part)
                 withContext(Dispatchers.Main) {
                     if (result.isSuccess() == true) {

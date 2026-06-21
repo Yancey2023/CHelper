@@ -19,6 +19,7 @@
 package yancey.chelper.ui.library
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -226,8 +227,8 @@ fun LocalLibraryEditScreen(viewModel: LocalLibraryEditViewModel = viewModel(), i
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
                                 .clickable {
-                                    val intent = android.content.Intent(
-                                        android.content.Intent.ACTION_VIEW,
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
                                         "https://abyssous.site/wiki".toUri()
                                     )
                                     context.startActivity(intent)

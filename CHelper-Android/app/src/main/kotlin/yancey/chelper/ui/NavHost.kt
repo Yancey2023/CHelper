@@ -44,12 +44,13 @@ import yancey.chelper.ui.enumeration.EnumerationScreen
 import yancey.chelper.ui.home.HomeScreen
 import yancey.chelper.ui.library.CPLUploadScreen
 import yancey.chelper.ui.library.CPLUserScreen
+import yancey.chelper.ui.library.LibraryMainScreen
 import yancey.chelper.ui.library.LocalLibraryEditScreen
 import yancey.chelper.ui.library.LocalLibraryListScreen
 import yancey.chelper.ui.library.LocalLibraryShowScreen
+import yancey.chelper.ui.library.MessageScreen
 import yancey.chelper.ui.library.PublicLibraryListScreen
 import yancey.chelper.ui.library.PublicLibraryShowScreen
-import yancey.chelper.ui.library.MessageScreen
 import yancey.chelper.ui.library.profile.UserProfileScreen
 import yancey.chelper.ui.library.score.LeaderboardScreen
 import yancey.chelper.ui.library.search.LibrarySearchScreen
@@ -232,7 +233,10 @@ fun NavHost(
             PublicLibraryListScreen(navController = navController)
         }
         composable<LibraryMainScreenKey> {
-            yancey.chelper.ui.library.LibraryMainScreen(navController = navController, isFloatingWindow = false)
+            LibraryMainScreen(
+                navController = navController,
+                isFloatingWindow = false
+            )
         }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val publicLibraryShow: PublicLibraryShowScreenKey = navBackStackEntry.toRoute()
@@ -344,7 +348,10 @@ fun FloatingWindowNavHost(
             PublicLibraryListScreen(navController = navController, isFloatingWindow = true)
         }
         composable<LibraryMainScreenKey> {
-            yancey.chelper.ui.library.LibraryMainScreen(navController = navController, isFloatingWindow = true)
+            LibraryMainScreen(
+                navController = navController,
+                isFloatingWindow = true
+            )
         }
         composable<PublicLibraryShowScreenKey> { navBackStackEntry ->
             val customKey = navBackStackEntry.toRoute<PublicLibraryShowScreenKey>()

@@ -22,6 +22,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
@@ -224,7 +225,7 @@ private fun CaptchaDialogContent(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     ).apply {
-                        gravity = android.view.Gravity.CENTER
+                        gravity = Gravity.CENTER
                     }
                 }
                 addView(progressBar)

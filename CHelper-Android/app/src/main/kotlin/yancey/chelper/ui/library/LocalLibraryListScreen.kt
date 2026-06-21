@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -47,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -248,7 +248,11 @@ fun LocalLibraryListScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(4.dp))
-                                                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.15f))
+                                                    .background(
+                                                        CHelperTheme.colors.mainColor.copy(
+                                                            alpha = 0.15f
+                                                        )
+                                                    )
                                                     .padding(horizontal = 6.dp, vertical = 1.dp)
                                             ) {
                                                 Text(
@@ -333,9 +337,11 @@ fun LocalLibraryListScreen(
                             localDataStore = localCommandLabDataStore
                         )
                     }
+
                     "edit" -> {
                         navController.navigate(LibraryEditScreenKey(id = showLocalMenuIndex))
                     }
+
                     "export" -> {
                         // 导出单个库到剪切板
                         val output = Json.encodeToString(LibraryFunction.serializer(), library)
@@ -351,6 +357,7 @@ fun LocalLibraryListScreen(
                             Toaster.show("已复制到剪切板")
                         }
                     }
+
                     "delete" -> {
                         showDeleteConfirmIndex = showLocalMenuIndex
                     }
@@ -612,7 +619,13 @@ private fun UserCloudLibrariesSection(
             QuickActionButton(
                 icon = R.drawable.ic_user,
                 label = "创作者",
-                onClick = { navController.navigate(UserProfileScreenKey(id = viewModel.currentUser?.id ?: 0)) }
+                onClick = {
+                    navController.navigate(
+                        UserProfileScreenKey(
+                            id = viewModel.currentUser?.id ?: 0
+                        )
+                    )
+                }
             )
         }
 
@@ -734,7 +747,7 @@ private fun UserCloudLibrariesSection(
                                 text = "待同步",
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = androidx.compose.ui.graphics.Color(0xFFE65100)
+                                    color = Color(0xFFE65100)
                                 ),
                                 modifier = Modifier.align(Alignment.CenterVertically)
                             )
@@ -774,8 +787,8 @@ private fun QuotaBar(
     }
     val barColor = when {
         unlimited -> CHelperTheme.colors.mainColor
-        ratio >= 0.9f -> androidx.compose.ui.graphics.Color(0xFFD32F2F)
-        ratio >= 0.7f -> androidx.compose.ui.graphics.Color(0xFFE65100)
+        ratio >= 0.9f -> Color(0xFFD32F2F)
+        ratio >= 0.7f -> Color(0xFFE65100)
         else -> CHelperTheme.colors.mainColor
     }
     Column(modifier = modifier) {

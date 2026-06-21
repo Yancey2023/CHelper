@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Text
-import yancey.chelper.ui.library.mcd.BlockType
 
 @Composable
 fun ExportWizard(
@@ -100,6 +99,7 @@ fun ExportWizard(
                         onClick = { viewModel.startRecording() }
                     )
                 }
+
                 1 -> {
                     ExportActionButton(
                         text = "◂ 返回配置",
@@ -112,6 +112,7 @@ fun ExportWizard(
                         onClick = { viewModel.finishRecording() }
                     )
                 }
+
                 2 -> {
                     ExportActionButton(
                         text = "◂ 继续录入",
@@ -321,7 +322,9 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
                         // Compose ClipboardManager 在窗口有焦点时可以工作
                         val text = try {
                             composeClipboard.getText()?.text?.trim()
-                        } catch (_: Exception) { null }
+                        } catch (_: Exception) {
+                            null
+                        }
 
                         if (!text.isNullOrEmpty()) {
                             viewModel.currentBlockInput = text

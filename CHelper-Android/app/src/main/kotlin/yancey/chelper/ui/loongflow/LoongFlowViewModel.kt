@@ -46,15 +46,16 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     data class ImportCommandCtx(
         val command: String,
         val chainName: String?,
-        val blockData: yancey.chelper.ui.library.mcd.MCDBlock?
+        val blockData: MCDBlock?
     ) {
-        val blockTypeName: String get() = when (blockData?.type) {
-            BlockType.IMPULSE -> "脉冲"
-            BlockType.CHAIN -> "连锁"
-            BlockType.REPEAT -> "循环"
-            BlockType.CHAT -> "手动输入"
-            null -> "纯命令"
-        }
+        val blockTypeName: String
+            get() = when (blockData?.type) {
+                BlockType.IMPULSE -> "脉冲"
+                BlockType.CHAIN -> "连锁"
+                BlockType.REPEAT -> "循环"
+                BlockType.CHAT -> "手动输入"
+                null -> "纯命令"
+            }
     }
 
     var importStep by mutableIntStateOf(0)       // 0=选择命令, 1=逐条复制
@@ -108,11 +109,13 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
                             ImportCommandCtx(cmd, chain.name, item.block)
                         }
                     }
+
                     is ChainItem.RawCommand -> {
                         item.command.takeIf { it.isNotEmpty() }?.let { cmd ->
                             ImportCommandCtx(cmd, chain.name, null)
                         }
                     }
+
                     is ChainItem.Comment -> null
                 }
             }

@@ -20,6 +20,8 @@ package yancey.chelper.network.library.service
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -32,6 +34,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.data.MessageListResponse
+import yancey.chelper.network.library.data.UnreadCountResponse
+import yancey.chelper.network.library.data.UpdateProfileRequest
 
 /**
  * CommandLab 用户系统 API 接口。
@@ -155,7 +160,7 @@ interface CommandLabUserService {
      * @return 包含系统分配信息等注册结果的 JSON 响应
      */
     @POST("register")
-    suspend fun register(@Body request: RegisterRequest): BaseResult<kotlinx.serialization.json.JsonElement?>
+    suspend fun register(@Body request: RegisterRequest): BaseResult<JsonElement?>
 
     // 登录相关
 
@@ -233,7 +238,7 @@ interface CommandLabUserService {
     @Multipart
     @POST("avatar")
     suspend fun uploadAvatar(
-        @Part file: okhttp3.MultipartBody.Part
+        @Part file: MultipartBody.Part
     ): BaseResult<UploadAvatarResponse?>
 
 
@@ -299,7 +304,7 @@ interface CommandLabUserService {
     suspend fun updateLibrary(
         @Path("id") id: Int,
         @Body request: UpdateLibraryRequest
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     /**
      * 更新用户个人公开资料
@@ -311,8 +316,8 @@ interface CommandLabUserService {
     @PUT("users/{id}")
     suspend fun updateProfile(
         @Path("id") id: Int,
-        @Body request: yancey.chelper.network.library.data.UpdateProfileRequest
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+        @Body request: UpdateProfileRequest
+    ): BaseResult<JsonElement?>
 
     /**
      * 获取用户自己的私有命令库列表（我的云端）
@@ -355,7 +360,7 @@ interface CommandLabUserService {
     suspend fun releaseToPublic(
         @Path("id") id: Int,
         @Body body: Map<String, String>
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     /**
      * 同步用户的私有库内容至已发布的公开库
@@ -366,7 +371,7 @@ interface CommandLabUserService {
     @POST("library/{id}/sync")
     suspend fun syncToPublic(
         @Path("id") id: Int
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     /**
      * 删除私有库
@@ -377,7 +382,7 @@ interface CommandLabUserService {
     @DELETE("library/{id}")
     suspend fun deleteLibrary(
         @Path("id") id: Int
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     // Quota
 
@@ -412,13 +417,13 @@ interface CommandLabUserService {
         @Query("page") page: Int = 1,
         @Query("page_size") pageSize: Int = 20,
         @Query("unread_only") unreadOnly: Boolean = false
-    ): BaseResult<yancey.chelper.network.library.data.MessageListResponse?>
+    ): BaseResult<MessageListResponse?>
 
     /**
      * 获取未读站内信数量
      */
     @GET("message/unread-count")
-    suspend fun getUnreadCount(): BaseResult<yancey.chelper.network.library.data.UnreadCountResponse?>
+    suspend fun getUnreadCount(): BaseResult<UnreadCountResponse?>
 
     /**
      * 将某条站内信标记为已读
@@ -426,7 +431,7 @@ interface CommandLabUserService {
     @PUT("message/{id}/read")
     suspend fun markMessageRead(
         @Path("id") id: Int
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     /**
      * 软删除（隐藏）一条站内信
@@ -434,7 +439,7 @@ interface CommandLabUserService {
     @DELETE("message/{id}")
     suspend fun deleteMessage(
         @Path("id") id: Int
-    ): BaseResult<kotlinx.serialization.json.JsonElement?>
+    ): BaseResult<JsonElement?>
 
     // Report
 
@@ -456,5 +461,5 @@ interface CommandLabUserService {
      * 提交举报。后端去重：同一用户对同一目标 pending 状态下不重复入库。
      */
     @POST("report")
-    suspend fun submitReport(@Body request: ReportRequest): BaseResult<kotlinx.serialization.json.JsonElement?>
+    suspend fun submitReport(@Body request: ReportRequest): BaseResult<JsonElement?>
 }

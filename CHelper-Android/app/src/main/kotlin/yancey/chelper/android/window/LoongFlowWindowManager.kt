@@ -13,6 +13,7 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -202,24 +203,26 @@ class LoongFlowWindowManager(
     private fun showPanel(context: Context, mode: LoongFlowMode, library: LibraryFunction?) {
         val metrics = application.resources.displayMetrics
         val isLandscape = metrics.widthPixels > metrics.heightPixels
-        
+
         // 初始默认尺寸
         val panelWidth: Int
         val panelHeight: Int
         if (isLandscape) {
-            panelWidth = if (isCompactMode) (metrics.widthPixels * 0.40).toInt() else (metrics.widthPixels * 0.70).toInt()
+            panelWidth =
+                if (isCompactMode) (metrics.widthPixels * 0.40).toInt() else (metrics.widthPixels * 0.70).toInt()
             panelHeight = (metrics.heightPixels * 0.35).toInt()
         } else {
             panelWidth = (metrics.widthPixels * 0.80).toInt()
-            panelHeight = if (isCompactMode) (metrics.heightPixels * 0.35).toInt() else (metrics.heightPixels * 0.65).toInt()
+            panelHeight =
+                if (isCompactMode) (metrics.heightPixels * 0.35).toInt() else (metrics.heightPixels * 0.65).toInt()
         }
 
         val vm = viewModel ?: return
 
         val panelView = object : FrameLayout(context) {
-            override fun dispatchKeyEvent(event: android.view.KeyEvent?): Boolean {
+            override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
                 // 如果按下了返回键，关闭游龙面板
-                if (event?.keyCode == android.view.KeyEvent.KEYCODE_BACK && event.action == android.view.KeyEvent.ACTION_UP) {
+                if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                     dismiss()
                     return true
                 }

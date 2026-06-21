@@ -15,9 +15,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Text
+import yancey.chelper.ui.library.mcd.BlockType
 
 @Composable
 fun ImportWizard(
@@ -94,6 +95,7 @@ fun ImportWizard(
                         onClick = { viewModel.startImportCopy() }
                     )
                 }
+
                 1 -> {
                     ActionButton(
                         text = "◂ 上一条",
@@ -319,7 +321,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
             Spacer(Modifier.height(16.dp))
 
             val ctx = cmds[index]
-            
+
             // 元信息 Chips
             FlowRow(
                 modifier = Modifier.padding(bottom = 8.dp),
@@ -344,7 +346,9 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
 
                 // 方块类型
                 val typeName = ctx.blockTypeName
-                val baseColor = ctx.blockData?.type?.let { if (CHelperTheme.theme == CHelperTheme.Theme.Dark) it.darkColor else it.lightColor } ?: CHelperTheme.colors.textSecondary
+                val baseColor =
+                    ctx.blockData?.type?.let { if (CHelperTheme.theme == CHelperTheme.Theme.Dark) it.darkColor else it.lightColor }
+                        ?: CHelperTheme.colors.textSecondary
                 Text(
                     text = typeName,
                     modifier = Modifier
@@ -360,7 +364,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
 
                 // 完整解析的 MCDv2 标签卡片化呈现
                 ctx.blockData?.let { bd ->
-                    if (bd.type != yancey.chelper.ui.library.mcd.BlockType.CHAT) {
+                    if (bd.type != BlockType.CHAT) {
                         // 条件制约
                         if (bd.conditional) {
                             Text(
@@ -387,7 +391,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFFD32F2F), 
+                                    color = Color(0xFFD32F2F),
                                     fontWeight = FontWeight.Medium
                                 )
                             )
@@ -400,7 +404,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFF388E3C), 
+                                    color = Color(0xFF388E3C),
                                     fontWeight = FontWeight.Medium
                                 )
                             )
@@ -416,7 +420,7 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = TextStyle(
                                     fontSize = 11.sp,
-                                    color = Color(0xFF1976D2), 
+                                    color = Color(0xFF1976D2),
                                     fontWeight = FontWeight.Medium
                                 )
                             )

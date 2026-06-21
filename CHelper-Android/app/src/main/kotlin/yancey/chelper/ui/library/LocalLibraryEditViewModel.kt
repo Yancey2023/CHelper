@@ -39,6 +39,7 @@ class LocalLibraryEditViewModel : ViewModel() {
     var description by mutableStateOf(TextFieldState())
     var tags by mutableStateOf(TextFieldState())
     var commands by mutableStateOf(TextFieldState())
+
     /**
      * 保存时是否顺手把本条本地库同步到云端。
      * 以前叫"自动同步"——但当时要求"本地库必须先有 uuid"，
@@ -51,6 +52,7 @@ class LocalLibraryEditViewModel : ViewModel() {
      * 用户不再需要关心 uuid 从哪来。
      */
     var autoSync by mutableStateOf(false)
+
     /**
      * 是否使用 MCD V2 语法。
      * - 新建本地库（ADD）默认开启：V2 才支持命令链 / 方块状态等完整可视化，新内容没必要再绑老语法。
@@ -62,6 +64,7 @@ class LocalLibraryEditViewModel : ViewModel() {
     var useV2 by mutableStateOf(true)
     var isShowDeleteDialog by mutableStateOf(false)
     var isShowLowCodeHelper by mutableStateOf(false)
+
     // V2 → V1 降级二次确认：切回去会丢命令链/方块状态可视化，得让用户先确认
     var isShowV2DowngradeConfirm by mutableStateOf(false)
     var isSyncing by mutableStateOf(false)

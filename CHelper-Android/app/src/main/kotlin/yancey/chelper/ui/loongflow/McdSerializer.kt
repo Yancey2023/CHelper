@@ -75,6 +75,7 @@ fun serializeParsedToMCDv2(parsed: ParsedMCD): String {
                     sb.appendLine("> C__")
                     sb.appendLine(item.command)
                 }
+
                 is ChainItem.Block -> {
                     sb.appendLine(buildStateLine(item.block))
                     sb.appendLine(item.block.command)

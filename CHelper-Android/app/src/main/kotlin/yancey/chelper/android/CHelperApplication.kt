@@ -28,10 +28,10 @@ import android.view.Gravity
 import com.hjq.toast.Toaster
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.util.PolicyGrantManager
+import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.network.ServiceManager
-import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 

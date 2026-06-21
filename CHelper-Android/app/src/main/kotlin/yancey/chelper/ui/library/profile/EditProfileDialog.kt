@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -204,7 +205,7 @@ fun EditProfileDialog(
                         colorFilter = ColorFilter.tint(Color(0xFFD32F2F))
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    androidx.compose.foundation.text.BasicText(
+                    BasicText(
                         text = "由于您当前为 Tier 0, 头像、主页和签名暂不可更改。",
                         style = TextStyle(fontSize = 12.sp, color = Color(0xFFD32F2F))
                     )

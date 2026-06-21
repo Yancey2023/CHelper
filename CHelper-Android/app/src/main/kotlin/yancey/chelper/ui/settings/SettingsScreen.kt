@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.settings
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -510,10 +511,13 @@ fun SettingsScreen(
                 "按时间最新发布" to "false"
             ),
             onChoose = {
-                android.util.Log.d("CPL_Tab", "Settings: user chose isRecommend=$it")
+                Log.d("CPL_Tab", "Settings: user chose isRecommend=$it")
                 coroutineScope.launch {
                     settingsDataStore.setPublicLibraryHomeRecommend(it == "true")
-                    android.util.Log.d("CPL_Tab", "Settings: saved to DataStore isRecommend=${it == "true"}")
+                    Log.d(
+                        "CPL_Tab",
+                        "Settings: saved to DataStore isRecommend=${it == "true"}"
+                    )
                 }
             })
     }

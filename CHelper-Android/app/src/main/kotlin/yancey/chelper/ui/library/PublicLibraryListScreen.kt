@@ -15,6 +15,15 @@
  */
 package yancey.chelper.ui.library
 
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,13 +46,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,8 +58,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -70,8 +74,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import yancey.chelper.R
+import yancey.chelper.data.SettingsDataStore
+import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.ui.LibrarySearchScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
@@ -85,8 +92,8 @@ fun PublicLibraryListScreen(
     isFloatingWindow: Boolean = false,
     isTab: Boolean = false
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
+    val context = LocalContext.current
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
     val tagClickBehavior = settingsDataStore.tagClickBehavior()
         .collectAsState(initial = "search")
     // 用 nullable 初始值区分"DataStore 还没读到"和"读到 false"。
@@ -99,7 +106,7 @@ fun PublicLibraryListScreen(
         settingsDataStore
     ) {
         settingsDataStore.isPublicLibraryHomeRecommend().collect {
-            android.util.Log.d("CPL_Tab", "DataStore emit: $it (previous: $value)")
+            Log.d("CPL_Tab", "DataStore emit: $it (previous: $value)")
             value = it
         }
     }
@@ -109,30 +116,37 @@ fun PublicLibraryListScreen(
     // 不要在每次重新进入页面时强行覆盖回设置默认（之前的 bug：切回云端总是变成猜你喜欢）
     LaunchedEffect(isPublicLibraryHomeRecommend) {
         val realValue = isPublicLibraryHomeRecommend
-        android.util.Log.d("CPL_Tab", "LaunchedEffect triggered: realValue=$realValue, currentLoadedMode=${viewModel.currentLoadedMode}, isRecommendMode=${viewModel.isRecommendMode}")
+        Log.d(
+            "CPL_Tab",
+            "LaunchedEffect triggered: realValue=$realValue, currentLoadedMode=${viewModel.currentLoadedMode}, isRecommendMode=${viewModel.isRecommendMode}"
+        )
         if (realValue == null) {
-            android.util.Log.d("CPL_Tab", "realValue is null, skipping")
+            Log.d("CPL_Tab", "realValue is null, skipping")
             return@LaunchedEffect
         }
         if (viewModel.currentLoadedMode == null) {
-            android.util.Log.d("CPL_Tab", "First load, calling switchMode(isRecommend=$realValue)")
+            Log.d("CPL_Tab", "First load, calling switchMode(isRecommend=$realValue)")
             viewModel.switchMode(isRecommend = realValue)
         } else {
-            android.util.Log.d("CPL_Tab", "Already loaded (currentLoadedMode=${viewModel.currentLoadedMode}), NOT calling switchMode")
+            Log.d(
+                "CPL_Tab",
+                "Already loaded (currentLoadedMode=${viewModel.currentLoadedMode}), NOT calling switchMode"
+            )
         }
     }
 
     // 检查是否有未读站内信
     LaunchedEffect(Unit) {
         try {
-            val response = yancey.chelper.network.ServiceManager.COMMAND_LAB_USER_SERVICE.getUnreadCount()
+            val response =
+                ServiceManager.COMMAND_LAB_USER_SERVICE.getUnreadCount()
             if (response.status == 0) {
                 val count = response.data?.count ?: 0
                 if (count > 0) {
-                    android.widget.Toast.makeText(
+                    Toast.makeText(
                         context,
                         "您有 $count 条未读站内信，可前往用户中心查看",
-                        android.widget.Toast.LENGTH_LONG
+                        Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -199,7 +213,7 @@ fun PublicLibraryListScreen(
                         .background(CHelperTheme.colors.backgroundComponent)
                         .clickable {
                             navController.navigate(
-                                yancey.chelper.ui.LibrarySearchScreenKey()
+                                LibrarySearchScreenKey()
                             )
                         }
                         .padding(horizontal = 20.dp),
@@ -225,12 +239,12 @@ fun PublicLibraryListScreen(
                 val isRecommend = viewModel.isRecommendMode
                 // Tab 背景色动画：300ms 平滑过渡
                 val latestBg by animateColorAsState(
-                    targetValue = if (!isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent,
+                    targetValue = if (!isRecommend) CHelperTheme.colors.mainColor else Color.Transparent,
                     animationSpec = tween(300),
                     label = "latestTabBg"
                 )
                 val recommendBg by animateColorAsState(
-                    targetValue = if (isRecommend) CHelperTheme.colors.mainColor else androidx.compose.ui.graphics.Color.Transparent,
+                    targetValue = if (isRecommend) CHelperTheme.colors.mainColor else Color.Transparent,
                     animationSpec = tween(300),
                     label = "recommendTabBg"
                 )
@@ -256,7 +270,7 @@ fun PublicLibraryListScreen(
                         Text(
                             text = "最新发布",
                             style = TextStyle(
-                                color = if (!isRecommend) androidx.compose.ui.graphics.Color.White else CHelperTheme.colors.textSecondary,
+                                color = if (!isRecommend) Color.White else CHelperTheme.colors.textSecondary,
                                 fontSize = 13.sp,
                                 fontWeight = if (!isRecommend) FontWeight.Bold else FontWeight.Normal
                             )
@@ -280,7 +294,7 @@ fun PublicLibraryListScreen(
                             Text(
                                 text = "猜你喜欢",
                                 style = TextStyle(
-                                    color = if (isRecommend) androidx.compose.ui.graphics.Color.White else CHelperTheme.colors.textSecondary,
+                                    color = if (isRecommend) Color.White else CHelperTheme.colors.textSecondary,
                                     fontSize = 13.sp,
                                     fontWeight = if (isRecommend) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -293,7 +307,7 @@ fun PublicLibraryListScreen(
                                     modifier = Modifier
                                         .size(12.dp)
                                         .rotate(if (viewModel.isLoading) spinAngle else 0f),
-                                    colorFilter = ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
+                                    colorFilter = ColorFilter.tint(Color.White)
                                 )
                             }
                         }
@@ -378,7 +392,7 @@ fun PublicLibraryListScreen(
                                         }
                                     } else {
                                         navController.navigate(
-                                            yancey.chelper.ui.LibrarySearchScreenKey(tag)
+                                            LibrarySearchScreenKey(tag)
                                         )
                                     }
                                 }
@@ -390,7 +404,8 @@ fun PublicLibraryListScreen(
                             item {
                                 // 呼吸式脉冲：Reverse 保证 0.3→1→0.3 平滑往返，
                                 // 默认的 Restart 会让 alpha 从 1 瞬间跳回 0.3，视觉上一闪一闪
-                                val infiniteTransition = rememberInfiniteTransition(label = "loading")
+                                val infiniteTransition =
+                                    rememberInfiniteTransition(label = "loading")
                                 val alpha by infiniteTransition.animateFloat(
                                     initialValue = 0.3f,
                                     targetValue = 1f,

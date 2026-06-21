@@ -19,6 +19,7 @@
 package yancey.chelper.ui.library
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.hjq.toast.Toaster
 import yancey.chelper.R
 import yancey.chelper.data.LocalCommandLabDataStore
 import yancey.chelper.network.library.data.LibraryFunction
@@ -140,240 +142,241 @@ fun CPLUploadScreen(
         // editId<=0 → 上传一条新的指令库到云端。两者背后都是云端写入，但用词
         // 必须能让用户区分"我是在改云端旧的"和"我是在新增云端的"，
         // 也跟左侧的 LocalLibraryEditScreen（本地命令库）做出明确区隔。
-        val titleRes = if (editLibraryId > 0) R.string.upload_title_edit_cloud else R.string.upload_title
+        val titleRes =
+            if (editLibraryId > 0) R.string.upload_title_edit_cloud else R.string.upload_title
         RootViewWithHeaderAndCopyright(title = stringResource(titleRes)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // 可滚动的内容区
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // 基础信息卡片
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(CHelperTheme.colors.backgroundComponent)
+                    .fillMaxSize()
                     .padding(16.dp)
             ) {
-                Text(
-                    text = "基础信息",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = CHelperTheme.colors.textMain
-                    )
-                )
-                Spacer(Modifier.height(14.dp))
-                TextField(
-                    state = viewModel.name,
-                    hint = stringResource(R.string.upload_field_name),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    state = viewModel.description,
-                    hint = stringResource(R.string.upload_field_description),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                // 可滚动的内容区
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    TextField(
-                        state = viewModel.version,
-                        hint = stringResource(R.string.upload_field_version),
-                        modifier = Modifier.weight(1f)
-                    )
-                    TextField(
-                        state = viewModel.tags,
-                        hint = stringResource(R.string.upload_field_tags),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 脚本内容卡片
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(CHelperTheme.colors.backgroundComponent)
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "执行脚本",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textMain
-                        )
-                    )
-                    
-                    // 右侧操作区：可选的 V2 辅助补全 + 本地导入
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // 基础信息卡片
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(16.dp)
                     ) {
-                        if (viewModel.useV2) {
+                        Text(
+                            text = "基础信息",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textMain
+                            )
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        TextField(
+                            state = viewModel.name,
+                            hint = stringResource(R.string.upload_field_name),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        TextField(
+                            state = viewModel.description,
+                            hint = stringResource(R.string.upload_field_description),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            TextField(
+                                state = viewModel.version,
+                                hint = stringResource(R.string.upload_field_version),
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextField(
+                                state = viewModel.tags,
+                                hint = stringResource(R.string.upload_field_tags),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 脚本内容卡片
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "执行脚本",
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = CHelperTheme.colors.textMain
+                                )
+                            )
+
+                            // 右侧操作区：可选的 V2 辅助补全 + 本地导入
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (viewModel.useV2) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0xFFE65100).copy(alpha = 0.1f))
+                                            .clickable { showLowCodeHelper = true }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            id = R.drawable.pencil,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            text = "低代码补全 V2",
+                                            style = TextStyle(
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFFE65100)
+                                            )
+                                        )
+                                    }
+                                }
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
+                                        .clickable { showImportDialog = true }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(
+                                        id = R.drawable.folder,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.upload_import_local),
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = CHelperTheme.colors.mainColor
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+
+                        TextField(
+                            state = viewModel.commands,
+                            hint = stringResource(if (viewModel.useV2) R.string.upload_field_commands_v2 else R.string.upload_field_commands_v1),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(350.dp),
+                            contentAlignment = Alignment.TopStart
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // 底部辅助选项区：语法说明 & V2 开关
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFFE65100).copy(alpha = 0.1f))
-                                    .clickable { showLowCodeHelper = true }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    .clickable {
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            "https://abyssous.site/wiki".toUri()
+                                        )
+                                        context.startActivity(intent)
+                                    }
+                                    .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    id = R.drawable.pencil,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
+                                    id = R.drawable.book,
+                                    contentDescription = stringResource(R.string.upload_wiki_link),
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 Text(
-                                    text = "低代码补全 V2",
+                                    text = stringResource(R.string.upload_wiki_link),
                                     style = TextStyle(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFFE65100)
+                                        fontSize = 13.sp,
+                                        color = CHelperTheme.colors.mainColor,
+                                        fontWeight = FontWeight.Medium
                                     )
                                 )
                             }
-                        }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
-                                .clickable { showImportDialog = true }
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            Icon(
-                                id = R.drawable.folder,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = stringResource(R.string.upload_import_local),
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = CHelperTheme.colors.mainColor
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "启用 V2 语法",
+                                    style = TextStyle(
+                                        fontSize = 13.sp,
+                                        color = CHelperTheme.colors.textSecondary
+                                    )
                                 )
-                            )
+                                Spacer(Modifier.width(8.dp))
+                                Switch(
+                                    checked = viewModel.useV2,
+                                    onCheckedChange = { newValue ->
+                                        if (!newValue && viewModel.useV2) {
+                                            // 从 v2 切到 v1：弹确认框
+                                            showV2DowngradeConfirm = true
+                                        } else {
+                                            viewModel.useV2 = newValue
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
-                }
-                Spacer(Modifier.height(12.dp))
 
-                TextField(
-                    state = viewModel.commands,
-                    hint = stringResource(if (viewModel.useV2) R.string.upload_field_commands_v2 else R.string.upload_field_commands_v1),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(350.dp),
-                    contentAlignment = Alignment.TopStart
+                } // End of scrollable Column
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val emptyErrorText = stringResource(R.string.upload_empty_error)
+                Button(
+                    text = stringResource(if (viewModel.isLoading) R.string.upload_btn_uploading else R.string.upload_btn_preview),
+                    onClick = {
+                        if (!viewModel.isLoading) {
+                            val content = viewModel.commands.text.toString()
+                            if (viewModel.name.text.isBlank() || content.isBlank()) {
+                                Toaster.show(emptyErrorText)
+                                return@Button
+                            }
+                            validationResult = validateMCDContent(content)
+                            showPreviewScreen = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // 底部辅助选项区：语法说明 & V2 开关
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .clickable {
-                                val intent = android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    "https://abyssous.site/wiki".toUri()
-                                )
-                                context.startActivity(intent)
-                            }
-                            .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            id = R.drawable.book,
-                            contentDescription = stringResource(R.string.upload_wiki_link),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.upload_wiki_link),
-                            style = TextStyle(
-                                fontSize = 13.sp,
-                                color = CHelperTheme.colors.mainColor,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "启用 V2 语法",
-                            style = TextStyle(
-                                fontSize = 13.sp,
-                                color = CHelperTheme.colors.textSecondary
-                            )
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Switch(
-                            checked = viewModel.useV2,
-                            onCheckedChange = { newValue ->
-                                if (!newValue && viewModel.useV2) {
-                                    // 从 v2 切到 v1：弹确认框
-                                    showV2DowngradeConfirm = true
-                                } else {
-                                    viewModel.useV2 = newValue
-                                }
-                            }
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(10.dp))
             }
-
-            } // End of scrollable Column
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            val emptyErrorText = stringResource(R.string.upload_empty_error)
-            Button(
-                text = stringResource(if (viewModel.isLoading) R.string.upload_btn_uploading else R.string.upload_btn_preview),
-                onClick = {
-                    if (!viewModel.isLoading) {
-                        val content = viewModel.commands.text.toString()
-                        if (viewModel.name.text.isBlank() || content.isBlank()) {
-                            com.hjq.toast.Toaster.show(emptyErrorText)
-                            return@Button
-                        }
-                        validationResult = validateMCDContent(content)
-                        showPreviewScreen = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-        }
         } // End of RootView
     } // End of else block
 
@@ -393,7 +396,7 @@ fun CPLUploadScreen(
             onApply = { newContent ->
                 viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
                 showLowCodeHelper = false
-                com.hjq.toast.Toaster.show("已应用标记！")
+                Toaster.show("已应用标记！")
             }
         )
     }
@@ -751,8 +754,8 @@ private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
                 .clickable {
-                    val intent = android.content.Intent(
-                        android.content.Intent.ACTION_VIEW,
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
                         "https://abyssous.site/wiki".toUri()
                     )
                     helpContext.startActivity(intent)

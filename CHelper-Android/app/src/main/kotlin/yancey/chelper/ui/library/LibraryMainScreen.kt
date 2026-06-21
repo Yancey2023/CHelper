@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import yancey.chelper.R
+import yancey.chelper.network.ServiceManager
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootView
 import yancey.chelper.ui.common.widget.Text
@@ -57,7 +58,8 @@ fun LibraryMainScreen(
     // 检查未读站内信数量。访客也能查（站内信里有公共公告）
     LaunchedEffect(Unit) {
         try {
-            val response = yancey.chelper.network.ServiceManager.COMMAND_LAB_USER_SERVICE.getUnreadCount()
+            val response =
+                ServiceManager.COMMAND_LAB_USER_SERVICE.getUnreadCount()
             if (response.status == 0) {
                 unreadCount = response.data?.count ?: 0
             }

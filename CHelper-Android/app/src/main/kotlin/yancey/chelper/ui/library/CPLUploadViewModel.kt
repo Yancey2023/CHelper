@@ -92,7 +92,8 @@ class CPLUploadViewModel : ViewModel() {
                 try {
                     val functionStartIdx = rawContent.indexOf("###Function###")
                     if (functionStartIdx != -1) {
-                        body = rawContent.substring(functionStartIdx + "###Function###".length).trimStart('\n', '\r')
+                        body = rawContent.substring(functionStartIdx + "###Function###".length)
+                            .trimStart('\n', '\r')
                         val functionEndIdx = body.indexOf("###End###")
                         if (functionEndIdx != -1) {
                             body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
@@ -107,12 +108,12 @@ class CPLUploadViewModel : ViewModel() {
                     MonitorUtil.generateCustomLog(e, "MCDStripHeaderError")
                     body = rawContent
                 }
-                
+
                 val cleanLines = body.lines().filter { line ->
                     val t = line.trim()
-                    !(t.startsWith("@name=") || t.startsWith("@version=") || 
-                      t.startsWith("@tags=") || t.startsWith("@note=") || 
-                      t.startsWith("@mcd_version=") || t.startsWith("@uuid="))
+                    !(t.startsWith("@name=") || t.startsWith("@version=") ||
+                            t.startsWith("@tags=") || t.startsWith("@note=") ||
+                            t.startsWith("@mcd_version=") || t.startsWith("@uuid="))
                 }
                 commands.setTextAndPlaceCursorAtEnd(cleanLines.joinToString("\n").trim())
             } catch (e: Exception) {

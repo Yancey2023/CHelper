@@ -203,7 +203,8 @@ private fun SelectableChip(
     onClick: () -> Unit
 ) {
     val bgColor = if (isSelected) color.copy(alpha = 0.15f) else Color.Transparent
-    val borderColor = if (isSelected) color.copy(alpha = 0.4f) else CHelperTheme.colors.textSecondary.copy(alpha = 0.2f)
+    val borderColor =
+        if (isSelected) color.copy(alpha = 0.4f) else CHelperTheme.colors.textSecondary.copy(alpha = 0.2f)
     val textColor = if (isSelected) color else CHelperTheme.colors.textSecondary
 
     Box(

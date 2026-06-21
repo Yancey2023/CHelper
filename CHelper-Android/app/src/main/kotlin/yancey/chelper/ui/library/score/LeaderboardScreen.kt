@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LeaderboardUser
+import yancey.chelper.ui.UserProfileScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Text
@@ -139,7 +140,7 @@ fun LeaderboardScreen(
                         user = user,
                         onClick = {
                             user.id?.let {
-                                navController?.navigate(yancey.chelper.ui.UserProfileScreenKey(it))
+                                navController?.navigate(UserProfileScreenKey(it))
                             }
                         }
                     )

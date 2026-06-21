@@ -23,6 +23,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
+import yancey.chelper.network.library.util.WafHelper
 import java.io.IOException
 
 /**
@@ -41,7 +42,7 @@ class AuthInterceptor private constructor() : Interceptor {
             val builder = request.newBuilder()
 
             // 添加 WAF Cookie
-            val wafCookie = yancey.chelper.network.library.util.WafHelper.getCookie()
+            val wafCookie = WafHelper.getCookie()
             if (!wafCookie.isNullOrEmpty()) {
                 builder.addHeader("Cookie", wafCookie)
             }

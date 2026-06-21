@@ -9,7 +9,6 @@
 package yancey.chelper.android.window
 
 import com.hjq.window.EasyWindow
-import com.hjq.window.draggable.AbstractWindowDraggableRule.OnWindowDraggingListener
 import com.hjq.window.draggable.MovingWindowDraggableRule
 
 class LoongFlowDraggableRule(

@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import yancey.chelper.R
 import yancey.chelper.android.CHelperApplication
 
@@ -59,7 +60,7 @@ class FloatingWindowService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, FloatingWindowService::class.java)
-            androidx.core.content.ContextCompat.startForegroundService(context, intent)
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun stop(context: Context) {

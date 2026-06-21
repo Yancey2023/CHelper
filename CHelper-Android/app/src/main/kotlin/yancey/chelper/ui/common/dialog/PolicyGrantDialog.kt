@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.R
+import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.DividerVertical
 import yancey.chelper.ui.common.widget.Switch
@@ -109,7 +110,7 @@ fun PolicyGrantDialog(
                             text = stringResource(R.string.dialog_policy_grant_read_privacy_policy),
                             style = TextStyle(
                                 fontSize = 20.sp,
-                                color = yancey.chelper.ui.common.CHelperTheme.colors.mainColor,
+                                color = CHelperTheme.colors.mainColor,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -129,7 +130,7 @@ fun PolicyGrantDialog(
                             text = stringResource(R.string.dialog_is_confirm_confirm),
                             style = TextStyle(
                                 fontSize = 20.sp,
-                                color = yancey.chelper.ui.common.CHelperTheme.colors.mainColor,
+                                color = CHelperTheme.colors.mainColor,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -143,8 +144,8 @@ fun PolicyGrantDialog(
 @Preview
 @Composable
 fun PolicyGrantDialogLightThemePreview() {
-    yancey.chelper.ui.common.CHelperTheme(
-        theme = yancey.chelper.ui.common.CHelperTheme.Theme.Light,
+    CHelperTheme(
+        theme = CHelperTheme.Theme.Light,
         backgroundBitmap = null
     ) {
         PolicyGrantDialog()
@@ -154,8 +155,8 @@ fun PolicyGrantDialogLightThemePreview() {
 @Preview
 @Composable
 fun PolicyGrantDialogDarkThemePreview() {
-    yancey.chelper.ui.common.CHelperTheme(
-        theme = yancey.chelper.ui.common.CHelperTheme.Theme.Dark,
+    CHelperTheme(
+        theme = CHelperTheme.Theme.Dark,
         backgroundBitmap = null
     ) {
         PolicyGrantDialog()

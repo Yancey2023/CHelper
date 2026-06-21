@@ -18,6 +18,7 @@
 
 package yancey.chelper.network.library.data
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -27,6 +28,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -83,7 +85,7 @@ class LibraryFunction(
     @SerialName("has_public_version") var hasPublicVersion: Boolean? = null,
     @SerialName("is_publish") var isPublish: Boolean? = null,
     @SerialName("is_owner") var isOwner: Boolean? = null,
-    @SerialName("chain_data") var chainData: kotlinx.serialization.json.JsonElement? = null,
+    @SerialName("chain_data") var chainData: JsonElement? = null,
     @SerialName("auto_sync") var autoSync: Boolean? = false,
     /**
      * 后端下发的"私有库相对公开版本是否未同步"标记。
@@ -162,7 +164,7 @@ object LenientStringSerializer : KSerializer<String?> {
         }
     }
 
-    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: String?) {
         if (value != null) {
             encoder.encodeString(value)

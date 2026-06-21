@@ -27,6 +27,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.BaseResult
 import yancey.chelper.network.library.data.LibraryFunction
@@ -126,9 +128,9 @@ class PublicLibraryShowViewModel : ViewModel() {
                 }
                 if (result.isSuccess()) {
                     // 后端自动审核通过时返回 {"public_id": <int>}
-                    val publicId = (result.data as? kotlinx.serialization.json.JsonObject)
+                    val publicId = (result.data as? JsonObject)
                         ?.get("public_id")
-                        ?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull() }
+                        ?.let { (it as? JsonPrimitive)?.content?.toIntOrNull() }
                     releasedPublicId = publicId
                     actionMessage = result.message ?: "已提交发布申请"
                 } else {

@@ -93,7 +93,8 @@ class CompletionViewModel(application: Application) : AndroidViewModel(applicati
                 min(command.selection.start, command.selection.end),
                 max(command.selection.start, command.selection.end)
             )
-            val isSyntaxHighlight = isSyntaxHighlight && command.text.length < syntaxHighlightMaxLength
+            val isSyntaxHighlight =
+                isSyntaxHighlight && command.text.length < syntaxHighlightMaxLength
             val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
             if (selectedString.text.isEmpty()) {
                 // 输入内容为空
@@ -237,6 +238,7 @@ class CompletionViewModel(application: Application) : AndroidViewModel(applicati
 
         }
     }
+
     private fun File.readCachedCommand(): TextFieldState? {
         if (!exists()) {
             return null

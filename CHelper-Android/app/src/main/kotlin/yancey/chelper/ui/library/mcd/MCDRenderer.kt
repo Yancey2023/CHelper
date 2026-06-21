@@ -196,7 +196,7 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
                         "H" -> BlockType.CHAT
                         else -> BlockType.CHAIN
                     }
-                    
+
                     if (pendingBlockType == BlockType.CHAT) {
                         pendingConditional = false
                         pendingAlwaysActive = true

@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.library
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -58,7 +59,10 @@ class PublicLibraryListViewModel : ViewModel() {
     private var searchJob: Job? = null
 
     fun switchMode(isRecommend: Boolean) {
-        android.util.Log.d("CPL_Tab", "switchMode called: isRecommend=$isRecommend, currentLoadedMode=$currentLoadedMode, isRecommendMode=$isRecommendMode")
+        Log.d(
+            "CPL_Tab",
+            "switchMode called: isRecommend=$isRecommend, currentLoadedMode=$currentLoadedMode, isRecommendMode=$isRecommendMode"
+        )
         // 保存当前模式的状态
         saveCurrentState()
 
@@ -69,10 +73,13 @@ class PublicLibraryListViewModel : ViewModel() {
         val total = if (isRecommend) recommendTotalPages else latestTotalPages
         val more = if (isRecommend) recommendHasMore else latestHasMore
 
-        android.util.Log.d("CPL_Tab", "cache size: ${cache.size}, recommendCache: ${recommendCache.size}, latestCache: ${latestCache.size}")
+        Log.d(
+            "CPL_Tab",
+            "cache size: ${cache.size}, recommendCache: ${recommendCache.size}, latestCache: ${latestCache.size}"
+        )
         if (cache.isNotEmpty()) {
             // 使用缓存数据
-            android.util.Log.d("CPL_Tab", "Using cached data, libraries count: ${cache.size}")
+            Log.d("CPL_Tab", "Using cached data, libraries count: ${cache.size}")
             libraries.clear()
             libraries.addAll(cache)
             currentPage = page
@@ -81,7 +88,7 @@ class PublicLibraryListViewModel : ViewModel() {
         } else {
             // 缓存为空，先取消正在进行的加载，再刷新
             // 否则 isLoading=true 会拦住 refresh -> loadFunctions
-            android.util.Log.d("CPL_Tab", "Cache empty, cancelling current job and calling refresh")
+            Log.d("CPL_Tab", "Cache empty, cancelling current job and calling refresh")
             searchJob?.cancel()
             isLoading = false
             refresh(isRecommend = isRecommend)
@@ -94,7 +101,7 @@ class PublicLibraryListViewModel : ViewModel() {
         val cache = if (isCurrentRecommend) recommendCache else latestCache
         cache.clear()
         cache.addAll(libraries)
-        
+
         if (isCurrentRecommend) {
             recommendCurrentPage = currentPage
             recommendTotalPages = totalPages
@@ -106,15 +113,25 @@ class PublicLibraryListViewModel : ViewModel() {
         }
     }
 
-    fun loadFunctions(search: String? = null, resetPage: Boolean = true, isRecommend: Boolean = false) {
-        android.util.Log.d("CPL_Tab", "loadFunctions: search=$search, resetPage=$resetPage, isRecommend=$isRecommend, isLoading=$isLoading, libraries.size=${libraries.size}, forceRefresh=$forceRefresh")
+    fun loadFunctions(
+        search: String? = null,
+        resetPage: Boolean = true,
+        isRecommend: Boolean = false
+    ) {
+        Log.d(
+            "CPL_Tab",
+            "loadFunctions: search=$search, resetPage=$resetPage, isRecommend=$isRecommend, isLoading=$isLoading, libraries.size=${libraries.size}, forceRefresh=$forceRefresh"
+        )
         if (isLoading) {
-            android.util.Log.d("CPL_Tab", "loadFunctions blocked: isLoading=true")
+            Log.d("CPL_Tab", "loadFunctions blocked: isLoading=true")
             return
         }
         // 如果已经有数据且不是用户手动刷新，跳过重复拉取
         if (resetPage && libraries.isNotEmpty() && !forceRefresh) {
-            android.util.Log.d("CPL_Tab", "loadFunctions blocked: already has data and not force refresh")
+            Log.d(
+                "CPL_Tab",
+                "loadFunctions blocked: already has data and not force refresh"
+            )
             return
         }
         forceRefresh = false
@@ -190,7 +207,7 @@ class PublicLibraryListViewModel : ViewModel() {
     }
 
     fun refresh(isRecommend: Boolean = false) {
-        android.util.Log.d("CPL_Tab", "refresh called: isRecommend=$isRecommend")
+        Log.d("CPL_Tab", "refresh called: isRecommend=$isRecommend")
         forceRefresh = true
         loadFunctions(null, resetPage = true, isRecommend = isRecommend)
     }

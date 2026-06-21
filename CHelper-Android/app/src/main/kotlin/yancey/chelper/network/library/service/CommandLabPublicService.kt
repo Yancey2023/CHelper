@@ -28,7 +28,9 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import yancey.chelper.network.library.data.BaseResult
+import yancey.chelper.network.library.data.LeaderboardData
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.data.UserProfileData
 
 /**
  * 命令库公开 API 接口，负责与命令库相关的非敏感操作，如获取命令库列表、详情、点赞以及查看用户公开资料和排行榜等
@@ -104,6 +106,7 @@ interface CommandLabPublicService {
     class LibraryLikeResponse {
         @JsonNames("like_count", "likeCount")
         var likeCount: Int? = null
+
         @JsonNames("is_liked", "isLiked")
         var isLiked: Boolean? = null
     }
@@ -125,7 +128,7 @@ interface CommandLabPublicService {
      * @return 包含排行榜用户列表的响应结果
      */
     @GET("api/leaderboard")
-    suspend fun getLeaderboard(): BaseResult<yancey.chelper.network.library.data.LeaderboardData?>
+    suspend fun getLeaderboard(): BaseResult<LeaderboardData?>
 
     /**
      * 获取指定用户的公开资料信息
@@ -136,5 +139,5 @@ interface CommandLabPublicService {
     @GET("users/public/{id}")
     suspend fun getUserProfile(
         @Path("id") id: Int
-    ): BaseResult<yancey.chelper.network.library.data.UserProfileData?>
+    ): BaseResult<UserProfileData?>
 }

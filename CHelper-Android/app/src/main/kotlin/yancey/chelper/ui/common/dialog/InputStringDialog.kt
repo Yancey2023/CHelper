@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.R
+import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.DividerVertical
 import yancey.chelper.ui.common.widget.Text
@@ -88,7 +89,7 @@ fun InputStringDialog(
                             text = stringResource(R.string.dialog_input_string_cancel),
                             style = TextStyle(
                                 fontSize = 20.sp,
-                                color = yancey.chelper.ui.common.CHelperTheme.colors.mainColor,
+                                color = CHelperTheme.colors.mainColor,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -107,7 +108,7 @@ fun InputStringDialog(
                             text = stringResource(R.string.dialog_input_string_confirm),
                             style = TextStyle(
                                 fontSize = 20.sp,
-                                color = yancey.chelper.ui.common.CHelperTheme.colors.mainColor,
+                                color = CHelperTheme.colors.mainColor,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -121,8 +122,8 @@ fun InputStringDialog(
 @Preview
 @Composable
 fun InputStringDialogLightThemePreview() {
-    yancey.chelper.ui.common.CHelperTheme(
-        theme = yancey.chelper.ui.common.CHelperTheme.Theme.Light,
+    CHelperTheme(
+        theme = CHelperTheme.Theme.Light,
         backgroundBitmap = null
     ) {
         InputStringDialog(
@@ -137,8 +138,8 @@ fun InputStringDialogLightThemePreview() {
 @Preview
 @Composable
 fun InputStringDialogDarkThemePreview() {
-    yancey.chelper.ui.common.CHelperTheme(
-        theme = yancey.chelper.ui.common.CHelperTheme.Theme.Dark,
+    CHelperTheme(
+        theme = CHelperTheme.Theme.Dark,
         backgroundBitmap = null
     ) {
         InputStringDialog(

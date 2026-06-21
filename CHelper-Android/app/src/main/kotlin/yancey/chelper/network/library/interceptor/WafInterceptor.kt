@@ -20,7 +20,6 @@ package yancey.chelper.network.library.interceptor
 
 import android.util.Log
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
 import yancey.chelper.network.library.util.WafHelper
 import java.io.IOException
@@ -36,7 +35,7 @@ class WafInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
-        
+
         //如果已有 Cookie，先确保它是最新的
         val existingCookie = WafHelper.getCookie()
         if (!existingCookie.isNullOrEmpty() && request.header("Cookie") == null) {
@@ -44,10 +43,13 @@ class WafInterceptor : Interceptor {
         }
 
         var response = chain.proceed(request)
-        
+
         // 是否为 WAF 页面
         if (isWafChallenge(response)) {
-            Log.w("WafInterceptor", "WAF challenge detected on ${request.url}. Starting refresh process...")
+            Log.w(
+                "WafInterceptor",
+                "WAF challenge detected on ${request.url}. Starting refresh process..."
+            )
             response.close() // 清理被拦截的响应
 
             // 阻塞等待 WebView 质询结束
@@ -57,14 +59,17 @@ class WafInterceptor : Interceptor {
                 refreshSuccess = success
                 latch.countDown()
             }
-            
+
             // 最多等待 15 秒
             latch.await(15, TimeUnit.SECONDS)
-            
+
             if (refreshSuccess) {
                 val newCookie = WafHelper.getCookie()
-                Log.i("WafInterceptor", "WAF refresh successful. Retrying with new cookie: $newCookie")
-                
+                Log.i(
+                    "WafInterceptor",
+                    "WAF refresh successful. Retrying with new cookie: $newCookie"
+                )
+
                 if (!newCookie.isNullOrEmpty()) {
                     // 更新现有请求的 Cookie 头重试
                     val retryRequest = request.newBuilder()
@@ -77,22 +82,22 @@ class WafInterceptor : Interceptor {
                 throw IOException("WAF protection bypassed failed. Please try again later.")
             }
         }
-        
+
         return response
     }
 
     private fun isWafChallenge(response: Response): Boolean {
         // EdgeOne WAF 质询通常返回 200 或 202
         if (response.code != 200 && response.code != 202) return false
-        
+
         // 返回的内容类型应该是 text/html
         val contentType = response.header("Content-Type") ?: ""
         if (!contentType.contains("text/html", ignoreCase = true)) return false
-        
+
         val server = response.header("server") ?: ""
         if (!server.contains("TencentEdgeOne", ignoreCase = true)) {
         }
-        
+
         // 读取部分 Body 嗅探特征字符串
         try {
             val bodyPreview = response.peekBody(2048).string()
@@ -102,7 +107,7 @@ class WafInterceptor : Interceptor {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        
+
         return false
     }
 }

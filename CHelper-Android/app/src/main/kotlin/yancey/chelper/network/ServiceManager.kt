@@ -31,6 +31,7 @@ import yancey.chelper.BuildConfig
 import yancey.chelper.network.chelper.service.CHelperService
 import yancey.chelper.network.library.interceptor.AuthInterceptor
 import yancey.chelper.network.library.interceptor.RateLimitInterceptor
+import yancey.chelper.network.library.interceptor.WafInterceptor
 import yancey.chelper.network.library.service.CaptchaService
 import yancey.chelper.network.library.service.CommandLabPublicService
 import yancey.chelper.network.library.service.CommandLabUserService
@@ -63,7 +64,7 @@ object ServiceManager {
             .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
             .addInterceptor(BrotliInterceptor)
             .addInterceptor(RateLimitInterceptor(2))
-            .addInterceptor(yancey.chelper.network.library.interceptor.WafInterceptor())
+            .addInterceptor(WafInterceptor())
             .addInterceptor(AuthInterceptor.INSTANCE)
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))

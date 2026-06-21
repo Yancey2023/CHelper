@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.library
 
+import MessageScreenKey
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +44,7 @@ import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,17 +56,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import com.hjq.toast.Toaster
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.UserProfileScreenKey
@@ -84,8 +90,8 @@ fun CPLUserScreen(
     navController: NavHostController = rememberNavController(),
     isTab: Boolean = false
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.refreshUserState()
@@ -118,7 +124,7 @@ fun CPLUserScreen(
                         viewModel.uploadAvatar(bytes, "avatar.jpg", mimeType)
                     }
                 } catch (e: Exception) {
-                    com.hjq.toast.Toaster.show("读取图片失败: ${e.message}")
+                    Toaster.show("读取图片失败: ${e.message}")
                 }
             }
         }
@@ -176,7 +182,9 @@ fun CPLUserScreen(
         val profile = viewModel.userProfile
         if (profile == null) {
             // 拉取中——用一个极简的对话框占位，避免空白卡顿让用户疑惑
-            androidx.compose.ui.window.Dialog(onDismissRequest = { showEditProfileDialog = false }) {
+            Dialog(onDismissRequest = {
+                showEditProfileDialog = false
+            }) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
@@ -304,7 +312,10 @@ fun UserProfileView(
                 .padding(20.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
                 Icon(id = R.drawable.pencil, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -344,7 +355,10 @@ fun UserProfileView(
                 .padding(20.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
                 Icon(id = R.drawable.ic_user, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
@@ -369,12 +383,15 @@ fun UserProfileView(
                     RoundedCornerShape(16.dp)
                 )
                 .clickable {
-                    navController.navigate(yancey.chelper.ui.MessageScreenKey)
+                    navController.navigate(MessageScreenKey)
                 }
                 .padding(20.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
                 Icon(id = R.drawable.ic_mail, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
@@ -436,7 +453,7 @@ fun GuestUserProfileView(
             text = "您可以浏览和下载指令，但无法上传或评论。",
             style = TextStyle(
                 color = CHelperTheme.colors.textSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
         )
         Spacer(Modifier.height(32.dp))
@@ -448,7 +465,7 @@ fun GuestUserProfileView(
                     CHelperTheme.colors.backgroundComponentNoTranslate,
                     RoundedCornerShape(16.dp)
                 )
-                .clickable { navController.navigate(yancey.chelper.ui.MessageScreenKey) }
+                .clickable { navController.navigate(MessageScreenKey) }
                 .padding(16.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -747,5 +764,3 @@ fun RowScope.TabPill(text: String, selected: Boolean, onClick: () -> Unit) {
         )
     }
 }
-
-// 以前这里有一个自定义的 Modifier 扩展，现在已经删掉了，直接用 androidx.compose.ui.draw.alpha 就行

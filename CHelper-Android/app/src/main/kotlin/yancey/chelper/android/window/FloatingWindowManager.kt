@@ -139,7 +139,11 @@ class FloatingWindowManager(
             setContent {
                 val backgroundBitmap =
                     BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(initial = null)
-                CHelperTheme(theme, backgroundBitmap.value, screenAlphaOverride = if (isFloatingWindowFontAlphaSync) 1.0f else floatingWindowScreenAlpha) {
+                CHelperTheme(
+                    theme,
+                    backgroundBitmap.value,
+                    screenAlphaOverride = if (isFloatingWindowFontAlphaSync) 1.0f else floatingWindowScreenAlpha
+                ) {
                     val lifecycleOwner = rememberLifecycleOwner()
                     val navigationEventDispatcher = remember { NavigationEventDispatcher() }
                     val navigationEventOwner =

@@ -143,9 +143,9 @@ class CommandEditText : AppCompatEditText {
         if (text == null || (tokens != null && tokens.isNotEmpty() && text.length != tokens.size)) {
             return
         }
-        
+
         lastTokens = tokens
-        
+
         if (theme == null || tokens == null || tokens.isEmpty()) {
             if (text is SpannableStringBuilder) {
                 text.getSpans(0, text.length, ForegroundColorSpan::class.java).forEach {
@@ -157,7 +157,7 @@ class CommandEditText : AppCompatEditText {
 
         val normalColor = context.getColor(R.color.text_main)
         val targetSpans = mutableListOf<SpanInfo>()
-        
+
         var lastIndex = 0
         var lastColor = theme!!.getColorByToken(tokens[0], normalColor)
         for (i in 1..<tokens.size) {
@@ -177,12 +177,12 @@ class CommandEditText : AppCompatEditText {
         if (text is SpannableStringBuilder) {
             val existSpans = text.getSpans(0, text.length, ForegroundColorSpan::class.java)
             val matchedSpans = BooleanArray(targetSpans.size)
-            
+
             for (span in existSpans) {
                 val spanStart = text.getSpanStart(span)
                 val spanEnd = text.getSpanEnd(span)
                 val color = span.foregroundColor
-                
+
                 var found = false
                 for (j in targetSpans.indices) {
                     if (!matchedSpans[j]) {
@@ -194,12 +194,12 @@ class CommandEditText : AppCompatEditText {
                         }
                     }
                 }
-                
+
                 if (!found) {
                     text.removeSpan(span)
                 }
             }
-            
+
             for (j in targetSpans.indices) {
                 if (!matchedSpans[j]) {
                     val target = targetSpans[j]

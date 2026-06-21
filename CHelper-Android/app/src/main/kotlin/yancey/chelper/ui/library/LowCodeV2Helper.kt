@@ -33,8 +33,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,6 +57,8 @@ import yancey.chelper.ui.common.dialog.DialogContainer
 import yancey.chelper.ui.common.widget.Switch
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.library.mcd.LineType
+import yancey.chelper.ui.library.mcd.MCDLineResult
+import yancey.chelper.ui.library.mcd.validateMCDContent
 
 /*
  * V2 状态标记辅助工具
@@ -71,7 +75,8 @@ fun LowCodeV2HelperDialog(
 ) {
     // 提取出所有需要标记的行
     val lines = rawContent.split(Regex("\\r?\\n"))
-    val results = yancey.chelper.ui.library.mcd.validateMCDContent(rawContent).lines.associateBy { it.lineNumber }
+    val results =
+        validateMCDContent(rawContent).lines.associateBy { it.lineNumber }
 
     // 状态记录: map of lineNumber -> stateString (例如 ">C", ">I!")
     val lineStates = remember { mutableStateOf(mutableMapOf<Int, String>()) }
@@ -101,7 +106,10 @@ fun LowCodeV2HelperDialog(
 
     CustomDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
+        properties = CustomDialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnClickOutside = false
+        )
     ) {
         DialogContainer(
             modifier = Modifier
@@ -110,7 +118,12 @@ fun LowCodeV2HelperDialog(
                 .heightIn(max = 600.dp),
             backgroundNoTranslate = true
         ) {
-            Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(16.dp)
+            ) {
                 Text(
                     text = "V2 标记助手",
                     style = TextStyle(
@@ -127,8 +140,19 @@ fun LowCodeV2HelperDialog(
                 Spacer(Modifier.height(12.dp))
 
                 if (targetLines.isEmpty()) {
-                    Box(modifier = Modifier.weight(1f, fill = false).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("当前脚本中所有指令都已有正确的前置方块推断状态，无需再标记。", style = TextStyle(color = CHelperTheme.colors.textHint, textAlign = TextAlign.Center))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "当前脚本中所有指令都已有正确的前置方块推断状态，无需再标记。",
+                            style = TextStyle(
+                                color = CHelperTheme.colors.textHint,
+                                textAlign = TextAlign.Center
+                            )
+                        )
                     }
                 } else {
                     Column(
@@ -175,8 +199,8 @@ fun LowCodeV2HelperDialog(
 private fun DialogActionBar(
     targetLines: List<Pair<Int, String>>,
     lines: List<String>,
-    results: Map<Int, yancey.chelper.ui.library.mcd.MCDLineResult?>,
-    lineStates: androidx.compose.runtime.MutableState<MutableMap<Int, String>>,
+    results: Map<Int, MCDLineResult?>,
+    lineStates: MutableState<MutableMap<Int, String>>,
     onDismiss: () -> Unit,
     onApply: (String) -> Unit
 ) {
@@ -263,12 +287,20 @@ private fun LowCodeLineItem(
         Row(verticalAlignment = Alignment.Top) {
             Text(
                 "L$lineNumber",
-                style = TextStyle(fontSize = 11.sp, color = Color(0xFFE65100), fontFamily = FontFamily.Monospace),
+                style = TextStyle(
+                    fontSize = 11.sp,
+                    color = Color(0xFFE65100),
+                    fontFamily = FontFamily.Monospace
+                ),
                 modifier = Modifier.width(32.dp)
             )
             Text(
                 code,
-                style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textMain, fontFamily = FontFamily.Monospace),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = CHelperTheme.colors.textMain,
+                    fontFamily = FontFamily.Monospace
+                ),
                 maxLines = 1
             )
         }
@@ -285,33 +317,76 @@ private fun LowCodeLineItem(
 
         // 条件 / 红石 / Tick 延迟控制行
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.alpha(if (isH) 0.5f else 1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.alpha(if (isH) 0.5f else 1f)
+            ) {
                 Switch(
                     checked = isCond,
-                    onCheckedChange = { if (!isH) onStateChange(buildState(if (isC) ">C" else if (isI) ">I" else ">R", it, isRed, delay)) }
+                    onCheckedChange = {
+                        if (!isH) onStateChange(
+                            buildState(
+                                if (isC) ">C" else if (isI) ">I" else ">R",
+                                it,
+                                isRed,
+                                delay
+                            )
+                        )
+                    }
                 )
                 Spacer(Modifier.width(6.dp))
-                Text("条件?", style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary))
+                Text(
+                    "条件?",
+                    style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary)
+                )
             }
             Spacer(Modifier.width(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.alpha(if (isH) 0.5f else 1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.alpha(if (isH) 0.5f else 1f)
+            ) {
                 Switch(
                     checked = isRed,
-                    onCheckedChange = { if (!isH) onStateChange(buildState(if (isC) ">C" else if (isI) ">I" else ">R", isCond, it, delay)) }
+                    onCheckedChange = {
+                        if (!isH) onStateChange(
+                            buildState(
+                                if (isC) ">C" else if (isI) ">I" else ">R",
+                                isCond,
+                                it,
+                                delay
+                            )
+                        )
+                    }
                 )
                 Spacer(Modifier.width(6.dp))
-                Text("红石!", style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary))
+                Text(
+                    "红石!",
+                    style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary)
+                )
             }
             Spacer(Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.alpha(if (isH) 0.5f else 1f)) {
-                Text("Tick:", style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.alpha(if (isH) 0.5f else 1f)
+            ) {
+                Text(
+                    "Tick:",
+                    style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary)
+                )
                 Spacer(Modifier.width(4.dp))
-                androidx.compose.foundation.text.BasicTextField(
+                BasicTextField(
                     value = delay,
                     onValueChange = {
                         if (!isH) {
                             val newDelay = it.filter { ch -> ch.isDigit() }
-                            if (newDelay.length <= 5) onStateChange(buildState(if (isC) ">C" else if (isI) ">I" else ">R", isCond, isRed, newDelay))
+                            if (newDelay.length <= 5) onStateChange(
+                                buildState(
+                                    if (isC) ">C" else if (isI) ">I" else ">R",
+                                    isCond,
+                                    isRed,
+                                    newDelay
+                                )
+                            )
                         }
                     },
                     modifier = Modifier
@@ -319,12 +394,23 @@ private fun LowCodeLineItem(
                         .clip(RoundedCornerShape(4.dp))
                         .background(CHelperTheme.colors.background)
                         .padding(horizontal = 4.dp, vertical = 2.dp),
-                    textStyle = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textMain, textAlign = TextAlign.Center),
+                    textStyle = TextStyle(
+                        fontSize = 12.sp,
+                        color = CHelperTheme.colors.textMain,
+                        textAlign = TextAlign.Center
+                    ),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.Center) {
                             if (delay.isEmpty()) {
-                                Text("0", style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textHint, textAlign = TextAlign.Center))
+                                Text(
+                                    "0",
+                                    style = TextStyle(
+                                        fontSize = 12.sp,
+                                        color = CHelperTheme.colors.textHint,
+                                        textAlign = TextAlign.Center
+                                    )
+                                )
                             }
                             innerTextField()
                         }

@@ -131,22 +131,22 @@ fun validateMCDContent(rawCommands: String): MCDValidationResult {
 fun autoPrefixMCDv2States(rawCommands: String): String {
     val results = validateMCDContent(rawCommands)
     val lines = rawCommands.split(Regex("\\r?\\n"))
-    
+
     val lineTypeByNum = results.lines.associateBy { it.lineNumber }
     val output = mutableListOf<String>()
-    
+
     var lastEffectiveType: LineType? = null
-    
+
     for ((idx, line) in lines.withIndex()) {
         val lineNum = idx + 1
         val result = lineTypeByNum[lineNum]
-        
+
         if (result == null) {
             // 空行
             output.add(line)
             continue
         }
-        
+
         if (result.type == LineType.COMMAND) {
             if (lastEffectiveType != LineType.STATE_LINE) {
                 // 如果当前是一个指令，且上面最近一个有效实体不是状态行，则补全
@@ -162,6 +162,6 @@ fun autoPrefixMCDv2States(rawCommands: String): String {
             }
         }
     }
-    
+
     return output.joinToString("\n")
 }

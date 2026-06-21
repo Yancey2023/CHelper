@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -112,7 +113,7 @@ class LibrarySearchViewModel : ViewModel() {
                     publicJob.join()
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 errorMessage = "网络错误: ${e.message}"
                 if (!resetPage && currentPage > 1) {
                     currentPage--
@@ -199,7 +200,7 @@ class LibrarySearchViewModel : ViewModel() {
                 }
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
             e.printStackTrace()
         }
 

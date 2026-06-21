@@ -47,8 +47,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +61,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,13 +70,20 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.hjq.toast.Toaster
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import yancey.chelper.R
+import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.network.library.data.formatUnixTime
 import yancey.chelper.network.library.data.UserProfileData
+import yancey.chelper.network.library.data.formatUnixTime
+import yancey.chelper.network.library.service.CommandLabUserService
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.IsConfirmDialog
+import yancey.chelper.ui.common.dialog.ReportDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Text
 
@@ -87,7 +97,7 @@ fun UserProfileScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     // 仅在浏览他人主页时启用举报入口；自己看自己的页面不显示
     var showReportDialog by remember { mutableStateOf(false) }
-    var selectedTab by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var actionDialogTarget by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
     val listState = rememberLazyListState()
 
@@ -235,11 +245,17 @@ fun UserProfileScreen(
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
                                 val progress = if (viewModel.quotaLimit > 0) {
-                                    (viewModel.quotaUsed.toFloat() / viewModel.quotaLimit.toFloat()).coerceIn(0f, 1f)
+                                    (viewModel.quotaUsed.toFloat() / viewModel.quotaLimit.toFloat()).coerceIn(
+                                        0f,
+                                        1f
+                                    )
                                 } else {
                                     0.1f // 无限制时默认显示 10%
                                 }
-                                val progressColor = if (progress > 0.9f && viewModel.quotaLimit > 0) Color(0xFFE53935) else CHelperTheme.colors.mainColor
+                                val progressColor =
+                                    if (progress > 0.9f && viewModel.quotaLimit > 0) Color(
+                                        0xFFE53935
+                                    ) else CHelperTheme.colors.mainColor
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -427,7 +443,7 @@ fun UserProfileScreen(
                             viewModel.uploadAvatar(bytes, mimeType)
                         }
                     } catch (e: Exception) {
-                        com.hjq.toast.Toaster.show("读取图片失败: ${e.message}")
+                        Toaster.show("读取图片失败: ${e.message}")
                     }
                 }
             }
@@ -454,7 +470,7 @@ fun UserProfileScreen(
     }
 
     actionDialogTarget?.let { (targetId, isPublic) ->
-        yancey.chelper.ui.common.dialog.IsConfirmDialog(
+        IsConfirmDialog(
             title = if (isPublic) "下架公开库" else "删除私有库",
             content = if (isPublic) "确定要下架这个公开市场的命令库吗？私有云库内的原始文本不会受影响。" else "确定要从云端删除这个私有库草稿吗？此操作不可逆。",
             onDismissRequest = { actionDialogTarget = null },
@@ -470,8 +486,8 @@ fun UserProfileScreen(
 
     if (showReportDialog && viewModel.userProfile != null) {
         val target = viewModel.userProfile!!
-        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-        yancey.chelper.ui.common.dialog.ReportDialog(
+        val coroutineScope = rememberCoroutineScope()
+        ReportDialog(
             onDismissRequest = { showReportDialog = false },
             title = "举报用户",
             targetDescription = target.nickname ?: "用户 #${target.id}",
@@ -479,19 +495,22 @@ fun UserProfileScreen(
                 val uid = target.id ?: return@ReportDialog
                 coroutineScope.launch {
                     try {
-                        val request = yancey.chelper.network.library.service.CommandLabUserService
+                        val request = CommandLabUserService
                             .ReportRequest().apply {
                                 targetType = "user"
                                 targetId = uid.toString()
                                 this.reason = reason
                             }
-                        val resp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            yancey.chelper.network.ServiceManager.COMMAND_LAB_USER_SERVICE
-                                .submitReport(request)
-                        }
-                        com.hjq.toast.Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
+                        val resp =
+                            withContext(Dispatchers.IO) {
+                                ServiceManager.COMMAND_LAB_USER_SERVICE
+                                    .submitReport(request)
+                            }
+                        Toaster.show(
+                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
+                        )
                     } catch (e: Exception) {
-                        com.hjq.toast.Toaster.show("网络错误: ${e.message}")
+                        Toaster.show("网络错误: ${e.message}")
                     }
                 }
             }
@@ -597,7 +616,7 @@ private fun ProfileHeader(user: UserProfileData) {
                 text = "\"${user.signature}\"",
                 style = TextStyle(
                     fontSize = 13.sp,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    fontStyle = FontStyle.Italic,
                     color = CHelperTheme.colors.textSecondary,
                     textAlign = TextAlign.Center
                 )

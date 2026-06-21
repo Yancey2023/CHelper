@@ -22,6 +22,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -69,7 +70,7 @@ fun Header(
                 contentDescription = stringResource(R.string.common_icon_back_content_description)
             )
         } else {
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(5.dp))
+            Spacer(modifier = Modifier.size(5.dp))
         }
         Text(
             text = title,

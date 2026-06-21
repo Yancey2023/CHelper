@@ -51,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,12 +69,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.hjq.toast.Toaster
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import yancey.chelper.R
+import yancey.chelper.android.window.LoongFlowWindowManager
+import yancey.chelper.data.SettingsDataStore
+import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.AuthorInfo
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.service.CommandLabUserService
+import yancey.chelper.network.library.util.LoginUtil
 import yancey.chelper.ui.CPLUploadScreenKey
+import yancey.chelper.ui.LibrarySearchScreenKey
 import yancey.chelper.ui.PublicLibraryShowScreenKey
 import yancey.chelper.ui.UserProfileScreenKey
 import yancey.chelper.ui.common.CHelperTheme
@@ -81,6 +92,7 @@ import yancey.chelper.ui.common.dialog.CaptchaDialog
 import yancey.chelper.ui.common.dialog.ChoosingDialog
 import yancey.chelper.ui.common.dialog.CustomDialog
 import yancey.chelper.ui.common.dialog.DialogContainer
+import yancey.chelper.ui.common.dialog.ReportDialog
 import yancey.chelper.ui.common.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.common.widget.Divider
 import yancey.chelper.ui.common.widget.DividerVertical
@@ -94,13 +106,13 @@ import yancey.chelper.ui.library.mcd.parseMCD
 fun PublicLibraryShowScreen(
     id: Int,
     isPrivate: Boolean = false,
-    navController: androidx.navigation.NavHostController? = null,
+    navController: NavHostController? = null,
     viewModel: PublicLibraryShowViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
     // 读取设置
-    val settingsDataStore = remember(context) { yancey.chelper.data.SettingsDataStore(context) }
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
     val ambiguousLineDefault = settingsDataStore.ambiguousLineDefault()
         .collectAsState(initial = "comment")
     val isHideMetadataPreview = settingsDataStore.isHideMetadataPreview()
@@ -324,7 +336,7 @@ fun PublicLibraryShowScreen(
                                                     .background(CHelperTheme.colors.background)
                                                     .clickable {
                                                         navController?.navigate(
-                                                            yancey.chelper.ui.LibrarySearchScreenKey(
+                                                            LibrarySearchScreenKey(
                                                                 tag
                                                             )
                                                         )
@@ -519,9 +531,10 @@ fun PublicLibraryShowScreen(
 
                     "toggle_view" -> viewModel.showRawSource = !viewModel.showRawSource
                     "loongflow_import" -> {
-                        yancey.chelper.android.window.LoongFlowWindowManager.INSTANCE
+                        LoongFlowWindowManager.INSTANCE
                             .showImport(context, viewModel.library)
                     }
+
                     "report" -> showReportDialog = true
                 }
             }
@@ -548,13 +561,14 @@ fun PublicLibraryShowScreen(
             onChoose = { action ->
                 when (action) {
                     "release" -> {
-                        val user = yancey.chelper.network.library.util.LoginUtil.currentUser
+                        val user = LoginUtil.currentUser
                         if (user != null && (user.tier ?: 0) >= 2) {
                             viewModel.library.id?.let { viewModel.releaseToPublic(it, "") }
                         } else {
                             showCaptchaDialog = true
                         }
                     }
+
                     "view_public" -> navController?.navigate(
                         PublicLibraryShowScreenKey(
                             id = id,
@@ -640,31 +654,34 @@ fun PublicLibraryShowScreen(
         // 这里只举报公有库，所以 target_type=library 没问题
         val targetUuid = viewModel.library.uuid
         val targetName = viewModel.library.name
-        val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-        yancey.chelper.ui.common.dialog.ReportDialog(
+        val coroutineScope = rememberCoroutineScope()
+        ReportDialog(
             onDismissRequest = { showReportDialog = false },
             title = "举报命令库",
             targetDescription = targetName,
             onConfirm = { reason ->
                 if (targetUuid.isNullOrBlank()) {
-                    com.hjq.toast.Toaster.show("无法定位举报目标")
+                    Toaster.show("无法定位举报目标")
                     return@ReportDialog
                 }
                 coroutineScope.launch {
                     try {
-                        val request = yancey.chelper.network.library.service.CommandLabUserService
+                        val request = CommandLabUserService
                             .ReportRequest().apply {
                                 targetType = "library"
                                 targetId = targetUuid
                                 this.reason = reason
                             }
-                        val resp = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                            yancey.chelper.network.ServiceManager.COMMAND_LAB_USER_SERVICE
-                                .submitReport(request)
-                        }
-                        com.hjq.toast.Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
+                        val resp =
+                            withContext(Dispatchers.IO) {
+                                ServiceManager.COMMAND_LAB_USER_SERVICE
+                                    .submitReport(request)
+                            }
+                        Toaster.show(
+                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
+                        )
                     } catch (e: Exception) {
-                        com.hjq.toast.Toaster.show("网络错误: ${e.message}")
+                        Toaster.show("网络错误: ${e.message}")
                     }
                 }
             }

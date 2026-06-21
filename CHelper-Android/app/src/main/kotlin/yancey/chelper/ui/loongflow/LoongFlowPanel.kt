@@ -9,6 +9,7 @@
 package yancey.chelper.ui.loongflow
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -30,10 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Text
@@ -120,102 +124,102 @@ fun LoongFlowPanel(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                // 专属矢量图腾 + 模式标题
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(id = yancey.chelper.R.drawable.ic_loong_flow_bubble),
-                    contentDescription = "LoongFlow Logo",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = when (mode) {
-                        LoongFlowMode.IMPORT -> "游龙导入"
-                        LoongFlowMode.EXPORT -> "游龙导出"
-                    },
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = CHelperTheme.colors.textMain
+                    // 专属矢量图腾 + 模式标题
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_loong_flow_bubble),
+                        contentDescription = "LoongFlow Logo",
+                        modifier = Modifier.size(20.dp)
                     )
-                )
-
-                // 导入模式显示库名
-                if (mode == LoongFlowMode.IMPORT && viewModel.libraryName.isNotEmpty()) {
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = "· ${viewModel.libraryName}",
+                        text = when (mode) {
+                            LoongFlowMode.IMPORT -> "游龙导入"
+                            LoongFlowMode.EXPORT -> "游龙导出"
+                        },
                         style = TextStyle(
-                            fontSize = 12.sp,
-                            color = CHelperTheme.colors.textSecondary
-                        ),
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                } else {
-                    Spacer(Modifier.weight(1f))
-                }
-
-                // 缩放尺寸按钮
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onToggleSize() }
-                        .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "⛶",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textSecondary
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = CHelperTheme.colors.textMain
                         )
                     )
-                }
 
-                Spacer(Modifier.width(6.dp))
-
-                // 最小化气泡按钮
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onMinimize() }
-                        .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "─",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textSecondary
+                    // 导入模式显示库名
+                    if (mode == LoongFlowMode.IMPORT && viewModel.libraryName.isNotEmpty()) {
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = "· ${viewModel.libraryName}",
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                                color = CHelperTheme.colors.textSecondary
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
-                    )
-                }
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
 
-                Spacer(Modifier.width(6.dp))
-
-                // 关闭按钮
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onDismiss() }
-                        .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "✕",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textSecondary
+                    // 缩放尺寸按钮
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onToggleSize() }
+                            .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "⛶",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textSecondary
+                            )
                         )
-                    )
-                }
+                    }
+
+                    Spacer(Modifier.width(6.dp))
+
+                    // 最小化气泡按钮
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onMinimize() }
+                            .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "─",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textSecondary
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.width(6.dp))
+
+                    // 关闭按钮
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onDismiss() }
+                            .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✕",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textSecondary
+                            )
+                        )
+                    }
                 }
             } // 结束外层 Column 包裹 title row 的 drag layer
 
@@ -229,6 +233,7 @@ fun LoongFlowPanel(
                             onDismiss = onDismiss,
                         )
                     }
+
                     LoongFlowMode.EXPORT -> {
                         ExportWizard(
                             viewModel = viewModel,

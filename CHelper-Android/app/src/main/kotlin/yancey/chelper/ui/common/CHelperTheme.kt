@@ -247,10 +247,19 @@ fun CHelperTheme(
     val mainColor = animateColorAsState(targetColor.mainColor, animationSpec)
     val mainColorSecondary =
         animateColorAsState(targetColor.mainColorSecondary, animationSpec)
-    val background = animateColorAsState(targetColor.background.copy(alpha = targetColor.background.alpha * screenAlphaOverride), animationSpec)
-    val backgroundComponent = animateColorAsState(targetColor.backgroundComponent.copy(alpha = targetColor.backgroundComponent.alpha * screenAlphaOverride), animationSpec)
+    val background = animateColorAsState(
+        targetColor.background.copy(alpha = targetColor.background.alpha * screenAlphaOverride),
+        animationSpec
+    )
+    val backgroundComponent = animateColorAsState(
+        targetColor.backgroundComponent.copy(alpha = targetColor.backgroundComponent.alpha * screenAlphaOverride),
+        animationSpec
+    )
     val backgroundComponentNoTranslate =
-        animateColorAsState(targetColor.backgroundComponentNoTranslate.copy(alpha = targetColor.backgroundComponentNoTranslate.alpha * screenAlphaOverride), animationSpec)
+        animateColorAsState(
+            targetColor.backgroundComponentNoTranslate.copy(alpha = targetColor.backgroundComponentNoTranslate.alpha * screenAlphaOverride),
+            animationSpec
+        )
     val textMain = animateColorAsState(targetColor.textMain, animationSpec)
     val textBond = animateColorAsState(targetColor.textBond, animationSpec)
     val textSecondary = animateColorAsState(targetColor.textSecondary, animationSpec)

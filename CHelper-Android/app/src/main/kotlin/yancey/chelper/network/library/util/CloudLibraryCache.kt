@@ -37,18 +37,35 @@ object CloudLibraryCache {
     /** 默认 60s TTL：覆盖"切 tab 来回"的高频回访，又能让用户主动刷新（清缓存）后看到最新。 */
     const val DEFAULT_TTL_MS: Long = 60_000L
 
-    @Volatile private var librariesUserId: Int? = null
-    @Volatile private var librariesData: List<LibraryFunction>? = null
-    @Volatile private var librariesAt: Long = 0L
+    @Volatile
+    private var librariesUserId: Int? = null
 
-    @Volatile private var profileUserId: Int? = null
-    @Volatile private var profileData: UserProfileData? = null
-    @Volatile private var profileAt: Long = 0L
+    @Volatile
+    private var librariesData: List<LibraryFunction>? = null
 
-    @Volatile private var quotaUserId: Int? = null
-    @Volatile private var quotaUsedValue: Int? = null
-    @Volatile private var quotaLimitValue: Int? = null
-    @Volatile private var quotaAt: Long = 0L
+    @Volatile
+    private var librariesAt: Long = 0L
+
+    @Volatile
+    private var profileUserId: Int? = null
+
+    @Volatile
+    private var profileData: UserProfileData? = null
+
+    @Volatile
+    private var profileAt: Long = 0L
+
+    @Volatile
+    private var quotaUserId: Int? = null
+
+    @Volatile
+    private var quotaUsedValue: Int? = null
+
+    @Volatile
+    private var quotaLimitValue: Int? = null
+
+    @Volatile
+    private var quotaAt: Long = 0L
 
     data class Quota(val used: Int?, val limit: Int?)
 
