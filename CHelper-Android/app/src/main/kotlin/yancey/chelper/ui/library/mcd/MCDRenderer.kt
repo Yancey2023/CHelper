@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import yancey.chelper.core.CHelperCore
 import yancey.chelper.core.Theme
 import yancey.chelper.data.SettingsDataStore
 import androidx.compose.ui.graphics.Color
@@ -297,19 +298,22 @@ fun parseMCD(
                     }
                 }
                 if (cpackPath != null) {
-                    yancey.chelper.core.CHelperCore.fromAssets(context.assets, cpackPath).use { core ->
-                        chains.forEach { chain ->
-                            chain.items.forEach { item ->
-                                when (item) {
-                                    is ChainItem.Block -> {
-                                        core.onTextChanged(item.block.command, 0)
-                                        item.block.syntaxHighlightTokens = core.syntaxToken
+                    val core = MCDHighlightCoreCache.get(context, cpackPath)
+                    if (core != null) {
+                        synchronized(core) {
+                            chains.forEach { chain ->
+                                chain.items.forEach { item ->
+                                    when (item) {
+                                        is ChainItem.Block -> {
+                                            core.onTextChanged(item.block.command, 0)
+                                            item.block.syntaxHighlightTokens = core.syntaxToken
+                                        }
+                                        is ChainItem.RawCommand -> {
+                                            core.onTextChanged(item.command, 0)
+                                            item.syntaxHighlightTokens = core.syntaxToken
+                                        }
+                                        else -> {}
                                     }
-                                    is ChainItem.RawCommand -> {
-                                        core.onTextChanged(item.command, 0)
-                                        item.syntaxHighlightTokens = core.syntaxToken
-                                    }
-                                    else -> {}
                                 }
                             }
                         }
@@ -671,5 +675,27 @@ fun highlightCommand(command: String, tokens: IntArray?, isDark: Boolean): Annot
             start = lastIndex,
             end = length
         )
+    }
+}
+
+object MCDHighlightCoreCache {
+    private var core: CHelperCore? = null
+    private var path: String? = null
+
+    @Synchronized
+    fun get(context: Context, cpackPath: String): CHelperCore? {
+        if (core != null && path == cpackPath) {
+            return core
+        }
+        try {
+            core?.close()
+            core = CHelperCore.fromAssets(context.assets, cpackPath)
+            path = cpackPath
+        } catch (e: Exception) {
+            Log.e("MCDHighlightCoreCache", "Failed to load CHelperCore", e)
+            core = null
+            path = null
+        }
+        return core
     }
 }
