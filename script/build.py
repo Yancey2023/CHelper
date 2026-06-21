@@ -135,19 +135,9 @@ if __name__ == "__main__":
     os.chdir("CHelper-Android")
     subprocess.run([gradlew, "assembleRelease"], check=True)
     os.chdir("..")
-
-    # build web
-    print("building web...")
-    os.chdir("CHelper-Web")
+    
+    # build web and build doc
     subprocess.run([corepack, "up"], check=True)
     subprocess.run([pnpm, "up", "--latest"], check=True)
     subprocess.run([pnpm, "build"], check=True)
-    os.chdir("..")
-
-    # build doc
-    print("building doc...")
-    os.chdir("CHelper-Doc")
-    subprocess.run([corepack, "up"], check=True)
-    subprocess.run([pnpm, "up", "--latest"], check=True)
     subprocess.run([pnpm, "docs:build"], check=True)
-    os.chdir("..")

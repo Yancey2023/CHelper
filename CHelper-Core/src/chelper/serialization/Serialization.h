@@ -301,7 +301,7 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
                         }
                     }
                     if (childIndex == SIZE_MAX) {
-                        trie.push_back({definition});
+                        trie.emplace_back(definition);
                         childIndex = trie.size() - 1;
                         trie[current].children.push_back(childIndex);
                     }

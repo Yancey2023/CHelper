@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: latest
 
@@ -37,10 +37,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
-          cache-dependency-path: 'CHelper-Web/pnpm-lock.yaml'
 
       - name: Install dependencies
-        working-directory: ${{ github.workspace }}/CHelper-Web
         run: pnpm install
 
       - name: Build For GitHub Page
@@ -48,16 +46,16 @@ jobs:
         run: npx vite build --base=/${{ github.event.repository.name }}/ --mode production
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './CHelper-Web/dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Build For My Server
         working-directory: ${{ github.workspace }}/CHelper-Web

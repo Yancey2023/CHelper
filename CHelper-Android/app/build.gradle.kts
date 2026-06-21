@@ -3,14 +3,16 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    kotlin("plugin.compose")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "yancey.chelper"
-    compileSdk = 37
+    compileSdk {
+        version = release(37)
+    }
 
     defaultConfig {
         applicationId = "yancey.chelper"
@@ -62,7 +64,7 @@ android {
     // 不能直接走 buildType "继承"——那只继承构建配置，sourceSet 是相互独立的。
     sourceSets {
         getByName("beta") {
-            kotlin.srcDir("src/release/kotlin")
+            kotlin.directories.add("src/release/kotlin")
         }
     }
 
@@ -128,58 +130,56 @@ kotlin {
 
 dependencies {
     // https://github.com/boxbeam/Crunch
-    implementation("com.github.Redempt:Crunch:2.0.3")
+    implementation(libs.crunch)
     // https://github.com/androidx/androidx
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.activity:activity:1.13.0")
-    implementation("androidx.activity:activity-ktx:1.13.0")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.recyclerview:recyclerview:1.4.0")
-    implementation("androidx.navigation:navigation-compose:2.9.8")
-    implementation("androidx.datastore:datastore:1.2.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.compose.ui:ui:1.11.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.11.0")
-    implementation("androidx.compose.foundation:foundation:1.11.0")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.11.0")
+    implementation(libs.appcompat)
+    implementation(libs.activity)
+    implementation(libs.activity.ktx)
+    implementation(libs.activity.compose)
+    implementation(libs.recyclerview)
+    implementation(libs.navigation.compose)
+    implementation(libs.datastore)
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.foundation)
+    debugImplementation(libs.compose.ui.tooling)
     // https://github.com/coil-kt/coil
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation(libs.coil.compose)
     // https://github.com/Kotlin/kotlinx.serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation(libs.kotlinx.serialization.json)
     // https://github.com/square/okhttp
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:5.3.2"))
-    implementation("com.squareup.okhttp3:okhttp")
-    implementation("com.squareup.okhttp3:okhttp-brotli")
-    implementation("com.squareup.okhttp3:logging-interceptor")
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.brotli)
+    implementation(libs.logging.interceptor)
     // https://github.com/square/retrofit
-    implementation(platform("com.squareup.retrofit2:retrofit-bom:3.0.0"))
-    implementation("com.squareup.retrofit2:retrofit")
-    implementation("com.squareup.retrofit2:converter-kotlinx-serialization")
+    implementation(platform(libs.retrofit.bom))
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
     // https://github.com/getActivity/DeviceCompat
-    implementation("com.github.getActivity:DeviceCompat:2.6")
+    implementation(libs.devicecompat)
     // https://github.com/getActivity/XXPermissions
-    implementation("com.github.getActivity:XXPermissions:28.2")
+    implementation(libs.xxpermissions)
     // https://github.com/getActivity/Toaster
-    implementation("com.github.getActivity:Toaster:15.0")
+    implementation(libs.toaster)
     // https://github.com/getActivity/EasyWindow
-    implementation("com.github.getActivity:EasyWindow:15.0")
+    implementation(libs.easywindow)
     // https://www.umeng.com
     // 只在 release / beta 引入 Umeng 三件套——debug 不需要崩溃上报，
     // 省下几千个类的 dex 化时间，本地构建快很多。
     // 对应的 MonitorUtil 实现在 src/release/kotlin（debug 用 src/debug/kotlin 的 no-op stub）。
-    releaseImplementation("com.umeng.umsdk:common:9.9.1")
-    releaseImplementation("com.umeng.umsdk:asms:1.8.7.2")
-    // noinspection Aligned16KB
-    releaseImplementation("com.umeng.umsdk:apm:2.0.8")
-    "betaImplementation"("com.umeng.umsdk:common:9.9.1")
-    "betaImplementation"("com.umeng.umsdk:asms:1.8.7.2")
-    // noinspection Aligned16KB
-    "betaImplementation"("com.umeng.umsdk:apm:2.0.8")
+    releaseImplementation(libs.umeng.common)
+    releaseImplementation(libs.umeng.asms)
+    releaseImplementation(libs.umeng.apm)
+    "betaImplementation"(libs.umeng.common)
+    "betaImplementation"(libs.umeng.asms)
+    "betaImplementation"(libs.umeng.apm)
     // https://github.com/junit-team/junit4
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     // https://github.com/androidx/androidx
-    androidTestImplementation("androidx.test:core:1.7.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }

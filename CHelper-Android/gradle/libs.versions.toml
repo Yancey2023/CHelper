@@ -1,0 +1,67 @@
+[versions]
+agp = "9.2.1"
+kotlin = "2.4.0"
+crunch = "2.0.3"
+appcompat = "1.7.1"
+activity = "1.13.0"
+recyclerview = "1.4.0"
+navigation-compose = "2.9.8"
+datastore = "1.2.1"
+lifecycle = "2.11.0"
+compose-ui = "1.11.3"
+coil = "2.7.0"
+kotlinx-serialization-json = "1.11.0"
+okhttp = "5.4.0"
+retrofit = "3.0.0"
+devicecompat = "2.6"
+xxpermissions = "28.2"
+toaster = "15.0"
+easywindow = "15.0"
+umeng-common = "9.9.2"
+umeng-asms = "1.8.7.2"
+umeng-apm = "2.0.8"
+junit = "4.13.2"
+androidx-test-core = "1.7.0"
+androidx-test-espresso = "3.7.0"
+androidx-test-ext-junit = "1.3.0"
+
+[libraries]
+crunch = { module = "com.github.Redempt:Crunch", version.ref = "crunch" }
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+activity = { module = "androidx.activity:activity", version.ref = "activity" }
+activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
+datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
+compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose-ui" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp" }
+okhttp = { module = "com.squareup.okhttp3:okhttp" }
+okhttp-brotli = { module = "com.squareup.okhttp3:okhttp-brotli" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor" }
+retrofit-bom = { module = "com.squareup.retrofit2:retrofit-bom", version.ref = "retrofit" }
+retrofit = { module = "com.squareup.retrofit2:retrofit" }
+retrofit-converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization" }
+devicecompat = { module = "com.github.getActivity:DeviceCompat", version.ref = "devicecompat" }
+xxpermissions = { module = "com.github.getActivity:XXPermissions", version.ref = "xxpermissions" }
+toaster = { module = "com.github.getActivity:Toaster", version.ref = "toaster" }
+easywindow = { module = "com.github.getActivity:EasyWindow", version.ref = "easywindow" }
+umeng-common = { module = "com.umeng.umsdk:common", version.ref = "umeng-common" }
+umeng-asms = { module = "com.umeng.umsdk:asms", version.ref = "umeng-asms" }
+umeng-apm = { module = "com.umeng.umsdk:apm", version.ref = "umeng-apm" }
+junit = { module = "junit:junit", version.ref = "junit" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

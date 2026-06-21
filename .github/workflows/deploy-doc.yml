@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: latest
 
@@ -24,10 +24,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
-          cache-dependency-path: 'CHelper-Doc/pnpm-lock.yaml'
 
       - name: Install dependencies
-        working-directory: ${{ github.workspace }}/CHelper-Doc
         run: pnpm install
 
       - name: Build

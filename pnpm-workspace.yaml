@@ -1,0 +1,5 @@
+packages:
+  - 'CHelper-Web'
+  - 'CHelper-Doc'
+allowBuilds:
+  esbuild: true
