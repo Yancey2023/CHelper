@@ -30,11 +30,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import yancey.chelper.core.Theme
+import yancey.chelper.data.SettingsDataStore
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -71,7 +78,8 @@ data class MCDBlock(
     val alwaysActive: Boolean = true,
     val needsRedstone: Boolean = false,
     val tickDelay: Int = 0,
-    val command: String = ""
+    val command: String = "",
+    var syntaxHighlightTokens: IntArray? = null
 )
 
 /** 链中的一个元素：可能是注释、v1 原始指令、或 v2 命令方块 */
@@ -97,7 +105,13 @@ data class ParsedMCD(
 
 // 解析器
 
-fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD {
+fun parseMCD(
+    content: String?,
+    ambiguousDefault: String = "comment",
+    context: Context? = null,
+    cpackBranch: String? = null,
+    isEnableMcdHighlight: Boolean = false
+): ParsedMCD {
     if (content.isNullOrBlank()) return ParsedMCD()
 
     return try {
@@ -261,12 +275,29 @@ fun parseMCD(content: String?, ambiguousDefault: String = "comment"): ParsedMCD 
             }
         }
 
-        ParsedMCD(
+        val parsed = ParsedMCD(
             metaInfo = metaInfo,
             rootComments = rootComments,
             chains = chains,
             isV2 = isV2
         )
+        if (isV2 && isEnableMcdHighlight && context != null && !cpackBranch.isNullOrEmpty()) {
+            try {
+                yancey.chelper.core.CHelperCore.fromAssets(context.assets, "cpack/$cpackBranch").use { core ->
+                    chains.forEach { chain ->
+                        chain.items.forEach { item ->
+                            if (item is ChainItem.Block) {
+                                core.onTextChanged(item.block.command, 0)
+                                item.block.syntaxHighlightTokens = core.syntaxToken
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MCDRenderer", "Failed to highlight MCD blocks", e)
+            }
+        }
+        parsed
     } catch (e: Exception) {
         // 之前是 e.printStackTrace()，release 版 logcat 看不到也没上报，
         // 这里改成完整 Log.e + Umeng 上报，避免"解析悄悄炸"成为线上盲区。
@@ -297,10 +328,21 @@ fun MCDContentView(
     ambiguousDefault: String = "comment",
     showMetadata: Boolean = true
 ) {
-    val parsed by produceState<ParsedMCD?>(initialValue = null, content, ambiguousDefault) {
+    val context = LocalContext.current
+    val settingsDataStore = remember(context) { SettingsDataStore(context) }
+    val cpackBranch by settingsDataStore.cpackBranch().collectAsState(initial = "release-experiment")
+    val isEnableMcdHighlight by settingsDataStore.isEnableMcdHighlight().collectAsState(initial = true)
+
+    val parsed by produceState<ParsedMCD?>(initialValue = null, content, ambiguousDefault, cpackBranch, isEnableMcdHighlight) {
         value = null
         value = withContext(Dispatchers.Default) {
-            parseMCD(content, ambiguousDefault)
+            parseMCD(
+                content = content,
+                ambiguousDefault = ambiguousDefault,
+                context = context,
+                cpackBranch = cpackBranch,
+                isEnableMcdHighlight = isEnableMcdHighlight
+            )
         }
     }
 
@@ -529,8 +571,12 @@ private fun BlockItem(block: MCDBlock) {
                 .padding(10.dp, 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val isDark = CHelperTheme.theme == CHelperTheme.Theme.Dark
+            val highlightedText = remember(block.command, block.syntaxHighlightTokens, isDark) {
+                highlightCommand(block.command, block.syntaxHighlightTokens, isDark)
+            }
             Text(
-                text = block.command,
+                text = highlightedText,
                 modifier = Modifier
                     .weight(1f),
                 style = TextStyle(
@@ -566,6 +612,38 @@ private fun Badge(text: String, color: Color) {
                 fontWeight = FontWeight.Medium,
                 color = color
             )
+        )
+    }
+}
+
+fun highlightCommand(command: String, tokens: IntArray?, isDark: Boolean): AnnotatedString {
+    if (tokens == null || tokens.isEmpty() || command.isEmpty()) {
+        return AnnotatedString(command)
+    }
+    val theme = if (isDark) Theme.THEME_NIGHT else Theme.THEME_DAY
+    val normalColor = if (isDark) 0xFFFFFFFF.toInt() else 0xFF000000.toInt()
+    
+    return buildAnnotatedString {
+        append(command)
+        var lastIndex = 0
+        var lastColor = theme.getColorByToken(tokens[0], normalColor)
+        val length = minOf(tokens.size, command.length)
+        for (i in 1 until length) {
+            val color = theme.getColorByToken(tokens[i], normalColor)
+            if (color != lastColor) {
+                addStyle(
+                    style = SpanStyle(color = Color(lastColor)),
+                    start = lastIndex,
+                    end = i
+                )
+                lastIndex = i
+                lastColor = color
+            }
+        }
+        addStyle(
+            style = SpanStyle(color = Color(lastColor)),
+            start = lastIndex,
+            end = length
         )
     }
 }

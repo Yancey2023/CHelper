@@ -71,6 +71,7 @@ data class Settings(
     val isFloatingWindowFontAlphaSync: Boolean? = null,
     val syntaxHighlightMaxLength: Int? = null,
     val publicLibraryHomeRecommend: Boolean? = null,
+    val isEnableMcdHighlight: Boolean? = null,
 )
 
 object SettingsSerializer : Serializer<Settings> {
@@ -242,6 +243,13 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setIsHideMetadataPreview(value: Boolean) {
         context.settingsDataStore.updateData { it.copy(isHideMetadataPreview = value) }
+    }
+
+    fun isEnableMcdHighlight(): Flow<Boolean> =
+        context.settingsDataStore.data.map { it.isEnableMcdHighlight ?: true }
+
+    suspend fun setIsEnableMcdHighlight(value: Boolean) {
+        context.settingsDataStore.updateData { it.copy(isEnableMcdHighlight = value) }
     }
 }
 
