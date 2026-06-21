@@ -160,4 +160,10 @@ export default defineConfig({
   },
 
   lastUpdated: true,
+
+  markdown: {
+    languageAlias: {
+      mcfunction: "txt",
+    },
+  },
 });
