@@ -298,9 +298,9 @@ fun parseMCD(
                     }
                 }
                 if (cpackPath != null) {
-                    val core = MCDHighlightCoreCache.get(context, cpackPath)
-                    if (core != null) {
-                        synchronized(core) {
+                    synchronized(MCDHighlightCoreCache) {
+                        val core = MCDHighlightCoreCache.get(context, cpackPath)
+                        if (core != null) {
                             chains.forEach { chain ->
                                 chain.items.forEach { item ->
                                     when (item) {

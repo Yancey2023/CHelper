@@ -97,7 +97,33 @@ class LocalLibraryEditViewModel : ViewModel() {
         version.setTextAndPlaceCursorAtEnd(library.version ?: "")
         description.setTextAndPlaceCursorAtEnd(library.note ?: "")
         tags.setTextAndPlaceCursorAtEnd(library.tags?.joinToString(separator = ",") ?: "")
-        commands.setTextAndPlaceCursorAtEnd(library.content ?: "")
+
+        // 剥离已有的 MCD 头部和标记，保持 commands 输入框内容纯净，防重复嵌套
+        val rawContent = library.content ?: ""
+        var body = ""
+        try {
+            val functionStartIdx = rawContent.indexOf("###Function###")
+            if (functionStartIdx != -1) {
+                body = rawContent.substring(functionStartIdx + "###Function###".length)
+                    .trimStart('\n', '\r')
+                val functionEndIdx = body.indexOf("###End###")
+                if (functionEndIdx != -1) {
+                    body = body.substring(0, functionEndIdx).trimEnd('\n', '\r')
+                }
+            } else {
+                body = rawContent
+            }
+        } catch (e: Exception) {
+            body = rawContent
+        }
+
+        val cleanLines = body.lines().filter { line ->
+            val t = line.trim()
+            !(t.startsWith("@name=") || t.startsWith("@version=") ||
+                    t.startsWith("@tags=") || t.startsWith("@note=") ||
+                    t.startsWith("@mcd_version=") || t.startsWith("@uuid="))
+        }
+        commands.setTextAndPlaceCursorAtEnd(cleanLines.joinToString("\n").trim())
         autoSync = library.autoSync ?: false
         // 编辑存量库：从原始 content 推断 V2 标记。容忍 `@mcd_version= 2` 这种带空格的写法
         val content = library.content ?: ""

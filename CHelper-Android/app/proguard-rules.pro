@@ -66,3 +66,9 @@
 }
 
 # ----- end -----
+
+# Fix kotlinx.serialization ClassValue issues on older Android versions (API < 34)
+# Prevent R8 from merging ClassValueReferences into Platform_commonKt, which would cause class verification to fail universally.
+-keep class kotlinx.serialization.internal.ClassValueReferences { *; }
+-dontwarn java.lang.ClassValue
+
