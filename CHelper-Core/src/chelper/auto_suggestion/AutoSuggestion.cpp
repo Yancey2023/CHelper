@@ -76,12 +76,13 @@ namespace CHelper::AutoSuggestion {
                 suggestions.addSymbolSuggestion({0, 0, false, Node::NodeCommand::nodeCommandStart.normalId});
             }
             std::u16string_view str = astNode.tokens.string().substr(0, index - astNode.tokens.startIndex);
+            KMPMatcher kmpMatcher(str);
             std::vector<std::shared_ptr<NormalId>> nameStartOf, nameContain, descriptionContain;
             for (const auto &item: *node.commands) {
                 //通过名字进行搜索
                 bool flag = false;
                 for (const auto &item2: item.name) {
-                    size_t index1 = item2.find(str);
+                    size_t index1 = kmpMatcher.match(item2);
                     if (index1 != std::u16string::npos) [[unlikely]] {
                         if (index1 == 0) [[unlikely]] {
                             nameStartOf.push_back(NormalId::make(item2, item.description));
@@ -96,7 +97,7 @@ namespace CHelper::AutoSuggestion {
                 }
                 //通过介绍进行搜索
                 if (item.description.has_value() &&
-                    item.description.value().find(str) != std::u16string::npos) [[unlikely]] {
+                    kmpMatcher.match(item.description.value()) != std::u16string::npos) [[unlikely]] {
                     for (const auto &item2: item.name) {
                         descriptionContain.push_back(NormalId::make(item2, item.description));
                     }
@@ -129,12 +130,13 @@ namespace CHelper::AutoSuggestion {
         static bool collectSuggestions(const ASTNode &astNode, size_t index, Suggestions &suggestions) {
             const auto &node = *reinterpret_cast<const Node::NodeCommandName *>(astNode.node.data);
             std::u16string_view str = astNode.tokens.string().substr(0, index - astNode.tokens.startIndex);
+            KMPMatcher kmpMatcher(str);
             std::vector<std::shared_ptr<NormalId>> nameStartOf, nameContain, descriptionContain;
             for (const auto &item: *node.commands) {
                 bool flag = false;
                 for (const auto &item2: item.name) {
                     //通过名字进行搜索
-                    size_t index1 = item2.find(str);
+                    size_t index1 = kmpMatcher.match(item2);
                     if (index1 != std::u16string::npos) [[unlikely]] {
                         if (index1 == 0) [[unlikely]] {
                             nameStartOf.push_back(NormalId::make(item2, item.description));
@@ -148,7 +150,7 @@ namespace CHelper::AutoSuggestion {
                     continue;
                 }
                 //通过介绍进行搜索
-                if (item.description.has_value() && item.description.value().find(str) != std::u16string::npos) [[unlikely]] {
+                if (item.description.has_value() && kmpMatcher.match(item.description.value()) != std::u16string::npos) [[unlikely]] {
                     for (const auto &item2: item.name) {
                         descriptionContain.push_back(NormalId::make(item2, item.description));
                     }
