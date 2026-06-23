@@ -17,3 +17,5 @@ node_modules/
 # script
 release.py
 CHelper-Android/gradle/gradle-daemon-jvm.properties
+build_tests/
+build/
