@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -34,7 +35,7 @@ class CHelperCoreInstrumentedTest {
         } catch (e: Throwable) {
             // 当前 ABI 不匹配或资源缺失时不算测试失败——
             // 这种环境下根本跑不起来这个测试，硬挂只会污染 CI 信号
-            org.junit.Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
+            Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
             return
         }
         try {
@@ -76,7 +77,7 @@ class CHelperCoreInstrumentedTest {
         val core = try {
             CHelperCore.fromAssets(ctx.assets, cpackPath)
         } catch (e: Throwable) {
-            org.junit.Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
+            Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
             return
         }
         core.close()
