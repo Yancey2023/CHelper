@@ -85,8 +85,8 @@ def build_web_core(toolchain_dir: str):
         content = "import wasmUrl from '@/assets/libCHelperWeb.wasm?url'\n\n" + content
         content = content.replace('locateFile("libCHelperWeb.wasm")', "wasmUrl;")
         content = content.replace(
-            "var wasmExports;createWasm();",
-            "var wasmExports;export var createWasmFuture = createWasm();",
+            "var wasmExports;createWasm()",
+            "var wasmExports;export var createWasmFuture = createWasm()",
         )
         content += """
 export class CHelperCore {
