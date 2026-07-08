@@ -464,6 +464,9 @@ namespace CHelper::Parser {
             }
             tokenReader.push();
             tokenReader.skipToLF();
+            if (childASTNodes.empty()) [[unlikely]] {
+                return ASTNode::simpleNode(node, tokenReader.collect());
+            }
             return ASTNode::orNode(node, std::move(childASTNodes), tokenReader.collect());
         }
     };

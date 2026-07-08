@@ -200,6 +200,9 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodePerCommand> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodePerCommand &node, StructureBuilder &structure, bool isMustHave) {
+            if (astNode == nullptr || astNode->mode != ASTNodeMode::OR || astNode->childNodes.empty()) {
+                return true;
+            }
             const auto &bestNode = astNode->getBestNode();
             collectNodeStructureOrUnknown(&bestNode, bestNode.node, structure, isMustHave);
             return true;
