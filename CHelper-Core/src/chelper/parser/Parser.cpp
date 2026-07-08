@@ -987,7 +987,7 @@ namespace CHelper::Parser {
     }
 
     ASTNode parse(std::u16string content, const Node::NodeWithType &mainNode) {
-        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(std::move(content))));
+        TokenReader tokenReader(Lexer::lex(std::move(content)));
 #ifdef CHelperTest
         Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(tokenReader.lexerResult->content)));
 #endif

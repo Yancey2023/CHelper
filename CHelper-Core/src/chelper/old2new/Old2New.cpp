@@ -622,7 +622,7 @@ namespace CHelper::Old2New {
     }
 
     std::u16string old2new(const BlockFixData &blockFixData, std::u16string old) {
-        TokenReader tokenReader(std::make_shared<LexerResult>(Lexer::lex(std::move(old))));
+        TokenReader tokenReader(Lexer::lex(std::move(old)));
         std::vector<DataFix> dataFixList;
         expectCommand(blockFixData, tokenReader, dataFixList);
         std::ranges::sort(dataFixList, [](const DataFix &dataFix1, const DataFix &dataFix2) {

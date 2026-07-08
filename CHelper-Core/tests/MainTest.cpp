@@ -44,7 +44,7 @@ namespace CHelper::Test {
         try {
             for (const auto &command: commands) {
                 SPDLOG_INFO("lex command: {}", FORMAT_ARG(utf8::utf16to8(command)));
-                for (const auto &item: Lexer::lex(command).allTokens) {
+                for (const auto &item: Lexer::lex(command)->allTokens) {
                     SPDLOG_INFO("[{}] {} {}", getTokenTypeStr(item.type), item.pos, FORMAT_ARG(utf8::utf16to8(item.content)));
                 }
             }

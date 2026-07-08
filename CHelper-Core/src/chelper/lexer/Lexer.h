@@ -26,7 +26,7 @@
 
 namespace CHelper::Lexer {
 
-    LexerResult lex(std::u16string content);
+    std::shared_ptr<LexerResult> lex(std::u16string content);
 
 }// namespace CHelper::Lexer
 

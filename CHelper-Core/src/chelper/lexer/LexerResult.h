@@ -29,9 +29,15 @@ namespace CHelper {
     class LexerResult {
     public:
         const std::u16string content;
-        const std::vector<Token> allTokens;
+        std::vector<Token> allTokens;
 
         LexerResult(std::u16string content, std::vector<Token> allTokens);
+
+        // allTokens 中的 string_view 存储了 content 内容的指针，随意复制或移动会出问题
+        LexerResult(const LexerResult &) = delete;
+        LexerResult(LexerResult &&) = delete;
+        LexerResult &operator=(const LexerResult &) = delete;
+        LexerResult &operator=(LexerResult &&) = delete;
 
         [[nodiscard]] size_t getIndex(size_t tokenIndex) const;
     };
