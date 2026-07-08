@@ -31,3 +31,5 @@ fill ~~~~~~ stone replace
 xp 12L @a
 clone ~~~
 summon ll
+list
+/list
