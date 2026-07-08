@@ -200,6 +200,9 @@ namespace CHelper::CommandStructure {
     template<>
     struct CommandStructure<Node::NodePerCommand> {
         static bool collectStructure(const ASTNode *astNode, const Node::NodePerCommand &node, StructureBuilder &structure, bool isMustHave) {
+            if (astNode == nullptr || astNode->mode != ASTNodeMode::OR || astNode->childNodes.empty()) {
+                return true;
+            }
             const auto &bestNode = astNode->getBestNode();
             collectNodeStructureOrUnknown(&bestNode, bestNode.node, structure, isMustHave);
             return true;
@@ -335,11 +338,8 @@ namespace CHelper::CommandStructure {
             if (astNode == nullptr || (astNode->mode == ASTNodeMode::NONE && astNode->isAllSpaceError())) {
                 collectNodeStructureOrUnknown(nullptr, node.innerNode, structure, isMustHave);
                 if (isMustHave) {
-                    for (const auto &item: node.nextNodes) {
-                        if (item->innerNode.nodeTypeId == Node::NodeTypeId::LF) [[unlikely]] {
-                            isMustHave = false;
-                            break;
-                        }
+                    if (node.hasNextLF) {
+                        isMustHave = false;
                     }
                 }
                 if (!node.nextNodes.empty()) {
@@ -352,11 +352,8 @@ namespace CHelper::CommandStructure {
                     return true;
                 }
                 if (isMustHave) {
-                    for (const auto &item: node.nextNodes) {
-                        if (item->innerNode.nodeTypeId == Node::NodeTypeId::LF) [[unlikely]] {
-                            isMustHave = false;
-                            break;
-                        }
+                    if (node.hasNextLF) {
+                        isMustHave = false;
                     }
                 }
                 if (astNode->childNodes.size() < 2) {

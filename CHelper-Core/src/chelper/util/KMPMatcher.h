@@ -26,7 +26,7 @@ namespace CHelper {
      */
     class KMPMatcher {
     private:
-        std::u16string_view pattern;
+        std::u16string pattern;
         size_t *failure;
 
     public:

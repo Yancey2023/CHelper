@@ -63,6 +63,7 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     var selectedIndices by mutableStateOf<Set<Int>>(emptySet())
     var currentCopyIndex by mutableIntStateOf(0)
     var isImportComplete by mutableStateOf(false)
+    var importMiniIconEnabled by mutableStateOf(true)
     var libraryName by mutableStateOf("")
 
     // 导出模式状态 (剪贴板 → MCD)
@@ -127,6 +128,9 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     val selectedCommands: List<ImportCommandCtx>
         get() = allCommands.filterIndexed { index, _ -> index in selectedIndices }
 
+    val currentImportCommand: ImportCommandCtx?
+        get() = selectedCommands.getOrNull(currentCopyIndex)
+
     fun toggleSelection(index: Int) {
         selectedIndices = if (index in selectedIndices) {
             selectedIndices - index
@@ -144,15 +148,16 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     /** 进入逐条复制步骤 */
-    fun startImportCopy() {
+    fun startImportCopy(): Boolean {
         if (selectedCommands.isEmpty()) {
             toastMessage = "请至少选择一条命令"
-            return
+            return false
         }
         importStep = 1
         currentCopyIndex = 0
         isImportComplete = false
         copyCurrentCommand()
+        return true
     }
 
     /** 复制当前命令到剪贴板 */
@@ -181,9 +186,13 @@ class LoongFlowViewModel(application: Application) : AndroidViewModel(applicatio
 
     /** 回退到上一条 */
     fun prevCommand() {
+        if (isImportComplete) {
+            isImportComplete = false
+            copyCurrentCommand()
+            return
+        }
         if (currentCopyIndex > 0) {
             currentCopyIndex--
-            isImportComplete = false
             copyCurrentCommand()
         }
     }

@@ -37,9 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +57,7 @@ fun ExportWizard(
     viewModel: LoongFlowViewModel,
     onMinimize: () -> Unit,
     onDismiss: () -> Unit,
+    onRequestInputFocus: () -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 步骤指示条
@@ -69,8 +74,8 @@ fun ExportWizard(
                 .padding(horizontal = 12.dp)
         ) {
             when (viewModel.exportStep) {
-                0 -> ExportStepConfig(viewModel)
-                1 -> ExportStepRecord(viewModel)
+                0 -> ExportStepConfig(viewModel, onRequestInputFocus)
+                1 -> ExportStepRecord(viewModel, onRequestInputFocus)
                 2 -> ExportStepPreview(viewModel)
             }
         }
@@ -134,7 +139,7 @@ fun ExportWizard(
  * 链配置——设置链名称、作者名
  */
 @Composable
-private fun ExportStepConfig(viewModel: LoongFlowViewModel) {
+private fun ExportStepConfig(viewModel: LoongFlowViewModel, onRequestInputFocus: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -164,7 +169,8 @@ private fun ExportStepConfig(viewModel: LoongFlowViewModel) {
             label = "链名称",
             value = viewModel.chainName,
             onValueChange = { viewModel.chainName = it },
-            placeholder = "未命名命令链"
+            placeholder = "未命名命令链",
+            onRequestInputFocus = onRequestInputFocus,
         )
         Spacer(Modifier.height(14.dp))
 
@@ -173,7 +179,8 @@ private fun ExportStepConfig(viewModel: LoongFlowViewModel) {
             label = "作者",
             value = viewModel.authorName,
             onValueChange = { viewModel.authorName = it },
-            placeholder = "可选"
+            placeholder = "可选",
+            onRequestInputFocus = onRequestInputFocus,
         )
     }
 }
@@ -183,8 +190,10 @@ private fun ConfigTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String
+    placeholder: String,
+    onRequestInputFocus: () -> Unit = {},
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column {
         Text(
             text = label,
@@ -216,6 +225,14 @@ private fun ConfigTextField(
                 ),
                 singleLine = true,
                 cursorBrush = SolidColor(CHelperTheme.colors.mainColor),
+                modifier = Modifier
+                    .requestLoongFlowInputFocus(onRequestInputFocus)
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            onRequestInputFocus()
+                            keyboardController?.show()
+                        }
+                    },
                 decorationBox = { innerTextField ->
                     Box {
                         if (value.isEmpty()) {
@@ -239,7 +256,8 @@ private fun ConfigTextField(
  * 逐条录入
  */
 @Composable
-private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
+private fun ExportStepRecord(viewModel: LoongFlowViewModel, onRequestInputFocus: () -> Unit) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -288,7 +306,14 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
                 cursorBrush = SolidColor(CHelperTheme.colors.mainColor),
                 modifier = Modifier
                     .fillMaxSize()
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .requestLoongFlowInputFocus(onRequestInputFocus)
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            onRequestInputFocus()
+                            keyboardController?.show()
+                        }
+                    },
                 decorationBox = { innerTextField ->
                     Box {
                         if (viewModel.currentBlockInput.isEmpty()) {
@@ -357,7 +382,8 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel) {
             needsRedstone = viewModel.currentNeedsRedstone,
             onNeedsRedstoneChange = { viewModel.currentNeedsRedstone = it },
             tickDelay = viewModel.currentTickDelay,
-            onTickDelayChange = { viewModel.currentTickDelay = it }
+            onTickDelayChange = { viewModel.currentTickDelay = it },
+            onRequestInputFocus = onRequestInputFocus,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -592,3 +618,15 @@ private fun ExportActionButton(
         )
     )
 }
+
+private fun Modifier.requestLoongFlowInputFocus(onRequestInputFocus: () -> Unit): Modifier =
+    pointerInput(onRequestInputFocus) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.changes.any { it.pressed }) {
+                    onRequestInputFocus()
+                }
+            }
+        }
+    }

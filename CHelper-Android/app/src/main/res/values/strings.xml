@@ -97,7 +97,7 @@
     <string name="layout_home_experimental_feature">实验性功能</string>
     <string name="layout_home_experimental_feature_local_library">本地命令库</string>
     <string name="layout_home_experimental_feature_public_library">公有命令库</string>
-    <string name="layout_home_experimental_feature_raw_json_studio">原始Json文本生成器（未完工，期待有人接手）</string>
+    <string name="layout_home_experimental_feature_raw_json_studio">原始 Json 文本生成器</string>
     <string name="layout_home_about">关于</string>
     <string name="layout_home_about_app_mode">关于</string>
 
@@ -188,8 +188,8 @@
     <string name="layout_old2new_ime_guide_not_support">你的系统不支持使用第三方输入法</string>
 
     <!--    use in RawTextView    -->
-    <string name="layout_rawtext_title">原始Json文本生成器</string>
-    <string name="layout_rawtext_text_hint">请输入文字，选择要上色的文字，点击对应颜色即可上色</string>
+    <string name="layout_rawtext_title">原始 Json 文本生成器</string>
+    <string name="layout_rawtext_text_hint">请输入文字，选择要上色的文字，点击对应颜色即可插入样式代码</string>
     <string name="layout_rawtext_copy">复制</string>
     <string name="layout_rawtext_preview">预览</string>
     <string name="layout_rawtext_color">颜色</string>

@@ -1,0 +1,15 @@
+{
+    "slot.weapon.mainhand": "主手",
+    "slot.weapon.offhand": "副手",
+    "slot.armor.head": "头盔",
+    "slot.armor.chest": "胸甲",
+    "slot.armor.legs": "护腿",
+    "slot.armor.feet": "靴子",
+    "slot.enderchest": "末影箱·仅玩家",
+    "slot.hotbar": "快捷栏·仅玩家",
+    "slot.inventory": "物品栏",
+    "slot.saddle": "鞍槽位·仅驯服的马、驴和骡",
+    "slot.armor": "马铠槽位·仅驯服的马",
+    "slot.chest": "箱子槽位·仅驮箱子的驴和骡",
+    "slot.equippable": "装备槽位·仅马、驴和骡"
+}

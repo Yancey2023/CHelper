@@ -320,10 +320,10 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
             for (size_t i = 1; i < trie.size(); ++i) {
                 auto &wrappedNode = t.wrappedNodes[i - 1];
                 for (const auto child: trie[i].children) {
-                    wrappedNode.nextNodes.push_back(&t.wrappedNodes[child - 1]);
+                    wrappedNode.pushNextNode(&t.wrappedNodes[child - 1]);
                 }
                 if (trie[i].needsLf) {
-                    wrappedNode.nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
+                    wrappedNode.pushNextNode(CHelper::Node::NodeLF::getInstance());
                 }
             }
             //populate startNodes
@@ -436,12 +436,12 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
             auto &wrappedNode = t.wrappedNodes[i];
             for (auto targetIdx: entries[i].nextIndices) {
                 if (targetIdx == UINT32_MAX) {
-                    wrappedNode.nextNodes.push_back(CHelper::Node::NodeLF::getInstance());
+                    wrappedNode.pushNextNode(CHelper::Node::NodeLF::getInstance());
                 } else {
                     if (targetIdx >= wrappedCount) [[unlikely]] {
                         throw std::runtime_error("invalid wrapped node index");
                     }
-                    wrappedNode.nextNodes.push_back(&t.wrappedNodes[targetIdx]);
+                    wrappedNode.pushNextNode(&t.wrappedNodes[targetIdx]);
                 }
             }
         }

@@ -59,8 +59,11 @@ namespace CHelper {
             NodeWithType innerNode;
             //存储下一个节点，需要调用构造函数之后再进行添加
             std::vector<NodeWrapped *> nextNodes;
+            bool hasNextLF = false;
 
             explicit NodeWrapped(NodeWithType innerNode);
+
+            void pushNextNode(NodeWrapped *node);
 
             [[nodiscard]] NodeSerializable &getNodeSerializable() const;
         };

@@ -43,7 +43,7 @@ namespace CHelper {
     public:
         const TokenType::TokenType type;
         const size_t pos;
-        const std::u16string_view content;
+        const std::u16string content;
 
         Token(TokenType::TokenType type, const size_t &pos, const std::u16string_view &content);
 

@@ -418,6 +418,13 @@ namespace CHelper::Node {
 #endif
     }
 
+    void NodeWrapped::pushNextNode(NodeWrapped *node) {
+        nextNodes.push_back(node);
+        if (node->innerNode.nodeTypeId == NodeTypeId::LF) {
+            hasNextLF = true;
+        }
+    }
+
     [[nodiscard]] NodeSerializable &NodeWrapped::getNodeSerializable() const {
         return *reinterpret_cast<NodeSerializable *>(innerNode.data);
     }

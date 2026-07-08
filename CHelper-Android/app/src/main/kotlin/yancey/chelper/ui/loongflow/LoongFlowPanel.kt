@@ -26,6 +26,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import yancey.chelper.R
 import yancey.chelper.network.library.data.LibraryFunction
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.dialog.IsConfirmDialog
 import yancey.chelper.ui.common.widget.Text
 
 /**
@@ -57,13 +62,23 @@ fun LoongFlowPanel(
     mode: LoongFlowMode,
     library: LibraryFunction?,
     viewModel: LoongFlowViewModel,
+    isEnableImportMiniIcon: Boolean = true,
     onMinimize: () -> Unit,
     onDismiss: () -> Unit,
     onToggleSize: () -> Unit = {},
+    onRequestInputFocus: () -> Unit = {},
     onMove: (Float, Float) -> Unit = { _, _ -> },
     onDragEnd: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    var exportCloseConfirmVisible by remember { mutableStateOf(false) }
+    val requestDismiss = {
+        if (mode == LoongFlowMode.EXPORT) {
+            exportCloseConfirmVisible = true
+        } else {
+            onDismiss()
+        }
+    }
 
     // Toast 消息反馈
     DisposableEffect(viewModel.toastMessage) {
@@ -207,7 +222,7 @@ fun LoongFlowPanel(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { onDismiss() }
+                            .clickable { requestDismiss() }
                             .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -231,6 +246,11 @@ fun LoongFlowPanel(
                             viewModel = viewModel,
                             onMinimize = onMinimize,
                             onDismiss = onDismiss,
+                            onStartImport = {
+                                if (viewModel.startImportCopy() && isEnableImportMiniIcon) {
+                                    onMinimize()
+                                }
+                            },
                         )
                     }
 
@@ -238,11 +258,22 @@ fun LoongFlowPanel(
                         ExportWizard(
                             viewModel = viewModel,
                             onMinimize = onMinimize,
-                            onDismiss = onDismiss,
+                            onDismiss = requestDismiss,
+                            onRequestInputFocus = onRequestInputFocus,
                         )
                     }
                 }
             }
         }
+    }
+
+    if (exportCloseConfirmVisible) {
+        IsConfirmDialog(
+            onDismissRequest = { exportCloseConfirmVisible = false },
+            title = "关闭游龙导出？",
+            content = "当前导出进度不会自动保存，确认要关闭吗？",
+            confirmText = "关闭",
+            onConfirm = onDismiss,
+        )
     }
 }

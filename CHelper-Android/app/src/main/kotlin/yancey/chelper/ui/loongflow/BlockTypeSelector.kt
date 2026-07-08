@@ -28,8 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,8 +59,10 @@ fun BlockTypeSelector(
     onNeedsRedstoneChange: (Boolean) -> Unit,
     tickDelay: Int,
     onTickDelayChange: (Int) -> Unit,
+    onRequestInputFocus: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -144,6 +150,14 @@ fun BlockTypeSelector(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     cursorBrush = SolidColor(CHelperTheme.colors.mainColor),
+                    modifier = Modifier
+                        .requestLoongFlowInputFocus(onRequestInputFocus)
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                onRequestInputFocus()
+                                keyboardController?.show()
+                            }
+                        },
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.Center) {
                             if (tickDelay == 0) {
@@ -225,3 +239,15 @@ private fun SelectableChip(
         )
     }
 }
+
+private fun Modifier.requestLoongFlowInputFocus(onRequestInputFocus: () -> Unit): Modifier =
+    pointerInput(onRequestInputFocus) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.changes.any { it.pressed }) {
+                    onRequestInputFocus()
+                }
+            }
+        }
+    }

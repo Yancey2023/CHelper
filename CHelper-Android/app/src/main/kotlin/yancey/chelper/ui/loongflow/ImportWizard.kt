@@ -49,6 +49,7 @@ fun ImportWizard(
     viewModel: LoongFlowViewModel,
     onMinimize: () -> Unit,
     onDismiss: () -> Unit,
+    onStartImport: () -> Unit = { viewModel.startImportCopy() },
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 步骤指示条
@@ -92,7 +93,7 @@ fun ImportWizard(
                     ActionButton(
                         text = "开始导入 (${viewModel.selectedIndices.size}) ▸",
                         color = CHelperTheme.colors.mainColor,
-                        onClick = { viewModel.startImportCopy() }
+                        onClick = onStartImport
                     )
                 }
 

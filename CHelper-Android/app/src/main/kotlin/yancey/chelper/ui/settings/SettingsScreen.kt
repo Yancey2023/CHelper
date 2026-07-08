@@ -101,6 +101,8 @@ fun SettingsScreen(
         .collectAsState(initial = false)
     val isEnableMcdHighlight by settingsDataStore.isEnableMcdHighlight()
         .collectAsState(initial = true)
+    val isEnableLoongFlowImportMiniIcon by settingsDataStore.isEnableLoongFlowImportMiniIcon()
+        .collectAsState(initial = true)
     val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
         .collectAsState(initial = true)
     val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
@@ -374,6 +376,17 @@ fun SettingsScreen(
                     onCheckedChange = {
                         coroutineScope.launch {
                             settingsDataStore.setIsEnableMcdHighlight(it)
+                        }
+                    },
+                )
+                Divider()
+                SettingsItem(
+                    name = "是否启用小图标模式",
+                    description = "开启后游龙开始导入会自动收起为命令类型小图标；关闭后保留原大窗口流程",
+                    checked = isEnableLoongFlowImportMiniIcon,
+                    onCheckedChange = {
+                        coroutineScope.launch {
+                            settingsDataStore.setIsEnableLoongFlowImportMiniIcon(it)
                         }
                     },
                 )
