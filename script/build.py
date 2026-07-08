@@ -138,6 +138,6 @@ if __name__ == "__main__":
     
     # build web and build doc
     subprocess.run([corepack, "up"], check=True)
-    subprocess.run([pnpm, "up", "--latest"], check=True)
+    subprocess.run([pnpm, "-r", "up", "--latest"], check=True)
     subprocess.run([pnpm, "build"], check=True)
     subprocess.run([pnpm, "docs:build"], check=True)
