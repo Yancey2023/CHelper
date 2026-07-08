@@ -78,7 +78,6 @@ namespace CHelper {
                 ASTNodeId::ASTNodeId id,
                 size_t whichBest = -1);
 
-    public:
         static ASTNode simpleNode(const Node::NodeWithType &node,
                                   const TokensView &tokens,
                                   const std::shared_ptr<ErrorReason> &errorReason = nullptr,
@@ -89,8 +88,6 @@ namespace CHelper {
                                const TokensView &tokens,
                                const std::shared_ptr<ErrorReason> &errorReason = nullptr,
                                const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
-
-        // TODO 为什么当时我用的是char*，而不是std::shared_ptr<ErrorReason>
 
         static ASTNode orNode(const Node::NodeWithType &node,
                               std::vector<ASTNode> &&childNodes,

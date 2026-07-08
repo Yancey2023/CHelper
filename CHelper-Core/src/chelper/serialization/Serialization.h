@@ -266,6 +266,7 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
                 const std::string syntax = utf8::utf16to8(syntaxUtf16);
                 size_t position = syntax.find(u' ');
                 if (position == std::string::npos) {
+                    hasOptionalFirst = true;
                     continue;
                 }
                 hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';

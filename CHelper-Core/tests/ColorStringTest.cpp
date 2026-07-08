@@ -143,6 +143,8 @@ TEST(ColorStringTest, ColorString) {
             uR"(camerashake add @a 10000000000000000000000000000000000000000000000000000 3402823466385288598117041834845169254401)",
             uR"(setblock ~~~ candle_cake[lit=)",
             uR"(give @s repeating_command_block)",
+            uR"(list)",
+            uR"(/list)"
     };
     for (const auto &command: commands) {
         testCommand(core, command);

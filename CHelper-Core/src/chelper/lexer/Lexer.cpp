@@ -215,7 +215,7 @@ namespace CHelper::Lexer {
         auto result = std::make_shared<LexerResult>(std::move(content), std::vector<Token>{});
         Lexer lexer(result->content);
         lexer.run();
-        result->allTokens = std::move(lexer.getResult());
+        result->allTokens = lexer.getResult();
 #ifdef CHelperTest
         Profile::pop();
 #endif
