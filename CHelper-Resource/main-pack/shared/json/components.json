@@ -1,0 +1,120 @@
+{
+    "id": "components",
+    "start": "COMPONENTS",
+    "node": [
+        {
+            "type": "JSON_STRING",
+            "id": "BLOCK_ID",
+            "description": "方块类型",
+            "data": [
+                {
+                    "type": "BLOCK",
+                    "id": "BLOCK",
+                    "description": "方块类型",
+                    "nodeBlockType": 1
+                }
+            ]
+        },
+        {
+            "type": "JSON_LIST",
+            "id": "BLOCK_ID_LIST",
+            "description": "方块类型",
+            "data": "BLOCK_ID"
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "BLOCKS",
+            "description": "方块类型",
+            "data": [
+                {
+                    "key": "blocks",
+                    "description": "方块类型",
+                    "value": [
+                        "BLOCK_ID_LIST"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "JSON_STRING",
+            "id": "ITEM_LOCK_MODE",
+            "brief": "锁定模式",
+            "description": "物品锁定模式",
+            "data": [
+                {
+                    "type": "NORMAL_ID",
+                    "id": "ITEM_LOCK",
+                    "description": "锁定模式",
+                    "ignoreError": false,
+                    "contents": [
+                        {
+                            "name": "lock_in_inventory",
+                            "description": "阻止该物品被从玩家的物品栏移除、丢弃或用于合成。 "
+                        },
+                        {
+                            "name": "lock_in_slot",
+                            "description": "阻止该物品被从玩家物品栏的该槽位移动、移除、丢弃或用于合成。"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "ITEM_LOCK",
+            "brief": "锁定模式",
+            "description": "物品锁定模式",
+            "data": [
+                {
+                    "key": "mode",
+                    "brief": "锁定模式",
+                    "description": "物品锁定模式",
+                    "value": [
+                        "ITEM_LOCK_MODE"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "KEEP_ON_DEATH",
+            "description": "使该物品在玩家死亡时不会掉落",
+            "data": []
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "COMPONENTS",
+            "description": "被放置物品的物品组件",
+            "data": [
+                {
+                    "key": "minecraft:can_place_on",
+                    "description": "控制此物品/方块（在冒险模式下）可以使用/放置在其上的方块类型。",
+                    "value": [
+                        "BLOCKS"
+                    ]
+                },
+                {
+                    "key": "minecraft:can_destroy",
+                    "description": "控制此物品/方块（在冒险模式下）可以破坏的方块类型。此效果不会改变原本的破坏速度和破坏后掉落物。",
+                    "value": [
+                        "BLOCKS"
+                    ]
+                },
+                {
+                    "key": "minecraft:item_lock",
+                    "description": "将该物品锁定在玩家的物品栏",
+                    "value": [
+                        "ITEM_LOCK"
+                    ]
+                },
+                {
+                    "key": "minecraft:keep_on_death",
+                    "description": "使该物品在玩家死亡时不会掉落",
+                    "value": [
+                        "KEEP_ON_DEATH"
+                    ]
+                }
+            ]
+        }
+    ]
+}

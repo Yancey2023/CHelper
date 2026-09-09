@@ -1,0 +1,1530 @@
+{
+    "id": "animation",
+    "type": "normal",
+    "content": [
+        {
+            "name": "animation.actor.billboard"
+        },
+        {
+            "name": "animation.agent.move"
+        },
+        {
+            "name": "animation.agent.shrug"
+        },
+        {
+            "name": "animation.agent.swing_arms"
+        },
+        {
+            "name": "animation.allay.dance"
+        },
+        {
+            "name": "animation.allay.fly"
+        },
+        {
+            "name": "animation.allay.hold_item"
+        },
+        {
+            "name": "animation.allay.hold_item_fly"
+        },
+        {
+            "name": "animation.allay.idle"
+        },
+        {
+            "name": "animation.allay.look_at_target.default"
+        },
+        {
+            "name": "animation.armadillo.look_at_target"
+        },
+        {
+            "name": "animation.armadillo.peek"
+        },
+        {
+            "name": "animation.armadillo.roll_up"
+        },
+        {
+            "name": "animation.armadillo.rolled_up"
+        },
+        {
+            "name": "animation.armadillo.unroll"
+        },
+        {
+            "name": "animation.armadillo.unroll_fast"
+        },
+        {
+            "name": "animation.armadillo.walk"
+        },
+        {
+            "name": "animation.armor.boots.offset"
+        },
+        {
+            "name": "animation.armor.chestplate.offset"
+        },
+        {
+            "name": "animation.armor.helmet.offset"
+        },
+        {
+            "name": "animation.armor.leggings.offset"
+        },
+        {
+            "name": "animation.armor_stand.athena_pose"
+        },
+        {
+            "name": "animation.armor_stand.brandish_pose"
+        },
+        {
+            "name": "animation.armor_stand.cancan_a_pose"
+        },
+        {
+            "name": "animation.armor_stand.cancan_b_pose"
+        },
+        {
+            "name": "animation.armor_stand.default_pose"
+        },
+        {
+            "name": "animation.armor_stand.entertain_pose"
+        },
+        {
+            "name": "animation.armor_stand.hero_pose"
+        },
+        {
+            "name": "animation.armor_stand.holding_heavy_core"
+        },
+        {
+            "name": "animation.armor_stand.honor_pose"
+        },
+        {
+            "name": "animation.armor_stand.no_pose"
+        },
+        {
+            "name": "animation.armor_stand.riposte_pose"
+        },
+        {
+            "name": "animation.armor_stand.salute_pose"
+        },
+        {
+            "name": "animation.armor_stand.solemn_pose"
+        },
+        {
+            "name": "animation.armor_stand.wiggle"
+        },
+        {
+            "name": "animation.armor_stand.zombie_pose"
+        },
+        {
+            "name": "animation.arrow.move"
+        },
+        {
+            "name": "animation.axolotl.idle_floor"
+        },
+        {
+            "name": "animation.axolotl.idle_floor_underwater"
+        },
+        {
+            "name": "animation.axolotl.idle_underwater"
+        },
+        {
+            "name": "animation.axolotl.play_dead"
+        },
+        {
+            "name": "animation.axolotl.swim"
+        },
+        {
+            "name": "animation.axolotl.swim_angle"
+        },
+        {
+            "name": "animation.axolotl.walk_floor"
+        },
+        {
+            "name": "animation.axolotl.walk_floor_underwater"
+        },
+        {
+            "name": "animation.bat.flying"
+        },
+        {
+            "name": "animation.bat.resting"
+        },
+        {
+            "name": "animation.bee.fly.bobbing"
+        },
+        {
+            "name": "animation.bee.flying"
+        },
+        {
+            "name": "animation.bee.no_stinger"
+        },
+        {
+            "name": "animation.bee.sting"
+        },
+        {
+            "name": "animation.blaze.move"
+        },
+        {
+            "name": "animation.bow.wield"
+        },
+        {
+            "name": "animation.bow.wield_first_person_pull"
+        },
+        {
+            "name": "animation.breeze.idle"
+        },
+        {
+            "name": "animation.breeze.idle_ground_particles"
+        },
+        {
+            "name": "animation.breeze.idle_ground_sound"
+        },
+        {
+            "name": "animation.breeze.jump"
+        },
+        {
+            "name": "animation.breeze.shoot"
+        },
+        {
+            "name": "animation.breeze.slide"
+        },
+        {
+            "name": "animation.breeze.slide_ground_particles"
+        },
+        {
+            "name": "animation.breeze.whirl_sound"
+        },
+        {
+            "name": "animation.camel.dash"
+        },
+        {
+            "name": "animation.camel.dash_sound"
+        },
+        {
+            "name": "animation.camel.idle"
+        },
+        {
+            "name": "animation.camel.look_at_target"
+        },
+        {
+            "name": "animation.camel.sit"
+        },
+        {
+            "name": "animation.camel.sit_down"
+        },
+        {
+            "name": "animation.camel.stand_up"
+        },
+        {
+            "name": "animation.camel.walk"
+        },
+        {
+            "name": "animation.cat.baby_transform"
+        },
+        {
+            "name": "animation.cat.lie_down"
+        },
+        {
+            "name": "animation.cat.sit"
+        },
+        {
+            "name": "animation.cat.sneak"
+        },
+        {
+            "name": "animation.cat.sprint"
+        },
+        {
+            "name": "animation.cat.walk"
+        },
+        {
+            "name": "animation.chicken.baby_transform"
+        },
+        {
+            "name": "animation.chicken.general"
+        },
+        {
+            "name": "animation.chicken.general.v1.0"
+        },
+        {
+            "name": "animation.chicken.move"
+        },
+        {
+            "name": "animation.cod.flop"
+        },
+        {
+            "name": "animation.cod.swim"
+        },
+        {
+            "name": "animation.common.look_at_target"
+        },
+        {
+            "name": "animation.copper_golem.chest_interaction.put_item"
+        },
+        {
+            "name": "animation.copper_golem.chest_interaction.put_item_fail"
+        },
+        {
+            "name": "animation.copper_golem.chest_interaction.take_item"
+        },
+        {
+            "name": "animation.copper_golem.chest_interaction.take_item_fail"
+        },
+        {
+            "name": "animation.copper_golem.hold_item"
+        },
+        {
+            "name": "animation.copper_golem.spin"
+        },
+        {
+            "name": "animation.copper_golem.spin.oxidized"
+        },
+        {
+            "name": "animation.copper_golem.spin.weathered"
+        },
+        {
+            "name": "animation.copper_golem.walk"
+        },
+        {
+            "name": "animation.copper_golem.walk_holding_item"
+        },
+        {
+            "name": "animation.cow.baby_transform"
+        },
+        {
+            "name": "animation.cow.setup"
+        },
+        {
+            "name": "animation.cow.setup.v1.0"
+        },
+        {
+            "name": "animation.creaking.attack"
+        },
+        {
+            "name": "animation.creaking.look_at_target"
+        },
+        {
+            "name": "animation.creaking.sway"
+        },
+        {
+            "name": "animation.creaking.twitch"
+        },
+        {
+            "name": "animation.creaking.walk"
+        },
+        {
+            "name": "animation.creeper.legs"
+        },
+        {
+            "name": "animation.creeper.swelling"
+        },
+        {
+            "name": "animation.crossbow.wield"
+        },
+        {
+            "name": "animation.crossbow.wield_first_person_pull"
+        },
+        {
+            "name": "animation.dolphin.move"
+        },
+        {
+            "name": "animation.drowned.attack.rotations"
+        },
+        {
+            "name": "animation.drowned.attack.rotations.v1.0"
+        },
+        {
+            "name": "animation.drowned.swimming.v1.0"
+        },
+        {
+            "name": "animation.elytra.default"
+        },
+        {
+            "name": "animation.elytra.gliding"
+        },
+        {
+            "name": "animation.elytra.sleeping"
+        },
+        {
+            "name": "animation.elytra.sneaking"
+        },
+        {
+            "name": "animation.elytra.swimming"
+        },
+        {
+            "name": "animation.ender_crystal.move"
+        },
+        {
+            "name": "animation.ender_dragon.jaw_movement"
+        },
+        {
+            "name": "animation.ender_dragon.neck_head_movement"
+        },
+        {
+            "name": "animation.ender_dragon.setup"
+        },
+        {
+            "name": "animation.ender_dragon.tail_movement"
+        },
+        {
+            "name": "animation.ender_dragon.wings_limbs_movement"
+        },
+        {
+            "name": "animation.enderman.arms_legs"
+        },
+        {
+            "name": "animation.enderman.base_pose"
+        },
+        {
+            "name": "animation.enderman.base_pose_v1.0"
+        },
+        {
+            "name": "animation.enderman.carrying"
+        },
+        {
+            "name": "animation.enderman.scary_face"
+        },
+        {
+            "name": "animation.enderman.scary_face_v1.0"
+        },
+        {
+            "name": "animation.endermite.move"
+        },
+        {
+            "name": "animation.evocation_fang.bite"
+        },
+        {
+            "name": "animation.evoker.casting"
+        },
+        {
+            "name": "animation.evoker.casting.v1.0"
+        },
+        {
+            "name": "animation.evoker.general"
+        },
+        {
+            "name": "animation.evoker.general.v1.0"
+        },
+        {
+            "name": "animation.evoker.move"
+        },
+        {
+            "name": "animation.fireworks_rocket.move"
+        },
+        {
+            "name": "animation.fox.baby_transform"
+        },
+        {
+            "name": "animation.fox.crouch"
+        },
+        {
+            "name": "animation.fox.pounce"
+        },
+        {
+            "name": "animation.fox.setup"
+        },
+        {
+            "name": "animation.fox.sit"
+        },
+        {
+            "name": "animation.fox.sleep"
+        },
+        {
+            "name": "animation.fox.stuck"
+        },
+        {
+            "name": "animation.fox.wiggle"
+        },
+        {
+            "name": "animation.frog.croak"
+        },
+        {
+            "name": "animation.frog.idle.water"
+        },
+        {
+            "name": "animation.frog.jump"
+        },
+        {
+            "name": "animation.frog.swim"
+        },
+        {
+            "name": "animation.frog.tongue"
+        },
+        {
+            "name": "animation.frog.walk"
+        },
+        {
+            "name": "animation.ghast.move"
+        },
+        {
+            "name": "animation.ghast.scale"
+        },
+        {
+            "name": "animation.goat.attack"
+        },
+        {
+            "name": "animation.goat.baby_scaling"
+        },
+        {
+            "name": "animation.goat.look_at_target"
+        },
+        {
+            "name": "animation.goat.ram_attack"
+        },
+        {
+            "name": "animation.goat.walk"
+        },
+        {
+            "name": "animation.guardian.move_eye"
+        },
+        {
+            "name": "animation.guardian.move_eye.v1.0"
+        },
+        {
+            "name": "animation.guardian.setup"
+        },
+        {
+            "name": "animation.guardian.spikes"
+        },
+        {
+            "name": "animation.guardian.spikes.v1.0"
+        },
+        {
+            "name": "animation.guardian.swim"
+        },
+        {
+            "name": "animation.happy_ghast.move"
+        },
+        {
+            "name": "animation.happy_ghast.scale"
+        },
+        {
+            "name": "animation.hoglin.attack"
+        },
+        {
+            "name": "animation.hoglin.baby_scaling"
+        },
+        {
+            "name": "animation.hoglin.look_at_target"
+        },
+        {
+            "name": "animation.hoglin.walk"
+        },
+        {
+            "name": "animation.horse.baby_transform"
+        },
+        {
+            "name": "animation.horse.eat"
+        },
+        {
+            "name": "animation.horse.look_at_player"
+        },
+        {
+            "name": "animation.horse.mouth"
+        },
+        {
+            "name": "animation.horse.setup"
+        },
+        {
+            "name": "animation.horse.shake_tail"
+        },
+        {
+            "name": "animation.horse.stand"
+        },
+        {
+            "name": "animation.horse.v2.baby_transform"
+        },
+        {
+            "name": "animation.horse.v2.eat"
+        },
+        {
+            "name": "animation.horse.v2.setup"
+        },
+        {
+            "name": "animation.horse.v2.stand"
+        },
+        {
+            "name": "animation.horse.v2.tail"
+        },
+        {
+            "name": "animation.horse.v2.walk"
+        },
+        {
+            "name": "animation.horse.v3.baby_transform"
+        },
+        {
+            "name": "animation.horse.v3.eat"
+        },
+        {
+            "name": "animation.horse.v3.look_at_player"
+        },
+        {
+            "name": "animation.horse.v3.rear"
+        },
+        {
+            "name": "animation.horse.v3.tail"
+        },
+        {
+            "name": "animation.horse.v3.walk"
+        },
+        {
+            "name": "animation.horse.walk"
+        },
+        {
+            "name": "animation.humanoid.attack.rotations"
+        },
+        {
+            "name": "animation.humanoid.attack.rotations.v1.0"
+        },
+        {
+            "name": "animation.humanoid.base_pose"
+        },
+        {
+            "name": "animation.humanoid.base_pose.v1.0"
+        },
+        {
+            "name": "animation.humanoid.big_head"
+        },
+        {
+            "name": "animation.humanoid.big_head.v1.0"
+        },
+        {
+            "name": "animation.humanoid.bob"
+        },
+        {
+            "name": "animation.humanoid.bob.v1.0"
+        },
+        {
+            "name": "animation.humanoid.bow_and_arrow"
+        },
+        {
+            "name": "animation.humanoid.bow_and_arrow.v1.0"
+        },
+        {
+            "name": "animation.humanoid.brandish_spear"
+        },
+        {
+            "name": "animation.humanoid.brandish_spear.v1.0"
+        },
+        {
+            "name": "animation.humanoid.brushing"
+        },
+        {
+            "name": "animation.humanoid.celebrating"
+        },
+        {
+            "name": "animation.humanoid.charging"
+        },
+        {
+            "name": "animation.humanoid.charging.v1.0"
+        },
+        {
+            "name": "animation.humanoid.damage_nearby_mobs"
+        },
+        {
+            "name": "animation.humanoid.damage_nearby_mobs.v1.0"
+        },
+        {
+            "name": "animation.humanoid.fishing_rod"
+        },
+        {
+            "name": "animation.humanoid.holding"
+        },
+        {
+            "name": "animation.humanoid.holding.v1.0"
+        },
+        {
+            "name": "animation.humanoid.holding_brush"
+        },
+        {
+            "name": "animation.humanoid.holding_spyglass"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.default"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.default.v1.0"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.gliding"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.gliding.v1.0"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.swimming"
+        },
+        {
+            "name": "animation.humanoid.look_at_target.swimming.v1.0"
+        },
+        {
+            "name": "animation.humanoid.melee_spear_hold"
+        },
+        {
+            "name": "animation.humanoid.melee_spear_use"
+        },
+        {
+            "name": "animation.humanoid.move"
+        },
+        {
+            "name": "animation.humanoid.move.v1.0"
+        },
+        {
+            "name": "animation.humanoid.riding.arms"
+        },
+        {
+            "name": "animation.humanoid.riding.arms.v1.0"
+        },
+        {
+            "name": "animation.humanoid.riding.body"
+        },
+        {
+            "name": "animation.humanoid.riding.legs"
+        },
+        {
+            "name": "animation.humanoid.riding.legs.v1.0"
+        },
+        {
+            "name": "animation.humanoid.sneaking"
+        },
+        {
+            "name": "animation.humanoid.sneaking.v1.0"
+        },
+        {
+            "name": "animation.humanoid.swimming"
+        },
+        {
+            "name": "animation.humanoid.swimming.v1.0"
+        },
+        {
+            "name": "animation.humanoid.tooting_goat_horn"
+        },
+        {
+            "name": "animation.humanoid.use_item_progress"
+        },
+        {
+            "name": "animation.humanoid.use_item_progress.v1.0"
+        },
+        {
+            "name": "animation.idle_arm_1"
+        },
+        {
+            "name": "animation.idle_back_1"
+        },
+        {
+            "name": "animation.idle_bottom_1"
+        },
+        {
+            "name": "animation.idle_torso_1"
+        },
+        {
+            "name": "animation.iron_golem.attack"
+        },
+        {
+            "name": "animation.iron_golem.flower"
+        },
+        {
+            "name": "animation.iron_golem.move"
+        },
+        {
+            "name": "animation.iron_golem.move_to_target"
+        },
+        {
+            "name": "animation.iron_golem.walk"
+        },
+        {
+            "name": "animation.iron_golem.walk_to_target"
+        },
+        {
+            "name": "animation.llama.baby_transform"
+        },
+        {
+            "name": "animation.llama.baby_transform.v1.0"
+        },
+        {
+            "name": "animation.llama.setup"
+        },
+        {
+            "name": "animation.llama.setup.v1.0"
+        },
+        {
+            "name": "animation.llama_spit.setup"
+        },
+        {
+            "name": "animation.magma_cube.move"
+        },
+        {
+            "name": "animation.minecart.move"
+        },
+        {
+            "name": "animation.minecart.move.v1.0"
+        },
+        {
+            "name": "animation.mooshroom.baby_transform"
+        },
+        {
+            "name": "animation.mooshroom.setup"
+        },
+        {
+            "name": "animation.mooshroom.setup.v1.0"
+        },
+        {
+            "name": "animation.nautilus.breathe"
+        },
+        {
+            "name": "animation.nautilus.charge_warning"
+        },
+        {
+            "name": "animation.nautilus.dashing"
+        },
+        {
+            "name": "animation.nautilus.look_at_target"
+        },
+        {
+            "name": "animation.nautilus.swim"
+        },
+        {
+            "name": "animation.npc.baby_transform"
+        },
+        {
+            "name": "animation.npc.general"
+        },
+        {
+            "name": "animation.npc.get_in_bed"
+        },
+        {
+            "name": "animation.npc.move"
+        },
+        {
+            "name": "animation.npc.raise_arms"
+        },
+        {
+            "name": "animation.ocelot.baby_transform"
+        },
+        {
+            "name": "animation.ocelot.sit"
+        },
+        {
+            "name": "animation.ocelot.sneak"
+        },
+        {
+            "name": "animation.ocelot.sprint"
+        },
+        {
+            "name": "animation.ocelot.walk"
+        },
+        {
+            "name": "animation.ocelot_v1.0.baby_transform"
+        },
+        {
+            "name": "animation.ocelot_v1.0.setup"
+        },
+        {
+            "name": "animation.ocelot_v1.0.sit"
+        },
+        {
+            "name": "animation.ocelot_v1.0.sneak"
+        },
+        {
+            "name": "animation.ocelot_v1.0.sprint"
+        },
+        {
+            "name": "animation.ocelot_v1.0.walk"
+        },
+        {
+            "name": "animation.panda.baby_transform"
+        },
+        {
+            "name": "animation.panda.lying"
+        },
+        {
+            "name": "animation.panda.rolling"
+        },
+        {
+            "name": "animation.panda.sitting"
+        },
+        {
+            "name": "animation.panda.sneezing"
+        },
+        {
+            "name": "animation.panda.unhappy"
+        },
+        {
+            "name": "animation.parrot.base"
+        },
+        {
+            "name": "animation.parrot.dance"
+        },
+        {
+            "name": "animation.parrot.flying"
+        },
+        {
+            "name": "animation.parrot.moving"
+        },
+        {
+            "name": "animation.parrot.sitting"
+        },
+        {
+            "name": "animation.parrot.standing"
+        },
+        {
+            "name": "animation.phantom.base_pose"
+        },
+        {
+            "name": "animation.phantom.move"
+        },
+        {
+            "name": "animation.pig.baby_transform"
+        },
+        {
+            "name": "animation.pig.setup"
+        },
+        {
+            "name": "animation.pig.setup.v1.0"
+        },
+        {
+            "name": "animation.piglin.admire"
+        },
+        {
+            "name": "animation.piglin.celebrate_hunt"
+        },
+        {
+            "name": "animation.piglin.celebrate_hunt_special"
+        },
+        {
+            "name": "animation.piglin.crossbow.charge"
+        },
+        {
+            "name": "animation.piglin.crossbow.hold"
+        },
+        {
+            "name": "animation.piglin.hand.attack"
+        },
+        {
+            "name": "animation.piglin.move"
+        },
+        {
+            "name": "animation.piglin.sword.attack"
+        },
+        {
+            "name": "animation.pillager.crossbow.charge"
+        },
+        {
+            "name": "animation.pillager.crossbow.hold"
+        },
+        {
+            "name": "animation.player.attack.positions"
+        },
+        {
+            "name": "animation.player.attack.rotations"
+        },
+        {
+            "name": "animation.player.base_pose.upside_down"
+        },
+        {
+            "name": "animation.player.bob"
+        },
+        {
+            "name": "animation.player.bob.stationary"
+        },
+        {
+            "name": "animation.player.bow_equipped"
+        },
+        {
+            "name": "animation.player.cape"
+        },
+        {
+            "name": "animation.player.crawl"
+        },
+        {
+            "name": "animation.player.crawl.legs"
+        },
+        {
+            "name": "animation.player.crawl.no_right_arm"
+        },
+        {
+            "name": "animation.player.crossbow_equipped"
+        },
+        {
+            "name": "animation.player.crossbow_hold"
+        },
+        {
+            "name": "animation.player.first_person.attack_item_rotation"
+        },
+        {
+            "name": "animation.player.first_person.attack_rotation"
+        },
+        {
+            "name": "animation.player.first_person.attack_rotation_item"
+        },
+        {
+            "name": "animation.player.first_person.base_pose"
+        },
+        {
+            "name": "animation.player.first_person.breathing_bob"
+        },
+        {
+            "name": "animation.player.first_person.crossbow_equipped"
+        },
+        {
+            "name": "animation.player.first_person.crossbow_hold"
+        },
+        {
+            "name": "animation.player.first_person.empty_hand"
+        },
+        {
+            "name": "animation.player.first_person.map_hold"
+        },
+        {
+            "name": "animation.player.first_person.map_hold_attack"
+        },
+        {
+            "name": "animation.player.first_person.map_hold_main_hand"
+        },
+        {
+            "name": "animation.player.first_person.map_hold_off_hand"
+        },
+        {
+            "name": "animation.player.first_person.melee_spear_attack"
+        },
+        {
+            "name": "animation.player.first_person.melee_spear_hold"
+        },
+        {
+            "name": "animation.player.first_person.melee_spear_use"
+        },
+        {
+            "name": "animation.player.first_person.shield_block"
+        },
+        {
+            "name": "animation.player.first_person.swap_item"
+        },
+        {
+            "name": "animation.player.first_person.vr_attack_rotation"
+        },
+        {
+            "name": "animation.player.first_person.walk"
+        },
+        {
+            "name": "animation.player.glide"
+        },
+        {
+            "name": "animation.player.holding"
+        },
+        {
+            "name": "animation.player.holding.zombie"
+        },
+        {
+            "name": "animation.player.holding_heavy_core"
+        },
+        {
+            "name": "animation.player.look_at_target.inverted"
+        },
+        {
+            "name": "animation.player.look_at_target.ui"
+        },
+        {
+            "name": "animation.player.melee_spear_attack"
+        },
+        {
+            "name": "animation.player.move.arms"
+        },
+        {
+            "name": "animation.player.move.arms.single"
+        },
+        {
+            "name": "animation.player.move.arms.stationary"
+        },
+        {
+            "name": "animation.player.move.arms.statue_of_liberty"
+        },
+        {
+            "name": "animation.player.move.arms.zombie"
+        },
+        {
+            "name": "animation.player.move.legs"
+        },
+        {
+            "name": "animation.player.move.legs.inverted"
+        },
+        {
+            "name": "animation.player.move.legs.single"
+        },
+        {
+            "name": "animation.player.move.legs.stationary"
+        },
+        {
+            "name": "animation.player.riding.arms"
+        },
+        {
+            "name": "animation.player.riding.arms.zombie"
+        },
+        {
+            "name": "animation.player.riding.legs"
+        },
+        {
+            "name": "animation.player.riding.root"
+        },
+        {
+            "name": "animation.player.shield_block_main_hand"
+        },
+        {
+            "name": "animation.player.shield_block_off_hand"
+        },
+        {
+            "name": "animation.player.sleeping"
+        },
+        {
+            "name": "animation.player.sneaking"
+        },
+        {
+            "name": "animation.player.sneaking.inverted"
+        },
+        {
+            "name": "animation.player.swim"
+        },
+        {
+            "name": "animation.player.swim.legs"
+        },
+        {
+            "name": "animation.player.swim.legs.single"
+        },
+        {
+            "name": "animation.player.swim.legs.stationary"
+        },
+        {
+            "name": "animation.player.swim.no_right_arm"
+        },
+        {
+            "name": "animation.polarbear.baby_transform"
+        },
+        {
+            "name": "animation.polarbear.move"
+        },
+        {
+            "name": "animation.pufferfish.flop"
+        },
+        {
+            "name": "animation.pufferfish.swim"
+        },
+        {
+            "name": "animation.quadruped.walk"
+        },
+        {
+            "name": "animation.rabbit.baby_transform"
+        },
+        {
+            "name": "animation.rabbit.move"
+        },
+        {
+            "name": "animation.ravager.biting"
+        },
+        {
+            "name": "animation.ravager.idle_mouth"
+        },
+        {
+            "name": "animation.ravager.roaring"
+        },
+        {
+            "name": "animation.ravager.stunned"
+        },
+        {
+            "name": "animation.ravager.walk"
+        },
+        {
+            "name": "animation.react_arm_1"
+        },
+        {
+            "name": "animation.react_arm_2"
+        },
+        {
+            "name": "animation.react_back_1"
+        },
+        {
+            "name": "animation.react_back_2"
+        },
+        {
+            "name": "animation.react_bored_1"
+        },
+        {
+            "name": "animation.react_bored_arm_1"
+        },
+        {
+            "name": "animation.react_bored_back_1"
+        },
+        {
+            "name": "animation.react_bored_bottom_1"
+        },
+        {
+            "name": "animation.react_bored_head_1"
+        },
+        {
+            "name": "animation.react_bored_torso_1"
+        },
+        {
+            "name": "animation.react_bottom_1"
+        },
+        {
+            "name": "animation.react_bottom_2"
+        },
+        {
+            "name": "animation.react_bottom_3"
+        },
+        {
+            "name": "animation.react_confirm_1"
+        },
+        {
+            "name": "animation.react_confirm_2"
+        },
+        {
+            "name": "animation.react_head_1"
+        },
+        {
+            "name": "animation.react_head_2"
+        },
+        {
+            "name": "animation.react_idle"
+        },
+        {
+            "name": "animation.react_offer_1"
+        },
+        {
+            "name": "animation.react_offer_2"
+        },
+        {
+            "name": "animation.react_offer_arm_1"
+        },
+        {
+            "name": "animation.react_offer_arm_2"
+        },
+        {
+            "name": "animation.react_offer_back_1"
+        },
+        {
+            "name": "animation.react_offer_back_2"
+        },
+        {
+            "name": "animation.react_offer_bottom_1"
+        },
+        {
+            "name": "animation.react_offer_bottom_2"
+        },
+        {
+            "name": "animation.react_offer_head_1"
+        },
+        {
+            "name": "animation.react_offer_head_2"
+        },
+        {
+            "name": "animation.react_offer_torso_1"
+        },
+        {
+            "name": "animation.react_offer_torso_2"
+        },
+        {
+            "name": "animation.react_torso_1"
+        },
+        {
+            "name": "animation.react_torso_2"
+        },
+        {
+            "name": "animation.salmon.flop"
+        },
+        {
+            "name": "animation.salmon.swim"
+        },
+        {
+            "name": "animation.sheep.baby_transform"
+        },
+        {
+            "name": "animation.sheep.grazing"
+        },
+        {
+            "name": "animation.sheep.setup"
+        },
+        {
+            "name": "animation.shield.wield_first_person_blocking"
+        },
+        {
+            "name": "animation.shield.wield_main_hand_first_person"
+        },
+        {
+            "name": "animation.shield.wield_main_hand_first_person_blocking"
+        },
+        {
+            "name": "animation.shield.wield_off_hand_first_person"
+        },
+        {
+            "name": "animation.shield.wield_off_hand_first_person_blocking"
+        },
+        {
+            "name": "animation.shield.wield_third_person"
+        },
+        {
+            "name": "animation.shulker.facing"
+        },
+        {
+            "name": "animation.shulker.facing.v1.0"
+        },
+        {
+            "name": "animation.shulker.move"
+        },
+        {
+            "name": "animation.shulker.move.v1.0"
+        },
+        {
+            "name": "animation.shulker_bullet.move"
+        },
+        {
+            "name": "animation.silverfish.move"
+        },
+        {
+            "name": "animation.skeleton.attack"
+        },
+        {
+            "name": "animation.skeleton.attack.v1.0"
+        },
+        {
+            "name": "animation.sniffer.baby_transform"
+        },
+        {
+            "name": "animation.sniffer.dig"
+        },
+        {
+            "name": "animation.sniffer.feeling_happy"
+        },
+        {
+            "name": "animation.sniffer.longsniff"
+        },
+        {
+            "name": "animation.sniffer.search"
+        },
+        {
+            "name": "animation.sniffer.sniffsniff"
+        },
+        {
+            "name": "animation.sniffer.stand_up"
+        },
+        {
+            "name": "animation.sniffer.walk"
+        },
+        {
+            "name": "animation.snowgolem.arms"
+        },
+        {
+            "name": "animation.snowgolem.move"
+        },
+        {
+            "name": "animation.snowgolem.move.v1.8"
+        },
+        {
+            "name": "animation.spear.held_first_person"
+        },
+        {
+            "name": "animation.spear.held_third_person"
+        },
+        {
+            "name": "animation.spear.hit"
+        },
+        {
+            "name": "animation.spider.default_leg_pose"
+        },
+        {
+            "name": "animation.spider.look_at_target"
+        },
+        {
+            "name": "animation.spider.walk"
+        },
+        {
+            "name": "animation.spyglass.holding"
+        },
+        {
+            "name": "animation.spyglass.scoping"
+        },
+        {
+            "name": "animation.squid.move"
+        },
+        {
+            "name": "animation.squid.rotate"
+        },
+        {
+            "name": "animation.strider.bristle_flow"
+        },
+        {
+            "name": "animation.strider.look_at_target.default"
+        },
+        {
+            "name": "animation.strider.walk"
+        },
+        {
+            "name": "animation.tadpole.swim"
+        },
+        {
+            "name": "animation.trident.wield_first_person"
+        },
+        {
+            "name": "animation.trident.wield_first_person_raise"
+        },
+        {
+            "name": "animation.trident.wield_first_person_raise_shake"
+        },
+        {
+            "name": "animation.trident.wield_first_person_riptide"
+        },
+        {
+            "name": "animation.trident.wield_third_person"
+        },
+        {
+            "name": "animation.trident.wield_third_person_raise"
+        },
+        {
+            "name": "animation.tripod_camera.neutral"
+        },
+        {
+            "name": "animation.tropicalfish.flop"
+        },
+        {
+            "name": "animation.tropicalfish.swim"
+        },
+        {
+            "name": "animation.turtle.general"
+        },
+        {
+            "name": "animation.turtle.ground_move"
+        },
+        {
+            "name": "animation.turtle.move"
+        },
+        {
+            "name": "animation.vex.attack.rotations.v1.0"
+        },
+        {
+            "name": "animation.vex.charge"
+        },
+        {
+            "name": "animation.vex.idle"
+        },
+        {
+            "name": "animation.vex.move"
+        },
+        {
+            "name": "animation.villager.baby_transform"
+        },
+        {
+            "name": "animation.villager.general"
+        },
+        {
+            "name": "animation.villager.general.v1.0"
+        },
+        {
+            "name": "animation.villager.get_in_bed"
+        },
+        {
+            "name": "animation.villager.move"
+        },
+        {
+            "name": "animation.villager.raise_arms"
+        },
+        {
+            "name": "animation.vindicator.attack"
+        },
+        {
+            "name": "animation.vindicator.base"
+        },
+        {
+            "name": "animation.vindicator.hand_attack"
+        },
+        {
+            "name": "animation.vindicator.riding.arms"
+        },
+        {
+            "name": "animation.vindicator.riding.legs"
+        },
+        {
+            "name": "animation.vindicator.walk"
+        },
+        {
+            "name": "animation.warden.attack"
+        },
+        {
+            "name": "animation.warden.bob"
+        },
+        {
+            "name": "animation.warden.dig"
+        },
+        {
+            "name": "animation.warden.emerge"
+        },
+        {
+            "name": "animation.warden.hurt"
+        },
+        {
+            "name": "animation.warden.look_at_target.default"
+        },
+        {
+            "name": "animation.warden.move"
+        },
+        {
+            "name": "animation.warden.roar"
+        },
+        {
+            "name": "animation.warden.shiver"
+        },
+        {
+            "name": "animation.warden.sniff"
+        },
+        {
+            "name": "animation.warden.sonic_boom"
+        },
+        {
+            "name": "animation.wind_charge.rotate"
+        },
+        {
+            "name": "animation.witch.general"
+        },
+        {
+            "name": "animation.wither_boss.look_at_target"
+        },
+        {
+            "name": "animation.wither_boss.move"
+        },
+        {
+            "name": "animation.wither_boss.scale"
+        },
+        {
+            "name": "animation.wither_skeleton.attack"
+        },
+        {
+            "name": "animation.wither_skull.move"
+        },
+        {
+            "name": "animation.wolf.angry"
+        },
+        {
+            "name": "animation.wolf.baby_scaling"
+        },
+        {
+            "name": "animation.wolf.head_rot_z"
+        },
+        {
+            "name": "animation.wolf.leg_default"
+        },
+        {
+            "name": "animation.wolf.setup"
+        },
+        {
+            "name": "animation.wolf.shaking"
+        },
+        {
+            "name": "animation.wolf.sitting"
+        },
+        {
+            "name": "animation.wolf.tail_default"
+        },
+        {
+            "name": "animation.zombie.attack_bare_hand"
+        },
+        {
+            "name": "animation.zombie.melee_spear_hold"
+        },
+        {
+            "name": "animation.zombie.melee_spear_use"
+        },
+        {
+            "name": "animation.zombie.swimming"
+        }
+    ]
+}

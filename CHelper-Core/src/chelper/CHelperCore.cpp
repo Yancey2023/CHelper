@@ -97,6 +97,10 @@ namespace CHelper {
         return *cpack;
     }
 
+    std::shared_ptr<const CPack> CHelperCore::getSharedCPack() const {
+        return cpack;
+    }
+
     CommandContext *CHelperCore::createContext(std::u16string command) const {
         return new CommandContext(cpack, std::move(command));
     }

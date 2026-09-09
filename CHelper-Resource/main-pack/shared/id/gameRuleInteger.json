@@ -1,0 +1,26 @@
+{
+    "id": "gameRuleInteger",
+    "type": "normal",
+    "content": [
+        {
+            "name": "functionCommandLimit",
+            "description": "通过function命令执行命令的最大数量。"
+        },
+        {
+            "name": "maxCommandChainLength",
+            "description": "决定了连锁型命令方块能连锁执行的总数量。"
+        },
+        {
+            "name": "playersSleepingPercentage",
+            "description": "设置跳过夜晚所需的入睡玩家所占百分比。设置为0时，1个玩家入睡即可跳过夜晚。设置为大于100的值会使玩家无法通过入睡跳过夜晚。"
+        },
+        {
+            "name": "randomTickSpeed",
+            "description": "每游戏刻每区段中随机的方块刻发生的频率（例如植物生长，树叶腐烂等）。为0时禁用随机刻，较高的数字将增大随机刻频率。"
+        },
+        {
+            "name": "spawnRadius",
+            "description": "首次进入服务器的玩家和没有重生点的死亡玩家在重生时与世界出生点坐标的距离。"
+        }
+    ]
+}

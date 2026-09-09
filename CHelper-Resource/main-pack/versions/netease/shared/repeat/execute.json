@@ -1,0 +1,668 @@
+{
+    "id": "execute",
+    "breakNodes": [
+        {
+            "type": "TEXT",
+            "description": "要被执行的目标命令",
+            "data": {
+                "name": "run",
+                "description": "要被执行的目标命令"
+            }
+        },
+        {
+            "type": "COMMAND",
+            "id": "command",
+            "description": "命令"
+        }
+    ],
+    "isEnd": [
+        false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true
+    ],
+    "repeatNodes": [
+        [
+            {
+                "data": {
+                    "name": "align",
+                    "description": "把执行位置转换为方块坐标（向下取整）"
+                },
+                "description": "把执行位置转换为方块坐标（向下取整）",
+                "type": "TEXT"
+            },
+            {
+                "type": "NORMAL_ID",
+                "brief": "坐标轴",
+                "description": "需要转换的坐标轴",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "x",
+                        "description": "x轴"
+                    },
+                    {
+                        "name": "y",
+                        "description": "y轴"
+                    },
+                    {
+                        "name": "z",
+                        "description": "z轴"
+                    },
+                    {
+                        "name": "xy",
+                        "description": "x轴 y轴"
+                    },
+                    {
+                        "name": "xz",
+                        "description": "x轴 z轴"
+                    },
+                    {
+                        "name": "yz",
+                        "description": "y轴 z轴"
+                    },
+                    {
+                        "name": "xyz",
+                        "description": "x轴 y轴 z 轴"
+                    },
+                    {
+                        "name": "yx",
+                        "description": "x轴 y轴"
+                    },
+                    {
+                        "name": "zx",
+                        "description": "x轴 z轴"
+                    },
+                    {
+                        "name": "zy",
+                        "description": "y轴 z轴"
+                    },
+                    {
+                        "name": "xzy",
+                        "description": "x轴 y轴 z轴"
+                    },
+                    {
+                        "name": "yxz",
+                        "description": "x轴 y轴 z轴"
+                    },
+                    {
+                        "name": "yzx",
+                        "description": "x轴 y轴 z轴"
+                    },
+                    {
+                        "name": "zxy",
+                        "description": "x轴 y轴 z轴"
+                    },
+                    {
+                        "name": "zyx",
+                        "description": "x轴 y轴 z轴"
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "切换命令的基准点为实体脚或眼睛的位置(默认为脚)",
+                "data": {
+                    "name": "anchored",
+                    "description": "切换命令的基准点为实体脚或眼睛的位置(默认为脚)"
+                }
+            },
+            {
+                "type": "NORMAL_ID",
+                "brief": "朝向的部位",
+                "description": "需要朝向实体的哪个位置",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "eyes",
+                        "description": "相对坐标会参照眼部位置，局部坐标会影响俯仰和偏转"
+                    },
+                    {
+                        "name": "feet",
+                        "description": "默认的行为，相对坐标基于脚部位置"
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "改变命令的执行者，但不改变执行位置或执行朝向等",
+                "data": {
+                    "name": "as",
+                    "description": "改变命令的执行者，但不改变执行位置或执行朝向等"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "命令的执行者",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "改变命令的执行位置、执行朝向和执行维度为指定实体的坐标、朝向和维度，不改变命令执行者",
+                "data": {
+                    "name": "at",
+                    "description": "改变命令的执行位置、执行朝向和执行维度为指定实体的坐标、朝向和维度，不改变命令执行者"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "作为命令的执行位置、执行朝向和执行维度的实体",
+                "isMustPlayer": false,
+                "isOnlyOne": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "将命令的执行朝向改为面向指定的坐标或某个实体，不改变命令执行者和执行位置",
+                "data": {
+                    "name": "facing",
+                    "description": "将命令的执行朝向改为面向指定的坐标或某个实体，不改变命令执行者和执行位置"
+                }
+            },
+            {
+                "type": "POSITION",
+                "brief": "朝向的坐标",
+                "description": "将命令的执行朝向改为面向该坐标"
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "将命令的执行朝向改为面向指定的坐标或某个实体，不改变命令执行者和执行位置",
+                "data": {
+                    "name": "facing",
+                    "description": "将命令的执行朝向改为面向指定的坐标或某个实体，不改变命令执行者和执行位置"
+                }
+            },
+            {
+                "type": "TEXT",
+                "description": "将命令的执行朝向改为面向某个实体，不改变命令执行者和执行位置",
+                "data": {
+                    "name": "entity",
+                    "description": "将命令的执行朝向改为面向某个实体，不改变命令执行者和执行位置"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "需要朝向的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            },
+            {
+                "type": "NORMAL_ID",
+                "brief": "朝向的部位",
+                "description": "需要朝向实体的哪个位置",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "eyes",
+                        "description": "相对坐标会参照眼部位置，局部坐标会影响俯仰和偏转"
+                    },
+                    {
+                        "name": "feet",
+                        "description": "默认的行为，相对坐标基于脚部位置"
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "将命令执行维度设为特定维度，命令将在指定的维度中执行",
+                "data": {
+                    "name": "in",
+                    "description": "将命令执行维度设为特定维度，命令将在指定的维度中执行"
+                }
+            },
+            {
+                "type": "NORMAL_ID",
+                "description": "维度",
+                "ignoreError": true,
+                "contents": [
+                    {
+                        "name": "overworld",
+                        "description": "主世界"
+                    },
+                    {
+                        "name": "nether",
+                        "description": "下届"
+                    },
+                    {
+                        "name": "the_end",
+                        "description": "末地"
+                    },
+                    {
+                        "name": "dm3",
+                        "description": "dm3"
+                    },
+                    {
+                        "name": "dm4",
+                        "description": "dm4"
+                    },
+                    {
+                        "name": "dm5",
+                        "description": "dm5"
+                    },
+                    {
+                        "name": "dm6",
+                        "description": "dm6"
+                    },
+                    {
+                        "name": "dm7",
+                        "description": "dm7"
+                    },
+                    {
+                        "name": "dm8",
+                        "description": "dm8"
+                    },
+                    {
+                        "name": "dm9",
+                        "description": "dm9"
+                    },
+                    {
+                        "name": "dm10",
+                        "description": "dm10"
+                    },
+                    {
+                        "name": "dm11",
+                        "description": "dm11"
+                    },
+                    {
+                        "name": "dm12",
+                        "description": "dm12"
+                    },
+                    {
+                        "name": "dm13",
+                        "description": "dm13"
+                    },
+                    {
+                        "name": "dm14",
+                        "description": "dm14"
+                    },
+                    {
+                        "name": "dm15",
+                        "description": "dm15"
+                    },
+                    {
+                        "name": "dm16",
+                        "description": "dm16"
+                    },
+                    {
+                        "name": "dm17",
+                        "description": "dm17"
+                    },
+                    {
+                        "name": "dm18",
+                        "description": "dm18"
+                    },
+                    {
+                        "name": "dm19",
+                        "description": "dm19"
+                    },
+                    {
+                        "name": "dm20",
+                        "description": "dm20"
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "在指定的坐标执行命令，改变执行位置，但不改变执行者、执行朝向",
+                "data": {
+                    "name": "positioned",
+                    "description": "在指定的坐标执行命令，改变执行位置，但不改变执行者、执行朝向"
+                }
+            },
+            {
+                "type": "POSITION",
+                "brief": "坐标",
+                "description": "执行命令的坐标"
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "在指定的坐标执行命令，改变执行位置，但不改变执行者、执行朝向",
+                "data": {
+                    "name": "positioned",
+                    "description": "在指定的坐标执行命令，改变执行位置，但不改变执行者、执行朝向"
+                }
+            },
+            {
+                "type": "TEXT",
+                "description": "命令执行的位置为实体所处的坐标",
+                "data": {
+                    "name": "as",
+                    "description": "命令执行的位置为实体所处的坐标"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "作为命令执行的位置为实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "将命令的执行朝向设为特定方向，或者设为指定实体的朝向。改变执行朝向，不改变执行者和执行位置",
+                "data": {
+                    "name": "rotated",
+                    "description": "将命令的执行朝向设为特定方向，或者设为指定实体的朝向。改变执行朝向，不改变执行者和执行位置"
+                }
+            },
+            {
+                "type": "RELATIVE_FLOAT",
+                "brief": "rx",
+                "description": "命令执行朝向的绕x轴旋转度数(竖直上方为-90.0，至竖直下方90.0)",
+                "canUseCaretNotation": false
+            },
+            {
+                "type": "RELATIVE_FLOAT",
+                "brief": "ry",
+                "description": "命令执行朝向的绕y轴旋转度数(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
+                "canUseCaretNotation": false
+            }
+        ],
+        [
+            {
+                "type": "TEXT",
+                "description": "将命令的执行朝向设为特定方向，或者设为指定实体的朝向。改变执行朝向，不改变执行者和执行位置",
+                "data": {
+                    "name": "rotated",
+                    "description": "将命令的执行朝向设为特定方向，或者设为指定实体的朝向。改变执行朝向，不改变执行者和执行位置"
+                }
+            },
+            {
+                "type": "TEXT",
+                "description": "采用指定实体的朝向",
+                "data": {
+                    "name": "as",
+                    "description": "采用指定实体的朝向"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "作为命令执行朝向的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            }
+        ],
+        [
+            {
+                "type": "NORMAL_ID",
+                "description": "if|unless",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "if",
+                        "description": "如果是"
+                    },
+                    {
+                        "name": "unless",
+                        "description": "如果不是"
+                    }
+                ]
+            },
+            {
+                "type": "TEXT",
+                "description": "比较给定的位置的方块是否为给定的方块ID",
+                "data": {
+                    "name": "block",
+                    "description": "比较给定的位置的方块是否为给定的方块ID"
+                }
+            },
+            {
+                "type": "POSITION",
+                "brief": "方块坐标",
+                "description": "要进行比较的方块坐标"
+            },
+            {
+                "type": "BLOCK",
+                "description": "要进行比较的方块",
+                "nodeBlockType": 0
+            }
+        ],
+        [
+            {
+                "type": "NORMAL_ID",
+                "description": "if|unless",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "if",
+                        "description": "如果是"
+                    },
+                    {
+                        "name": "unless",
+                        "description": "如果不是"
+                    }
+                ]
+            },
+            {
+                "type": "TEXT",
+                "description": "比较相同大小的两个长方体区域的方块",
+                "data": {
+                    "name": "blocks",
+                    "description": "比较相同大小的两个长方体区域的方块"
+                }
+            },
+            {
+                "type": "POSITION",
+                "brief": "源坐标1",
+                "description": "源区域的对角坐标"
+            },
+            {
+                "type": "POSITION",
+                "brief": "源坐标2",
+                "description": "源区域的对角坐标"
+            },
+            {
+                "type": "POSITION",
+                "brief": "探测区域的坐标",
+                "description": "探测区域的西北方向较低点的坐标"
+            },
+            {
+                "type": "NORMAL_ID",
+                "brief": "比较方式",
+                "description": "探测区域内的全部方块或忽略源区域内空气方块所在的位置",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "all",
+                        "description": "探测区域内的全部方块"
+                    },
+                    {
+                        "name": "masked",
+                        "description": "忽略源区域内空气方块所在的位置"
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "type": "NORMAL_ID",
+                "description": "if|unless",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "if",
+                        "description": "如果是"
+                    },
+                    {
+                        "name": "unless",
+                        "description": "如果不是"
+                    }
+                ]
+            },
+            {
+                "type": "TEXT",
+                "description": "检查一个或多个特定实体是否存在",
+                "data": {
+                    "name": "entity",
+                    "description": "检查一个或多个特定实体是否存在"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "要检测是否存在的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            }
+        ],
+        [
+            {
+                "type": "NORMAL_ID",
+                "description": "if|unless",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "if",
+                        "description": "如果是"
+                    },
+                    {
+                        "name": "unless",
+                        "description": "如果不是"
+                    }
+                ]
+            },
+            {
+                "type": "TEXT",
+                "description": "检查指定目标的记分板中的记分项的分数是否与另一个（或同一个）目标的记分项的分数是否符合指定的关系，或者是否在给定的范围之内",
+                "data": {
+                    "name": "score",
+                    "description": "检查指定目标的记分板中的记分项的分数是否与另一个（或同一个）目标的记分项的分数是否符合指定的关系，或者是否在给定的范围之内"
+                }
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "要检查分数的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            },
+            {
+                "type": "STRING",
+                "brief": "记分项",
+                "description": "记分项的名字",
+                "canContainSpace": true,
+                "ignoreLater": false
+            },
+            {
+                "type": "NORMAL_ID",
+                "description": "运算符",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "<",
+                        "description": "小于"
+                    },
+                    {
+                        "name": "<=",
+                        "description": "小于等于"
+                    },
+                    {
+                        "name": "=",
+                        "description": "等于"
+                    },
+                    {
+                        "name": ">=",
+                        "description": "大于等于"
+                    },
+                    {
+                        "name": ">",
+                        "description": "大于"
+                    }
+                ]
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "要检查分数的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            },
+            {
+                "type": "STRING",
+                "brief": "记分项",
+                "description": "记分项的名字",
+                "canContainSpace": true,
+                "ignoreLater": false
+            }
+        ],
+        [
+            {
+                "type": "NORMAL_ID",
+                "description": "if|unless",
+                "ignoreError": false,
+                "contents": [
+                    {
+                        "name": "if",
+                        "description": "如果是"
+                    },
+                    {
+                        "name": "unless",
+                        "description": "如果不是"
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "name": "score",
+                    "description": "检查指定目标的记分板中的记分项的分数是否与另一个（或同一个）目标的记分项的分数是否符合指定的关系，或者是否在给定的范围之内"
+                },
+                "description": "检查指定目标的记分板中的记分项的分数是否与另一个（或同一个）目标的记分项的分数是否符合指定的关系，或者是否在给定的范围之内",
+                "type": "TEXT"
+            },
+            {
+                "type": "TARGET_SELECTOR",
+                "description": "要检查分数的实体",
+                "isOnlyOne": false,
+                "isMustPlayer": false,
+                "isMustNPC": false,
+                "isWildcard": false
+            },
+            {
+                "type": "STRING",
+                "brief": "记分项",
+                "description": "记分项的名字",
+                "canContainSpace": true,
+                "ignoreLater": false
+            },
+            {
+                "type": "TEXT",
+                "description": "匹配范围",
+                "data": {
+                    "name": "matches",
+                    "description": "匹配范围"
+                }
+            },
+            {
+                "type": "RANGE",
+                "description": "分数范围"
+            }
+        ]
+    ]
+}

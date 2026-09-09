@@ -1,0 +1,153 @@
+{
+    "id": "rawtext",
+    "start": "PARENT",
+    "node": [
+        {
+            "type": "JSON_STRING",
+            "id": "TEXT",
+            "description": "在文本中直接出现的原始文本的字符串。\\n用于换行（回车）。如果文本中有translate，则text的内容会被translate覆盖。"
+        },
+        {
+            "type": "JSON_STRING",
+            "id": "TRANSLATE",
+            "description": "使用玩家所选择的语言显示的翻译识别符。"
+        },
+        {
+            "type": "JSON_STRING",
+            "id": "STRING",
+            "description": "translate使用的聊天字符串参数。"
+        },
+        {
+            "type": "JSON_LIST",
+            "id": "WITH",
+            "description": "translate使用的聊天字符串参数的列表。",
+            "data": "STRING"
+        },
+        {
+            "type": "JSON_STRING",
+            "id": "TARGET_SELECTOR",
+            "description": "目标选择器",
+            "data": [
+                {
+                    "type": "TARGET_SELECTOR",
+                    "id": "TARGET_SELECTOR",
+                    "description": "目标选择器",
+                    "isMustPlayer": false,
+                    "isOnlyOne": false,
+                    "isMustNPC": false,
+                    "isWildcard": false
+                },
+                {
+                    "type": "TEXT",
+                    "id": "ALL_TARGET",
+                    "description": "目标选择器",
+                    "data": {
+                        "name": "*",
+                        "description": "选择全部实体"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "JSON_STRING",
+            "id": "SCORE_OBJECTIVE",
+            "description": "选定要显示分数的目标所在记分项的名称"
+        },
+        {
+            "type": "JSON_INTEGER",
+            "id": "SCORE_VALUE",
+            "description": "可选。如果存在此值，则无论分数是多少，都将使用此值。"
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "SCORE",
+            "description": "显示所选目标在所选记分项的当前分数",
+            "data": [
+                {
+                    "key": "name",
+                    "description": "选定要显示分数的目标",
+                    "value": [
+                        "TARGET_SELECTOR"
+                    ]
+                },
+                {
+                    "key": "objective",
+                    "description": "选定要显示分数的目标所在记分项的名称",
+                    "value": [
+                        "SCORE_OBJECTIVE"
+                    ]
+                },
+                {
+                    "key": "value",
+                    "description": "可选。如果存在此值，则无论分数是多少，都将使用此值。",
+                    "value": [
+                        "SCORE_VALUE"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "RAWTEXT_ELEMENT",
+            "description": "被放置物品的物品组件",
+            "data": [
+                {
+                    "key": "text",
+                    "description": "在文本中直接出现的原始文本的字符串。\\n用于换行（回车）。如果文本中有translate，则text的内容会被translate覆盖。",
+                    "value": [
+                        "TEXT"
+                    ]
+                },
+                {
+                    "key": "selector",
+                    "description": "可以在命令中输出实体的名称",
+                    "value": [
+                        "TARGET_SELECTOR"
+                    ]
+                },
+                {
+                    "key": "translate",
+                    "description": "使用玩家所选择的语言显示的翻译识别符。",
+                    "value": [
+                        "TRANSLATE"
+                    ]
+                },
+                {
+                    "key": "with",
+                    "description": "translate使用的聊天字符串参数的列表。",
+                    "value": [
+                        "WITH",
+                        "PARENT"
+                    ]
+                },
+                {
+                    "key": "score",
+                    "description": "显示所选目标在所选记分项的当前分数。",
+                    "value": [
+                        "SCORE"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "JSON_LIST",
+            "id": "RAWTEXT",
+            "description": "被放置物品的物品组件",
+            "data": "RAWTEXT_ELEMENT"
+        },
+        {
+            "type": "JSON_OBJECT",
+            "id": "PARENT",
+            "description": "被放置物品的物品组件",
+            "data": [
+                {
+                    "key": "rawtext",
+                    "description": "原始JSON文本",
+                    "value": [
+                        "RAWTEXT"
+                    ]
+                }
+            ]
+        }
+    ]
+}

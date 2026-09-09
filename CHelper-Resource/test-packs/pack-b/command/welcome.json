@@ -1,0 +1,31 @@
+{
+  // ===== 【B】welcome：与 A 同名（冲突测试用）=====
+  // 差异点：字面量分支是 max（A 是 all）；无 /hi 别名。
+  // 与 A 同时启用时按管理页列表顺序裁决：靠上的生效，另一个整体忽略。
+  "name": [
+    "welcome"
+  ],
+  "description": "【B】欢迎命令：/welcome max 或 /welcome <对象>（无 /hi 别名）",
+
+  "syntax": [
+    "/welcome <who: GreetWho>",
+    "/welcome max"
+  ],
+
+  "node": {
+    "<who: GreetWho>": {
+      "type": "NORMAL_ID",
+      "brief": "欢迎对象",
+      "description": "要欢迎的对象（boss/friend）",
+      "key": "greetWho"
+    },
+    "max": {
+      "type": "TEXT",
+      "description": "欢迎到场所有人（含 BOSS）",
+      "data": {
+        "name": "max",
+        "description": "欢迎到场所有人"
+      }
+    }
+  }
+}

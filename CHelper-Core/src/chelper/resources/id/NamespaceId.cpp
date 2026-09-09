@@ -27,6 +27,8 @@ namespace CHelper {
                             .append(u":")
                             .append(name),
                     description);
+            // 带命名空间的派生候选继承来源（来源徽标），与原始条目一致
+            idWithNamespace->packName = packName;
         }
         return idWithNamespace;
     }

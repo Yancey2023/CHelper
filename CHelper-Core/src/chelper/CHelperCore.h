@@ -56,6 +56,9 @@ namespace CHelper {
 
         [[nodiscard]] const CPack &getCPack() const;
 
+        // 供 FragmentContext 等片段上下文共享 CPack（shared_ptr 保活）
+        [[nodiscard]] std::shared_ptr<const CPack> getSharedCPack() const;
+
         /**
          * 把命令文本解析成AST，生成独立的命令上下文
          * 适用于下游多线程并行的场景：

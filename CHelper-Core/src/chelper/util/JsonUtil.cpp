@@ -32,6 +32,61 @@ namespace CHelper::JsonUtil {
         return indexConvertList[index];
     }
 
+    std::string stripJsonComments(std::string_view input) {
+        std::string out;
+        out.reserve(input.size());
+        const size_t n = input.size();
+        size_t i = 0;
+        bool inString = false;
+        while (i < n) {
+            const char c = input[i];
+            if (inString) {
+                out.push_back(c);
+                if (c == '\\' && i + 1 < n) {
+                    out.push_back(input[i + 1]);
+                    i += 2;
+                    continue;
+                }
+                if (c == '"') {
+                    inString = false;
+                }
+                ++i;
+                continue;
+            }
+            if (c == '"') {
+                inString = true;
+                out.push_back(c);
+                ++i;
+                continue;
+            }
+            if (c == '/' && i + 1 < n) {
+                const char d = input[i + 1];
+                if (d == '/') {
+                    // 行注释：跳到行尾（换行保留，便于错误定位）
+                    i += 2;
+                    while (i < n && input[i] != '\n' && input[i] != '\r') {
+                        ++i;
+                    }
+                    out.push_back(' ');
+                    continue;
+                }
+                if (d == '*') {
+                    // 块注释：替换为单个空格，避免相邻 token 粘连（如 true/*x*/false）
+                    i += 2;
+                    while (i + 1 < n && !(input[i] == '*' && input[i + 1] == '/')) {
+                        ++i;
+                    }
+                    i = (i + 1 < n) ? i + 2 : n;
+                    out.push_back(' ');
+                    continue;
+                }
+            }
+            out.push_back(c);
+            ++i;
+        }
+        return out;
+    }
+
     std::u16string string2jsonString(const std::u16string_view &input) {
         std::u16string result;
         result.reserve(static_cast<size_t>(static_cast<double>(input.size()) * 1.2));

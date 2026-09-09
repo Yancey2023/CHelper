@@ -30,13 +30,17 @@ import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hjq.toast.Toaster
+import java.util.concurrent.CancellationException
+import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.core.CHelperCore
 import yancey.chelper.core.CommandContext
 import yancey.chelper.core.ErrorReason
+import yancey.chelper.core.KernelCache
 import yancey.chelper.core.SelectedString
 import yancey.chelper.core.Suggestion
 import yancey.chelper.data.CopyHistoryDataStore
@@ -64,6 +68,23 @@ class CompletionViewModel(application: Application) : AndroidViewModel(applicati
     var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
     var nodeCount by mutableIntStateOf(0)
     var core: CHelperCore? = null
+
+    /**
+     * 已持有的共享内核租约（段 + 启用拓展包指纹；KernelCache 管理内核生命周期，
+     * 页面只租借不 close）。仅主线程读写。
+     */
+    private var heldSegment: String? = null
+
+    private var heldFingerprint: String? = null
+
+    /**
+     * 异步取内核的串行执行器 + 代际号：切换过快时旧结果按代际丢弃并归还租约。
+     */
+    private var composeGeneration = 0
+
+    private val composeDispatcher =
+        Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "chelper-compose") }
+            .asCoroutineDispatcher()
 
     /**
      * 当前命令文本对应的命令上下文，文本内容改变时重新创建
@@ -227,44 +248,101 @@ class CompletionViewModel(application: Application) : AndroidViewModel(applicati
         isSyntaxHighlight: Boolean,
         isShowErrorReason: Boolean
     ) {
-        if (cpackBranch.isEmpty()) {
+        // 主路径：内核来自共享 KernelCache（按主包启用段 + 启用拓展包配置租借，
+        // 与库页高亮/rawtext 同段复用，内核生命周期由缓存管理，页面不 close）。
+        // 空段 = 无可用版本，清空并归还租约。
+        val segment = cpackBranch.replace('-', '/')
+        if (segment.isEmpty()) {
+            composeGeneration++
+            releaseHeldCore()
             this.context?.close()
             this.context = null
             contextText = null
-            core?.close()
             core = null
             nodeCount = 0
             return
         }
-        var cpackPath: String? = null
-        for (filename in context.assets.list("cpack") ?: return) {
-            if (filename.startsWith(cpackBranch)) {
-                cpackPath = "cpack/$filename"
-            }
-        }
-        if (cpackPath == null) {
-            return
-        }
-        core.let {
-            if (it == null || it.path != cpackPath) {
-                var newCore: CHelperCore? = null
-                try {
-                    newCore = CHelperCore.fromAssets(context.assets, cpackPath)
-                } catch (throwable: Throwable) {
-                    Toaster.show("资源包加载失败")
-                    Log.w("CompletionViewModel", "fail to load resource pack", throwable)
-                    MonitorUtil.generateCustomLog(throwable, "LoadResourcePackException")
+        val generation = ++composeGeneration
+        viewModelScope.launch(composeDispatcher) {
+            var acquired = false
+            try {
+                // 读取当前启用拓展包配置指纹（桥内缓存，廉价）；配置变化也会触发重建
+                val fingerprint = KernelCache.currentFingerprint(context)
+                if (segment == heldSegment && fingerprint == heldFingerprint && core != null) {
+                    // 段与包配置都没变（如重新进入命令页）：无需重建，同步一次 UI 状态即可
+                    withContext(Dispatchers.Main.immediate) {
+                        if (generation == composeGeneration) {
+                            onSelectionChanged(
+                                isCheckingBySelection,
+                                isSyntaxHighlight,
+                                isShowErrorReason
+                            )
+                        }
+                    }
+                    return@launch
                 }
-                if (newCore != null) {
-                    this.context?.close()
-                    this.context = null
+                val newCore = KernelCache.acquire(context, segment)
+                acquired = newCore != null
+                withContext(Dispatchers.Main.immediate) {
+                    if (generation != composeGeneration) {
+                        // 期间又切换了版本/配置：归还这次租约，丢弃
+                        KernelCache.release(segment)
+                        return@withContext
+                    }
+                    if (newCore == null) {
+                        // 合成失败：透传 KernelCache 记录的原始原因，便于定位（常见：包文件校验不通过）
+                        val reason = KernelCache.lastComposeFailure()
+                        Toaster.show(
+                            if (reason.isNullOrEmpty()) "资源包加载失败" else "资源包加载失败：" + reason
+                        )
+                        return@withContext
+                    }
+                    // 先归还旧租约（段或包配置任一变化都要换内核），再挂新内核
+                    releaseOldHeld(segment, fingerprint)
+                    heldSegment = segment
+                    heldFingerprint = fingerprint
+                    this@CompletionViewModel.context?.close()
+                    this@CompletionViewModel.context = null
                     contextText = null
-                    it?.close()
                     core = newCore
                     lastInput = SelectedString("", 0, 0)
                     onSelectionChanged(isCheckingBySelection, isSyntaxHighlight, isShowErrorReason)
                 }
+            } catch (cancel: CancellationException) {
+                if (acquired) {
+                    KernelCache.release(segment)
+                }
+                throw cancel
+            } catch (throwable: Throwable) {
+                Log.w("CompletionViewModel", "fail to acquire kernel", throwable)
+                MonitorUtil.generateCustomLog(throwable, "ComposeCoreException")
+                withContext(Dispatchers.Main.immediate) {
+                    if (generation == composeGeneration) {
+                        Toaster.show("资源包加载失败：" + (throwable.message ?: ""))
+                    }
+                }
             }
+        }
+    }
+
+    /** 归还当前内核租约（内核生命周期归 KernelCache 管理） */
+    private fun releaseHeldCore() {
+        val segment = heldSegment ?: return
+        val fingerprint = heldFingerprint ?: ""
+        heldSegment = null
+        heldFingerprint = null
+        KernelCache.release(segment, fingerprint)
+    }
+
+    /**
+     * 换内核前归还旧租约：仅当旧配置（段/包指纹）与目标不同才需要释放；
+     * 相同则保留旧租约（缓存命中路径会直接复用内核）。
+     */
+    private fun releaseOldHeld(segment: String, fingerprint: String) {
+        val oldSegment = heldSegment ?: return
+        val oldFingerprint = heldFingerprint
+        if (oldSegment != segment || oldFingerprint != fingerprint) {
+            KernelCache.release(oldSegment, oldFingerprint ?: "")
         }
     }
 
@@ -276,10 +354,13 @@ class CompletionViewModel(application: Application) : AndroidViewModel(applicati
 
     override fun onCleared() {
         super.onCleared()
+        // 使在途的取内核任务失效；其取消路径会自行归还租约（release 幂等）
+        composeGeneration++
+        releaseHeldCore()
         context?.close()
         context = null
         contextText = null
-        core?.close()
+        core = null
         // 保存上次的输入内容
         try {
             file.writeCachedCommand(command)

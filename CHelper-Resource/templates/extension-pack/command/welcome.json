@@ -1,0 +1,34 @@
+{
+  // ===== 命令注册 =====
+  "name": [
+    "welcome",   // 命令名：注册 /welcome
+    "hi"         // 别名：/welcome 与 /hi 等价（都进同一语法图）
+  ],
+  "description": "发送欢迎语（模板：NORMAL_ID 候选参数 + TEXT 字面量分支）",
+
+  // syntax 只是给人看的说明（纯文档），真正的解析结构在 node。
+  "syntax": [
+    "/welcome <who: GreetWho>",  // 占位符 <名字: 说明> 须在 node 中有同名键
+    "/welcome all"                // 字面量分支：输入 all 命中
+  ],
+
+  "node": {
+    // —— 占位符：候选项来自 ID 表 ——
+    "<who: GreetWho>": {          // 键必须与 syntax 占位符一致（含 < >）
+      "type": "NORMAL_ID",        // 从 key 指向的 ID 表选值
+      "brief": "欢迎对象",         // 参数行里的简短提示
+      "description": "要欢迎的对象（候选见 ID/greetWho.json）",
+      "key": "greetWho"           // 指向本包 ID/greetWho.json 的 id 字段
+    },
+
+    // —— 字面量分支：输入 "all" 走这里 ——
+    "all": {
+      "type": "TEXT",             // 字面量关键词（非占位符）
+      "description": "欢迎所有人",
+      "data": {                   // data.name 即字面量本体
+        "name": "all",
+        "description": "欢迎所有人"
+      }
+    }
+  }
+}

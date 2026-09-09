@@ -486,7 +486,10 @@ public:
                             CHelper::Node::NodeWithType &t);
 };
 
-static CHelper::Node::NodeCreateStage::NodeCreateStage currentCreateStage;
+// 装载阶段全局状态：必须跨 TU 共享单一实例（模板在多个 TU 实例化时都读它）。
+// 原为 header 内 static（每 TU 一份副本），在多 TU 模板实例化合并下会读到未被设置的那份，
+// 导致 JSON/REPEAT/COMMAND 装载阶段检查失败（"unknown node type"）。改为 C++17 inline 共享。
+inline CHelper::Node::NodeCreateStage::NodeCreateStage currentCreateStage = CHelper::Node::NodeCreateStage::NONE;
 
 template<CHelper::Node::NodeTypeId::NodeTypeId nodeTypeId>
 struct NodeCodec {

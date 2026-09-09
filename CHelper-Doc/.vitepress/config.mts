@@ -130,8 +130,57 @@ export default defineConfig({
             link: "/development/android",
           },
           {
+            text: "高亮渲染专项（自定义渲染）",
+            link: "/development/highlight-rendering",
+          },
+          {
             text: "CHelper 网页接口 / JavaScript 接口文档",
             link: "/development/web",
+          },
+        ],
+      },
+      {
+        text: "拓展包设计（草案）",
+        items: [
+          {
+            text: "开发示例：逐字段走读",
+            link: "/design/extension-pack/tutorial",
+          },
+          {
+            text: "设计总览",
+            link: "/design/extension-pack/overview",
+          },
+          {
+            text: "包格式规范",
+            link: "/design/extension-pack/pack-format",
+          },
+          {
+            text: "合成器设计",
+            link: "/design/extension-pack/composer",
+          },
+          {
+            text: "段装载器接口",
+            link: "/design/extension-pack/segment-loader",
+          },
+          {
+            text: "选择器数据化设计",
+            link: "/design/extension-pack/selector-data",
+          },
+          {
+            text: "客户端接入与路线图",
+            link: "/design/extension-pack/clients-and-roadmap",
+          },
+          {
+            text: "P0 实现任务清单",
+            link: "/design/extension-pack/p0-tasks",
+          },
+          {
+            text: "json 补全收敛（rawtext）",
+            link: "/design/extension-pack/rawtext-convergence",
+          },
+          {
+            text: "共享合成内核缓存",
+            link: "/design/extension-pack/kernel-cache",
           },
         ],
       },

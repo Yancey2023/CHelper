@@ -1,0 +1,22 @@
+{
+  // ===== 实体 ID 参数：引用【内置】entity 表（type=namespace，不随包带数据）=====
+  // 与主包 /summon 同机制：跨包引用在合成 CPack 上解析，此处只声明 key。
+  "name": [
+    "pentity"
+  ],
+  "description": "【A】实体参数（内置 entity 表引用：/pentity zombie 等）",
+
+  "syntax": [
+    "/pentity <entityType: EntityType>"
+  ],
+
+  "node": {
+    "<entityType: EntityType>": {
+      "type": "NAMESPACE_ID",     // 命名空间表（主包内置 entity）
+      "brief": "实体类型",
+      "description": "候选来自内置实体表（zombie/creeper/villager…）",
+      "ignoreError": true,
+      "key": "entity"             // 内置表 id：实体表（versions/<vt>/shared/id/entity.json）
+    }
+  }
+}

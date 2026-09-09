@@ -1,0 +1,21 @@
+{
+  // ===== JSON 结构参数：引用本包 json/demoMessage.json（此前从未被命令引用过）=====
+  // "type": "JSON" 的节点在输入 JSON 参数时按结构提示键/值（键 text → 字符串值）。
+  "name": [
+    "pjson"
+  ],
+  "description": "【A】JSON 结构参数（引用包内 json/demoMessage.json：/pjson {\"text\":\"hi\"}）",
+
+  "syntax": [
+    "/pjson <message: Message>"
+  ],
+
+  "node": {
+    "<message: Message>": {
+      "type": "JSON",
+      "brief": "消息",
+      "description": "JSON 文本，按 demoMessage 结构补全（对象含 text 键）",
+      "key": "demoMessage"        // 指向本包 json/demoMessage.json 的 id
+    }
+  }
+}

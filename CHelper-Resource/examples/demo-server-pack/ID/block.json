@@ -1,0 +1,78 @@
+{
+  "id": "block",
+  "type": "block",
+  "content": {
+    "blockStateValues": [
+      {
+        "name": "demo_machine",
+        "idNamespace": "demo",
+        "description": "示例机器",
+        "properties": [
+          {
+            "name": "lit",
+            "defaultValue": false
+          },
+          {
+            "name": "power",
+            "defaultValue": 0,
+            "valid": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ]
+      }
+    ],
+    "blockPropertyDescriptions": {
+      "common": [],
+      "block": [
+        {
+          "blocks": [
+            "demo_machine",
+            "demo:demo_machine"
+          ],
+          "properties": [
+            {
+              "propertyName": "lit",
+              "description": "是否点亮",
+              "values": [
+                {
+                  "valueName": false,
+                  "description": "关闭"
+                },
+                {
+                  "valueName": true,
+                  "description": "点亮"
+                }
+              ]
+            },
+            {
+              "propertyName": "power",
+              "description": "能量等级",
+              "values": [
+                {
+                  "valueName": 0,
+                  "description": "关闭"
+                },
+                {
+                  "valueName": 1,
+                  "description": "低"
+                },
+                {
+                  "valueName": 2,
+                  "description": "中"
+                },
+                {
+                  "valueName": 3,
+                  "description": "高"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

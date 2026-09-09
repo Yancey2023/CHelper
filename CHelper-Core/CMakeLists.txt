@@ -96,7 +96,7 @@ endfunction()
 
 chelper_fetch_thirdparty(fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG c0cd0fcfece8ac1541857a6dc5955745f1ec165
+    GIT_TAG c0cd0fcfece8ac1541857a6dc5955745f1ec165b
 )
 chelper_fetch_thirdparty(utfcpp
     GIT_REPOSITORY https://github.com/nemtrif/utfcpp.git

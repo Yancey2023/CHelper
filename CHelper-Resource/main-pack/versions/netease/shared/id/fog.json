@@ -1,0 +1,298 @@
+{
+    "id": "fog",
+    "type": "normal",
+    "content": [
+        {
+            "name": "minecraft:fog_bamboo_jungle",
+            "description": "竹林"
+        },
+        {
+            "name": "minecraft:fog_bamboo_jungle_hills",
+            "description": "竹林丘陵"
+        },
+        {
+            "name": "minecraft:fog_basalt_deltas",
+            "description": "玄武岩三角洲"
+        },
+        {
+            "name": "minecraft:fog_beach",
+            "description": "沙滩"
+        },
+        {
+            "name": "minecraft:fog_birch_forest",
+            "description": "桦木森林"
+        },
+        {
+            "name": "minecraft:fog_birch_forest_hills",
+            "description": "桦木森林丘陵"
+        },
+        {
+            "name": "minecraft:fog_cherry_grove",
+            "description": "樱花树林"
+        },
+        {
+            "name": "minecraft:fog_cold_beach",
+            "description": "积雪沙滩"
+        },
+        {
+            "name": "minecraft:fog_cold_ocean",
+            "description": "冷水海洋"
+        },
+        {
+            "name": "minecraft:fog_cold_taiga",
+            "description": "积雪针叶林"
+        },
+        {
+            "name": "minecraft:fog_cold_taiga_hills",
+            "description": "积雪的针叶林丘陵"
+        },
+        {
+            "name": "minecraft:fog_cold_taiga_mutated",
+            "description": "积雪的针叶林山地"
+        },
+        {
+            "name": "minecraft:fog_crimson_forest",
+            "description": "绯红森林"
+        },
+        {
+            "name": "minecraft:fog_deep_cold_ocean",
+            "description": "冷水深海"
+        },
+        {
+            "name": "minecraft:fog_deep_frozen_ocean",
+            "description": "冰冻深海"
+        },
+        {
+            "name": "minecraft:fog_deep_lukewarm_ocean",
+            "description": "温水深海"
+        },
+        {
+            "name": "minecraft:fog_deep_ocean",
+            "description": "深海"
+        },
+        {
+            "name": "minecraft:fog_deep_warm_ocean",
+            "description": "暖水深海"
+        },
+        {
+            "name": "minecraft:fog_default",
+            "description": "默认"
+        },
+        {
+            "name": "minecraft:fog_desert",
+            "description": "沙漠"
+        },
+        {
+            "name": "minecraft:fog_desert_hills",
+            "description": "沙漠丘陵"
+        },
+        {
+            "name": "minecraft:fog_extreme_hills",
+            "description": "山地"
+        },
+        {
+            "name": "minecraft:fog_extreme_hills_edge",
+            "description": "山地边缘"
+        },
+        {
+            "name": "minecraft:fog_extreme_hills_mutated",
+            "description": "沙砾山地"
+        },
+        {
+            "name": "minecraft:fog_extreme_hills_plus_trees",
+            "description": "繁茂的山地"
+        },
+        {
+            "name": "minecraft:fog_extreme_hills_plus_trees_mutated",
+            "description": "沙砾山地+"
+        },
+        {
+            "name": "minecraft:fog_flower_forest",
+            "description": "繁花森林"
+        },
+        {
+            "name": "minecraft:fog_forest",
+            "description": "森林"
+        },
+        {
+            "name": "minecraft:fog_forest_hills",
+            "description": "繁茂的丘陵"
+        },
+        {
+            "name": "minecraft:fog_frozen_ocean",
+            "description": "冻洋"
+        },
+        {
+            "name": "minecraft:fog_frozen_river",
+            "description": "冻河"
+        },
+        {
+            "name": "minecraft:fog_hell",
+            "description": "下界荒地"
+        },
+        {
+            "name": "minecraft:fog_ice_mountains",
+            "description": "雪山"
+        },
+        {
+            "name": "minecraft:fog_ice_plains",
+            "description": "积雪的冻原"
+        },
+        {
+            "name": "minecraft:fog_ice_plains_spikes",
+            "description": "冰刺之地"
+        },
+        {
+            "name": "minecraft:fog_jungle",
+            "description": "丛林"
+        },
+        {
+            "name": "minecraft:fog_jungle_edge",
+            "description": "丛林边缘"
+        },
+        {
+            "name": "minecraft:fog_jungle_hills",
+            "description": "丛林丘陵"
+        },
+        {
+            "name": "minecraft:fog_jungle_mutated",
+            "description": "丛林变种"
+        },
+        {
+            "name": "minecraft:fog_lukewarm_ocean",
+            "description": "温水海洋"
+        },
+        {
+            "name": "minecraft:fog_mangrove_swamp",
+            "description": "红树林沼泽"
+        },
+        {
+            "name": "minecraft:fog_mega_spruce_taiga",
+            "description": "巨型云杉针叶林"
+        },
+        {
+            "name": "minecraft:fog_mega_spruce_taiga_mutated",
+            "description": "巨型云杉针叶林丘陵"
+        },
+        {
+            "name": "minecraft:fog_mega_taiga",
+            "description": "巨型针叶林"
+        },
+        {
+            "name": "minecraft:fog_mega_taiga_hills",
+            "description": "巨型针叶林丘陵"
+        },
+        {
+            "name": "minecraft:fog_mega_taiga_mutated",
+            "description": "巨型针叶林丘陵"
+        },
+        {
+            "name": "minecraft:fog_mesa",
+            "description": "恶地"
+        },
+        {
+            "name": "minecraft:fog_mesa_bryce",
+            "description": "风蚀恶地"
+        },
+        {
+            "name": "minecraft:fog_mesa_mutated",
+            "description": "恶地高原变种"
+        },
+        {
+            "name": "minecraft:fog_mesa_plateau",
+            "description": "恶地高原"
+        },
+        {
+            "name": "minecraft:fog_mesa_plateau_stone",
+            "description": "繁茂的恶地高原"
+        },
+        {
+            "name": "minecraft:fog_mushroom_island",
+            "description": "蘑菇岛"
+        },
+        {
+            "name": "minecraft:fog_mushroom_island_shore",
+            "description": "蘑菇岛岸"
+        },
+        {
+            "name": "minecraft:fog_ocean",
+            "description": "海洋"
+        },
+        {
+            "name": "minecraft:fog_pale_garden",
+            "description": "苍白之园"
+        },
+        {
+            "name": "minecraft:fog_plains",
+            "description": "平原"
+        },
+        {
+            "name": "minecraft:fog_powder_snow",
+            "description": "细雪"
+        },
+        {
+            "name": "minecraft:fog_river",
+            "description": "河流"
+        },
+        {
+            "name": "minecraft:fog_roofed_forest",
+            "description": "黑森林"
+        },
+        {
+            "name": "minecraft:fog_savanna",
+            "description": "热带草原"
+        },
+        {
+            "name": "minecraft:fog_savanna_mutated",
+            "description": "破碎的热带草原"
+        },
+        {
+            "name": "minecraft:fog_savanna_plateau",
+            "description": "热带高原"
+        },
+        {
+            "name": "minecraft:fog_soulsand_valley",
+            "description": "灵魂沙峡谷"
+        },
+        {
+            "name": "minecraft:fog_stone_beach",
+            "description": "石岸"
+        },
+        {
+            "name": "minecraft:fog_sunflower_plains",
+            "description": "向日葵平原"
+        },
+        {
+            "name": "minecraft:fog_swampland",
+            "description": "沼泽"
+        },
+        {
+            "name": "minecraft:fog_swampland_mutated",
+            "description": "沼泽丘陵"
+        },
+        {
+            "name": "minecraft:fog_taiga",
+            "description": "针叶林"
+        },
+        {
+            "name": "minecraft:fog_taiga_hills",
+            "description": "针叶林丘陵"
+        },
+        {
+            "name": "minecraft:fog_taiga_mutated",
+            "description": "针叶林山地"
+        },
+        {
+            "name": "minecraft:fog_the_end",
+            "description": "末地"
+        },
+        {
+            "name": "minecraft:fog_warm_ocean",
+            "description": "暖水海洋"
+        },
+        {
+            "name": "minecraft:fog_warped_forest",
+            "description": "诡异森林"
+        }
+    ]
+}

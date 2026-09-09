@@ -1,0 +1,15 @@
+{
+  "id": "entity",
+  "type": "namespace",
+  "content": [
+    {
+      "name": "demo_guard",
+      "description": "示例守卫（服务器自定义实体）"
+    },
+    {
+      "name": "demo_pet",
+      "idNamespace": "demo",
+      "description": "示例宠物（demo 命名空间）"
+    }
+  ]
+}

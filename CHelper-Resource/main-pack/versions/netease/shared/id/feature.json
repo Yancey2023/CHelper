@@ -1,0 +1,723 @@
+{
+    "id": "feature",
+    "type": "normal",
+    "content": [
+        {
+            "name": "minecraft:amethyst_geode_feature"
+        },
+        {
+            "name": "minecraft:andesite_feature"
+        },
+        {
+            "name": "minecraft:azalea_root_system_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:azalea_tree_feature"
+        },
+        {
+            "name": "minecraft:bamboo_then_podzol_feature"
+        },
+        {
+            "name": "minecraft:beehive_east_feature"
+        },
+        {
+            "name": "minecraft:beehive_esw_order_feature"
+        },
+        {
+            "name": "minecraft:beehive_feature"
+        },
+        {
+            "name": "minecraft:beehive_search_feature"
+        },
+        {
+            "name": "minecraft:beehive_south_feature"
+        },
+        {
+            "name": "minecraft:beehive_swe_order_feature"
+        },
+        {
+            "name": "minecraft:beehive_wes_order_feature"
+        },
+        {
+            "name": "minecraft:beehive_west_feature"
+        },
+        {
+            "name": "minecraft:big_dripleaf_east_feature"
+        },
+        {
+            "name": "minecraft:big_dripleaf_north_feature"
+        },
+        {
+            "name": "minecraft:big_dripleaf_south_feature"
+        },
+        {
+            "name": "minecraft:big_dripleaf_west_feature"
+        },
+        {
+            "name": "minecraft:birch_tree_feature"
+        },
+        {
+            "name": "minecraft:birch_tree_with_beehive_feature"
+        },
+        {
+            "name": "minecraft:birch_tree_with_optional_beehive_feature"
+        },
+        {
+            "name": "minecraft:bush_feature"
+        },
+        {
+            "name": "minecraft:cave_vine_feature"
+        },
+        {
+            "name": "minecraft:cave_vine_in_moss_feature"
+        },
+        {
+            "name": "minecraft:cave_vine_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:cherry_tree_feature"
+        },
+        {
+            "name": "minecraft:cherry_tree_with_beehive_feature"
+        },
+        {
+            "name": "minecraft:clay_ore_feature"
+        },
+        {
+            "name": "minecraft:clay_pool_with_dripleaves_feature"
+        },
+        {
+            "name": "minecraft:clay_with_dripleaves_feature"
+        },
+        {
+            "name": "minecraft:coal_ore_feature"
+        },
+        {
+            "name": "minecraft:coal_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:cocoa_age_0_feature"
+        },
+        {
+            "name": "minecraft:cocoa_age_1_feature"
+        },
+        {
+            "name": "minecraft:cocoa_age_2_feature"
+        },
+        {
+            "name": "minecraft:copper_ore_feature"
+        },
+        {
+            "name": "minecraft:creaking_heart_feature"
+        },
+        {
+            "name": "minecraft:creaking_heart_search_feature"
+        },
+        {
+            "name": "minecraft:crimson_fungus_feature"
+        },
+        {
+            "name": "minecraft:crimson_fungus_scatter_feature"
+        },
+        {
+            "name": "minecraft:crimson_roots_feature"
+        },
+        {
+            "name": "minecraft:crimson_roots_scatter_feature"
+        },
+        {
+            "name": "minecraft:deepslate_diamond_fossil_feature"
+        },
+        {
+            "name": "minecraft:deepslate_feature"
+        },
+        {
+            "name": "minecraft:diamond_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:diamond_ore_feature"
+        },
+        {
+            "name": "minecraft:diamond_ore_large_feature"
+        },
+        {
+            "name": "minecraft:diorite_feature"
+        },
+        {
+            "name": "minecraft:dirt_feature"
+        },
+        {
+            "name": "minecraft:dripstone_caves_copper_ore_feature"
+        },
+        {
+            "name": "minecraft:emerald_ore_feature"
+        },
+        {
+            "name": "minecraft:fallen_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:fallen_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:fallen_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:fallen_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:fallen_super_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:fancy_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:fancy_oak_tree_with_beehive_feature"
+        },
+        {
+            "name": "minecraft:fancy_oak_tree_with_leaf_litter_and_optional_beehive"
+        },
+        {
+            "name": "minecraft:fancy_oak_tree_with_optional_beehive_feature"
+        },
+        {
+            "name": "minecraft:fern_double_plant_feature"
+        },
+        {
+            "name": "minecraft:fern_double_plant_lower_feature"
+        },
+        {
+            "name": "minecraft:fern_double_plant_patch_feature"
+        },
+        {
+            "name": "minecraft:fern_double_plant_upper_feature"
+        },
+        {
+            "name": "minecraft:fern_feature"
+        },
+        {
+            "name": "minecraft:fixup_fern_double_plant_upper_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_grass_double_plant_upper_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_lapis_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_mesa_gold_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_sunflower_double_plant_upper_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_vines_position_feature"
+        },
+        {
+            "name": "minecraft:fixup_waterlily_position_feature"
+        },
+        {
+            "name": "minecraft:fossil_feature"
+        },
+        {
+            "name": "minecraft:glow_lichen_feature"
+        },
+        {
+            "name": "minecraft:gold_ore_extra_feature"
+        },
+        {
+            "name": "minecraft:gold_ore_feature"
+        },
+        {
+            "name": "minecraft:gold_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:granite_feature"
+        },
+        {
+            "name": "minecraft:grass_double_plant_feature"
+        },
+        {
+            "name": "minecraft:grass_double_plant_lower_feature"
+        },
+        {
+            "name": "minecraft:grass_double_plant_patch_feature"
+        },
+        {
+            "name": "minecraft:grass_double_plant_upper_feature"
+        },
+        {
+            "name": "minecraft:gravel_ore_feature"
+        },
+        {
+            "name": "minecraft:iron_ore_feature"
+        },
+        {
+            "name": "minecraft:iron_ore_small_feature"
+        },
+        {
+            "name": "minecraft:jungle_bush_feature"
+        },
+        {
+            "name": "minecraft:jungle_fern_feature"
+        },
+        {
+            "name": "minecraft:jungle_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:jungle_tree_with_cocoa_feature"
+        },
+        {
+            "name": "minecraft:lapis_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:lapis_ore_feature"
+        },
+        {
+            "name": "minecraft:mangrove_tree_feature"
+        },
+        {
+            "name": "minecraft:mangrove_tree_with_beenest_feature"
+        },
+        {
+            "name": "minecraft:mega_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:mega_pine_tree_feature"
+        },
+        {
+            "name": "minecraft:mega_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:moss_ceiling_feature"
+        },
+        {
+            "name": "minecraft:moss_ceiling_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:moss_patch_bonemeal_feature"
+        },
+        {
+            "name": "minecraft:moss_patch_feature"
+        },
+        {
+            "name": "minecraft:moss_patch_snap_to_floor_feature"
+        },
+        {
+            "name": "minecraft:mountain_pine_tree_feature"
+        },
+        {
+            "name": "minecraft:mountain_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:nether_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:nether_soul_sand_underground_feature"
+        },
+        {
+            "name": "minecraft:nether_sprouts_feature"
+        },
+        {
+            "name": "minecraft:nether_sprouts_scatter_feature"
+        },
+        {
+            "name": "minecraft:noop_undecorated_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:oak_tree_feature"
+        },
+        {
+            "name": "minecraft:oak_tree_with_beehive_feature"
+        },
+        {
+            "name": "minecraft:oak_tree_with_optional_beehive_feature"
+        },
+        {
+            "name": "minecraft:oak_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:optional_beehive_feature"
+        },
+        {
+            "name": "minecraft:optional_fallen_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:optional_fallen_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:optional_fallen_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:optional_fallen_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:optional_fallen_super_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:optional_jungle_tree_cocoa_feature"
+        },
+        {
+            "name": "minecraft:optional_log_brown_mushroom_feature"
+        },
+        {
+            "name": "minecraft:optional_log_mushrooms_feature"
+        },
+        {
+            "name": "minecraft:optional_lower_cocoa_feature"
+        },
+        {
+            "name": "minecraft:optional_oak_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:optional_podzol_feature"
+        },
+        {
+            "name": "minecraft:optional_roofed_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:optional_spruce_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:optional_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:optional_undecorated_jungle_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:optional_upper_cocoa_feature"
+        },
+        {
+            "name": "minecraft:pale_hanging_moss_feature"
+        },
+        {
+            "name": "minecraft:pale_hanging_moss_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:pale_moss_patch_bonemeal_feature"
+        },
+        {
+            "name": "minecraft:pale_moss_patch_feature"
+        },
+        {
+            "name": "minecraft:pale_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:pale_oak_tree_with_decorations_and_creaking_heart_feature"
+        },
+        {
+            "name": "minecraft:pale_oak_tree_with_decorations_feature"
+        },
+        {
+            "name": "minecraft:pine_tree_feature"
+        },
+        {
+            "name": "minecraft:pink_petals_scatter_feature"
+        },
+        {
+            "name": "minecraft:random_cherry_tree_feature"
+        },
+        {
+            "name": "minecraft:random_clay_with_dripleaves_feature"
+        },
+        {
+            "name": "minecraft:random_clay_with_dripleaves_snap_to_floor_feature"
+        },
+        {
+            "name": "minecraft:random_dry_grass_block_feature"
+        },
+        {
+            "name": "minecraft:random_mangrove_tree_feature"
+        },
+        {
+            "name": "minecraft:random_oak_tree_from_sapling_feature"
+        },
+        {
+            "name": "minecraft:random_oak_tree_with_beehive_from_sapling_feature"
+        },
+        {
+            "name": "minecraft:random_pale_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:random_roofed_forest_feature"
+        },
+        {
+            "name": "minecraft:random_roofed_forest_feature_with_decoration_feature"
+        },
+        {
+            "name": "minecraft:random_roofed_forest_feature_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:redstone_ore_feature"
+        },
+        {
+            "name": "minecraft:roofed_tree_feature"
+        },
+        {
+            "name": "minecraft:roofed_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:savanna_tree_feature"
+        },
+        {
+            "name": "minecraft:scatter_birch_forest_wildflowers_feature"
+        },
+        {
+            "name": "minecraft:scatter_brown_mushroom_feature"
+        },
+        {
+            "name": "minecraft:scatter_bush_feature"
+        },
+        {
+            "name": "minecraft:scatter_cold_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_deep_cold_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_deep_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_deep_warm_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_dry_grass_feature"
+        },
+        {
+            "name": "minecraft:scatter_eyeblossom_feature"
+        },
+        {
+            "name": "minecraft:scatter_fern_feature"
+        },
+        {
+            "name": "minecraft:scatter_flower_forest_flower_feature"
+        },
+        {
+            "name": "minecraft:scatter_jungle_plant_feature"
+        },
+        {
+            "name": "minecraft:scatter_jungle_tree_cocoa_feature"
+        },
+        {
+            "name": "minecraft:scatter_jungle_tree_lower_cocoa_feature"
+        },
+        {
+            "name": "minecraft:scatter_jungle_tree_upper_cocoa_feature"
+        },
+        {
+            "name": "minecraft:scatter_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:scatter_meadow_flower_feature"
+        },
+        {
+            "name": "minecraft:scatter_meadow_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:scatter_meadow_wildflowers_feature"
+        },
+        {
+            "name": "minecraft:scatter_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_overworld_flower_feature"
+        },
+        {
+            "name": "minecraft:scatter_pale_hanging_moss_feature"
+        },
+        {
+            "name": "minecraft:scatter_plains_flower_feature"
+        },
+        {
+            "name": "minecraft:scatter_red_mushroom_feature"
+        },
+        {
+            "name": "minecraft:scatter_river_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_swamp_flower_feature"
+        },
+        {
+            "name": "minecraft:scatter_swamp_seagrass_feature"
+        },
+        {
+            "name": "minecraft:scatter_sweet_berry_bush_feature"
+        },
+        {
+            "name": "minecraft:scatter_taiga_plant_feature"
+        },
+        {
+            "name": "minecraft:scatter_tall_grass_around_forest_foliage_feature"
+        },
+        {
+            "name": "minecraft:scatter_tall_grass_around_tree_feature"
+        },
+        {
+            "name": "minecraft:scatter_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:scatter_warm_ocean_seagrass_feature"
+        },
+        {
+            "name": "minecraft:sculk_vein_feature"
+        },
+        {
+            "name": "minecraft:select_beehive_feature"
+        },
+        {
+            "name": "minecraft:select_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:select_birch_tree_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:select_cocoa_feature"
+        },
+        {
+            "name": "minecraft:select_jungle_plant_feature"
+        },
+        {
+            "name": "minecraft:select_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:select_log_mushroom_feature"
+        },
+        {
+            "name": "minecraft:select_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:select_oak_tree_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:select_roofed_tree_feature"
+        },
+        {
+            "name": "minecraft:select_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:select_standing_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:select_standing_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:select_super_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:select_taiga_plant_feature"
+        },
+        {
+            "name": "minecraft:select_undecorated_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:short_dry_grass_feature"
+        },
+        {
+            "name": "minecraft:silverfish_feature"
+        },
+        {
+            "name": "minecraft:small_dripstone_feature"
+        },
+        {
+            "name": "minecraft:small_dripstone_snap_to_surface_feature"
+        },
+        {
+            "name": "minecraft:spore_blossom_feature"
+        },
+        {
+            "name": "minecraft:spore_blossom_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:spruce_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:sunflower_double_plant_feature"
+        },
+        {
+            "name": "minecraft:sunflower_double_plant_lower_feature"
+        },
+        {
+            "name": "minecraft:sunflower_double_plant_patch_feature"
+        },
+        {
+            "name": "minecraft:sunflower_double_plant_upper_feature"
+        },
+        {
+            "name": "minecraft:super_birch_tree_feature"
+        },
+        {
+            "name": "minecraft:super_birch_tree_with_beehive_feature"
+        },
+        {
+            "name": "minecraft:super_birch_tree_with_optional_beehive_feature"
+        },
+        {
+            "name": "minecraft:swamp_tree_feature"
+        },
+        {
+            "name": "minecraft:taiga_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:tall_dry_grass_feature"
+        },
+        {
+            "name": "minecraft:tall_grass_feature"
+        },
+        {
+            "name": "minecraft:tall_mangrove_tree_feature"
+        },
+        {
+            "name": "minecraft:tall_mangrove_tree_with_beenest_feature"
+        },
+        {
+            "name": "minecraft:tuff_feature"
+        },
+        {
+            "name": "minecraft:undecorated_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:undecorated_jungle_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:underground_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:underground_extra_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:underground_glow_lichen_feature"
+        },
+        {
+            "name": "minecraft:underground_underwater_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:underwater_magma_feature"
+        },
+        {
+            "name": "minecraft:underwater_magma_snap_to_surface_feature"
+        },
+        {
+            "name": "minecraft:underwater_magma_underground_feature"
+        },
+        {
+            "name": "minecraft:vines_single_face_scatter_feature"
+        },
+        {
+            "name": "minecraft:warped_fungus_feature"
+        },
+        {
+            "name": "minecraft:warped_fungus_scatter_feature"
+        },
+        {
+            "name": "minecraft:warped_roots_feature"
+        },
+        {
+            "name": "minecraft:warped_roots_scatter_feature"
+        }
+    ]
+}

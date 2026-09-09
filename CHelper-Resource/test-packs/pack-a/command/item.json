@@ -1,0 +1,20 @@
+{
+  // ===== 物品 ID 参数：引用【内置】item 大表（type=item，不随包带数据）=====
+  // 与主包 /give 同机制：ITEM 节点按内置 itemIds 补全（stone/diamond_sword…）。
+  "name": [
+    "pitem"
+  ],
+  "description": "【A】物品参数（内置 item 大表引用：/pitem stone 等）",
+
+  "syntax": [
+    "/pitem <itemName: Item>"
+  ],
+
+  "node": {
+    "<itemName: Item>": {
+      "type": "ITEM",             // 内置物品大表节点（同 /give）
+      "description": "候选来自内置物品表（stone/acacia_boat…）",
+      "nodeItemType": 0           // 0=普通物品（同主包 /give 声明）
+    }
+  }
+}

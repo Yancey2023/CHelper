@@ -257,6 +257,7 @@ namespace CHelper {
         });
         Profile::next("create main node");
         mainNode = Node::NodeCommand("MAIN_NODE", u"欢迎使用命令助手(作者：Yancey)", commands.get());
+        mainNode.cpack = this; // 命令名来源表（一级补全徽标）
         Profile::pop();
     }
 

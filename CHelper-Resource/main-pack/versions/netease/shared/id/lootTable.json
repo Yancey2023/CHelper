@@ -1,0 +1,743 @@
+{
+    "id": "lootTable",
+    "type": "normal",
+    "content": [
+        {
+            "name": "\"chests/abandoned_mineshaft\"",
+            "description": "废弃矿井宝箱"
+        },
+        {
+            "name": "\"chests/ancient_city\"",
+            "description": "远古城市宝箱"
+        },
+        {
+            "name": "\"chests/ancient_city_ice_box\"",
+            "description": "远古城市冰窖宝箱"
+        },
+        {
+            "name": "\"chests/bastion_bridge\"",
+            "description": "堡垒遗迹桥宝箱"
+        },
+        {
+            "name": "\"chests/bastion_hoglin_stable\"",
+            "description": "堡垒遗迹疣猪兽棚宝箱"
+        },
+        {
+            "name": "\"chests/bastion_other\"",
+            "description": "堡垒遗迹宝箱"
+        },
+        {
+            "name": "\"chests/bastion_treasure\"",
+            "description": "堡垒遗迹藏宝室宝箱"
+        },
+        {
+            "name": "\"chests/buriedtreasure\"",
+            "description": "埋藏的宝藏宝箱"
+        },
+        {
+            "name": "\"chests/desert_pyramid\"",
+            "description": "沙漠神殿宝箱"
+        },
+        {
+            "name": "\"chests/dispenser_trap\"",
+            "description": "丛林神庙发射器陷阱"
+        },
+        {
+            "name": "\"chests/end_city_treasure\"",
+            "description": "末地城宝箱"
+        },
+        {
+            "name": "\"chests/igloo_chest\"",
+            "description": "雪屋宝箱"
+        },
+        {
+            "name": "\"chests/jungle_temple\"",
+            "description": "丛林神庙宝箱"
+        },
+        {
+            "name": "\"chests/monster_room\"",
+            "description": "地牢宝箱（游戏内未使用）"
+        },
+        {
+            "name": "\"chests/nether_bridge\"",
+            "description": "下界要塞宝箱"
+        },
+        {
+            "name": "\"chests/pillager_outpost\"",
+            "description": "掠夺者前哨站宝箱"
+        },
+        {
+            "name": "\"chests/ruined_portal\"",
+            "description": "废弃传送门宝箱"
+        },
+        {
+            "name": "\"chests/shipwreck\"",
+            "description": "沉船地图箱"
+        },
+        {
+            "name": "\"chests/shipwrecksupply\"",
+            "description": "沉船补给箱"
+        },
+        {
+            "name": "\"chests/shipwrecktreasure\"",
+            "description": "沉船宝箱"
+        },
+        {
+            "name": "\"chests/simple_dungeon\"",
+            "description": "地牢宝箱"
+        },
+        {
+            "name": "\"chests/spawn_bonus_chest\"",
+            "description": "奖励箱"
+        },
+        {
+            "name": "\"chests/stronghold_corridor\"",
+            "description": "要塞走廊祭坛宝箱"
+        },
+        {
+            "name": "\"chests/stronghold_crossing\"",
+            "description": "要塞储藏室宝箱"
+        },
+        {
+            "name": "\"chests/stronghold_library\"",
+            "description": "要塞图书馆宝箱"
+        },
+        {
+            "name": "\"chests/trial_chambers/corridor\""
+        },
+        {
+            "name": "\"chests/trial_chambers/entrance\""
+        },
+        {
+            "name": "\"chests/trial_chambers/intersection\""
+        },
+        {
+            "name": "\"chests/trial_chambers/intersection_barrel\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_common\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_ominous\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_ominous_common\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_ominous_rare\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_ominous_unique\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_rare\""
+        },
+        {
+            "name": "\"chests/trial_chambers/reward_unique\""
+        },
+        {
+            "name": "\"chests/trial_chambers/supply\""
+        },
+        {
+            "name": "\"chests/underwater_ruin_big\"",
+            "description": "大型海底废墟宝箱"
+        },
+        {
+            "name": "\"chests/underwater_ruin_small\"",
+            "description": "小型海底废墟宝箱"
+        },
+        {
+            "name": "\"chests/village/village_armorer\"",
+            "description": "村庄盔甲匠宝箱"
+        },
+        {
+            "name": "\"chests/village/village_butcher\"",
+            "description": "村庄屠夫宝箱"
+        },
+        {
+            "name": "\"chests/village/village_cartographer\"",
+            "description": "村庄制图师宝箱"
+        },
+        {
+            "name": "\"chests/village/village_desert_house\"",
+            "description": "沙漠村庄宝箱"
+        },
+        {
+            "name": "\"chests/village/village_fletcher\"",
+            "description": "村庄制箭师宝箱"
+        },
+        {
+            "name": "\"chests/village/village_mason\"",
+            "description": "村庄石匠宝箱"
+        },
+        {
+            "name": "\"chests/village/village_plains_house\"",
+            "description": "平原村庄宝箱"
+        },
+        {
+            "name": "\"chests/village/village_savanna_house\"",
+            "description": "热带草原村庄宝箱"
+        },
+        {
+            "name": "\"chests/village/village_shepherd\"",
+            "description": "村庄牧羊人宝箱"
+        },
+        {
+            "name": "\"chests/village/village_snowy_house\"",
+            "description": "雪域村庄宝箱"
+        },
+        {
+            "name": "\"chests/village/village_taiga_house\"",
+            "description": "针叶林村庄宝箱"
+        },
+        {
+            "name": "\"chests/village/village_tannery\"",
+            "description": "村庄皮匠宝箱"
+        },
+        {
+            "name": "\"chests/village/village_temple\"",
+            "description": "村庄教堂宝箱"
+        },
+        {
+            "name": "\"chests/village/village_toolsmith\"",
+            "description": "村庄工具匠宝箱"
+        },
+        {
+            "name": "\"chests/village/village_weaponsmith\"",
+            "description": "村庄武器匠宝箱"
+        },
+        {
+            "name": "\"chests/village_blacksmith\"",
+            "description": "村庄铁匠铺宝箱（游戏内未使用）"
+        },
+        {
+            "name": "\"chests/village_two_room_house\"",
+            "description": "村庄大型房屋宝箱（游戏内未使用）"
+        },
+        {
+            "name": "\"chests/woodland_mansion\"",
+            "description": "林地府邸宝箱"
+        },
+        {
+            "name": "\"dispensers/trial_chambers/chamber\""
+        },
+        {
+            "name": "\"dispensers/trial_chambers/corridor\""
+        },
+        {
+            "name": "\"dispensers/trial_chambers/water\""
+        },
+        {
+            "name": "\"empty\"",
+            "description": "不生成战利品"
+        },
+        {
+            "name": "empty",
+            "description": "不生成战利品"
+        },
+        {
+            "name": "\"entities/armadillo_brush\""
+        },
+        {
+            "name": "\"entities/armor_set_chain\"",
+            "description": "锁链盔甲装备"
+        },
+        {
+            "name": "\"entities/armor_set_diamond\"",
+            "description": "钻石盔甲装备"
+        },
+        {
+            "name": "\"entities/armor_set_gold\"",
+            "description": "金质盔甲装备"
+        },
+        {
+            "name": "\"entities/armor_set_iron\"",
+            "description": "铁质盔甲装备"
+        },
+        {
+            "name": "\"entities/armor_set_leather\"",
+            "description": "皮革盔甲装备"
+        },
+        {
+            "name": "\"entities/armor_stand\"",
+            "description": "盔甲架的掉落物"
+        },
+        {
+            "name": "\"entities/bat\"",
+            "description": "蝙蝠的掉落物"
+        },
+        {
+            "name": "\"entities/blaze\"",
+            "description": "烈焰人的掉落物"
+        },
+        {
+            "name": "\"entities/boat\"",
+            "description": "船的掉落物"
+        },
+        {
+            "name": "\"entities/bogged\""
+        },
+        {
+            "name": "\"entities/bogged_shear\""
+        },
+        {
+            "name": "\"entities/breeze\""
+        },
+        {
+            "name": "\"entities/brown_mooshroom_shear\"",
+            "description": "棕色哞菇剪除蘑菇的掉落物"
+        },
+        {
+            "name": "\"entities/cat\"",
+            "description": "猫的掉落物"
+        },
+        {
+            "name": "\"entities/cat_gift\"",
+            "description": "猫的赠礼"
+        },
+        {
+            "name": "\"entities/cave_spider\"",
+            "description": "洞穴蜘蛛的掉落物"
+        },
+        {
+            "name": "\"entities/chicken\"",
+            "description": "鸡的掉落物"
+        },
+        {
+            "name": "\"entities/clownfish\"",
+            "description": "小丑鱼的掉落物（不再使用）"
+        },
+        {
+            "name": "\"entities/cold_ocean_ruins_brushable_block\""
+        },
+        {
+            "name": "\"entities/cow\"",
+            "description": "牛的掉落物"
+        },
+        {
+            "name": "\"entities/creeper\"",
+            "description": "苦力怕的掉落物"
+        },
+        {
+            "name": "\"entities/desert_pyramid_brushable_block\""
+        },
+        {
+            "name": "\"entities/desert_well_brushable_block\""
+        },
+        {
+            "name": "\"entities/dolphin\"",
+            "description": "海豚的掉落物"
+        },
+        {
+            "name": "\"entities/drowned\"",
+            "description": "溺尸的掉落物"
+        },
+        {
+            "name": "\"entities/drowned_equipment\"",
+            "description": "溺尸的装备"
+        },
+        {
+            "name": "\"entities/drowned_ranged_equipment\"",
+            "description": "远程攻击的溺尸的装备"
+        },
+        {
+            "name": "\"entities/elder_guardian\"",
+            "description": "远古守卫者的掉落物"
+        },
+        {
+            "name": "\"entities/empty_brushable_block\""
+        },
+        {
+            "name": "\"entities/enderman\"",
+            "description": "末影人的掉落物"
+        },
+        {
+            "name": "\"entities/endermite\"",
+            "description": "末影螨的掉落物"
+        },
+        {
+            "name": "\"entities/evocation_illager\"",
+            "description": "唤魔者的掉落物"
+        },
+        {
+            "name": "\"entities/fish\"",
+            "description": "鳕鱼的掉落物"
+        },
+        {
+            "name": "\"entities/fox_equipment\"",
+            "description": "狐狸的携带物"
+        },
+        {
+            "name": "\"entities/frog\"",
+            "description": "青蛙的掉落物"
+        },
+        {
+            "name": "\"entities/ghast\"",
+            "description": "恶魂的掉落物"
+        },
+        {
+            "name": "\"entities/giant\""
+        },
+        {
+            "name": "\"entities/glow_squid\"",
+            "description": "发光鱿鱼的掉落物"
+        },
+        {
+            "name": "\"entities/goat\"",
+            "description": "山羊的掉落物"
+        },
+        {
+            "name": "\"entities/guardian\"",
+            "description": "守卫者的掉落物"
+        },
+        {
+            "name": "\"entities/hoglin\"",
+            "description": "疣猪兽的掉落物"
+        },
+        {
+            "name": "\"entities/horse\"",
+            "description": "马的掉落物"
+        },
+        {
+            "name": "\"entities/iron_golem\"",
+            "description": "铁傀儡的掉落物"
+        },
+        {
+            "name": "\"entities/llama\"",
+            "description": "羊驼的掉落物"
+        },
+        {
+            "name": "\"entities/magma_cube\"",
+            "description": "岩浆怪的掉落物"
+        },
+        {
+            "name": "\"entities/mooshroom\"",
+            "description": "哞菇的掉落物"
+        },
+        {
+            "name": "\"entities/mooshroom_shear\"",
+            "description": "哞菇剪除蘑菇的掉落物"
+        },
+        {
+            "name": "\"entities/ocelot\"",
+            "description": "豹猫的掉落物"
+        },
+        {
+            "name": "\"entities/panda\"",
+            "description": "熊猫的掉落物"
+        },
+        {
+            "name": "\"entities/panda_sneeze\"",
+            "description": "熊猫的喷嚏"
+        },
+        {
+            "name": "\"entities/parrot\"",
+            "description": "鹦鹉的掉落物"
+        },
+        {
+            "name": "\"entities/phantom\"",
+            "description": "幻翼的掉落物"
+        },
+        {
+            "name": "\"entities/pig\"",
+            "description": "猪的掉落物"
+        },
+        {
+            "name": "\"entities/pig_saddled\"",
+            "description": "装备鞍的猪的掉落物"
+        },
+        {
+            "name": "\"entities/piglin_barter\"",
+            "description": "猪灵以物易物的掉落物"
+        },
+        {
+            "name": "\"entities/piglin_brute_gear\"",
+            "description": "猪灵蛮兵的装备"
+        },
+        {
+            "name": "\"entities/piglin_gear_melee\"",
+            "description": "近战攻击的猪灵的装备"
+        },
+        {
+            "name": "\"entities/piglin_gear_ranged\"",
+            "description": "远程攻击的猪灵的装备"
+        },
+        {
+            "name": "\"entities/pillager\"",
+            "description": "掠夺者的掉落物"
+        },
+        {
+            "name": "\"entities/pillager_captain\""
+        },
+        {
+            "name": "\"entities/pillager_captain_equipment\"",
+            "description": "掠夺者队长的装备"
+        },
+        {
+            "name": "\"entities/pillager_gear\"",
+            "description": "掠夺者的装备"
+        },
+        {
+            "name": "\"entities/pillager_raid\"",
+            "description": "由袭击生成的掠夺者的掉落物"
+        },
+        {
+            "name": "\"entities/polar_bear\"",
+            "description": "北极熊的掉落物"
+        },
+        {
+            "name": "\"entities/pufferfish\"",
+            "description": "河豚的掉落物"
+        },
+        {
+            "name": "\"entities/rabbit\"",
+            "description": "兔子的掉落物"
+        },
+        {
+            "name": "\"entities/raider_drops\"",
+            "description": "由袭击生成的怪物的掉落物"
+        },
+        {
+            "name": "\"entities/ravager\"",
+            "description": "劫掠兽的掉落物"
+        },
+        {
+            "name": "\"entities/salmon_large\"",
+            "description": "大体型鲑鱼的掉落物"
+        },
+        {
+            "name": "\"entities/salmon_normal\"",
+            "description": "鲑鱼的掉落物"
+        },
+        {
+            "name": "\"entities/sea_turtle\"",
+            "description": "海龟的掉落物"
+        },
+        {
+            "name": "\"entities/sheep\"",
+            "description": "绵羊的掉落物"
+        },
+        {
+            "name": "\"entities/sheep_shear\"",
+            "description": "绵羊剪毛的掉落物"
+        },
+        {
+            "name": "\"entities/sheep_sheared\"",
+            "description": "被剪过毛的绵羊的掉落物"
+        },
+        {
+            "name": "\"entities/shulker\"",
+            "description": "潜影贝的掉落物"
+        },
+        {
+            "name": "\"entities/silverfish\"",
+            "description": "蠹虫的掉落物"
+        },
+        {
+            "name": "\"entities/skeleton\"",
+            "description": "骷髅的掉落物"
+        },
+        {
+            "name": "\"entities/skeleton_gear\"",
+            "description": "骷髅的装备"
+        },
+        {
+            "name": "\"entities/skeleton_horse\"",
+            "description": "骷髅马的掉落物"
+        },
+        {
+            "name": "\"entities/slime\"",
+            "description": "史莱姆的掉落物"
+        },
+        {
+            "name": "\"entities/snow_golem_shear\"",
+            "description": "雪傀儡剪掉南瓜头后的的掉落物"
+        },
+        {
+            "name": "\"entities/snowman\"",
+            "description": "雪傀儡的掉落物"
+        },
+        {
+            "name": "\"entities/spider\"",
+            "description": "蜘蛛的掉落物"
+        },
+        {
+            "name": "\"entities/squid\"",
+            "description": "鱿鱼的掉落物"
+        },
+        {
+            "name": "\"entities/stray\"",
+            "description": "流浪者的掉落物"
+        },
+        {
+            "name": "\"entities/strider\"",
+            "description": "炽足兽的掉落物"
+        },
+        {
+            "name": "\"entities/strider_saddled\"",
+            "description": "装备鞍的炽足兽的掉落物"
+        },
+        {
+            "name": "\"entities/trail_ruins_brushable_block_common\""
+        },
+        {
+            "name": "\"entities/trail_ruins_brushable_block_rare\""
+        },
+        {
+            "name": "\"entities/tropicalfish\"",
+            "description": "热带鱼的掉落物"
+        },
+        {
+            "name": "\"entities/vex_gear\"",
+            "description": "恼鬼的装备"
+        },
+        {
+            "name": "\"entities/vindication_illager\"",
+            "description": "卫道士的掉落物"
+        },
+        {
+            "name": "\"entities/vindicator_captain_equipment\"",
+            "description": "卫道士队长的装备"
+        },
+        {
+            "name": "\"entities/vindicator_gear\"",
+            "description": "卫道士的装备"
+        },
+        {
+            "name": "\"entities/vindicator_raid\"",
+            "description": "由袭击生成的卫道士的掉落物"
+        },
+        {
+            "name": "\"entities/warden\"",
+            "description": "监守者的掉落物"
+        },
+        {
+            "name": "\"entities/warm_ocean_ruins_brushable_block\""
+        },
+        {
+            "name": "\"entities/witch\"",
+            "description": "女巫的掉落物"
+        },
+        {
+            "name": "\"entities/wither_boss\"",
+            "description": "凋灵的掉落物"
+        },
+        {
+            "name": "\"entities/wither_skeleton\"",
+            "description": "凋灵骷髅的掉落物"
+        },
+        {
+            "name": "\"entities/wither_skeleton_gear\"",
+            "description": "凋灵骷髅的装备"
+        },
+        {
+            "name": "\"entities/wolf\"",
+            "description": "狼的掉落物"
+        },
+        {
+            "name": "\"entities/zoglin\"",
+            "description": "僵尸疣猪兽的掉落物"
+        },
+        {
+            "name": "\"entities/zombie\"",
+            "description": "僵尸的掉落物"
+        },
+        {
+            "name": "\"entities/zombie_equipment\"",
+            "description": "僵尸的装备"
+        },
+        {
+            "name": "\"entities/zombie_horse\"",
+            "description": "僵尸马的掉落物"
+        },
+        {
+            "name": "\"entities/zombie_pigman\"",
+            "description": "僵尸猪灵的掉落物"
+        },
+        {
+            "name": "\"entities/zombie_pigman_gear\"",
+            "description": "僵尸猪灵的装备"
+        },
+        {
+            "name": "\"entities/zombified_piglin_rider_gear\"",
+            "description": "僵尸猪灵炽足兽骑士的装备"
+        },
+        {
+            "name": "\"equipment/low_tier_items\""
+        },
+        {
+            "name": "\"equipment/trial_chamber\""
+        },
+        {
+            "name": "\"equipment/trial_chamber_chainmail\""
+        },
+        {
+            "name": "\"equipment/trial_chamber_diamond\""
+        },
+        {
+            "name": "\"equipment/trial_chamber_iron\""
+        },
+        {
+            "name": "\"equipment/trial_chamber_melee\""
+        },
+        {
+            "name": "\"equipment/trial_chamber_ranged\""
+        },
+        {
+            "name": "\"gameplay/entities/mooshroom_milking\"",
+            "description": "对哞菇使用碗所获得的产物"
+        },
+        {
+            "name": "\"gameplay/entities/sniffer_seeds\""
+        },
+        {
+            "name": "\"gameplay/fishing\"",
+            "description": "钓鱼钓到的物品"
+        },
+        {
+            "name": "\"gameplay/fishing/fish\"",
+            "description": "钓到的鱼"
+        },
+        {
+            "name": "\"gameplay/fishing/jungle_fish\"",
+            "description": "在丛林生物群系中钓到的鱼"
+        },
+        {
+            "name": "\"gameplay/fishing/jungle_junk\"",
+            "description": "在丛林生物群系中钓到的垃圾"
+        },
+        {
+            "name": "\"gameplay/fishing/junk\"",
+            "description": "钓到的垃圾"
+        },
+        {
+            "name": "\"gameplay/fishing/treasure\"",
+            "description": "钓到的宝藏"
+        },
+        {
+            "name": "\"gameplay/jungle_fishing\"",
+            "description": "在丛林生物群系中的钓鱼钓到的物品"
+        },
+        {
+            "name": "\"pots/trial_chambers/corridor\""
+        },
+        {
+            "name": "\"spawners/ominous/trial_chamber/consumables\""
+        },
+        {
+            "name": "\"spawners/ominous/trial_chamber/key\""
+        },
+        {
+            "name": "\"spawners/trial_chamber/consumables\""
+        },
+        {
+            "name": "\"spawners/trial_chamber/items_to_drop_when_ominous\""
+        },
+        {
+            "name": "\"spawners/trial_chamber/key\""
+        }
+    ]
+}

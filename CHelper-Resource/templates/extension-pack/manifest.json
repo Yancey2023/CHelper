@@ -1,0 +1,24 @@
+{
+  // ===== 包信息（必填：name / version / versionCode / packId）=====
+  "name": "我的拓展包模板",        // 包显示名（中文）：会作为补全候选的"来源"展示
+  "description": "CHelper 拓展包模板：完整演示自定义命令、候选表、目标选择器、JSON 结构声明与 execute 子命令扩展（全文件带注释，JSON 注释会被引擎自动忽略）",
+  "version": "0.1.0",              // 展示版本
+  "versionCode": 1,                // 整数版本号：任何改动后必须递增
+  "versionType": "beta",           // 面向的游戏版本类型（beta/release/netease，展示用）
+  "branch": "thirdparty",          // 分支；第三方拓展包惯例使用 thirdparty
+  "author": "你的名字",            // 作者
+  "packId": "my-first-pack-0.1.0", // 全局唯一标识，建议 <slug>-<version>；随 versionCode 递增同步更新
+  "isBasicPack": false,            // 第三方包必须为 false；true 只用于内置主包
+  "priority": 100,                 // 信息/预留字段：当前叠加顺序 = 应用内"资源包管理"列表顺序（靠上优先）
+
+  // ===== 合成指令（选填，演示）=====
+  // 向内置 execute 命令追加一条子命令：输入 /execute myaction <目标> 即可用。
+  "extends": {
+    "repeat": {
+      "execute": {
+        "mode": "append",                                  // 追加模式
+        "file": "extensions/execute-addon.json"            // 片段文件路径（相对包根）
+      }
+    }
+  }
+}

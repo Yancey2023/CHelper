@@ -1,0 +1,64 @@
+{
+  "name": [
+    "gamerule"
+  ],
+  "description": "设置或查询游戏规则",
+  "syntax": [
+    "/gamerule",
+    "/gamerule <rule: BoolGameRule> [value: Boolean]",
+    "/gamerule <rule: IntGameRule> [value: int]",
+    "/gamerule playerWaypoints <value: playerwaypointsValues>"
+  ],
+  "node": {
+    "[value: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "将游戏规则设置的值",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "[value: int]": {
+      "type": "INTEGER",
+      "brief": "值",
+      "description": "将游戏规则设置的值"
+    },
+    "<value: playerwaypointsValues>": {
+      "type": "NORMAL_ID",
+      "brief": "值",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": true,
+      "contents": [
+        {
+          "name": "off",
+          "description": "玩家不会在定位栏上显示"
+        },
+        {
+          "name": "everyone",
+          "description": "所有玩家均会在定位栏上显示"
+        }
+      ]
+    },
+    "<rule: BoolGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": false,
+      "key": "gameRuleBoolean"
+    },
+    "<rule: IntGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": false,
+      "key": "gameRuleInteger"
+    },
+    "playerWaypoints": {
+      "type": "TEXT",
+      "description": "控制定位栏显示玩家路径点行为的游戏规则",
+      "data": {
+        "name": "playerWaypoints",
+        "description": "控制定位栏显示玩家路径点行为的游戏规则"
+      }
+    }
+  }
+}

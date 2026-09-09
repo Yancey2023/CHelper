@@ -1,0 +1,9 @@
+{
+  // ===== ID 候选表（B 版内容与 A 不同，用于观察叠加效果）=====
+  "id": "greetWho",
+  "type": "normal",
+  "content": [
+    { "name": "boss",   "description": "BOSS 玩家" },
+    { "name": "friend", "description": "好友" }
+  ]
+}

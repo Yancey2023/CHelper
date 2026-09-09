@@ -1,0 +1,134 @@
+{
+    "id": "cameraEasing",
+    "type": "normal",
+    "content": [
+        {
+            "name": "in_back",
+            "description": "缓入（回弹效果）"
+        },
+        {
+            "name": "in_bounce",
+            "description": "缓入（弹跳效果）"
+        },
+        {
+            "name": "in_circ",
+            "description": "缓入（圆形函数）"
+        },
+        {
+            "name": "in_cubic",
+            "description": "缓入（三次方函数）"
+        },
+        {
+            "name": "in_elastic",
+            "description": "缓入（弹簧效果）"
+        },
+        {
+            "name": "in_expo",
+            "description": "缓入（指数函数）"
+        },
+        {
+            "name": "in_out_back",
+            "description": "缓入缓出（回弹效果）"
+        },
+        {
+            "name": "in_out_bounce",
+            "description": "缓入缓出（弹跳效果）"
+        },
+        {
+            "name": "in_out_circ",
+            "description": "缓入缓出（圆形函数）"
+        },
+        {
+            "name": "in_out_cubic",
+            "description": "缓入缓出（三次方函数）"
+        },
+        {
+            "name": "in_out_elastic",
+            "description": "缓入缓出（弹簧效果）"
+        },
+        {
+            "name": "in_out_expo",
+            "description": "缓入缓出（指数函数）"
+        },
+        {
+            "name": "in_out_quad",
+            "description": "缓入缓出（二次方函数）"
+        },
+        {
+            "name": "in_out_quart",
+            "description": "缓入缓出（四次方函数）"
+        },
+        {
+            "name": "in_out_quint",
+            "description": "缓入缓出（五次方函数）"
+        },
+        {
+            "name": "in_out_sine",
+            "description": "缓入缓出（正弦函数）"
+        },
+        {
+            "name": "in_quad",
+            "description": "缓入（二次方函数）"
+        },
+        {
+            "name": "in_quart",
+            "description": "缓入（四次方函数）"
+        },
+        {
+            "name": "in_quint",
+            "description": "缓入（五次方函数）"
+        },
+        {
+            "name": "in_sine",
+            "description": "缓入（正弦函数）"
+        },
+        {
+            "name": "linear",
+            "description": "匀速运动"
+        },
+        {
+            "name": "out_back",
+            "description": "缓出（回弹效果）"
+        },
+        {
+            "name": "out_bounce",
+            "description": "缓出（弹跳效果）"
+        },
+        {
+            "name": "out_circ",
+            "description": "缓出（圆形函数）"
+        },
+        {
+            "name": "out_cubic",
+            "description": "缓出（三次方函数）"
+        },
+        {
+            "name": "out_elastic",
+            "description": "缓出（弹簧效果）"
+        },
+        {
+            "name": "out_expo",
+            "description": "缓出（指数函数）"
+        },
+        {
+            "name": "out_quad",
+            "description": "缓出（二次方函数）"
+        },
+        {
+            "name": "out_quart",
+            "description": "缓出（四次方函数）"
+        },
+        {
+            "name": "out_quint",
+            "description": "缓出（五次方函数）"
+        },
+        {
+            "name": "out_sine",
+            "description": "缓出（正弦函数）"
+        },
+        {
+            "name": "spring",
+            "description": "物理弹簧模拟效果"
+        }
+    ]
+}

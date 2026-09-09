@@ -1,0 +1,165 @@
+{
+  "name": [
+    "schedule"
+  ],
+  "description": "在指定的区域全部被加载时执行函数",
+  "syntax": [
+    "/schedule clear <function: filepath>",
+    "/schedule delay add <function: filepath> <time: int> [replace|append]",
+    "/schedule delay add <function: filepath> <time: int>D [replace|append]",
+    "/schedule delay add <function: filepath> <time: int>S [replace|append]",
+    "/schedule delay add <function: filepath> <time: int>T [replace|append]",
+    "/schedule delay clear <function: filepath>",
+    "/schedule on_area_loaded add <from: x y z> <to: x y z> <function: filepath>",
+    "/schedule on_area_loaded add circle <center: x y z> <radius: int> <function: filepath>",
+    "/schedule on_area_loaded add tickingarea <name: string> <function: filepath>",
+    "/schedule on_area_loaded clear function <function: filepath>",
+    "/schedule on_area_loaded clear tickingarea <name: string> [function: filepath]"
+  ],
+  "node": {
+    "clear": {
+      "type": "TEXT",
+      "description": "将之前指定的函数从计划中移除",
+      "data": {
+        "name": "clear",
+        "description": "将之前指定的函数从计划中移除"
+      }
+    },
+    "<function: filepath>": {
+      "type": "STRING",
+      "brief": "函数",
+      "description": "要执行的函数或函数标签",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "delay": {
+      "type": "TEXT",
+      "description": "延迟执行函数",
+      "data": {
+        "name": "delay",
+        "description": "延迟执行函数"
+      }
+    },
+    "add": {
+      "type": "TEXT",
+      "description": "增加",
+      "data": {
+        "name": "add",
+        "description": "增加"
+      }
+    },
+    "<time: int>D|<time: int>S|<time: int>T|<time: int>": {
+      "type": "INTEGER",
+      "brief": "时间",
+      "description": "等待的时间",
+      "ignoreLater": true,
+      "units": [
+        {
+          "name": "D",
+          "description": "一个游戏日，合24000游戏刻"
+        },
+        {
+          "name": "S",
+          "description": "一秒，合20游戏刻"
+        },
+        {
+          "name": "T",
+          "description": "（默认且可省略）：一个游戏刻，无单位时默认"
+        },
+        {
+          "name": "d",
+          "description": "一个游戏日，合24000游戏刻"
+        },
+        {
+          "name": "s",
+          "description": "一秒，合20游戏刻"
+        },
+        {
+          "name": "t",
+          "description": "（默认且可省略）：一个游戏刻，无单位时默认"
+        }
+      ]
+    },
+    "[replace|append]": {
+      "type": "NORMAL_ID",
+      "description": "替换或追加模式",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "replace",
+          "description": "（默认值）取代此函数或函数标签的现有计划"
+        },
+        {
+          "name": "append",
+          "description": "为此函数或函数标签添加新的计划"
+        }
+      ]
+    },
+    "on_area_loaded": {
+      "type": "TEXT",
+      "description": "在指定的区域加载后运行",
+      "data": {
+        "name": "on_area_loaded",
+        "description": "在指定的区域加载后运行"
+      }
+    },
+    "<from: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标1",
+      "description": "用于定义矩形加载区域的两个对角坐标的第一个"
+    },
+    "<to: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标2",
+      "description": "用于定义矩形加载区域的两个对角坐标的第二个"
+    },
+    "circle": {
+      "type": "TEXT",
+      "description": "在与圆形区域有重叠部分的区域全部被加载时执行函数",
+      "data": {
+        "name": "circle",
+        "description": "在与圆形区域有重叠部分的区域全部被加载时执行函数"
+      }
+    },
+    "<center: x y z>": {
+      "type": "POSITION",
+      "brief": "中心坐标",
+      "description": "用于定义圆形加载区域的圆心的坐标"
+    },
+    "<radius: int>": {
+      "type": "INTEGER",
+      "brief": "半径",
+      "description": "圆形常加载区域的半径作为从中心到圆周的区块数"
+    },
+    "tickingarea": {
+      "type": "TEXT",
+      "description": "在常加载区域被添加时运行函数",
+      "data": {
+        "name": "tickingarea",
+        "description": "在常加载区域被添加时运行函数"
+      }
+    },
+    "<name: string>": {
+      "type": "STRING",
+      "brief": "常加载区域名称",
+      "description": "常加载区域的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[function: filepath]": {
+      "type": "STRING",
+      "brief": "函数",
+      "description": "要执行的函数或函数标签",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "function": {
+      "type": "TEXT",
+      "description": "函数",
+      "data": {
+        "name": "function",
+        "description": "函数"
+      }
+    }
+  }
+}

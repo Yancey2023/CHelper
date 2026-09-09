@@ -1,0 +1,6101 @@
+{
+    "id": "item",
+    "type": "item",
+    "content": [
+        {
+            "name": "acacia_boat",
+            "description": "金合欢木船"
+        },
+        {
+            "name": "acacia_button",
+            "description": "金合欢木按钮"
+        },
+        {
+            "name": "acacia_chest_boat",
+            "description": "金合欢木运输船"
+        },
+        {
+            "name": "acacia_door",
+            "description": "金合欢木门"
+        },
+        {
+            "name": "acacia_fence",
+            "description": "金合欢木栅栏"
+        },
+        {
+            "name": "acacia_fence_gate",
+            "description": "金合欢木栅栏门"
+        },
+        {
+            "name": "acacia_hanging_sign",
+            "description": "悬挂式金合欢木告示牌"
+        },
+        {
+            "name": "acacia_leaves",
+            "description": "金合欢树叶"
+        },
+        {
+            "name": "acacia_log",
+            "description": "金合欢原木"
+        },
+        {
+            "name": "acacia_planks",
+            "description": "金合欢木板"
+        },
+        {
+            "name": "acacia_pressure_plate",
+            "description": "金合欢木压力板"
+        },
+        {
+            "name": "acacia_sapling",
+            "description": "金合欢树苗"
+        },
+        {
+            "name": "acacia_shelf",
+            "description": "金合欢木展示架"
+        },
+        {
+            "name": "acacia_sign",
+            "description": "金合欢木告示牌"
+        },
+        {
+            "name": "acacia_slab",
+            "description": "金合欢木台阶"
+        },
+        {
+            "name": "acacia_stairs",
+            "description": "金合欢木楼梯"
+        },
+        {
+            "name": "acacia_trapdoor",
+            "description": "金合欢木活板门"
+        },
+        {
+            "name": "acacia_wood",
+            "description": "金合欢木"
+        },
+        {
+            "name": "activator_rail",
+            "description": "激活铁轨"
+        },
+        {
+            "name": "air",
+            "description": "空气"
+        },
+        {
+            "name": "allay_spawn_egg",
+            "description": "悦灵刷怪蛋"
+        },
+        {
+            "name": "allium",
+            "description": "绒球葱"
+        },
+        {
+            "name": "allow",
+            "description": "允许方块"
+        },
+        {
+            "name": "amethyst_block",
+            "description": "紫水晶块"
+        },
+        {
+            "name": "amethyst_cluster",
+            "description": "紫水晶簇"
+        },
+        {
+            "name": "amethyst_shard",
+            "description": "紫水晶碎片"
+        },
+        {
+            "name": "ancient_debris",
+            "description": "远古残骸"
+        },
+        {
+            "name": "andesite",
+            "description": "安山岩"
+        },
+        {
+            "name": "andesite_slab",
+            "description": "安山岩台阶"
+        },
+        {
+            "name": "andesite_stairs",
+            "description": "安山岩楼梯"
+        },
+        {
+            "name": "andesite_wall",
+            "description": "安山岩墙"
+        },
+        {
+            "name": "angler_pottery_sherd",
+            "description": "垂钓纹样陶片"
+        },
+        {
+            "name": "anvil",
+            "description": "铁砧"
+        },
+        {
+            "name": "apple",
+            "description": "苹果"
+        },
+        {
+            "name": "archer_pottery_sherd",
+            "description": "弓箭纹样陶片"
+        },
+        {
+            "name": "armadillo_scute",
+            "description": "犰狳鳞甲"
+        },
+        {
+            "name": "armadillo_spawn_egg",
+            "description": "犰狳刷怪蛋"
+        },
+        {
+            "name": "armor_stand",
+            "description": "盔甲架"
+        },
+        {
+            "name": "arms_up_pottery_sherd",
+            "description": "举臂纹样陶片"
+        },
+        {
+            "name": "arrow",
+            "description": "箭"
+        },
+        {
+            "name": "axolotl_bucket",
+            "description": "美西螈桶"
+        },
+        {
+            "name": "axolotl_spawn_egg",
+            "description": "美西螈刷怪蛋"
+        },
+        {
+            "name": "azalea",
+            "description": "杜鹃花丛"
+        },
+        {
+            "name": "azalea_leaves",
+            "description": "杜鹃树叶"
+        },
+        {
+            "name": "azalea_leaves_flowered",
+            "description": "盛开的杜鹃树叶"
+        },
+        {
+            "name": "azure_bluet",
+            "description": "蓝花美耳草"
+        },
+        {
+            "name": "baked_potato",
+            "description": "烤马铃薯"
+        },
+        {
+            "name": "bamboo",
+            "description": "竹子"
+        },
+        {
+            "name": "bamboo_block",
+            "description": "竹块"
+        },
+        {
+            "name": "bamboo_button",
+            "description": "竹按钮"
+        },
+        {
+            "name": "bamboo_chest_raft",
+            "description": "运输竹筏"
+        },
+        {
+            "name": "bamboo_door",
+            "description": "竹门"
+        },
+        {
+            "name": "bamboo_fence",
+            "description": "竹栅栏"
+        },
+        {
+            "name": "bamboo_fence_gate",
+            "description": "竹栅栏门"
+        },
+        {
+            "name": "bamboo_hanging_sign",
+            "description": "悬挂式竹告示牌"
+        },
+        {
+            "name": "bamboo_mosaic",
+            "description": "竹马赛克"
+        },
+        {
+            "name": "bamboo_mosaic_slab",
+            "description": "竹马赛克台阶"
+        },
+        {
+            "name": "bamboo_mosaic_stairs",
+            "description": "竹马赛克楼梯"
+        },
+        {
+            "name": "bamboo_planks",
+            "description": "竹板"
+        },
+        {
+            "name": "bamboo_pressure_plate",
+            "description": "竹压力板"
+        },
+        {
+            "name": "bamboo_raft",
+            "description": "竹筏"
+        },
+        {
+            "name": "bamboo_shelf",
+            "description": "竹展示架"
+        },
+        {
+            "name": "bamboo_sign",
+            "description": "竹告示牌"
+        },
+        {
+            "name": "bamboo_slab",
+            "description": "竹台阶"
+        },
+        {
+            "name": "bamboo_stairs",
+            "description": "竹楼梯"
+        },
+        {
+            "name": "bamboo_trapdoor",
+            "description": "竹活板门"
+        },
+        {
+            "name": "banner",
+            "description": "旗帜"
+        },
+        {
+            "name": "barrel",
+            "description": "木桶"
+        },
+        {
+            "name": "barrier",
+            "description": "屏障"
+        },
+        {
+            "name": "basalt",
+            "description": "玄武岩"
+        },
+        {
+            "name": "bat_spawn_egg",
+            "description": "蝙蝠刷怪蛋"
+        },
+        {
+            "name": "beacon",
+            "description": "信标"
+        },
+        {
+            "name": "bed",
+            "description": "床"
+        },
+        {
+            "name": "bedrock",
+            "description": "基岩"
+        },
+        {
+            "name": "bee_nest",
+            "description": "蜂巢"
+        },
+        {
+            "name": "bee_spawn_egg",
+            "description": "蜜蜂刷怪蛋"
+        },
+        {
+            "name": "beef",
+            "description": "生牛肉"
+        },
+        {
+            "name": "beehive",
+            "description": "蜂箱"
+        },
+        {
+            "name": "beetroot",
+            "description": "甜菜根"
+        },
+        {
+            "name": "beetroot_seeds",
+            "description": "甜菜种子"
+        },
+        {
+            "name": "beetroot_soup",
+            "description": "甜菜汤"
+        },
+        {
+            "name": "bell",
+            "description": "钟"
+        },
+        {
+            "name": "big_dripleaf",
+            "description": "大型垂滴叶"
+        },
+        {
+            "name": "birch_boat",
+            "description": "白桦木船"
+        },
+        {
+            "name": "birch_button",
+            "description": "白桦木按钮"
+        },
+        {
+            "name": "birch_chest_boat",
+            "description": "白桦木运输船"
+        },
+        {
+            "name": "birch_door",
+            "description": "白桦木门"
+        },
+        {
+            "name": "birch_fence",
+            "description": "白桦木栅栏"
+        },
+        {
+            "name": "birch_fence_gate",
+            "description": "白桦木栅栏门"
+        },
+        {
+            "name": "birch_hanging_sign",
+            "description": "悬挂式白桦木告示牌"
+        },
+        {
+            "name": "birch_leaves",
+            "description": "白桦树叶"
+        },
+        {
+            "name": "birch_log",
+            "description": "白桦原木"
+        },
+        {
+            "name": "birch_planks",
+            "description": "白桦木板"
+        },
+        {
+            "name": "birch_pressure_plate",
+            "description": "白桦木压力板"
+        },
+        {
+            "name": "birch_sapling",
+            "description": "白桦树苗"
+        },
+        {
+            "name": "birch_shelf",
+            "description": "白桦木展示架"
+        },
+        {
+            "name": "birch_sign",
+            "description": "白桦木告示牌"
+        },
+        {
+            "name": "birch_slab",
+            "description": "白桦木台阶"
+        },
+        {
+            "name": "birch_stairs",
+            "description": "白桦木楼梯"
+        },
+        {
+            "name": "birch_trapdoor",
+            "description": "白桦木活板门"
+        },
+        {
+            "name": "birch_wood",
+            "description": "白桦木"
+        },
+        {
+            "name": "black_bundle",
+            "description": "黑色收纳袋"
+        },
+        {
+            "name": "black_candle",
+            "description": "黑色蜡烛"
+        },
+        {
+            "name": "black_carpet",
+            "description": "黑色地毯"
+        },
+        {
+            "name": "black_concrete",
+            "description": "黑色混凝土"
+        },
+        {
+            "name": "black_concrete_powder",
+            "description": "黑色混凝土粉末"
+        },
+        {
+            "name": "black_dye",
+            "description": "黑色染料"
+        },
+        {
+            "name": "black_glazed_terracotta",
+            "description": "黑色带釉陶瓦"
+        },
+        {
+            "name": "black_harness",
+            "description": "黑色挽具"
+        },
+        {
+            "name": "black_shulker_box",
+            "description": "黑色潜影盒"
+        },
+        {
+            "name": "black_stained_glass",
+            "description": "黑色染色玻璃"
+        },
+        {
+            "name": "black_stained_glass_pane",
+            "description": "黑色染色玻璃板"
+        },
+        {
+            "name": "black_terracotta",
+            "description": "黑色陶瓦"
+        },
+        {
+            "name": "black_wool",
+            "description": "黑色羊毛"
+        },
+        {
+            "name": "blackstone",
+            "description": "黑石"
+        },
+        {
+            "name": "blackstone_slab",
+            "description": "黑石台阶"
+        },
+        {
+            "name": "blackstone_stairs",
+            "description": "黑石楼梯"
+        },
+        {
+            "name": "blackstone_wall",
+            "description": "黑石墙"
+        },
+        {
+            "name": "blade_pottery_sherd",
+            "description": "利刃纹样陶片"
+        },
+        {
+            "name": "blast_furnace",
+            "description": "高炉"
+        },
+        {
+            "name": "blaze_powder",
+            "description": "烈焰粉"
+        },
+        {
+            "name": "blaze_rod",
+            "description": "烈焰棒"
+        },
+        {
+            "name": "blaze_spawn_egg",
+            "description": "烈焰人刷怪蛋"
+        },
+        {
+            "name": "blue_bundle",
+            "description": "蓝色收纳袋"
+        },
+        {
+            "name": "blue_candle",
+            "description": "蓝色蜡烛"
+        },
+        {
+            "name": "blue_carpet",
+            "description": "蓝色地毯"
+        },
+        {
+            "name": "blue_concrete",
+            "description": "蓝色混凝土"
+        },
+        {
+            "name": "blue_concrete_powder",
+            "description": "蓝色混凝土粉末"
+        },
+        {
+            "name": "blue_dye",
+            "description": "蓝色染料"
+        },
+        {
+            "name": "blue_egg",
+            "description": "蓝色鸡蛋"
+        },
+        {
+            "name": "blue_glazed_terracotta",
+            "description": "蓝色带釉陶瓦"
+        },
+        {
+            "name": "blue_harness",
+            "description": "蓝色挽具"
+        },
+        {
+            "name": "blue_ice",
+            "description": "蓝冰"
+        },
+        {
+            "name": "blue_orchid",
+            "description": "兰花"
+        },
+        {
+            "name": "blue_shulker_box",
+            "description": "蓝色潜影盒"
+        },
+        {
+            "name": "blue_stained_glass",
+            "description": "蓝色染色玻璃"
+        },
+        {
+            "name": "blue_stained_glass_pane",
+            "description": "蓝色染色玻璃板"
+        },
+        {
+            "name": "blue_terracotta",
+            "description": "蓝色陶瓦"
+        },
+        {
+            "name": "blue_wool",
+            "description": "蓝色羊毛"
+        },
+        {
+            "name": "bogged_spawn_egg",
+            "description": "沼骸刷怪蛋"
+        },
+        {
+            "name": "bolt_armor_trim_smithing_template",
+            "description": "镶铆盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "bone",
+            "description": "骨头"
+        },
+        {
+            "name": "bone_block",
+            "description": "骨块"
+        },
+        {
+            "name": "bone_meal",
+            "description": "骨粉"
+        },
+        {
+            "name": "book",
+            "description": "书"
+        },
+        {
+            "name": "bookshelf",
+            "description": "书架"
+        },
+        {
+            "name": "border_block",
+            "description": "边界"
+        },
+        {
+            "name": "bordure_indented_banner_pattern",
+            "description": "波纹边旗帜图案"
+        },
+        {
+            "name": "bow",
+            "description": "弓"
+        },
+        {
+            "name": "bowl",
+            "description": "碗"
+        },
+        {
+            "name": "brain_coral",
+            "description": "脑纹珊瑚"
+        },
+        {
+            "name": "brain_coral_block",
+            "description": "脑纹珊瑚块"
+        },
+        {
+            "name": "brain_coral_fan",
+            "description": "脑纹珊瑚扇"
+        },
+        {
+            "name": "bread",
+            "description": "面包"
+        },
+        {
+            "name": "breeze_rod",
+            "description": "旋风棒"
+        },
+        {
+            "name": "breeze_spawn_egg",
+            "description": "旋风人刷怪蛋"
+        },
+        {
+            "name": "brewer_pottery_sherd",
+            "description": "佳酿纹样陶片"
+        },
+        {
+            "name": "brewing_stand",
+            "description": "酿造台"
+        },
+        {
+            "name": "brick",
+            "description": "红砖"
+        },
+        {
+            "name": "brick_block",
+            "description": "红砖块"
+        },
+        {
+            "name": "brick_slab",
+            "description": "红砖台阶"
+        },
+        {
+            "name": "brick_stairs",
+            "description": "红砖楼梯"
+        },
+        {
+            "name": "brick_wall",
+            "description": "红砖墙"
+        },
+        {
+            "name": "brown_bundle",
+            "description": "棕色收纳袋"
+        },
+        {
+            "name": "brown_candle",
+            "description": "棕色蜡烛"
+        },
+        {
+            "name": "brown_carpet",
+            "description": "棕色地毯"
+        },
+        {
+            "name": "brown_concrete",
+            "description": "棕色混凝土"
+        },
+        {
+            "name": "brown_concrete_powder",
+            "description": "棕色混凝土粉末"
+        },
+        {
+            "name": "brown_dye",
+            "description": "棕色染料"
+        },
+        {
+            "name": "brown_egg",
+            "description": "棕色鸡蛋"
+        },
+        {
+            "name": "brown_glazed_terracotta",
+            "description": "棕色带釉陶瓦"
+        },
+        {
+            "name": "brown_harness",
+            "description": "棕色挽具"
+        },
+        {
+            "name": "brown_mushroom",
+            "description": "棕色蘑菇"
+        },
+        {
+            "name": "brown_mushroom_block",
+            "description": "棕色蘑菇方块"
+        },
+        {
+            "name": "brown_shulker_box",
+            "description": "棕色潜影盒"
+        },
+        {
+            "name": "brown_stained_glass",
+            "description": "棕色染色玻璃"
+        },
+        {
+            "name": "brown_stained_glass_pane",
+            "description": "棕色染色玻璃板"
+        },
+        {
+            "name": "brown_terracotta",
+            "description": "棕色陶瓦"
+        },
+        {
+            "name": "brown_wool",
+            "description": "棕色羊毛"
+        },
+        {
+            "name": "brush",
+            "description": "刷子"
+        },
+        {
+            "name": "bubble_coral",
+            "description": "气泡珊瑚"
+        },
+        {
+            "name": "bubble_coral_block",
+            "description": "气泡珊瑚块"
+        },
+        {
+            "name": "bubble_coral_fan",
+            "description": "气泡珊瑚扇"
+        },
+        {
+            "name": "bucket",
+            "description": "铁桶"
+        },
+        {
+            "name": "budding_amethyst",
+            "description": "紫水晶母岩"
+        },
+        {
+            "name": "bundle",
+            "description": "收纳袋"
+        },
+        {
+            "name": "burn_pottery_sherd",
+            "description": "烈焰纹样陶片"
+        },
+        {
+            "name": "bush",
+            "description": "灌木丛"
+        },
+        {
+            "name": "cactus",
+            "description": "仙人掌"
+        },
+        {
+            "name": "cactus_flower",
+            "description": "仙人掌花"
+        },
+        {
+            "name": "cake",
+            "description": "蛋糕"
+        },
+        {
+            "name": "calcite",
+            "description": "方解石"
+        },
+        {
+            "name": "calibrated_sculk_sensor",
+            "description": "校频幽匿感测体"
+        },
+        {
+            "name": "camel_husk_spawn_egg",
+            "description": "骆驼尸壳刷怪蛋"
+        },
+        {
+            "name": "camel_spawn_egg",
+            "description": "骆驼刷怪蛋"
+        },
+        {
+            "name": "campfire",
+            "description": "营火"
+        },
+        {
+            "name": "candle",
+            "description": "蜡烛"
+        },
+        {
+            "name": "carrot",
+            "description": "胡萝卜"
+        },
+        {
+            "name": "carrot_on_a_stick",
+            "description": "胡萝卜钓竿"
+        },
+        {
+            "name": "cartography_table",
+            "description": "制图台"
+        },
+        {
+            "name": "carved_pumpkin",
+            "description": "雕刻南瓜"
+        },
+        {
+            "name": "cat_spawn_egg",
+            "description": "猫刷怪蛋"
+        },
+        {
+            "name": "cauldron",
+            "description": "炼药锅"
+        },
+        {
+            "name": "cave_spider_spawn_egg",
+            "description": "洞穴蜘蛛刷怪蛋"
+        },
+        {
+            "name": "chain_command_block",
+            "description": "连锁型命令方块"
+        },
+        {
+            "name": "chainmail_boots",
+            "description": "锁链靴子"
+        },
+        {
+            "name": "chainmail_chestplate",
+            "description": "锁链胸甲"
+        },
+        {
+            "name": "chainmail_helmet",
+            "description": "锁链头盔"
+        },
+        {
+            "name": "chainmail_leggings",
+            "description": "锁链护腿"
+        },
+        {
+            "name": "charcoal",
+            "description": "木炭"
+        },
+        {
+            "name": "cherry_boat",
+            "description": "樱花木船"
+        },
+        {
+            "name": "cherry_button",
+            "description": "樱花木按钮"
+        },
+        {
+            "name": "cherry_chest_boat",
+            "description": "樱花木运输船"
+        },
+        {
+            "name": "cherry_door",
+            "description": "樱花木门"
+        },
+        {
+            "name": "cherry_fence",
+            "description": "樱花木栅栏"
+        },
+        {
+            "name": "cherry_fence_gate",
+            "description": "樱花木栅栏门"
+        },
+        {
+            "name": "cherry_hanging_sign",
+            "description": "悬挂式樱花木告示牌"
+        },
+        {
+            "name": "cherry_leaves",
+            "description": "樱花树叶"
+        },
+        {
+            "name": "cherry_log",
+            "description": "樱花原木"
+        },
+        {
+            "name": "cherry_planks",
+            "description": "樱花木板"
+        },
+        {
+            "name": "cherry_pressure_plate",
+            "description": "樱花木压力板"
+        },
+        {
+            "name": "cherry_sapling",
+            "description": "樱花树苗"
+        },
+        {
+            "name": "cherry_shelf",
+            "description": "樱花木展示架"
+        },
+        {
+            "name": "cherry_sign",
+            "description": "樱花木告示牌"
+        },
+        {
+            "name": "cherry_slab",
+            "description": "樱花木台阶"
+        },
+        {
+            "name": "cherry_stairs",
+            "description": "樱花木楼梯"
+        },
+        {
+            "name": "cherry_trapdoor",
+            "description": "樱花木活板门"
+        },
+        {
+            "name": "cherry_wood",
+            "description": "樱花木"
+        },
+        {
+            "name": "chest",
+            "description": "箱子"
+        },
+        {
+            "name": "chest_minecart",
+            "description": "运输矿车"
+        },
+        {
+            "name": "chicken",
+            "description": "鸡"
+        },
+        {
+            "name": "chicken_spawn_egg",
+            "description": "鸡刷怪蛋"
+        },
+        {
+            "name": "chipped_anvil",
+            "description": "开裂的铁砧"
+        },
+        {
+            "name": "chiseled_bookshelf",
+            "description": "雕纹书架"
+        },
+        {
+            "name": "chiseled_copper",
+            "description": "雕纹铜块"
+        },
+        {
+            "name": "chiseled_deepslate",
+            "description": "雕纹深板岩"
+        },
+        {
+            "name": "chiseled_nether_bricks",
+            "description": "雕纹下界砖块"
+        },
+        {
+            "name": "chiseled_polished_blackstone",
+            "description": "雕纹磨制黑石"
+        },
+        {
+            "name": "chiseled_quartz_block",
+            "description": "雕纹石英块"
+        },
+        {
+            "name": "chiseled_red_sandstone",
+            "description": "雕纹红砂岩"
+        },
+        {
+            "name": "chiseled_resin_bricks",
+            "description": "雕纹树脂砖块"
+        },
+        {
+            "name": "chiseled_sandstone",
+            "description": "雕纹砂岩"
+        },
+        {
+            "name": "chiseled_stone_bricks",
+            "description": "雕纹石砖"
+        },
+        {
+            "name": "chiseled_tuff",
+            "description": "雕纹凝灰岩"
+        },
+        {
+            "name": "chiseled_tuff_bricks",
+            "description": "雕纹凝灰岩砖"
+        },
+        {
+            "name": "chorus_flower",
+            "description": "紫颂花"
+        },
+        {
+            "name": "chorus_fruit",
+            "description": "紫颂果"
+        },
+        {
+            "name": "chorus_plant",
+            "description": "紫颂植株"
+        },
+        {
+            "name": "clay",
+            "description": "黏土"
+        },
+        {
+            "name": "clay_ball",
+            "description": "黏土球"
+        },
+        {
+            "name": "clock",
+            "description": "时钟"
+        },
+        {
+            "name": "closed_eyeblossom",
+            "description": "闭合的眼眸花"
+        },
+        {
+            "name": "coal",
+            "description": "煤炭"
+        },
+        {
+            "name": "coal_block",
+            "description": "煤炭块"
+        },
+        {
+            "name": "coal_ore",
+            "description": "煤矿石"
+        },
+        {
+            "name": "coarse_dirt",
+            "description": "砂土"
+        },
+        {
+            "name": "coast_armor_trim_smithing_template",
+            "description": "海岸盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "cobbled_deepslate",
+            "description": "深板岩圆石"
+        },
+        {
+            "name": "cobbled_deepslate_slab",
+            "description": "深板岩圆石台阶"
+        },
+        {
+            "name": "cobbled_deepslate_stairs",
+            "description": "深板岩圆石楼梯"
+        },
+        {
+            "name": "cobbled_deepslate_wall",
+            "description": "深板岩圆石墙"
+        },
+        {
+            "name": "cobblestone",
+            "description": "圆石"
+        },
+        {
+            "name": "cobblestone_slab",
+            "description": "圆石台阶"
+        },
+        {
+            "name": "cobblestone_wall",
+            "description": "圆石墙"
+        },
+        {
+            "name": "cocoa_beans",
+            "description": "可可豆"
+        },
+        {
+            "name": "cod",
+            "description": "鳕鱼"
+        },
+        {
+            "name": "cod_bucket",
+            "description": "鳕鱼桶"
+        },
+        {
+            "name": "cod_spawn_egg",
+            "description": "鳕鱼刷怪蛋"
+        },
+        {
+            "name": "command_block",
+            "description": "命令方块"
+        },
+        {
+            "name": "command_block_minecart",
+            "description": "命令方块矿车"
+        },
+        {
+            "name": "comparator",
+            "description": "红石比较器"
+        },
+        {
+            "name": "compass",
+            "description": "指南针"
+        },
+        {
+            "name": "composter",
+            "description": "堆肥桶"
+        },
+        {
+            "name": "conduit",
+            "description": "潮涌核心"
+        },
+        {
+            "name": "cooked_beef",
+            "description": "牛排"
+        },
+        {
+            "name": "cooked_chicken",
+            "description": "熟鸡肉"
+        },
+        {
+            "name": "cooked_cod",
+            "description": "熟鳕鱼"
+        },
+        {
+            "name": "cooked_mutton",
+            "description": "熟羊肉"
+        },
+        {
+            "name": "cooked_porkchop",
+            "description": "熟猪排"
+        },
+        {
+            "name": "cooked_rabbit",
+            "description": "熟兔肉"
+        },
+        {
+            "name": "cooked_salmon",
+            "description": "熟鲑鱼"
+        },
+        {
+            "name": "cookie",
+            "description": "曲奇"
+        },
+        {
+            "name": "copper_axe",
+            "description": "铜斧"
+        },
+        {
+            "name": "copper_bars",
+            "description": "铜栏杆"
+        },
+        {
+            "name": "copper_block",
+            "description": "铜块"
+        },
+        {
+            "name": "copper_boots",
+            "description": "铜靴子"
+        },
+        {
+            "name": "copper_bulb",
+            "description": "铜灯"
+        },
+        {
+            "name": "copper_chain",
+            "description": "铜链"
+        },
+        {
+            "name": "copper_chest",
+            "description": "铜箱子"
+        },
+        {
+            "name": "copper_chestplate",
+            "description": "铜胸甲"
+        },
+        {
+            "name": "copper_door",
+            "description": "铜门"
+        },
+        {
+            "name": "copper_golem_spawn_egg",
+            "description": "铜傀儡刷怪蛋"
+        },
+        {
+            "name": "copper_golem_statue",
+            "description": "铜傀儡像"
+        },
+        {
+            "name": "copper_grate",
+            "description": "铜格栅"
+        },
+        {
+            "name": "copper_helmet",
+            "description": "铜头盔"
+        },
+        {
+            "name": "copper_hoe",
+            "description": "铜锄"
+        },
+        {
+            "name": "copper_horse_armor",
+            "description": "铜马铠"
+        },
+        {
+            "name": "copper_ingot",
+            "description": "铜锭"
+        },
+        {
+            "name": "copper_lantern",
+            "description": "铜灯笼"
+        },
+        {
+            "name": "copper_leggings",
+            "description": "铜护腿"
+        },
+        {
+            "name": "copper_nautilus_armor",
+            "description": "铜鹦鹉螺铠"
+        },
+        {
+            "name": "copper_nugget",
+            "description": "铜粒"
+        },
+        {
+            "name": "copper_ore",
+            "description": "铜矿石"
+        },
+        {
+            "name": "copper_pickaxe",
+            "description": "铜镐"
+        },
+        {
+            "name": "copper_shovel",
+            "description": "铜锹"
+        },
+        {
+            "name": "copper_spear",
+            "description": "铜矛"
+        },
+        {
+            "name": "copper_sword",
+            "description": "铜剑"
+        },
+        {
+            "name": "copper_torch",
+            "description": "铜火把"
+        },
+        {
+            "name": "copper_trapdoor",
+            "description": "铜活板门"
+        },
+        {
+            "name": "cornflower",
+            "description": "矢车菊"
+        },
+        {
+            "name": "cow_spawn_egg",
+            "description": "牛刷怪蛋"
+        },
+        {
+            "name": "cracked_deepslate_bricks",
+            "description": "裂纹深板岩砖"
+        },
+        {
+            "name": "cracked_deepslate_tiles",
+            "description": "裂纹深板岩瓦"
+        },
+        {
+            "name": "cracked_nether_bricks",
+            "description": "裂纹下界砖块"
+        },
+        {
+            "name": "cracked_polished_blackstone_bricks",
+            "description": "裂纹磨制黑石砖"
+        },
+        {
+            "name": "cracked_stone_bricks",
+            "description": "裂纹石砖"
+        },
+        {
+            "name": "crafter",
+            "description": "合成器"
+        },
+        {
+            "name": "crafting_table",
+            "description": "工作台"
+        },
+        {
+            "name": "creaking_heart",
+            "description": "嘎枝之心"
+        },
+        {
+            "name": "creaking_spawn_egg",
+            "description": "嘎枝刷怪蛋"
+        },
+        {
+            "name": "creeper_banner_pattern",
+            "description": "苦力怕盾徽旗帜图案"
+        },
+        {
+            "name": "creeper_head",
+            "description": "苦力怕的头"
+        },
+        {
+            "name": "creeper_spawn_egg",
+            "description": "苦力怕刷怪蛋"
+        },
+        {
+            "name": "crimson_button",
+            "description": "绯红木按钮"
+        },
+        {
+            "name": "crimson_door",
+            "description": "绯红木门"
+        },
+        {
+            "name": "crimson_fence",
+            "description": "绯红木栅栏"
+        },
+        {
+            "name": "crimson_fence_gate",
+            "description": "绯红木栅栏门"
+        },
+        {
+            "name": "crimson_fungus",
+            "description": "绯红菌"
+        },
+        {
+            "name": "crimson_hanging_sign",
+            "description": "悬挂式绯红木告示牌"
+        },
+        {
+            "name": "crimson_hyphae",
+            "description": "绯红菌核"
+        },
+        {
+            "name": "crimson_nylium",
+            "description": "绯红菌岩"
+        },
+        {
+            "name": "crimson_planks",
+            "description": "绯红木板"
+        },
+        {
+            "name": "crimson_pressure_plate",
+            "description": "绯红木压力板"
+        },
+        {
+            "name": "crimson_roots",
+            "description": "绯红菌索"
+        },
+        {
+            "name": "crimson_shelf",
+            "description": "绯红木展示架"
+        },
+        {
+            "name": "crimson_sign",
+            "description": "绯红木告示牌"
+        },
+        {
+            "name": "crimson_slab",
+            "description": "绯红木台阶"
+        },
+        {
+            "name": "crimson_stairs",
+            "description": "绯红木楼梯"
+        },
+        {
+            "name": "crimson_stem",
+            "description": "绯红菌柄"
+        },
+        {
+            "name": "crimson_trapdoor",
+            "description": "绯红木活板门"
+        },
+        {
+            "name": "crossbow",
+            "description": "弩"
+        },
+        {
+            "name": "crying_obsidian",
+            "description": "哭泣的黑曜石"
+        },
+        {
+            "name": "cut_copper",
+            "description": "切制铜块"
+        },
+        {
+            "name": "cut_copper_slab",
+            "description": "切制铜台阶"
+        },
+        {
+            "name": "cut_copper_stairs",
+            "description": "切制铜楼梯"
+        },
+        {
+            "name": "cut_red_sandstone",
+            "description": "切制红砂岩"
+        },
+        {
+            "name": "cut_red_sandstone_slab",
+            "description": "切制红砂岩台阶"
+        },
+        {
+            "name": "cut_sandstone",
+            "description": "切制砂岩"
+        },
+        {
+            "name": "cut_sandstone_slab",
+            "description": "切制砂岩台阶"
+        },
+        {
+            "name": "cyan_bundle",
+            "description": "青色收纳袋"
+        },
+        {
+            "name": "cyan_candle",
+            "description": "青色蜡烛"
+        },
+        {
+            "name": "cyan_carpet",
+            "description": "青色地毯"
+        },
+        {
+            "name": "cyan_concrete",
+            "description": "青色混凝土"
+        },
+        {
+            "name": "cyan_concrete_powder",
+            "description": "青色混凝土粉末"
+        },
+        {
+            "name": "cyan_dye",
+            "description": "青色染料"
+        },
+        {
+            "name": "cyan_glazed_terracotta",
+            "description": "青色带釉陶瓦"
+        },
+        {
+            "name": "cyan_harness",
+            "description": "青色挽具"
+        },
+        {
+            "name": "cyan_shulker_box",
+            "description": "青色潜影盒"
+        },
+        {
+            "name": "cyan_stained_glass",
+            "description": "青色染色玻璃"
+        },
+        {
+            "name": "cyan_stained_glass_pane",
+            "description": "青色染色玻璃板"
+        },
+        {
+            "name": "cyan_terracotta",
+            "description": "青色陶瓦"
+        },
+        {
+            "name": "cyan_wool",
+            "description": "青色羊毛"
+        },
+        {
+            "name": "damaged_anvil",
+            "description": "损坏的铁砧"
+        },
+        {
+            "name": "dandelion",
+            "description": "蒲公英"
+        },
+        {
+            "name": "danger_pottery_sherd",
+            "description": "危机纹样陶片"
+        },
+        {
+            "name": "dark_oak_boat",
+            "description": "深色橡木船"
+        },
+        {
+            "name": "dark_oak_button",
+            "description": "深色橡木按钮"
+        },
+        {
+            "name": "dark_oak_chest_boat",
+            "description": "深色橡木运输船"
+        },
+        {
+            "name": "dark_oak_door",
+            "description": "深色橡木门"
+        },
+        {
+            "name": "dark_oak_fence",
+            "description": "深色橡木栅栏"
+        },
+        {
+            "name": "dark_oak_fence_gate",
+            "description": "深色橡木栅栏门"
+        },
+        {
+            "name": "dark_oak_hanging_sign",
+            "description": "悬挂式深色橡木告示牌"
+        },
+        {
+            "name": "dark_oak_leaves",
+            "description": "深色橡树树叶"
+        },
+        {
+            "name": "dark_oak_log",
+            "description": "深色橡木原木"
+        },
+        {
+            "name": "dark_oak_planks",
+            "description": "深色橡木木板"
+        },
+        {
+            "name": "dark_oak_pressure_plate",
+            "description": "深色橡木压力板"
+        },
+        {
+            "name": "dark_oak_sapling",
+            "description": "深色橡树树苗"
+        },
+        {
+            "name": "dark_oak_shelf",
+            "description": "深色橡木展示架"
+        },
+        {
+            "name": "dark_oak_sign",
+            "description": "深色橡木告示牌"
+        },
+        {
+            "name": "dark_oak_slab",
+            "description": "深色橡木台阶"
+        },
+        {
+            "name": "dark_oak_stairs",
+            "description": "深色橡木楼梯"
+        },
+        {
+            "name": "dark_oak_trapdoor",
+            "description": "深色橡木活板门"
+        },
+        {
+            "name": "dark_oak_wood",
+            "description": "深色橡木"
+        },
+        {
+            "name": "dark_prismarine",
+            "description": "暗海晶石"
+        },
+        {
+            "name": "dark_prismarine_slab",
+            "description": "暗海晶石台阶"
+        },
+        {
+            "name": "dark_prismarine_stairs",
+            "description": "暗海晶石楼梯"
+        },
+        {
+            "name": "daylight_detector",
+            "description": "阳光探测器"
+        },
+        {
+            "name": "dead_brain_coral",
+            "description": "失活的脑纹珊瑚"
+        },
+        {
+            "name": "dead_brain_coral_block",
+            "description": "失活的脑纹珊瑚块"
+        },
+        {
+            "name": "dead_brain_coral_fan",
+            "description": "失活的脑纹珊瑚扇"
+        },
+        {
+            "name": "dead_bubble_coral",
+            "description": "失活的气泡珊瑚"
+        },
+        {
+            "name": "dead_bubble_coral_block",
+            "description": "失活的气泡珊瑚块"
+        },
+        {
+            "name": "dead_bubble_coral_fan",
+            "description": "失活的气泡珊瑚扇"
+        },
+        {
+            "name": "dead_fire_coral",
+            "description": "失活的火珊瑚"
+        },
+        {
+            "name": "dead_fire_coral_block",
+            "description": "失活的火珊瑚块"
+        },
+        {
+            "name": "dead_fire_coral_fan",
+            "description": "失活的火珊瑚扇"
+        },
+        {
+            "name": "dead_horn_coral",
+            "description": "失活的鹿角珊瑚"
+        },
+        {
+            "name": "dead_horn_coral_block",
+            "description": "失活的鹿角珊瑚块"
+        },
+        {
+            "name": "dead_horn_coral_fan",
+            "description": "失活的鹿角珊瑚扇"
+        },
+        {
+            "name": "dead_tube_coral",
+            "description": "失活的管珊瑚"
+        },
+        {
+            "name": "dead_tube_coral_block",
+            "description": "失活的管珊瑚块"
+        },
+        {
+            "name": "dead_tube_coral_fan",
+            "description": "失活的管珊瑚扇"
+        },
+        {
+            "name": "deadbush",
+            "description": "枯萎的灌木"
+        },
+        {
+            "name": "decorated_pot",
+            "description": "饰纹陶罐"
+        },
+        {
+            "name": "deepslate",
+            "description": "深板岩"
+        },
+        {
+            "name": "deepslate_brick_slab",
+            "description": "深板岩砖台阶"
+        },
+        {
+            "name": "deepslate_brick_stairs",
+            "description": "深板岩砖楼梯"
+        },
+        {
+            "name": "deepslate_brick_wall",
+            "description": "深板岩砖墙"
+        },
+        {
+            "name": "deepslate_bricks",
+            "description": "深板岩砖"
+        },
+        {
+            "name": "deepslate_coal_ore",
+            "description": "深层煤矿石"
+        },
+        {
+            "name": "deepslate_copper_ore",
+            "description": "深层铜矿石"
+        },
+        {
+            "name": "deepslate_diamond_ore",
+            "description": "深层钻石矿石"
+        },
+        {
+            "name": "deepslate_emerald_ore",
+            "description": "深层绿宝石矿石"
+        },
+        {
+            "name": "deepslate_gold_ore",
+            "description": "深层金矿石"
+        },
+        {
+            "name": "deepslate_iron_ore",
+            "description": "深层铁矿石"
+        },
+        {
+            "name": "deepslate_lapis_ore",
+            "description": "深层青金石矿石"
+        },
+        {
+            "name": "deepslate_redstone_ore",
+            "description": "深层红石矿石"
+        },
+        {
+            "name": "deepslate_tile_slab",
+            "description": "深板岩瓦台阶"
+        },
+        {
+            "name": "deepslate_tile_stairs",
+            "description": "深板岩瓦楼梯"
+        },
+        {
+            "name": "deepslate_tile_wall",
+            "description": "深板岩瓦墙"
+        },
+        {
+            "name": "deepslate_tiles",
+            "description": "深板岩瓦"
+        },
+        {
+            "name": "deny",
+            "description": "拒绝方块"
+        },
+        {
+            "name": "detector_rail",
+            "description": "探测铁轨"
+        },
+        {
+            "name": "diamond",
+            "description": "钻石"
+        },
+        {
+            "name": "diamond_axe",
+            "description": "钻石斧"
+        },
+        {
+            "name": "diamond_block",
+            "description": "钻石块"
+        },
+        {
+            "name": "diamond_boots",
+            "description": "钻石靴子"
+        },
+        {
+            "name": "diamond_chestplate",
+            "description": "钻石胸甲"
+        },
+        {
+            "name": "diamond_helmet",
+            "description": "钻石头盔"
+        },
+        {
+            "name": "diamond_hoe",
+            "description": "钻石锄"
+        },
+        {
+            "name": "diamond_horse_armor",
+            "description": "钻石马铠"
+        },
+        {
+            "name": "diamond_leggings",
+            "description": "钻石护腿"
+        },
+        {
+            "name": "diamond_nautilus_armor",
+            "description": "钻石鹦鹉螺铠"
+        },
+        {
+            "name": "diamond_ore",
+            "description": "钻石矿石"
+        },
+        {
+            "name": "diamond_pickaxe",
+            "description": "钻石镐"
+        },
+        {
+            "name": "diamond_shovel",
+            "description": "钻石锹"
+        },
+        {
+            "name": "diamond_spear",
+            "description": "钻石矛"
+        },
+        {
+            "name": "diamond_sword",
+            "description": "钻石剑"
+        },
+        {
+            "name": "diorite",
+            "description": "闪长岩"
+        },
+        {
+            "name": "diorite_slab",
+            "description": "闪长岩台阶"
+        },
+        {
+            "name": "diorite_stairs",
+            "description": "闪长岩楼梯"
+        },
+        {
+            "name": "diorite_wall",
+            "description": "闪长岩墙"
+        },
+        {
+            "name": "dirt",
+            "description": "泥土"
+        },
+        {
+            "name": "dirt_with_roots",
+            "description": "缠根泥土"
+        },
+        {
+            "name": "disc_fragment_5",
+            "description": "唱片残片 Samuel Åberg - 5"
+        },
+        {
+            "name": "dispenser",
+            "description": "发射器"
+        },
+        {
+            "name": "dolphin_spawn_egg",
+            "description": "海豚刷怪蛋"
+        },
+        {
+            "name": "donkey_spawn_egg",
+            "description": "驴刷怪蛋"
+        },
+        {
+            "name": "dragon_breath",
+            "description": "龙息"
+        },
+        {
+            "name": "dragon_egg",
+            "description": "龙蛋"
+        },
+        {
+            "name": "dragon_head",
+            "description": "龙首"
+        },
+        {
+            "name": "dried_ghast",
+            "description": "失水恶魂"
+        },
+        {
+            "name": "dried_kelp",
+            "description": "干海带"
+        },
+        {
+            "name": "dried_kelp_block",
+            "description": "干海带块"
+        },
+        {
+            "name": "dripstone_block",
+            "description": "滴水石块"
+        },
+        {
+            "name": "dropper",
+            "description": "投掷器"
+        },
+        {
+            "name": "drowned_spawn_egg",
+            "description": "溺尸刷怪蛋"
+        },
+        {
+            "name": "dune_armor_trim_smithing_template",
+            "description": "沙丘盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "echo_shard",
+            "description": "回响碎片"
+        },
+        {
+            "name": "egg",
+            "description": "鸡蛋"
+        },
+        {
+            "name": "elder_guardian_spawn_egg",
+            "description": "远古守卫者刷怪蛋"
+        },
+        {
+            "name": "elytra",
+            "description": "鞘翅"
+        },
+        {
+            "name": "emerald",
+            "description": "绿宝石"
+        },
+        {
+            "name": "emerald_block",
+            "description": "绿宝石块"
+        },
+        {
+            "name": "emerald_ore",
+            "description": "绿宝石矿石"
+        },
+        {
+            "name": "empty_map",
+            "description": "空地图"
+        },
+        {
+            "name": "enchanted_book",
+            "description": "附魔书"
+        },
+        {
+            "name": "enchanted_golden_apple",
+            "description": "附魔金苹果"
+        },
+        {
+            "name": "enchanting_table",
+            "description": "附魔台"
+        },
+        {
+            "name": "end_brick_stairs",
+            "description": "末地石砖楼梯"
+        },
+        {
+            "name": "end_bricks",
+            "description": "末地石砖"
+        },
+        {
+            "name": "end_crystal",
+            "description": "末地水晶"
+        },
+        {
+            "name": "end_portal_frame",
+            "description": "末地传送门框架"
+        },
+        {
+            "name": "end_rod",
+            "description": "末地烛"
+        },
+        {
+            "name": "end_stone",
+            "description": "末地石"
+        },
+        {
+            "name": "end_stone_brick_slab",
+            "description": "末地石砖台阶"
+        },
+        {
+            "name": "end_stone_brick_wall",
+            "description": "末地石砖墙"
+        },
+        {
+            "name": "ender_chest",
+            "description": "末影箱"
+        },
+        {
+            "name": "ender_dragon_spawn_egg",
+            "description": "末影龙刷怪蛋"
+        },
+        {
+            "name": "ender_eye",
+            "description": "末影之眼"
+        },
+        {
+            "name": "ender_pearl",
+            "description": "末影珍珠"
+        },
+        {
+            "name": "enderman_spawn_egg",
+            "description": "末影人刷怪蛋"
+        },
+        {
+            "name": "endermite_spawn_egg",
+            "description": "末影螨刷怪蛋"
+        },
+        {
+            "name": "evoker_spawn_egg",
+            "description": "唤魔者刷怪蛋"
+        },
+        {
+            "name": "experience_bottle",
+            "description": "附魔之瓶"
+        },
+        {
+            "name": "explorer_pottery_sherd",
+            "description": "探险纹样陶片"
+        },
+        {
+            "name": "exposed_chiseled_copper",
+            "description": "斑驳的雕纹铜块"
+        },
+        {
+            "name": "exposed_copper",
+            "description": "斑驳的铜块"
+        },
+        {
+            "name": "exposed_copper_bars",
+            "description": "斑驳的铜栏杆"
+        },
+        {
+            "name": "exposed_copper_bulb",
+            "description": "斑驳的铜灯"
+        },
+        {
+            "name": "exposed_copper_chain",
+            "description": "斑驳的铜链"
+        },
+        {
+            "name": "exposed_copper_chest",
+            "description": "斑驳的铜箱子"
+        },
+        {
+            "name": "exposed_copper_door",
+            "description": "斑驳的铜门"
+        },
+        {
+            "name": "exposed_copper_golem_statue",
+            "description": "斑驳的铜傀儡像"
+        },
+        {
+            "name": "exposed_copper_grate",
+            "description": "斑驳的铜格栅"
+        },
+        {
+            "name": "exposed_copper_lantern",
+            "description": "斑驳的铜灯笼"
+        },
+        {
+            "name": "exposed_copper_trapdoor",
+            "description": "斑驳的铜活板门"
+        },
+        {
+            "name": "exposed_cut_copper",
+            "description": "斑驳的切制铜块"
+        },
+        {
+            "name": "exposed_cut_copper_slab",
+            "description": "斑驳的切制铜台阶"
+        },
+        {
+            "name": "exposed_cut_copper_stairs",
+            "description": "斑驳的切制铜楼梯"
+        },
+        {
+            "name": "exposed_lightning_rod",
+            "description": "斑驳的避雷针"
+        },
+        {
+            "name": "eye_armor_trim_smithing_template",
+            "description": "眼眸盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "farmland",
+            "description": "耕地"
+        },
+        {
+            "name": "feather",
+            "description": "羽毛"
+        },
+        {
+            "name": "fence_gate",
+            "description": "橡木栅栏门"
+        },
+        {
+            "name": "fermented_spider_eye",
+            "description": "发酵蛛眼"
+        },
+        {
+            "name": "fern",
+            "description": "蕨"
+        },
+        {
+            "name": "field_masoned_banner_pattern",
+            "description": "砖纹旗帜图案"
+        },
+        {
+            "name": "filled_map",
+            "description": "地图"
+        },
+        {
+            "name": "fire_charge",
+            "description": "火焰弹"
+        },
+        {
+            "name": "fire_coral",
+            "description": "火珊瑚"
+        },
+        {
+            "name": "fire_coral_block",
+            "description": "火珊瑚块"
+        },
+        {
+            "name": "fire_coral_fan",
+            "description": "火珊瑚扇"
+        },
+        {
+            "name": "firefly_bush",
+            "description": "萤火虫灌木丛"
+        },
+        {
+            "name": "firework_rocket",
+            "description": "烟花火箭"
+        },
+        {
+            "name": "firework_star",
+            "description": "烟火之星"
+        },
+        {
+            "name": "fishing_rod",
+            "description": "钓鱼竿"
+        },
+        {
+            "name": "fletching_table",
+            "description": "制箭台"
+        },
+        {
+            "name": "flint",
+            "description": "燧石"
+        },
+        {
+            "name": "flint_and_steel",
+            "description": "打火石"
+        },
+        {
+            "name": "flow_armor_trim_smithing_template",
+            "description": "涡流盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "flow_banner_pattern",
+            "description": "涡流旗帜图案"
+        },
+        {
+            "name": "flow_pottery_sherd",
+            "description": "涡流纹样陶片"
+        },
+        {
+            "name": "flower_banner_pattern",
+            "description": "花朵盾徽旗帜图案"
+        },
+        {
+            "name": "flower_pot",
+            "description": "花盆"
+        },
+        {
+            "name": "flowering_azalea",
+            "description": "盛开的杜鹃花丛"
+        },
+        {
+            "name": "fox_spawn_egg",
+            "description": "狐狸刷怪蛋"
+        },
+        {
+            "name": "frame",
+            "description": "物品展示框"
+        },
+        {
+            "name": "friend_pottery_sherd",
+            "description": "挚友纹样陶片"
+        },
+        {
+            "name": "frog_spawn",
+            "description": "青蛙卵"
+        },
+        {
+            "name": "frog_spawn_egg",
+            "description": "青蛙刷怪蛋"
+        },
+        {
+            "name": "frosted_ice",
+            "description": "霜冰"
+        },
+        {
+            "name": "furnace",
+            "description": "熔炉"
+        },
+        {
+            "name": "ghast_spawn_egg",
+            "description": "恶魂刷怪蛋"
+        },
+        {
+            "name": "ghast_tear",
+            "description": "恶魂之泪"
+        },
+        {
+            "name": "gilded_blackstone",
+            "description": "镶金黑石"
+        },
+        {
+            "name": "glass",
+            "description": "玻璃"
+        },
+        {
+            "name": "glass_bottle",
+            "description": "玻璃瓶"
+        },
+        {
+            "name": "glass_pane",
+            "description": "玻璃板"
+        },
+        {
+            "name": "glistering_melon_slice",
+            "description": "闪烁的西瓜片"
+        },
+        {
+            "name": "globe_banner_pattern",
+            "description": "地球旗帜图案"
+        },
+        {
+            "name": "glow_berries",
+            "description": "发光浆果"
+        },
+        {
+            "name": "glow_frame",
+            "description": "荧光物品展示框"
+        },
+        {
+            "name": "glow_ink_sac",
+            "description": "荧光墨囊"
+        },
+        {
+            "name": "glow_lichen",
+            "description": "发光地衣"
+        },
+        {
+            "name": "glow_squid_spawn_egg",
+            "description": "发光鱿鱼刷怪蛋"
+        },
+        {
+            "name": "glowstone",
+            "description": "荧石"
+        },
+        {
+            "name": "glowstone_dust",
+            "description": "荧石粉"
+        },
+        {
+            "name": "goat_horn",
+            "description": "山羊角"
+        },
+        {
+            "name": "goat_spawn_egg",
+            "description": "山羊刷怪蛋"
+        },
+        {
+            "name": "gold_block",
+            "description": "金块"
+        },
+        {
+            "name": "gold_ingot",
+            "description": "金锭"
+        },
+        {
+            "name": "gold_nugget",
+            "description": "金粒"
+        },
+        {
+            "name": "gold_ore",
+            "description": "金矿石"
+        },
+        {
+            "name": "golden_apple",
+            "description": "金苹果"
+        },
+        {
+            "name": "golden_axe",
+            "description": "金斧"
+        },
+        {
+            "name": "golden_boots",
+            "description": "金靴子"
+        },
+        {
+            "name": "golden_carrot",
+            "description": "金胡萝卜"
+        },
+        {
+            "name": "golden_chestplate",
+            "description": "金胸甲"
+        },
+        {
+            "name": "golden_helmet",
+            "description": "金头盔"
+        },
+        {
+            "name": "golden_hoe",
+            "description": "金锄"
+        },
+        {
+            "name": "golden_horse_armor",
+            "description": "金马铠"
+        },
+        {
+            "name": "golden_leggings",
+            "description": "金护腿"
+        },
+        {
+            "name": "golden_nautilus_armor",
+            "description": "金鹦鹉螺铠"
+        },
+        {
+            "name": "golden_pickaxe",
+            "description": "金镐"
+        },
+        {
+            "name": "golden_rail",
+            "description": "动力铁轨"
+        },
+        {
+            "name": "golden_shovel",
+            "description": "金锹"
+        },
+        {
+            "name": "golden_spear",
+            "description": "金矛"
+        },
+        {
+            "name": "golden_sword",
+            "description": "金剑"
+        },
+        {
+            "name": "granite",
+            "description": "花岗岩"
+        },
+        {
+            "name": "granite_slab",
+            "description": "花岗岩台阶"
+        },
+        {
+            "name": "granite_stairs",
+            "description": "花岗岩楼梯"
+        },
+        {
+            "name": "granite_wall",
+            "description": "花岗岩墙"
+        },
+        {
+            "name": "grass_block",
+            "description": "草方块"
+        },
+        {
+            "name": "grass_path",
+            "description": "土径"
+        },
+        {
+            "name": "gravel",
+            "description": "沙砾"
+        },
+        {
+            "name": "gray_bundle",
+            "description": "灰色收纳袋"
+        },
+        {
+            "name": "gray_candle",
+            "description": "灰色蜡烛"
+        },
+        {
+            "name": "gray_carpet",
+            "description": "灰色地毯"
+        },
+        {
+            "name": "gray_concrete",
+            "description": "灰色混凝土"
+        },
+        {
+            "name": "gray_concrete_powder",
+            "description": "灰色混凝土粉末"
+        },
+        {
+            "name": "gray_dye",
+            "description": "灰色染料"
+        },
+        {
+            "name": "gray_glazed_terracotta",
+            "description": "灰色带釉陶瓦"
+        },
+        {
+            "name": "gray_harness",
+            "description": "灰色挽具"
+        },
+        {
+            "name": "gray_shulker_box",
+            "description": "灰色潜影盒"
+        },
+        {
+            "name": "gray_stained_glass",
+            "description": "灰色染色玻璃"
+        },
+        {
+            "name": "gray_stained_glass_pane",
+            "description": "灰色染色玻璃板"
+        },
+        {
+            "name": "gray_terracotta",
+            "description": "灰色陶瓦"
+        },
+        {
+            "name": "gray_wool",
+            "description": "灰色羊毛"
+        },
+        {
+            "name": "green_bundle",
+            "description": "绿色收纳袋"
+        },
+        {
+            "name": "green_candle",
+            "description": "绿色蜡烛"
+        },
+        {
+            "name": "green_carpet",
+            "description": "绿色地毯"
+        },
+        {
+            "name": "green_concrete",
+            "description": "绿色混凝土"
+        },
+        {
+            "name": "green_concrete_powder",
+            "description": "绿色混凝土粉末"
+        },
+        {
+            "name": "green_dye",
+            "description": "绿色染料"
+        },
+        {
+            "name": "green_glazed_terracotta",
+            "description": "绿色带釉陶瓦"
+        },
+        {
+            "name": "green_harness",
+            "description": "绿色挽具"
+        },
+        {
+            "name": "green_shulker_box",
+            "description": "绿色潜影盒"
+        },
+        {
+            "name": "green_stained_glass",
+            "description": "绿色染色玻璃"
+        },
+        {
+            "name": "green_stained_glass_pane",
+            "description": "绿色染色玻璃板"
+        },
+        {
+            "name": "green_terracotta",
+            "description": "绿色陶瓦"
+        },
+        {
+            "name": "green_wool",
+            "description": "绿色羊毛"
+        },
+        {
+            "name": "grindstone",
+            "description": "砂轮"
+        },
+        {
+            "name": "guardian_spawn_egg",
+            "description": "守卫者刷怪蛋"
+        },
+        {
+            "name": "gunpowder",
+            "description": "火药"
+        },
+        {
+            "name": "guster_banner_pattern",
+            "description": "旋风旗帜图案"
+        },
+        {
+            "name": "guster_pottery_sherd",
+            "description": "旋风纹样陶片"
+        },
+        {
+            "name": "hanging_roots",
+            "description": "垂根"
+        },
+        {
+            "name": "happy_ghast_spawn_egg",
+            "description": "快乐恶魂刷怪蛋"
+        },
+        {
+            "name": "hardened_clay",
+            "description": "陶瓦"
+        },
+        {
+            "name": "hay_block",
+            "description": "干草捆"
+        },
+        {
+            "name": "heart_of_the_sea",
+            "description": "海洋之心"
+        },
+        {
+            "name": "heart_pottery_sherd",
+            "description": "爱心纹样陶片"
+        },
+        {
+            "name": "heartbreak_pottery_sherd",
+            "description": "心碎纹样陶片"
+        },
+        {
+            "name": "heavy_core",
+            "description": "沉重核心"
+        },
+        {
+            "name": "heavy_weighted_pressure_plate",
+            "description": "重质测重压力板"
+        },
+        {
+            "name": "hoglin_spawn_egg",
+            "description": "疣猪兽刷怪蛋"
+        },
+        {
+            "name": "honey_block",
+            "description": "蜂蜜块"
+        },
+        {
+            "name": "honey_bottle",
+            "description": "蜂蜜瓶"
+        },
+        {
+            "name": "honeycomb",
+            "description": "蜜脾"
+        },
+        {
+            "name": "honeycomb_block",
+            "description": "蜜脾块"
+        },
+        {
+            "name": "hopper",
+            "description": "漏斗"
+        },
+        {
+            "name": "hopper_minecart",
+            "description": "漏斗矿车"
+        },
+        {
+            "name": "horn_coral",
+            "description": "鹿角珊瑚"
+        },
+        {
+            "name": "horn_coral_block",
+            "description": "鹿角珊瑚块"
+        },
+        {
+            "name": "horn_coral_fan",
+            "description": "鹿角珊瑚扇"
+        },
+        {
+            "name": "horse_spawn_egg",
+            "description": "马刷怪蛋"
+        },
+        {
+            "name": "host_armor_trim_smithing_template",
+            "description": "雇主盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "howl_pottery_sherd",
+            "description": "狼嚎纹样陶片"
+        },
+        {
+            "name": "husk_spawn_egg",
+            "description": "尸壳刷怪蛋"
+        },
+        {
+            "name": "ice",
+            "description": "冰"
+        },
+        {
+            "name": "infested_chiseled_stone_bricks",
+            "description": "虫蚀雕纹石砖"
+        },
+        {
+            "name": "infested_cobblestone",
+            "description": "虫蚀圆石"
+        },
+        {
+            "name": "infested_cracked_stone_bricks",
+            "description": "虫蚀裂纹石砖"
+        },
+        {
+            "name": "infested_deepslate",
+            "description": "虫蚀深板岩"
+        },
+        {
+            "name": "infested_mossy_stone_bricks",
+            "description": "虫蚀苔石砖"
+        },
+        {
+            "name": "infested_stone",
+            "description": "虫蚀石头"
+        },
+        {
+            "name": "infested_stone_bricks",
+            "description": "虫蚀石砖"
+        },
+        {
+            "name": "ink_sac",
+            "description": "墨囊"
+        },
+        {
+            "name": "iron_axe",
+            "description": "铁斧"
+        },
+        {
+            "name": "iron_bars",
+            "description": "铁栏杆"
+        },
+        {
+            "name": "iron_block",
+            "description": "铁块"
+        },
+        {
+            "name": "iron_boots",
+            "description": "铁靴子"
+        },
+        {
+            "name": "iron_chain",
+            "description": "铁链"
+        },
+        {
+            "name": "iron_chestplate",
+            "description": "铁胸甲"
+        },
+        {
+            "name": "iron_door",
+            "description": "铁门"
+        },
+        {
+            "name": "iron_golem_spawn_egg",
+            "description": "铁傀儡刷怪蛋"
+        },
+        {
+            "name": "iron_helmet",
+            "description": "铁头盔"
+        },
+        {
+            "name": "iron_hoe",
+            "description": "铁锄"
+        },
+        {
+            "name": "iron_horse_armor",
+            "description": "铁马铠"
+        },
+        {
+            "name": "iron_ingot",
+            "description": "铁锭"
+        },
+        {
+            "name": "iron_leggings",
+            "description": "铁护腿"
+        },
+        {
+            "name": "iron_nautilus_armor",
+            "description": "铁鹦鹉螺铠"
+        },
+        {
+            "name": "iron_nugget",
+            "description": "铁粒"
+        },
+        {
+            "name": "iron_ore",
+            "description": "铁矿石"
+        },
+        {
+            "name": "iron_pickaxe",
+            "description": "铁镐"
+        },
+        {
+            "name": "iron_shovel",
+            "description": "铁锹"
+        },
+        {
+            "name": "iron_spear",
+            "description": "铁矛"
+        },
+        {
+            "name": "iron_sword",
+            "description": "铁剑"
+        },
+        {
+            "name": "iron_trapdoor",
+            "description": "铁活板门"
+        },
+        {
+            "name": "jigsaw",
+            "description": "拼图方块"
+        },
+        {
+            "name": "jukebox",
+            "description": "唱片机"
+        },
+        {
+            "name": "jungle_boat",
+            "description": "丛林木船"
+        },
+        {
+            "name": "jungle_button",
+            "description": "丛林木按钮"
+        },
+        {
+            "name": "jungle_chest_boat",
+            "description": "丛林木运输船"
+        },
+        {
+            "name": "jungle_door",
+            "description": "丛林木门"
+        },
+        {
+            "name": "jungle_fence",
+            "description": "丛林木栅栏"
+        },
+        {
+            "name": "jungle_fence_gate",
+            "description": "丛林木栅栏门"
+        },
+        {
+            "name": "jungle_hanging_sign",
+            "description": "悬挂式丛林木告示牌"
+        },
+        {
+            "name": "jungle_leaves",
+            "description": "丛林树叶"
+        },
+        {
+            "name": "jungle_log",
+            "description": "丛林原木"
+        },
+        {
+            "name": "jungle_planks",
+            "description": "丛林木板"
+        },
+        {
+            "name": "jungle_pressure_plate",
+            "description": "丛林木压力板"
+        },
+        {
+            "name": "jungle_sapling",
+            "description": "丛林树苗"
+        },
+        {
+            "name": "jungle_shelf",
+            "description": "丛林木展示架"
+        },
+        {
+            "name": "jungle_sign",
+            "description": "丛林木告示牌"
+        },
+        {
+            "name": "jungle_slab",
+            "description": "丛林木台阶"
+        },
+        {
+            "name": "jungle_stairs",
+            "description": "丛林木楼梯"
+        },
+        {
+            "name": "jungle_trapdoor",
+            "description": "丛林木活板门"
+        },
+        {
+            "name": "jungle_wood",
+            "description": "丛林木"
+        },
+        {
+            "name": "kelp",
+            "description": "海带"
+        },
+        {
+            "name": "ladder",
+            "description": "梯子"
+        },
+        {
+            "name": "lantern",
+            "description": "灯笼"
+        },
+        {
+            "name": "lapis_block",
+            "description": "青金石块"
+        },
+        {
+            "name": "lapis_lazuli",
+            "description": "青金石"
+        },
+        {
+            "name": "lapis_ore",
+            "description": "青金石矿石"
+        },
+        {
+            "name": "large_amethyst_bud",
+            "description": "大型紫晶芽"
+        },
+        {
+            "name": "large_fern",
+            "description": "大型蕨"
+        },
+        {
+            "name": "lava_bucket",
+            "description": "熔岩桶"
+        },
+        {
+            "name": "lead",
+            "description": "拴绳"
+        },
+        {
+            "name": "leaf_litter",
+            "description": "枯叶堆"
+        },
+        {
+            "name": "leather",
+            "description": "皮革"
+        },
+        {
+            "name": "leather_boots",
+            "description": "皮革靴子"
+        },
+        {
+            "name": "leather_chestplate",
+            "description": "皮革外套"
+        },
+        {
+            "name": "leather_helmet",
+            "description": "皮革帽子"
+        },
+        {
+            "name": "leather_horse_armor",
+            "description": "皮革马铠"
+        },
+        {
+            "name": "leather_leggings",
+            "description": "皮革裤子"
+        },
+        {
+            "name": "lectern",
+            "description": "讲台"
+        },
+        {
+            "name": "lever",
+            "description": "拉杆"
+        },
+        {
+            "name": "light_block_0",
+            "description": "光源方块（0）"
+        },
+        {
+            "name": "light_block_1",
+            "description": "光源方块（1）"
+        },
+        {
+            "name": "light_block_10",
+            "description": "光源方块（10）"
+        },
+        {
+            "name": "light_block_11",
+            "description": "光源方块（11）"
+        },
+        {
+            "name": "light_block_12",
+            "description": "光源方块（12）"
+        },
+        {
+            "name": "light_block_13",
+            "description": "光源方块（13）"
+        },
+        {
+            "name": "light_block_14",
+            "description": "光源方块（14）"
+        },
+        {
+            "name": "light_block_15",
+            "description": "光源方块（15）"
+        },
+        {
+            "name": "light_block_2",
+            "description": "光源方块（2）"
+        },
+        {
+            "name": "light_block_3",
+            "description": "光源方块（3）"
+        },
+        {
+            "name": "light_block_4",
+            "description": "光源方块（4）"
+        },
+        {
+            "name": "light_block_5",
+            "description": "光源方块（5）"
+        },
+        {
+            "name": "light_block_6",
+            "description": "光源方块（6）"
+        },
+        {
+            "name": "light_block_7",
+            "description": "光源方块（7）"
+        },
+        {
+            "name": "light_block_8",
+            "description": "光源方块（8）"
+        },
+        {
+            "name": "light_block_9",
+            "description": "光源方块（9）"
+        },
+        {
+            "name": "light_blue_bundle",
+            "description": "淡蓝色收纳袋"
+        },
+        {
+            "name": "light_blue_candle",
+            "description": "淡蓝色蜡烛"
+        },
+        {
+            "name": "light_blue_carpet",
+            "description": "淡蓝色地毯"
+        },
+        {
+            "name": "light_blue_concrete",
+            "description": "淡蓝色混凝土"
+        },
+        {
+            "name": "light_blue_concrete_powder",
+            "description": "淡蓝色混凝土粉末"
+        },
+        {
+            "name": "light_blue_dye",
+            "description": "淡蓝色染料"
+        },
+        {
+            "name": "light_blue_glazed_terracotta",
+            "description": "淡蓝色带釉陶瓦"
+        },
+        {
+            "name": "light_blue_harness",
+            "description": "淡蓝色挽具"
+        },
+        {
+            "name": "light_blue_shulker_box",
+            "description": "淡蓝色潜影盒"
+        },
+        {
+            "name": "light_blue_stained_glass",
+            "description": "淡蓝色染色玻璃"
+        },
+        {
+            "name": "light_blue_stained_glass_pane",
+            "description": "淡蓝色染色玻璃板"
+        },
+        {
+            "name": "light_blue_terracotta",
+            "description": "淡蓝色陶瓦"
+        },
+        {
+            "name": "light_blue_wool",
+            "description": "淡蓝色羊毛"
+        },
+        {
+            "name": "light_gray_bundle",
+            "description": "淡灰色收纳袋"
+        },
+        {
+            "name": "light_gray_candle",
+            "description": "淡灰色蜡烛"
+        },
+        {
+            "name": "light_gray_carpet",
+            "description": "淡灰色地毯"
+        },
+        {
+            "name": "light_gray_concrete",
+            "description": "淡灰色混凝土"
+        },
+        {
+            "name": "light_gray_concrete_powder",
+            "description": "淡灰色混凝土粉末"
+        },
+        {
+            "name": "light_gray_dye",
+            "description": "淡灰色染料"
+        },
+        {
+            "name": "light_gray_harness",
+            "description": "淡灰色挽具"
+        },
+        {
+            "name": "light_gray_shulker_box",
+            "description": "淡灰色潜影盒"
+        },
+        {
+            "name": "light_gray_stained_glass",
+            "description": "淡灰色染色玻璃"
+        },
+        {
+            "name": "light_gray_stained_glass_pane",
+            "description": "淡灰色染色玻璃板"
+        },
+        {
+            "name": "light_gray_terracotta",
+            "description": "淡灰色陶瓦"
+        },
+        {
+            "name": "light_gray_wool",
+            "description": "淡灰色羊毛"
+        },
+        {
+            "name": "light_weighted_pressure_plate",
+            "description": "轻质测重压力板"
+        },
+        {
+            "name": "lightning_rod",
+            "description": "避雷针"
+        },
+        {
+            "name": "lilac",
+            "description": "丁香"
+        },
+        {
+            "name": "lily_of_the_valley",
+            "description": "铃兰"
+        },
+        {
+            "name": "lime_bundle",
+            "description": "黄绿色收纳袋"
+        },
+        {
+            "name": "lime_candle",
+            "description": "黄绿色蜡烛"
+        },
+        {
+            "name": "lime_carpet",
+            "description": "黄绿色地毯"
+        },
+        {
+            "name": "lime_concrete",
+            "description": "黄绿色混凝土"
+        },
+        {
+            "name": "lime_concrete_powder",
+            "description": "黄绿色混凝土粉末"
+        },
+        {
+            "name": "lime_dye",
+            "description": "黄绿色染料"
+        },
+        {
+            "name": "lime_glazed_terracotta",
+            "description": "黄绿色带釉陶瓦"
+        },
+        {
+            "name": "lime_harness",
+            "description": "黄绿色挽具"
+        },
+        {
+            "name": "lime_shulker_box",
+            "description": "黄绿色潜影盒"
+        },
+        {
+            "name": "lime_stained_glass",
+            "description": "黄绿色染色玻璃"
+        },
+        {
+            "name": "lime_stained_glass_pane",
+            "description": "黄绿色染色玻璃板"
+        },
+        {
+            "name": "lime_terracotta",
+            "description": "黄绿色陶瓦"
+        },
+        {
+            "name": "lime_wool",
+            "description": "黄绿色羊毛"
+        },
+        {
+            "name": "lingering_potion",
+            "description": "滞留药水",
+            "descriptions": [
+                "水瓶（普通）",
+                "平凡的药水（普通）",
+                "平凡的药水（延长）",
+                "浓稠的药水（普通）",
+                "粗制的药水（普通）",
+                "夜视药水（普通）",
+                "夜视药水（延长）",
+                "隐身药水（普通）",
+                "隐身药水（延长）",
+                "跳跃药水（普通）",
+                "跳跃药水（延长）",
+                "跳跃药水（加强）",
+                "抗火药水（普通）",
+                "抗火药水（延长）",
+                "迅捷药水（普通）",
+                "迅捷药水（延长）",
+                "迅捷药水（加强）",
+                "迟缓药水（普通）",
+                "迟缓药水（延长）",
+                "水肺药水（普通）",
+                "水肺药水（延长）",
+                "治疗药水（普通）",
+                "治疗药水（加强）",
+                "伤害药水（普通）",
+                "伤害药水（加强）",
+                "剧毒药水（普通）",
+                "剧毒药水（延长）",
+                "剧毒药水（加强）",
+                "再生药水（普通）",
+                "再生药水（延长）",
+                "再生药水（加强）",
+                "力量药水（普通）",
+                "力量药水（延长）",
+                "力量药水（加强）",
+                "虚弱药水（普通）",
+                "虚弱药水（延长）",
+                "衰变药水（普通）",
+                "神龟药水（普通）",
+                "神龟药水（延长）",
+                "神龟药水（加强）",
+                "缓降药水（普通）",
+                "缓降药水（延长）",
+                "迟缓药水（加强）",
+                "蓄风药水（普通）",
+                "盘丝药水（普通）",
+                "渗浆药水（普通）",
+                "虫蚀药水（普通）"
+            ]
+        },
+        {
+            "name": "lit_pumpkin",
+            "description": "南瓜灯"
+        },
+        {
+            "name": "llama_spawn_egg",
+            "description": "羊驼刷怪蛋"
+        },
+        {
+            "name": "lodestone",
+            "description": "磁石"
+        },
+        {
+            "name": "lodestone_compass",
+            "description": "磁石指针"
+        },
+        {
+            "name": "loom",
+            "description": "织布机"
+        },
+        {
+            "name": "mace",
+            "description": "重锤"
+        },
+        {
+            "name": "magenta_bundle",
+            "description": "品红色收纳袋"
+        },
+        {
+            "name": "magenta_candle",
+            "description": "品红色蜡烛"
+        },
+        {
+            "name": "magenta_carpet",
+            "description": "品红色地毯"
+        },
+        {
+            "name": "magenta_concrete",
+            "description": "品红色混凝土"
+        },
+        {
+            "name": "magenta_concrete_powder",
+            "description": "品红色混凝土粉末"
+        },
+        {
+            "name": "magenta_dye",
+            "description": "品红色染料"
+        },
+        {
+            "name": "magenta_glazed_terracotta",
+            "description": "品红色带釉陶瓦"
+        },
+        {
+            "name": "magenta_harness",
+            "description": "品红色挽具"
+        },
+        {
+            "name": "magenta_shulker_box",
+            "description": "品红色潜影盒"
+        },
+        {
+            "name": "magenta_stained_glass",
+            "description": "品红色染色玻璃"
+        },
+        {
+            "name": "magenta_stained_glass_pane",
+            "description": "品红色染色玻璃板"
+        },
+        {
+            "name": "magenta_terracotta",
+            "description": "品红色陶瓦"
+        },
+        {
+            "name": "magenta_wool",
+            "description": "品红色羊毛"
+        },
+        {
+            "name": "magma",
+            "description": "岩浆块"
+        },
+        {
+            "name": "magma_cream",
+            "description": "岩浆膏"
+        },
+        {
+            "name": "magma_cube_spawn_egg",
+            "description": "岩浆怪刷怪蛋"
+        },
+        {
+            "name": "mangrove_boat",
+            "description": "红树木船"
+        },
+        {
+            "name": "mangrove_button",
+            "description": "红树木按钮"
+        },
+        {
+            "name": "mangrove_chest_boat",
+            "description": "红树木运输船"
+        },
+        {
+            "name": "mangrove_door",
+            "description": "红树木门"
+        },
+        {
+            "name": "mangrove_fence",
+            "description": "红树木栅栏"
+        },
+        {
+            "name": "mangrove_fence_gate",
+            "description": "红树木栅栏门"
+        },
+        {
+            "name": "mangrove_hanging_sign",
+            "description": "悬挂式红树木告示牌"
+        },
+        {
+            "name": "mangrove_leaves",
+            "description": "红树树叶"
+        },
+        {
+            "name": "mangrove_log",
+            "description": "红树原木"
+        },
+        {
+            "name": "mangrove_planks",
+            "description": "红树木板"
+        },
+        {
+            "name": "mangrove_pressure_plate",
+            "description": "红树木压力板"
+        },
+        {
+            "name": "mangrove_propagule",
+            "description": "红树胎生苗"
+        },
+        {
+            "name": "mangrove_roots",
+            "description": "红树根"
+        },
+        {
+            "name": "mangrove_shelf",
+            "description": "红树木展示架"
+        },
+        {
+            "name": "mangrove_sign",
+            "description": "红树木告示牌"
+        },
+        {
+            "name": "mangrove_slab",
+            "description": "红树木台阶"
+        },
+        {
+            "name": "mangrove_stairs",
+            "description": "红树木楼梯"
+        },
+        {
+            "name": "mangrove_trapdoor",
+            "description": "红树木活板门"
+        },
+        {
+            "name": "mangrove_wood",
+            "description": "红树木"
+        },
+        {
+            "name": "medium_amethyst_bud",
+            "description": "中型紫晶芽"
+        },
+        {
+            "name": "melon_block",
+            "description": "西瓜"
+        },
+        {
+            "name": "melon_seeds",
+            "description": "西瓜种子"
+        },
+        {
+            "name": "melon_slice",
+            "description": "西瓜片"
+        },
+        {
+            "name": "milk_bucket",
+            "description": "奶桶"
+        },
+        {
+            "name": "minecart",
+            "description": "矿车"
+        },
+        {
+            "name": "miner_pottery_sherd",
+            "description": "采矿纹样陶片"
+        },
+        {
+            "name": "mob_spawner",
+            "description": "刷怪笼"
+        },
+        {
+            "name": "mojang_banner_pattern",
+            "description": "Mojang徽标旗帜图案"
+        },
+        {
+            "name": "mooshroom_spawn_egg",
+            "description": "哞菇刷怪蛋"
+        },
+        {
+            "name": "moss_block",
+            "description": "苔藓块"
+        },
+        {
+            "name": "moss_carpet",
+            "description": "覆地苔藓"
+        },
+        {
+            "name": "mossy_cobblestone",
+            "description": "苔石"
+        },
+        {
+            "name": "mossy_cobblestone_slab",
+            "description": "苔石台阶"
+        },
+        {
+            "name": "mossy_cobblestone_stairs",
+            "description": "苔石楼梯"
+        },
+        {
+            "name": "mossy_cobblestone_wall",
+            "description": "苔石墙"
+        },
+        {
+            "name": "mossy_stone_brick_slab",
+            "description": "苔石砖台阶"
+        },
+        {
+            "name": "mossy_stone_brick_stairs",
+            "description": "苔石砖楼梯"
+        },
+        {
+            "name": "mossy_stone_brick_wall",
+            "description": "苔石砖墙"
+        },
+        {
+            "name": "mossy_stone_bricks",
+            "description": "苔石砖"
+        },
+        {
+            "name": "mourner_pottery_sherd",
+            "description": "悲恸纹样陶片"
+        },
+        {
+            "name": "mud",
+            "description": "泥巴"
+        },
+        {
+            "name": "mud_brick_slab",
+            "description": "泥砖台阶"
+        },
+        {
+            "name": "mud_brick_stairs",
+            "description": "泥砖楼梯"
+        },
+        {
+            "name": "mud_brick_wall",
+            "description": "泥砖墙"
+        },
+        {
+            "name": "mud_bricks",
+            "description": "泥砖"
+        },
+        {
+            "name": "muddy_mangrove_roots",
+            "description": "沾泥的红树根"
+        },
+        {
+            "name": "mule_spawn_egg",
+            "description": "骡刷怪蛋"
+        },
+        {
+            "name": "mushroom_stem",
+            "description": "蘑菇柄"
+        },
+        {
+            "name": "mushroom_stew",
+            "description": "蘑菇煲"
+        },
+        {
+            "name": "music_disc_11",
+            "description": "音乐唱片 C418 - 11"
+        },
+        {
+            "name": "music_disc_13",
+            "description": "音乐唱片 C418 - 13"
+        },
+        {
+            "name": "music_disc_5",
+            "description": "音乐唱片 Samuel Åberg - 5"
+        },
+        {
+            "name": "music_disc_blocks",
+            "description": "音乐唱片 C418 - blocks"
+        },
+        {
+            "name": "music_disc_cat",
+            "description": "音乐唱片 C418 - cat"
+        },
+        {
+            "name": "music_disc_chirp",
+            "description": "音乐唱片 C418 - chirp"
+        },
+        {
+            "name": "music_disc_creator",
+            "description": "音乐唱片 Lena Raine - Creator"
+        },
+        {
+            "name": "music_disc_creator_music_box",
+            "description": "音乐唱片 Lena Raine - Creator（八音盒）"
+        },
+        {
+            "name": "music_disc_far",
+            "description": "音乐唱片 C418 - far"
+        },
+        {
+            "name": "music_disc_lava_chicken",
+            "description": "音乐唱片 Hyper Potions - Lava Chicken"
+        },
+        {
+            "name": "music_disc_mall",
+            "description": "音乐唱片 C418 - mall"
+        },
+        {
+            "name": "music_disc_mellohi",
+            "description": "音乐唱片 C418 - mellohi"
+        },
+        {
+            "name": "music_disc_otherside",
+            "description": "音乐唱片 Lena Raine - otherside"
+        },
+        {
+            "name": "music_disc_pigstep",
+            "description": "音乐唱片 Lena Raine - Pigstep"
+        },
+        {
+            "name": "music_disc_precipice",
+            "description": "音乐唱片 Aaron Cherof - Precipice"
+        },
+        {
+            "name": "music_disc_relic",
+            "description": "音乐唱片 Aaron Cherof - Relic"
+        },
+        {
+            "name": "music_disc_stal",
+            "description": "音乐唱片 C418 - stal"
+        },
+        {
+            "name": "music_disc_strad",
+            "description": "音乐唱片 C418 - strad"
+        },
+        {
+            "name": "music_disc_tears",
+            "description": "音乐唱片 Amos Roddy - Tears"
+        },
+        {
+            "name": "music_disc_wait",
+            "description": "音乐唱片 C418 - wait"
+        },
+        {
+            "name": "music_disc_ward",
+            "description": "音乐唱片 C418 - ward"
+        },
+        {
+            "name": "mutton",
+            "description": "生羊肉"
+        },
+        {
+            "name": "mycelium",
+            "description": "菌丝体"
+        },
+        {
+            "name": "name_tag",
+            "description": "命名牌"
+        },
+        {
+            "name": "nautilus_shell",
+            "description": "鹦鹉螺壳"
+        },
+        {
+            "name": "nautilus_spawn_egg",
+            "description": "鹦鹉螺刷怪蛋"
+        },
+        {
+            "name": "nether_brick",
+            "description": "下界砖块"
+        },
+        {
+            "name": "nether_brick_fence",
+            "description": "下界砖栅栏"
+        },
+        {
+            "name": "nether_brick_slab",
+            "description": "下界砖台阶"
+        },
+        {
+            "name": "nether_brick_stairs",
+            "description": "下界砖楼梯"
+        },
+        {
+            "name": "nether_brick_wall",
+            "description": "下界砖墙"
+        },
+        {
+            "name": "nether_gold_ore",
+            "description": "下界金矿石"
+        },
+        {
+            "name": "nether_sprouts",
+            "description": "下界苗"
+        },
+        {
+            "name": "nether_star",
+            "description": "下界之星"
+        },
+        {
+            "name": "nether_wart",
+            "description": "下界疣"
+        },
+        {
+            "name": "nether_wart_block",
+            "description": "下界疣块"
+        },
+        {
+            "name": "netherbrick",
+            "description": "下界砖"
+        },
+        {
+            "name": "netherite_axe",
+            "description": "下界合金斧"
+        },
+        {
+            "name": "netherite_block",
+            "description": "下界合金块"
+        },
+        {
+            "name": "netherite_boots",
+            "description": "下界合金靴子"
+        },
+        {
+            "name": "netherite_chestplate",
+            "description": "下界合金胸甲"
+        },
+        {
+            "name": "netherite_helmet",
+            "description": "下界合金头盔"
+        },
+        {
+            "name": "netherite_hoe",
+            "description": "下界合金锄"
+        },
+        {
+            "name": "netherite_horse_armor",
+            "description": "下界合金马铠"
+        },
+        {
+            "name": "netherite_ingot",
+            "description": "下界合金锭"
+        },
+        {
+            "name": "netherite_leggings",
+            "description": "下界合金护腿"
+        },
+        {
+            "name": "netherite_nautilus_armor",
+            "description": "下界合金鹦鹉螺铠"
+        },
+        {
+            "name": "netherite_pickaxe",
+            "description": "下界合金镐"
+        },
+        {
+            "name": "netherite_scrap",
+            "description": "下界合金碎片"
+        },
+        {
+            "name": "netherite_shovel",
+            "description": "下界合金锹"
+        },
+        {
+            "name": "netherite_spear",
+            "description": "下界合金矛"
+        },
+        {
+            "name": "netherite_sword",
+            "description": "下界合金剑"
+        },
+        {
+            "name": "netherite_upgrade_smithing_template",
+            "description": "下界合金升级 锻造模板"
+        },
+        {
+            "name": "netherrack",
+            "description": "下界岩"
+        },
+        {
+            "name": "normal_stone_slab",
+            "description": "石头台阶"
+        },
+        {
+            "name": "normal_stone_stairs",
+            "description": "石头楼梯"
+        },
+        {
+            "name": "noteblock",
+            "description": "音符盒"
+        },
+        {
+            "name": "oak_boat",
+            "description": "橡木船"
+        },
+        {
+            "name": "oak_chest_boat",
+            "description": "橡木运输船"
+        },
+        {
+            "name": "oak_fence",
+            "description": "橡木栅栏"
+        },
+        {
+            "name": "oak_hanging_sign",
+            "description": "悬挂式橡木告示牌"
+        },
+        {
+            "name": "oak_leaves",
+            "description": "橡树树叶"
+        },
+        {
+            "name": "oak_log",
+            "description": "橡木原木"
+        },
+        {
+            "name": "oak_planks",
+            "description": "橡木木板"
+        },
+        {
+            "name": "oak_sapling",
+            "description": "橡树树苗"
+        },
+        {
+            "name": "oak_shelf",
+            "description": "橡木展示架"
+        },
+        {
+            "name": "oak_sign",
+            "description": "橡木告示牌"
+        },
+        {
+            "name": "oak_slab",
+            "description": "橡木台阶"
+        },
+        {
+            "name": "oak_stairs",
+            "description": "橡木楼梯"
+        },
+        {
+            "name": "oak_wood",
+            "description": "橡木"
+        },
+        {
+            "name": "observer",
+            "description": "侦测器"
+        },
+        {
+            "name": "obsidian",
+            "description": "黑曜石"
+        },
+        {
+            "name": "ocelot_spawn_egg",
+            "description": "豹猫刷怪蛋"
+        },
+        {
+            "name": "ochre_froglight",
+            "description": "赭黄蛙明灯"
+        },
+        {
+            "name": "ominous_bottle",
+            "description": "不祥之瓶"
+        },
+        {
+            "name": "ominous_trial_key",
+            "description": "不祥试炼钥匙"
+        },
+        {
+            "name": "open_eyeblossom",
+            "description": "张开的眼眸花"
+        },
+        {
+            "name": "orange_bundle",
+            "description": "橙色收纳袋"
+        },
+        {
+            "name": "orange_candle",
+            "description": "橙色蜡烛"
+        },
+        {
+            "name": "orange_carpet",
+            "description": "橙色地毯"
+        },
+        {
+            "name": "orange_concrete",
+            "description": "橙色混凝土"
+        },
+        {
+            "name": "orange_concrete_powder",
+            "description": "橙色混凝土粉末"
+        },
+        {
+            "name": "orange_dye",
+            "description": "橙色染料"
+        },
+        {
+            "name": "orange_glazed_terracotta",
+            "description": "橙色带釉陶瓦"
+        },
+        {
+            "name": "orange_harness",
+            "description": "橙色挽具"
+        },
+        {
+            "name": "orange_shulker_box",
+            "description": "橙色潜影盒"
+        },
+        {
+            "name": "orange_stained_glass",
+            "description": "橙色染色玻璃"
+        },
+        {
+            "name": "orange_stained_glass_pane",
+            "description": "橙色染色玻璃板"
+        },
+        {
+            "name": "orange_terracotta",
+            "description": "橙色陶瓦"
+        },
+        {
+            "name": "orange_tulip",
+            "description": "橙色郁金香"
+        },
+        {
+            "name": "orange_wool",
+            "description": "橙色羊毛"
+        },
+        {
+            "name": "oxeye_daisy",
+            "description": "滨菊"
+        },
+        {
+            "name": "oxidized_chiseled_copper",
+            "description": "氧化的雕纹铜块"
+        },
+        {
+            "name": "oxidized_copper",
+            "description": "氧化的铜块"
+        },
+        {
+            "name": "oxidized_copper_bars",
+            "description": "氧化的铜栏杆"
+        },
+        {
+            "name": "oxidized_copper_bulb",
+            "description": "氧化的铜灯"
+        },
+        {
+            "name": "oxidized_copper_chain",
+            "description": "氧化的铜链"
+        },
+        {
+            "name": "oxidized_copper_chest",
+            "description": "氧化的铜箱子"
+        },
+        {
+            "name": "oxidized_copper_door",
+            "description": "氧化的铜门"
+        },
+        {
+            "name": "oxidized_copper_golem_statue",
+            "description": "氧化的铜傀儡像"
+        },
+        {
+            "name": "oxidized_copper_grate",
+            "description": "氧化的铜格栅"
+        },
+        {
+            "name": "oxidized_copper_lantern",
+            "description": "氧化的铜灯笼"
+        },
+        {
+            "name": "oxidized_copper_trapdoor",
+            "description": "氧化的铜活板门"
+        },
+        {
+            "name": "oxidized_cut_copper",
+            "description": "氧化的切制铜块"
+        },
+        {
+            "name": "oxidized_cut_copper_slab",
+            "description": "氧化的切制铜台阶"
+        },
+        {
+            "name": "oxidized_cut_copper_stairs",
+            "description": "氧化的切制铜楼梯"
+        },
+        {
+            "name": "oxidized_lightning_rod",
+            "description": "氧化的避雷针"
+        },
+        {
+            "name": "packed_ice",
+            "description": "浮冰"
+        },
+        {
+            "name": "packed_mud",
+            "description": "泥坯"
+        },
+        {
+            "name": "painting",
+            "description": "画"
+        },
+        {
+            "name": "pale_hanging_moss",
+            "description": "苍白垂须"
+        },
+        {
+            "name": "pale_moss_block",
+            "description": "苍白苔藓块"
+        },
+        {
+            "name": "pale_moss_carpet",
+            "description": "苍白覆地苔藓"
+        },
+        {
+            "name": "pale_oak_boat",
+            "description": "苍白橡木船"
+        },
+        {
+            "name": "pale_oak_button",
+            "description": "苍白橡木按钮"
+        },
+        {
+            "name": "pale_oak_chest_boat",
+            "description": "苍白橡木运输船"
+        },
+        {
+            "name": "pale_oak_door",
+            "description": "苍白橡木门"
+        },
+        {
+            "name": "pale_oak_fence",
+            "description": "苍白橡木栅栏"
+        },
+        {
+            "name": "pale_oak_fence_gate",
+            "description": "苍白橡木栅栏门"
+        },
+        {
+            "name": "pale_oak_hanging_sign",
+            "description": "悬挂式苍白橡木告示牌"
+        },
+        {
+            "name": "pale_oak_leaves",
+            "description": "苍白橡树树叶"
+        },
+        {
+            "name": "pale_oak_log",
+            "description": "苍白橡木原木"
+        },
+        {
+            "name": "pale_oak_planks",
+            "description": "苍白橡木木板"
+        },
+        {
+            "name": "pale_oak_pressure_plate",
+            "description": "苍白橡木压力板"
+        },
+        {
+            "name": "pale_oak_sapling",
+            "description": "苍白橡树树苗"
+        },
+        {
+            "name": "pale_oak_shelf",
+            "description": "苍白橡木展示架"
+        },
+        {
+            "name": "pale_oak_sign",
+            "description": "苍白橡木告示牌"
+        },
+        {
+            "name": "pale_oak_slab",
+            "description": "苍白橡木台阶"
+        },
+        {
+            "name": "pale_oak_stairs",
+            "description": "苍白橡木楼梯"
+        },
+        {
+            "name": "pale_oak_trapdoor",
+            "description": "苍白橡木活板门"
+        },
+        {
+            "name": "pale_oak_wood",
+            "description": "苍白橡木"
+        },
+        {
+            "name": "panda_spawn_egg",
+            "description": "熊猫刷怪蛋"
+        },
+        {
+            "name": "paper",
+            "description": "纸"
+        },
+        {
+            "name": "parched_spawn_egg",
+            "description": "焦骸刷怪蛋"
+        },
+        {
+            "name": "parrot_spawn_egg",
+            "description": "鹦鹉刷怪蛋"
+        },
+        {
+            "name": "pearlescent_froglight",
+            "description": "珠光蛙明灯"
+        },
+        {
+            "name": "peony",
+            "description": "牡丹"
+        },
+        {
+            "name": "petrified_oak_slab",
+            "description": "石化橡木台阶"
+        },
+        {
+            "name": "phantom_membrane",
+            "description": "幻翼膜"
+        },
+        {
+            "name": "phantom_spawn_egg",
+            "description": "幻翼刷怪蛋"
+        },
+        {
+            "name": "pig_spawn_egg",
+            "description": "猪刷怪蛋"
+        },
+        {
+            "name": "piglin_banner_pattern",
+            "description": "猪鼻旗帜图案"
+        },
+        {
+            "name": "piglin_brute_spawn_egg",
+            "description": "猪灵蛮兵刷怪蛋"
+        },
+        {
+            "name": "piglin_head",
+            "description": "猪灵的头"
+        },
+        {
+            "name": "piglin_spawn_egg",
+            "description": "猪灵刷怪蛋"
+        },
+        {
+            "name": "pillager_spawn_egg",
+            "description": "掠夺者刷怪蛋"
+        },
+        {
+            "name": "pink_bundle",
+            "description": "粉红色收纳袋"
+        },
+        {
+            "name": "pink_candle",
+            "description": "粉红色蜡烛"
+        },
+        {
+            "name": "pink_carpet",
+            "description": "粉红色地毯"
+        },
+        {
+            "name": "pink_concrete",
+            "description": "粉红色混凝土"
+        },
+        {
+            "name": "pink_concrete_powder",
+            "description": "粉红色混凝土粉末"
+        },
+        {
+            "name": "pink_dye",
+            "description": "粉红色染料"
+        },
+        {
+            "name": "pink_glazed_terracotta",
+            "description": "粉红色带釉陶瓦"
+        },
+        {
+            "name": "pink_harness",
+            "description": "粉红色挽具"
+        },
+        {
+            "name": "pink_petals",
+            "description": "粉红色花簇"
+        },
+        {
+            "name": "pink_shulker_box",
+            "description": "粉红色潜影盒"
+        },
+        {
+            "name": "pink_stained_glass",
+            "description": "粉红色染色玻璃"
+        },
+        {
+            "name": "pink_stained_glass_pane",
+            "description": "粉红色染色玻璃板"
+        },
+        {
+            "name": "pink_terracotta",
+            "description": "粉红色陶瓦"
+        },
+        {
+            "name": "pink_tulip",
+            "description": "粉红色郁金香"
+        },
+        {
+            "name": "pink_wool",
+            "description": "粉红色羊毛"
+        },
+        {
+            "name": "piston",
+            "description": "活塞"
+        },
+        {
+            "name": "pitcher_plant",
+            "description": "瓶子草"
+        },
+        {
+            "name": "pitcher_pod",
+            "description": "瓶子草荚果"
+        },
+        {
+            "name": "player_head",
+            "description": "玩家的头"
+        },
+        {
+            "name": "plenty_pottery_sherd",
+            "description": "富饶纹样陶片"
+        },
+        {
+            "name": "podzol",
+            "description": "灰化土"
+        },
+        {
+            "name": "pointed_dripstone",
+            "description": "滴水石锥"
+        },
+        {
+            "name": "poisonous_potato",
+            "description": "毒马铃薯"
+        },
+        {
+            "name": "polar_bear_spawn_egg",
+            "description": "北极熊刷怪蛋"
+        },
+        {
+            "name": "polished_andesite",
+            "description": "磨制安山岩"
+        },
+        {
+            "name": "polished_andesite_slab",
+            "description": "磨制安山岩台阶"
+        },
+        {
+            "name": "polished_andesite_stairs",
+            "description": "磨制安山岩楼梯"
+        },
+        {
+            "name": "polished_basalt",
+            "description": "磨制玄武岩"
+        },
+        {
+            "name": "polished_blackstone",
+            "description": "磨制黑石"
+        },
+        {
+            "name": "polished_blackstone_brick_slab",
+            "description": "磨制黑石砖台阶"
+        },
+        {
+            "name": "polished_blackstone_brick_stairs",
+            "description": "磨制黑石砖楼梯"
+        },
+        {
+            "name": "polished_blackstone_brick_wall",
+            "description": "磨制黑石砖墙"
+        },
+        {
+            "name": "polished_blackstone_bricks",
+            "description": "磨制黑石砖"
+        },
+        {
+            "name": "polished_blackstone_button",
+            "description": "磨制黑石按钮"
+        },
+        {
+            "name": "polished_blackstone_pressure_plate",
+            "description": "磨制黑石压力板"
+        },
+        {
+            "name": "polished_blackstone_slab",
+            "description": "磨制黑石台阶"
+        },
+        {
+            "name": "polished_blackstone_stairs",
+            "description": "磨制黑石楼梯"
+        },
+        {
+            "name": "polished_blackstone_wall",
+            "description": "磨制黑石墙"
+        },
+        {
+            "name": "polished_deepslate",
+            "description": "磨制深板岩"
+        },
+        {
+            "name": "polished_deepslate_slab",
+            "description": "磨制深板岩台阶"
+        },
+        {
+            "name": "polished_deepslate_stairs",
+            "description": "磨制深板岩楼梯"
+        },
+        {
+            "name": "polished_deepslate_wall",
+            "description": "磨制深板岩墙"
+        },
+        {
+            "name": "polished_diorite",
+            "description": "磨制闪长岩"
+        },
+        {
+            "name": "polished_diorite_slab",
+            "description": "磨制闪长岩台阶"
+        },
+        {
+            "name": "polished_diorite_stairs",
+            "description": "磨制闪长岩楼梯"
+        },
+        {
+            "name": "polished_granite",
+            "description": "磨制花岗岩"
+        },
+        {
+            "name": "polished_granite_slab",
+            "description": "磨制花岗岩台阶"
+        },
+        {
+            "name": "polished_granite_stairs",
+            "description": "磨制花岗岩楼梯"
+        },
+        {
+            "name": "polished_tuff",
+            "description": "磨制凝灰岩"
+        },
+        {
+            "name": "polished_tuff_slab",
+            "description": "磨制凝灰岩台阶"
+        },
+        {
+            "name": "polished_tuff_stairs",
+            "description": "磨制凝灰岩楼梯"
+        },
+        {
+            "name": "polished_tuff_wall",
+            "description": "磨制凝灰岩墙"
+        },
+        {
+            "name": "popped_chorus_fruit",
+            "description": "爆裂紫颂果"
+        },
+        {
+            "name": "poppy",
+            "description": "虞美人"
+        },
+        {
+            "name": "porkchop",
+            "description": "生猪排"
+        },
+        {
+            "name": "potato",
+            "description": "马铃薯"
+        },
+        {
+            "name": "potion",
+            "description": "药水",
+            "descriptions": [
+                "水瓶（普通）",
+                "平凡的药水（普通）",
+                "平凡的药水（延长）",
+                "浓稠的药水（普通）",
+                "粗制的药水（普通）",
+                "夜视药水（普通）",
+                "夜视药水（延长）",
+                "隐身药水（普通）",
+                "隐身药水（延长）",
+                "跳跃药水（普通）",
+                "跳跃药水（延长）",
+                "跳跃药水（加强）",
+                "抗火药水（普通）",
+                "抗火药水（延长）",
+                "迅捷药水（普通）",
+                "迅捷药水（延长）",
+                "迅捷药水（加强）",
+                "迟缓药水（普通）",
+                "迟缓药水（延长）",
+                "水肺药水（普通）",
+                "水肺药水（延长）",
+                "治疗药水（普通）",
+                "治疗药水（加强）",
+                "伤害药水（普通）",
+                "伤害药水（加强）",
+                "剧毒药水（普通）",
+                "剧毒药水（延长）",
+                "剧毒药水（加强）",
+                "再生药水（普通）",
+                "再生药水（延长）",
+                "再生药水（加强）",
+                "力量药水（普通）",
+                "力量药水（延长）",
+                "力量药水（加强）",
+                "虚弱药水（普通）",
+                "虚弱药水（延长）",
+                "衰变药水（普通）",
+                "神龟药水（普通）",
+                "神龟药水（延长）",
+                "神龟药水（加强）",
+                "缓降药水（普通）",
+                "缓降药水（延长）",
+                "迟缓药水（加强）",
+                "蓄风药水（普通）",
+                "盘丝药水（普通）",
+                "渗浆药水（普通）",
+                "虫蚀药水（普通）"
+            ]
+        },
+        {
+            "name": "powder_snow_bucket",
+            "description": "细雪桶"
+        },
+        {
+            "name": "prismarine",
+            "description": "海晶石"
+        },
+        {
+            "name": "prismarine_brick_slab",
+            "description": "海晶石砖台阶"
+        },
+        {
+            "name": "prismarine_bricks",
+            "description": "海晶石砖"
+        },
+        {
+            "name": "prismarine_bricks_stairs",
+            "description": "海晶石砖楼梯"
+        },
+        {
+            "name": "prismarine_crystals",
+            "description": "海晶砂粒"
+        },
+        {
+            "name": "prismarine_shard",
+            "description": "海晶碎片"
+        },
+        {
+            "name": "prismarine_slab",
+            "description": "海晶石台阶"
+        },
+        {
+            "name": "prismarine_stairs",
+            "description": "海晶石楼梯"
+        },
+        {
+            "name": "prismarine_wall",
+            "description": "海晶石墙"
+        },
+        {
+            "name": "prize_pottery_sherd",
+            "description": "珍宝纹样陶片"
+        },
+        {
+            "name": "pufferfish",
+            "description": "河豚"
+        },
+        {
+            "name": "pufferfish_bucket",
+            "description": "河豚桶"
+        },
+        {
+            "name": "pufferfish_spawn_egg",
+            "description": "河豚刷怪蛋"
+        },
+        {
+            "name": "pumpkin",
+            "description": "南瓜"
+        },
+        {
+            "name": "pumpkin_pie",
+            "description": "南瓜派"
+        },
+        {
+            "name": "pumpkin_seeds",
+            "description": "南瓜种子"
+        },
+        {
+            "name": "purple_bundle",
+            "description": "紫色收纳袋"
+        },
+        {
+            "name": "purple_candle",
+            "description": "紫色蜡烛"
+        },
+        {
+            "name": "purple_carpet",
+            "description": "紫色地毯"
+        },
+        {
+            "name": "purple_concrete",
+            "description": "紫色混凝土"
+        },
+        {
+            "name": "purple_concrete_powder",
+            "description": "紫色混凝土粉末"
+        },
+        {
+            "name": "purple_dye",
+            "description": "紫色染料"
+        },
+        {
+            "name": "purple_glazed_terracotta",
+            "description": "紫色带釉陶瓦"
+        },
+        {
+            "name": "purple_harness",
+            "description": "紫色挽具"
+        },
+        {
+            "name": "purple_shulker_box",
+            "description": "紫色潜影盒"
+        },
+        {
+            "name": "purple_stained_glass",
+            "description": "紫色染色玻璃"
+        },
+        {
+            "name": "purple_stained_glass_pane",
+            "description": "紫色染色玻璃板"
+        },
+        {
+            "name": "purple_terracotta",
+            "description": "紫色陶瓦"
+        },
+        {
+            "name": "purple_wool",
+            "description": "紫色羊毛"
+        },
+        {
+            "name": "purpur_block",
+            "description": "紫珀块"
+        },
+        {
+            "name": "purpur_pillar",
+            "description": "紫珀柱"
+        },
+        {
+            "name": "purpur_slab",
+            "description": "紫珀台阶"
+        },
+        {
+            "name": "purpur_stairs",
+            "description": "紫珀楼梯"
+        },
+        {
+            "name": "quartz",
+            "description": "下界石英"
+        },
+        {
+            "name": "quartz_block",
+            "description": "石英块"
+        },
+        {
+            "name": "quartz_bricks",
+            "description": "石英砖"
+        },
+        {
+            "name": "quartz_ore",
+            "description": "下界石英矿石"
+        },
+        {
+            "name": "quartz_pillar",
+            "description": "石英柱"
+        },
+        {
+            "name": "quartz_slab",
+            "description": "石英台阶"
+        },
+        {
+            "name": "quartz_stairs",
+            "description": "石英楼梯"
+        },
+        {
+            "name": "rabbit",
+            "description": "兔子"
+        },
+        {
+            "name": "rabbit_foot",
+            "description": "兔子脚"
+        },
+        {
+            "name": "rabbit_hide",
+            "description": "兔子皮"
+        },
+        {
+            "name": "rabbit_spawn_egg",
+            "description": "兔子刷怪蛋"
+        },
+        {
+            "name": "rabbit_stew",
+            "description": "兔肉煲"
+        },
+        {
+            "name": "rail",
+            "description": "铁轨"
+        },
+        {
+            "name": "raiser_armor_trim_smithing_template",
+            "description": "牧民盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "ravager_spawn_egg",
+            "description": "劫掠兽刷怪蛋"
+        },
+        {
+            "name": "raw_copper",
+            "description": "粗铜"
+        },
+        {
+            "name": "raw_copper_block",
+            "description": "粗铜块"
+        },
+        {
+            "name": "raw_gold",
+            "description": "粗金"
+        },
+        {
+            "name": "raw_gold_block",
+            "description": "粗金块"
+        },
+        {
+            "name": "raw_iron",
+            "description": "粗铁"
+        },
+        {
+            "name": "raw_iron_block",
+            "description": "粗铁块"
+        },
+        {
+            "name": "recovery_compass",
+            "description": "追溯指针"
+        },
+        {
+            "name": "red_bundle",
+            "description": "红色收纳袋"
+        },
+        {
+            "name": "red_candle",
+            "description": "红色蜡烛"
+        },
+        {
+            "name": "red_carpet",
+            "description": "红色地毯"
+        },
+        {
+            "name": "red_concrete",
+            "description": "红色混凝土"
+        },
+        {
+            "name": "red_concrete_powder",
+            "description": "红色混凝土粉末"
+        },
+        {
+            "name": "red_dye",
+            "description": "红色染料"
+        },
+        {
+            "name": "red_glazed_terracotta",
+            "description": "红色带釉陶瓦"
+        },
+        {
+            "name": "red_harness",
+            "description": "红色挽具"
+        },
+        {
+            "name": "red_mushroom",
+            "description": "红色蘑菇"
+        },
+        {
+            "name": "red_mushroom_block",
+            "description": "红色蘑菇方块"
+        },
+        {
+            "name": "red_nether_brick",
+            "description": "红色下界砖块"
+        },
+        {
+            "name": "red_nether_brick_slab",
+            "description": "红色下界砖台阶"
+        },
+        {
+            "name": "red_nether_brick_stairs",
+            "description": "红色下界砖楼梯"
+        },
+        {
+            "name": "red_nether_brick_wall",
+            "description": "红色下界砖墙"
+        },
+        {
+            "name": "red_sand",
+            "description": "红沙"
+        },
+        {
+            "name": "red_sandstone",
+            "description": "红砂岩"
+        },
+        {
+            "name": "red_sandstone_slab",
+            "description": "红砂岩台阶"
+        },
+        {
+            "name": "red_sandstone_stairs",
+            "description": "红砂岩楼梯"
+        },
+        {
+            "name": "red_sandstone_wall",
+            "description": "红砂岩墙"
+        },
+        {
+            "name": "red_shulker_box",
+            "description": "红色潜影盒"
+        },
+        {
+            "name": "red_stained_glass",
+            "description": "红色染色玻璃"
+        },
+        {
+            "name": "red_stained_glass_pane",
+            "description": "红色染色玻璃板"
+        },
+        {
+            "name": "red_terracotta",
+            "description": "红色陶瓦"
+        },
+        {
+            "name": "red_tulip",
+            "description": "红色郁金香"
+        },
+        {
+            "name": "red_wool",
+            "description": "红色羊毛"
+        },
+        {
+            "name": "redstone",
+            "description": "红石粉"
+        },
+        {
+            "name": "redstone_block",
+            "description": "红石块"
+        },
+        {
+            "name": "redstone_lamp",
+            "description": "红石灯"
+        },
+        {
+            "name": "redstone_ore",
+            "description": "红石矿石"
+        },
+        {
+            "name": "redstone_torch",
+            "description": "红石火把"
+        },
+        {
+            "name": "reinforced_deepslate",
+            "description": "强化深板岩"
+        },
+        {
+            "name": "repeater",
+            "description": "红石中继器"
+        },
+        {
+            "name": "repeating_command_block",
+            "description": "循环型命令方块"
+        },
+        {
+            "name": "resin_block",
+            "description": "树脂块"
+        },
+        {
+            "name": "resin_brick",
+            "description": "树脂砖"
+        },
+        {
+            "name": "resin_brick_slab",
+            "description": "树脂砖台阶"
+        },
+        {
+            "name": "resin_brick_stairs",
+            "description": "树脂砖楼梯"
+        },
+        {
+            "name": "resin_brick_wall",
+            "description": "树脂砖墙"
+        },
+        {
+            "name": "resin_bricks",
+            "description": "树脂砖块"
+        },
+        {
+            "name": "resin_clump",
+            "description": "树脂团"
+        },
+        {
+            "name": "respawn_anchor",
+            "description": "重生锚"
+        },
+        {
+            "name": "rib_armor_trim_smithing_template",
+            "description": "肋骨盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "rose_bush",
+            "description": "玫瑰丛"
+        },
+        {
+            "name": "rotten_flesh",
+            "description": "腐肉"
+        },
+        {
+            "name": "saddle",
+            "description": "鞍"
+        },
+        {
+            "name": "salmon",
+            "description": "鲑鱼"
+        },
+        {
+            "name": "salmon_bucket",
+            "description": "鲑鱼桶"
+        },
+        {
+            "name": "salmon_spawn_egg",
+            "description": "鲑鱼刷怪蛋"
+        },
+        {
+            "name": "sand",
+            "description": "沙子"
+        },
+        {
+            "name": "sandstone",
+            "description": "砂岩"
+        },
+        {
+            "name": "sandstone_slab",
+            "description": "砂岩台阶"
+        },
+        {
+            "name": "sandstone_stairs",
+            "description": "砂岩楼梯"
+        },
+        {
+            "name": "sandstone_wall",
+            "description": "砂岩墙"
+        },
+        {
+            "name": "scaffolding",
+            "description": "脚手架"
+        },
+        {
+            "name": "scrape_pottery_sherd",
+            "description": "刮削纹样陶片"
+        },
+        {
+            "name": "sculk",
+            "description": "幽匿块"
+        },
+        {
+            "name": "sculk_catalyst",
+            "description": "幽匿催发体"
+        },
+        {
+            "name": "sculk_sensor",
+            "description": "幽匿感测体"
+        },
+        {
+            "name": "sculk_shrieker",
+            "description": "幽匿尖啸体"
+        },
+        {
+            "name": "sculk_vein",
+            "description": "幽匿脉络"
+        },
+        {
+            "name": "sea_lantern",
+            "description": "海晶灯"
+        },
+        {
+            "name": "sea_pickle",
+            "description": "海泡菜"
+        },
+        {
+            "name": "seagrass",
+            "description": "海草"
+        },
+        {
+            "name": "sentry_armor_trim_smithing_template",
+            "description": "哨兵盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "shaper_armor_trim_smithing_template",
+            "description": "塑造盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "sheaf_pottery_sherd",
+            "description": "麦捆纹样陶片"
+        },
+        {
+            "name": "shears",
+            "description": "剪刀"
+        },
+        {
+            "name": "sheep_spawn_egg",
+            "description": "绵羊刷怪蛋"
+        },
+        {
+            "name": "shelter_pottery_sherd",
+            "description": "树荫纹样陶片"
+        },
+        {
+            "name": "shield",
+            "description": "盾牌"
+        },
+        {
+            "name": "short_dry_grass",
+            "description": "矮枯草丛"
+        },
+        {
+            "name": "short_grass",
+            "description": "矮草丛"
+        },
+        {
+            "name": "shroomlight",
+            "description": "菌光体"
+        },
+        {
+            "name": "shulker_shell",
+            "description": "潜影壳"
+        },
+        {
+            "name": "shulker_spawn_egg",
+            "description": "潜影贝刷怪蛋"
+        },
+        {
+            "name": "silence_armor_trim_smithing_template",
+            "description": "幽静盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "silver_glazed_terracotta",
+            "description": "淡灰色带釉陶瓦"
+        },
+        {
+            "name": "silverfish_spawn_egg",
+            "description": "蠹虫刷怪蛋"
+        },
+        {
+            "name": "skeleton_horse_spawn_egg",
+            "description": "骷髅马刷怪蛋"
+        },
+        {
+            "name": "skeleton_skull",
+            "description": "骷髅头颅"
+        },
+        {
+            "name": "skeleton_spawn_egg",
+            "description": "骷髅刷怪蛋"
+        },
+        {
+            "name": "skull_banner_pattern",
+            "description": "头颅盾徽旗帜图案"
+        },
+        {
+            "name": "skull_pottery_sherd",
+            "description": "头颅纹样陶片"
+        },
+        {
+            "name": "slime",
+            "description": "黏液块"
+        },
+        {
+            "name": "slime_ball",
+            "description": "黏液球"
+        },
+        {
+            "name": "slime_spawn_egg",
+            "description": "史莱姆刷怪蛋"
+        },
+        {
+            "name": "small_amethyst_bud",
+            "description": "小型紫晶芽"
+        },
+        {
+            "name": "small_dripleaf_block",
+            "description": "小型垂滴叶"
+        },
+        {
+            "name": "smithing_table",
+            "description": "锻造台"
+        },
+        {
+            "name": "smoker",
+            "description": "烟熏炉"
+        },
+        {
+            "name": "smooth_basalt",
+            "description": "平滑玄武岩"
+        },
+        {
+            "name": "smooth_quartz",
+            "description": "平滑石英块"
+        },
+        {
+            "name": "smooth_quartz_slab",
+            "description": "平滑石英台阶"
+        },
+        {
+            "name": "smooth_quartz_stairs",
+            "description": "平滑石英楼梯"
+        },
+        {
+            "name": "smooth_red_sandstone",
+            "description": "平滑红砂岩"
+        },
+        {
+            "name": "smooth_red_sandstone_slab",
+            "description": "平滑红砂岩台阶"
+        },
+        {
+            "name": "smooth_red_sandstone_stairs",
+            "description": "平滑红砂岩楼梯"
+        },
+        {
+            "name": "smooth_sandstone",
+            "description": "平滑砂岩"
+        },
+        {
+            "name": "smooth_sandstone_slab",
+            "description": "平滑砂岩台阶"
+        },
+        {
+            "name": "smooth_sandstone_stairs",
+            "description": "平滑砂岩楼梯"
+        },
+        {
+            "name": "smooth_stone",
+            "description": "平滑石头"
+        },
+        {
+            "name": "smooth_stone_slab",
+            "description": "平滑石头台阶"
+        },
+        {
+            "name": "sniffer_egg",
+            "description": "嗅探兽蛋"
+        },
+        {
+            "name": "sniffer_spawn_egg",
+            "description": "嗅探兽刷怪蛋"
+        },
+        {
+            "name": "snort_pottery_sherd",
+            "description": "嗅探纹样陶片"
+        },
+        {
+            "name": "snout_armor_trim_smithing_template",
+            "description": "猪鼻盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "snow",
+            "description": "雪块"
+        },
+        {
+            "name": "snow_golem_spawn_egg",
+            "description": "雪傀儡刷怪蛋"
+        },
+        {
+            "name": "snow_layer",
+            "description": "雪"
+        },
+        {
+            "name": "snowball",
+            "description": "雪球"
+        },
+        {
+            "name": "soul_campfire",
+            "description": "灵魂营火"
+        },
+        {
+            "name": "soul_lantern",
+            "description": "灵魂灯笼"
+        },
+        {
+            "name": "soul_sand",
+            "description": "灵魂沙"
+        },
+        {
+            "name": "soul_soil",
+            "description": "灵魂土"
+        },
+        {
+            "name": "soul_torch",
+            "description": "灵魂火把"
+        },
+        {
+            "name": "spider_eye",
+            "description": "蜘蛛眼"
+        },
+        {
+            "name": "spider_spawn_egg",
+            "description": "蜘蛛刷怪蛋"
+        },
+        {
+            "name": "spire_armor_trim_smithing_template",
+            "description": "尖塔盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "splash_potion",
+            "description": "喷溅药水",
+            "descriptions": [
+                "水瓶（普通）",
+                "平凡的药水（普通）",
+                "平凡的药水（延长）",
+                "浓稠的药水（普通）",
+                "粗制的药水（普通）",
+                "夜视药水（普通）",
+                "夜视药水（延长）",
+                "隐身药水（普通）",
+                "隐身药水（延长）",
+                "跳跃药水（普通）",
+                "跳跃药水（延长）",
+                "跳跃药水（加强）",
+                "抗火药水（普通）",
+                "抗火药水（延长）",
+                "迅捷药水（普通）",
+                "迅捷药水（延长）",
+                "迅捷药水（加强）",
+                "迟缓药水（普通）",
+                "迟缓药水（延长）",
+                "水肺药水（普通）",
+                "水肺药水（延长）",
+                "治疗药水（普通）",
+                "治疗药水（加强）",
+                "伤害药水（普通）",
+                "伤害药水（加强）",
+                "剧毒药水（普通）",
+                "剧毒药水（延长）",
+                "剧毒药水（加强）",
+                "再生药水（普通）",
+                "再生药水（延长）",
+                "再生药水（加强）",
+                "力量药水（普通）",
+                "力量药水（延长）",
+                "力量药水（加强）",
+                "虚弱药水（普通）",
+                "虚弱药水（延长）",
+                "衰变药水（普通）",
+                "神龟药水（普通）",
+                "神龟药水（延长）",
+                "神龟药水（加强）",
+                "缓降药水（普通）",
+                "缓降药水（延长）",
+                "迟缓药水（加强）",
+                "蓄风药水（普通）",
+                "盘丝药水（普通）",
+                "渗浆药水（普通）",
+                "虫蚀药水（普通）"
+            ]
+        },
+        {
+            "name": "sponge",
+            "description": "海绵"
+        },
+        {
+            "name": "spore_blossom",
+            "description": "孢子花"
+        },
+        {
+            "name": "spruce_boat",
+            "description": "云杉木船"
+        },
+        {
+            "name": "spruce_button",
+            "description": "云杉木按钮"
+        },
+        {
+            "name": "spruce_chest_boat",
+            "description": "云杉木运输船"
+        },
+        {
+            "name": "spruce_door",
+            "description": "云杉木门"
+        },
+        {
+            "name": "spruce_fence",
+            "description": "云杉木栅栏"
+        },
+        {
+            "name": "spruce_fence_gate",
+            "description": "云杉木栅栏门"
+        },
+        {
+            "name": "spruce_hanging_sign",
+            "description": "悬挂式云杉木告示牌"
+        },
+        {
+            "name": "spruce_leaves",
+            "description": "云杉树叶"
+        },
+        {
+            "name": "spruce_log",
+            "description": "云杉原木"
+        },
+        {
+            "name": "spruce_planks",
+            "description": "云杉木板"
+        },
+        {
+            "name": "spruce_pressure_plate",
+            "description": "云杉木压力板"
+        },
+        {
+            "name": "spruce_sapling",
+            "description": "云杉树苗"
+        },
+        {
+            "name": "spruce_shelf",
+            "description": "云杉木展示架"
+        },
+        {
+            "name": "spruce_sign",
+            "description": "云杉木告示牌"
+        },
+        {
+            "name": "spruce_slab",
+            "description": "云杉木台阶"
+        },
+        {
+            "name": "spruce_stairs",
+            "description": "云杉木楼梯"
+        },
+        {
+            "name": "spruce_trapdoor",
+            "description": "云杉木活板门"
+        },
+        {
+            "name": "spruce_wood",
+            "description": "云杉木"
+        },
+        {
+            "name": "spyglass",
+            "description": "望远镜"
+        },
+        {
+            "name": "squid_spawn_egg",
+            "description": "鱿鱼刷怪蛋"
+        },
+        {
+            "name": "stick",
+            "description": "木棍"
+        },
+        {
+            "name": "sticky_piston",
+            "description": "黏性活塞"
+        },
+        {
+            "name": "stone",
+            "description": "石头"
+        },
+        {
+            "name": "stone_axe",
+            "description": "石斧"
+        },
+        {
+            "name": "stone_brick_slab",
+            "description": "石砖台阶"
+        },
+        {
+            "name": "stone_brick_stairs",
+            "description": "石砖楼梯"
+        },
+        {
+            "name": "stone_brick_wall",
+            "description": "石砖墙"
+        },
+        {
+            "name": "stone_bricks",
+            "description": "石砖"
+        },
+        {
+            "name": "stone_button",
+            "description": "石头按钮"
+        },
+        {
+            "name": "stone_hoe",
+            "description": "石锄"
+        },
+        {
+            "name": "stone_pickaxe",
+            "description": "石镐"
+        },
+        {
+            "name": "stone_pressure_plate",
+            "description": "石头压力板"
+        },
+        {
+            "name": "stone_shovel",
+            "description": "石锹"
+        },
+        {
+            "name": "stone_spear",
+            "description": "石矛"
+        },
+        {
+            "name": "stone_stairs",
+            "description": "圆石楼梯"
+        },
+        {
+            "name": "stone_sword",
+            "description": "石剑"
+        },
+        {
+            "name": "stonecutter_block",
+            "description": "切石机"
+        },
+        {
+            "name": "stray_spawn_egg",
+            "description": "流浪者刷怪蛋"
+        },
+        {
+            "name": "strider_spawn_egg",
+            "description": "炽足兽刷怪蛋"
+        },
+        {
+            "name": "string",
+            "description": "线"
+        },
+        {
+            "name": "stripped_acacia_log",
+            "description": "去皮金合欢原木"
+        },
+        {
+            "name": "stripped_acacia_wood",
+            "description": "去皮金合欢木"
+        },
+        {
+            "name": "stripped_bamboo_block",
+            "description": "去皮竹块"
+        },
+        {
+            "name": "stripped_birch_log",
+            "description": "去皮白桦原木"
+        },
+        {
+            "name": "stripped_birch_wood",
+            "description": "去皮白桦木"
+        },
+        {
+            "name": "stripped_cherry_log",
+            "description": "去皮樱花原木"
+        },
+        {
+            "name": "stripped_cherry_wood",
+            "description": "去皮樱花木"
+        },
+        {
+            "name": "stripped_crimson_hyphae",
+            "description": "去皮绯红菌核"
+        },
+        {
+            "name": "stripped_crimson_stem",
+            "description": "去皮绯红菌柄"
+        },
+        {
+            "name": "stripped_dark_oak_log",
+            "description": "去皮深色橡木原木"
+        },
+        {
+            "name": "stripped_dark_oak_wood",
+            "description": "去皮深色橡木"
+        },
+        {
+            "name": "stripped_jungle_log",
+            "description": "去皮丛林原木"
+        },
+        {
+            "name": "stripped_jungle_wood",
+            "description": "去皮丛林木"
+        },
+        {
+            "name": "stripped_mangrove_log",
+            "description": "去皮红树原木"
+        },
+        {
+            "name": "stripped_mangrove_wood",
+            "description": "去皮红树木"
+        },
+        {
+            "name": "stripped_oak_log",
+            "description": "去皮橡木原木"
+        },
+        {
+            "name": "stripped_oak_wood",
+            "description": "去皮橡木"
+        },
+        {
+            "name": "stripped_pale_oak_log",
+            "description": "去皮苍白橡木原木"
+        },
+        {
+            "name": "stripped_pale_oak_wood",
+            "description": "去皮苍白橡木"
+        },
+        {
+            "name": "stripped_spruce_log",
+            "description": "去皮云杉原木"
+        },
+        {
+            "name": "stripped_spruce_wood",
+            "description": "去皮云杉木"
+        },
+        {
+            "name": "stripped_warped_hyphae",
+            "description": "去皮诡异菌核"
+        },
+        {
+            "name": "stripped_warped_stem",
+            "description": "去皮诡异菌柄"
+        },
+        {
+            "name": "structure_block",
+            "description": "结构方块"
+        },
+        {
+            "name": "structure_void",
+            "description": "结构空位"
+        },
+        {
+            "name": "sugar",
+            "description": "糖"
+        },
+        {
+            "name": "sugar_cane",
+            "description": "甘蔗"
+        },
+        {
+            "name": "sunflower",
+            "description": "向日葵"
+        },
+        {
+            "name": "suspicious_gravel",
+            "description": "可疑的沙砾"
+        },
+        {
+            "name": "suspicious_sand",
+            "description": "可疑的沙子"
+        },
+        {
+            "name": "suspicious_stew",
+            "description": "谜之炖菜"
+        },
+        {
+            "name": "sweet_berries",
+            "description": "甜浆果"
+        },
+        {
+            "name": "tadpole_bucket",
+            "description": "蝌蚪桶"
+        },
+        {
+            "name": "tadpole_spawn_egg",
+            "description": "蝌蚪刷怪蛋"
+        },
+        {
+            "name": "tall_dry_grass",
+            "description": "高枯草丛"
+        },
+        {
+            "name": "tall_grass",
+            "description": "高草丛"
+        },
+        {
+            "name": "target",
+            "description": "标靶"
+        },
+        {
+            "name": "tide_armor_trim_smithing_template",
+            "description": "潮汐盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "tinted_glass",
+            "description": "遮光玻璃"
+        },
+        {
+            "name": "tnt",
+            "description": "TNT"
+        },
+        {
+            "name": "tnt_minecart",
+            "description": "TNT矿车"
+        },
+        {
+            "name": "torch",
+            "description": "火把"
+        },
+        {
+            "name": "torchflower",
+            "description": "火把花"
+        },
+        {
+            "name": "torchflower_seeds",
+            "description": "火把花种子"
+        },
+        {
+            "name": "totem_of_undying",
+            "description": "不死图腾"
+        },
+        {
+            "name": "trader_llama_spawn_egg",
+            "description": "行商羊驼刷怪蛋"
+        },
+        {
+            "name": "trapdoor",
+            "description": "橡木活板门"
+        },
+        {
+            "name": "trapped_chest",
+            "description": "陷阱箱"
+        },
+        {
+            "name": "trial_key",
+            "description": "试炼钥匙"
+        },
+        {
+            "name": "trial_spawner",
+            "description": "试炼刷怪笼"
+        },
+        {
+            "name": "trident",
+            "description": "三叉戟"
+        },
+        {
+            "name": "tripwire_hook",
+            "description": "绊线钩"
+        },
+        {
+            "name": "tropical_fish",
+            "description": "热带鱼"
+        },
+        {
+            "name": "tropical_fish_bucket",
+            "description": "热带鱼桶"
+        },
+        {
+            "name": "tropical_fish_spawn_egg",
+            "description": "热带鱼刷怪蛋"
+        },
+        {
+            "name": "tube_coral",
+            "description": "管珊瑚"
+        },
+        {
+            "name": "tube_coral_block",
+            "description": "管珊瑚块"
+        },
+        {
+            "name": "tube_coral_fan",
+            "description": "管珊瑚扇"
+        },
+        {
+            "name": "tuff",
+            "description": "凝灰岩"
+        },
+        {
+            "name": "tuff_brick_slab",
+            "description": "凝灰岩砖台阶"
+        },
+        {
+            "name": "tuff_brick_stairs",
+            "description": "凝灰岩砖楼梯"
+        },
+        {
+            "name": "tuff_brick_wall",
+            "description": "凝灰岩砖墙"
+        },
+        {
+            "name": "tuff_bricks",
+            "description": "凝灰岩砖"
+        },
+        {
+            "name": "tuff_slab",
+            "description": "凝灰岩台阶"
+        },
+        {
+            "name": "tuff_stairs",
+            "description": "凝灰岩楼梯"
+        },
+        {
+            "name": "tuff_wall",
+            "description": "凝灰岩墙"
+        },
+        {
+            "name": "turtle_egg",
+            "description": "海龟蛋"
+        },
+        {
+            "name": "turtle_helmet",
+            "description": "海龟壳"
+        },
+        {
+            "name": "turtle_scute",
+            "description": "海龟鳞甲"
+        },
+        {
+            "name": "turtle_spawn_egg",
+            "description": "海龟刷怪蛋"
+        },
+        {
+            "name": "twisting_vines",
+            "description": "缠怨藤"
+        },
+        {
+            "name": "undyed_shulker_box",
+            "description": "潜影盒"
+        },
+        {
+            "name": "vault",
+            "description": "宝库"
+        },
+        {
+            "name": "verdant_froglight",
+            "description": "青翠蛙明灯"
+        },
+        {
+            "name": "vex_armor_trim_smithing_template",
+            "description": "恼鬼盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "vex_spawn_egg",
+            "description": "恼鬼刷怪蛋"
+        },
+        {
+            "name": "villager_spawn_egg",
+            "description": "村民刷怪蛋"
+        },
+        {
+            "name": "vindicator_spawn_egg",
+            "description": "卫道士刷怪蛋"
+        },
+        {
+            "name": "vine",
+            "description": "藤蔓"
+        },
+        {
+            "name": "wandering_trader_spawn_egg",
+            "description": "流浪商人刷怪蛋"
+        },
+        {
+            "name": "ward_armor_trim_smithing_template",
+            "description": "监守盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "warden_spawn_egg",
+            "description": "监守者刷怪蛋"
+        },
+        {
+            "name": "warped_button",
+            "description": "诡异木按钮"
+        },
+        {
+            "name": "warped_door",
+            "description": "诡异木门"
+        },
+        {
+            "name": "warped_fence",
+            "description": "诡异木栅栏"
+        },
+        {
+            "name": "warped_fence_gate",
+            "description": "诡异木栅栏门"
+        },
+        {
+            "name": "warped_fungus",
+            "description": "诡异菌"
+        },
+        {
+            "name": "warped_fungus_on_a_stick",
+            "description": "诡异菌钓竿"
+        },
+        {
+            "name": "warped_hanging_sign",
+            "description": "悬挂式诡异木告示牌"
+        },
+        {
+            "name": "warped_hyphae",
+            "description": "诡异菌核"
+        },
+        {
+            "name": "warped_nylium",
+            "description": "诡异菌岩"
+        },
+        {
+            "name": "warped_planks",
+            "description": "诡异木板"
+        },
+        {
+            "name": "warped_pressure_plate",
+            "description": "诡异木压力板"
+        },
+        {
+            "name": "warped_roots",
+            "description": "诡异菌索"
+        },
+        {
+            "name": "warped_shelf",
+            "description": "诡异木展示架"
+        },
+        {
+            "name": "warped_sign",
+            "description": "诡异木告示牌"
+        },
+        {
+            "name": "warped_slab",
+            "description": "诡异木台阶"
+        },
+        {
+            "name": "warped_stairs",
+            "description": "诡异木楼梯"
+        },
+        {
+            "name": "warped_stem",
+            "description": "诡异菌柄"
+        },
+        {
+            "name": "warped_trapdoor",
+            "description": "诡异木活板门"
+        },
+        {
+            "name": "warped_wart_block",
+            "description": "诡异疣块"
+        },
+        {
+            "name": "water_bucket",
+            "description": "水桶"
+        },
+        {
+            "name": "waterlily",
+            "description": "睡莲"
+        },
+        {
+            "name": "waxed_chiseled_copper",
+            "description": "涂蜡的雕纹铜块"
+        },
+        {
+            "name": "waxed_copper",
+            "description": "涂蜡的铜块"
+        },
+        {
+            "name": "waxed_copper_bars",
+            "description": "涂蜡的铜栏杆"
+        },
+        {
+            "name": "waxed_copper_bulb",
+            "description": "涂蜡的铜灯"
+        },
+        {
+            "name": "waxed_copper_chain",
+            "description": "涂蜡的铜链"
+        },
+        {
+            "name": "waxed_copper_chest",
+            "description": "涂蜡的铜箱子"
+        },
+        {
+            "name": "waxed_copper_door",
+            "description": "涂蜡的铜门"
+        },
+        {
+            "name": "waxed_copper_golem_statue",
+            "description": "涂蜡的铜傀儡像"
+        },
+        {
+            "name": "waxed_copper_grate",
+            "description": "涂蜡的铜格栅"
+        },
+        {
+            "name": "waxed_copper_lantern",
+            "description": "涂蜡的铜灯笼"
+        },
+        {
+            "name": "waxed_copper_trapdoor",
+            "description": "涂蜡的铜活板门"
+        },
+        {
+            "name": "waxed_cut_copper",
+            "description": "涂蜡的切制铜块"
+        },
+        {
+            "name": "waxed_cut_copper_slab",
+            "description": "涂蜡的切制铜台阶"
+        },
+        {
+            "name": "waxed_cut_copper_stairs",
+            "description": "涂蜡的切制铜楼梯"
+        },
+        {
+            "name": "waxed_exposed_chiseled_copper",
+            "description": "涂蜡的斑驳雕纹铜块"
+        },
+        {
+            "name": "waxed_exposed_copper",
+            "description": "涂蜡的斑驳铜块"
+        },
+        {
+            "name": "waxed_exposed_copper_bars",
+            "description": "涂蜡的斑驳铜栏杆"
+        },
+        {
+            "name": "waxed_exposed_copper_bulb",
+            "description": "涂蜡的斑驳铜灯"
+        },
+        {
+            "name": "waxed_exposed_copper_chain",
+            "description": "涂蜡的斑驳铜链"
+        },
+        {
+            "name": "waxed_exposed_copper_chest",
+            "description": "涂蜡的斑驳铜箱子"
+        },
+        {
+            "name": "waxed_exposed_copper_door",
+            "description": "涂蜡的斑驳铜门"
+        },
+        {
+            "name": "waxed_exposed_copper_golem_statue",
+            "description": "涂蜡的斑驳铜傀儡像"
+        },
+        {
+            "name": "waxed_exposed_copper_grate",
+            "description": "涂蜡的斑驳铜格栅"
+        },
+        {
+            "name": "waxed_exposed_copper_lantern",
+            "description": "涂蜡的斑驳铜灯笼"
+        },
+        {
+            "name": "waxed_exposed_copper_trapdoor",
+            "description": "涂蜡的斑驳铜活板门"
+        },
+        {
+            "name": "waxed_exposed_cut_copper",
+            "description": "涂蜡的斑驳切制铜块"
+        },
+        {
+            "name": "waxed_exposed_cut_copper_slab",
+            "description": "涂蜡的斑驳切制铜台阶"
+        },
+        {
+            "name": "waxed_exposed_cut_copper_stairs",
+            "description": "涂蜡的斑驳切制铜楼梯"
+        },
+        {
+            "name": "waxed_exposed_lightning_rod",
+            "description": "涂蜡的斑驳避雷针"
+        },
+        {
+            "name": "waxed_lightning_rod",
+            "description": "涂蜡的避雷针"
+        },
+        {
+            "name": "waxed_oxidized_chiseled_copper",
+            "description": "涂蜡的氧化雕纹铜块"
+        },
+        {
+            "name": "waxed_oxidized_copper",
+            "description": "涂蜡的氧化铜块"
+        },
+        {
+            "name": "waxed_oxidized_copper_bars",
+            "description": "涂蜡的氧化铜栏杆"
+        },
+        {
+            "name": "waxed_oxidized_copper_bulb",
+            "description": "涂蜡的氧化铜灯"
+        },
+        {
+            "name": "waxed_oxidized_copper_chain",
+            "description": "涂蜡的氧化铜链"
+        },
+        {
+            "name": "waxed_oxidized_copper_chest",
+            "description": "涂蜡的氧化铜箱子"
+        },
+        {
+            "name": "waxed_oxidized_copper_door",
+            "description": "涂蜡的氧化铜门"
+        },
+        {
+            "name": "waxed_oxidized_copper_golem_statue",
+            "description": "涂蜡的氧化铜傀儡像"
+        },
+        {
+            "name": "waxed_oxidized_copper_grate",
+            "description": "涂蜡的氧化铜格栅"
+        },
+        {
+            "name": "waxed_oxidized_copper_lantern",
+            "description": "涂蜡的氧化铜灯笼"
+        },
+        {
+            "name": "waxed_oxidized_copper_trapdoor",
+            "description": "涂蜡的氧化铜活板门"
+        },
+        {
+            "name": "waxed_oxidized_cut_copper",
+            "description": "涂蜡的氧化切制铜块"
+        },
+        {
+            "name": "waxed_oxidized_cut_copper_slab",
+            "description": "涂蜡的氧化切制铜台阶"
+        },
+        {
+            "name": "waxed_oxidized_cut_copper_stairs",
+            "description": "涂蜡的氧化切制铜楼梯"
+        },
+        {
+            "name": "waxed_oxidized_lightning_rod",
+            "description": "涂蜡的氧化避雷针"
+        },
+        {
+            "name": "waxed_weathered_chiseled_copper",
+            "description": "涂蜡的锈蚀雕纹铜块"
+        },
+        {
+            "name": "waxed_weathered_copper",
+            "description": "涂蜡的锈蚀铜块"
+        },
+        {
+            "name": "waxed_weathered_copper_bars",
+            "description": "涂蜡的锈蚀铜栏杆"
+        },
+        {
+            "name": "waxed_weathered_copper_bulb",
+            "description": "涂蜡的锈蚀铜灯"
+        },
+        {
+            "name": "waxed_weathered_copper_chain",
+            "description": "涂蜡的锈蚀铜链"
+        },
+        {
+            "name": "waxed_weathered_copper_chest",
+            "description": "涂蜡的锈蚀铜箱子"
+        },
+        {
+            "name": "waxed_weathered_copper_door",
+            "description": "涂蜡的锈蚀铜门"
+        },
+        {
+            "name": "waxed_weathered_copper_golem_statue",
+            "description": "涂蜡的锈蚀铜傀儡像"
+        },
+        {
+            "name": "waxed_weathered_copper_grate",
+            "description": "涂蜡的锈蚀铜格栅"
+        },
+        {
+            "name": "waxed_weathered_copper_lantern",
+            "description": "涂蜡的锈蚀铜灯笼"
+        },
+        {
+            "name": "waxed_weathered_copper_trapdoor",
+            "description": "涂蜡的锈蚀铜活板门"
+        },
+        {
+            "name": "waxed_weathered_cut_copper",
+            "description": "涂蜡的锈蚀切制铜块"
+        },
+        {
+            "name": "waxed_weathered_cut_copper_slab",
+            "description": "涂蜡的锈蚀切制铜台阶"
+        },
+        {
+            "name": "waxed_weathered_cut_copper_stairs",
+            "description": "涂蜡的锈蚀切制铜楼梯"
+        },
+        {
+            "name": "waxed_weathered_lightning_rod",
+            "description": "涂蜡的锈蚀避雷针"
+        },
+        {
+            "name": "wayfinder_armor_trim_smithing_template",
+            "description": "向导盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "weathered_chiseled_copper",
+            "description": "锈蚀的雕纹铜块"
+        },
+        {
+            "name": "weathered_copper",
+            "description": "锈蚀的铜块"
+        },
+        {
+            "name": "weathered_copper_bars",
+            "description": "锈蚀的铜栏杆"
+        },
+        {
+            "name": "weathered_copper_bulb",
+            "description": "锈蚀的铜灯"
+        },
+        {
+            "name": "weathered_copper_chain",
+            "description": "锈蚀的铜链"
+        },
+        {
+            "name": "weathered_copper_chest",
+            "description": "锈蚀的铜箱子"
+        },
+        {
+            "name": "weathered_copper_door",
+            "description": "锈蚀的铜门"
+        },
+        {
+            "name": "weathered_copper_golem_statue",
+            "description": "锈蚀的铜傀儡像"
+        },
+        {
+            "name": "weathered_copper_grate",
+            "description": "锈蚀的铜格栅"
+        },
+        {
+            "name": "weathered_copper_lantern",
+            "description": "锈蚀的铜灯笼"
+        },
+        {
+            "name": "weathered_copper_trapdoor",
+            "description": "锈蚀的铜活板门"
+        },
+        {
+            "name": "weathered_cut_copper",
+            "description": "锈蚀的切制铜块"
+        },
+        {
+            "name": "weathered_cut_copper_slab",
+            "description": "锈蚀的切制铜台阶"
+        },
+        {
+            "name": "weathered_cut_copper_stairs",
+            "description": "锈蚀的切制铜楼梯"
+        },
+        {
+            "name": "weathered_lightning_rod",
+            "description": "锈蚀的避雷针"
+        },
+        {
+            "name": "web",
+            "description": "蜘蛛网"
+        },
+        {
+            "name": "weeping_vines",
+            "description": "垂泪藤"
+        },
+        {
+            "name": "wet_sponge",
+            "description": "湿海绵"
+        },
+        {
+            "name": "wheat",
+            "description": "小麦"
+        },
+        {
+            "name": "wheat_seeds",
+            "description": "小麦种子"
+        },
+        {
+            "name": "white_bundle",
+            "description": "白色收纳袋"
+        },
+        {
+            "name": "white_candle",
+            "description": "白色蜡烛"
+        },
+        {
+            "name": "white_carpet",
+            "description": "白色地毯"
+        },
+        {
+            "name": "white_concrete",
+            "description": "白色混凝土"
+        },
+        {
+            "name": "white_concrete_powder",
+            "description": "白色混凝土粉末"
+        },
+        {
+            "name": "white_dye",
+            "description": "白色染料"
+        },
+        {
+            "name": "white_glazed_terracotta",
+            "description": "白色带釉陶瓦"
+        },
+        {
+            "name": "white_harness",
+            "description": "白色挽具"
+        },
+        {
+            "name": "white_shulker_box",
+            "description": "白色潜影盒"
+        },
+        {
+            "name": "white_stained_glass",
+            "description": "白色染色玻璃"
+        },
+        {
+            "name": "white_stained_glass_pane",
+            "description": "白色染色玻璃板"
+        },
+        {
+            "name": "white_terracotta",
+            "description": "白色陶瓦"
+        },
+        {
+            "name": "white_tulip",
+            "description": "白色郁金香"
+        },
+        {
+            "name": "white_wool",
+            "description": "白色羊毛"
+        },
+        {
+            "name": "wild_armor_trim_smithing_template",
+            "description": "荒野盔甲纹饰 锻造模板"
+        },
+        {
+            "name": "wildflowers",
+            "description": "野花簇"
+        },
+        {
+            "name": "wind_charge",
+            "description": "风弹"
+        },
+        {
+            "name": "witch_spawn_egg",
+            "description": "女巫刷怪蛋"
+        },
+        {
+            "name": "wither_rose",
+            "description": "凋灵玫瑰"
+        },
+        {
+            "name": "wither_skeleton_skull",
+            "description": "凋灵骷髅头颅"
+        },
+        {
+            "name": "wither_skeleton_spawn_egg",
+            "description": "凋灵骷髅刷怪蛋"
+        },
+        {
+            "name": "wither_spawn_egg",
+            "description": "凋灵刷怪蛋"
+        },
+        {
+            "name": "wolf_armor",
+            "description": "狼铠"
+        },
+        {
+            "name": "wolf_spawn_egg",
+            "description": "狼刷怪蛋"
+        },
+        {
+            "name": "wooden_axe",
+            "description": "木斧"
+        },
+        {
+            "name": "wooden_button",
+            "description": "橡木按钮"
+        },
+        {
+            "name": "wooden_door",
+            "description": "橡木门"
+        },
+        {
+            "name": "wooden_hoe",
+            "description": "木锄"
+        },
+        {
+            "name": "wooden_pickaxe",
+            "description": "木镐"
+        },
+        {
+            "name": "wooden_pressure_plate",
+            "description": "橡木压力板"
+        },
+        {
+            "name": "wooden_shovel",
+            "description": "木锹"
+        },
+        {
+            "name": "wooden_spear",
+            "description": "木矛"
+        },
+        {
+            "name": "wooden_sword",
+            "description": "木剑"
+        },
+        {
+            "name": "writable_book",
+            "description": "书与笔"
+        },
+        {
+            "name": "yellow_bundle",
+            "description": "黄色收纳袋"
+        },
+        {
+            "name": "yellow_candle",
+            "description": "黄色蜡烛"
+        },
+        {
+            "name": "yellow_carpet",
+            "description": "黄色地毯"
+        },
+        {
+            "name": "yellow_concrete",
+            "description": "黄色混凝土"
+        },
+        {
+            "name": "yellow_concrete_powder",
+            "description": "黄色混凝土粉末"
+        },
+        {
+            "name": "yellow_dye",
+            "description": "黄色染料"
+        },
+        {
+            "name": "yellow_glazed_terracotta",
+            "description": "黄色带釉陶瓦"
+        },
+        {
+            "name": "yellow_harness",
+            "description": "黄色挽具"
+        },
+        {
+            "name": "yellow_shulker_box",
+            "description": "黄色潜影盒"
+        },
+        {
+            "name": "yellow_stained_glass",
+            "description": "黄色染色玻璃"
+        },
+        {
+            "name": "yellow_stained_glass_pane",
+            "description": "黄色染色玻璃板"
+        },
+        {
+            "name": "yellow_terracotta",
+            "description": "黄色陶瓦"
+        },
+        {
+            "name": "yellow_wool",
+            "description": "黄色羊毛"
+        },
+        {
+            "name": "zoglin_spawn_egg",
+            "description": "僵尸疣猪兽刷怪蛋"
+        },
+        {
+            "name": "zombie_head",
+            "description": "僵尸的头"
+        },
+        {
+            "name": "zombie_horse_spawn_egg",
+            "description": "僵尸马刷怪蛋"
+        },
+        {
+            "name": "zombie_nautilus_spawn_egg",
+            "description": "僵尸鹦鹉螺刷怪蛋"
+        },
+        {
+            "name": "zombie_pigman_spawn_egg",
+            "description": "僵尸猪灵刷怪蛋"
+        },
+        {
+            "name": "zombie_spawn_egg",
+            "description": "僵尸刷怪蛋"
+        },
+        {
+            "name": "zombie_villager_spawn_egg",
+            "description": "僵尸村民刷怪蛋"
+        }
+    ]
+}

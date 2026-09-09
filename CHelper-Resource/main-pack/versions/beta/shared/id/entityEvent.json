@@ -1,0 +1,1392 @@
+{
+    "id": "entityEvent",
+    "type": "normal",
+    "content": [
+        {
+            "name": "abort_sheltering"
+        },
+        {
+            "name": "admire_item_started_event"
+        },
+        {
+            "name": "admire_item_stopped_event"
+        },
+        {
+            "name": "ageable_grow_up"
+        },
+        {
+            "name": "attack_cooldown_complete_event"
+        },
+        {
+            "name": "attacked"
+        },
+        {
+            "name": "be_sheared"
+        },
+        {
+            "name": "become_angry"
+        },
+        {
+            "name": "become_angry_event"
+        },
+        {
+            "name": "become_calm_event"
+        },
+        {
+            "name": "become_cow"
+        },
+        {
+            "name": "become_pregnant"
+        },
+        {
+            "name": "become_stray_event"
+        },
+        {
+            "name": "become_witch"
+        },
+        {
+            "name": "become_zombie"
+        },
+        {
+            "name": "become_zombie_event"
+        },
+        {
+            "name": "calmed_down"
+        },
+        {
+            "name": "change_to_skeleton"
+        },
+        {
+            "name": "collected_nectar"
+        },
+        {
+            "name": "countdown_to_perish_event"
+        },
+        {
+            "name": "dried_out"
+        },
+        {
+            "name": "enter_water"
+        },
+        {
+            "name": "escaped_event"
+        },
+        {
+            "name": "fed_open_eyeblossom"
+        },
+        {
+            "name": "fed_wither_rose"
+        },
+        {
+            "name": "find_flower_timeout"
+        },
+        {
+            "name": "find_hive_event"
+        },
+        {
+            "name": "find_hive_timeout"
+        },
+        {
+            "name": "from_egg"
+        },
+        {
+            "name": "from_explosion"
+        },
+        {
+            "name": "from_village"
+        },
+        {
+            "name": "go_back_to_spawn_failed"
+        },
+        {
+            "name": "got_in_powder_snow"
+        },
+        {
+            "name": "got_out_of_powder_snow"
+        },
+        {
+            "name": "grow_up"
+        },
+        {
+            "name": "hive_destroyed"
+        },
+        {
+            "name": "important_block_destroyed_event"
+        },
+        {
+            "name": "in_desert"
+        },
+        {
+            "name": "in_snow"
+        },
+        {
+            "name": "killed_enemy_event"
+        },
+        {
+            "name": "laid_egg"
+        },
+        {
+            "name": "minecraft:add_attributes"
+        },
+        {
+            "name": "minecraft:add_biome_and_skin"
+        },
+        {
+            "name": "minecraft:add_can_ride"
+        },
+        {
+            "name": "minecraft:add_damage_timer"
+        },
+        {
+            "name": "minecraft:add_periodic_damage"
+        },
+        {
+            "name": "minecraft:ageable_grow_up"
+        },
+        {
+            "name": "minecraft:ageable_set_baby"
+        },
+        {
+            "name": "minecraft:all_riders_dismounted"
+        },
+        {
+            "name": "minecraft:ambient_night"
+        },
+        {
+            "name": "minecraft:ambient_normal"
+        },
+        {
+            "name": "minecraft:ambient_sleep"
+        },
+        {
+            "name": "minecraft:as_adult"
+        },
+        {
+            "name": "minecraft:as_baby"
+        },
+        {
+            "name": "minecraft:as_baby_jockey"
+        },
+        {
+            "name": "minecraft:as_ranged_adult"
+        },
+        {
+            "name": "minecraft:as_ranged_baby"
+        },
+        {
+            "name": "minecraft:as_ranged_baby_jockey"
+        },
+        {
+            "name": "minecraft:as_rider"
+        },
+        {
+            "name": "minecraft:ate_allium"
+        },
+        {
+            "name": "minecraft:ate_bluet"
+        },
+        {
+            "name": "minecraft:ate_closed_eyeblossom"
+        },
+        {
+            "name": "minecraft:ate_cornflower"
+        },
+        {
+            "name": "minecraft:ate_daisy"
+        },
+        {
+            "name": "minecraft:ate_dandelion"
+        },
+        {
+            "name": "minecraft:ate_lily"
+        },
+        {
+            "name": "minecraft:ate_open_eyeblossom"
+        },
+        {
+            "name": "minecraft:ate_orchid"
+        },
+        {
+            "name": "minecraft:ate_poppy"
+        },
+        {
+            "name": "minecraft:ate_rose"
+        },
+        {
+            "name": "minecraft:ate_torchflower"
+        },
+        {
+            "name": "minecraft:ate_tulip"
+        },
+        {
+            "name": "minecraft:baby_on_calm"
+        },
+        {
+            "name": "minecraft:become_aggressive"
+        },
+        {
+            "name": "minecraft:become_aggro"
+        },
+        {
+            "name": "minecraft:become_anenonme"
+        },
+        {
+            "name": "minecraft:become_angry"
+        },
+        {
+            "name": "minecraft:become_armorable"
+        },
+        {
+            "name": "minecraft:become_armorer"
+        },
+        {
+            "name": "minecraft:become_black_tang"
+        },
+        {
+            "name": "minecraft:become_blue_dory"
+        },
+        {
+            "name": "minecraft:become_brown"
+        },
+        {
+            "name": "minecraft:become_brown_adult"
+        },
+        {
+            "name": "minecraft:become_butcher"
+        },
+        {
+            "name": "minecraft:become_butterfly_fish"
+        },
+        {
+            "name": "minecraft:become_calm"
+        },
+        {
+            "name": "minecraft:become_cartographer"
+        },
+        {
+            "name": "minecraft:become_cc_betta"
+        },
+        {
+            "name": "minecraft:become_charged"
+        },
+        {
+            "name": "minecraft:become_cichlid"
+        },
+        {
+            "name": "minecraft:become_cleric"
+        },
+        {
+            "name": "minecraft:become_clownfish"
+        },
+        {
+            "name": "minecraft:become_dog_fish"
+        },
+        {
+            "name": "minecraft:become_e_red_snapper"
+        },
+        {
+            "name": "minecraft:become_farmer"
+        },
+        {
+            "name": "minecraft:become_fisherman"
+        },
+        {
+            "name": "minecraft:become_fletcher"
+        },
+        {
+            "name": "minecraft:become_goat_fish"
+        },
+        {
+            "name": "minecraft:become_hostile"
+        },
+        {
+            "name": "minecraft:become_immobile"
+        },
+        {
+            "name": "minecraft:become_leatherworker"
+        },
+        {
+            "name": "minecraft:become_librarian"
+        },
+        {
+            "name": "minecraft:become_mason"
+        },
+        {
+            "name": "minecraft:become_mobile"
+        },
+        {
+            "name": "minecraft:become_moorish_idol"
+        },
+        {
+            "name": "minecraft:become_neutral"
+        },
+        {
+            "name": "minecraft:become_ornate_butterfly"
+        },
+        {
+            "name": "minecraft:become_parrot_fish"
+        },
+        {
+            "name": "minecraft:become_pregnant"
+        },
+        {
+            "name": "minecraft:become_queen_angel_fish"
+        },
+        {
+            "name": "minecraft:become_red"
+        },
+        {
+            "name": "minecraft:become_red_adult"
+        },
+        {
+            "name": "minecraft:become_red_cichlid"
+        },
+        {
+            "name": "minecraft:become_red_lipped_benny"
+        },
+        {
+            "name": "minecraft:become_red_snapper"
+        },
+        {
+            "name": "minecraft:become_scared"
+        },
+        {
+            "name": "minecraft:become_sheperd"
+        },
+        {
+            "name": "minecraft:become_statue"
+        },
+        {
+            "name": "minecraft:become_stunned"
+        },
+        {
+            "name": "minecraft:become_threadfin"
+        },
+        {
+            "name": "minecraft:become_tomato_clown"
+        },
+        {
+            "name": "minecraft:become_toolsmith"
+        },
+        {
+            "name": "minecraft:become_triggerfish"
+        },
+        {
+            "name": "minecraft:become_unskilled"
+        },
+        {
+            "name": "minecraft:become_weaponsmith"
+        },
+        {
+            "name": "minecraft:become_yellow_tail_parrot"
+        },
+        {
+            "name": "minecraft:become_yellow_tang"
+        },
+        {
+            "name": "minecraft:begin_oxidizing"
+        },
+        {
+            "name": "minecraft:born_default"
+        },
+        {
+            "name": "minecraft:born_screamer"
+        },
+        {
+            "name": "minecraft:calm"
+        },
+        {
+            "name": "minecraft:camel_husk_saddled"
+        },
+        {
+            "name": "minecraft:camel_husk_unsaddled"
+        },
+        {
+            "name": "minecraft:camel_saddled"
+        },
+        {
+            "name": "minecraft:camel_unsaddled"
+        },
+        {
+            "name": "minecraft:cat_gifted_owner"
+        },
+        {
+            "name": "minecraft:clear_add_bad_omen"
+        },
+        {
+            "name": "minecraft:clear_add_raid_omen"
+        },
+        {
+            "name": "minecraft:cold_color"
+        },
+        {
+            "name": "minecraft:command_block_activate"
+        },
+        {
+            "name": "minecraft:command_block_deactivate"
+        },
+        {
+            "name": "minecraft:convert_to_drowned"
+        },
+        {
+            "name": "minecraft:convert_to_zombie"
+        },
+        {
+            "name": "minecraft:crumble"
+        },
+        {
+            "name": "minecraft:crumble_and_notify_creaking_heart"
+        },
+        {
+            "name": "minecraft:crystal_explode"
+        },
+        {
+            "name": "minecraft:damaged_by_entity"
+        },
+        {
+            "name": "minecraft:damaged_by_player"
+        },
+        {
+            "name": "minecraft:defend_wandering_trader"
+        },
+        {
+            "name": "minecraft:donkey_saddled"
+        },
+        {
+            "name": "minecraft:donkey_unsaddled"
+        },
+        {
+            "name": "minecraft:dried_out"
+        },
+        {
+            "name": "minecraft:emerged"
+        },
+        {
+            "name": "minecraft:end_roar"
+        },
+        {
+            "name": "minecraft:entered_bubble_column_down"
+        },
+        {
+            "name": "minecraft:entered_bubble_column_up"
+        },
+        {
+            "name": "minecraft:entity_born"
+        },
+        {
+            "name": "minecraft:entity_born_wild"
+        },
+        {
+            "name": "minecraft:entity_spawned"
+        },
+        {
+            "name": "minecraft:entity_spawned_by_creaking_heart"
+        },
+        {
+            "name": "minecraft:entity_spawned_with_biome_specific_jockey"
+        },
+        {
+            "name": "minecraft:entity_spawned_with_default_jockey"
+        },
+        {
+            "name": "minecraft:entity_transformed"
+        },
+        {
+            "name": "minecraft:exited_bubble_column"
+        },
+        {
+            "name": "minecraft:exited_disturbed_hive"
+        },
+        {
+            "name": "minecraft:exited_hive"
+        },
+        {
+            "name": "minecraft:exited_hive_on_fire"
+        },
+        {
+            "name": "minecraft:explode"
+        },
+        {
+            "name": "minecraft:flowerless"
+        },
+        {
+            "name": "minecraft:fox_configure_day"
+        },
+        {
+            "name": "minecraft:fox_configure_defending"
+        },
+        {
+            "name": "minecraft:fox_configure_docile_day"
+        },
+        {
+            "name": "minecraft:fox_configure_docile_night"
+        },
+        {
+            "name": "minecraft:fox_configure_night"
+        },
+        {
+            "name": "minecraft:fox_configure_thunderstorm"
+        },
+        {
+            "name": "minecraft:from_full_puff"
+        },
+        {
+            "name": "minecraft:from_player"
+        },
+        {
+            "name": "minecraft:from_player_default"
+        },
+        {
+            "name": "minecraft:from_player_exposed"
+        },
+        {
+            "name": "minecraft:from_player_oxidized"
+        },
+        {
+            "name": "minecraft:from_player_spawned"
+        },
+        {
+            "name": "minecraft:from_player_weathered"
+        },
+        {
+            "name": "minecraft:from_serialized_entity"
+        },
+        {
+            "name": "minecraft:from_village"
+        },
+        {
+            "name": "minecraft:from_wandering_trader"
+        },
+        {
+            "name": "minecraft:gain_bad_omen"
+        },
+        {
+            "name": "minecraft:gain_raid_omen"
+        },
+        {
+            "name": "minecraft:go_lay_egg"
+        },
+        {
+            "name": "minecraft:has_target"
+        },
+        {
+            "name": "minecraft:hatch_cold"
+        },
+        {
+            "name": "minecraft:hatch_warm"
+        },
+        {
+            "name": "minecraft:hive_full"
+        },
+        {
+            "name": "minecraft:hopper_activate"
+        },
+        {
+            "name": "minecraft:hopper_deactivate"
+        },
+        {
+            "name": "minecraft:horse_saddled"
+        },
+        {
+            "name": "minecraft:horse_unsaddled"
+        },
+        {
+            "name": "minecraft:hostile_dismounted"
+        },
+        {
+            "name": "minecraft:hostile_mounted"
+        },
+        {
+            "name": "minecraft:increase_max_health"
+        },
+        {
+            "name": "minecraft:increment_swaying_ticks"
+        },
+        {
+            "name": "minecraft:join_caravan"
+        },
+        {
+            "name": "minecraft:laid_egg"
+        },
+        {
+            "name": "minecraft:leave_caravan"
+        },
+        {
+            "name": "minecraft:lost_target"
+        },
+        {
+            "name": "minecraft:mad_at_wolf"
+        },
+        {
+            "name": "minecraft:make_black"
+        },
+        {
+            "name": "minecraft:make_brown"
+        },
+        {
+            "name": "minecraft:make_chestnut"
+        },
+        {
+            "name": "minecraft:make_creamy"
+        },
+        {
+            "name": "minecraft:make_darkbrown"
+        },
+        {
+            "name": "minecraft:make_gray"
+        },
+        {
+            "name": "minecraft:make_white"
+        },
+        {
+            "name": "minecraft:maximum_oxidation"
+        },
+        {
+            "name": "minecraft:melee_mode"
+        },
+        {
+            "name": "minecraft:mule_saddled"
+        },
+        {
+            "name": "minecraft:mule_unsaddled"
+        },
+        {
+            "name": "minecraft:navigation_off_land"
+        },
+        {
+            "name": "minecraft:navigation_on_land"
+        },
+        {
+            "name": "minecraft:no_threat_detected"
+        },
+        {
+            "name": "minecraft:on_anger"
+        },
+        {
+            "name": "minecraft:on_armor_equip"
+        },
+        {
+            "name": "minecraft:on_calm"
+        },
+        {
+            "name": "minecraft:on_chest"
+        },
+        {
+            "name": "minecraft:on_deflate"
+        },
+        {
+            "name": "minecraft:on_dismount"
+        },
+        {
+            "name": "minecraft:on_drowned_dismount"
+        },
+        {
+            "name": "minecraft:on_drowned_mount"
+        },
+        {
+            "name": "minecraft:on_eat_block"
+        },
+        {
+            "name": "minecraft:on_full_puff"
+        },
+        {
+            "name": "minecraft:on_half_puff"
+        },
+        {
+            "name": "minecraft:on_harnessed"
+        },
+        {
+            "name": "minecraft:on_hurt_event"
+        },
+        {
+            "name": "minecraft:on_instant_prime"
+        },
+        {
+            "name": "minecraft:on_leash"
+        },
+        {
+            "name": "minecraft:on_mount"
+        },
+        {
+            "name": "minecraft:on_normal_puff"
+        },
+        {
+            "name": "minecraft:on_not_riding_player"
+        },
+        {
+            "name": "minecraft:on_passenger_dismount"
+        },
+        {
+            "name": "minecraft:on_passenger_mount"
+        },
+        {
+            "name": "minecraft:on_player_dismount"
+        },
+        {
+            "name": "minecraft:on_player_mount"
+        },
+        {
+            "name": "minecraft:on_prime"
+        },
+        {
+            "name": "minecraft:on_riding_player"
+        },
+        {
+            "name": "minecraft:on_saddled"
+        },
+        {
+            "name": "minecraft:on_saddled_in_water"
+        },
+        {
+            "name": "minecraft:on_saddled_out_of_water"
+        },
+        {
+            "name": "minecraft:on_scared"
+        },
+        {
+            "name": "minecraft:on_sheared"
+        },
+        {
+            "name": "minecraft:on_start_riding_camel_husk"
+        },
+        {
+            "name": "minecraft:on_start_riding_zombie_horse"
+        },
+        {
+            "name": "minecraft:on_stop_riding_camel_husk"
+        },
+        {
+            "name": "minecraft:on_stop_riding_zombie_horse"
+        },
+        {
+            "name": "minecraft:on_stop_tempting"
+        },
+        {
+            "name": "minecraft:on_take_flower"
+        },
+        {
+            "name": "minecraft:on_tame"
+        },
+        {
+            "name": "minecraft:on_target_start_looking"
+        },
+        {
+            "name": "minecraft:on_target_stop_looking"
+        },
+        {
+            "name": "minecraft:on_trust"
+        },
+        {
+            "name": "minecraft:on_unharnessed"
+        },
+        {
+            "name": "minecraft:on_unleash"
+        },
+        {
+            "name": "minecraft:on_unleashed"
+        },
+        {
+            "name": "minecraft:on_unsaddled"
+        },
+        {
+            "name": "minecraft:oxidize_copper"
+        },
+        {
+            "name": "minecraft:panda_aggressive"
+        },
+        {
+            "name": "minecraft:panda_brown"
+        },
+        {
+            "name": "minecraft:panda_lazy"
+        },
+        {
+            "name": "minecraft:panda_playful"
+        },
+        {
+            "name": "minecraft:panda_weak"
+        },
+        {
+            "name": "minecraft:panda_worried"
+        },
+        {
+            "name": "minecraft:pet_slept_with_owner"
+        },
+        {
+            "name": "minecraft:promote_to_illager_captain"
+        },
+        {
+            "name": "minecraft:promote_to_patrol_captain"
+        },
+        {
+            "name": "minecraft:raid_expired"
+        },
+        {
+            "name": "minecraft:randomize_sound_variant"
+        },
+        {
+            "name": "minecraft:ranged_mode"
+        },
+        {
+            "name": "minecraft:remove_oxidation_layer"
+        },
+        {
+            "name": "minecraft:remove_persistence"
+        },
+        {
+            "name": "minecraft:remove_raid_trigger"
+        },
+        {
+            "name": "minecraft:reset_swaying_ticks"
+        },
+        {
+            "name": "minecraft:restart_oxidation_timer"
+        },
+        {
+            "name": "minecraft:resupply_trades"
+        },
+        {
+            "name": "minecraft:rider_mounted"
+        },
+        {
+            "name": "minecraft:roll_up"
+        },
+        {
+            "name": "minecraft:schedule_bed_villager"
+        },
+        {
+            "name": "minecraft:schedule_gather_villager"
+        },
+        {
+            "name": "minecraft:schedule_home_villager"
+        },
+        {
+            "name": "minecraft:schedule_play_villager"
+        },
+        {
+            "name": "minecraft:schedule_wander_villager"
+        },
+        {
+            "name": "minecraft:schedule_work_farmer"
+        },
+        {
+            "name": "minecraft:schedule_work_fisher"
+        },
+        {
+            "name": "minecraft:schedule_work_librarian"
+        },
+        {
+            "name": "minecraft:schedule_work_pro_villager"
+        },
+        {
+            "name": "minecraft:scheduled"
+        },
+        {
+            "name": "minecraft:serialize_entity_succeeded"
+        },
+        {
+            "name": "minecraft:set_trap"
+        },
+        {
+            "name": "minecraft:sink"
+        },
+        {
+            "name": "minecraft:spawn_adult"
+        },
+        {
+            "name": "minecraft:spawn_adult_with_rider"
+        },
+        {
+            "name": "minecraft:spawn_armorer"
+        },
+        {
+            "name": "minecraft:spawn_as_illager_captain"
+        },
+        {
+            "name": "minecraft:spawn_as_patrol_follower"
+        },
+        {
+            "name": "minecraft:spawn_as_rider"
+        },
+        {
+            "name": "minecraft:spawn_as_strider_jockey"
+        },
+        {
+            "name": "minecraft:spawn_baby"
+        },
+        {
+            "name": "minecraft:spawn_baby_strider_jockey"
+        },
+        {
+            "name": "minecraft:spawn_butcher"
+        },
+        {
+            "name": "minecraft:spawn_cleric"
+        },
+        {
+            "name": "minecraft:spawn_cold"
+        },
+        {
+            "name": "minecraft:spawn_emerging"
+        },
+        {
+            "name": "minecraft:spawn_farmer"
+        },
+        {
+            "name": "minecraft:spawn_for_raid"
+        },
+        {
+            "name": "minecraft:spawn_for_raid_with_evoker_rider"
+        },
+        {
+            "name": "minecraft:spawn_for_raid_with_pillager_rider"
+        },
+        {
+            "name": "minecraft:spawn_from_village"
+        },
+        {
+            "name": "minecraft:spawn_librarian"
+        },
+        {
+            "name": "minecraft:spawn_midnight_cat"
+        },
+        {
+            "name": "minecraft:spawn_skilled_adult"
+        },
+        {
+            "name": "minecraft:spawn_tame"
+        },
+        {
+            "name": "minecraft:spawn_tame_adult"
+        },
+        {
+            "name": "minecraft:spawn_tame_baby"
+        },
+        {
+            "name": "minecraft:spawn_temperate"
+        },
+        {
+            "name": "minecraft:spawn_warm"
+        },
+        {
+            "name": "minecraft:spawn_wild"
+        },
+        {
+            "name": "minecraft:spawn_wild_adult"
+        },
+        {
+            "name": "minecraft:spawn_wild_ashen"
+        },
+        {
+            "name": "minecraft:spawn_wild_baby"
+        },
+        {
+            "name": "minecraft:spawn_wild_baby_or_adult"
+        },
+        {
+            "name": "minecraft:spawn_wild_black"
+        },
+        {
+            "name": "minecraft:spawn_wild_chestnut"
+        },
+        {
+            "name": "minecraft:spawn_wild_pale"
+        },
+        {
+            "name": "minecraft:spawn_wild_rusty"
+        },
+        {
+            "name": "minecraft:spawn_wild_snowy"
+        },
+        {
+            "name": "minecraft:spawn_wild_spotted"
+        },
+        {
+            "name": "minecraft:spawn_wild_striped"
+        },
+        {
+            "name": "minecraft:spawn_wild_woods"
+        },
+        {
+            "name": "minecraft:spawn_with_pillager_captain_rider"
+        },
+        {
+            "name": "minecraft:spawn_with_pillager_rider"
+        },
+        {
+            "name": "minecraft:spawn_with_rider"
+        },
+        {
+            "name": "minecraft:spawn_with_vindicator_captain_rider"
+        },
+        {
+            "name": "minecraft:spawn_with_vindicator_rider"
+        },
+        {
+            "name": "minecraft:spring_trap"
+        },
+        {
+            "name": "minecraft:start_celebrating"
+        },
+        {
+            "name": "minecraft:start_charge"
+        },
+        {
+            "name": "minecraft:start_death"
+        },
+        {
+            "name": "minecraft:start_despawn"
+        },
+        {
+            "name": "minecraft:start_dryingout"
+        },
+        {
+            "name": "minecraft:start_exploding"
+        },
+        {
+            "name": "minecraft:start_exploding_forced"
+        },
+        {
+            "name": "minecraft:start_fly"
+        },
+        {
+            "name": "minecraft:start_full_puff"
+        },
+        {
+            "name": "minecraft:start_half_puff"
+        },
+        {
+            "name": "minecraft:start_johnny"
+        },
+        {
+            "name": "minecraft:start_land"
+        },
+        {
+            "name": "minecraft:start_peeking"
+        },
+        {
+            "name": "minecraft:start_playing_idle_ground_sound"
+        },
+        {
+            "name": "minecraft:start_roar"
+        },
+        {
+            "name": "minecraft:start_sitting"
+        },
+        {
+            "name": "minecraft:start_transforming"
+        },
+        {
+            "name": "minecraft:start_twitching"
+        },
+        {
+            "name": "minecraft:start_unrolling"
+        },
+        {
+            "name": "minecraft:started_riding"
+        },
+        {
+            "name": "minecraft:stop_aggro"
+        },
+        {
+            "name": "minecraft:stop_celebrating"
+        },
+        {
+            "name": "minecraft:stop_charge"
+        },
+        {
+            "name": "minecraft:stop_dryingout"
+        },
+        {
+            "name": "minecraft:stop_exploding"
+        },
+        {
+            "name": "minecraft:stop_johnny"
+        },
+        {
+            "name": "minecraft:stop_peeking"
+        },
+        {
+            "name": "minecraft:stop_playing_idle_ground_sound"
+        },
+        {
+            "name": "minecraft:stop_sitting"
+        },
+        {
+            "name": "minecraft:stop_transforming"
+        },
+        {
+            "name": "minecraft:stopped_riding"
+        },
+        {
+            "name": "minecraft:switch_to_ai_controlled"
+        },
+        {
+            "name": "minecraft:switch_to_melee"
+        },
+        {
+            "name": "minecraft:switch_to_player_controlled"
+        },
+        {
+            "name": "minecraft:switch_to_ranged"
+        },
+        {
+            "name": "minecraft:target_far_enough"
+        },
+        {
+            "name": "minecraft:target_too_close"
+        },
+        {
+            "name": "minecraft:temperate_color"
+        },
+        {
+            "name": "minecraft:threat_detected"
+        },
+        {
+            "name": "minecraft:to_full_puff"
+        },
+        {
+            "name": "minecraft:transport_items.start_place_fail"
+        },
+        {
+            "name": "minecraft:transport_items.start_place_succeed"
+        },
+        {
+            "name": "minecraft:transport_items.start_take_fail"
+        },
+        {
+            "name": "minecraft:transport_items.start_take_succeed"
+        },
+        {
+            "name": "minecraft:transport_items.stop_interaction"
+        },
+        {
+            "name": "minecraft:trigger_raid"
+        },
+        {
+            "name": "minecraft:turn_black"
+        },
+        {
+            "name": "minecraft:turn_blue"
+        },
+        {
+            "name": "minecraft:turn_brown"
+        },
+        {
+            "name": "minecraft:turn_cyan"
+        },
+        {
+            "name": "minecraft:turn_gray"
+        },
+        {
+            "name": "minecraft:turn_green"
+        },
+        {
+            "name": "minecraft:turn_light_blue"
+        },
+        {
+            "name": "minecraft:turn_lime"
+        },
+        {
+            "name": "minecraft:turn_magenta"
+        },
+        {
+            "name": "minecraft:turn_orange"
+        },
+        {
+            "name": "minecraft:turn_pink"
+        },
+        {
+            "name": "minecraft:turn_purple"
+        },
+        {
+            "name": "minecraft:turn_red"
+        },
+        {
+            "name": "minecraft:turn_silver"
+        },
+        {
+            "name": "minecraft:turn_white"
+        },
+        {
+            "name": "minecraft:turn_yellow"
+        },
+        {
+            "name": "minecraft:unroll"
+        },
+        {
+            "name": "minecraft:upgrade_to_1_21_100"
+        },
+        {
+            "name": "minecraft:upgrade_to_1_21_130"
+        },
+        {
+            "name": "minecraft:warm_color"
+        },
+        {
+            "name": "minecraft:wax_off"
+        },
+        {
+            "name": "minecraft:wax_on"
+        },
+        {
+            "name": "navigation_off_land"
+        },
+        {
+            "name": "navigation_on_land"
+        },
+        {
+            "name": "on_calm"
+        },
+        {
+            "name": "on_digging_event"
+        },
+        {
+            "name": "on_digging_start"
+        },
+        {
+            "name": "on_egg_spawned"
+        },
+        {
+            "name": "on_fail_during_digging"
+        },
+        {
+            "name": "on_fail_during_searching"
+        },
+        {
+            "name": "on_feeling_happy_end"
+        },
+        {
+            "name": "on_item_found"
+        },
+        {
+            "name": "on_not_riding_parent"
+        },
+        {
+            "name": "on_poison_effect_added"
+        },
+        {
+            "name": "on_pregnant"
+        },
+        {
+            "name": "on_rising_end"
+        },
+        {
+            "name": "on_scenting_success"
+        },
+        {
+            "name": "on_search_and_digging_success"
+        },
+        {
+            "name": "on_wither_effect_added"
+        },
+        {
+            "name": "perish_event"
+        },
+        {
+            "name": "pickup_item_delay"
+        },
+        {
+            "name": "pickup_item_delay_complete"
+        },
+        {
+            "name": "recover_after_dried_out"
+        },
+        {
+            "name": "seek_shelter"
+        },
+        {
+            "name": "spawn_adult"
+        },
+        {
+            "name": "spawn_adult_melee"
+        },
+        {
+            "name": "spawn_adult_melee_no_hunting"
+        },
+        {
+            "name": "spawn_adult_no_hunting"
+        },
+        {
+            "name": "spawn_adult_parent_jockey"
+        },
+        {
+            "name": "spawn_adult_piglin_jockey"
+        },
+        {
+            "name": "spawn_adult_ranged"
+        },
+        {
+            "name": "spawn_adult_ranged_no_hunting"
+        },
+        {
+            "name": "spawn_adult_unhuntable"
+        },
+        {
+            "name": "spawn_baby"
+        },
+        {
+            "name": "spawn_cold"
+        },
+        {
+            "name": "spawn_large"
+        },
+        {
+            "name": "spawn_medium"
+        },
+        {
+            "name": "spawn_small"
+        },
+        {
+            "name": "spawn_temperate"
+        },
+        {
+            "name": "spawn_warm"
+        },
+        {
+            "name": "spawn_zombified_piglin_rider"
+        },
+        {
+            "name": "start_drying_out"
+        },
+        {
+            "name": "start_dryingout"
+        },
+        {
+            "name": "start_event"
+        },
+        {
+            "name": "start_suffocating"
+        },
+        {
+            "name": "start_zombification_event"
+        },
+        {
+            "name": "stop_drying_out"
+        },
+        {
+            "name": "stop_dryingout"
+        },
+        {
+            "name": "stop_panicking_after_fire"
+        },
+        {
+            "name": "stop_suffocating"
+        },
+        {
+            "name": "stop_zombification_event"
+        },
+        {
+            "name": "switch_to_melee"
+        },
+        {
+            "name": "switch_to_ranged"
+        },
+        {
+            "name": "villager_converted"
+        },
+        {
+            "name": "wololo"
+        }
+    ]
+}

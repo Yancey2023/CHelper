@@ -56,7 +56,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import yancey.chelper.R
 import yancey.chelper.android.util.MonitorUtil
-import yancey.chelper.core.CHelperCore
+import yancey.chelper.core.KernelCache
 import yancey.chelper.core.Theme
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
@@ -139,8 +139,10 @@ data class ParsedMCD(
 // 解析器
 
 /**
- * 只做文本结构解析，不做语法高亮。
- * 超长库的高亮应走 [applyMcdHighlightAsync]，避免打开详情页时长时间阻塞。
+ * 解析 MCD 结构；可选同步语法高亮（兼容旧调用方，如逐行复制）。
+ * 页面渲染主路径不走这里：MCDContentView 先纯结构解析出 UI，
+ * 再由其内部的分批高亮（[applyMcdHighlightItemsAsync] 私有路径）后台补 token，
+ * 避免超长库打开详情页时长时间阻塞。
  */
 fun parseMCD(
     content: String?,
@@ -394,16 +396,6 @@ fun parseMCDStructure(
     }
 }
 
-private fun resolveCpackPath(context: Context, cpackBranch: String): String? {
-    val cpackList = context.assets.list("cpack") ?: return null
-    for (filename in cpackList) {
-        if (filename.startsWith(cpackBranch)) {
-            return "cpack/$filename"
-        }
-    }
-    return null
-}
-
 /**
  * 同步高亮（兼容旧调用方如逐行复制）。
  * 有条数/长度上限，超长库不会把整库都丢进 native。
@@ -413,38 +405,41 @@ private fun applyMcdHighlightSync(
     context: Context,
     cpackBranch: String
 ) {
+    val segment = cpackBranch.replace('-', '/')
+    val core = KernelCache.acquire(context, segment)
+    if (core == null) {
+        return
+    }
     try {
-        val cpackPath = resolveCpackPath(context, cpackBranch) ?: return
         var highlighted = 0
-        synchronized(MCDHighlightCoreCache) {
-            val core = MCDHighlightCoreCache.get(context, cpackPath) ?: return
-            outer@ for (chain in parsed.chains) {
-                for (item in chain.items) {
-                    if (highlighted >= MCD_HIGHLIGHT_MAX_COMMANDS) break@outer
-                    when (item) {
-                        is ChainItem.Block -> {
-                            val cmd = item.block.command
-                            if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) continue
-                            core.createContext(cmd)
-                                .use { item.block.syntaxHighlightTokens = it.syntaxToken }
-                            highlighted++
-                        }
-
-                        is ChainItem.RawCommand -> {
-                            val cmd = item.command
-                            if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) continue
-                            core.createContext(cmd)
-                                .use { item.syntaxHighlightTokens = it.syntaxToken }
-                            highlighted++
-                        }
-
-                        else -> {}
+        outer@ for (chain in parsed.chains) {
+            for (item in chain.items) {
+                if (highlighted >= MCD_HIGHLIGHT_MAX_COMMANDS) break@outer
+                when (item) {
+                    is ChainItem.Block -> {
+                        val cmd = item.block.command
+                        if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) continue
+                        core.createContext(cmd)
+                            .use { item.block.syntaxHighlightTokens = it.syntaxToken }
+                        highlighted++
                     }
+
+                    is ChainItem.RawCommand -> {
+                        val cmd = item.command
+                        if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) continue
+                        core.createContext(cmd)
+                            .use { item.syntaxHighlightTokens = it.syntaxToken }
+                        highlighted++
+                    }
+
+                    else -> {}
                 }
             }
         }
     } catch (e: Exception) {
         Log.e("MCDRenderer", "Failed to highlight MCD blocks", e)
+    } finally {
+        KernelCache.release(segment)
     }
 }
 
@@ -469,6 +464,7 @@ suspend fun applyMcdHighlightAsync(
  * 对当前已显示的一批命令做高亮。
  * 每次调用仍受 [MCD_HIGHLIGHT_MAX_COMMANDS] 保护；渲染器按延迟追加批次调用，
  * 这样首屏后的命令也能高亮，而不会把整库一次压进 native 高亮器。
+ * 内核从共享 [KernelCache] 按段租借（与命令补全同段复用），批次结束归还。
  */
 private suspend fun applyMcdHighlightItemsAsync(
     items: List<ChainItem>,
@@ -476,33 +472,39 @@ private suspend fun applyMcdHighlightItemsAsync(
     cpackBranch: String,
     onBatchDone: (suspend (highlightedSoFar: Int) -> Unit)? = null
 ): Int = withContext(Dispatchers.Default) {
+    val segment = cpackBranch.replace('-', '/')
+    val core = KernelCache.acquire(context, segment)
+    if (core == null) {
+        return@withContext 0
+    }
     try {
-        val cpackPath = resolveCpackPath(context, cpackBranch) ?: return@withContext 0
         var highlighted = 0
         var sinceYield = 0
         for (item in items) {
             if (highlighted >= MCD_HIGHLIGHT_MAX_COMMANDS) break
-            val applied = synchronized(MCDHighlightCoreCache) {
-                val core =
-                    MCDHighlightCoreCache.get(context, cpackPath) ?: return@synchronized false
-                when (item) {
-                    is ChainItem.Block -> {
-                        val cmd = item.block.command
-                        if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) return@synchronized false
+            val applied = when (item) {
+                is ChainItem.Block -> {
+                    val cmd = item.block.command
+                    if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) {
+                        false
+                    } else {
                         core.createContext(cmd)
                             .use { item.block.syntaxHighlightTokens = it.syntaxToken }
                         true
                     }
+                }
 
-                    is ChainItem.RawCommand -> {
-                        val cmd = item.command
-                        if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) return@synchronized false
+                is ChainItem.RawCommand -> {
+                    val cmd = item.command
+                    if (cmd.isEmpty() || cmd.length > MCD_HIGHLIGHT_MAX_CMD_LEN) {
+                        false
+                    } else {
                         core.createContext(cmd).use { item.syntaxHighlightTokens = it.syntaxToken }
                         true
                     }
-
-                    else -> false
                 }
+
+                else -> false
             }
             if (applied) {
                 highlighted++
@@ -521,6 +523,8 @@ private suspend fun applyMcdHighlightItemsAsync(
     } catch (e: Exception) {
         Log.e("MCDRenderer", "Failed to highlight MCD blocks async", e)
         0
+    } finally {
+        KernelCache.release(segment)
     }
 }
 
@@ -576,7 +580,7 @@ fun MCDContentView(
     val context = LocalContext.current
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
     val cpackBranch by settingsDataStore.cpackBranch()
-        .collectAsState(initial = "release-experiment")
+        .collectAsState(initial = "release/experiment")
     val isEnableMcdHighlight by settingsDataStore.isEnableMcdHighlight()
         .collectAsState(initial = true)
 
@@ -954,27 +958,5 @@ fun highlightCommand(command: String, tokens: IntArray?, isDark: Boolean): Annot
             start = lastIndex,
             end = length
         )
-    }
-}
-
-object MCDHighlightCoreCache {
-    private var core: CHelperCore? = null
-    private var path: String? = null
-
-    @Synchronized
-    fun get(context: Context, cpackPath: String): CHelperCore? {
-        if (core != null && path == cpackPath) {
-            return core
-        }
-        try {
-            core?.close()
-            core = CHelperCore.fromAssets(context.assets, cpackPath)
-            path = cpackPath
-        } catch (e: Exception) {
-            Log.e("MCDHighlightCoreCache", "Failed to load CHelperCore", e)
-            core = null
-            path = null
-        }
-        return core
     }
 }

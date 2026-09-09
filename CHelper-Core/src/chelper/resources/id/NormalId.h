@@ -29,6 +29,8 @@ namespace CHelper {
     public:
         std::u16string name;
         std::optional<std::u16string> description;
+        // 来源包名（内存态，仅合成器打标；不进序列化/二进制，缺省 = 内置）
+        std::optional<std::u16string> packName;
 
     private:
         XXH64_hash_t nameHash = 0;

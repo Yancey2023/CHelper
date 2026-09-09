@@ -1,0 +1,495 @@
+{
+    "id": "featureRule",
+    "type": "normal",
+    "content": [
+        {
+            "name": "minecraft:after_surface_silverfish_feature"
+        },
+        {
+            "name": "minecraft:bamboo_jungle_after_surface_bamboo_feature"
+        },
+        {
+            "name": "minecraft:bamboo_jungle_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:bamboo_jungle_before_surface_bamboo_feature_rules"
+        },
+        {
+            "name": "minecraft:bamboo_jungle_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:birch_forest_before_surface_wildflowers_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_biome_surface_double_plant_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_biome_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_grove_after_surface_cherry_tree_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_grove_cherry_tree_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_grove_pink_petals_feature_rules"
+        },
+        {
+            "name": "minecraft:cherry_grove_surface_pink_petals_feature_rules"
+        },
+        {
+            "name": "minecraft:cold_ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:cold_taiga_after_surface_sweet_berry_bush_feature_rules"
+        },
+        {
+            "name": "minecraft:cold_taiga_first_sweet_berry_bush_feature"
+        },
+        {
+            "name": "minecraft:crimson_feature"
+        },
+        {
+            "name": "minecraft:crimson_roots_feature"
+        },
+        {
+            "name": "minecraft:crimson_roots_soul_sand_valley_feature"
+        },
+        {
+            "name": "minecraft:deep_cold_ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:deep_ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:deep_warm_ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:desert_after_surface_dry_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:desert_or_swamp_after_surface_fossil_deepslate_feature"
+        },
+        {
+            "name": "minecraft:desert_or_swamp_after_surface_fossil_feature"
+        },
+        {
+            "name": "minecraft:dripstone_caves_underground_copper_ore_feature"
+        },
+        {
+            "name": "minecraft:extreme_hills_after_surface_silverfish_feature"
+        },
+        {
+            "name": "minecraft:eyeblossom_feature_rules"
+        },
+        {
+            "name": "minecraft:flower_forest_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:flower_forest_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:forest_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:forest_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:grove_pine_tree_feature"
+        },
+        {
+            "name": "minecraft:grove_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:jungle_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:jungle_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:jungle_after_surface_vines_feature"
+        },
+        {
+            "name": "minecraft:jungle_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:jungle_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_azalea_root_system_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_cave_vines_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_leaf_clay_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_moss_ceiling_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_spore_blossom_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_after_surface_vegetation_feature"
+        },
+        {
+            "name": "minecraft:lush_caves_underground_clay_ore_feature"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_mangrove_tree_feature"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_mangrove_tree_with_beenest_feature"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_tall_mangrove_tree_feature"
+        },
+        {
+            "name": "minecraft:mangrove_swamp_tall_mangrove_tree_with_beenest_feature"
+        },
+        {
+            "name": "minecraft:meadow_after_surface_double_plant_feature_rules"
+        },
+        {
+            "name": "minecraft:meadow_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:meadow_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:meadow_before_surface_wildflowers_feature_rules"
+        },
+        {
+            "name": "minecraft:meadow_flowers_feature"
+        },
+        {
+            "name": "minecraft:meadow_surface_double_plant_feature_rules"
+        },
+        {
+            "name": "minecraft:meadow_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:mega_taiga_after_surface_brown_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:mega_taiga_after_surface_red_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:mega_taiga_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:mega_taiga_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:mesa_after_surface_dry_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:mesa_before_surface_gold_ore_feature"
+        },
+        {
+            "name": "minecraft:mesa_underground_gold_ore_feature"
+        },
+        {
+            "name": "minecraft:minecraft:savanna_mutated_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:minecraft:savanna_mutated_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:mountains_underground_coal_ore_feature"
+        },
+        {
+            "name": "minecraft:mushroom_island_after_surface_brown_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:mushroom_island_after_surface_red_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:nether_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:nether_soul_sand_underground_feature_rules"
+        },
+        {
+            "name": "minecraft:nether_sprouts_feature_rules"
+        },
+        {
+            "name": "minecraft:ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_after_surface_bush_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_after_surface_extra_brown_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_after_surface_extra_red_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:overworld_amethyst_geode_feature"
+        },
+        {
+            "name": "minecraft:overworld_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:overworld_extra_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:overworld_surface_extra_brown_mushroom_feature"
+        },
+        {
+            "name": "minecraft:overworld_surface_extra_red_mushroom_feature"
+        },
+        {
+            "name": "minecraft:overworld_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:overworld_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_andesite_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_andesite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_andesite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_coal_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_coal_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_coal_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_copper_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_deepslate_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diamond_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diamond_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diamond_ore_feature_square"
+        },
+        {
+            "name": "minecraft:overworld_underground_diamond_ore_large_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diorite_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diorite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_diorite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_dirt_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_emerald_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_extra_gravel_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_glow_lichen_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_gold_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_gold_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_granite_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_granite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_granite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_gravel_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_iron_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_iron_ore_middle_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_iron_ore_small_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_iron_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_lapis_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_lapis_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_redstone_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_redstone_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_tuff_feature"
+        },
+        {
+            "name": "minecraft:overworld_underwater_cave_carver_feature"
+        },
+        {
+            "name": "minecraft:overworld_underwater_magma_feature"
+        },
+        {
+            "name": "minecraft:pale_garden_pale_oak_tree_feature_rules"
+        },
+        {
+            "name": "minecraft:pale_garden_surface_double_plant_feature_rules"
+        },
+        {
+            "name": "minecraft:pale_garden_surface_pale_moss_patch_feature_rules"
+        },
+        {
+            "name": "minecraft:pale_garden_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:plains_after_surface_double_plant_sunflower_feature_rules"
+        },
+        {
+            "name": "minecraft:plains_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:plains_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:plains_first_double_plant_grass_feature"
+        },
+        {
+            "name": "minecraft:plains_first_double_plant_sunflower_feature"
+        },
+        {
+            "name": "minecraft:plains_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:plains_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:river_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:roofed_forest_surface_roofed_tree_feature_rules"
+        },
+        {
+            "name": "minecraft:savanna_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:savanna_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:savanna_first_double_plant_grass_feature"
+        },
+        {
+            "name": "minecraft:savanna_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:savanna_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:sculk_vein_feature"
+        },
+        {
+            "name": "minecraft:small_dripstone_feature"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_brown_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_flowers_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_red_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_after_surface_waterlily_feature_rules"
+        },
+        {
+            "name": "minecraft:swamp_surface_flowers_feature"
+        },
+        {
+            "name": "minecraft:swamp_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:swamp_surface_waterlily_feature"
+        },
+        {
+            "name": "minecraft:taiga_after_surface_brown_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:taiga_after_surface_red_mushroom_feature_rules"
+        },
+        {
+            "name": "minecraft:taiga_after_surface_sweet_berry_bush_feature_rules"
+        },
+        {
+            "name": "minecraft:taiga_after_surface_tall_grass_feature_rules"
+        },
+        {
+            "name": "minecraft:taiga_first_double_plant_fern_feature"
+        },
+        {
+            "name": "minecraft:taiga_first_sweet_berry_bush_feature"
+        },
+        {
+            "name": "minecraft:taiga_surface_tall_grass_feature"
+        },
+        {
+            "name": "minecraft:warm_ocean_after_surface_seagrass_feature_rules"
+        },
+        {
+            "name": "minecraft:warped_fungus_crimson_feature"
+        },
+        {
+            "name": "minecraft:warped_fungus_feature"
+        },
+        {
+            "name": "minecraft:warped_roots_feature"
+        }
+    ]
+}

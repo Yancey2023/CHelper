@@ -1,0 +1,18 @@
+{
+  // ===== 自定义实体（namespace 表，追加进内置 entity 表）=====
+  // demo_guard：无 idNamespace（默认 minecraft）→ 短名 demo_guard 合法；
+  // demo_pet：idNamespace demo → 必须写全名 demo:demo_pet（短名报错）。
+  "id": "entity",
+  "type": "namespace",
+  "content": [
+    {
+      "name": "demo_guard",
+      "description": "测试守卫（默认命名空间，短名可用）"
+    },
+    {
+      "name": "demo_pet",
+      "idNamespace": "demo",
+      "description": "测试宠物（demo 命名空间，需带前缀）"
+    }
+  ]
+}

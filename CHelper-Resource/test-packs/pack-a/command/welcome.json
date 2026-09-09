@@ -1,0 +1,30 @@
+{
+  // ===== 【A】welcome：NORMAL_ID 候选参数 + TEXT 字面量分支 =====
+  "name": [
+    "welcome",   // 注册 /welcome
+    "hi"         // 别名：/hi 等价（排序冲突测试时留意：B 没有 hi）
+  ],
+  "description": "【A】欢迎命令：/welcome all 或 /welcome <对象>（别名 /hi）",
+
+  "syntax": [
+    "/welcome <who: GreetWho>",  // 占位符 <名字: 说明> 须在 node 中有同名键
+    "/welcome all"               // 字面量分支：输入 all 命中（B 版是 max）
+  ],
+
+  "node": {
+    "<who: GreetWho>": {          // 键必须与 syntax 占位符一致（含 < >）
+      "type": "NORMAL_ID",        // 候选项来自 key 指向的 ID 表
+      "brief": "欢迎对象",
+      "description": "要欢迎的对象（player/vip/admin）",
+      "key": "greetWho"           // 指向本包 ID/greetWho.json 的 id
+    },
+    "all": {                      // 字面量：输入 all 命中
+      "type": "TEXT",
+      "description": "欢迎所有人",
+      "data": {
+        "name": "all",
+        "description": "欢迎所有人"
+      }
+    }
+  }
+}

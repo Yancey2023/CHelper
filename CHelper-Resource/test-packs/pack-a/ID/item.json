@@ -1,0 +1,16 @@
+{
+  // ===== 拓展包自带 item 大表（条目级合并进主包物品表）=====
+  // 与主包 item.json 同构：content 为条目列表；与已有同名条目重复 → 忽略（先到先得）。
+  "id": "item",
+  "type": "item",
+  "content": [
+    {
+      "name": "custom_gadget",
+      "description": "自定义测试物品"
+    },
+    {
+      "name": "demo_crystal",
+      "description": "演示水晶（自定义测试物品）"
+    }
+  ]
+}

@@ -21,6 +21,9 @@
 #ifndef CHELPER_JSONUTIL_H
 #define CHELPER_JSONUTIL_H
 
+#include <string>
+#include <string_view>
+
 namespace CHelper {
 
     class ErrorReason;
@@ -40,6 +43,27 @@ namespace CHelper {
         std::u16string string2jsonString(const std::u16string_view &input);
 
         ConvertResult jsonString2String(const std::u16string_view &input);
+
+        /**
+         * 剥离 JSON 中的注释（行注释与块注释，字符串内的标记不处理），
+         * 注释替换为单个空格以避免相邻 token 粘连。
+         * 用于"资源包 JSON 允许写注释"：包文件可直接内联字段说明。
+         */
+        std::string stripJsonComments(std::string_view input);
+
+        /**
+         * 带注释容错的 JSON 解析：先尝试直接解析（无注释的包零开销），
+         * 失败则剥离注释后重试。@return 解析成功且无错误。
+         */
+        template<class JsonDocument>
+        bool parseJsonWithComments(JsonDocument &doc, const char *data, size_t size) {
+            if (!doc.Parse(data, size).HasParseError()) {
+                return true;
+            }
+            std::string cleaned = stripJsonComments(std::string_view(data, size));
+            doc.Parse(cleaned.data(), cleaned.size());
+            return !doc.HasParseError();
+        }
 
     }// namespace JsonUtil
 

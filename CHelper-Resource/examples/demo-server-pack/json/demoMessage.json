@@ -1,0 +1,25 @@
+{
+  "id": "demoMessage",
+  "start": "PARENT",
+  "node": [
+    {
+      "type": "JSON_OBJECT",
+      "id": "PARENT",
+      "description": "演示消息对象：{ \"text\": \"...\" }",
+      "data": [
+        {
+          "key": "text",
+          "description": "消息文本",
+          "value": [
+            "TEXT"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "JSON_STRING",
+      "id": "TEXT",
+      "description": "原始文本字符串"
+    }
+  ]
+}

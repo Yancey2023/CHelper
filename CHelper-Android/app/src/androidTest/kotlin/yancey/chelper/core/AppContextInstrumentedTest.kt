@@ -29,14 +29,11 @@ class AppContextInstrumentedTest {
     }
 
     @Test
-    fun assetManagerContainsCpackDirectory() {
+    fun assetContainsMainPack() {
         val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-        val files = ctx.assets.list("cpack") ?: emptyArray()
-        // 资源包文件是软件运行的前置条件，少了就说明打包流程或目录被改坏了
-        assertTrue("cpack 下没文件，资源打包可能挂了", files.isNotEmpty())
-        assertTrue(
-            "cpack 下应有 .cpack 文件，实际：${files.toList()}",
-            files.any { it.endsWith(".cpack") }
-        )
+        // 主包文件是软件运行的前置条件（唯一内置数据资产），少了就说明打包流程或目录被改坏了
+        ctx.assets.open("main-pack.chepack").use { input ->
+            assertTrue("main-pack.chepack 不应为空", input.available() > 0)
+        }
     }
 }

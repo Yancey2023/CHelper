@@ -1,0 +1,50 @@
+{
+  "name": [
+    "tag"
+  ],
+  "description": "管理实体的记分板标签",
+  "syntax": [
+    "/tag <entity: target> <add|remove> <name: string>",
+    "/tag <entity: target> list"
+  ],
+  "node": {
+    "<entity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要操作的实体目标",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": true
+    },
+    "<add|remove>": {
+      "type": "NORMAL_ID",
+      "description": "添加或移除",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "add",
+          "description": "为目标添加一个标签"
+        },
+        {
+          "name": "remove",
+          "description": "移除目标的一个标签"
+        }
+      ]
+    },
+    "<name: string>": {
+      "type": "STRING",
+      "brief": "标签名",
+      "description": "要被添加或被移除的标签名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "list": {
+      "type": "TEXT",
+      "description": "列出目标所拥有的所有标签",
+      "data": {
+        "name": "list",
+        "description": "列出目标所拥有的所有标签"
+      }
+    }
+  }
+}

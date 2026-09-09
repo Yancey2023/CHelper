@@ -1,0 +1,23 @@
+{
+  // ===== 测试资源包 A：全功能演示 =====
+  "name": "测试资源包 A",                 // 包显示名（管理页/来源标注用）
+  "description": "导入测试包 v0.6：自定义命令、内置表引用、自定义方块/物品/实体（含命名空间前缀规则）、选择器 @x/myflag、JSON 结构；全文件带注释",
+  "version": "0.6.0",                    // 展示版本
+  "versionCode": 6,                      // 递增的整数版本号（覆盖更新依赖它）
+  "versionType": "beta",                 // 面向版本类型（展示用）
+  "branch": "thirdparty",                // 第三方拓展包惯例
+  "author": "CHelper",
+  "packId": "chelper-test-pack-a-0.1.0", // 全局唯一标识：换内容请递增 versionCode 并同步更新
+  "isBasicPack": false,                  // 第三方包必须 false
+  "priority": 100,                       // 预留字段：生效顺序 = 应用内资源包管理列表顺序（靠上优先）
+
+  // ===== 合成指令：向内置 execute 追加 myaction 子命令 =====
+  "extends": {
+    "repeat": {
+      "execute": {
+        "mode": "append",                // 追加模式
+        "file": "extensions/execute-addon.json"
+      }
+    }
+  }
+}

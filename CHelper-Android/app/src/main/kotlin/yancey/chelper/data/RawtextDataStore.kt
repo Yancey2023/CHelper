@@ -34,9 +34,9 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /*
- * RawJSON 生成器的偏好与草稿持久化。
- * 对应网页版的 localStorage：复制格式偏好、自动保存开关、编辑草稿、模拟器 mock 值。
- * 草稿直接存生成器自己的段结构 JSON（draft 字段），跟最终 rawtext 输出无关。
+ * 原始 JSON 文本（titleraw）编辑器的偏好与草稿持久化。
+ * 草稿直接存编辑器自己的元素树 JSON（draft 字段），调试模拟值存 debug 字段，
+ * 与最终 rawtext 输出无关。自动保存默认开启，不再弹首次询问。
  */
 private val Context.rawtextDataStore: DataStore<RawtextPreferences> by dataStore(
     fileName = "rawtext_studio.json",
@@ -45,20 +45,20 @@ private val Context.rawtextDataStore: DataStore<RawtextPreferences> by dataStore
 
 @Serializable
 data class RawtextPreferences(
-    val copyFormat: String? = null,         // "formatted" / "compressed"，null 表示还没问过
-    val autoSavePrompted: Boolean = false,   // 是否已经弹过"开启动态保存"询问
-    val autoSaveEnabled: Boolean = false,
-    val draft: String? = null,               // 段结构序列化
-    val mockSettings: String? = null,        // 模拟器 mock 值序列化
+    val autoSaveEnabled: Boolean = true,
+    val draft: String? = null,               // 元素树序列化（List<RawtextElement>）
+    val debug: String? = null,               // 调试状态序列化（RawtextDebugSnapshot）
 )
 
 object RawtextPreferencesSerializer : Serializer<RawtextPreferences> {
+    private val json = Json { ignoreUnknownKeys = true }
+
     override val defaultValue: RawtextPreferences = RawtextPreferences()
 
     override suspend fun readFrom(input: InputStream): RawtextPreferences =
         try {
             withContext(Dispatchers.IO) {
-                Json.decodeFromString<RawtextPreferences>(input.readBytes().decodeToString())
+                json.decodeFromString<RawtextPreferences>(input.readBytes().decodeToString())
             }
         } catch (serialization: SerializationException) {
             throw CorruptionException("Unable to read RawtextPreferences", serialization)
@@ -66,7 +66,7 @@ object RawtextPreferencesSerializer : Serializer<RawtextPreferences> {
 
     override suspend fun writeTo(t: RawtextPreferences, output: OutputStream) {
         withContext(Dispatchers.IO) {
-            output.write(Json.encodeToString(t).encodeToByteArray())
+            output.write(json.encodeToString(t).encodeToByteArray())
         }
     }
 }
@@ -75,23 +75,17 @@ class RawtextDataStore(private val context: Context) {
 
     fun preferences(): Flow<RawtextPreferences> = context.rawtextDataStore.data
 
-    fun copyFormat(): Flow<String?> = context.rawtextDataStore.data.map { it.copyFormat }
+    fun autoSaveEnabled(): Flow<Boolean> = context.rawtextDataStore.data.map { it.autoSaveEnabled }
 
-    suspend fun setCopyFormat(format: String) {
-        context.rawtextDataStore.updateData { it.copy(copyFormat = format) }
-    }
-
-    suspend fun setAutoSave(prompted: Boolean, enabled: Boolean) {
-        context.rawtextDataStore.updateData {
-            it.copy(autoSavePrompted = prompted, autoSaveEnabled = enabled)
-        }
+    suspend fun setAutoSave(enabled: Boolean) {
+        context.rawtextDataStore.updateData { it.copy(autoSaveEnabled = enabled) }
     }
 
     suspend fun saveDraft(draft: String?) {
         context.rawtextDataStore.updateData { it.copy(draft = draft) }
     }
 
-    suspend fun saveMockSettings(mock: String) {
-        context.rawtextDataStore.updateData { it.copy(mockSettings = mock) }
+    suspend fun saveDebug(debug: String) {
+        context.rawtextDataStore.updateData { it.copy(debug = debug) }
     }
 }

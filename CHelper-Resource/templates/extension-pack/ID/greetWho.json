@@ -1,0 +1,20 @@
+{
+  // ===== ID 候选表（被 command/*.json 中 NORMAL_ID 的 key 引用）=====
+  "id": "greetWho",            // 表名：command 里 "key": "greetWho" 引用它
+  "type": "normal",            // normal=普通表；namespace=带命名空间表；block/item=大表（P1 支持）
+  "content": [
+    // 每个候选：name=可输入值，description=补全时的中文说明
+    {
+      "name": "player",        // 输入 player（候选会带中文说明展示）
+      "description": "所有玩家"
+    },
+    {
+      "name": "vip",
+      "description": "VIP 玩家"
+    },
+    {
+      "name": "admin",
+      "description": "管理员"
+    }
+  ]
+}

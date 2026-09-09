@@ -1,0 +1,64 @@
+{
+  // ===== 拓展包自带 block 大表（条目级合并进主包方块表）=====
+  // 新增方块会被追加；与已有方块（同命名空间+同名）重复的条目会被忽略（先到先得）。
+  // 声明了 properties 的方块必须自带属性描述（blockPropertyDescriptions），
+  // 否则解析该方块状态时引擎找不到描述会报错——见 pack-format.md / composer.md §3.3。
+  "id": "block",
+  "type": "block",
+  "content": {
+    "blockStateValues": [
+      {
+        "name": "demo_machine",
+        "idNamespace": "demo",
+        "description": "示例机器（拓展包自定义方块）",
+        "properties": [
+          {
+            "name": "lit",
+            "defaultValue": false
+          },
+          {
+            "name": "power",
+            "defaultValue": 0,
+            "valid": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ]
+      }
+    ],
+    "blockPropertyDescriptions": {
+      "common": [],
+      "block": [
+        {
+          "blocks": [
+            "demo_machine",
+            "demo:demo_machine"
+          ],
+          "properties": [
+            {
+              "propertyName": "lit",
+              "description": "是否点亮",
+              "values": [
+                { "valueName": false, "description": "关闭" },
+                { "valueName": true,  "description": "点亮" }
+              ]
+            },
+            {
+              "propertyName": "power",
+              "description": "能量等级",
+              "values": [
+                { "valueName": 0, "description": "关闭" },
+                { "valueName": 1, "description": "低" },
+                { "valueName": 2, "description": "中" },
+                { "valueName": 3, "description": "高" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

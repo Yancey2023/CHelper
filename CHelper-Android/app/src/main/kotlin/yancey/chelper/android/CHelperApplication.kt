@@ -27,8 +27,10 @@ import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
 import yancey.chelper.android.util.MonitorUtil
+import yancey.chelper.android.extension.AndroidExtensionPacks
 import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.android.window.LoongFlowWindowManager
+import yancey.chelper.core.ExtensionPackBridge
 import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.network.ServiceManager
@@ -70,6 +72,9 @@ class CHelperApplication : Application() {
         SettingsDataStore(this).init()
         // 自定义主题初始化
         BackgroundStore.init(dataDir.resolve("theme"))
+
+        // 注册启用拓展包源：内核合成（KernelCache）读取资源包管理里的启用包
+        ExtensionPackBridge.source = AndroidExtensionPacks
 
         // 悬浮窗前台服务通知渠道
         createFloatingWindowNotificationChannel()

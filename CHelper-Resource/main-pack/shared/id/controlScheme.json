@@ -1,0 +1,21 @@
+{
+    "id": "controlScheme",
+    "type": "normal",
+    "content": [
+        {
+            "name": "camera_relative"
+        },
+        {
+            "name": "camera_relative_strafe"
+        },
+        {
+            "name": "locked_player_relative_strafe"
+        },
+        {
+            "name": "player_relative"
+        },
+        {
+            "name": "player_relative_strafe"
+        }
+    ]
+}

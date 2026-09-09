@@ -1,0 +1,52 @@
+{
+  "name": "CHelper 内置主包（全版本原版数据，分层）",
+  "description": "内置补全包：六段（beta/release/netease × vanilla/experiment）相同内容只存一份，按 shared → versions/<vt>/shared → versions/<vt>/<branch> 分层装载（后层覆盖同名）。",
+  "version": "1.1.0",
+  "versionCode": 2,
+  "versionType": "main",
+  "branch": "main",
+  "author": "Yancey",
+  "updateDate": "2026-09-05",
+  "packId": "chelper-main-pack",
+  "isBasicPack": true,
+  "isDefault": true,
+  "layout": "layered",
+  "segments": {
+    "beta": {
+      "vanilla": {
+        "version": "1.26.0.29",
+        "packId": "BasicPack-1.26.0.29-vanilla",
+        "name": "[内置] 测试版原版"
+      },
+      "experiment": {
+        "version": "1.26.0.29",
+        "packId": "BasicPack-1.26.0.29-experiment",
+        "name": "[内置] 测试版实验性玩法"
+      }
+    },
+    "release": {
+      "vanilla": {
+        "version": "1.21.132.1",
+        "packId": "BasicPack-1.21.132.1-vanilla",
+        "name": "[内置] 正式版原版"
+      },
+      "experiment": {
+        "version": "1.21.132.1",
+        "packId": "BasicPack-1.21.132.1-experiment",
+        "name": "[内置] 正式版实验性玩法"
+      }
+    },
+    "netease": {
+      "vanilla": {
+        "version": "1.21.50.07",
+        "packId": "BasicPack-1.21.50.07-vanilla",
+        "name": "[内置] 中国版原版"
+      },
+      "experiment": {
+        "version": "1.21.50.07",
+        "packId": "BasicPack-1.21.50.07-experiment",
+        "name": "[内置] 中国版实验性玩法"
+      }
+    }
+  }
+}

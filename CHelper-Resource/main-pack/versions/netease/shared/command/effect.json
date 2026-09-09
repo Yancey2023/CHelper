@@ -1,0 +1,52 @@
+{
+  "name": [
+    "effect"
+  ],
+  "description": "管理玩家及其他实体上的状态效果",
+  "syntax": [
+    "/effect <player: target> <effect: Effect> [seconds: int] [amplifier: int] [hideParticles: Boolean]",
+    "/effect <player: target> clear"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<effect: Effect>": {
+      "type": "NORMAL_ID",
+      "brief": "效果",
+      "description": "需要给予的效果",
+      "ignoreError": true,
+      "key": "effect"
+    },
+    "[seconds: int]": {
+      "type": "INTEGER",
+      "brief": "时长",
+      "description": "以秒为单位指定效果时长"
+    },
+    "[amplifier: int]": {
+      "type": "INTEGER",
+      "brief": "等级",
+      "description": "效果的额外等级"
+    },
+    "[hideParticles: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否隐藏药水粒子",
+      "description": "是否隐藏药水粒子",
+      "descriptionTrue": "隐藏药水粒子",
+      "descriptionFalse": "显示药水粒子"
+    },
+    "clear": {
+      "type": "TEXT",
+      "description": "移除所有效果",
+      "data": {
+        "name": "clear",
+        "description": "移除所有效果"
+      }
+    }
+  }
+}

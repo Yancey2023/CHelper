@@ -1,0 +1,39 @@
+{
+  "name": [
+    "execute"
+  ],
+  "description": "（拓展片段：向内置 execute 追加子命令，由合成器合并后生效，不单独注册）",
+  "syntax": [
+    "/execute <addon: ExecuteChainedAddon_1>"
+  ],
+  "node": {
+    "<addon: ExecuteChainedAddon_1>": {
+      "type": "REPEAT",
+      "key": "execute",
+      "description": "示例服务器动作（execute myaction <target>）",
+      "branches": [
+        {
+          "isEnd": true,
+          "nodes": [
+            {
+              "type": "TEXT",
+              "description": "服务器动作名",
+              "data": {
+                "name": "myaction",
+                "description": "执行示例服务器动作"
+              }
+            },
+            {
+              "type": "TARGET_SELECTOR",
+              "description": "动作作用的目标实体",
+              "isOnlyOne": false,
+              "isMustPlayer": false,
+              "isMustNPC": false,
+              "isWildcard": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

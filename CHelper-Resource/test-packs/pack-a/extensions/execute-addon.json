@@ -1,0 +1,42 @@
+{
+  // ===== execute 子命令扩展片段 =====
+  // 由 manifest.json 的 extends.repeat.execute 引用；合成时把 branches 追加进内置
+  // execute，此后 /execute myaction <目标> 可用。
+  "name": [
+    "execute"
+  ],
+  "description": "（拓展片段：向内置 execute 追加子命令，由合成器合并后生效，不单独注册）",
+  "syntax": [
+    "/execute <addon: ExecuteChainedAddon_1>"
+  ],
+  "node": {
+    "<addon: ExecuteChainedAddon_1>": {
+      "type": "REPEAT",
+      "key": "execute",
+      "description": "示例动作：/execute myaction <目标>",
+      "branches": [
+        {
+          "isEnd": true,
+          "nodes": [
+            {
+              "type": "TEXT",
+              "description": "动作名",
+              "data": {
+                "name": "myaction",
+                "description": "执行示例动作"
+              }
+            },
+            {
+              "type": "TARGET_SELECTOR",
+              "description": "动作作用的目标",
+              "isOnlyOne": false,
+              "isMustPlayer": false,
+              "isMustNPC": false,
+              "isWildcard": false
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

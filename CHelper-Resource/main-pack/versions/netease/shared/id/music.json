@@ -1,0 +1,242 @@
+{
+    "id": "music",
+    "type": "normal",
+    "content": [
+        {
+            "name": "music.game",
+            "description": "生存模式背景音乐"
+        },
+        {
+            "name": "music.game.basalt_deltas",
+            "description": "玄武岩三角洲背景音乐"
+        },
+        {
+            "name": "music.game.creative",
+            "description": "创造模式背景音乐"
+        },
+        {
+            "name": "music.game.credits",
+            "description": "制作人员界面背景音乐"
+        },
+        {
+            "name": "music.game.crimson_forest",
+            "description": "绯红森林背景音乐"
+        },
+        {
+            "name": "music.game.deep_dark",
+            "description": "深暗之域背景音乐"
+        },
+        {
+            "name": "music.game.dripstone_caves",
+            "description": "溶洞背景音乐"
+        },
+        {
+            "name": "music.game.end",
+            "description": "末地背景音乐"
+        },
+        {
+            "name": "music.game.endboss",
+            "description": "末影龙战斗背景音乐"
+        },
+        {
+            "name": "music.game.frozen_peaks",
+            "description": "冰封山峰背景音乐"
+        },
+        {
+            "name": "music.game.grove",
+            "description": "雪林背景音乐"
+        },
+        {
+            "name": "music.game.jagged_peaks",
+            "description": "尖峭山峰背景音乐"
+        },
+        {
+            "name": "music.game.lush_caves",
+            "description": "繁茂洞穴背景音乐"
+        },
+        {
+            "name": "music.game.meadow",
+            "description": "草甸背景音乐"
+        },
+        {
+            "name": "music.game.nether",
+            "description": "下界背景音乐"
+        },
+        {
+            "name": "music.game.nether_wastes",
+            "description": "下界荒地背景音乐"
+        },
+        {
+            "name": "music.game.snowy_slopes",
+            "description": "积雪山坡背景音乐"
+        },
+        {
+            "name": "music.game.soul_sand_valley",
+            "description": "灵魂沙峡谷背景音乐"
+        },
+        {
+            "name": "music.game.soulsand_valley",
+            "description": "灵魂沙峡谷背景音乐"
+        },
+        {
+            "name": "music.game.stony_peaks",
+            "description": "裸岩山峰背景音乐"
+        },
+        {
+            "name": "music.game.swamp_music",
+            "description": "沼泽背景音乐"
+        },
+        {
+            "name": "music.game.warped_forest",
+            "description": "诡异森林背景音乐"
+        },
+        {
+            "name": "music.game.water",
+            "description": "水下背景音乐"
+        },
+        {
+            "name": "music.game_and_wild_equal_chance",
+            "description": "森林背景音乐"
+        },
+        {
+            "name": "music.game_and_wild_favor_game",
+            "description": "针叶林背景音乐"
+        },
+        {
+            "name": "music.menu",
+            "description": "游戏菜单背景音乐"
+        },
+        {
+            "name": "music.overworld.bamboo_jungle",
+            "description": "竹林背景音乐"
+        },
+        {
+            "name": "music.overworld.cherry_grove",
+            "description": "樱花树林背景音乐"
+        },
+        {
+            "name": "music.overworld.deep_dark",
+            "description": "深暗之域背景音乐"
+        },
+        {
+            "name": "music.overworld.desert",
+            "description": "沙漠背景音乐"
+        },
+        {
+            "name": "music.overworld.dripstone_caves",
+            "description": "溶洞背景音乐"
+        },
+        {
+            "name": "music.overworld.flower_forest",
+            "description": "繁花森林背景音乐"
+        },
+        {
+            "name": "music.overworld.grove",
+            "description": "雪林背景音乐"
+        },
+        {
+            "name": "music.overworld.jagged_peaks",
+            "description": "尖峭山峰背景音乐"
+        },
+        {
+            "name": "music.overworld.jungle",
+            "description": "丛林背景音乐"
+        },
+        {
+            "name": "music.overworld.jungle_edge",
+            "description": "丛林边缘背景音乐"
+        },
+        {
+            "name": "music.overworld.lush_caves",
+            "description": "繁茂洞穴背景音乐"
+        },
+        {
+            "name": "music.overworld.mesa",
+            "description": "恶地背景音乐"
+        },
+        {
+            "name": "music.overworld.snowy_slopes",
+            "description": "积雪山坡背景音乐"
+        },
+        {
+            "name": "music.overworld.stony_peaks",
+            "description": "裸岩山峰背景音乐"
+        },
+        {
+            "name": "record.11",
+            "description": "音乐唱片（C418 - 11）"
+        },
+        {
+            "name": "record.13",
+            "description": "音乐唱片（C418 - 13）"
+        },
+        {
+            "name": "record.5",
+            "description": "音乐唱片（Samuel Åberg - 5）"
+        },
+        {
+            "name": "record.blocks",
+            "description": "音乐唱片（C418 - blocks）"
+        },
+        {
+            "name": "record.cat",
+            "description": "音乐唱片（C418 - cat）"
+        },
+        {
+            "name": "record.chirp",
+            "description": "音乐唱片（C418 - chirp）"
+        },
+        {
+            "name": "record.creator",
+            "description": "音乐唱片（Lena Raine - Creator）"
+        },
+        {
+            "name": "record.creator_music_box",
+            "description": "音乐唱片（Lena Raine - Creator（八音盒））"
+        },
+        {
+            "name": "record.far",
+            "description": "音乐唱片（C418 - far）"
+        },
+        {
+            "name": "record.mall",
+            "description": "音乐唱片（C418 - mall）"
+        },
+        {
+            "name": "record.mellohi",
+            "description": "音乐唱片（C418 - mellohi）"
+        },
+        {
+            "name": "record.otherside",
+            "description": "音乐唱片（Lena Raine - otherside）"
+        },
+        {
+            "name": "record.pigstep",
+            "description": "音乐唱片（Lena Raine - Pigstep）"
+        },
+        {
+            "name": "record.precipice",
+            "description": "音乐唱片（Aaron Cherof - Precipice）"
+        },
+        {
+            "name": "record.relic",
+            "description": "音乐唱片（Aaron Cherof - Relic）"
+        },
+        {
+            "name": "record.stal",
+            "description": "音乐唱片（C418 - stal）"
+        },
+        {
+            "name": "record.strad",
+            "description": "音乐唱片（C418 - strad）"
+        },
+        {
+            "name": "record.wait",
+            "description": "音乐唱片（C418 - wait）"
+        },
+        {
+            "name": "record.ward",
+            "description": "音乐唱片（C418 - ward）"
+        }
+    ]
+}

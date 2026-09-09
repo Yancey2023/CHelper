@@ -1,0 +1,18 @@
+{
+  "id": "kit",
+  "type": "normal",
+  "content": [
+    {
+      "name": "starter",
+      "description": "新手礼包"
+    },
+    {
+      "name": "diamond",
+      "description": "钻石礼包"
+    },
+    {
+      "name": "legend",
+      "description": "传说礼包"
+    }
+  ]
+}
