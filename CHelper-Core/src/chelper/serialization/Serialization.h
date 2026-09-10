@@ -30,8 +30,27 @@
 
 namespace CHelper {
 
-    // 当前 CPack 加载阶段，用于限制哪些节点类型允许被反序列化
-    extern Node::NodeCreateStage::NodeCreateStage currentCreateStage;
+    /**
+     * 节点反序列化上下文：携带当前 CPack 加载阶段，用于限制哪些节点类型允许被反序列化。
+     * 阶段跟随上下文在调用链上传递，而不是放在全局变量里：
+     * 全局变量会被并发创建 CPack 的线程互相覆盖，导致节点被误判为非法类型。
+     */
+    struct NodeReadContext : glz::context {
+        Node::NodeCreateStage::NodeCreateStage createStage = Node::NodeCreateStage::JSON_NODE;
+    };
+
+    /**
+     * 取出上下文携带的加载阶段。
+     * 未携带阶段的普通上下文（如下游直接用 glz::read_json 读取节点数据）不限制节点类型，
+     * 与阶段为 JSON_NODE（其覆盖全部可序列化的节点类型）等价。
+     */
+    [[nodiscard]] inline Node::NodeCreateStage::NodeCreateStage getCreateStage(const glz::is_context auto &ctx) {
+        if constexpr (requires { ctx.createStage; }) {
+            return ctx.createStage;
+        } else {
+            return Node::NodeCreateStage::JSON_NODE;
+        }
+    }
 }// namespace CHelper
 
 // ================= std::u16string 支持（JSON / MessagePack，UTF-8 转换） =================
@@ -519,7 +538,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_BLOCK(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::BLOCK>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -542,7 +561,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_BOOLEAN(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::BOOLEAN>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -565,7 +584,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_COMMAND(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -588,7 +607,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_COMMAND_NAME(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND_NAME>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -611,7 +630,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::FLOAT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -634,7 +653,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_INTEGER(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -657,7 +676,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_INTEGER_WITH_UNIT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER_WITH_UNIT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -680,7 +699,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_ITEM(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::ITEM>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -703,7 +722,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -726,7 +745,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_BOOLEAN(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_BOOLEAN>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -749,7 +768,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_FLOAT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -772,7 +791,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_INTEGER(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_INTEGER>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -795,7 +814,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_LIST(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_LIST>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -818,7 +837,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_NULL(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_NULL>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -841,7 +860,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_ENTRY(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_ENTRY>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -864,7 +883,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_OBJECT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_OBJECT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -887,7 +906,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_JSON_STRING(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_STRING>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -910,7 +929,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_NAMESPACE_ID(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::NAMESPACE_ID>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -933,7 +952,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_NORMAL_ID(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::NORMAL_ID>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -956,7 +975,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_POSITION(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::POSITION>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -979,7 +998,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_RANGE(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::RANGE>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1002,7 +1021,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_RELATIVE_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::RELATIVE_FLOAT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1025,7 +1044,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_REPEAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::REPEAT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1048,7 +1067,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_STRING(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::STRING>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1071,7 +1090,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_TARGET_SELECTOR(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::TARGET_SELECTOR>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1094,7 +1113,7 @@ namespace CHelper {
     template<auto Opts, class Ctx, class It, class End>
     inline void nodeReadBinary_TEXT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
         const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::TEXT>::nodeCreateStage;
-        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) [[unlikely]] {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
@@ -1212,28 +1231,28 @@ namespace CHelper {
         }
     }
 
-#define CHELPER_NODE_READ_CASE(v1)                                                                                  \
-    case Node::NodeTypeId::v1: {                                                                                    \
-        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::v1>::nodeCreateStage;                  \
-        if (nodeCreateStage.empty() ||                                                                              \
-            std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) \
-                [[unlikely]] {                                                                                      \
-            ctx.error = glz::error_code::no_matching_variant_type;                                                  \
-            return;                                                                                                 \
-        }                                                                                                           \
-        using NT = Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type;                                                \
-        auto *node = new NT();                                                                                      \
-        glz::parse<Fmt>::template op<Opts>(*node, ctx, it, end);                                                    \
-        if (bool(ctx.error)) [[unlikely]] {                                                                         \
-            delete node;                                                                                            \
-            return;                                                                                                 \
-        }                                                                                                           \
-        if (!node->isMustAfterSpace.has_value()) [[unlikely]] {                                                     \
-            node->isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::v1>::isMustAfterSpace;                  \
-        }                                                                                                           \
-        t.nodeTypeId = Node::NodeTypeId::v1;                                                                        \
-        t.data = node;                                                                                              \
-        break;                                                                                                      \
+#define CHELPER_NODE_READ_CASE(v1)                                                                                   \
+    case Node::NodeTypeId::v1: {                                                                                     \
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::v1>::nodeCreateStage;                   \
+        if (nodeCreateStage.empty() ||                                                                               \
+            std::find(nodeCreateStage.begin(), nodeCreateStage.end(), getCreateStage(ctx)) == nodeCreateStage.end()) \
+                [[unlikely]] {                                                                                       \
+            ctx.error = glz::error_code::no_matching_variant_type;                                                   \
+            return;                                                                                                  \
+        }                                                                                                            \
+        using NT = Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type;                                                 \
+        auto *node = new NT();                                                                                       \
+        glz::parse<Fmt>::template op<Opts>(*node, ctx, it, end);                                                     \
+        if (bool(ctx.error)) [[unlikely]] {                                                                          \
+            delete node;                                                                                             \
+            return;                                                                                                  \
+        }                                                                                                            \
+        if (!node->isMustAfterSpace.has_value()) [[unlikely]] {                                                      \
+            node->isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::v1>::isMustAfterSpace;                   \
+        }                                                                                                            \
+        t.nodeTypeId = Node::NodeTypeId::v1;                                                                         \
+        t.data = node;                                                                                               \
+        break;                                                                                                       \
     }
 
     // 第二遍：按具体节点类型反序列化
@@ -2653,42 +2672,43 @@ namespace CHelper::serialization {
         size_t stackSize = Profile::stack.size();
 #endif
         auto cpack = std::unique_ptr<CPack>(new CPack());
-        currentCreateStage = Node::NodeCreateStage::NONE;
+        // 加载阶段随上下文传递，各段落只允许反序列化自己合法的节点类型
+        NodeReadContext ctx;
+        ctx.createStage = Node::NodeCreateStage::NONE;
         Profile::push("loading manifest");
-        readJsonFromFile(cpack->manifest, path / "manifest.json");
+        readJsonFromFile(cpack->manifest, path / "manifest.json", ctx);
         Profile::next("loading id data");
         for (const auto &file: std::filesystem::recursive_directory_iterator(path / "id")) {
             Profile::next(R"(loading id data in path "{}")", FORMAT_ARG(file.path().string()));
             IdEntry entry;
-            readJsonFromFile(entry, file.path());
+            readJsonFromFile(entry, file.path(), ctx);
             cpack->applyId(entry);
         }
         Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
         for (const auto &file: std::filesystem::recursive_directory_iterator(path / "json")) {
             Profile::next(R"(loading json data in path "{}")", FORMAT_ARG(file.path().string()));
             Node::NodeJsonElement item;
-            readJsonFromFile(item, file.path());
+            readJsonFromFile(item, file.path(), ctx);
             cpack->applyJson(std::move(item));
         }
         Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
+        ctx.createStage = Node::NodeCreateStage::REPEAT_NODE;
         for (const auto &file: std::filesystem::recursive_directory_iterator(path / "repeat")) {
             Profile::next(R"(loading repeat data in path "{}")", FORMAT_ARG(file.path().string()));
             Node::RepeatData item;
-            readJsonFromFile(item, file.path());
+            readJsonFromFile(item, file.path(), ctx);
             cpack->applyRepeat(std::move(item));
         }
         Profile::next("loading commands");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+        ctx.createStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
         for (const auto &file: std::filesystem::recursive_directory_iterator(path / "command")) {
             Profile::next(R"(loading command in path "{}")", FORMAT_ARG(file.path().string()));
             Node::NodePerCommand item;
-            readJsonFromFile(item, file.path());
+            readJsonFromFile(item, file.path(), ctx);
             cpack->applyCommand(std::move(item));
         }
         Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
         cpack->afterApply();
         Profile::pop();
 #if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
@@ -2711,11 +2731,11 @@ namespace CHelper::serialization {
         size_t stackSize = Profile::stack.size();
 #endif
         // 单文件格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        NodeReadContext ctx;
+        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
         CPackJsonData data;
-        readJson(data, json);
+        readJson(data, json, ctx);
         auto cpack = std::unique_ptr<CPack>(new CPack());
-        currentCreateStage = Node::NodeCreateStage::NONE;
         Profile::push("loading manifest");
         cpack->manifest = std::move(data.manifest);
         Profile::next("loading id data");
@@ -2723,22 +2743,18 @@ namespace CHelper::serialization {
             cpack->applyId(entry);
         }
         Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
         for (auto &item: data.json) {
             cpack->applyJson(std::move(item));
         }
         Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
         for (auto &item: data.repeat) {
             cpack->applyRepeat(std::move(item));
         }
         Profile::next("loading command data");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
         for (auto &item: data.command) {
             cpack->applyCommand(std::move(item));
         }
         Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
         cpack->afterApply();
         Profile::pop();
 #if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
@@ -2756,11 +2772,11 @@ namespace CHelper::serialization {
         size_t stackSize = Profile::stack.size();
 #endif
         // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        NodeReadContext ctx;
+        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
         CPackData cpackData;
-        readBinary(cpackData, data);
+        readBinary(cpackData, data, ctx);
         auto cpack = std::unique_ptr<CPack>(new CPack());
-        currentCreateStage = Node::NodeCreateStage::NONE;
         Profile::push("loading manifest");
         cpack->manifest = std::move(cpackData.manifest);
         Profile::next("loading normal id data");
@@ -2772,16 +2788,12 @@ namespace CHelper::serialization {
         Profile::next("loading block id data");
         cpack->blockIds = std::move(cpackData.blockIds);
         Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
         cpack->jsonNodes = std::move(cpackData.jsonNodes);
         Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
         cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
         Profile::next("loading command data");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
         cpack->commands = std::move(cpackData.commands);
         Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
         cpack->afterApply();
         Profile::pop();
 #if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)

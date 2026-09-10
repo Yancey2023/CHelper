@@ -21,7 +21,7 @@
 namespace CHelper::Profile {
 
 #ifndef CHELPER_NO_FILESYSTEM
-    std::vector<std::string> stack;
+    thread_local std::vector<std::string> stack;
 #endif
 
     void pop() {

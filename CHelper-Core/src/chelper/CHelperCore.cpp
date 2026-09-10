@@ -22,9 +22,6 @@
 
 namespace CHelper {
 
-    // 当前 CPack 加载阶段定义（声明与使用都在 Serialization.h）
-    Node::NodeCreateStage::NodeCreateStage currentCreateStage = Node::NodeCreateStage::NONE;
-
 #ifndef CHELPER_NO_FILESYSTEM
     // 下游只 include CHelperCore.h，而序列化函数以 inline 形式定义在 Serialization.h；
     // 编译器不会为未被本翻译单元使用的 inline 函数生成符号，链接时会出现未解析符号。

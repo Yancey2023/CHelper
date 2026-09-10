@@ -17,6 +17,7 @@
  */
 
 #include "CpackTestHelper.h"
+#include <future>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -141,6 +142,67 @@ namespace CHelper::Test {
             {"name": ["cmd"], "description": "repeat command", "syntax": ["/cmd <r: repeat>"],
              "node": {"<r: repeat>": {"type": "REPEAT", "key": "nonexistent"}}}
           ])"));
+    }
+
+    TEST(CPackValidationTest, NodeCreateStageFollowsContext) {
+        //加载阶段随反序列化上下文传递：JSON节点在JSON_NODE阶段合法，在其他阶段必须被拒绝。
+        //阶段曾经是全局变量，多线程同时创建CPack时会互相覆盖，这里锁住上下文这条路径
+        const std::string jsonNodes = R"([{"type": "JSON_NULL", "id": "N", "description": "null"}])";
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_NO_THROW(readJson(nodes, jsonNodes, ctx));
+            ASSERT_EQ(nodes.nodes.size(), size_t{1});
+            EXPECT_EQ(nodes.nodes[0].nodeTypeId, Node::NodeTypeId::JSON_NULL);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::REPEAT_NODE;
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_THROW(readJson(nodes, jsonNodes, ctx), std::runtime_error);
+        }
+        {
+            //未携带阶段的普通上下文不限制节点类型
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_NO_THROW(readJson(nodes, jsonNodes));
+            ASSERT_EQ(nodes.nodes.size(), size_t{1});
+            EXPECT_EQ(nodes.nodes[0].nodeTypeId, Node::NodeTypeId::JSON_NULL);
+        }
+    }
+
+    TEST(CPackValidationTest, ConcurrentCpackCreation) {
+        //多个线程同时创建CPack：任何一个线程的加载阶段都不能影响其他线程，
+        //否则后完成的线程会把自己的阶段覆盖到正在读取节点的线程上，导致加载随机失败
+        const std::string json = makeCpackJson(R"([
+            {"id": "json1", "start": "N", "node": [
+              {"type": "JSON_NULL", "id": "N", "description": "null"}
+            ]}
+          ])",
+                                               R"([
+            {"id": "repeat1",
+             "breakNodes": [{"type": "STRING", "id": "B", "description": "break"}],
+             "isEnd": [true],
+             "repeatNodes": [[{"type": "STRING", "id": "S", "description": "string"}]]}
+          ])",
+                                               R"([
+            {"name": ["list"], "description": "list command", "syntax": ["/list"], "node": {}}
+          ])");
+        constexpr int32_t roundCount = 4;
+        constexpr int32_t threadCount = 8;
+        for (int32_t round = 0; round < roundCount; ++round) {
+            std::vector<std::future<bool>> futures;
+            futures.reserve(threadCount);
+            for (int32_t i = 0; i < threadCount; ++i) {
+                futures.emplace_back(std::async(std::launch::async, [&json]() {
+                    std::unique_ptr<CPack> cpack;
+                    return tryCreateCpack(json, cpack);
+                }));
+            }
+            for (auto &future: futures) {
+                EXPECT_TRUE(future.get()) << "round " << round;
+            }
+        }
     }
 
 }// namespace CHelper::Test

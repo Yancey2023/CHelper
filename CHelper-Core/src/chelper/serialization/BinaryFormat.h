@@ -433,19 +433,34 @@ namespace CHelper {
 #endif
 
     // JSON 读取（失败时抛出带定位信息的异常）
-    template<class T>
-    void readJson(T &value, const std::string_view buffer) {
-        const auto ec = glz::read_json(value, buffer);
+    // ctx 允许调用方携带自定义反序列化上下文（如 CPack 加载阶段），不传则使用默认上下文
+    template<class T, class Ctx>
+        requires glz::is_context<Ctx>
+    void readJson(T &value, const std::string_view buffer, Ctx &ctx) {
+        const auto ec = glz::read<glz::opts{}>(value, buffer, ctx);
         if (bool(ec)) [[unlikely]] {
             throw std::runtime_error("fail to parse json: " + glz::format_error(ec, buffer));
         }
     }
 
+    template<class T>
+    void readJson(T &value, const std::string_view buffer) {
+        glz::context ctx{};
+        readJson(value, buffer, ctx);
+    }
+
 #ifndef CHELPER_NO_FILESYSTEM
+    template<class T, class Ctx>
+        requires glz::is_context<Ctx>
+    void readJsonFromFile(T &value, const std::filesystem::path &path, Ctx &ctx) {
+        std::string buffer = readFileToString(path);
+        readJson(value, buffer, ctx);
+    }
+
     template<class T>
     void readJsonFromFile(T &value, const std::filesystem::path &path) {
-        std::string buffer = readFileToString(path);
-        readJson(value, buffer);
+        glz::context ctx{};
+        readJsonFromFile(value, path, ctx);
     }
 #endif
 
@@ -487,11 +502,18 @@ namespace CHelper {
         }
     }
 
-    template<class T>
-    void readBinary(T &value, const std::string_view buffer) {
-        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer);
+    template<class T, class Ctx>
+        requires glz::is_context<Ctx>
+    void readBinary(T &value, const std::string_view buffer, Ctx &ctx) {
+        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
         if (bool(ec)) [[unlikely]] {
             throw std::runtime_error("fail to parse binary: " + glz::format_error(ec, buffer));
         }
+    }
+
+    template<class T>
+    void readBinary(T &value, const std::string_view buffer) {
+        glz::context ctx{};
+        readBinary(value, buffer, ctx);
     }
 }// namespace CHelper

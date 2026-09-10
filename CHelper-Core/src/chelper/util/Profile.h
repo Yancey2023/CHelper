@@ -27,7 +27,8 @@
 namespace CHelper::Profile {
 
 #ifndef CHELPER_NO_FILESYSTEM
-    extern std::vector<std::string> stack;
+    // 调用栈按线程独立维护：加载 CPack 等操作允许并发进行，共享同一个栈会在并发时损坏
+    extern thread_local std::vector<std::string> stack;
 #endif
 
     template<typename... T>
