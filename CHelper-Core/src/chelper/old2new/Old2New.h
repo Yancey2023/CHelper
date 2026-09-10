@@ -84,10 +84,9 @@ namespace CHelper::Old2New {
 #ifndef CHELPER_NO_FILESYSTEM
     BlockFixData blockFixDataFromJson(const std::filesystem::path &path);
 #endif
-
     std::string blockFixDataToBinary(const BlockFixData &blockFixData);
-
     BlockFixData blockFixDataFromBinary(std::string_view buffer);
+
 
 }// namespace CHelper::Old2New
 

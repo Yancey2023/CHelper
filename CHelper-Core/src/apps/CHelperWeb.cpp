@@ -178,9 +178,7 @@ namespace {
 extern "C" {
 
 EMSCRIPTEN_KEEPALIVE CHelper::CHelperCore *init(const char *cpackPtr, size_t cpackLength) {
-    return CHelper::CHelperCore::create([&cpackPtr, &cpackLength]() -> std::unique_ptr<CHelper::CPack> {
-        return CHelper::CPack::createByBinary(std::string_view(cpackPtr, cpackLength));
-    });
+    return CHelper::CHelperCore::createByBinary(std::string_view(cpackPtr, cpackLength));
 }
 
 EMSCRIPTEN_KEEPALIVE void release(const CHelper::CHelperCore *core) {

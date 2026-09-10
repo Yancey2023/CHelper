@@ -54,6 +54,8 @@ namespace CHelper {
         static CHelperCore *createByBinary(const std::filesystem::path &cpackPath);
 #endif
 
+        static CHelperCore *createByBinary(std::string_view data);
+
         [[nodiscard]] const CPack &getCPack() const;
 
         /**

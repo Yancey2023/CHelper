@@ -18,8 +18,8 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
+#include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
-#include <chelper/serialization/Serialization.h>
 
 #define CHELPER_INIT(v1)                                                                                                                                                        \
     case Node::NodeTypeId::v1:                                                                                                                                                  \

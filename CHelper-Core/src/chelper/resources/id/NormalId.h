@@ -50,10 +50,5 @@ namespace CHelper {
 
 }// namespace CHelper
 
-template<>
-struct glz::meta<CHelper::NormalId> {
-    using T = CHelper::NormalId;
-    static constexpr auto value = glz::object(&T::name, &T::description);
-};
 
 #endif//CHELPER_NORMALID_H

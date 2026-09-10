@@ -17,6 +17,7 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -33,7 +34,7 @@ namespace CHelper::Test {
     TEST(CHelperCoreTest, CreateWithValidCPack) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
         CHelperCore *core = CHelperCore::create([&resourceDir]() -> std::unique_ptr<CPack> {
-            return CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+            return CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
         });
         ASSERT_NE(core, nullptr);
         //创建成功后core必须完全可用

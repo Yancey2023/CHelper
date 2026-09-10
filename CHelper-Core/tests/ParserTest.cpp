@@ -20,6 +20,7 @@
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/id/NormalId.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -111,7 +112,7 @@ namespace CHelper::Test {
     // NUMBER token可能包含连续的0-9 . + -，Parser必须校验完整的数字格式
     TEST(ParserTest, NumberFormatValidation) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        std::unique_ptr<CPack> vanillaCpack = CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+        std::unique_ptr<CPack> vanillaCpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
         const auto cpack = std::shared_ptr<const CPack>(std::move(vanillaCpack));
         ASSERT_NE(cpack, nullptr);
         const auto hasErrorWithText = [](const std::vector<std::shared_ptr<ErrorReason>> &errors,

@@ -17,6 +17,7 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <thread>
@@ -27,7 +28,7 @@ namespace CHelper::Test {
 
         std::shared_ptr<const CPack> loadCPack() {
             std::filesystem::path resourceDir(RESOURCE_DIR);
-            std::shared_ptr<const CPack> cpack = CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+            std::shared_ptr<const CPack> cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
             EXPECT_TRUE(cpack != nullptr);
             return cpack;
         }

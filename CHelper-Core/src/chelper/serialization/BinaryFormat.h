@@ -357,8 +357,9 @@ namespace glz {
     };
 
     // ================= glaze 反射对象（按 meta 成员顺序紧凑排列） =================
+    // glaze_object_t（自定义 glz::meta）：成员是 meta 中的成员指针
     template<class T>
-        requires(glz::glaze_object_t<T> || glz::reflectable<T>)
+        requires(glz::glaze_object_t<T>)
     struct to<CHelper::BinaryFormat, T> {
         template<auto Opts, class V, is_context Ctx, class B>
         static void op(V &&value, Ctx &&ctx, B &&b, auto &&ix) noexcept {
@@ -370,7 +371,7 @@ namespace glz {
     };
 
     template<class T>
-        requires(glz::glaze_object_t<T> || glz::reflectable<T>)
+        requires(glz::glaze_object_t<T>)
     struct from<CHelper::BinaryFormat, T> {
         template<auto Opts, class V, is_context Ctx, class It, class End>
         static void op(V &&value, Ctx &&ctx, It &&it, End &&end) {
@@ -383,6 +384,114 @@ namespace glz {
             });
         }
     };
+
+    // reflectable（纯聚合体）：成员通过结构化绑定 to_tie 访问
+    template<class T>
+        requires(glz::reflectable<T>)
+    struct to<CHelper::BinaryFormat, T> {
+        template<auto Opts, class V, is_context Ctx, class B>
+        static void op(V &&value, Ctx &&ctx, B &&b, auto &&ix) noexcept {
+            decltype(auto) tie = to_tie(value);
+            for_each<reflect<T>::size>([&]<auto I>() {
+                serialize<CHelper::BinaryFormat>::template op<Opts>(get<I>(tie), ctx, b, ix);
+            });
+        }
+    };
+
+    template<class T>
+        requires(glz::reflectable<T>)
+    struct from<CHelper::BinaryFormat, T> {
+        template<auto Opts, class V, is_context Ctx, class It, class End>
+        static void op(V &&value, Ctx &&ctx, It &&it, End &&end) {
+            decltype(auto) tie = to_tie(value);
+            for_each<reflect<T>::size>([&]<auto I>() {
+                if (bool(ctx.error)) [[unlikely]] {
+                    return;
+                }
+                parse<CHelper::BinaryFormat>::template op<Opts>(get<I>(tie), ctx, it, end);
+            });
+        }
+    };
 }// namespace glz
 
 #endif//CHELPER_BINARY_FORMAT_H
+
+// ================= 通用 I/O 辅助函数（所有文件通过 pch.h 可用） =================
+namespace CHelper {
+
+#ifndef CHELPER_NO_FILESYSTEM
+    // 读取整个文件（资源 JSON 加载用）
+    inline std::string readFileToString(const std::filesystem::path &path) {
+        std::ifstream is(path, std::ios::binary);
+        if (!is.is_open()) [[unlikely]] {
+            throw std::runtime_error("fail to open file: " + path.string());
+        }
+        std::ostringstream ss;
+        ss << is.rdbuf();
+        return std::move(ss).str();
+    }
+#endif
+
+    // JSON 读取（失败时抛出带定位信息的异常）
+    template<class T>
+    void readJson(T &value, const std::string_view buffer) {
+        const auto ec = glz::read_json(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse json: " + glz::format_error(ec, buffer));
+        }
+    }
+
+#ifndef CHELPER_NO_FILESYSTEM
+    template<class T>
+    void readJsonFromFile(T &value, const std::filesystem::path &path) {
+        std::string buffer = readFileToString(path);
+        readJson(value, buffer);
+    }
+#endif
+
+    // JSON 写出（紧凑格式）
+    template<class T>
+    [[nodiscard]] std::string writeJson(const T &value) {
+        std::string buffer;
+        const auto ec = glz::write_json(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write json");
+        }
+        return buffer;
+    }
+
+    // MessagePack 读写
+    template<class T>
+    void writeMsgpack(std::string &buffer, const T &value) {
+        const auto ec = glz::write_msgpack(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write msgpack");
+        }
+    }
+
+    template<class T>
+    void readMsgpack(T &value, const std::string_view buffer) {
+        const auto ec = glz::read_msgpack(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse msgpack: " + glz::format_error(ec, buffer));
+        }
+    }
+
+    // 自定义二进制格式（.cpack / old2new.dat）
+    template<class T>
+    void writeBinary(std::string &buffer, const T &value) {
+        glz::context ctx{};
+        const auto ec = glz::write<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write binary");
+        }
+    }
+
+    template<class T>
+    void readBinary(T &value, const std::string_view buffer) {
+        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse binary: " + glz::format_error(ec, buffer));
+        }
+    }
+}// namespace CHelper

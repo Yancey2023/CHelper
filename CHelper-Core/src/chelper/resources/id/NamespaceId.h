@@ -39,10 +39,5 @@ namespace CHelper {
 
 }// namespace CHelper
 
-template<>
-struct glz::meta<CHelper::NamespaceId> {
-    using T = CHelper::NamespaceId;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace);
-};
 
 #endif//CHELPER_NAMESPACEID_H

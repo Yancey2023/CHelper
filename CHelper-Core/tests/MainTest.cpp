@@ -18,6 +18,7 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/parser/Parser.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -236,7 +237,7 @@ TEST(MainTest, ParseCommand) {
 
 TEST(MainTest, SemanticNodeCount) {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    std::shared_ptr<const CHelper::CPack> cPack = CHelper::CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+    std::shared_ptr<const CHelper::CPack> cPack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     CHelper::CHelperCore core(cPack);
 
     const auto expectNodeCount = [&core](const std::u16string &command, size_t expected) {

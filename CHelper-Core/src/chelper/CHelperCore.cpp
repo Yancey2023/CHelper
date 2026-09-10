@@ -17,8 +17,32 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <chelper/old2new/Old2New.h>
+#include <chelper/serialization/Serialization.h>
 
 namespace CHelper {
+
+    // 当前 CPack 加载阶段定义（声明与使用都在 Serialization.h）
+    Node::NodeCreateStage::NodeCreateStage currentCreateStage = Node::NodeCreateStage::NONE;
+
+#ifndef CHELPER_NO_FILESYSTEM
+    // 下游只 include CHelperCore.h，而序列化函数以 inline 形式定义在 Serialization.h；
+    // 编译器不会为未被本翻译单元使用的 inline 函数生成符号，链接时会出现未解析符号。
+    // 外部链接的函数一定会被生成，其函数体对这些函数的调用会强制编译器
+    // 在本目标文件中同时生成它们的符号。此函数本身永远不会被调用
+    void emitSerializationSymbols(const CPack &cpack, const std::filesystem::path &path) {
+        std::ignore = cpack.toJson();
+        cpack.writeJsonToFile(path);
+        cpack.writeJsonToDirectory(path);
+        cpack.writeBinToFile(path);
+        std::ignore = Old2New::blockFixDataFromJson(path);
+        std::ignore = Old2New::blockFixDataToBinary(Old2New::blockFixDataFromBinary({}));
+    }
+#else
+    void emitSerializationSymbols() {
+        std::ignore = Old2New::blockFixDataToBinary(Old2New::blockFixDataFromBinary({}));
+    }
+#endif
 
     CHelperCore::CHelperCore(std::shared_ptr<const CPack> cpack)
         : cpack(std::move(cpack)) {}
@@ -42,7 +66,7 @@ namespace CHelper {
             return new CHelperCore(std::move(cPack));
         } catch (const std::exception &e) {
             SPDLOG_ERROR("CPack load failed");
-            CHelper::Profile::printAndClear(e);
+            Profile::printAndClear(e);
             return nullptr;
         }
     }
@@ -50,13 +74,13 @@ namespace CHelper {
 #ifndef CHELPER_NO_FILESYSTEM
     CHelperCore *CHelperCore::createByDirectory(const std::filesystem::path &cpackPath) {
         return create([&cpackPath]() {
-            return CPack::createByDirectory(cpackPath);
+            return serialization::createCPackByDirectory(cpackPath);
         });
     }
 
     CHelperCore *CHelperCore::createByJson(const std::filesystem::path &cpackPath) {
         return create([&cpackPath]() {
-            return CPack::createByJson(cpackPath);
+            return serialization::createCPackByJsonFile(cpackPath);
         });
     }
 
@@ -71,10 +95,16 @@ namespace CHelper {
             }
             // 读取文件
             std::string buffer = readFileToString(cpackPath);
-            return CPack::createByBinary(buffer);
+            return serialization::createCPackByBinary(buffer);
         });
     }
 #endif
+
+    CHelperCore *CHelperCore::createByBinary(std::string_view data) {
+        return create([&data]() {
+            return serialization::createCPackByBinary(data);
+        });
+    }
 
     const CPack &CHelperCore::getCPack() const {
         return *cpack;
@@ -91,5 +121,4 @@ namespace CHelper {
     std::u16string CHelperCore::old2new(const Old2New::BlockFixData &blockFixData, std::u16string old) {
         return Old2New::old2new(blockFixData, std::move(old));
     }
-
 }// namespace CHelper

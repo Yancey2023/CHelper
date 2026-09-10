@@ -551,7 +551,7 @@ TEST(BinaryUtilTest, PerCPackNormalIds) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(
+        cpack = CHelper::serialization::createCPackByDirectory(
                 std::filesystem::path(resourceDir / "resources" / "beta" / "vanilla"));
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
@@ -571,8 +571,8 @@ TEST(BinaryUtilTest, CPackNormalIds) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" /
-                                                  "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
+                                                               "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
@@ -585,8 +585,8 @@ TEST(BinaryUtilTest, CPackNamespaceId) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" /
-                                                  "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
+                                                               "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
@@ -601,7 +601,7 @@ TEST(BinaryUtilTest, NodeJsonBoolean) {
     std::unique_ptr<CHelper::CPack> cpack;
     std::filesystem::path resourceDir(RESOURCE_DIR);
     try {
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
@@ -614,8 +614,8 @@ TEST(BinaryUtilTest, NodeJsonInteger) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" /
-                                                  "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
+                                                               "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
@@ -666,8 +666,8 @@ TEST(BinaryUtilTest, NodeJsonFloat) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" /
-                                                  "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
+                                                               "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
@@ -718,7 +718,7 @@ TEST(BinaryUtilTest, NodeJsonNull) {
     std::unique_ptr<CHelper::CPack> cpack;
     try {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);

@@ -23,6 +23,8 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/old2new/Old2New.h>
+#include <chelper/resources/CPack.h>
 #include <chelper/serialization/BinaryFormat.h>
 #include <glaze/containers/ordered_small_map.hpp>
 
@@ -30,82 +32,6 @@ namespace CHelper {
 
     // 当前 CPack 加载阶段，用于限制哪些节点类型允许被反序列化
     extern Node::NodeCreateStage::NodeCreateStage currentCreateStage;
-
-#ifndef CHELPER_NO_FILESYSTEM
-    // 读取整个文件（资源 JSON 加载用）
-    inline std::string readFileToString(const std::filesystem::path &path) {
-        std::ifstream is(path, std::ios::binary);
-        if (!is.is_open()) [[unlikely]] {
-            throw std::runtime_error("fail to open file: " + path.string());
-        }
-        std::ostringstream ss;
-        ss << is.rdbuf();
-        return std::move(ss).str();
-    }
-#endif
-
-    // JSON 读取（失败时抛出带定位信息的异常）
-    template<class T>
-    void readJson(T &value, const std::string_view buffer) {
-        const auto ec = glz::read_json(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse json: " + glz::format_error(ec, buffer));
-        }
-    }
-
-#ifndef CHELPER_NO_FILESYSTEM
-    template<class T>
-    void readJsonFromFile(T &value, const std::filesystem::path &path) {
-        std::string buffer = readFileToString(path);
-        readJson(value, buffer);
-    }
-#endif
-
-    // JSON 写出（紧凑格式，与旧版 rapidjson Writer 行为一致）
-    template<class T>
-    [[nodiscard]] std::string writeJson(const T &value) {
-        std::string buffer;
-        const auto ec = glz::write_json(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write json");
-        }
-        return buffer;
-    }
-
-    // MessagePack 读写（二进制 .cpack / old2new.dat）
-    template<class T>
-    void writeMsgpack(std::string &buffer, const T &value) {
-        const auto ec = glz::write_msgpack(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write msgpack");
-        }
-    }
-
-    template<class T>
-    void readMsgpack(T &value, const std::string_view buffer) {
-        const auto ec = glz::read_msgpack(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse msgpack: " + glz::format_error(ec, buffer));
-        }
-    }
-
-    // 自定义二进制格式（.cpack / old2new.dat）
-    template<class T>
-    void writeBinary(std::string &buffer, const T &value) {
-        glz::context ctx{};
-        const auto ec = glz::write<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write binary");
-        }
-    }
-
-    template<class T>
-    void readBinary(T &value, const std::string_view buffer) {
-        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse binary: " + glz::format_error(ec, buffer));
-        }
-    }
 }// namespace CHelper
 
 // ================= std::u16string 支持（JSON / MessagePack，UTF-8 转换） =================
@@ -1489,6 +1415,82 @@ struct glz::meta<CHelper::Node::RepeatData> {
     static constexpr auto value = glz::object(&T::id, &T::breakNodes, &T::repeatNodes, &T::isEnd);
 };
 
+// ================= 模型类型 meta 定义 =================
+template<>
+struct glz::meta<CHelper::NormalId> {
+    using T = CHelper::NormalId;
+    static constexpr auto value = glz::object(&T::name, &T::description);
+};
+
+template<>
+struct glz::meta<CHelper::NamespaceId> {
+    using T = CHelper::NamespaceId;
+    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace);
+};
+
+template<>
+struct glz::meta<CHelper::ItemId> {
+    using T = CHelper::ItemId;
+    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace, &T::max, &T::descriptions);
+};
+
+template<>
+struct glz::meta<CHelper::Manifest> {
+    using T = CHelper::Manifest;
+    static constexpr auto value =
+            glz::object(&T::name, &T::description, &T::version, &T::versionType, &T::branch, &T::author,
+                        &T::updateDate, &T::packId, &T::versionCode, &T::isBasicPack, &T::isDefault);
+};
+
+// ================= CPack 数据类型 meta 定义 =================
+template<>
+struct glz::meta<CHelper::NormalIdEntry> {
+    using T = CHelper::NormalIdEntry;
+    static constexpr auto value = glz::object(&T::id, &T::content);
+};
+
+template<>
+struct glz::meta<CHelper::NamespaceIdEntry> {
+    using T = CHelper::NamespaceIdEntry;
+    static constexpr auto value = glz::object(&T::id, &T::content);
+};
+
+template<>
+struct glz::meta<CHelper::BlockIdsEntry> {
+    using T = CHelper::BlockIdsEntry;
+    static constexpr auto value = glz::object(&T::id, &T::content);
+};
+
+template<>
+struct glz::meta<CHelper::ItemIdsEntry> {
+    using T = CHelper::ItemIdsEntry;
+    static constexpr auto value = glz::object(&T::id, &T::content);
+};
+
+template<>
+struct glz::meta<CHelper::IdEntry> {
+    static constexpr std::string_view tag = "type";
+    static constexpr auto ids = std::array{"normal", "namespace", "block", "item"};
+};
+
+template<>
+struct glz::meta<CHelper::CPackJsonData> {
+    using T = CHelper::CPackJsonData;
+    static constexpr auto value = glz::object(&T::manifest, &T::id, &T::json, &T::repeat, &T::command);
+};
+
+template<>
+struct glz::meta<CHelper::CPackData> {
+    using T = CHelper::CPackData;
+    static constexpr auto value = glz::object(&T::manifest, &T::normalIds, &T::namespaceIds, &T::itemIds, &T::blockIds, &T::jsonNodes, &T::repeatNodeData, &T::commands);
+};
+
+template<>
+struct glz::meta<CHelper::Old2New::BlockFixEntry> {
+    using T = CHelper::Old2New::BlockFixEntry;
+    static constexpr auto value = glz::object(&T::name, &T::data, &T::newBlockId, &T::blockState);
+};
+
 // ================= NodePerCommand =================
 namespace CHelper::Node {
 
@@ -1844,5 +1846,952 @@ namespace glz {
         }
     };
 }// namespace glz
+
+
+// ================= BlockId 序列化（从 BlockId.h 移入） =================
+namespace CHelper {
+
+    // ================= 序列化辅助（JSON / MessagePack 通用） =================
+
+    // 逐成员遍历 JSON 对象 / msgpack map（f 以 (key, ctx, it, end) 回调处理每个值）
+    template<std::uint32_t Fmt, auto Opts, class F>
+    void forEachObjectMember(glz::is_context auto &&ctx, auto &&it, auto &&end, F &&f) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it != '{') [[unlikely]] {
+                ctx.error = glz::error_code::expected_brace;
+                return;
+            }
+            ++it;
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it == '}') {
+                ++it;
+                return;
+            }
+            while (true) {
+                glz::skip_ws<Opts>(ctx, it, end);
+                std::string key;
+                glz::parse<glz::JSON>::op<Opts>(key, ctx, it, end);
+                if (bool(ctx.error)) return;
+                glz::skip_ws<Opts>(ctx, it, end);
+                ++it;// ':'
+                glz::skip_ws<Opts>(ctx, it, end);
+                f(key, ctx, it, end);
+                if (bool(ctx.error)) return;
+                glz::skip_ws<Opts>(ctx, it, end);
+                if (*it == ',') {
+                    ++it;
+                    continue;
+                }
+                if (*it == '}') {
+                    ++it;
+                    return;
+                }
+                ctx.error = glz::error_code::syntax_error;
+                return;
+            }
+        } else {
+            // MSGPACK
+            if (it >= end) [[unlikely]] {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
+            const uint8_t tag = static_cast<uint8_t>(*it++);
+            uint32_t size = 0;
+            if (tag >= 0x80 && tag <= 0x8f) {
+                size = tag & 0x0f;
+            } else if (tag == 0xde) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else if (tag == 0xdf) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else [[unlikely]] {
+                ctx.error = glz::error_code::syntax_error;
+                return;
+            }
+            for (uint32_t i = 0; i < size; ++i) {
+                std::string key;
+                glz::parse<glz::MSGPACK>::op<Opts>(key, ctx, it, end);
+                if (bool(ctx.error)) return;
+                f(key, ctx, it, end);
+                if (bool(ctx.error)) return;
+            }
+        }
+    }
+
+    // 逐元素遍历 JSON 数组 / msgpack 数组
+    template<std::uint32_t Fmt, auto Opts, class F>
+    void forEachArrayElement(glz::is_context auto &&ctx, auto &&it, auto &&end, F &&f) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it != '[') [[unlikely]] {
+                ctx.error = glz::error_code::expected_bracket;
+                return;
+            }
+            ++it;
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it == ']') {
+                ++it;
+                return;
+            }
+            while (true) {
+                f(ctx, it, end);
+                if (bool(ctx.error)) return;
+                glz::skip_ws<Opts>(ctx, it, end);
+                if (*it == ',') {
+                    ++it;
+                    continue;
+                }
+                if (*it == ']') {
+                    ++it;
+                    return;
+                }
+                ctx.error = glz::error_code::syntax_error;
+                return;
+            }
+        } else {
+            // MSGPACK
+            if (it >= end) [[unlikely]] {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
+            const uint8_t tag = static_cast<uint8_t>(*it++);
+            uint32_t size = 0;
+            if (tag >= 0x90 && tag <= 0x9f) {
+                size = tag & 0x0f;
+            } else if (tag == 0xdc) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else if (tag == 0xdd) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else [[unlikely]] {
+                ctx.error = glz::error_code::syntax_error;
+                return;
+            }
+            for (uint32_t i = 0; i < size; ++i) {
+                f(ctx, it, end);
+                if (bool(ctx.error)) return;
+            }
+        }
+    }
+
+    // 写出 PropertyValue 的原始值（由 type 决定活跃成员）
+    template<std::uint32_t Fmt, auto Opts>
+    void writePropertyValue(const PropertyValue &v, const PropertyType::PropertyType type,
+                            glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        switch (type) {
+            case PropertyType::STRING:
+                glz::serialize<Fmt>::template op<Opts>(*v.string, ctx, b, ix);
+                break;
+            case PropertyType::BOOLEAN:
+                glz::serialize<Fmt>::template op<Opts>(v.boolean, ctx, b, ix);
+                break;
+            case PropertyType::INTEGER:
+                glz::serialize<Fmt>::template op<Opts>(v.integer, ctx, b, ix);
+                break;
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
+
+    inline void releasePropertyValue(const PropertyValue &v, const PropertyType::PropertyType type) {
+        if (type == PropertyType::STRING) {
+            delete v.string;
+        }
+    }
+
+    // 判断当前值是否为 null（msgpack 的 obj 写出会把 nullopt optional 写成 nil）
+    template<std::uint32_t Fmt, auto Opts>
+    bool valueIsNull(glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            return *it == 'n';
+        } else {
+            return static_cast<uint8_t>(*it) == 0xc0;
+        }
+    }
+
+    // 消费 null 值
+    template<std::uint32_t Fmt, auto Opts>
+    void skipNull(glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            it += 4;// "null" 长度固定为 4
+        } else {
+            ++it;
+        }
+    }
+
+    // 读取 PropertyValue：根据值本身的类型判定
+    // JSON：窥视首字符
+    template<std::uint32_t Fmt, auto Opts>
+    void readPropertyValue(PropertyValue &v, PropertyType::PropertyType &type,
+                           glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it == '"') [[likely]] {
+                type = PropertyType::STRING;
+                v.string = new std::u16string();
+                glz::parse<glz::JSON>::op<Opts>(*v.string, ctx, it, end);
+            } else if (*it == 't' || *it == 'f') [[likely]] {
+                type = PropertyType::BOOLEAN;
+                glz::parse<glz::JSON>::op<Opts>(v.boolean, ctx, it, end);
+            } else {
+                type = PropertyType::INTEGER;
+                glz::parse<glz::JSON>::op<Opts>(v.integer, ctx, it, end);
+            }
+        }
+    }
+
+    // 二进制格式：类型已由 Property::type 确定，按类型读取对应成员
+    template<auto Opts>
+    void readBinaryPropertyValue(PropertyValue &v, const PropertyType::PropertyType type,
+                                 glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        switch (type) {
+            case PropertyType::STRING:
+                v.string = new std::u16string();
+                glz::parse<CHelper::BinaryFormat>::template op<Opts>(*v.string, ctx, it, end);
+                break;
+            case PropertyType::BOOLEAN:
+                glz::parse<CHelper::BinaryFormat>::template op<Opts>(v.boolean, ctx, it, end);
+                break;
+            case PropertyType::INTEGER:
+                glz::parse<CHelper::BinaryFormat>::template op<Opts>(v.integer, ctx, it, end);
+                break;
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
+
+    // MSGPACK：按分发器已消费的 tag 判定
+    template<auto Opts>
+    void readPropertyValue(PropertyValue &v, PropertyType::PropertyType &type, const uint8_t tag,
+                           glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if ((tag >= 0xa0 && tag <= 0xbf) || tag == 0xd9 || tag == 0xda || tag == 0xdb) [[likely]] {
+            type = PropertyType::STRING;
+            v.string = new std::u16string();
+            std::string utf8;
+            glz::from<glz::MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
+            *v.string = utf8::utf8to16(utf8);
+        } else if (tag == 0xc2 || tag == 0xc3) [[likely]] {
+            type = PropertyType::BOOLEAN;
+            v.boolean = tag == 0xc3;
+        } else {
+            type = PropertyType::INTEGER;
+            glz::from<glz::MSGPACK, int32_t>::op<Opts>(v.integer, tag, ctx, it, end);
+        }
+    }
+}// namespace CHelper
+
+
+namespace CHelper {
+
+    // 携带类型的 PropertyValue 写出视图
+    struct PropertyValueWriter {
+        const PropertyValue *value;
+        PropertyType::PropertyType type;
+    };
+
+    // 写出 Property（键名与旧版一致：name / defaultValue / valid）
+    template<std::uint32_t Fmt, auto Opts>
+    void writeProperty(const Property &t, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        std::optional<std::vector<PropertyValueWriter>> valid;
+        if (t.valid.has_value()) {
+            valid.emplace();
+            valid->reserve(t.valid.value().size());
+            for (const auto &item: t.valid.value()) {
+                valid->push_back(PropertyValueWriter{&item, t.type});
+            }
+        }
+        auto value = glz::obj{"name", t.name, "defaultValue", PropertyValueWriter{&t.defaultValue, t.type}, "valid",
+                              std::move(valid)};
+        glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);
+    }
+
+    // 读取 Property：defaultValue / valid 的类型由值本身判定
+    template<std::uint32_t Fmt, auto Opts>
+    void readProperty(Property &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        t.release();
+        bool hasDefaultValue = false;
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+            if (key == "name") [[likely]] {
+                glz::parse<Fmt>::template op<Opts>(t.name, ctx2, it2, end2);
+            } else if (key == "defaultValue") [[likely]] {
+                if constexpr (Fmt == glz::JSON) {
+                    readPropertyValue<glz::JSON, Opts>(t.defaultValue, t.type, ctx2, it2, end2);
+                } else {
+                    const uint8_t tag = static_cast<uint8_t>(*it2++);
+                    readPropertyValue<Opts>(t.defaultValue, t.type, tag, ctx2, it2, end2);
+                }
+                hasDefaultValue = true;
+            } else if (key == "valid") {
+                if (valueIsNull<Fmt, Opts>(ctx2, it2, end2)) {
+                    skipNull<Fmt, Opts>(ctx2, it2, end2);
+                    t.valid = std::nullopt;
+                    return;
+                }
+                t.valid = std::make_optional<std::vector<PropertyValue>>();
+                forEachArrayElement<Fmt, Opts>(ctx2, it2, end2, [&](auto &&ctx3, auto &&it3, auto &&end3) {
+                    PropertyValue propertyValue;
+                    PropertyType::PropertyType type = t.type;
+                    if constexpr (Fmt == glz::JSON) {
+                        readPropertyValue<glz::JSON, Opts>(propertyValue, type, ctx3, it3, end3);
+                    } else {
+                        const uint8_t tag = static_cast<uint8_t>(*it3++);
+                        readPropertyValue<Opts>(propertyValue, type, tag, ctx3, it3, end3);
+                    }
+                    if (t.type != type) [[unlikely]] {
+                        releasePropertyValue(propertyValue, type);
+                        throw std::runtime_error("error block state property type");
+                    }
+                    t.valid.value().push_back(propertyValue);
+                });
+            } else {
+                glz::skip_value<Fmt>::template op<Opts>(ctx2, it2, end2);
+            }
+        });
+        if (bool(ctx.error)) return;
+        if (!hasDefaultValue) [[unlikely]] {
+            throw std::runtime_error("missing defaultValue in block property");
+        }
+    }
+
+    // 二进制格式（非自描述）：name, type, defaultValue, [valid: bool, uint32, values...]
+    template<auto Opts>
+    void writeBinaryProperty(const Property &t, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(t.name, ctx, b, ix);
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, b, ix);
+        writePropertyValue<CHelper::BinaryFormat, Opts>(t.defaultValue, t.type, ctx, b, ix);
+        const bool hasValid = t.valid.has_value();
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(hasValid, ctx, b, ix);
+        if (hasValid) {
+            glz::serialize<CHelper::BinaryFormat>::template op<Opts>(
+                    static_cast<std::uint32_t>(t.valid.value().size()), ctx, b, ix);
+            for (const auto &item: t.valid.value()) {
+                writePropertyValue<CHelper::BinaryFormat, Opts>(item, t.type, ctx, b, ix);
+            }
+        }
+    }
+
+    template<auto Opts>
+    void readBinaryProperty(Property &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        t.release();
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.name, ctx, it, end);
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, it, end);
+        readBinaryPropertyValue<Opts>(t.defaultValue, t.type, ctx, it, end);
+        bool hasValid = false;
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(hasValid, ctx, it, end);
+        if (hasValid) {
+            std::uint32_t size = 0;
+            glz::parse<CHelper::BinaryFormat>::template op<Opts>(size, ctx, it, end);
+            t.valid = std::make_optional<std::vector<PropertyValue>>();
+            t.valid.value().reserve(size);
+            for (std::uint32_t i = 0; i < size; ++i) {
+                PropertyValue propertyValue;
+                readBinaryPropertyValue<Opts>(propertyValue, t.type, ctx, it, end);
+                t.valid.value().push_back(propertyValue);
+            }
+        } else {
+            t.valid = std::nullopt;
+        }
+    }
+}// namespace CHelper
+
+namespace glz {
+    template<>
+    struct to<JSON, CHelper::PropertyValueWriter> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writePropertyValue<JSON, Opts>(*value.value, value.type, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::PropertyValueWriter> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writePropertyValue<MSGPACK, Opts>(*value.value, value.type, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<JSON, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeProperty<JSON, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeProperty<MSGPACK, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<JSON, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readProperty<JSON, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct from<MSGPACK, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已被分发器消费，回退后由 readProperty 解析 map 头
+            --it;
+            CHelper::readProperty<MSGPACK, Opts>(value, ctx, it, end);
+        }
+    };
+}// namespace glz
+
+namespace CHelper {
+
+    // 携带类型的 BlockPropertyValueDescription 写出视图
+    struct BlockPropertyValueDescriptionWriter {
+        const BlockPropertyValueDescription *value;
+        PropertyType::PropertyType type;
+    };
+
+    // 写出 BlockPropertyDescription（键名与旧版一致：propertyName / description / values{valueName, description}）
+    template<std::uint32_t Fmt, auto Opts>
+    void writeBlockPropertyDescription(const BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        std::vector<BlockPropertyValueDescriptionWriter> values;
+        values.reserve(t.values.size());
+        for (const auto &item: t.values) {
+            values.push_back(BlockPropertyValueDescriptionWriter{&item, t.type});
+        }
+        auto value = glz::obj{"propertyName", t.propertyName, "description", t.description, "values", std::move(values)};
+        glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);
+    }
+
+    // 读取 BlockPropertyDescription：type 由第一个 valueName 的类型判定
+    template<std::uint32_t Fmt, auto Opts>
+    void readBlockPropertyDescription(BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        t.release();
+        bool hasPropertyType = false;
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+            if (key == "propertyName") [[likely]] {
+                glz::parse<Fmt>::template op<Opts>(t.propertyName, ctx2, it2, end2);
+            } else if (key == "description") {
+                if (valueIsNull<Fmt, Opts>(ctx2, it2, end2)) {
+                    skipNull<Fmt, Opts>(ctx2, it2, end2);
+                    t.description = std::nullopt;
+                } else {
+                    t.description.emplace();
+                    glz::parse<Fmt>::template op<Opts>(t.description.value(), ctx2, it2, end2);
+                }
+            } else if (key == "values") [[likely]] {
+                forEachArrayElement<Fmt, Opts>(ctx2, it2, end2, [&](auto &&ctx3, auto &&it3, auto &&end3) {
+                    BlockPropertyValueDescription blockPropertyValueDescription;
+                    PropertyType::PropertyType type = t.type;
+                    bool hasValueName = false;
+                    forEachObjectMember<Fmt, Opts>(ctx3, it3, end3,
+                                                   [&](const std::string &key2, auto &&ctx4, auto &&it4, auto &&end4) {
+                                                       if (key2 == "valueName") [[likely]] {
+                                                           if constexpr (Fmt == glz::JSON) {
+                                                               readPropertyValue<glz::JSON, Opts>(
+                                                                       blockPropertyValueDescription.valueName, type, ctx4,
+                                                                       it4, end4);
+                                                           } else {
+                                                               const uint8_t tag = static_cast<uint8_t>(*it4++);
+                                                               readPropertyValue<Opts>(
+                                                                       blockPropertyValueDescription.valueName, type, tag,
+                                                                       ctx4, it4, end4);
+                                                           }
+                                                           hasValueName = true;
+                                                       } else if (key2 == "description") {
+                                                           if (valueIsNull<Fmt, Opts>(ctx4, it4, end4)) {
+                                                               skipNull<Fmt, Opts>(ctx4, it4, end4);
+                                                               blockPropertyValueDescription.description = std::nullopt;
+                                                           } else {
+                                                               blockPropertyValueDescription.description.emplace();
+                                                               glz::parse<Fmt>::template op<Opts>(
+                                                                       blockPropertyValueDescription.description.value(),
+                                                                       ctx4, it4, end4);
+                                                           }
+                                                       } else {
+                                                           glz::skip_value<Fmt>::template op<Opts>(ctx4, it4, end4);
+                                                       }
+                                                   });
+                    if (bool(ctx3.error)) return;
+                    if (!hasValueName) [[unlikely]] {
+                        throw std::runtime_error("missing valueName in block property value");
+                    }
+                    if (hasPropertyType) [[unlikely]] {
+                        if (t.type != type) [[likely]] {
+                            releasePropertyValue(blockPropertyValueDescription.valueName, type);
+                            throw std::runtime_error("error block state property type");
+                        }
+                    } else {
+                        hasPropertyType = true;
+                        t.type = type;
+                    }
+                    t.values.push_back(std::move(blockPropertyValueDescription));
+                });
+            } else {
+                glz::skip_value<Fmt>::template op<Opts>(ctx2, it2, end2);
+            }
+        });
+    }
+
+    // 二进制格式（非自描述）：propertyName, description, type, values(uint32 + {valueName, description}...)
+    template<auto Opts>
+    void writeBinaryBlockPropertyDescription(const BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&b,
+                                             auto &&ix) {
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(t.propertyName, ctx, b, ix);
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(t.description, ctx, b, ix);
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, b, ix);
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(static_cast<std::uint32_t>(t.values.size()), ctx, b, ix);
+        for (const auto &item: t.values) {
+            writePropertyValue<CHelper::BinaryFormat, Opts>(item.valueName, t.type, ctx, b, ix);
+            glz::serialize<CHelper::BinaryFormat>::template op<Opts>(item.description, ctx, b, ix);
+        }
+    }
+
+    template<auto Opts>
+    void readBinaryBlockPropertyDescription(BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&it,
+                                            auto &&end) {
+        t.release();
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.propertyName, ctx, it, end);
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.description, ctx, it, end);
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, it, end);
+        std::uint32_t size = 0;
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(size, ctx, it, end);
+        t.values.reserve(size);
+        for (std::uint32_t i = 0; i < size; ++i) {
+            BlockPropertyValueDescription blockPropertyValueDescription;
+            readBinaryPropertyValue<Opts>(blockPropertyValueDescription.valueName, t.type, ctx, it, end);
+            glz::parse<CHelper::BinaryFormat>::template op<Opts>(blockPropertyValueDescription.description, ctx, it, end);
+            t.values.push_back(std::move(blockPropertyValueDescription));
+        }
+    }
+}// namespace CHelper
+
+namespace glz {
+    template<>
+    struct to<JSON, CHelper::BlockPropertyValueDescriptionWriter> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            auto inner = glz::obj{"valueName", CHelper::PropertyValueWriter{&value.value->valueName, value.type},
+                                  "description", value.value->description};
+            serialize<JSON>::op<Opts>(inner, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::BlockPropertyValueDescriptionWriter> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            auto inner = glz::obj{"valueName", CHelper::PropertyValueWriter{&value.value->valueName, value.type},
+                                  "description", value.value->description};
+            serialize<MSGPACK>::op<Opts>(inner, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<JSON, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeBlockPropertyDescription<JSON, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeBlockPropertyDescription<MSGPACK, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<JSON, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readBlockPropertyDescription<JSON, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct from<MSGPACK, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已被分发器消费，回退后由 readBlockPropertyDescription 解析 map 头
+            --it;
+            CHelper::readBlockPropertyDescription<MSGPACK, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct to<CHelper::BinaryFormat, CHelper::PropertyValueWriter> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writePropertyValue<CHelper::BinaryFormat, Opts>(*value.value, value.type, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<CHelper::BinaryFormat, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeBinaryProperty<Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<CHelper::BinaryFormat, CHelper::Property> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readBinaryProperty<Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct to<CHelper::BinaryFormat, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeBinaryBlockPropertyDescription<Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<CHelper::BinaryFormat, CHelper::BlockPropertyDescription> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readBinaryBlockPropertyDescription<Opts>(value, ctx, it, end);
+        }
+    };
+}// namespace glz
+
+template<>
+struct glz::meta<CHelper::PerBlockPropertyDescription> {
+    using T = CHelper::PerBlockPropertyDescription;
+    static constexpr auto value = glz::object(&T::blocks, &T::properties);
+};
+
+template<>
+struct glz::meta<CHelper::BlockPropertyDescriptions> {
+    using T = CHelper::BlockPropertyDescriptions;
+    static constexpr auto value = glz::object(&T::common, &T::block);
+};
+
+template<>
+struct glz::meta<CHelper::BlockId> {
+    using T = CHelper::BlockId;
+    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace, &T::properties);
+};
+
+template<>
+struct glz::meta<CHelper::BlockIds> {
+    using T = CHelper::BlockIds;
+    static constexpr auto value = glz::object(&T::blockStateValues, &T::blockPropertyDescriptions);
+};
+
+
+// ================= Old2New 序列化 =================
+namespace CHelper::Old2New {
+
+#ifndef CHELPER_NO_FILESYSTEM
+    inline BlockFixData blockFixDataFromJson(const std::filesystem::path &path) {
+        std::vector<BlockFixEntry> entries;
+        readJsonFromFile(entries, path);
+        BlockFixData blockFixData;
+        for (auto &entry: entries) {
+            auto &dataValueToBlockState = blockFixData.try_emplace(std::move(entry.name)).first->second;
+            dataValueToBlockState.insert_or_assign(entry.data,
+                                                   std::make_pair(std::move(entry.newBlockId),
+                                                                  std::move(entry.blockState)));
+        }
+        return blockFixData;
+    }
+#endif
+
+    inline std::string blockFixDataToBinary(const BlockFixData &blockFixData) {
+        std::string buffer;
+        writeBinary(buffer, blockFixData);
+        return buffer;
+    }
+
+    inline BlockFixData blockFixDataFromBinary(std::string_view buffer) {
+        BlockFixData blockFixData;
+        readBinary(blockFixData, buffer);
+        return blockFixData;
+    }
+}// namespace CHelper::Old2New
+
+// ================= CPack 写出 =================
+#ifndef CHELPER_NO_FILESYSTEM
+namespace CHelper {
+
+    // value 为原始对象，写出前做 JSON 编码
+    template<class T>
+    inline void writeJsonToFileWithCreateDirectory(const std::filesystem::path &path, const T &value) {
+        if (!std::filesystem::exists(path)) {
+            std::filesystem::create_directories(path.parent_path());
+        }
+        std::ofstream os(path, std::ios::binary);
+        if (!os.is_open()) [[unlikely]] {
+            throw std::runtime_error("fail to open file: " + path.string());
+        }
+        os << writeJson(value);
+    }
+
+    // content 为已编码的 JSON 文本，原样写出（非模板重载优先于模板匹配 std::string）
+    inline void writeJsonToFileWithCreateDirectory(const std::filesystem::path &path, const std::string &content) {
+        if (!std::filesystem::exists(path)) {
+            std::filesystem::create_directories(path.parent_path());
+        }
+        std::ofstream os(path, std::ios::binary);
+        if (!os.is_open()) [[unlikely]] {
+            throw std::runtime_error("fail to open file: " + path.string());
+        }
+        os << content;
+    }
+
+    inline void CPack::writeJsonToDirectory(const std::filesystem::path &path) const {
+        writeJsonToFileWithCreateDirectory(path / "manifest.json", manifest);
+        for (const auto &item: normalIds) {
+            const IdEntry entry = NormalIdEntry{item.first, item.second};
+            writeJsonToFileWithCreateDirectory(path / "id" / (item.first + ".json"), entry);
+        }
+        for (const auto &item: namespaceIds) {
+            const IdEntry entry = NamespaceIdEntry{item.first, item.second};
+            writeJsonToFileWithCreateDirectory(path / "id" / (item.first + ".json"), entry);
+        }
+        {
+            const IdEntry entry = ItemIdsEntry{"item", itemIds};
+            writeJsonToFileWithCreateDirectory(path / "id" / "items.json", entry);
+        }
+        {
+            const IdEntry entry = BlockIdsEntry{"block", blockIds};
+            writeJsonToFileWithCreateDirectory(path / "id" / "block.json", entry);
+        }
+        for (const auto &item: jsonNodes) {
+            writeJsonToFileWithCreateDirectory(path / "json" / (item.id.value() + ".json"), item);
+        }
+        for (const auto &item: repeatNodeData) {
+            writeJsonToFileWithCreateDirectory(path / "repeat" / (item.id + ".json"), item);
+        }
+        for (const auto &item: *commands) {
+            writeJsonToFileWithCreateDirectory(path / "command" / (utf8::utf16to8(item.name[0]) + ".json"), item);
+        }
+    }
+
+    inline std::string CPack::toJson() const {
+        std::vector<IdEntry> idEntries;
+        idEntries.reserve(normalIds.size() + namespaceIds.size() + 2);
+        for (const auto &item: normalIds) {
+            idEntries.push_back(NormalIdEntry{item.first, item.second});
+        }
+        for (const auto &item: namespaceIds) {
+            idEntries.push_back(NamespaceIdEntry{item.first, item.second});
+        }
+        idEntries.push_back(ItemIdsEntry{"item", itemIds});
+        idEntries.push_back(BlockIdsEntry{"block", blockIds});
+        // jsonNodes 不可拷贝（FreeableNodeWithTypes），通过引用写出
+        auto value = glz::obj{"manifest", manifest, "id", idEntries, "json", jsonNodes, "repeat", repeatNodeData,
+                              "command", *commands};
+        return writeJson(value);
+    }
+
+    inline void CPack::writeJsonToFile(const std::filesystem::path &path) const {
+        writeJsonToFileWithCreateDirectory(path, toJson());
+    }
+
+    inline void CPack::writeBinToFile(const std::filesystem::path &path) const {
+        std::filesystem::create_directories(path.parent_path());
+        Profile::push("writing binary cpack to file: {}", FORMAT_ARG(path.string()));
+        std::string buffer;
+        // 按 CPackData 的 meta 成员顺序顺序写出（jsonNodes 不可拷贝，直接引用写出）
+        glz::context ctx{};
+        if (buffer.size() < 2 * glz::write_padding_bytes) {
+            buffer.resize(2 * glz::write_padding_bytes);
+        }
+        size_t ix = 0;
+        auto writeOne = [&](auto &&value) {
+            glz::serialize<CHelper::BinaryFormat>::template op<glz::opts{}>(value, ctx, buffer, ix);
+            if (bool(ctx.error)) [[unlikely]] {
+                throw std::runtime_error("fail to write binary");
+            }
+        };
+        writeOne(manifest);
+        writeOne(normalIds);
+        writeOne(namespaceIds);
+        writeOne(itemIds);
+        writeOne(blockIds);
+        writeOne(jsonNodes);
+        writeOne(repeatNodeData);
+        // commands 需以 shared_ptr 形式写出（带存在标记），与 CPackData 的反射读取对应
+        writeOne(commands);
+        buffer.resize(ix);
+        std::ofstream ostream(path, std::ios::binary);
+        if (!ostream.is_open()) [[unlikely]] {
+            Profile::pop();
+            throw std::runtime_error("fail to open file: " + path.string());
+        }
+        ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        ostream.close();
+        Profile::pop();
+    }
+}// namespace CHelper
+#endif
+
+// ================= CPack 读取（唯一允许构建 CPack 的入口） =================
+namespace CHelper::serialization {
+
+#ifndef CHELPER_NO_FILESYSTEM
+    inline std::unique_ptr<CPack> createCPackByDirectory(const std::filesystem::path &path) {
+        Profile::push("start load CPack by DIRECTORY: {}", FORMAT_ARG(path.string()));
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        size_t stackSize = Profile::stack.size();
+#endif
+        auto cpack = std::unique_ptr<CPack>(new CPack());
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        Profile::push("loading manifest");
+        readJsonFromFile(cpack->manifest, path / "manifest.json");
+        Profile::next("loading id data");
+        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "id")) {
+            Profile::next(R"(loading id data in path "{}")", FORMAT_ARG(file.path().string()));
+            IdEntry entry;
+            readJsonFromFile(entry, file.path());
+            cpack->applyId(entry);
+        }
+        Profile::next("loading json data");
+        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "json")) {
+            Profile::next(R"(loading json data in path "{}")", FORMAT_ARG(file.path().string()));
+            Node::NodeJsonElement item;
+            readJsonFromFile(item, file.path());
+            cpack->applyJson(std::move(item));
+        }
+        Profile::next("loading repeat data");
+        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
+        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "repeat")) {
+            Profile::next(R"(loading repeat data in path "{}")", FORMAT_ARG(file.path().string()));
+            Node::RepeatData item;
+            readJsonFromFile(item, file.path());
+            cpack->applyRepeat(std::move(item));
+        }
+        Profile::next("loading commands");
+        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "command")) {
+            Profile::next(R"(loading command in path "{}")", FORMAT_ARG(file.path().string()));
+            Node::NodePerCommand item;
+            readJsonFromFile(item, file.path());
+            cpack->applyCommand(std::move(item));
+        }
+        Profile::next("init cpack");
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        cpack->afterApply();
+        Profile::pop();
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        if (Profile::stack.size() != stackSize) [[unlikely]] {
+            SPDLOG_WARN("error profile stack after loading cpack");
+        }
+#endif
+        Profile::pop();
+        return cpack;
+    }
+
+    inline std::unique_ptr<CPack> createCPackByJsonFile(const std::filesystem::path &cpackPath) {
+        return createCPackByJson(readFileToString(cpackPath));
+    }
+#endif
+
+    inline std::unique_ptr<CPack> createCPackByJson(const std::string &json) {
+        Profile::push("start load CPack by JSON");
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        size_t stackSize = Profile::stack.size();
+#endif
+        // 单文件格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        CPackJsonData data;
+        readJson(data, json);
+        auto cpack = std::unique_ptr<CPack>(new CPack());
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        Profile::push("loading manifest");
+        cpack->manifest = std::move(data.manifest);
+        Profile::next("loading id data");
+        for (const auto &entry: data.id) {
+            cpack->applyId(entry);
+        }
+        Profile::next("loading json data");
+        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        for (auto &item: data.json) {
+            cpack->applyJson(std::move(item));
+        }
+        Profile::next("loading repeat data");
+        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
+        for (auto &item: data.repeat) {
+            cpack->applyRepeat(std::move(item));
+        }
+        Profile::next("loading command data");
+        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+        for (auto &item: data.command) {
+            cpack->applyCommand(std::move(item));
+        }
+        Profile::next("init cpack");
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        cpack->afterApply();
+        Profile::pop();
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        if (Profile::stack.size() != stackSize) [[unlikely]] {
+            SPDLOG_WARN("error profile stack after loading cpack");
+        }
+#endif
+        Profile::pop();
+        return cpack;
+    }
+
+    inline std::unique_ptr<CPack> createCPackByBinary(std::string_view data) {
+        Profile::push("start load CPack by binary");
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        size_t stackSize = Profile::stack.size();
+#endif
+        // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        CPackData cpackData;
+        readBinary(cpackData, data);
+        auto cpack = std::unique_ptr<CPack>(new CPack());
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        Profile::push("loading manifest");
+        cpack->manifest = std::move(cpackData.manifest);
+        Profile::next("loading normal id data");
+        cpack->normalIds = std::move(cpackData.normalIds);
+        Profile::next("loading namespace id data");
+        cpack->namespaceIds = std::move(cpackData.namespaceIds);
+        Profile::next("loading item id data");
+        cpack->itemIds = std::move(cpackData.itemIds);
+        Profile::next("loading block id data");
+        cpack->blockIds = std::move(cpackData.blockIds);
+        Profile::next("loading json data");
+        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
+        cpack->jsonNodes = std::move(cpackData.jsonNodes);
+        Profile::next("loading repeat data");
+        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
+        cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
+        Profile::next("loading command data");
+        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+        cpack->commands = std::move(cpackData.commands);
+        Profile::next("init cpack");
+        currentCreateStage = Node::NodeCreateStage::NONE;
+        cpack->afterApply();
+        Profile::pop();
+#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
+        if (Profile::stack.size() != stackSize) [[unlikely]] {
+            SPDLOG_WARN("error profile stack after loading cpack");
+        }
+#endif
+        Profile::pop();
+        return cpack;
+    }
+}// namespace CHelper::serialization
 
 #endif//CHELPER_SERIALIZATION_H

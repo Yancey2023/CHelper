@@ -22,10 +22,10 @@
 #define CHELPER_CPACK_H
 
 #include <chelper/node/CommandNode.h>
+#include <chelper/node/NodeType.h>
 #include <chelper/resources/Manifest.h>
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
-#include <chelper/serialization/Serialization.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -76,96 +76,37 @@ namespace CHelper {
 
 }// namespace CHelper
 
-template<>
-struct glz::meta<CHelper::NormalIdEntry> {
-    using T = CHelper::NormalIdEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
-};
-
-template<>
-struct glz::meta<CHelper::NamespaceIdEntry> {
-    using T = CHelper::NamespaceIdEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
-};
-
-template<>
-struct glz::meta<CHelper::BlockIdsEntry> {
-    using T = CHelper::BlockIdsEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
-};
-
-template<>
-struct glz::meta<CHelper::ItemIdsEntry> {
-    using T = CHelper::ItemIdsEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
-};
-
-template<>
-struct glz::meta<CHelper::IdEntry> {
-    static constexpr std::string_view tag = "type";
-    static constexpr auto ids = std::array{"normal", "namespace", "block", "item"};
-};
-
-template<>
-struct glz::meta<CHelper::CPackJsonData> {
-    using T = CHelper::CPackJsonData;
-    static constexpr auto value = glz::object(&T::manifest, &T::id, &T::json, &T::repeat, &T::command);
-};
-
-template<>
-struct glz::meta<CHelper::CPackData> {
-    using T = CHelper::CPackData;
-    static constexpr auto value = glz::object(&T::manifest, &T::normalIds, &T::namespaceIds, &T::itemIds, &T::blockIds, &T::jsonNodes, &T::repeatNodeData, &T::commands);
-};
-
-// IdEntry 变体的二进制格式支持：uint8 备选索引 + 备选值（非自描述）
-template<>
-struct glz::to<CHelper::BinaryFormat, CHelper::IdEntry> {
-    template<auto Opts>
-    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-        const std::uint8_t index = static_cast<std::uint8_t>(value.index());
-        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(index, ctx, b, ix);
-        std::visit([&](const auto &alt) {
-            glz::serialize<CHelper::BinaryFormat>::template op<Opts>(alt, ctx, b, ix);
-        },
-                   value);
-    }
-};
-
-template<>
-struct glz::from<CHelper::BinaryFormat, CHelper::IdEntry> {
-    template<auto Opts>
-    static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-        std::uint8_t index = 0;
-        glz::parse<CHelper::BinaryFormat>::template op<Opts>(index, ctx, it, end);
-        if (bool(ctx.error)) return;
-        switch (index) {
-            case 0:
-                value.template emplace<0>();
-                break;
-            case 1:
-                value.template emplace<1>();
-                break;
-            case 2:
-                value.template emplace<2>();
-                break;
-            case 3:
-                value.template emplace<3>();
-                break;
-            default:
-                ctx.error = glz::error_code::no_matching_variant_type;
-                return;
-        }
-        std::visit([&](auto &alt) {
-            glz::parse<CHelper::BinaryFormat>::template op<Opts>(alt, ctx, it, end);
-        },
-                   value);
-    }
-};
 
 namespace CHelper {
 
+    // CPack 的读取函数（唯一允许构建 CPack 的入口），定义在 Serialization.h
+    namespace serialization {
+#ifndef CHELPER_NO_FILESYSTEM
+        std::unique_ptr<CPack> createCPackByDirectory(const std::filesystem::path &path);
+
+        std::unique_ptr<CPack> createCPackByJsonFile(const std::filesystem::path &cpackPath);
+#endif
+
+        std::unique_ptr<CPack> createCPackByJson(const std::string &json);
+
+        std::unique_ptr<CPack> createCPackByBinary(std::string_view data);
+    }// namespace serialization
+
     class CPack {
+    private:
+        // 默认构造不做任何工作，成员由 Serialization.h 的读取函数填充
+        CPack() = default;
+
+#ifndef CHELPER_NO_FILESYSTEM
+        friend std::unique_ptr<CPack> serialization::createCPackByDirectory(const std::filesystem::path &path);
+
+        friend std::unique_ptr<CPack> serialization::createCPackByJsonFile(const std::filesystem::path &cpackPath);
+#endif
+
+        friend std::unique_ptr<CPack> serialization::createCPackByJson(const std::string &json);
+
+        friend std::unique_ptr<CPack> serialization::createCPackByBinary(std::string_view data);
+
     public:
         Manifest manifest;
         std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>> normalIds;
@@ -199,24 +140,6 @@ namespace CHelper {
         void afterApply();
 
     public:
-#ifndef CHELPER_NO_FILESYSTEM
-        explicit CPack(const std::filesystem::path &path);
-#endif
-
-        explicit CPack(CPackJsonData &&data);
-
-        explicit CPack(CPackData &&data);
-
-#ifndef CHELPER_NO_FILESYSTEM
-        static std::unique_ptr<CPack> createByDirectory(const std::filesystem::path &path);
-
-        static std::unique_ptr<CPack> createByJson(const std::filesystem::path &cpackPath);
-#endif
-
-        static std::unique_ptr<CPack> createByBinary(std::string_view data);
-
-        static std::unique_ptr<CPack> createByJson(const std::string &json);
-
 #ifndef CHELPER_NO_FILESYSTEM
         void writeJsonToDirectory(const std::filesystem::path &path) const;
 #endif

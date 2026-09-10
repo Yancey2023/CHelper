@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include <chelper/old2new/Old2New.h>
+#include <chelper/serialization/Serialization.h>
 
 namespace CHelper::Test {
 

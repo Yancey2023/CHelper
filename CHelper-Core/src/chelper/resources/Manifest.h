@@ -35,10 +35,5 @@ namespace CHelper {
 
 }// namespace CHelper
 
-template<>
-struct glz::meta<CHelper::Manifest> {
-    using T = CHelper::Manifest;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::version, &T::versionType, &T::branch, &T::author, &T::updateDate, &T::packId, &T::versionCode, &T::isBasicPack, &T::isDefault);
-};
 
 #endif//CHELPER_MANIFEST_H

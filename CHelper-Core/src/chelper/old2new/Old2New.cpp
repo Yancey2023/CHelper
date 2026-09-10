@@ -18,13 +18,7 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/old2new/Old2New.h>
-#include <chelper/serialization/Serialization.h>
 
-template<>
-struct glz::meta<CHelper::Old2New::BlockFixEntry> {
-    using T = CHelper::Old2New::BlockFixEntry;
-    static constexpr auto value = glz::object(&T::name, &T::data, &T::newBlockId, &T::blockState);
-};
 
 namespace CHelper::Old2New {
 
@@ -645,34 +639,6 @@ namespace CHelper::Old2New {
         }
         result.append(tokenReader.lexerResult->content.substr(index));
         return result;
-    }
-
-#ifndef CHELPER_NO_FILESYSTEM
-    BlockFixData blockFixDataFromJson(const std::filesystem::path &path) {
-        std::vector<BlockFixEntry> entries;
-        CHelper::readJsonFromFile(entries, path);
-        BlockFixData blockFixData;
-        for (auto &entry: entries) {
-            auto &dataValueToBlockState = blockFixData.try_emplace(std::move(entry.name)).first->second;
-            dataValueToBlockState.insert_or_assign(entry.data,
-                                                   std::make_pair(std::move(entry.newBlockId),
-                                                                  std::move(entry.blockState)));
-        }
-        return blockFixData;
-    }
-#endif
-
-    // 二进制格式直接序列化嵌套 map（方块名只写一次，与旧版二进制布局一致）
-    std::string blockFixDataToBinary(const BlockFixData &blockFixData) {
-        std::string buffer;
-        CHelper::writeBinary(buffer, blockFixData);
-        return buffer;
-    }
-
-    BlockFixData blockFixDataFromBinary(std::string_view buffer) {
-        BlockFixData blockFixData;
-        CHelper::readBinary(blockFixData, buffer);
-        return blockFixData;
     }
 
 }// namespace CHelper::Old2New

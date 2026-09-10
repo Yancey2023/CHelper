@@ -22,6 +22,7 @@
 #define CHELPER_CPACK_TEST_HELPER_H
 
 #include <chelper/CHelperCore.h>
+#include <chelper/serialization/Serialization.h>
 #include <chelper/util/Profile.h>
 #include <gtest/gtest.h>
 
@@ -72,7 +73,7 @@ namespace CHelper::Test {
      */
     inline bool tryCreateCpack(const std::string &json, std::unique_ptr<CPack> &out) {
         try {
-            out = CPack::createByJson(json);
+            out = CHelper::serialization::createCPackByJson(json);
             return true;
         } catch (const std::exception &e) {
             Profile::printAndClear(e);

@@ -151,9 +151,7 @@ Java_yancey_chelper_core_CHelperCore_create0(
             char *buffer = new char[dataFileSize];
             int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
             AAsset_close(asset);
-            CHelper::CHelperCore *core = CHelper::CHelperCore::create([&buffer, &numBytesRead]() {
-                return CHelper::CPack::createByBinary(std::string_view(buffer, numBytesRead));
-            });
+            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(buffer, numBytesRead));
             delete[] buffer;
             return reinterpret_cast<jlong>(core);
         }
