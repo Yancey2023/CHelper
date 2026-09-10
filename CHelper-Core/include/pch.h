@@ -303,6 +303,7 @@
 #define XXH_STATIC_LINKING_ONLY
 #include <xxhash.h>
 // UTF编码处理
+#include <chelper/util/Utf8.h>
 #include <utf8.h>
 // 序列化（glaze：JSON / BEVE / CBOR / BSON / MessagePack 等 + 自定义二进制格式）
 #include <glaze/bson.hpp>

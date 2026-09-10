@@ -54,6 +54,8 @@ namespace CHelper {
 }// namespace CHelper
 
 // ================= std::u16string 支持（JSON / MessagePack，UTF-8 转换） =================
+// 转换函数必须写全限定名 ::CHelper::U16Conv::。这里在 glz 命名空间内，
+// MSVC 的非限定查找不会继续向外找到 CHelper，会直接报 identifier not found
 namespace glz {
     template<>
     struct from<JSON, std::u16string> {
@@ -61,7 +63,7 @@ namespace glz {
         static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             std::string utf8;
             parse<JSON>::op<Opts>(utf8, ctx, it, end);
-            value = utf8::utf8to16(utf8);
+            value = ::CHelper::U16Conv::toU16(utf8);
         }
     };
 
@@ -80,7 +82,7 @@ namespace glz {
             // tag 已由分发器消费，直接交给 std::string 读取
             std::string utf8;
             from<MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
-            value = utf8::utf8to16(utf8);
+            value = ::CHelper::U16Conv::toU16(utf8);
         }
     };
 
@@ -100,7 +102,7 @@ namespace glz {
         static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {              \
             std::string utf8;                                                                                   \
             parse<Fmt>::template op<Opts>(utf8, ctx, it, end);                                                  \
-            value = utf8::utf8to16(utf8);                                                                       \
+            value = ::CHelper::U16Conv::toU16(utf8);                                                            \
         }                                                                                                       \
     };                                                                                                          \
     template<>                                                                                                  \
@@ -127,7 +129,7 @@ namespace glz {
         static void op(std::u16string &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             std::string utf8;
             from<BSON, std::string>::template op<Opts>(utf8, tag, ctx, it, end);
-            value = utf8::utf8to16(utf8);
+            value = ::CHelper::U16Conv::toU16(utf8);
         }
     };
 
@@ -2218,7 +2220,7 @@ namespace CHelper {
             v.string = new std::u16string();
             std::string utf8;
             glz::from<glz::MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
-            *v.string = utf8::utf8to16(utf8);
+            *v.string = ::CHelper::U16Conv::toU16(utf8);
         } else if (tag == 0xc2 || tag == 0xc3) [[likely]] {
             type = PropertyType::BOOLEAN;
             v.boolean = tag == 0xc3;

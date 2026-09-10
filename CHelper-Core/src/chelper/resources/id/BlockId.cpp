@@ -257,7 +257,7 @@ namespace CHelper {
             case PropertyType::INTEGER:
                 return new Node::NodeText(
                         "BLOCK_STATE_ENTRY_VALUE_INTEGER", u"方块状态键值对的键（整数）",
-                        NormalId::make(utf8::utf8to16(std::to_string(blockPropertyValueDescription.valueName.integer)), description),
+                        NormalId::make(::CHelper::U16Conv::toU16(std::to_string(blockPropertyValueDescription.valueName.integer)), description),
                         [](const Node::NodeWithType &node1, TokenReader &tokenReader) -> ASTNode {
                             return tokenReader.readIntegerASTNode(node1);
                         });
@@ -351,19 +351,20 @@ namespace CHelper {
                 blockStateEntryChildNode2.reserve(2);
                 std::vector<Node::NodeWithType> blockStateEntryChildNode1;
                 blockStateEntryChildNode1.reserve(properties.value().size());
-                std::ranges::transform(properties.value(),
-                               std::back_inserter(blockStateEntryChildNode1),
-                               [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
-                                   const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
-                                           getIdWithNamespace()->name,
-                                           name,
-                                           item.name);
-                                   Node::NodeEntry *result = getBlockStateNode(
-                                           nodeChildren.nodes, blockPropertyDescription,
-                                           item.defaultValue, item.valid);
-                                   nodeChildren.nodes.emplace_back(*result);
-                                   return *result;
-                               });
+                std::ranges::transform(
+                    properties.value(),
+                    std::back_inserter(blockStateEntryChildNode1),
+                    [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
+                        const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
+                                getIdWithNamespace()->name,
+                                name,
+                                item.name);
+                        Node::NodeEntry *result = getBlockStateNode(
+                                nodeChildren.nodes, blockPropertyDescription,
+                                item.defaultValue, item.valid);
+                        nodeChildren.nodes.emplace_back(*result);
+                        return *result;
+                    });
                 auto nodeChild = new Node::NodeOr(std::move(blockStateEntryChildNode1), false);
                 blockStateEntryChildNode2.emplace_back(*nodeChild);
                 nodeChildren.nodes.emplace_back(*nodeChild);

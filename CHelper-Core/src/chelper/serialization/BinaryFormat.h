@@ -182,7 +182,7 @@ namespace glz {
             if constexpr (std::is_same_v<T, std::string>) {
                 value = utf8;
             } else {
-                value = utf8::utf8to16(utf8);
+                value = CHelper::U16Conv::toU16(utf8);
             }
         }
     };
