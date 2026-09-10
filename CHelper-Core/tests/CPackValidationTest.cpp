@@ -171,6 +171,51 @@ namespace CHelper::Test {
         }
     }
 
+    TEST(CPackValidationTest, PeekNodeTypeName) {
+        //写入端把 "type" 固定放在第一个成员，节点读取靠预读第一个成员直接取到类型名，
+        //因此预读必须命中该布局；顺序不同时返回 false，由完整扫描兜底
+        constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
+        NodeReadContext ctx;
+        {
+            std::string json = R"({"type": "JSON_NULL", "id": "N"})";
+            std::string_view typeName;
+            auto it = json.data();
+            const auto end = json.data() + json.size();
+            EXPECT_TRUE((peekNodeTypeName<glz::JSON, opts>(typeName, ctx, it, end)));
+            EXPECT_EQ(typeName, "JSON_NULL");
+        }
+        {
+            std::string json = R"({"id": "N", "type": "JSON_NULL"})";
+            std::string_view typeName;
+            auto it = json.data();
+            const auto end = json.data() + json.size();
+            EXPECT_FALSE((peekNodeTypeName<glz::JSON, opts>(typeName, ctx, it, end)));
+        }
+        {
+            std::string msgpack;
+            auto obj = glz::obj{"type", "JSON_NULL", "id", "N"};
+            EXPECT_FALSE(bool(glz::write_msgpack(obj, msgpack)));
+            std::string_view typeName;
+            auto it = msgpack.data();
+            const auto end = msgpack.data() + msgpack.size();
+            EXPECT_TRUE((peekNodeTypeName<glz::MSGPACK, opts>(typeName, ctx, it, end)));
+            EXPECT_EQ(typeName, "JSON_NULL");
+        }
+    }
+
+    TEST(CPackValidationTest, NodeTypeNotFirst) {
+        //"type" 不在第一个成员时回退到完整扫描，节点仍然要能被正确读取
+        std::unique_ptr<CPack> cpack;
+        EXPECT_TRUE(tryCreateCpack(makeCpackJson(R"([
+            {"id": "json1", "start": "N", "node": [
+              {"id": "N", "description": "null", "type": "JSON_NULL"}
+            ]}
+          ])"),
+                                   cpack));
+        ASSERT_NE(cpack, nullptr);
+        EXPECT_EQ(cpack->jsonNodes.size(), size_t{1});
+    }
+
     TEST(CPackValidationTest, ConcurrentCpackCreation) {
         //多个线程同时创建CPack：任何一个线程的加载阶段都不能影响其他线程，
         //否则后完成的线程会把自己的阶段覆盖到正在读取节点的线程上，导致加载随机失败

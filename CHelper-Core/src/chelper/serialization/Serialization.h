@@ -1206,11 +1206,13 @@ namespace CHelper {
             if (tag >= 0x80 && tag <= 0x8f) {
                 size = tag & 0x0f;
             } else if (tag == 0xde) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                it += 2;
             } else if (tag == 0xdf) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                it += 4;
             } else [[unlikely]] {
                 ctx.error = glz::error_code::syntax_error;
                 return false;
@@ -1255,7 +1257,7 @@ namespace CHelper {
         break;                                                                                                       \
     }
 
-    // 第二遍：按具体节点类型反序列化
+    // 按具体节点类型反序列化（由预读或完整扫描得到类型名后分派）
     template<std::uint32_t Fmt, auto Opts>
     inline void readNodeValue(Node::NodeWithType &t, const std::string_view typeName, glz::is_context auto &&ctx, auto &&it,
                               auto &&end) {
@@ -1271,11 +1273,135 @@ namespace CHelper {
         }
     }
 
-    // 节点对象反序列化：第一遍提取 "type"，第二遍重置迭代器按具体类型读取
+    // 预读一个不含转义的字符串（JSON 键名/类型名、msgpack str）：
+    // 含转义、长度不足或不是字符串时返回 false，由调用方回退到完整扫描
+    template<std::uint32_t Fmt>
+    inline bool peekString(std::string_view &result, auto &it, const auto &end) {
+        if constexpr (Fmt == glz::JSON) {
+            if (it >= end || *it != '"') {
+                return false;
+            }
+            ++it;
+            const auto *start = it;
+            while (it < end && *it != '"') {
+                if (*it == '\\') {
+                    return false;
+                }
+                ++it;
+            }
+            if (it >= end) {
+                return false;
+            }
+            result = std::string_view(start, static_cast<size_t>(it - start));
+            ++it;
+            return true;
+        } else {
+            // MSGPACK：fixstr / str8 / str16 / str32
+            if (it >= end) {
+                return false;
+            }
+            const uint8_t tag = static_cast<uint8_t>(*it++);
+            uint32_t size = 0;
+            if (tag >= 0xa0 && tag <= 0xbf) {
+                size = tag & 0x1f;
+            } else if (tag == 0xd9) {
+                if (it >= end) return false;
+                size = static_cast<uint8_t>(*it++);
+            } else if (tag == 0xda) {
+                if (it + 2 > end) return false;
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                it += 2;
+            } else if (tag == 0xdb) {
+                if (it + 4 > end) return false;
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                it += 4;
+            } else {
+                return false;
+            }
+            if (it + size > end) {
+                return false;
+            }
+            result = std::string_view(it, size);
+            it += size;
+            return true;
+        }
+    }
+
+    // 预读节点对象的第一个成员：写出端固定把 "type" 放在最前，
+    // 命中即可直接取得类型名，无需为了找 "type" 而完整扫描整个节点对象。
+    // 未命中（成员顺序不同、含转义、格式错误等）返回 false，由调用方回退到完整扫描；
+    // 预读只是试探，失败时不改变 ctx.error，迭代器由调用方重置
+    template<std::uint32_t Fmt, auto Opts>
+    inline bool peekNodeTypeName(std::string_view &typeName, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        const auto savedError = ctx.error;
+        bool found = false;
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (!bool(ctx.error) && it < end && *it == '{') {
+                ++it;
+                glz::skip_ws<Opts>(ctx, it, end);
+                std::string_view key;
+                if (!bool(ctx.error) && peekString<Fmt>(key, it, end) && key == "type") {
+                    glz::skip_ws<Opts>(ctx, it, end);
+                    if (!bool(ctx.error) && it < end && *it == ':') {
+                        ++it;
+                        glz::skip_ws<Opts>(ctx, it, end);
+                        found = !bool(ctx.error) && peekString<Fmt>(typeName, it, end);
+                    }
+                }
+            }
+        } else {
+            // MSGPACK：map 头 + 第一个键
+            if (it < end) {
+                const uint8_t tag = static_cast<uint8_t>(*it++);
+                uint32_t size = 0;
+                bool isMap = true;
+                if (tag >= 0x80 && tag <= 0x8f) {
+                    size = tag & 0x0f;
+                } else if (tag == 0xde) {
+                    if (it + 2 > end) {
+                        isMap = false;
+                    } else {
+                        size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                        it += 2;
+                    }
+                } else if (tag == 0xdf) {
+                    if (it + 4 > end) {
+                        isMap = false;
+                    } else {
+                        size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
+                               (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
+                               (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                        it += 4;
+                    }
+                } else {
+                    isMap = false;
+                }
+                std::string_view key;
+                if (isMap && size > 0 && peekString<Fmt>(key, it, end) && key == "type") {
+                    found = peekString<Fmt>(typeName, it, end);
+                }
+            }
+        }
+        ctx.error = savedError;
+        return found;
+    }
+
+    // 节点对象反序列化：写出端固定把 "type" 放在最前，因此先预读第一个成员即可确定类型，
+    // 整个节点只被完整解析一次；顺序不同或无法预读时回退到完整扫描（扫描 + 重置迭代器重读）
     template<std::uint32_t Fmt, auto Opts>
     inline void readNodeWithType(Node::NodeWithType &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
         const auto start = it;
+        std::string_view peekedTypeName;
+        if (peekNodeTypeName<Fmt, opts>(peekedTypeName, ctx, it, end)) {
+            it = start;
+            readNodeValue<Fmt, opts>(t, peekedTypeName, ctx, it, end);
+            return;
+        }
+        it = start;
         std::string typeName;
         if (!scanNodeTypeName<Fmt, opts>(typeName, ctx, it, end)) return;
         it = start;
@@ -1312,7 +1438,7 @@ namespace glz {
     struct from<MSGPACK, CHelper::Node::NodeWithType> {
         template<auto Opts>
         static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-            // tag 已被分发器消费，回退一个字节后统一走两遍读取
+            // tag 已被分发器消费，回退一个字节后走与 JSON 相同的节点读取路径
             --it;
             CHelper::readNodeWithType<MSGPACK, Opts>(value, ctx, it, end);
         }
@@ -1518,16 +1644,6 @@ namespace CHelper::Node {
         std::vector<uint32_t> next;
     };
 
-    struct NodePerCommandWire {
-        std::vector<std::u16string> name;
-        std::optional<std::u16string> description;
-        std::vector<std::u16string> syntax;
-        glz::ordered_small_map<NodeWithType> node;
-        // 预解析的节点图（仅 msgpack 格式包含；JSON 格式由 syntax 重建）
-        std::optional<std::vector<WrappedNodeWire>> wrappedNodes;
-        std::optional<std::vector<uint32_t>> startNodes;
-    };
-
     // 由 syntax 字符串构建语法树（JSON 格式路径，与旧版逻辑一致）
     inline void buildNodePerCommandTrie(NodePerCommand &t) {
         //id map: token string -> node definition
@@ -1671,64 +1787,32 @@ namespace CHelper::Node {
         }
     }
 
-    inline void nodePerCommandFromWire(NodePerCommand &t, NodePerCommandWire &&wire) {
-        t.name = std::move(wire.name);
-        if (t.name.empty()) [[unlikely]] {
-            throw std::runtime_error("command size cannot be zero");
-        }
-        t.description = std::move(wire.description);
-        t.syntax = std::move(wire.syntax);
-        t.nodes.nodes.reserve(wire.node.size());
-        for (auto &[key, node]: wire.node) {
-            // 键即节点 id，写回节点数据
-            static_cast<NodeSerializable *>(node.data)->id = key;
-            t.nodes.nodes.push_back(std::move(node));
-        }
-        if (wire.wrappedNodes.has_value()) {
-            buildNodePerCommandGraph(t, wire.wrappedNodes.value(),
-                                     wire.startNodes.value_or(std::vector<uint32_t>{}));
-        } else {
-            buildNodePerCommandTrie(t);
-        }
-    }
-
-    inline void nodePerCommandToWire(const NodePerCommand &t, NodePerCommandWire &wire, const bool includeGraph) {
-        wire.name = t.name;
-        wire.description = t.description;
-        wire.syntax = t.syntax;
-        for (const auto &node: t.nodes.nodes) {
-            const auto *serializable = static_cast<const NodeSerializable *>(node.data);
-            if (serializable->id.has_value()) {
-                wire.node.emplace(*serializable->id, node);
-            }
-        }
-        if (includeGraph) {
-            auto &wrapped = wire.wrappedNodes.emplace();
-            wrapped.reserve(t.wrappedNodes.size());
-            for (const auto &wrappedNode: t.wrappedNodes) {
-                auto &item = wrapped.emplace_back();
-                for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
-                    if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
-                        item.definition = static_cast<int32_t>(i);
-                        break;
-                    }
-                }
-                for (const auto *next: wrappedNode.nextNodes) {
-                    if (next == NodeLF::getInstance()) {
-                        item.next.push_back(UINT32_MAX);
-                    } else {
-                        item.next.push_back(static_cast<uint32_t>(next - t.wrappedNodes.data()));
-                    }
+    // 由内存中的节点图（指针）生成写出的紧凑表示：定义/后继/起始都用下标表示
+    inline void buildNodePerCommandWireGraph(const NodePerCommand &t, std::vector<WrappedNodeWire> &wrapped,
+                                             std::vector<uint32_t> &starts) {
+        wrapped.reserve(t.wrappedNodes.size());
+        for (const auto &wrappedNode: t.wrappedNodes) {
+            auto &item = wrapped.emplace_back();
+            for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
+                if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
+                    item.definition = static_cast<int32_t>(i);
+                    break;
                 }
             }
-            auto &starts = wire.startNodes.emplace();
-            starts.reserve(t.startNodes.size());
-            for (const auto *start: t.startNodes) {
-                if (start == NodeLF::getInstance()) {
-                    starts.push_back(UINT32_MAX);
+            for (const auto *next: wrappedNode.nextNodes) {
+                if (next == NodeLF::getInstance()) {
+                    item.next.push_back(UINT32_MAX);
                 } else {
-                    starts.push_back(static_cast<uint32_t>(start - t.wrappedNodes.data()));
+                    item.next.push_back(static_cast<uint32_t>(next - t.wrappedNodes.data()));
                 }
+            }
+        }
+        starts.reserve(t.startNodes.size());
+        for (const auto *start: t.startNodes) {
+            if (start == NodeLF::getInstance()) {
+                starts.push_back(UINT32_MAX);
+            } else {
+                starts.push_back(static_cast<uint32_t>(start - t.wrappedNodes.data()));
             }
         }
     }
@@ -1740,57 +1824,7 @@ struct glz::meta<CHelper::Node::WrappedNodeWire> {
     static constexpr auto value = glz::object(&T::definition, &T::next);
 };
 
-template<>
-struct glz::meta<CHelper::Node::NodePerCommandWire> {
-    using T = CHelper::Node::NodePerCommandWire;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::syntax, &T::node, &T::wrappedNodes, &T::startNodes);
-};
-
 namespace glz {
-    template<>
-    struct to<JSON, CHelper::Node::NodePerCommand> {
-        template<auto Opts>
-        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            CHelper::Node::NodePerCommandWire wire;
-            CHelper::Node::nodePerCommandToWire(value, wire, false);
-            serialize<JSON>::op<Opts>(wire, ctx, b, ix);
-        }
-    };
-
-    template<>
-    struct to<MSGPACK, CHelper::Node::NodePerCommand> {
-        template<auto Opts>
-        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            CHelper::Node::NodePerCommandWire wire;
-            CHelper::Node::nodePerCommandToWire(value, wire, true);
-            serialize<MSGPACK>::op<Opts>(wire, ctx, b, ix);
-        }
-    };
-
-    template<>
-    struct from<JSON, CHelper::Node::NodePerCommand> {
-        template<auto Opts>
-        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-            CHelper::Node::NodePerCommandWire wire;
-            parse<JSON>::op<Opts>(wire, ctx, it, end);
-            if (bool(ctx.error)) return;
-            CHelper::Node::nodePerCommandFromWire(value, std::move(wire));
-        }
-    };
-
-    template<>
-    struct from<MSGPACK, CHelper::Node::NodePerCommand> {
-        template<auto Opts>
-        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-            // tag 已被分发器消费，回退后解析 map 头
-            --it;
-            CHelper::Node::NodePerCommandWire wire;
-            parse<MSGPACK>::op<Opts>(wire, ctx, it, end);
-            if (bool(ctx.error)) return;
-            CHelper::Node::nodePerCommandFromWire(value, std::move(wire));
-        }
-    };
-
     // 严格遵循旧版二进制布局：name, description, syntax, nodes(数组，元素含 id),
     // wrappedCount + [defIdx, nextCount, nextIndices...](UINT32_MAX 表示 LF),
     // startCount + [startIndices...]；无键名、无 optional 存在标记
@@ -1920,11 +1954,13 @@ namespace CHelper {
             if (tag >= 0x80 && tag <= 0x8f) {
                 size = tag & 0x0f;
             } else if (tag == 0xde) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                it += 2;
             } else if (tag == 0xdf) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                it += 4;
             } else [[unlikely]] {
                 ctx.error = glz::error_code::syntax_error;
                 return;
@@ -1980,11 +2016,13 @@ namespace CHelper {
             if (tag >= 0x90 && tag <= 0x9f) {
                 size = tag & 0x0f;
             } else if (tag == 0xdc) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                it += 2;
             } else if (tag == 0xdd) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                it += 4;
             } else [[unlikely]] {
                 ctx.error = glz::error_code::syntax_error;
                 return;
@@ -2041,6 +2079,93 @@ namespace CHelper {
         } else {
             ++it;
         }
+    }
+
+    // ================= NodePerCommand 的 JSON / MessagePack 表示 =================
+    // name / description / syntax 与节点定义都直接读写最终结构，不再经过中间的 wire 结构：
+    // 读出时节点按 "id -> 节点" 的键值对直接写入 nodes 并就地写回 id，
+    // 写出时用 glz::obj 引用最终成员，只有节点索引需要临时构造
+
+    // 读取可空成员：写入端会把 nullopt 的 optional 写成 null / nil
+    template<std::uint32_t Fmt, auto Opts, class T>
+    inline void readOptionalMember(std::optional<T> &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if (valueIsNull<Fmt, Opts>(ctx, it, end)) {
+            skipNull<Fmt, Opts>(ctx, it, end);
+            value.reset();
+        } else {
+            value.emplace();
+            glz::parse<Fmt>::template op<Opts>(*value, ctx, it, end);
+        }
+    }
+
+    template<std::uint32_t Fmt, auto Opts>
+    inline void readNodePerCommand(Node::NodePerCommand &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
+        std::optional<std::vector<uint32_t>> startNodes;
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](std::string &key, auto &&ctx, auto &&it, auto &&end) {
+            if (key == "name") [[likely]] {
+                glz::parse<Fmt>::template op<Opts>(t.name, ctx, it, end);
+            } else if (key == "description") [[likely]] {
+                glz::parse<Fmt>::template op<Opts>(t.description, ctx, it, end);
+            } else if (key == "syntax") [[likely]] {
+                glz::parse<Fmt>::template op<Opts>(t.syntax, ctx, it, end);
+            } else if (key == "node") [[likely]] {
+                forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](std::string &id, auto &&ctx, auto &&it, auto &&end) {
+                    // 键即节点 id，直接写回节点（键重复时两个节点都会保留，与二进制格式一致）
+                    Node::NodeWithType node;
+                    glz::parse<Fmt>::template op<Opts>(node, ctx, it, end);
+                    if (bool(ctx.error)) [[unlikely]] {
+                        return;
+                    }
+                    static_cast<Node::NodeSerializable *>(node.data)->id = std::move(id);
+                    t.nodes.nodes.push_back(std::move(node));
+                });
+            } else if (key == "wrappedNodes") {
+                readOptionalMember<Fmt, Opts>(wrappedNodes, ctx, it, end);
+            } else if (key == "startNodes") {
+                readOptionalMember<Fmt, Opts>(startNodes, ctx, it, end);
+            } else if constexpr (Opts.error_on_unknown_keys) {
+                ctx.error = glz::error_code::unknown_key;
+            } else {
+                glz::skip_value<Fmt>::template op<Opts>(ctx, it, end);
+            }
+        });
+        if (bool(ctx.error)) [[unlikely]] {
+            return;
+        }
+        if (t.name.empty()) [[unlikely]] {
+            throw std::runtime_error("command size cannot be zero");
+        }
+        if (wrappedNodes.has_value()) {
+            const std::vector<uint32_t> noStartNodes;
+            Node::buildNodePerCommandGraph(t, wrappedNodes.value(),
+                                           startNodes.has_value() ? startNodes.value() : noStartNodes);
+        } else {
+            Node::buildNodePerCommandTrie(t);
+        }
+    }
+
+    template<std::uint32_t Fmt, auto Opts>
+    inline void writeNodePerCommand(const Node::NodePerCommand &t, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        // 节点定义按 id 建立索引：只复制节点句柄与键，节点数据仍由 CPack 持有
+        glz::ordered_small_map<Node::NodeWithType> nodes;
+        nodes.reserve(t.nodes.nodes.size());
+        for (const auto &node: t.nodes.nodes) {
+            const auto *serializable = static_cast<const Node::NodeSerializable *>(node.data);
+            if (serializable->id.has_value()) {
+                nodes.try_emplace(*serializable->id, node);
+            }
+        }
+        std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
+        std::optional<std::vector<uint32_t>> startNodes;
+        if constexpr (Fmt == glz::MSGPACK) {
+            // JSON 的节点图由 syntax 重建，只有 MessagePack 需要写出预解析的节点图
+            Node::buildNodePerCommandWireGraph(t, wrappedNodes.emplace(), startNodes.emplace());
+        }
+        // name / description / syntax 直接引用最终结构，不产生深拷贝
+        auto value = glz::obj{"name", t.name, "description", t.description, "syntax", t.syntax, "node", nodes,
+                              "wrappedNodes", wrappedNodes, "startNodes", startNodes};
+        glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);
     }
 
     // 读取 PropertyValue：根据值本身的类型判定
@@ -2219,6 +2344,41 @@ namespace CHelper {
 }// namespace CHelper
 
 namespace glz {
+    // NodePerCommand 的 JSON / MessagePack 表示（读写实现见上）
+    template<>
+    struct to<JSON, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeNodePerCommand<JSON, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeNodePerCommand<MSGPACK, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<JSON, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readNodePerCommand<JSON, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct from<MSGPACK, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已被分发器消费，回退后解析 map 头
+            --it;
+            CHelper::readNodePerCommand<MSGPACK, Opts>(value, ctx, it, end);
+        }
+    };
+
     template<>
     struct to<JSON, CHelper::PropertyValueWriter> {
         template<auto Opts>

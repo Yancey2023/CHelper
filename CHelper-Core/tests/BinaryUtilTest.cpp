@@ -726,3 +726,58 @@ TEST(BinaryUtilTest, NodeJsonNull) {
     testNode<CHelper::Node::NodeJsonNull>(
             *cpack, []() { return CHelper::Node::NodeJsonNull{"ID", u"description"}; });
 }
+
+// NodePerCommand 的 MessagePack 表示（含预解析的节点图）必须能完整往返
+TEST(BinaryUtilTest, NodePerCommandMsgpack) {
+    std::unique_ptr<CHelper::CPack> cpack;
+    try {
+        std::filesystem::path resourceDir(RESOURCE_DIR);
+        cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+    } catch (const std::exception &e) {
+        CHelper::Profile::printAndClear(e);
+        exit(-1);
+    }
+    const auto getDefinitionIndex = [](const CHelper::Node::NodePerCommand &command, const CHelper::Node::NodeWithType &node) {
+        for (size_t i = 0; i < command.nodes.nodes.size(); ++i) {
+            if (command.nodes.nodes[i].data == node.data) {
+                return i;
+            }
+        }
+        return SIZE_MAX;
+    };
+    for (const auto &command: *cpack->commands) {
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write_msgpack(command, buffer)));
+        CHelper::Node::NodePerCommand command2;
+        const auto rec = glz::read_msgpack(command2, buffer);
+        if (bool(rec)) {
+            ADD_FAILURE() << "msgpack read error: " << glz::format_error(rec, buffer);
+            continue;
+        }
+        EXPECT_EQ(command2.name, command.name);
+        EXPECT_EQ(command2.description, command.description);
+        EXPECT_EQ(command2.syntax, command.syntax);
+        ASSERT_EQ(command2.nodes.nodes.size(), command.nodes.nodes.size());
+        for (size_t i = 0; i < command.nodes.nodes.size(); ++i) {
+            EXPECT_EQ(command2.nodes.nodes[i].nodeTypeId, command.nodes.nodes[i].nodeTypeId);
+            EXPECT_EQ(static_cast<const CHelper::Node::NodeSerializable *>(command2.nodes.nodes[i].data)->id,
+                      static_cast<const CHelper::Node::NodeSerializable *>(command.nodes.nodes[i].data)->id);
+        }
+        ASSERT_EQ(command2.wrappedNodes.size(), command.wrappedNodes.size());
+        for (size_t i = 0; i < command.wrappedNodes.size(); ++i) {
+            const size_t definitionIndex = getDefinitionIndex(command, command.wrappedNodes[i].innerNode);
+            ASSERT_NE(definitionIndex, SIZE_MAX);
+            EXPECT_EQ(command2.wrappedNodes[i].innerNode.data, command2.nodes.nodes[definitionIndex].data);
+            EXPECT_EQ(command2.wrappedNodes[i].nextNodes.size(), command.wrappedNodes[i].nextNodes.size());
+        }
+        ASSERT_EQ(command2.startNodes.size(), command.startNodes.size());
+        for (size_t i = 0; i < command.startNodes.size(); ++i) {
+            if (command.startNodes[i] == CHelper::Node::NodeLF::getInstance()) {
+                EXPECT_EQ(command2.startNodes[i], CHelper::Node::NodeLF::getInstance());
+            } else {
+                const auto index = static_cast<size_t>(command.startNodes[i] - command.wrappedNodes.data());
+                EXPECT_EQ(command2.startNodes[i], &command2.wrappedNodes[index]);
+            }
+        }
+    }
+}
