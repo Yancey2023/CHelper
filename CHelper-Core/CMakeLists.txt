@@ -108,9 +108,9 @@ chelper_fetch_thirdparty(xxHash
     SOURCE_SUBDIR cmake_unofficial
     EXCLUDE_FROM_ALL
 )
-chelper_fetch_thirdparty(serialization
-    GIT_REPOSITORY https://github.com/Yancey2023/serialization.git
-    GIT_TAG cd9c95447d7336e4a6c9fc5ccc20f486578af1a2
+chelper_fetch_thirdparty(glaze
+    GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+    GIT_TAG dce5e0f7ec572725ec369a0bc59a00eeb2270a9a
 )
 chelper_fetch_thirdparty(spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -150,7 +150,7 @@ file(GLOB_RECURSE CHELPER_CORE_SOURCE_FILE src/chelper/*.cpp)
 add_library(CHelperCore STATIC ${CHELPER_CORE_SOURCE_FILE})
 target_precompile_headers(CHelperCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
 target_include_directories(CHelperCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash serialization::serialization)
+target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
 if(MSVC)
     set_property(TARGET CHelperCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
@@ -160,7 +160,7 @@ add_library(CHelper::Core ALIAS CHelperCore)
 add_library(CHelperNoFilesystemCore STATIC ${CHELPER_CORE_SOURCE_FILE})
 target_precompile_headers(CHelperNoFilesystemCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
 target_include_directories(CHelperNoFilesystemCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash serialization::serialization)
+target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
 target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
 if(MSVC)
     set_property(TARGET CHelperNoFilesystemCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

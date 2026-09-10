@@ -210,47 +210,146 @@ namespace CHelper {
 
 }// namespace CHelper
 
-template<class T, bool isConvertEndian>
-void test(const std::function<T()> &getInstance) {
-    std::ostringstream oss;
-    T t1 = getInstance();
-    serialization::Codec<T>::template to_binary<isConvertEndian>(oss, t1);
-    std::istringstream iss(oss.str());
+// 多格式 roundtrip：自定义二进制 + glaze 自带格式
+template<auto Write, auto Read>
+void roundtrip(const auto &t1) {
+    using T = std::decay_t<decltype(t1)>;
+    std::string buffer;
+    EXPECT_FALSE(bool(Write(t1, buffer)));
     T t2;
-    serialization::Codec<T>::template from_binary<isConvertEndian>(iss, t2);
+    const auto rec = Read(t2, buffer);
+    if (bool(rec)) {
+        std::ostringstream hex;
+        for (const unsigned char c: buffer) {
+            char temp[4];
+            snprintf(temp, sizeof(temp), "%02x ", c);
+            hex << temp;
+        }
+        ADD_FAILURE() << "read error: " << glz::format_error(rec, buffer) << "\nbuffer: " << hex.str();
+    }
     EXPECT_EQ(t1, t2);
-    EXPECT_FALSE(iss.eof());
 }
 
 template<class T>
 void test(const std::function<T()> &getInstance) {
-    test<T, true>(getInstance);
-    test<T, false>(getInstance);
-}
-
-template<class T, bool isConvertEndian>
-void testNode(CHelper::CPack &cpack, const std::function<T()> &getInstance) {
-    std::ostringstream oss;
     T t1 = getInstance();
-    serialization::Codec<T>::template to_binary<isConvertEndian>(oss, t1);
-    std::istringstream iss(oss.str());
-    T t2;
-    serialization::Codec<T>::template from_binary<isConvertEndian>(iss, t2);
-    CHelper::Node::initNode(t2, cpack);
-    EXPECT_EQ(t1, t2);
-    EXPECT_FALSE(iss.eof());
+    {
+        // 自定义二进制格式
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(t1, buffer)));
+        T t2;
+        const auto rec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(t2, buffer);
+        if (bool(rec)) {
+            ADD_FAILURE() << "binary read error: " << glz::format_error(rec, buffer);
+        }
+        EXPECT_EQ(t1, t2);
+    }
+    {
+        // JSON
+        std::string buffer;
+        EXPECT_NO_THROW(buffer = CHelper::writeJson(t1));
+        T t2;
+        EXPECT_NO_THROW(CHelper::readJson(t2, buffer));
+        EXPECT_EQ(t1, t2);
+    }
+    if constexpr (glz::write_supported<T, glz::MSGPACK> && glz::read_supported<T, glz::MSGPACK>) {
+        // MessagePack
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write_msgpack(t1, buffer)));
+        T t2;
+        const auto rec = glz::read_msgpack(t2, buffer);
+        if (bool(rec)) {
+            std::ostringstream hex;
+            for (const unsigned char c: buffer) {
+                char temp[4];
+                snprintf(temp, sizeof(temp), "%02x ", c);
+                hex << temp;
+            }
+            ADD_FAILURE() << "msgpack read error: " << glz::format_error(rec, buffer) << "\nbuffer: " << hex.str();
+        }
+        EXPECT_EQ(t1, t2);
+    }
 }
 
 template<class T>
 void testNode(CHelper::CPack &cpack, const std::function<T()> &getInstance) {
-    testNode<T, true>(cpack, getInstance);
-    testNode<T, false>(cpack, getInstance);
+    T t1 = getInstance();
+    {
+        // 自定义二进制格式
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(t1, buffer)));
+        T t2;
+        const auto rec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(t2, buffer);
+        if (bool(rec)) {
+            ADD_FAILURE() << "binary read error: " << glz::format_error(rec, buffer);
+        }
+        CHelper::Node::initNode(t2, cpack);
+        EXPECT_EQ(t1, t2);
+    }
+    {
+        // JSON
+        std::string buffer;
+        EXPECT_NO_THROW(buffer = CHelper::writeJson(t1));
+        T t2;
+        EXPECT_NO_THROW(CHelper::readJson(t2, buffer));
+        CHelper::Node::initNode(t2, cpack);
+        EXPECT_EQ(t1, t2);
+    }
+    {
+        // MessagePack
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write_msgpack(t1, buffer)));
+        T t2;
+        const auto rec = glz::read_msgpack(t2, buffer);
+        if (bool(rec)) {
+            ADD_FAILURE() << "msgpack read error: " << glz::format_error(rec, buffer);
+        }
+        CHelper::Node::initNode(t2, cpack);
+        EXPECT_EQ(t1, t2);
+    }
+}
+
+// Property 等手写编解码类型仅支持 JSON / MessagePack / 自定义二进制格式
+template<class T>
+void testHandwritten(const std::function<T()> &getInstance) {
+    T t1 = getInstance();
+    {
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(t1, buffer)));
+        T t2;
+        const auto rec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(t2, buffer);
+        if (bool(rec)) {
+            ADD_FAILURE() << "binary read error: " << glz::format_error(rec, buffer);
+        }
+        EXPECT_EQ(t1, t2);
+    }
+    {
+        std::string buffer;
+        EXPECT_NO_THROW(buffer = CHelper::writeJson(t1));
+        T t2;
+        EXPECT_NO_THROW(CHelper::readJson(t2, buffer));
+        EXPECT_EQ(t1, t2);
+    }
+    {
+        std::string buffer;
+        EXPECT_FALSE(bool(glz::write_msgpack(t1, buffer)));
+        T t2;
+        EXPECT_FALSE(bool(glz::read_msgpack(t2, buffer)));
+        EXPECT_EQ(t1, t2);
+    }
 }
 
 template<class T>
 void test(const std::vector<std::function<T()>> &getInstance) {
     for (const auto &item: getInstance) {
         test(item);
+    }
+}
+
+template<class T>
+void testHandwritten(const std::vector<std::function<T()>> &getInstance) {
+    for (const auto &item: getInstance) {
+        testHandwritten(item);
     }
 }
 
@@ -322,30 +421,26 @@ TEST(BinaryUtilTest, NormalId) {
 
 TEST(BinaryUtilTest, NamespaceId) {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    rapidjson::GenericDocument<rapidjson::UTF8<>> j = serialization::get_json_from_file(
-            resourceDir / "resources" / "beta" / "vanilla" / "id" / "entity.json");
+    CHelper::IdEntry entry;
+    CHelper::readJsonFromFile(entry, resourceDir / "resources" / "beta" / "vanilla" / "id" / "entity.json");
+    auto &namespaceEntry = std::get<CHelper::NamespaceIdEntry>(entry);
     std::vector<std::function<CHelper::NamespaceId()>> getInstance;
-    for (const auto &item: serialization::find_array_member_or_throw(j, "content")) {
-        CHelper::NamespaceId namespaceId;
-        serialization::Codec<CHelper::NamespaceId>::from_json(item, namespaceId);
-        getInstance.emplace_back([namespaceId]() { return namespaceId; });
+    for (const auto &item: *namespaceEntry.content) {
+        getInstance.emplace_back([item]() { return *item; });
     }
     test<CHelper::NamespaceId>(getInstance);
 }
 
 TEST(BinaryUtilTest, ItemId) {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    rapidjson::GenericDocument<rapidjson::UTF8<>> j = serialization::get_json_from_file(
-            resourceDir / "resources" / "beta" / "vanilla" / "id" / "item.json");
-    std::vector<std::function<CHelper::ItemId()>> getInstance;
-    for (const auto &item: serialization::find_array_member_or_throw(j, "content")) {
-        getInstance.emplace_back([&item]() {
-            CHelper::ItemId itemId;
-            serialization::Codec<CHelper::ItemId>::from_json(item, itemId);
-            return itemId;
-        });
+    CHelper::IdEntry entry;
+    CHelper::readJsonFromFile(entry, resourceDir / "resources" / "beta" / "vanilla" / "id" / "item.json");
+    auto &itemEntry = std::get<CHelper::ItemIdsEntry>(entry);
+    std::vector<std::function<std::shared_ptr<CHelper::ItemId>()>> getInstance;
+    for (const auto &item: *itemEntry.content) {
+        getInstance.emplace_back([item]() { return item; });
     }
-    test<CHelper::ItemId>(getInstance);
+    test<std::shared_ptr<CHelper::ItemId>>(getInstance);
 }
 
 TEST(BinaryUtilTest, Property) {
@@ -381,16 +476,74 @@ TEST(BinaryUtilTest, Property) {
         aProperty.valid->at(2).string = new std::u16string(u"a3");
         return aProperty;
     };
-    test<CHelper::Property>({getInstance1, getInstance2, getInstance3});
+    testHandwritten<CHelper::Property>({getInstance1, getInstance2, getInstance3});
+}
+
+TEST(BinaryUtilTest, NodeJsonElementBinary) {
+    // 旧版二进制格式：id 必有值，直接写字符串（无 optional 标记）
+    CHelper::Node::NodeJsonElement element;
+    element.id = "components";
+    element.startNodeId = "PARENT";
+    std::string buffer;
+    ASSERT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(element, buffer)));
+    std::u16string idBack = u"mismatch";
+    std::size_t pos = 0;
+    std::uint32_t len = 0;
+    // 手动按旧格式解码校验：uint32 长度 + UTF-8 字节
+    len = (static_cast<std::uint32_t>(buffer[0]) | (static_cast<std::uint32_t>(buffer[1]) << 8) |
+           (static_cast<std::uint32_t>(buffer[2]) << 16) | (static_cast<std::uint32_t>(buffer[3]) << 24));
+    EXPECT_EQ(len, 10);
+    idBack = utf8::utf8to16(std::string(buffer.data() + 4, len));
+    EXPECT_EQ(idBack, u"components");
+}
+
+TEST(BinaryUtilTest, NestedMapBinary) {
+    using BlockFixData = std::unordered_map<
+            std::u16string,
+            std::unordered_map<std::uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
+    using Inner = BlockFixData::mapped_type;
+    // 记录该布局所依赖的概念约束（readable_map_t 的构成与 pair 不属于 reflectable 的事实）
+    static_assert(glz::range<Inner>);
+    static_assert(glz::pair_t<glz::range_value_t<Inner>>);
+    static_assert(!glz::custom_read<Inner>);
+    static_assert(!glz::meta_value_t<Inner>);
+    static_assert(!glz::str_t<Inner>);
+    static_assert(glz::readable_map_t<Inner>);
+    static_assert(glz::range<BlockFixData>);
+    static_assert(glz::pair_t<glz::range_value_t<BlockFixData>>);
+    static_assert(!glz::custom_read<BlockFixData>);
+    static_assert(!glz::meta_value_t<BlockFixData>);
+    static_assert(!glz::str_t<BlockFixData>);
+    static_assert(glz::readable_map_t<BlockFixData>);
+    static_assert(glz::writable_map_t<BlockFixData>);
+    static_assert(glz::readable_map_t<BlockFixData::mapped_type>);
+    static_assert(glz::writable_map_t<BlockFixData::mapped_type>);
+    BlockFixData data;
+    auto &inner = data[u"stone"];
+    inner[0] = {u"stone", std::nullopt};
+    inner[1] = {std::nullopt, u"smooth"};
+    data[u"dirt"] = {};
+
+    std::string buffer;
+    ASSERT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(data, buffer)));
+    BlockFixData back;
+    const auto rec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(back, buffer);
+    if (bool(rec)) {
+        ADD_FAILURE() << "binary read error: " << glz::format_error(rec, buffer);
+    }
+    EXPECT_EQ(back.size(), 2);
+    EXPECT_EQ(back[u"stone"].size(), 2);
+    EXPECT_EQ(back[u"stone"][0].first.value(), u"stone");
+    EXPECT_EQ(back[u"stone"][1].second.value(), u"smooth");
+    EXPECT_TRUE(back[u"dirt"].empty());
 }
 
 TEST(BinaryUtilTest, BlockId) {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    rapidjson::GenericDocument<rapidjson::UTF8<>> j = serialization::get_json_from_file(
-            resourceDir / "resources" / "beta" / "vanilla" / "id" / "block.json");
-    CHelper::BlockIds blockIds;
-    serialization::Codec<CHelper::BlockIds>::from_json(serialization::find_member_or_throw(j, "content"), blockIds);
-    test<CHelper::BlockIds>([&blockIds]() { return blockIds; });
+    CHelper::IdEntry entry;
+    CHelper::readJsonFromFile(entry, resourceDir / "resources" / "beta" / "vanilla" / "id" / "block.json");
+    auto &blockEntry = std::get<CHelper::BlockIdsEntry>(entry);
+    testHandwritten<CHelper::BlockIds>([&blockEntry]() { return *blockEntry.content; });
 }
 
 TEST(BinaryUtilTest, PerCPackNormalIds) {
@@ -448,8 +601,7 @@ TEST(BinaryUtilTest, NodeJsonBoolean) {
     std::unique_ptr<CHelper::CPack> cpack;
     std::filesystem::path resourceDir(RESOURCE_DIR);
     try {
-        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" /
-                                                  "beta" / "vanilla");
+        cpack = CHelper::CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
         CHelper::Profile::printAndClear(e);
         exit(-1);

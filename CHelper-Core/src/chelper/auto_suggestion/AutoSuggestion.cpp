@@ -510,7 +510,7 @@ namespace CHelper::AutoSuggestion {
             Profile::push("collect suggestions: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif
             switch (astNode.node.nodeTypeId) {
-                CODEC_PASTE(CHELPER_COLLECT_AUTO_SUGGESTION, CHELPER_NODE_TYPES)
+                CHELPER_PASTE(CHELPER_COLLECT_AUTO_SUGGESTION, CHELPER_NODE_TYPES)
                 default:
                     CHELPER_UNREACHABLE();
             }

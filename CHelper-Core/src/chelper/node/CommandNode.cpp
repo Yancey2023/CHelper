@@ -402,7 +402,7 @@ namespace CHelper::Node {
 
     bool isNodeSerializable(NodeWithType innerNode) {
         switch (innerNode.nodeTypeId) {
-            CODEC_PASTE(CHELPER_IS_BASE_OF_NODE_SERIALIZABLE, CHELPER_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_IS_BASE_OF_NODE_SERIALIZABLE, CHELPER_NODE_TYPES)
             default:
                 return false;
         }

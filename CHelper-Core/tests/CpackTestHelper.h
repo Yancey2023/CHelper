@@ -71,11 +71,8 @@ namespace CHelper::Test {
      * 尝试从JSON字符串加载CPack，返回是否加载成功
      */
     inline bool tryCreateCpack(const std::string &json, std::unique_ptr<CPack> &out) {
-        rapidjson::GenericDocument<rapidjson::UTF8<>> doc;
-        doc.Parse(json.c_str());
-        EXPECT_FALSE(doc.HasParseError()) << "test json has parse error: " << json;
         try {
-            out = CPack::createByJson(doc);
+            out = CPack::createByJson(json);
             return true;
         } catch (const std::exception &e) {
             Profile::printAndClear(e);

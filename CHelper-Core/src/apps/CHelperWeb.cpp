@@ -179,9 +179,7 @@ extern "C" {
 
 EMSCRIPTEN_KEEPALIVE CHelper::CHelperCore *init(const char *cpackPtr, size_t cpackLength) {
     return CHelper::CHelperCore::create([&cpackPtr, &cpackLength]() -> std::unique_ptr<CHelper::CPack> {
-        std::string str = std::string(cpackPtr, cpackLength);
-        std::istringstream iss(str);
-        return CHelper::CPack::createByBinary(iss);
+        return CHelper::CPack::createByBinary(std::string_view(cpackPtr, cpackLength));
     });
 }
 

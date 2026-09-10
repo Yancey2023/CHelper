@@ -56,7 +56,7 @@ namespace CHelper {
 
     CHelperCore *CHelperCore::createByJson(const std::filesystem::path &cpackPath) {
         return create([&cpackPath]() {
-            return CPack::createByJson(serialization::get_json_from_file(cpackPath));
+            return CPack::createByJson(cpackPath);
         });
     }
 
@@ -69,26 +69,9 @@ namespace CHelper {
                 Profile::push("error file type -> {}", FORMAT_ARG(cpackPathStr));
                 throw std::runtime_error("error file type");
             }
-            // 打开文件
-            std::ifstream is(cpackPath, std::ios::binary);
-            if (!is.is_open()) [[unlikely]] {
-                Profile::push("fail to read file -> {}", FORMAT_ARG(cpackPathStr));
-                throw std::runtime_error("fail to read file");
-            }
             // 读取文件
-            std::unique_ptr<CPack> result = CPack::createByBinary(is);
-            // 检查文件是否读完
-            if (!is.eof()) [[unlikely]] {
-                char ch;
-                is.read(&ch, 1);
-                if (is.gcount() > 0) [[unlikely]] {
-                    Profile::push("file is not read completed -> {}", FORMAT_ARG(cpackPathStr));
-                    throw std::runtime_error("file is not read completed");
-                }
-            }
-            // 关闭文件
-            is.close();
-            return result;
+            std::string buffer = readFileToString(cpackPath);
+            return CPack::createByBinary(buffer);
         });
     }
 #endif

@@ -27,6 +27,14 @@ namespace CHelper::Old2New {
 
     using BlockFixData = std::unordered_map<std::u16string, std::unordered_map<uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
 
+    // blockFixData.json 的条目结构（JSON 与 MessagePack 共用）
+    struct BlockFixEntry {
+        std::u16string name;
+        uint32_t data;
+        std::optional<std::u16string> newBlockId;
+        std::optional<std::u16string> blockState;
+    };
+
     class DataFix {
     public:
         size_t start, end;
@@ -73,7 +81,13 @@ namespace CHelper::Old2New {
 
     std::u16string old2new(const BlockFixData &blockFixData, std::u16string old);
 
-    BlockFixData blockFixDataFromJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
+#ifndef CHELPER_NO_FILESYSTEM
+    BlockFixData blockFixDataFromJson(const std::filesystem::path &path);
+#endif
+
+    std::string blockFixDataToBinary(const BlockFixData &blockFixData);
+
+    BlockFixData blockFixDataFromBinary(std::string_view buffer);
 
 }// namespace CHelper::Old2New
 

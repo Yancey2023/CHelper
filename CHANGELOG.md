@@ -1,5 +1,6 @@
 未发布
 1. 修改：CHelperCore不再保存文本和光标状态，命令解析、命令结构、参数注释、补全提示、语法高亮等功能全部迁移到新的CommandContext命令上下文接口（Android与Web同步提供），CommandContext无任何可变状态，同一条命令解析一次后可被多线程同时读取，也支持基于同一个资源包创建多个上下文并行工作
+2. 修改：序列化库迁移至glaze，JSON资源使用glaze的JSON格式；二进制资源改用基于glaze自定义格式扩展点实现的编解码，.cpack与old2new.dat的二进制布局与旧版格式逐字节兼容（netease资源因新增dm3-dm7维度而更新）；同时支持glaze的BEVE/CBOR/BSON/MessagePack等格式对模型进行序列化
 
 v26.1.0 20260828
 1. 增加：命令库支持生成链接分享功能

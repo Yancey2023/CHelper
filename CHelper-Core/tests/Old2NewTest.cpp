@@ -25,8 +25,8 @@ namespace CHelper::Test {
     TEST(Old2NewTest, Old2New) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
         Old2New::BlockFixData blockFixData =
-                Old2New::blockFixDataFromJson(serialization::get_json_from_file(
-                        resourceDir / "resources" / "old2new" / "blockFixData.json"));
+                Old2New::blockFixDataFromJson(
+                        resourceDir / "resources" / "old2new" / "blockFixData.json");
         std::vector<std::u16string> oldCommands = {
                 uR"(execute @e[x=~5] ~~~ detect ~~-1~ stone 0 setblock ~~1~ command_block 0)",
                 uR"(execute @e[type=zombie] ~ ~ ~ summon lightning_bolt)",

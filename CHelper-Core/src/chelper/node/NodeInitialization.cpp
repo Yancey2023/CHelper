@@ -351,7 +351,7 @@ namespace CHelper::Node {
 
     void initNode(Node::NodeWithType node, const CPack &cpack) {
         switch (node.nodeTypeId) {
-            CODEC_PASTE(CHELPER_INIT, CHELPER_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_INIT, CHELPER_NODE_TYPES)
             default:
                 CHELPER_UNREACHABLE();
         }

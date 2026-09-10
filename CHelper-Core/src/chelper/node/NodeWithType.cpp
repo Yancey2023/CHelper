@@ -32,7 +32,7 @@ namespace CHelper::Node {
                 continue;
             }
             switch (item.nodeTypeId) {
-                CODEC_PASTE(CHELPER_DELETE, CHELPER_NODE_TYPES);
+                CHELPER_PASTE(CHELPER_DELETE, CHELPER_NODE_TYPES);
             }
             item.data = nullptr;
         }

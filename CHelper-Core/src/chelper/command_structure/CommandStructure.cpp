@@ -365,7 +365,7 @@ namespace CHelper::CommandStructure {
 
     bool collectNodeStructure(const ASTNode *astNode, const Node::NodeWithType &node, StructureBuilder &structure, bool isMustHave) {
         switch (node.nodeTypeId) {
-            CODEC_PASTE(CHELPER_COLLECT_STRUCTURE, CHELPER_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_COLLECT_STRUCTURE, CHELPER_NODE_TYPES)
             default:
                 CHELPER_UNREACHABLE();
         }

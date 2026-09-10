@@ -23,421 +23,1611 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/serialization/BinaryFormat.h>
+#include <glaze/containers/ordered_small_map.hpp>
 
-#define CODEC_NODE(CodecType, ...) \
-    CODEC_WITH_PARENT(CodecType, CHelper::Node::NodeSerializable, __VA_ARGS__)
+namespace CHelper {
 
-#define CODEC_NODE_NONE(CodecType) \
-    CODEC_NONE_WITH_PARENT(CodecType, CHelper::Node::NodeSerializable)
+    // 当前 CPack 加载阶段，用于限制哪些节点类型允许被反序列化
+    extern Node::NodeCreateStage::NodeCreateStage currentCreateStage;
 
-#define CHELPER_CODEC_NODE_TO_JSON(v1)                                                                      \
-    case CHelper::Node::NodeTypeId::v1:                                                                     \
-        NodeCodec<CHelper::Node::NodeTypeId::v1>::template to_json<JsonValueType>(allocator, jsonValue, t); \
+#ifndef CHELPER_NO_FILESYSTEM
+    // 读取整个文件（资源 JSON 加载用）
+    inline std::string readFileToString(const std::filesystem::path &path) {
+        std::ifstream is(path, std::ios::binary);
+        if (!is.is_open()) [[unlikely]] {
+            throw std::runtime_error("fail to open file: " + path.string());
+        }
+        std::ostringstream ss;
+        ss << is.rdbuf();
+        return std::move(ss).str();
+    }
+#endif
+
+    // JSON 读取（失败时抛出带定位信息的异常）
+    template<class T>
+    void readJson(T &value, const std::string_view buffer) {
+        const auto ec = glz::read_json(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse json: " + glz::format_error(ec, buffer));
+        }
+    }
+
+#ifndef CHELPER_NO_FILESYSTEM
+    template<class T>
+    void readJsonFromFile(T &value, const std::filesystem::path &path) {
+        std::string buffer = readFileToString(path);
+        readJson(value, buffer);
+    }
+#endif
+
+    // JSON 写出（紧凑格式，与旧版 rapidjson Writer 行为一致）
+    template<class T>
+    [[nodiscard]] std::string writeJson(const T &value) {
+        std::string buffer;
+        const auto ec = glz::write_json(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write json");
+        }
+        return buffer;
+    }
+
+    // MessagePack 读写（二进制 .cpack / old2new.dat）
+    template<class T>
+    void writeMsgpack(std::string &buffer, const T &value) {
+        const auto ec = glz::write_msgpack(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write msgpack");
+        }
+    }
+
+    template<class T>
+    void readMsgpack(T &value, const std::string_view buffer) {
+        const auto ec = glz::read_msgpack(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse msgpack: " + glz::format_error(ec, buffer));
+        }
+    }
+
+    // 自定义二进制格式（.cpack / old2new.dat）
+    template<class T>
+    void writeBinary(std::string &buffer, const T &value) {
+        glz::context ctx{};
+        const auto ec = glz::write<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to write binary");
+        }
+    }
+
+    template<class T>
+    void readBinary(T &value, const std::string_view buffer) {
+        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer);
+        if (bool(ec)) [[unlikely]] {
+            throw std::runtime_error("fail to parse binary: " + glz::format_error(ec, buffer));
+        }
+    }
+}// namespace CHelper
+
+// ================= std::u16string 支持（JSON / MessagePack，UTF-8 转换） =================
+namespace glz {
+    template<>
+    struct from<JSON, std::u16string> {
+        template<auto Opts>
+        static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            std::string utf8;
+            parse<JSON>::op<Opts>(utf8, ctx, it, end);
+            value = utf8::utf8to16(utf8);
+        }
+    };
+
+    template<>
+    struct to<JSON, std::u16string> {
+        template<auto Opts>
+        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+            serialize<JSON>::op<Opts>(utf8::utf16to8(value), ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<MSGPACK, std::u16string> {
+        template<auto Opts>
+        static void op(std::u16string &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已由分发器消费，直接交给 std::string 读取
+            std::string utf8;
+            from<MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
+            value = utf8::utf8to16(utf8);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, std::u16string> {
+        template<auto Opts>
+        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+            serialize<MSGPACK>::op<Opts>(utf8::utf16to8(value), ctx, b, ix);
+        }
+    };
+
+    // 其余 glaze 自带格式的 u16string 支持（均以 UTF-8 字符串承载）
+#define CHELPER_GLZ_U16STRING_FORMAT(Fmt)                                                                       \
+    template<>                                                                                                  \
+    struct from<Fmt, std::u16string> {                                                                          \
+        template<auto Opts>                                                                                     \
+        static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {              \
+            std::string utf8;                                                                                   \
+            parse<Fmt>::template op<Opts>(utf8, ctx, it, end);                                                  \
+            value = utf8::utf8to16(utf8);                                                                       \
+        }                                                                                                       \
+    };                                                                                                          \
+    template<>                                                                                                  \
+    struct to<Fmt, std::u16string> {                                                                            \
+        template<auto Opts>                                                                                     \
+        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept { \
+            serialize<Fmt>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);                               \
+        }                                                                                                       \
+    };
+
+    CHELPER_GLZ_U16STRING_FORMAT(BEVE)
+    CHELPER_GLZ_U16STRING_FORMAT(CBOR)
+    template<>
+    struct to<BSON, std::u16string> {
+        template<auto Opts>
+        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+            serialize<BSON>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<BSON, std::u16string> {
+        template<auto Opts>
+        static void op(std::u16string &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            std::string utf8;
+            from<BSON, std::string>::template op<Opts>(utf8, tag, ctx, it, end);
+            value = utf8::utf8to16(utf8);
+        }
+    };
+
+#undef CHELPER_GLZ_U16STRING_FORMAT
+
+    // 修复 glaze msgpack 读取器对 nullable 类型直接调用 emplace() 的问题
+    // （v8.3.0 起，shared_ptr / unique_ptr 没有 emplace，见官方 msgpack_test 中被跳过的用例）
+    template<class T>
+    struct from<MSGPACK, std::shared_ptr<T>> {
+        template<auto Opts>
+        static void op(std::shared_ptr<T> &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            if (tag == msgpack::nil) {
+                value.reset();
+                return;
+            }
+            if (!value) {
+                value = std::make_shared<T>();
+            }
+            from<MSGPACK, T>::template op<Opts>(*value, tag, ctx, it, end);
+        }
+    };
+
+    template<class T>
+    struct from<MSGPACK, std::unique_ptr<T>> {
+        template<auto Opts>
+        static void op(std::unique_ptr<T> &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            if (tag == msgpack::nil) {
+                value.reset();
+                return;
+            }
+            if (!value) {
+                value = std::make_unique<T>();
+            }
+            from<MSGPACK, T>::template op<Opts>(*value, tag, ctx, it, end);
+        }
+    };
+}// namespace glz
+
+// ================= 节点序列化 =================
+
+// 可序列化的节点类型列表（不含 WRAPPED / LF / PER_COMMAND / JSON_ELEMENT / JSON_ENTRY 等运行期类型）
+#define CHELPER_SERIALIZABLE_NODE_TYPES                                                                                  \
+    BLOCK, BOOLEAN, COMMAND, COMMAND_NAME, FLOAT, INTEGER, INTEGER_WITH_UNIT, ITEM, JSON, JSON_BOOLEAN, JSON_FLOAT,      \
+            JSON_INTEGER, JSON_LIST, JSON_NULL, JSON_ENTRY, JSON_OBJECT, JSON_STRING, NAMESPACE_ID, NORMAL_ID, POSITION, \
+            RANGE, RELATIVE_FLOAT, REPEAT, STRING, TARGET_SELECTOR, TEXT
+
+// 各节点类型的特有字段（写出用；键名与成员名一致，和旧版 CODEC_REGISTER_JSON_KEY 相同）
+#define CHELPER_NODE_FIELDS_BLOCK(n) , "nodeBlockType", n.nodeBlockType
+#define CHELPER_NODE_FIELDS_BOOLEAN(n) , "descriptionTrue", n.descriptionTrue, "descriptionFalse", n.descriptionFalse
+#define CHELPER_NODE_FIELDS_COMMAND(n)
+#define CHELPER_NODE_FIELDS_COMMAND_NAME(n)
+#define CHELPER_NODE_FIELDS_FLOAT(n) , "min", n.min, "max", n.max
+#define CHELPER_NODE_FIELDS_INTEGER(n) , "min", n.min, "max", n.max
+#define CHELPER_NODE_FIELDS_INTEGER_WITH_UNIT(n) , "units", n.units
+#define CHELPER_NODE_FIELDS_ITEM(n) , "nodeItemType", n.nodeItemType
+#define CHELPER_NODE_FIELDS_JSON(n) , "key", n.key
+#define CHELPER_NODE_FIELDS_JSON_BOOLEAN(n) , "descriptionTrue", n.descriptionTrue, "descriptionFalse", n.descriptionFalse
+#define CHELPER_NODE_FIELDS_JSON_FLOAT(n) , "min", n.min, "max", n.max
+#define CHELPER_NODE_FIELDS_JSON_INTEGER(n) , "min", n.min, "max", n.max
+#define CHELPER_NODE_FIELDS_JSON_LIST(n) , "data", n.data
+#define CHELPER_NODE_FIELDS_JSON_NULL(n)
+#define CHELPER_NODE_FIELDS_JSON_ENTRY(n) , "key", n.key, "value", n.value
+#define CHELPER_NODE_FIELDS_JSON_OBJECT(n) , "data", n.data
+#define CHELPER_NODE_FIELDS_JSON_STRING(n) , "data", n.data
+#define CHELPER_NODE_FIELDS_NAMESPACE_ID(n) , "key", n.key, "ignoreError", n.ignoreError, "contents", n.contents
+#define CHELPER_NODE_FIELDS_NORMAL_ID(n) , "key", n.key, "ignoreError", n.ignoreError, "contents", n.contents
+#define CHELPER_NODE_FIELDS_POSITION(n)
+#define CHELPER_NODE_FIELDS_RANGE(n)
+#define CHELPER_NODE_FIELDS_RELATIVE_FLOAT(n) , "canUseCaretNotation", n.canUseCaretNotation
+#define CHELPER_NODE_FIELDS_REPEAT(n) , "key", n.key
+#define CHELPER_NODE_FIELDS_STRING(n) , "canContainSpace", n.canContainSpace, "ignoreLater", n.ignoreLater
+#define CHELPER_NODE_FIELDS_TARGET_SELECTOR(n) \
+    , "isMustPlayer", n.isMustPlayer, "isMustNPC", n.isMustNPC, "isOnlyOne", n.isOnlyOne, "isWildcard", n.isWildcard
+#define CHELPER_NODE_FIELDS_TEXT(n) , "data", n.data
+
+
+namespace CHelper::Node {
+    // glz::meta 定义：反序列化时按成员名读取（含 NodeSerializable 基类字段）
+    template<class T>
+    concept NodeSerializableType = std::derived_from<T, NodeSerializable>;
+}// namespace CHelper::Node
+
+#define CHELPER_GLZ_NODE_META(Type, ...)                                                                                  \
+    template<>                                                                                                            \
+    struct glz::meta<Type> {                                                                                              \
+        using T = Type;                                                                                                   \
+        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace, __VA_ARGS__); \
+    };
+
+#define CHELPER_GLZ_NODE_META_NONE(Type)                                                                     \
+    template<>                                                                                               \
+    struct glz::meta<Type> {                                                                                 \
+        using T = Type;                                                                                      \
+        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace); \
+    };
+
+#define CHELPER_GLZ_NODE_WRITE(NodeType, Id)                                                                                     \
+    template<std::uint32_t Fmt, auto Opts, class Ctx, class B>                                                                   \
+    inline void nodeWriteValue_##Id(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {                                   \
+        static_assert(std::is_same_v<NodeType, Node::NodeTypeDetail<Node::NodeTypeId::Id>::Type>);                               \
+        const auto &n = *static_cast<const NodeType *>(t.data);                                                                  \
+        auto value = glz::obj{"type", Node::NodeTypeDetail<Node::NodeTypeId::Id>::name, "id", n.id, "brief", n.brief,            \
+                              "description", n.description, "isMustAfterSpace", n.isMustAfterSpace CHELPER_NODE_FIELDS_##Id(n)}; \
+        glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);                                                               \
+    }
+
+// 节点类型元数据（读取用；glz::meta 特化须在全局作用域，使用全限定名）
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeBlock, &CHelper::Node::NodeBlock::nodeBlockType)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeBoolean, &CHelper::Node::NodeBoolean::descriptionTrue, &CHelper::Node::NodeBoolean::descriptionFalse)
+CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeCommand)
+CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeCommandName)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeFloat, &CHelper::Node::NodeFloat::min, &CHelper::Node::NodeFloat::max)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeInteger, &CHelper::Node::NodeInteger::min, &CHelper::Node::NodeInteger::max)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeIntegerWithUnit, &CHelper::Node::NodeIntegerWithUnit::units)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeItem, &CHelper::Node::NodeItem::nodeItemType)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJson, &CHelper::Node::NodeJson::key)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonBoolean, &CHelper::Node::NodeJsonBoolean::descriptionTrue, &CHelper::Node::NodeJsonBoolean::descriptionFalse)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonFloat, &CHelper::Node::NodeJsonFloat::min, &CHelper::Node::NodeJsonFloat::max)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonInteger, &CHelper::Node::NodeJsonInteger::min, &CHelper::Node::NodeJsonInteger::max)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonList, &CHelper::Node::NodeJsonList::data)
+CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeJsonNull)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonEntry, &CHelper::Node::NodeJsonEntry::key, &CHelper::Node::NodeJsonEntry::value)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonObject, &CHelper::Node::NodeJsonObject::data)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonString, &CHelper::Node::NodeJsonString::data)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeNamespaceId, &CHelper::Node::NodeNamespaceId::key, &CHelper::Node::NodeNamespaceId::ignoreError, &CHelper::Node::NodeNamespaceId::contents)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeNormalId, &CHelper::Node::NodeNormalId::key, &CHelper::Node::NodeNormalId::ignoreError, &CHelper::Node::NodeNormalId::contents)
+CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodePosition)
+CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeRange)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeRelativeFloat, &CHelper::Node::NodeRelativeFloat::canUseCaretNotation)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeRepeat, &CHelper::Node::NodeRepeat::key)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeString, &CHelper::Node::NodeString::canContainSpace, &CHelper::Node::NodeString::ignoreLater)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeTargetSelector, &CHelper::Node::NodeTargetSelector::isMustPlayer, &CHelper::Node::NodeTargetSelector::isMustNPC, &CHelper::Node::NodeTargetSelector::isOnlyOne, &CHelper::Node::NodeTargetSelector::isWildcard)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeText, &CHelper::Node::NodeText::data)
+
+namespace CHelper {
+    // 节点类型写出函数（写出用，"type" 位于首位）
+    CHELPER_GLZ_NODE_WRITE(Node::NodeBlock, BLOCK)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeBoolean, BOOLEAN)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeCommand, COMMAND)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeCommandName, COMMAND_NAME)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeFloat, FLOAT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeInteger, INTEGER)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeIntegerWithUnit, INTEGER_WITH_UNIT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeItem, ITEM)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJson, JSON)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonBoolean, JSON_BOOLEAN)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonFloat, JSON_FLOAT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonInteger, JSON_INTEGER)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonList, JSON_LIST)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonNull, JSON_NULL)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonEntry, JSON_ENTRY)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonObject, JSON_OBJECT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonString, JSON_STRING)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeNamespaceId, NAMESPACE_ID)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeNormalId, NORMAL_ID)
+    CHELPER_GLZ_NODE_WRITE(Node::NodePosition, POSITION)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeRange, RANGE)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeRelativeFloat, RELATIVE_FLOAT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeRepeat, REPEAT)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeString, STRING)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeTargetSelector, TARGET_SELECTOR)
+    CHELPER_GLZ_NODE_WRITE(Node::NodeText, TEXT)
+}// namespace CHelper
+
+namespace CHelper {
+
+#define CHELPER_NODE_WRITE_CASE(v1)                    \
+    case Node::NodeTypeId::v1:                         \
+        nodeWriteValue_##v1<Fmt, Opts>(t, ctx, b, ix); \
         break;
 
-#define CHELPER_CODEC_NODE_FROM_JSON(v1)                                                           \
-    case CHelper::Node::NodeTypeId::v1:                                                            \
-        NodeCodec<CHelper::Node::NodeTypeId::v1>::template from_json<JsonValueType>(jsonValue, t); \
+    // 把节点对象（含 "type" 键）写入缓冲区
+    template<std::uint32_t Fmt, auto Opts, class Ctx, class B>
+    inline void writeNodeValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        switch (t.nodeTypeId) {
+            CHELPER_PASTE(CHELPER_NODE_WRITE_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            default:
+                ctx.error = glz::error_code::no_matching_variant_type;
+                break;
+        }
+    }
+
+
+    // 二进制节点读写函数（按成员声明顺序紧凑读写，无键名）
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_BLOCK(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeBlock *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeBlockType);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_BOOLEAN(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeBoolean *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_COMMAND(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeCommand *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_COMMAND_NAME(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeCommandName *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_FLOAT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeFloat *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_INTEGER(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeInteger *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_INTEGER_WITH_UNIT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeIntegerWithUnit *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.units);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_ITEM(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeItem *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeItemType);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJson *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_BOOLEAN(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonBoolean *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_FLOAT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonFloat *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_INTEGER(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonInteger *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_LIST(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonList *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_NULL(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonNull *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_ENTRY(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonEntry *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.value);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_OBJECT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonObject *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_JSON_STRING(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeJsonString *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_NAMESPACE_ID(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeNamespaceId *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_NORMAL_ID(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeNormalId *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_POSITION(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodePosition *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_RANGE(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeRange *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_RELATIVE_FLOAT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeRelativeFloat *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.canUseCaretNotation);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_REPEAT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeRepeat *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_STRING(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeString *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.canContainSpace, n.ignoreLater);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_TARGET_SELECTOR(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeTargetSelector *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.isMustPlayer, n.isMustNPC, n.isOnlyOne, n.isWildcard);
+    }
+    template<auto Opts, class Ctx, class B>
+    inline void nodeWriteBinary_TEXT(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const auto &n = *static_cast<const Node::NodeText *>(t.data);
+        auto write = [&](auto &&...args) {
+            (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);
+        };
+        write(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+    }
+#define CHELPER_NODE_WRITE_BINARY_CASE(v1)         \
+    case Node::NodeTypeId::v1:                     \
+        nodeWriteBinary_##v1<Opts>(t, ctx, b, ix); \
         break;
-
-#define CHELPER_CODEC_NODE_TO_BINARY(v1)                                                         \
-    case CHelper::Node::NodeTypeId::v1:                                                          \
-        NodeCodec<CHelper::Node::NodeTypeId::v1>::template to_binary<isNeedConvert>(ostream, t); \
+    // 二进制格式写出节点：uint8 类型 ID + 成员（无键名）
+    template<auto Opts, class Ctx, class B>
+    inline void writeNodeBinary(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        const std::uint8_t typeId = static_cast<std::uint8_t>(t.nodeTypeId);
+        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, b, ix);
+        switch (t.nodeTypeId) {
+            CHELPER_PASTE(CHELPER_NODE_WRITE_BINARY_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_BLOCK(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::BLOCK>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeBlock();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeBlockType);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::BLOCK>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::BLOCK;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_BOOLEAN(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::BOOLEAN>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeBoolean();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::BOOLEAN>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::BOOLEAN;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_COMMAND(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeCommand();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::COMMAND;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_COMMAND_NAME(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND_NAME>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeCommandName();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND_NAME>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::COMMAND_NAME;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::FLOAT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeFloat();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::FLOAT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::FLOAT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_INTEGER(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeInteger();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::INTEGER;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_INTEGER_WITH_UNIT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER_WITH_UNIT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeIntegerWithUnit();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.units);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER_WITH_UNIT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::INTEGER_WITH_UNIT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_ITEM(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::ITEM>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeItem();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeItemType);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::ITEM>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::ITEM;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJson();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_BOOLEAN(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_BOOLEAN>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonBoolean();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_BOOLEAN>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_BOOLEAN;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_FLOAT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonFloat();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_FLOAT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_FLOAT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_INTEGER(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_INTEGER>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonInteger();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_INTEGER>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_INTEGER;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_LIST(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_LIST>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonList();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_LIST>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_LIST;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_NULL(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_NULL>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonNull();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_NULL>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_NULL;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_ENTRY(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_ENTRY>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonEntry();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.value);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_ENTRY>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_ENTRY;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_OBJECT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_OBJECT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonObject();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_OBJECT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_OBJECT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_JSON_STRING(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::JSON_STRING>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeJsonString();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_STRING>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::JSON_STRING;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_NAMESPACE_ID(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::NAMESPACE_ID>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeNamespaceId();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::NAMESPACE_ID>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::NAMESPACE_ID;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_NORMAL_ID(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::NORMAL_ID>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeNormalId();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::NORMAL_ID>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::NORMAL_ID;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_POSITION(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::POSITION>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodePosition();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::POSITION>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::POSITION;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_RANGE(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::RANGE>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeRange();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::RANGE>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::RANGE;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_RELATIVE_FLOAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::RELATIVE_FLOAT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeRelativeFloat();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.canUseCaretNotation);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::RELATIVE_FLOAT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::RELATIVE_FLOAT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_REPEAT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::REPEAT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeRepeat();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::REPEAT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::REPEAT;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_STRING(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::STRING>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeString();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.canContainSpace, n.ignoreLater);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::STRING>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::STRING;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_TARGET_SELECTOR(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::TARGET_SELECTOR>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeTargetSelector();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.isMustPlayer, n.isMustNPC, n.isOnlyOne, n.isWildcard);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::TARGET_SELECTOR>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::TARGET_SELECTOR;
+        t.data = node;
+    }
+    template<auto Opts, class Ctx, class It, class End>
+    inline void nodeReadBinary_TEXT(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::TEXT>::nodeCreateStage;
+        if (nodeCreateStage.empty() || std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        auto *node = new Node::NodeText();
+        auto &n = *node;
+        auto read = [&](auto &&...args) {
+            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
+        };
+        read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
+        if (bool(ctx.error)) [[unlikely]] {
+            delete node;
+            return;
+        }
+        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
+            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::TEXT>::isMustAfterSpace;
+        }
+        t.nodeTypeId = Node::NodeTypeId::TEXT;
+        t.data = node;
+    }
+#define CHELPER_NODE_READ_BINARY_CASE(v1)           \
+    case Node::NodeTypeId::v1:                      \
+        nodeReadBinary_##v1<Opts>(t, ctx, it, end); \
         break;
+    // 二进制格式读取节点：uint8 类型 ID + 成员（与写出严格对应）
+    template<auto Opts, class Ctx, class It, class End>
+    inline void readNodeBinary(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
+        std::uint8_t typeId = 0;
+        glz::parse<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] {
+            return;
+        }
+        switch (typeId) {
+            CHELPER_PASTE(CHELPER_NODE_READ_BINARY_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            default:
+                ctx.error = glz::error_code::no_matching_variant_type;
+                break;
+        }
+    }
+    // 第一遍扫描：跳过对象/map 的所有值，仅提取 "type" 的值
+    template<std::uint32_t Fmt, auto Opts>
+    inline bool scanNodeTypeName(std::string &typeName, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        if constexpr (Fmt == glz::JSON) {
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it != '{') [[unlikely]] {
+                ctx.error = glz::error_code::expected_brace;
+                return false;
+            }
+            ++it;
+            glz::skip_ws<Opts>(ctx, it, end);
+            if (*it == '}') {
+                ++it;
+            } else {
+                while (true) {
+                    glz::skip_ws<Opts>(ctx, it, end);
+                    std::string key;
+                    glz::parse<glz::JSON>::op<Opts>(key, ctx, it, end);
+                    if (bool(ctx.error)) return false;
+                    glz::skip_ws<Opts>(ctx, it, end);
+                    ++it;// ':'
+                    glz::skip_ws<Opts>(ctx, it, end);
+                    if (key == "type") {
+                        glz::parse<glz::JSON>::op<Opts>(typeName, ctx, it, end);
+                        if (bool(ctx.error)) return false;
+                    } else {
+                        glz::skip_value<glz::JSON>::op<Opts>(ctx, it, end);
+                        if (bool(ctx.error)) return false;
+                    }
+                    glz::skip_ws<Opts>(ctx, it, end);
+                    if (*it == ',') {
+                        ++it;
+                        continue;
+                    }
+                    if (*it == '}') {
+                        ++it;
+                        break;
+                    }
+                    ctx.error = glz::error_code::syntax_error;
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            // MSGPACK
+            if (it >= end) [[unlikely]] {
+                ctx.error = glz::error_code::unexpected_end;
+                return false;
+            }
+            const uint8_t tag = static_cast<uint8_t>(*it++);
+            uint32_t size = 0;
+            if (tag >= 0x80 && tag <= 0x8f) {
+                size = tag & 0x0f;
+            } else if (tag == 0xde) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else if (tag == 0xdf) {
+                size = (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 24) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 16) |
+                       (static_cast<uint32_t>(static_cast<uint8_t>(*it++)) << 8) | static_cast<uint8_t>(*it++);
+            } else [[unlikely]] {
+                ctx.error = glz::error_code::syntax_error;
+                return false;
+            }
+            for (uint32_t i = 0; i < size; ++i) {
+                std::string key;
+                glz::parse<glz::MSGPACK>::op<Opts>(key, ctx, it, end);
+                if (bool(ctx.error)) return false;
+                if (key == "type") {
+                    glz::parse<glz::MSGPACK>::op<Opts>(typeName, ctx, it, end);
+                    if (bool(ctx.error)) return false;
+                } else {
+                    glz::skip_value<glz::MSGPACK>::op<Opts>(ctx, it, end);
+                    if (bool(ctx.error)) return false;
+                }
+            }
+            return true;
+        }
+    }
 
-#define CHELPER_CODEC_NODE_FROM_BINARY(v1)                                                         \
-    case CHelper::Node::NodeTypeId::v1:                                                            \
-        NodeCodec<CHelper::Node::NodeTypeId::v1>::template from_binary<isNeedConvert>(istream, t); \
-        break;
+#define CHELPER_NODE_READ_CASE(v1)                                                                                  \
+    case Node::NodeTypeId::v1: {                                                                                    \
+        const auto &nodeCreateStage = Node::NodeTypeDetail<Node::NodeTypeId::v1>::nodeCreateStage;                  \
+        if (nodeCreateStage.empty() ||                                                                              \
+            std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) \
+                [[unlikely]] {                                                                                      \
+            ctx.error = glz::error_code::no_matching_variant_type;                                                  \
+            return;                                                                                                 \
+        }                                                                                                           \
+        using NT = Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type;                                                \
+        auto *node = new NT();                                                                                      \
+        glz::parse<Fmt>::template op<Opts>(*node, ctx, it, end);                                                    \
+        if (bool(ctx.error)) [[unlikely]] {                                                                         \
+            delete node;                                                                                            \
+            return;                                                                                                 \
+        }                                                                                                           \
+        if (!node->isMustAfterSpace.has_value()) [[unlikely]] {                                                     \
+            node->isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::v1>::isMustAfterSpace;                  \
+        }                                                                                                           \
+        t.nodeTypeId = Node::NodeTypeId::v1;                                                                        \
+        t.data = node;                                                                                              \
+        break;                                                                                                      \
+    }
 
+    // 第二遍：按具体节点类型反序列化
+    template<std::uint32_t Fmt, auto Opts>
+    inline void readNodeValue(Node::NodeWithType &t, const std::string_view typeName, glz::is_context auto &&ctx, auto &&it,
+                              auto &&end) {
+        const std::optional<Node::NodeTypeId::NodeTypeId> id = Node::getNodeTypeIdByName(typeName);
+        if (!id.has_value()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        switch (id.value()) {
+            CHELPER_PASTE(CHELPER_NODE_READ_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
 
-CODEC(CHelper::Node::NodeSerializable, id, brief, description, isMustAfterSpace)
+    // 节点对象反序列化：第一遍提取 "type"，第二遍重置迭代器按具体类型读取
+    template<std::uint32_t Fmt, auto Opts>
+    inline void readNodeWithType(Node::NodeWithType &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
+        const auto start = it;
+        std::string typeName;
+        if (!scanNodeTypeName<Fmt, opts>(typeName, ctx, it, end)) return;
+        it = start;
+        readNodeValue<Fmt, opts>(t, typeName, ctx, it, end);
+    }
+}// namespace CHelper
 
+namespace glz {
+    template<>
+    struct to<JSON, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeNodeValue<JSON, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct to<MSGPACK, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeNodeValue<MSGPACK, Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<JSON, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readNodeWithType<JSON, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct from<MSGPACK, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已被分发器消费，回退一个字节后统一走两遍读取
+            --it;
+            CHelper::readNodeWithType<MSGPACK, Opts>(value, ctx, it, end);
+        }
+    };
+
+    template<>
+    struct to<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::writeNodeBinary<Opts>(value, ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::readNodeBinary<Opts>(value, ctx, it, end);
+        }
+    };
+
+}// namespace glz
+
+// ================= FreeableNodeWithTypes / NodeJsonElement / RepeatData =================
+namespace CHelper::Node {
+    class FreeableNodeWithTypes;
+    class NodeJsonElement;
+    struct RepeatData;
+}// namespace CHelper::Node
+
+// FreeableNodeWithTypes 直接以其内部的 nodes 数组形式序列化（与旧版格式一致）
 template<>
-struct serialization::Codec<CHelper::Node::NodeWithType> : BaseCodec<CHelper::Node::NodeWithType> {
-    using Type = CHelper::Node::NodeWithType;
-
-    constexpr static bool enable = true;
-
-    template<class JsonValueType>
-    static void to_json(typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const Type &t);
-
-    template<class JsonValueType>
-    static void from_json(const JsonValueType &jsonValue,
-                          Type &t);
-
-    template<bool isNeedConvert>
-    static void to_binary(std::ostream &ostream,
-                          const Type &t);
-
-    template<bool isNeedConvert>
-    static void from_binary(std::istream &istream,
-                            Type &t);
+struct glz::to<glz::JSON, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        serialize<JSON>::op<Opts>(value.nodes, ctx, b, ix);
+    }
 };
 
 template<>
-struct serialization::Codec<CHelper::Node::FreeableNodeWithTypes> : BaseCodec<CHelper::Node::FreeableNodeWithTypes> {
-
-    using Type = CHelper::Node::FreeableNodeWithTypes;
-
-    constexpr static bool enable = true;
-
-    template<class JsonValueType>
-    static void to_json(typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const Type &t) {
-        Codec<decltype(t.nodes)>::template to_json<JsonValueType>(allocator, jsonValue, t.nodes);
+struct glz::to<glz::MSGPACK, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        serialize<MSGPACK>::op<Opts>(value.nodes, ctx, b, ix);
     }
-
-    template<class JsonValueType>
-    static void from_json(const JsonValueType &jsonValue,
-                          Type &t) {
-        Codec<decltype(t.nodes)>::template from_json<JsonValueType>(jsonValue, t.nodes);
-    }
-
-    template<bool isNeedConvert>
-    static void to_binary(std::ostream &ostream,
-                          const Type &t) {
-        Codec<decltype(t.nodes)>::template to_binary<isNeedConvert>(ostream, t.nodes);
-    }
-
-    template<bool isNeedConvert>
-    static void from_binary(std::istream &istream,
-                            Type &t) {
-        Codec<decltype(t.nodes)>::template from_binary<isNeedConvert>(istream, t.nodes);
-    }
-};// namespace serialization
-
-CODEC_REGISTER_JSON_KEY(CHelper::Node::NodePerCommand, name, description, syntax, node);
-CODEC_REGISTER_JSON_KEY(CHelper::Node::NodeJsonElement, id, node, start);
+};
 
 template<>
-struct serialization::Codec<CHelper::Node::NodeJsonElement> : BaseCodec<CHelper::Node::NodeJsonElement> {
-
-    using Type = CHelper::Node::NodeJsonElement;
-
-    constexpr static bool enable = true;
-
-    template<class JsonValueType>
-    static void to_json(typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const Type &t) {
-        jsonValue.SetObject();
-        Codec<std::string>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::id_(), t.id.value());
-        Codec<decltype(t.nodes)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::node_(), t.nodes);
-        Codec<decltype(t.startNodeId)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::start_(), t.startNodeId);
+struct glz::from<glz::JSON, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        parse<JSON>::op<Opts>(value.nodes, ctx, it, end);
     }
+};
 
-    template<class JsonValueType>
-    static void from_json(const JsonValueType &jsonValue,
-                          Type &t) {
-        if (!jsonValue.IsObject()) [[unlikely]] {
-            throw exceptions::JsonSerializationTypeException("object", getJsonTypeStr(jsonValue.GetType()));
+template<>
+struct glz::from<glz::MSGPACK, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        // tag 已由分发器消费，直接传递给 vector 读取
+        from<MSGPACK, std::vector<CHelper::Node::NodeWithType>>::op<Opts>(value.nodes, tag, ctx, it, end);
+    }
+};
+
+template<>
+struct glz::to<CHelper::BinaryFormat, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        serialize<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, b, ix);
+    }
+};
+
+template<>
+struct glz::from<CHelper::BinaryFormat, CHelper::Node::FreeableNodeWithTypes> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        parse<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, it, end);
+    }
+};
+
+// 以下两个特化严格遵循旧版二进制布局：
+// NodeJsonElement 旧格式直接写字符串（id 必有值，无 optional 存在标记）
+template<>
+struct glz::to<CHelper::BinaryFormat, CHelper::Node::NodeJsonElement> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        if (!value.id.has_value()) [[unlikely]] {
+            ctx.error = glz::error_code::invalid_nullable_read;
+            return;
         }
-        CHelper::Profile::push("loading id");
-        t.id = std::make_optional<std::string>();
-        Codec<std::string>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::id_(), t.id.value());
-        CHelper::Profile::next("loading nodes");
-        Codec<decltype(t.nodes)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::node_(), t.nodes);
-        CHelper::Profile::next("loading start nodes");
-        Codec<decltype(t.startNodeId)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::start_(), t.startNodeId);
-        CHelper::Profile::pop();
+        serialize<CHelper::BinaryFormat>::template op<Opts>(value.id.value(), ctx, b, ix);
+        serialize<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, b, ix);
+        serialize<CHelper::BinaryFormat>::template op<Opts>(value.startNodeId, ctx, b, ix);
     }
-
-    template<bool isNeedConvert>
-    static void to_binary(std::ostream &ostream,
-                          const Type &t) {
-        Codec<std::string>::template to_binary<isNeedConvert>(ostream, t.id.value());
-        Codec<decltype(t.nodes)>::template to_binary<isNeedConvert>(ostream, t.nodes);
-        Codec<decltype(t.startNodeId)>::template to_binary<isNeedConvert>(ostream, t.startNodeId);
-    }
-
-    template<bool isNeedConvert>
-    static void from_binary(std::istream &istream,
-                            Type &t) {
-        t.id = std::make_optional<std::string>();
-        Codec<std::string>::template from_binary<isNeedConvert>(istream, t.id.value());
-        Codec<decltype(t.nodes)>::template from_binary<isNeedConvert>(istream, t.nodes);
-        Codec<decltype(t.startNodeId)>::template from_binary<isNeedConvert>(istream, t.startNodeId);
-    }
-};// namespace serialization
+};
 
 template<>
-struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::Node::NodePerCommand> {
+struct glz::from<CHelper::BinaryFormat, CHelper::Node::NodeJsonElement> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        std::string id;
+        parse<CHelper::BinaryFormat>::template op<Opts>(id, ctx, it, end);
+        value.id = std::move(id);
+        parse<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, it, end);
+        parse<CHelper::BinaryFormat>::template op<Opts>(value.startNodeId, ctx, it, end);
+    }
+};
 
-    using Type = CHelper::Node::NodePerCommand;
+template<>
+struct glz::meta<CHelper::Node::NodeJsonElement> {
+    using T = CHelper::Node::NodeJsonElement;
+    // JSON 键名与旧版一致：id / node / start
+    static constexpr auto value = glz::object("id", &T::id, "node", &T::nodes, "start", &T::startNodeId);
+};
 
-    constexpr static bool enable = true;
+template<>
+struct glz::meta<CHelper::Node::RepeatData> {
+    using T = CHelper::Node::RepeatData;
+    static constexpr auto value = glz::object(&T::id, &T::breakNodes, &T::repeatNodes, &T::isEnd);
+};
 
-    template<class JsonValueType>
-    static void to_json(typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const Type &t) {
-        jsonValue.SetObject();
-        //name
-        Codec<decltype(t.name)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::name_(), t.name);
-        //description
-        Codec<decltype(t.description)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::description_(), t.description);
-        //syntax
-        Codec<decltype(t.syntax)>::template to_json_member<JsonValueType>(allocator, jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::syntax_(), t.syntax);
-        //node (as JSON object keyed by node id)
-        typename JsonValueType::ValueType nodeObject;
-        nodeObject.SetObject();
-        nodeObject.MemberReserve(static_cast<rapidjson::SizeType>(t.wrappedNodes.size()), allocator);
-        for (const auto &wrappedNode: t.wrappedNodes) {
-            const auto &nodeId = wrappedNode.getNodeSerializable().id;
-            if (!nodeId.has_value()) [[unlikely]] {
+// ================= NodePerCommand =================
+namespace CHelper::Node {
+
+    struct WrappedNodeWire {
+        int32_t definition = -1;
+        std::vector<uint32_t> next;
+    };
+
+    struct NodePerCommandWire {
+        std::vector<std::u16string> name;
+        std::optional<std::u16string> description;
+        std::vector<std::u16string> syntax;
+        glz::ordered_small_map<NodeWithType> node;
+        // 预解析的节点图（仅 msgpack 格式包含；JSON 格式由 syntax 重建）
+        std::optional<std::vector<WrappedNodeWire>> wrappedNodes;
+        std::optional<std::vector<uint32_t>> startNodes;
+    };
+
+    // 由 syntax 字符串构建语法树（JSON 格式路径，与旧版逻辑一致）
+    inline void buildNodePerCommandTrie(NodePerCommand &t) {
+        //id map: token string -> node definition
+        std::vector<std::pair<std::string_view, NodeWithType *>> idMap;
+        for (auto &item: t.nodes.nodes) {
+            auto *serializable = static_cast<NodeSerializable *>(item.data);
+            if (!serializable->id.has_value()) {
                 continue;
             }
-            typename JsonValueType::ValueType nodeValue;
-            Codec<decltype(wrappedNode.innerNode)>::template to_json<typename JsonValueType::ValueType>(allocator, nodeValue, wrappedNode.innerNode);
-            nodeValue.RemoveMember("id");
-            typename JsonValueType::ValueType key(nodeId.value().c_str(), allocator);
-            nodeObject.AddMember(std::move(key), std::move(nodeValue), allocator);
-        }
-        jsonValue.AddMember(typename JsonValueType::ValueType(details::JsonKey<Type, typename JsonValueType::Ch>::node_(), allocator), std::move(nodeObject), allocator);
-    }
-
-    template<class JsonValueType>
-    static void from_json(const JsonValueType &jsonValue,
-                          Type &t) {
-        if (!jsonValue.IsObject()) [[unlikely]] {
-            throw exceptions::JsonSerializationTypeException("object", getJsonTypeStr(jsonValue.GetType()));
-        }
-        //name
-        CHelper::Profile::push("loading node name");
-        Codec<decltype(t.name)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::name_(), t.name);
-        //description
-        CHelper::Profile::next("loading node description");
-        Codec<decltype(t.description)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::description_(), t.description);
-        //syntax
-        CHelper::Profile::next("loading node syntax");
-        Codec<decltype(t.syntax)>::template from_json_member<JsonValueType>(jsonValue, details::JsonKey<Type, typename JsonValueType::Ch>::syntax_(), t.syntax);
-        //node (as JSON object keyed by node id)
-        const typename JsonValueType::ConstMemberIterator nodeIter = jsonValue.FindMember(details::JsonKey<Type, typename JsonValueType::Ch>::node_());
-        if (nodeIter == jsonValue.MemberEnd()) [[unlikely]] {
-            throw exceptions::JsonSerializationKeyException(details::JsonKey<Type, typename JsonValueType::Ch>::node_());
-        }
-        if (!nodeIter->value.IsObject()) [[unlikely]] {
-            throw exceptions::JsonSerializationTypeException("object", getJsonTypeStr(jsonValue.GetType()));
-        }
-        const auto &nodeObject = nodeIter->value;
-        t.nodes.nodes.reserve(nodeObject.MemberCount());
-        for (auto it = nodeObject.MemberBegin(); it != nodeObject.MemberEnd(); ++it) {
-            std::string nodeId;
-            Codec<std::string>::template from_json<typename JsonValueType::ValueType>(it->name, nodeId);
-            t.nodes.nodes.emplace_back();
-            Codec<CHelper::Node::NodeWithType>::template from_json<typename JsonValueType::ValueType>(it->value, t.nodes.nodes.back());
-            reinterpret_cast<CHelper::Node::NodeSerializable *>(t.nodes.nodes.back().data)->id = std::make_optional(std::move(nodeId));
-        }
-        //build wrappedNodes/startNodes from syntax strings (only for JSON — binary stores pre-parsed)
-        if (!t.syntax.empty()) {
-            CHelper::Profile::next("building syntax trie");
-            //id map: token string -> node definition
-            std::vector<std::pair<std::string_view, CHelper::Node::NodeWithType *>> idMap;
-            for (auto &item: t.nodes.nodes) {
-                auto *serializable = reinterpret_cast<CHelper::Node::NodeSerializable *>(item.data);
-                if (!serializable->id.has_value()) {
-                    continue;
-                }
-                const auto &id = serializable->id.value();
-                for (size_t start = 0, end; start < id.size(); start = end + 1) {
-                    const size_t findStart = (id[start] == '[' || id[start] == '<') ? id.find(id[start] == '[' ? ']' : '>', start) + 1 : start;
-                    end = std::min(id.find('|', findStart), id.size());
-                    if (end > start) {
-                        idMap.emplace_back(std::string_view(id.data() + start, end - start), &item);
-                    }
+            const auto &id = serializable->id.value();
+            for (size_t start = 0, end; start < id.size(); start = end + 1) {
+                const size_t findStart = (id[start] == '[' || id[start] == '<') ? id.find(id[start] == '[' ? ']' : '>', start) + 1 : start;
+                end = std::min(id.find('|', findStart), id.size());
+                if (end > start) {
+                    idMap.emplace_back(std::string_view(id.data() + start, end - start), &item);
                 }
             }
-            std::sort(idMap.begin(), idMap.end(), [](const auto &a, const auto &b) {
-                return a.first.size() > b.first.size();
-            });
-            //flat trie: [0]=root, [i>0] maps to wrappedNodes[i-1]
-            struct TrieNode {
-                CHelper::Node::NodeWithType *definition = nullptr;
-                std::vector<size_t> children;
-                bool needsLf = false;
-            };
-            std::vector<TrieNode> trie(1);
-            bool hasOptionalFirst = false;
-            for (const auto &syntaxUtf16: t.syntax) {
-                const std::string syntax = utf8::utf16to8(syntaxUtf16);
-                size_t position = syntax.find(u' ');
-                if (position == std::string::npos) {
-                    hasOptionalFirst = true;
-                    continue;
-                }
-                hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';
-                size_t current = 0;
-                while (position < syntax.size()) {
-                    while (position < syntax.size() && syntax[position] == u' ') {
-                        ++position;
-                    }
-                    if (position >= syntax.size()) {
-                        break;
-                    }
-                    const size_t tokenStartPos = position;
-                    CHelper::Node::NodeWithType *definition = nullptr;
-                    for (auto &[tokenView, definitionView]: idMap) {
-                        if (position + tokenView.size() <= syntax.size() &&
-                            std::string_view(syntax.data() + position, tokenView.size()) == tokenView) {
-                            definition = definitionView;
-                            position += tokenView.size();
-                            break;
-                        }
-                    }
-                    if (!definition) [[unlikely]] {
-                        throw std::runtime_error("unknown syntax token");
-                    }
-                    if (syntax[tokenStartPos] == u'[' && current != 0) {
-                        trie[current].needsLf = true;
-                    }
-                    size_t childIndex = SIZE_MAX;
-                    for (const auto child: trie[current].children) {
-                        if (trie[child].definition == definition) {
-                            childIndex = child;
-                            break;
-                        }
-                    }
-                    if (childIndex == SIZE_MAX) {
-                        trie.emplace_back(definition);
-                        childIndex = trie.size() - 1;
-                        trie[current].children.push_back(childIndex);
-                    }
-                    current = childIndex;
-                }
-                if (current) {
-                    trie[current].needsLf = true;
-                }
-            }
-            //materialize wrappedNodes (trie[0] excluded)
-            t.wrappedNodes.reserve(trie.size() - 1);
-            for (size_t i = 1; i < trie.size(); ++i) {
-                t.wrappedNodes.emplace_back(*trie[i].definition);
-            }
-            //connect nextNodes
-            for (size_t i = 1; i < trie.size(); ++i) {
-                auto &wrappedNode = t.wrappedNodes[i - 1];
-                for (const auto child: trie[i].children) {
-                    wrappedNode.pushNextNode(&t.wrappedNodes[child - 1]);
-                }
-                if (trie[i].needsLf) {
-                    wrappedNode.pushNextNode(CHelper::Node::NodeLF::getInstance());
-                }
-            }
-            //populate startNodes
-            t.startNodes.clear();
-            for (const auto child: trie[0].children) {
-                t.startNodes.push_back(&t.wrappedNodes[child - 1]);
-            }
-            if (hasOptionalFirst) {
-                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
-            }
         }
-        CHelper::Profile::pop();
-    }
-
-    template<bool isNeedConvert>
-    static void to_binary(std::ostream &ostream,
-                          const Type &t) {
-        //name
-        Codec<decltype(t.name)>::template to_binary<isNeedConvert>(ostream, t.name);
-        //description
-        Codec<decltype(t.description)>::template to_binary<isNeedConvert>(ostream, t.description);
-        //syntax
-        Codec<decltype(t.syntax)>::template to_binary<isNeedConvert>(ostream, t.syntax);
-        //node
-        Codec<decltype(t.nodes)>::template to_binary<isNeedConvert>(ostream, t.nodes);
-        //pre-parsed wrappedNodes graph (definition index + nextNodes indices)
-        const uint32_t wrappedCount = static_cast<uint32_t>(t.wrappedNodes.size());
-        Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, wrappedCount);
-        for (const auto &wrappedNode: t.wrappedNodes) {
-            int32_t defIdx = -1;
-            for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
-                if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
-                    defIdx = static_cast<int32_t>(i);
+        std::sort(idMap.begin(), idMap.end(), [](const auto &a, const auto &b) {
+            return a.first.size() > b.first.size();
+        });
+        //flat trie: [0]=root, [i>0] maps to wrappedNodes[i-1]
+        struct TrieNode {
+            NodeWithType *definition = nullptr;
+            std::vector<size_t> children;
+            bool needsLf = false;
+        };
+        std::vector<TrieNode> trie(1);
+        bool hasOptionalFirst = false;
+        for (const auto &syntaxUtf16: t.syntax) {
+            const std::string syntax = utf8::utf16to8(syntaxUtf16);
+            size_t position = syntax.find(u' ');
+            if (position == std::string::npos) {
+                hasOptionalFirst = true;
+                continue;
+            }
+            hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';
+            size_t current = 0;
+            while (position < syntax.size()) {
+                while (position < syntax.size() && syntax[position] == u' ') {
+                    ++position;
+                }
+                if (position >= syntax.size()) {
                     break;
                 }
-            }
-            Codec<int32_t>::template to_binary<isNeedConvert>(ostream, defIdx);
-            const uint32_t nextCount = static_cast<uint32_t>(wrappedNode.nextNodes.size());
-            Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, nextCount);
-            for (const auto *next: wrappedNode.nextNodes) {
-                if (next == CHelper::Node::NodeLF::getInstance()) {
-                    Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, UINT32_MAX);
-                } else {
-                    const auto idx = static_cast<uint32_t>(next - t.wrappedNodes.data());
-                    Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, idx);
+                const size_t tokenStartPos = position;
+                NodeWithType *definition = nullptr;
+                for (auto &[tokenView, definitionView]: idMap) {
+                    if (position + tokenView.size() <= syntax.size() &&
+                        std::string_view(syntax.data() + position, tokenView.size()) == tokenView) {
+                        definition = definitionView;
+                        position += tokenView.size();
+                        break;
+                    }
                 }
+                if (!definition) [[unlikely]] {
+                    throw std::runtime_error("unknown syntax token");
+                }
+                if (syntax[tokenStartPos] == u'[' && current != 0) {
+                    trie[current].needsLf = true;
+                }
+                size_t childIndex = SIZE_MAX;
+                for (const auto child: trie[current].children) {
+                    if (trie[child].definition == definition) {
+                        childIndex = child;
+                        break;
+                    }
+                }
+                if (childIndex == SIZE_MAX) {
+                    trie.emplace_back(definition);
+                    childIndex = trie.size() - 1;
+                    trie[current].children.push_back(childIndex);
+                }
+                current = childIndex;
+            }
+            if (current) {
+                trie[current].needsLf = true;
             }
         }
-        //startNodes indices
-        const uint32_t startCount = static_cast<uint32_t>(t.startNodes.size());
-        Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, startCount);
-        for (const auto *start: t.startNodes) {
-            if (start == CHelper::Node::NodeLF::getInstance()) {
-                Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, UINT32_MAX);
-            } else {
-                const auto idx = static_cast<uint32_t>(start - t.wrappedNodes.data());
-                Codec<uint32_t>::template to_binary<isNeedConvert>(ostream, idx);
+        //materialize wrappedNodes (trie[0] excluded)
+        t.wrappedNodes.reserve(trie.size() - 1);
+        for (size_t i = 1; i < trie.size(); ++i) {
+            t.wrappedNodes.emplace_back(*trie[i].definition);
+        }
+        //connect nextNodes
+        for (size_t i = 1; i < trie.size(); ++i) {
+            auto &wrappedNode = t.wrappedNodes[i - 1];
+            for (const auto child: trie[i].children) {
+                wrappedNode.pushNextNode(&t.wrappedNodes[child - 1]);
             }
+            if (trie[i].needsLf) {
+                wrappedNode.pushNextNode(NodeLF::getInstance());
+            }
+        }
+        //populate startNodes
+        t.startNodes.clear();
+        for (const auto child: trie[0].children) {
+            t.startNodes.push_back(&t.wrappedNodes[child - 1]);
+        }
+        if (hasOptionalFirst) {
+            t.startNodes.push_back(NodeLF::getInstance());
         }
     }
 
-    template<bool isNeedConvert>
-    static void from_binary(std::istream &istream,
-                            Type &t) {
-        //name
-        Codec<decltype(t.name)>::template from_binary<isNeedConvert>(istream, t.name);
-        if (t.name.empty()) [[unlikely]] {
-            throw std::runtime_error("command size cannot be zero");
-        }
-        //description
-        Codec<decltype(t.description)>::template from_binary<isNeedConvert>(istream, t.description);
-        //syntax (preserved for JSON round-trip)
-        Codec<decltype(t.syntax)>::template from_binary<isNeedConvert>(istream, t.syntax);
-        //node definitions
-        Codec<decltype(t.nodes)>::template from_binary<isNeedConvert>(istream, t.nodes);
-        //pre-parsed wrappedNodes graph
-        uint32_t wrappedCount;
-        Codec<uint32_t>::template from_binary<isNeedConvert>(istream, wrappedCount);
-        struct WrappedEntry {
-            int32_t defIdx;
-            std::vector<uint32_t> nextIndices;
-        };
-        std::vector<WrappedEntry> entries(wrappedCount);
-        for (uint32_t i = 0; i < wrappedCount; ++i) {
-            Codec<int32_t>::template from_binary<isNeedConvert>(istream, entries[i].defIdx);
-            uint32_t nextCount;
-            Codec<uint32_t>::template from_binary<isNeedConvert>(istream, nextCount);
-            entries[i].nextIndices.resize(nextCount);
-            for (uint32_t j = 0; j < nextCount; ++j) {
-                Codec<uint32_t>::template from_binary<isNeedConvert>(istream, entries[i].nextIndices[j]);
-            }
-        }
-        //startNodes indices
-        uint32_t startCount;
-        Codec<uint32_t>::template from_binary<isNeedConvert>(istream, startCount);
-        std::vector<uint32_t> startIndices(startCount);
-        for (uint32_t i = 0; i < startCount; ++i) {
-            Codec<uint32_t>::template from_binary<isNeedConvert>(istream, startIndices[i]);
-        }
-        //build wrappedNodes (reserve to prevent reallocation during pointer fixup)
+    // 由预解析的节点图构建（msgpack 格式路径，与旧版 from_binary 逻辑一致）
+    inline void buildNodePerCommandGraph(NodePerCommand &t, const std::vector<WrappedNodeWire> &wrapped,
+                                         const std::vector<uint32_t> &startIndices) {
+        const size_t wrappedCount = wrapped.size();
         t.wrappedNodes.reserve(wrappedCount);
-        for (uint32_t i = 0; i < wrappedCount; ++i) {
-            if (entries[i].defIdx < 0 || static_cast<size_t>(entries[i].defIdx) >= t.nodes.nodes.size()) [[unlikely]] {
+        for (size_t i = 0; i < wrappedCount; ++i) {
+            const auto defIdx = wrapped[i].definition;
+            if (defIdx < 0 || static_cast<size_t>(defIdx) >= t.nodes.nodes.size()) [[unlikely]] {
                 throw std::runtime_error("invalid node definition index");
             }
-            t.wrappedNodes.emplace_back(t.nodes.nodes[entries[i].defIdx]);
+            t.wrappedNodes.emplace_back(t.nodes.nodes[static_cast<size_t>(defIdx)]);
         }
-        //resolve nextNodes pointers
-        for (uint32_t i = 0; i < wrappedCount; ++i) {
+        for (size_t i = 0; i < wrappedCount; ++i) {
             auto &wrappedNode = t.wrappedNodes[i];
-            for (auto targetIdx: entries[i].nextIndices) {
+            for (const auto targetIdx: wrapped[i].next) {
                 if (targetIdx == UINT32_MAX) {
-                    wrappedNode.pushNextNode(CHelper::Node::NodeLF::getInstance());
+                    wrappedNode.pushNextNode(NodeLF::getInstance());
                 } else {
                     if (targetIdx >= wrappedCount) [[unlikely]] {
                         throw std::runtime_error("invalid wrapped node index");
@@ -446,12 +1636,11 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
                 }
             }
         }
-        //resolve startNodes pointers
         t.startNodes.clear();
-        t.startNodes.reserve(startCount);
-        for (auto idx: startIndices) {
+        t.startNodes.reserve(startIndices.size());
+        for (const auto idx: startIndices) {
             if (idx == UINT32_MAX) {
-                t.startNodes.push_back(CHelper::Node::NodeLF::getInstance());
+                t.startNodes.push_back(NodeLF::getInstance());
             } else {
                 if (idx >= wrappedCount) [[unlikely]] {
                     throw std::runtime_error("invalid start node index");
@@ -460,232 +1649,200 @@ struct serialization::Codec<CHelper::Node::NodePerCommand> : BaseCodec<CHelper::
             }
         }
     }
-};
 
-class NodeTypeHelper {
-public:
-    template<class JsonValueType>
-    static void to_json(CHelper::Node::NodeTypeId::NodeTypeId id,
-                        typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const CHelper::Node::NodeWithType &t);
-
-    template<class JsonValueType>
-    static void from_json(CHelper::Node::NodeTypeId::NodeTypeId id,
-                          const JsonValueType &jsonValue,
-                          CHelper::Node::NodeWithType &t);
-
-    template<bool isNeedConvert>
-    static void to_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
-                          std::ostream &ostream,
-                          const CHelper::Node::NodeWithType &t);
-
-    template<bool isNeedConvert>
-    static void from_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
-                            std::istream &istream,
-                            CHelper::Node::NodeWithType &t);
-};
-
-static CHelper::Node::NodeCreateStage::NodeCreateStage currentCreateStage;
-
-template<CHelper::Node::NodeTypeId::NodeTypeId nodeTypeId>
-struct NodeCodec {
-
-    using Type = typename CHelper::Node::NodeTypeDetail<nodeTypeId>::Type;
-    static constexpr auto nodeCreateStage = CHelper::Node::NodeTypeDetail<nodeTypeId>::nodeCreateStage;
-    static constexpr auto name = CHelper::Node::NodeTypeDetail<nodeTypeId>::name;
-    static constexpr auto isMustAfterSpace = CHelper::Node::NodeTypeDetail<nodeTypeId>::isMustAfterSpace;
-
-    template<class JsonValueType>
-    static void to_json(typename JsonValueType::AllocatorType &allocator,
-                        JsonValueType &jsonValue,
-                        const CHelper::Node::NodeWithType &t) {
-        if constexpr (serialization::Codec<Type>::enable) {
-            serialization::Codec<Type>::template to_json<JsonValueType>(allocator, jsonValue, *static_cast<const Type *>(t.data));
+    inline void nodePerCommandFromWire(NodePerCommand &t, NodePerCommandWire &&wire) {
+        t.name = std::move(wire.name);
+        if (t.name.empty()) [[unlikely]] {
+            throw std::runtime_error("command size cannot be zero");
         }
-    }
-
-    template<class JsonValueType>
-    static void from_json(const JsonValueType &jsonValue,
-                          CHelper::Node::NodeWithType &t) {
-        if constexpr (!serialization::Codec<Type>::enable || nodeCreateStage.empty()) {
-            CHelper::Profile::push("unknown node type -> {}", FORMAT_ARG(name));
-            throw std::runtime_error("unknown node type");
+        t.description = std::move(wire.description);
+        t.syntax = std::move(wire.syntax);
+        t.nodes.nodes.reserve(wire.node.size());
+        for (auto &[key, node]: wire.node) {
+            // 键即节点 id，写回节点数据
+            static_cast<NodeSerializable *>(node.data)->id = key;
+            t.nodes.nodes.push_back(std::move(node));
+        }
+        if (wire.wrappedNodes.has_value()) {
+            buildNodePerCommandGraph(t, wire.wrappedNodes.value(),
+                                     wire.startNodes.value_or(std::vector<uint32_t>{}));
         } else {
-            if (std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) {
-                CHelper::Profile::push("unknown node type -> {}", FORMAT_ARG(name));
-                throw std::runtime_error("unknown node type");
-            }
-            Type *node = new Type();
-            serialization::Codec<Type>::template from_json<JsonValueType>(jsonValue, *node);
-            if (!node->isMustAfterSpace.has_value()) [[unlikely]] {
-                node->isMustAfterSpace = isMustAfterSpace;
-            }
-            t.nodeTypeId = nodeTypeId;
-            t.data = node;
+            buildNodePerCommandTrie(t);
         }
     }
 
-    template<bool isNeedConvert>
-    static void to_binary(std::ostream &ostream,
-                          const CHelper::Node::NodeWithType &t) {
-        if constexpr (serialization::Codec<Type>::enable) {
-            serialization::Codec<Type>::template to_binary<isNeedConvert>(ostream, *static_cast<const Type *>(t.data));
+    inline void nodePerCommandToWire(const NodePerCommand &t, NodePerCommandWire &wire, const bool includeGraph) {
+        wire.name = t.name;
+        wire.description = t.description;
+        wire.syntax = t.syntax;
+        for (const auto &node: t.nodes.nodes) {
+            const auto *serializable = static_cast<const NodeSerializable *>(node.data);
+            if (serializable->id.has_value()) {
+                wire.node.emplace(*serializable->id, node);
+            }
+        }
+        if (includeGraph) {
+            auto &wrapped = wire.wrappedNodes.emplace();
+            wrapped.reserve(t.wrappedNodes.size());
+            for (const auto &wrappedNode: t.wrappedNodes) {
+                auto &item = wrapped.emplace_back();
+                for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
+                    if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
+                        item.definition = static_cast<int32_t>(i);
+                        break;
+                    }
+                }
+                for (const auto *next: wrappedNode.nextNodes) {
+                    if (next == NodeLF::getInstance()) {
+                        item.next.push_back(UINT32_MAX);
+                    } else {
+                        item.next.push_back(static_cast<uint32_t>(next - t.wrappedNodes.data()));
+                    }
+                }
+            }
+            auto &starts = wire.startNodes.emplace();
+            starts.reserve(t.startNodes.size());
+            for (const auto *start: t.startNodes) {
+                if (start == NodeLF::getInstance()) {
+                    starts.push_back(UINT32_MAX);
+                } else {
+                    starts.push_back(static_cast<uint32_t>(start - t.wrappedNodes.data()));
+                }
+            }
         }
     }
+}// namespace CHelper::Node
 
-    template<bool isNeedConvert>
-    static void from_binary(std::istream &istream,
-                            CHelper::Node::NodeWithType &t) {
-        if constexpr (!serialization::Codec<Type>::enable || nodeCreateStage.empty()) {
-            CHelper::Profile::push("unknown node type -> {}", FORMAT_ARG(name));
-            throw std::runtime_error("unknown node type");
-        } else {
-            if (std::find(nodeCreateStage.begin(), nodeCreateStage.end(), currentCreateStage) == nodeCreateStage.end()) {
-                CHelper::Profile::push("unknown node type -> {}", FORMAT_ARG(name));
-                throw std::runtime_error("unknown node type");
-            }
-            Type *node = new Type();
-            serialization::Codec<Type>::template from_binary<isNeedConvert>(istream, *node);
-            if (!node->isMustAfterSpace.has_value()) [[unlikely]] {
-                node->isMustAfterSpace = isMustAfterSpace;
-            }
-            t.nodeTypeId = nodeTypeId;
-            t.data = node;
-        }
-    }
+template<>
+struct glz::meta<CHelper::Node::WrappedNodeWire> {
+    using T = CHelper::Node::WrappedNodeWire;
+    static constexpr auto value = glz::object(&T::definition, &T::next);
 };
 
-CODEC_ENUM(CHelper::Node::NodeBlockType::NodeBlockType, uint8_t);
-CODEC_NODE(CHelper::Node::NodeBlock, nodeBlockType)
-CODEC_NODE_NONE(CHelper::Node::NodeCommand)
-CODEC_NODE_NONE(CHelper::Node::NodeCommandName)
-CODEC_NODE(CHelper::Node::NodeIntegerWithUnit, units)
-CODEC_ENUM(CHelper::Node::NodeItemType::NodeItemType, uint8_t);
-CODEC_NODE(CHelper::Node::NodeItem, nodeItemType)
-CODEC_NODE(CHelper::Node::NodeJson, key)
-CODEC_NODE(CHelper::Node::NodeNamespaceId, key, ignoreError, contents)
-CODEC_NODE(CHelper::Node::NodeNormalId, key, ignoreError, contents)
-CODEC_NODE_NONE(CHelper::Node::NodePosition)
-CODEC_NODE_NONE(CHelper::Node::NodeRange)
-CODEC_NODE(CHelper::Node::NodeRelativeFloat, canUseCaretNotation)
-CODEC(CHelper::Node::RepeatData, id, breakNodes, repeatNodes, isEnd)
-CODEC_NODE(CHelper::Node::NodeRepeat, key)
-CODEC_NODE(CHelper::Node::NodeString, canContainSpace, ignoreLater)
-CODEC_NODE(CHelper::Node::NodeTargetSelector, isMustPlayer, isMustNPC, isOnlyOne, isWildcard)
-CODEC_NODE(CHelper::Node::NodeText, data)
-CODEC_NODE(CHelper::Node::NodeBoolean, descriptionTrue, descriptionFalse)
-CODEC_NODE(CHelper::Node::NodeJsonBoolean, descriptionTrue, descriptionFalse)
-CODEC_NODE(CHelper::Node::NodeFloat, min, max)
-CODEC_NODE(CHelper::Node::NodeInteger, min, max)
-CODEC_NODE(CHelper::Node::NodeJsonInteger, min, max)
-CODEC_NODE(CHelper::Node::NodeJsonFloat, min, max)
-CODEC_NODE(CHelper::Node::NodeJsonList, data)
-CODEC_NODE_NONE(CHelper::Node::NodeJsonNull)
-CODEC_NODE(CHelper::Node::NodeJsonEntry, key, value)
-CODEC_NODE(CHelper::Node::NodeJsonObject, data)
-CODEC_NODE(CHelper::Node::NodeJsonString, data)
+template<>
+struct glz::meta<CHelper::Node::NodePerCommandWire> {
+    using T = CHelper::Node::NodePerCommandWire;
+    static constexpr auto value = glz::object(&T::name, &T::description, &T::syntax, &T::node, &T::wrappedNodes, &T::startNodes);
+};
 
-template<class JsonValueType>
-void NodeTypeHelper::to_json(CHelper::Node::NodeTypeId::NodeTypeId id,
-                             typename JsonValueType::AllocatorType &allocator,
-                             JsonValueType &jsonValue,
-                             const CHelper::Node::NodeWithType &t) {
-    switch (id) {
-        CODEC_PASTE(CHELPER_CODEC_NODE_TO_JSON, CHELPER_NODE_TYPES)
-        default:
-            CHELPER_UNREACHABLE();
-    }
-}
+namespace glz {
+    template<>
+    struct to<JSON, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::Node::NodePerCommandWire wire;
+            CHelper::Node::nodePerCommandToWire(value, wire, false);
+            serialize<JSON>::op<Opts>(wire, ctx, b, ix);
+        }
+    };
 
-template<class JsonValueType>
-void NodeTypeHelper::from_json(CHelper::Node::NodeTypeId::NodeTypeId id,
-                               const JsonValueType &jsonValue,
-                               CHelper::Node::NodeWithType &t) {
-    switch (id) {
-        CODEC_PASTE(CHELPER_CODEC_NODE_FROM_JSON, CHELPER_NODE_TYPES)
-        default:
-            CHELPER_UNREACHABLE();
-    }
-}
+    template<>
+    struct to<MSGPACK, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            CHelper::Node::NodePerCommandWire wire;
+            CHelper::Node::nodePerCommandToWire(value, wire, true);
+            serialize<MSGPACK>::op<Opts>(wire, ctx, b, ix);
+        }
+    };
 
-template<bool isNeedConvert>
-void NodeTypeHelper::to_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
-                               std::ostream &ostream,
-                               const CHelper::Node::NodeWithType &t) {
-    switch (id) {
-        CODEC_PASTE(CHELPER_CODEC_NODE_TO_BINARY, CHELPER_NODE_TYPES)
-        default:
-            CHELPER_UNREACHABLE();
-    }
-}
+    template<>
+    struct from<JSON, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            CHelper::Node::NodePerCommandWire wire;
+            parse<JSON>::op<Opts>(wire, ctx, it, end);
+            if (bool(ctx.error)) return;
+            CHelper::Node::nodePerCommandFromWire(value, std::move(wire));
+        }
+    };
 
-template<bool isNeedConvert>
-void NodeTypeHelper::from_binary(CHelper::Node::NodeTypeId::NodeTypeId id,
-                                 std::istream &istream,
-                                 CHelper::Node::NodeWithType &t) {
-    switch (id) {
-        CODEC_PASTE(CHELPER_CODEC_NODE_FROM_BINARY, CHELPER_NODE_TYPES)
-        default:
-            throw std::runtime_error("unknown node type");
-    }
-}
+    template<>
+    struct from<MSGPACK, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            // tag 已被分发器消费，回退后解析 map 头
+            --it;
+            CHelper::Node::NodePerCommandWire wire;
+            parse<MSGPACK>::op<Opts>(wire, ctx, it, end);
+            if (bool(ctx.error)) return;
+            CHelper::Node::nodePerCommandFromWire(value, std::move(wire));
+        }
+    };
 
-CODEC_ENUM(CHelper::Node::NodeTypeId::NodeTypeId, uint8_t);
+    // 严格遵循旧版二进制布局：name, description, syntax, nodes(数组，元素含 id),
+    // wrappedCount + [defIdx, nextCount, nextIndices...](UINT32_MAX 表示 LF),
+    // startCount + [startIndices...]；无键名、无 optional 存在标记
+    template<>
+    struct to<CHelper::BinaryFormat, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+            serialize<CHelper::BinaryFormat>::template op<Opts>(value.name, ctx, b, ix);
+            serialize<CHelper::BinaryFormat>::template op<Opts>(value.description, ctx, b, ix);
+            serialize<CHelper::BinaryFormat>::template op<Opts>(value.syntax, ctx, b, ix);
+            serialize<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, b, ix);
+            const std::uint32_t wrappedCount = static_cast<std::uint32_t>(value.wrappedNodes.size());
+            serialize<CHelper::BinaryFormat>::template op<Opts>(wrappedCount, ctx, b, ix);
+            for (const auto &wrappedNode: value.wrappedNodes) {
+                std::int32_t defIdx = -1;
+                for (std::size_t i = 0; i < value.nodes.nodes.size(); ++i) {
+                    if (value.nodes.nodes[i].data == wrappedNode.innerNode.data) {
+                        defIdx = static_cast<std::int32_t>(i);
+                        break;
+                    }
+                }
+                serialize<CHelper::BinaryFormat>::template op<Opts>(defIdx, ctx, b, ix);
+                const std::uint32_t nextCount = static_cast<std::uint32_t>(wrappedNode.nextNodes.size());
+                serialize<CHelper::BinaryFormat>::template op<Opts>(nextCount, ctx, b, ix);
+                for (const auto *next: wrappedNode.nextNodes) {
+                    const std::uint32_t nextIdx = next == CHelper::Node::NodeLF::getInstance()
+                                                          ? UINT32_MAX
+                                                          : static_cast<std::uint32_t>(next - value.wrappedNodes.data());
+                    serialize<CHelper::BinaryFormat>::template op<Opts>(nextIdx, ctx, b, ix);
+                }
+            }
+            const std::uint32_t startCount = static_cast<std::uint32_t>(value.startNodes.size());
+            serialize<CHelper::BinaryFormat>::template op<Opts>(startCount, ctx, b, ix);
+            for (const auto *start: value.startNodes) {
+                const std::uint32_t startIdx = start == CHelper::Node::NodeLF::getInstance()
+                                                       ? UINT32_MAX
+                                                       : static_cast<std::uint32_t>(start - value.wrappedNodes.data());
+                serialize<CHelper::BinaryFormat>::template op<Opts>(startIdx, ctx, b, ix);
+            }
+        }
+    };
 
-template<class JsonValueType>
-void serialization::Codec<CHelper::Node::NodeWithType>::to_json(
-        typename JsonValueType::AllocatorType &allocator,
-        JsonValueType &jsonValue,
-        const Type &t) {
-    std::string nodeIdName = CHelper::Node::getNodeTypeName(t.nodeTypeId);
-    NodeTypeHelper::template to_json<JsonValueType>(t.nodeTypeId, allocator, jsonValue, t);
-    assert(jsonValue.IsObject());
-    Codec<decltype(nodeIdName)>::template to_json_member<JsonValueType>(allocator, jsonValue, "type", nodeIdName);
-}
-
-template<class JsonValueType>
-void serialization::Codec<CHelper::Node::NodeWithType>::from_json(
-        const JsonValueType &jsonValue,
-        Type &t) {
-    if (!jsonValue.IsObject()) [[unlikely]] {
-        throw exceptions::JsonSerializationTypeException("object", getJsonTypeStr(jsonValue.GetType()));
-    }
-    CHelper::Profile::push("loading type");
-    std::string type;
-    Codec<decltype(type)>::template from_json_member<JsonValueType>(jsonValue, "type", type);
-    std::optional<std::u16string> id;
-    Codec<decltype(id)>::template from_json_member<JsonValueType>(jsonValue, "id", id);
-    CHelper::Profile::next("loading node {}", FORMAT_ARG(type));
-    if (id.has_value()) [[likely]] {
-        CHelper::Profile::next("loading node {} with id \"{}\"", FORMAT_ARG(type), FORMAT_ARG(utf8::utf16to8(id.value())));
-    } else {
-        CHelper::Profile::next("loading node {} without id", FORMAT_ARG(type));
-    }
-    std::optional<CHelper::Node::NodeTypeId::NodeTypeId> nodeTypeId = CHelper::Node::getNodeTypeIdByName(type);
-    if (!nodeTypeId.has_value()) [[unlikely]] {
-        CHelper::Profile::next("unknown node type -> {}", FORMAT_ARG(type));
-        throw std::runtime_error("unknown node type");
-    }
-    NodeTypeHelper::template from_json<JsonValueType>(nodeTypeId.value(), jsonValue, t);
-    CHelper::Profile::pop();
-}
-
-template<bool isNeedConvert>
-void serialization::Codec<CHelper::Node::NodeWithType>::to_binary(
-        std::ostream &ostream,
-        const Type &t) {
-    Codec<decltype(t.nodeTypeId)>::template to_binary<isNeedConvert>(ostream, t.nodeTypeId);
-    NodeTypeHelper::template to_binary<isNeedConvert>(t.nodeTypeId, ostream, t);
-}
-
-template<bool isNeedConvert>
-void serialization::Codec<CHelper::Node::NodeWithType>::from_binary(
-        std::istream &istream,
-        Type &t) {
-    CHelper::Node::NodeTypeId::NodeTypeId nodeTypeId;
-    Codec<decltype(nodeTypeId)>::template from_binary<isNeedConvert>(istream, nodeTypeId);
-    NodeTypeHelper::template from_binary<isNeedConvert>(nodeTypeId, istream, t);
-}
+    template<>
+    struct from<CHelper::BinaryFormat, CHelper::Node::NodePerCommand> {
+        template<auto Opts>
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+            parse<CHelper::BinaryFormat>::template op<Opts>(value.name, ctx, it, end);
+            parse<CHelper::BinaryFormat>::template op<Opts>(value.description, ctx, it, end);
+            parse<CHelper::BinaryFormat>::template op<Opts>(value.syntax, ctx, it, end);
+            parse<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, it, end);
+            std::uint32_t wrappedCount = 0;
+            parse<CHelper::BinaryFormat>::template op<Opts>(wrappedCount, ctx, it, end);
+            std::vector<CHelper::Node::WrappedNodeWire> wrapped(wrappedCount);
+            for (auto &wrappedWire: wrapped) {
+                std::int32_t defIdx = -1;
+                parse<CHelper::BinaryFormat>::template op<Opts>(defIdx, ctx, it, end);
+                wrappedWire.definition = defIdx;
+                std::uint32_t nextCount = 0;
+                parse<CHelper::BinaryFormat>::template op<Opts>(nextCount, ctx, it, end);
+                wrappedWire.next.resize(nextCount);
+                for (auto &nextIdx: wrappedWire.next) {
+                    parse<CHelper::BinaryFormat>::template op<Opts>(nextIdx, ctx, it, end);
+                }
+            }
+            std::uint32_t startCount = 0;
+            parse<CHelper::BinaryFormat>::template op<Opts>(startCount, ctx, it, end);
+            std::vector<std::uint32_t> startIndices(startCount);
+            for (auto &startIdx: startIndices) {
+                parse<CHelper::BinaryFormat>::template op<Opts>(startIdx, ctx, it, end);
+            }
+            CHelper::Node::buildNodePerCommandGraph(value, wrapped, startIndices);
+        }
+    };
+}// namespace glz
 
 #endif//CHELPER_SERIALIZATION_H

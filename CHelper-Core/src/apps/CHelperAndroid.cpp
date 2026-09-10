@@ -151,9 +151,8 @@ Java_yancey_chelper_core_CHelperCore_create0(
             char *buffer = new char[dataFileSize];
             int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
             AAsset_close(asset);
-            std::istringstream iss(std::string(buffer, numBytesRead));
-            CHelper::CHelperCore *core = CHelper::CHelperCore::create([&iss]() {
-                return CHelper::CPack::createByBinary(iss);
+            CHelper::CHelperCore *core = CHelper::CHelperCore::create([&buffer, &numBytesRead]() {
+                return CHelper::CPack::createByBinary(std::string_view(buffer, numBytesRead));
             });
             delete[] buffer;
             return reinterpret_cast<jlong>(core);
@@ -211,8 +210,7 @@ Java_yancey_chelper_core_CHelperCore_old2newInit0(
         char *buffer = new char[dataFileSize];
         int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
         AAsset_close(asset);
-        std::istringstream iss(std::string(buffer, numBytesRead));
-        serialization::from_binary(iss, blockFixData0);
+        blockFixData0 = CHelper::Old2New::blockFixDataFromBinary(std::string_view(buffer, numBytesRead));
         delete[] buffer;
         return true;
     } catch (const std::exception &e) {

@@ -44,6 +44,10 @@ namespace CHelper {
 
 }// namespace CHelper
 
-CODEC_WITH_PARENT(CHelper::ItemId, CHelper::NamespaceId, max, descriptions)
+template<>
+struct glz::meta<CHelper::ItemId> {
+    using T = CHelper::ItemId;
+    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace, &T::max, &T::descriptions);
+};
 
 #endif//CHELPER_ITEMID_H

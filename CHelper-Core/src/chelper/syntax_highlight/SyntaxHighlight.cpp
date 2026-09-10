@@ -208,7 +208,7 @@ namespace CHelper::SyntaxHighlight {
 #endif
         bool isDirty;
         switch (astNode.node.nodeTypeId) {
-            CODEC_PASTE(CHELPER_COLLECT_SYNTAX, CHELPER_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_COLLECT_SYNTAX, CHELPER_NODE_TYPES)
             default:
                 CHELPER_UNREACHABLE();
         }

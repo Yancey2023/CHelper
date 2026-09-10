@@ -35,9 +35,9 @@ CHelperApp::CHelperApp(QWidget *parent)
 #else
     QFile file = QFile(QDir(":/assets").entryInfoList().first().filePath());
     if (file.open(QIODevice::ReadOnly) && file.isReadable()) {
-        std::istringstream iss(file.readAll().toStdString());
-        core = CHelper::CHelperCore::create([&iss] {
-            return CHelper::CPack::createByBinary(iss);
+        const QByteArray cpackData = file.readAll();
+        core = CHelper::CHelperCore::create([&cpackData] {
+            return CHelper::CPack::createByBinary(std::string_view(cpackData.data(), cpackData.size()));
         });
     }
 #endif

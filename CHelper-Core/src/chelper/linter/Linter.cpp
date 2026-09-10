@@ -199,7 +199,7 @@ namespace CHelper::Linter {
 #endif
             bool isDirty = false;
             switch (astNode.node.nodeTypeId) {
-                CODEC_PASTE(CHELPER_LINT, CHELPER_NODE_TYPES)
+                CHELPER_PASTE(CHELPER_LINT, CHELPER_NODE_TYPES)
                 default:
                     CHELPER_UNREACHABLE();
             }

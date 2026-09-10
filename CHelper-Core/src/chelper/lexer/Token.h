@@ -54,6 +54,4 @@ namespace CHelper {
 
 }// namespace CHelper
 
-CODEC_ENUM(CHelper::TokenType::TokenType, uint8_t)
-
 #endif//CHELPER_TOKEN_H

@@ -75,10 +75,11 @@ bool outputOld2New() {
     std::filesystem::path resourceDir(RESOURCE_DIR);
     std::filesystem::path input = resourceDir / "resources" / "old2new" / "blockFixData.json";
     std::filesystem::path output = resourceDir / "generated" / "old2new" / "old2new.dat";
-    CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(serialization::get_json_from_file(input));
+    CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(input);
     std::filesystem::create_directories(output.parent_path());
+    const std::string buffer = CHelper::Old2New::blockFixDataToBinary(blockFixData);
     std::ofstream ostream(output, std::ios::binary);
-    serialization::Codec<decltype(blockFixData)>::to_binary<false>(ostream, blockFixData);
+    ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
     ostream.close();
     return true;
 }

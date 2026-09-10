@@ -18,8 +18,13 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/old2new/Old2New.h>
+#include <chelper/serialization/Serialization.h>
 
-CODEC_REGISTER_JSON_KEY(CHelper::Old2New::DataFix, name, data, newBlockId, blockState)
+template<>
+struct glz::meta<CHelper::Old2New::BlockFixEntry> {
+    using T = CHelper::Old2New::BlockFixEntry;
+    static constexpr auto value = glz::object(&T::name, &T::data, &T::newBlockId, &T::blockState);
+};
 
 namespace CHelper::Old2New {
 
@@ -642,27 +647,31 @@ namespace CHelper::Old2New {
         return result;
     }
 
-    BlockFixData blockFixDataFromJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericDocument<rapidjson::UTF8<>>;
-        if (!j.IsArray()) [[unlikely]] {
-            throw serialization::exceptions::JsonSerializationTypeException("array", serialization::getJsonTypeStr(j.GetType()));
-        }
+#ifndef CHELPER_NO_FILESYSTEM
+    BlockFixData blockFixDataFromJson(const std::filesystem::path &path) {
+        std::vector<BlockFixEntry> entries;
+        CHelper::readJsonFromFile(entries, path);
         BlockFixData blockFixData;
-        for (const auto &item: j.GetArray()) {
-            if (!item.IsObject()) [[unlikely]] {
-                throw serialization::exceptions::JsonSerializationTypeException("object", serialization::getJsonTypeStr(j.GetType()));
-            }
-            std::u16string name;
-            serialization::Codec<decltype(name)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::name_(), name);
-            uint32_t data;
-            serialization::Codec<decltype(data)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::data_(), data);
-            std::optional<std::u16string> newBlockId;
-            serialization::Codec<decltype(newBlockId)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::newBlockId_(), newBlockId);
-            std::optional<std::u16string> blockState;
-            serialization::Codec<decltype(blockState)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::blockState_(), blockState);
-            const auto &iter = blockFixData.try_emplace(std::move(name)).first;
-            iter->second.insert({data, {std::move(newBlockId), std::move(blockState)}});
+        for (auto &entry: entries) {
+            auto &dataValueToBlockState = blockFixData.try_emplace(std::move(entry.name)).first->second;
+            dataValueToBlockState.insert_or_assign(entry.data,
+                                                   std::make_pair(std::move(entry.newBlockId),
+                                                                  std::move(entry.blockState)));
         }
+        return blockFixData;
+    }
+#endif
+
+    // 二进制格式直接序列化嵌套 map（方块名只写一次，与旧版二进制布局一致）
+    std::string blockFixDataToBinary(const BlockFixData &blockFixData) {
+        std::string buffer;
+        CHelper::writeBinary(buffer, blockFixData);
+        return buffer;
+    }
+
+    BlockFixData blockFixDataFromBinary(std::string_view buffer) {
+        BlockFixData blockFixData;
+        CHelper::readBinary(blockFixData, buffer);
         return blockFixData;
     }
 
