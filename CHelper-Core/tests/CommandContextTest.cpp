@@ -78,7 +78,7 @@ namespace CHelper::Test {
         const std::u16string command = uR"(give @s stone 12 1)";
         CommandContext context(cpack, command);
 
-        EXPECT_EQ(context.getCommand(), command);
+        EXPECT_EQ(context.getCommand(), std::u16string_view(command));
         EXPECT_FALSE(context.getStructure().empty());
         EXPECT_FALSE(context.getParamHint(5).empty());
         // 命令完整，不应有错误原因
@@ -101,7 +101,7 @@ namespace CHelper::Test {
         CHelperCore core(cpack);
         for (const auto &command: getTestCommands()) {
             std::unique_ptr<CommandContext> context(core.createContext(command));
-            EXPECT_EQ(context->getCommand(), command) << utf8::utf16to8(command);
+            EXPECT_EQ(context->getCommand(), std::u16string_view(command)) << utf8::utf16to8(command);
             EXPECT_FALSE(context->getStructure().empty()) << utf8::utf16to8(command);
         }
     }

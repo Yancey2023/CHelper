@@ -34,7 +34,7 @@ namespace CHelper {
     public:
         const std::shared_ptr<LexerResult> lexerResult;
         size_t index = 0;
-        std::vector<size_t> indexStack;
+        std::pmr::vector<size_t> indexStack;
 
         explicit TokenReader(const std::shared_ptr<LexerResult> &lexerResult);
 

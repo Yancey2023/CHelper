@@ -23,9 +23,9 @@ namespace CHelper {
 
     ASTNode::ASTNode(ASTNodeMode::ASTNodeMode mode,
                      const Node::NodeWithType &node,
-                     std::vector<ASTNode> &&childNodes,
+                     std::pmr::vector<ASTNode> &&childNodes,
                      TokensView tokens,
-                     const std::vector<std::shared_ptr<ErrorReason>> &errorReasons,
+                     const std::pmr::vector<std::shared_ptr<ErrorReason>> &errorReasons,
                      ASTNodeId::ASTNodeId id,
                      size_t whichBest)
         : mode(mode),
@@ -40,7 +40,7 @@ namespace CHelper {
                                 const TokensView &tokens,
                                 const std::shared_ptr<ErrorReason> &errorReason,
                                 const ASTNodeId::ASTNodeId &id) {
-        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
         if (errorReason != nullptr) [[likely]] {
             errorReasons.push_back(errorReason);
         }
@@ -48,7 +48,7 @@ namespace CHelper {
     }
 
     ASTNode ASTNode::andNode(const Node::NodeWithType &node,
-                             std::vector<ASTNode> &&childNodes,
+                             std::pmr::vector<ASTNode> &&childNodes,
                              const TokensView &tokens,
                              const std::shared_ptr<ErrorReason> &errorReason,
                              const ASTNodeId::ASTNodeId &id) {
@@ -64,7 +64,7 @@ namespace CHelper {
     }
 
     ASTNode ASTNode::orNode(const Node::NodeWithType &node,
-                            std::vector<ASTNode> &&childNodes,
+                            std::pmr::vector<ASTNode> &&childNodes,
                             const TokensView *tokens,
                             const char16_t *errorReason,
                             const ASTNodeId::ASTNodeId &id) {
@@ -85,7 +85,7 @@ namespace CHelper {
                 break;
             }
         }
-        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
         size_t whichBest = 0;
         if (errorCount == 0) [[unlikely]] {
             // 从没有错误的内容中找出最好的节点
@@ -135,7 +135,7 @@ namespace CHelper {
     }
 
     ASTNode ASTNode::orNode(const Node::NodeWithType &node,
-                            std::vector<ASTNode> &&childNodes,
+                            std::pmr::vector<ASTNode> &&childNodes,
                             const TokensView &tokens,
                             const char16_t *errorReason,
                             const ASTNodeId::ASTNodeId &id) {

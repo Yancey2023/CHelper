@@ -22,13 +22,13 @@ namespace CHelper::Lexer {
 
     class Lexer {
     private:
-        const std::u16string &content;
+        const std::u16string_view content;
         size_t index = 0;
-        std::vector<Token> tokens;
+        std::pmr::vector<Token> &tokens;
 
     public:
-        explicit Lexer(const std::u16string &content)
-            : content(content) {}
+        Lexer(const std::u16string_view content, std::pmr::vector<Token> &tokens)
+            : content(content), tokens(tokens) {}
 
     private:
         void getNumberToken(size_t startIndex) {
@@ -202,20 +202,16 @@ namespace CHelper::Lexer {
                 }
             }
         }
-
-        std::vector<Token> getResult() {
-            return std::move(tokens);
-        }
     };
 
-    std::shared_ptr<LexerResult> lex(std::u16string content) {
+    std::shared_ptr<LexerResult> lex(const std::u16string_view content) {
 #ifdef CHelperTest
         Profile::push("start lex: {}", FORMAT_ARG(utf8::utf16to8(content)));
 #endif
-        auto result = std::make_shared<LexerResult>(std::move(content), std::vector<Token>{});
-        Lexer lexer(result->content);
+        auto result = allocateSharedFromDefault<LexerResult>(
+                std::pmr::u16string(content.data(), content.size()), std::pmr::vector<Token>{});
+        Lexer lexer(result->content, result->allTokens);
         lexer.run();
-        result->allTokens = lexer.getResult();
 #ifdef CHelperTest
         Profile::pop();
 #endif

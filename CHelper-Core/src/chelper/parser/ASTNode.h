@@ -61,10 +61,10 @@ namespace CHelper {
         //一个Node可能会生成多个ASTNode，这些ASTNode使用id进行区分
         Node::NodeWithType node;
         //子节点为AND类型和OR类型特有
-        std::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes;
         TokensView tokens;
         //不要直接用这个，这里不包括ID错误，只有结构错误，应该用getErrorReason()
-        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
         //AST节点ID
         ASTNodeId::ASTNodeId id;
         //哪个节点最好，OR类型特有，获取颜色和生成命令格式文本的时候使用
@@ -72,9 +72,9 @@ namespace CHelper {
 
         ASTNode(ASTNodeMode::ASTNodeMode mode,
                 const Node::NodeWithType &node,
-                std::vector<ASTNode> &&childNodes,
+                std::pmr::vector<ASTNode> &&childNodes,
                 TokensView tokens,
-                const std::vector<std::shared_ptr<ErrorReason>> &errorReasons,
+                const std::pmr::vector<std::shared_ptr<ErrorReason>> &errorReasons,
                 ASTNodeId::ASTNodeId id,
                 size_t whichBest = -1);
 
@@ -84,19 +84,19 @@ namespace CHelper {
                                   const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode andNode(const Node::NodeWithType &node,
-                               std::vector<ASTNode> &&childNodes,
+                               std::pmr::vector<ASTNode> &&childNodes,
                                const TokensView &tokens,
                                const std::shared_ptr<ErrorReason> &errorReason = nullptr,
                                const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode orNode(const Node::NodeWithType &node,
-                              std::vector<ASTNode> &&childNodes,
+                              std::pmr::vector<ASTNode> &&childNodes,
                               const TokensView *tokens,
                               const char16_t *errorReason = nullptr,
                               const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode orNode(const Node::NodeWithType &node,
-                              std::vector<ASTNode> &&childNodes,
+                              std::pmr::vector<ASTNode> &&childNodes,
                               const TokensView &tokens,
                               const char16_t *errorReason = nullptr,
                               const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);

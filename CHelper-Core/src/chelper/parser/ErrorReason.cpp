@@ -29,19 +29,19 @@ namespace CHelper {
     ErrorReason::ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                              size_t start,
                              size_t end,
-                             std::u16string errorReason)
+                             std::u16string_view errorReason)
         : level(level),
           start(start),
           end(end),
-          errorReason(std::move(errorReason)) {}
+          errorReason(errorReason.data(), errorReason.size()) {}
 
     ErrorReason::ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                              const TokensView &tokens,
-                             std::u16string errorReason)
+                             std::u16string_view errorReason)
         : level(level),
           start(tokens.startIndex),
           end(tokens.endIndex),
-          errorReason(std::move(errorReason)) {}
+          errorReason(errorReason.data(), errorReason.size()) {}
 
     bool ErrorReason::operator==(const ErrorReason &reason) const {
         return start == reason.start &&

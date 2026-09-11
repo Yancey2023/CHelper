@@ -255,7 +255,9 @@ namespace CHelper::Linter {
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode) {
-        std::vector<std::shared_ptr<ErrorReason>> result = astNode.errorReasons;
+        std::vector<std::shared_ptr<ErrorReason>> result;
+        result.reserve(astNode.errorReasons.size());
+        result.insert(result.end(), astNode.errorReasons.begin(), astNode.errorReasons.end());
 #ifdef CHelperTest
         Profile::push("start getting error reasons: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif

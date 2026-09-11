@@ -112,6 +112,35 @@ namespace CHelper {
             Profile::next(R"(init command: "{}")", FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(item.name, u",")))));
             Node::initNode(item, *this);
         }
+        // 解析阶段只读共享的 CPack。提前完成所有惰性缓存，避免第一次解析时
+        // 把 CPack 内部节点或 ID 缓存分配到调用方的临时内存资源中。
+        for (const auto &[key, values]: normalIds) {
+            (void) key;
+            for (const auto &item: *values) {
+                item->buildHash();
+            }
+        }
+        for (const auto &[key, values]: namespaceIds) {
+            (void) key;
+            for (const auto &item: *values) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+            }
+        }
+        if (itemIds != nullptr) {
+            for (const auto &item: *itemIds) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+                item->getNode();
+            }
+        }
+        if (blockIds != nullptr && blockIds->blockStateValues != nullptr) {
+            for (const auto &item: *blockIds->blockStateValues) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+                item->getNode(blockIds->blockPropertyDescriptions);
+            }
+        }
         Profile::next("sort command nodes");
         validate();
         std::ranges::sort(*commands, [](const auto &item1, const auto &item2) {

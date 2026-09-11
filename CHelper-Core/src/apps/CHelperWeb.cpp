@@ -66,7 +66,7 @@ namespace {
     }
 
     // 写入 UTF-16 字符串: [u32 长度][u16 数据]，返回数据末尾的位置
-    static size_t writeUtf16(size_t offset, const std::u16string &string) {
+    static size_t writeUtf16(size_t offset, const std::u16string_view string) {
         offset = writeU32(offset, static_cast<std::uint32_t>(string.size()));
         if (!string.empty()) {
             std::memcpy(buffer.data() + offset, string.data(), string.size() * sizeof(char16_t));
@@ -83,7 +83,7 @@ namespace {
     //   语法token     [u32 数量][u8 数据]*
 
     // 布局: [u32 长度][u16 字符串]
-    const uint8_t *writeU16String(const std::u16string &string) {
+    const uint8_t *writeU16String(const std::u16string_view string) {
         size_t offset = prepareBuffer(4 + string.size() * sizeof(char16_t));
         writeUtf16(offset, string);
         return buffer.data();

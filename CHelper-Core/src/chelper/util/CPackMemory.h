@@ -54,7 +54,7 @@ namespace CHelper {
     private:
         inline static std::once_flag installFlag;
         inline static std::atomic<std::pmr::memory_resource *> upstream = nullptr;
-        inline static thread_local CPackMemoryResource *current = nullptr;
+        inline static thread_local std::pmr::memory_resource *current = nullptr;
         inline static thread_local size_t scopeDepth = 0;
 
         [[nodiscard]] static CPackMemoryRouter &instance() noexcept {
@@ -87,28 +87,27 @@ namespace CHelper {
             });
         }
 
-        static void setCurrent(CPackMemoryResource *memory) noexcept {
+        static void setCurrent(std::pmr::memory_resource *memory) noexcept {
             current = memory;
         }
 
-        [[nodiscard]] static CPackMemoryResource *getCurrent() noexcept {
+        [[nodiscard]] static std::pmr::memory_resource *getCurrent() noexcept {
             return current;
         }
 
-        [[nodiscard]] static size_t enter(CPackMemoryResource *memory) noexcept {
+        [[nodiscard]] static size_t enter(std::pmr::memory_resource *memory) noexcept {
             setCurrent(memory);
             return ++scopeDepth;
         }
 
-        static void leave(const size_t depth, CPackMemoryResource *previous) noexcept {
+        static void leave(const size_t depth, std::pmr::memory_resource *previous) noexcept {
+            if (scopeDepth == 0) {
+                setCurrent(previous);
+                return;
+            }
             if (scopeDepth == depth) {
                 setCurrent(previous);
             }
-            --scopeDepth;
-        }
-
-        static void leaveOwner() noexcept {
-            setCurrent(nullptr);
             --scopeDepth;
         }
     };
@@ -120,7 +119,7 @@ namespace CHelper {
      */
     class CPackMemoryScope {
     private:
-        CPackMemoryResource *previous = nullptr;
+        std::pmr::memory_resource *previous = nullptr;
         std::shared_ptr<CPackMemoryResource> memory;
         size_t depth = 0;
         bool active = false;
@@ -132,7 +131,7 @@ namespace CHelper {
         explicit CPackMemoryScope(const std::shared_ptr<CPackMemoryResource> &memory)
             : previous(CPackMemoryRouter::getCurrent()), memory(memory), active(true) {
             CPackMemoryRouter::install();
-            depth = CPackMemoryRouter::enter(this->memory.get());
+            depth = CPackMemoryRouter::enter(this->memory->getResource());
         }
 
         void bindAsOwner(const std::shared_ptr<CPackMemoryResource> &ownerMemory) {
@@ -141,15 +140,32 @@ namespace CHelper {
             active = true;
             owner = true;
             CPackMemoryRouter::install();
-            depth = CPackMemoryRouter::enter(memory.get());
+            depth = CPackMemoryRouter::enter(memory->getResource());
+        }
+
+        void release() noexcept {
+            if (active) {
+                CPackMemoryRouter::leave(depth, previous);
+                active = false;
+            }
+        }
+
+        void prepareForDestruction() noexcept {
+            if (!active) {
+                previous = CPackMemoryRouter::getCurrent();
+                CPackMemoryRouter::install();
+                depth = CPackMemoryRouter::enter(memory->getResource());
+                active = true;
+            }
         }
 
         ~CPackMemoryScope() {
             if (active) {
                 if (owner) {
-                    CPackMemoryRouter::leaveOwner();
+                    CPackMemoryRouter::setCurrent(nullptr);
+                    CPackMemoryRouter::leave(depth, nullptr);
                 } else {
-                    CPackMemoryRouter::leave(depth, previous);
+                    release();
                 }
             }
         }

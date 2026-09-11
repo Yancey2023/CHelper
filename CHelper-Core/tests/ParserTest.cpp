@@ -177,7 +177,7 @@ namespace CHelper::Test {
     TEST(ParserTest, OrNodeWithEmptyChildNodes) {
         Node::NodeText node("OR_NODE_TEST", u"test", NormalId::make(u"x", u"test"));
         Node::NodeWithType nodeWithType(node);
-        std::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes;
         EXPECT_ANY_THROW(ASTNode::orNode(nodeWithType, std::move(childNodes), nullptr));
     }
 #endif

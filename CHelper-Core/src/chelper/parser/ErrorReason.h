@@ -22,6 +22,7 @@
 #define CHELPER_ERRORREASON_H
 
 #include <chelper/parser/TokensView.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -54,93 +55,93 @@ namespace CHelper {
     public:
         ErrorReasonLevel::ErrorReasonLevel level;
         size_t start, end;
-        std::u16string errorReason;
+        std::pmr::u16string errorReason;
 
         ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                     size_t start,
                     size_t end,
-                    std::u16string errorReason);
+                    std::u16string_view errorReason);
 
         ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                     const TokensView &tokens,
-                    std::u16string errorReason);
+                    std::u16string_view errorReason);
 
         //命令后面有多余部分
         [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(size_t start,
                                                                     size_t end,
                                                                     const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::EXCESS, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::EXCESS, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(const TokensView &tokens,
                                                                     const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::EXCESS, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::EXCESS, tokens, errorReason);
         }
 
         //缺少空格
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         requireSpace(const TokensView &tokens) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, tokens, u"命令不完整，缺少空格");
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, tokens, u"命令不完整，缺少空格");
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         requireSpace(size_t start, size_t end) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, start, end, u"命令不完整，缺少空格");
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, start, end, u"命令不完整，缺少空格");
         }
 
         //命令不完整
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         incomplete(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::INCOMPLETE, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::INCOMPLETE, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         incomplete(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::INCOMPLETE, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::INCOMPLETE, tokens, errorReason);
         }
 
         //类型不匹配
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         typeError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         typeError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, tokens, errorReason);
         }
 
         //内容不匹配
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         contentError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         contentError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, tokens, errorReason);
         }
 
         //逻辑错误
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         logicError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         logicError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, tokens, errorReason);
         }
 
         //ID错误
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         idError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::ID_ERROR, start, end, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::ID_ERROR, start, end, errorReason);
         }
 
         [[maybe_unused]] static std::shared_ptr<ErrorReason>
         idError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::ID_ERROR, tokens, errorReason);
+            return allocateSharedFromDefault<ErrorReason>(ErrorReasonLevel::ID_ERROR, tokens, errorReason);
         }
 
         bool operator==(const CHelper::ErrorReason &reason) const;

@@ -22,16 +22,17 @@
 #define CHELPER_LEXERRESULT_H
 
 #include <chelper/lexer/Token.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
 
     class LexerResult {
     public:
-        const std::u16string content;
-        std::vector<Token> allTokens;
+        const std::pmr::u16string content;
+        std::pmr::vector<Token> allTokens;
 
-        LexerResult(std::u16string content, std::vector<Token> allTokens);
+        LexerResult(std::pmr::u16string content, std::pmr::vector<Token> allTokens);
 
         // allTokens 中的 string_view 存储了 content 内容的指针，随意复制或移动会出问题
         LexerResult(const LexerResult &) = delete;

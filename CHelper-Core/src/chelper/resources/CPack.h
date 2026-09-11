@@ -114,6 +114,11 @@ namespace CHelper {
         friend std::unique_ptr<CPack> serialization::createCPackByBinary(std::string_view data);
 
     public:
+        ~CPack() {
+            CPackMemoryRouter::install();
+            CPackMemoryRouter::setCurrent(cpackMemory->getResource());
+        }
+
         Manifest manifest;
         std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
         std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
@@ -163,6 +168,10 @@ namespace CHelper {
 
         [[nodiscard]] std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
         getNamespaceId(std::string_view key) const;
+
+        [[nodiscard]] std::pmr::memory_resource *getMemoryResource() const noexcept {
+            return cpackMemory->getResource();
+        }
     };
 
 }// namespace CHelper

@@ -29,6 +29,80 @@
 
 namespace CHelper {
 
+    class CommandContextMemoryResource final : public std::pmr::memory_resource {
+    private:
+        std::pmr::unsynchronized_pool_resource resource;
+
+        void *do_allocate(const size_t bytes, const size_t alignment) override {
+            return resource.allocate(bytes, alignment);
+        }
+
+        void do_deallocate(void *pointer, const size_t bytes, const size_t alignment) noexcept override {
+            resource.deallocate(pointer, bytes, alignment);
+        }
+
+        [[nodiscard]] bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override {
+            return this == &other;
+        }
+
+    public:
+        CommandContextMemoryResource()
+            : resource({}, std::pmr::new_delete_resource()) {
+            CPackMemoryRouter::install();
+            std::pmr::memory_resource *previous = CPackMemoryRouter::getCurrent();
+            CPackMemoryRouter::setCurrent(nullptr);
+            Node::initializeStaticNodes();
+            CPackMemoryRouter::setCurrent(previous);
+        }
+
+        [[nodiscard]] std::pmr::memory_resource *getResource() noexcept {
+            return this;
+        }
+    };
+
+    class CommandContextMemoryScope {
+    private:
+        std::pmr::memory_resource *resource;
+        std::pmr::memory_resource *restore = nullptr;
+        size_t depth = 0;
+        bool active = false;
+
+    public:
+        CommandContextMemoryScope(std::pmr::memory_resource *resource,
+                                  std::pmr::memory_resource *restore)
+            : resource(resource), restore(restore), active(true) {
+            CPackMemoryRouter::install();
+            depth = CPackMemoryRouter::enter(resource);
+        }
+
+        void release() noexcept {
+            if (active) {
+                CPackMemoryRouter::leave(depth, restore);
+                if (restore != nullptr) {
+                    CPackMemoryRouter::setCurrent(nullptr);
+                }
+                active = false;
+            }
+        }
+
+        void prepareForDestruction() noexcept {
+            if (!active) {
+                CPackMemoryRouter::install();
+                depth = CPackMemoryRouter::enter(resource);
+                active = true;
+            }
+        }
+
+        ~CommandContextMemoryScope() {
+            if (active) {
+                CPackMemoryRouter::leave(depth, restore);
+            }
+        }
+
+        CommandContextMemoryScope(const CommandContextMemoryScope &) = delete;
+        CommandContextMemoryScope &operator=(const CommandContextMemoryScope &) = delete;
+    };
+
     /**
      * 命令上下文，持有某条命令解析好的AST
      * 与CHelperCore不同，CommandContext不保存光标等可变状态，
@@ -46,7 +120,9 @@ namespace CHelper {
     class CommandContext {
     private:
         std::shared_ptr<const CPack> cpack;
-        std::u16string command;
+        CommandContextMemoryResource memory;
+        CommandContextMemoryScope memoryScope;
+        std::pmr::u16string command;
         ASTNode astNode;
 
     public:
@@ -57,12 +133,14 @@ namespace CHelper {
          */
         CommandContext(std::shared_ptr<const CPack> cpack, std::u16string command);
 
+        ~CommandContext();
+
         [[nodiscard]] const CPack &getCPack() const;
 
         /**
          * 获取这个上下文对应的命令文本
          */
-        [[nodiscard]] const std::u16string &getCommand() const;
+        [[nodiscard]] std::u16string_view getCommand() const;
 
         /**
          * 获取解析好的AST
