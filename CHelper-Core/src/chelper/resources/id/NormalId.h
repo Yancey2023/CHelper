@@ -21,14 +21,15 @@
 #ifndef CHELPER_NORMALID_H
 #define CHELPER_NORMALID_H
 
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
 
     class NormalId {
     public:
-        std::u16string name;
-        std::optional<std::u16string> description;
+        std::pmr::u16string name;
+        std::optional<std::pmr::u16string> description;
 
     private:
         XXH64_hash_t nameHash = 0;
@@ -45,7 +46,25 @@ namespace CHelper {
 
         [[nodiscard]] XXH3_state_t *getHashState();
 
-        static std::shared_ptr<NormalId> make(const std::u16string &name, const std::optional<std::u16string> &description);
+        static std::shared_ptr<NormalId> make(std::u16string_view name, std::u16string_view description);
+
+        static std::shared_ptr<NormalId> make(std::u16string_view name) {
+            return make(name, std::u16string_view());
+        }
+
+        static std::shared_ptr<NormalId> make(std::u16string_view name, std::nullopt_t) {
+            return make(name);
+        }
+
+        template<class String>
+        static std::shared_ptr<NormalId> make(std::u16string_view name, const std::optional<String> &description) {
+            auto result = allocateSharedFromDefault<NormalId>();
+            result->name.assign(name.data(), name.size());
+            if (description.has_value()) {
+                result->description.emplace(description->data(), description->size());
+            }
+            return result;
+        }
     };
 
 }// namespace CHelper

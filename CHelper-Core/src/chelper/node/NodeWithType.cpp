@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/node/NodeWithType.h>
 
@@ -25,6 +26,18 @@
         break;
 
 namespace CHelper::Node {
+
+    void initializeStaticNodes() {
+        static const bool initialized = [] {
+            (void) NodeLF::getInstance();
+            (void) NodeAny::getNodeAny();
+            TargetSelectorData targetSelectorData;
+            (void) NodeJsonElement::getNodeJsonElement();
+            (void) NodeJsonEntry::getNodeJsonAllEntry();
+            return true;
+        }();
+        (void) initialized;
+    }
 
     FreeableNodeWithTypes::~FreeableNodeWithTypes() {
         for (auto &item: nodes) {

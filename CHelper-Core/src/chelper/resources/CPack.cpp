@@ -69,10 +69,10 @@ namespace CHelper {
             }
         }
         for (const auto &item: repeatNodeData) {
-            std::vector<Node::NodeWithType> content;
+            std::pmr::vector<Node::NodeWithType> content;
             content.reserve(item.repeatNodes.size());
             for (const auto &item2: item.repeatNodes) {
-                std::vector<Node::NodeWithType> perContent;
+                std::pmr::vector<Node::NodeWithType> perContent;
                 perContent.reserve(item2.nodes.size());
                 for (const auto &item3: item2.nodes) {
                     auto nodeWrapped = new Node::NodeWrapped(item3);
@@ -83,7 +83,7 @@ namespace CHelper {
                 content.emplace_back(*node);
                 cacheNodes.nodes.emplace_back(*node);
             }
-            std::vector<Node::NodeWithType> breakChildNodes;
+            std::pmr::vector<Node::NodeWithType> breakChildNodes;
             breakChildNodes.reserve(item.breakNodes.nodes.size());
             for (const auto &item2: item.breakNodes.nodes) {
                 auto nodeWrapped = new Node::NodeWrapped(item2);
@@ -144,9 +144,10 @@ namespace CHelper {
         }
     }
 
-    std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>
-    CPack::getNormalId(const std::string &key) const {
-        auto it = normalIds.find(key);
+    std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>
+    CPack::getNormalId(const std::string_view key) const {
+        const std::pmr::string searchKey(key.data(), key.size(), normalIds.get_allocator().resource());
+        auto it = normalIds.find(searchKey);
         if (it == normalIds.end()) [[unlikely]] {
 #ifdef CHelperDebug
             SPDLOG_WARN(R"(fail to find normal ids by key: "{}")", FORMAT_ARG(key));
@@ -156,14 +157,15 @@ namespace CHelper {
         return it->second;
     }
 
-    std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>
-    CPack::getNamespaceId(const std::string &key) const {
+    std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
+    CPack::getNamespaceId(const std::string_view key) const {
         if (key == "block") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::vector<std::shared_ptr<NamespaceId>>>(blockIds->blockStateValues);
+            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(blockIds->blockStateValues);
         } else if (key == "item") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::vector<std::shared_ptr<NamespaceId>>>(itemIds);
+            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(itemIds);
         }
-        auto it = namespaceIds.find(key);
+        const std::pmr::string searchKey(key.data(), key.size(), namespaceIds.get_allocator().resource());
+        auto it = namespaceIds.find(searchKey);
         if (it == namespaceIds.end()) [[unlikely]] {
 #ifdef CHelperDebug
             SPDLOG_WARN(R"(fail to find namespace ids by key: "{}")", FORMAT_ARG(key));

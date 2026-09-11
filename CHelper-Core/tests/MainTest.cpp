@@ -133,9 +133,9 @@ namespace CHelper::Test {
                                     fmt::styled(utf8::utf16to8(item.content->name), fg(fmt::color::lime_green)),
                                     fmt::styled(utf8::utf16to8(item.content->description.value_or(u"")), fg(fmt::color::cornflower_blue)));
                         std::u16string result = command.substr(0, item.start)
-                                                        .append(item.content->name)
+                                                        .append(item.content->name.data(), item.content->name.size())
                                                         .append(command.substr(item.end));
-                        std::u16string greenPart = item.content->name;
+                        std::u16string greenPart(item.content->name.data(), item.content->name.size());
                         if (item.end == command.length()) {
                             ASTNode astNode = Parser::parse(result, context->getCPack());
                             if (item.isAddSpace && astNode.isAllSpaceError()) {

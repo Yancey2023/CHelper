@@ -60,10 +60,9 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodeIntegerWithUnit> {
         static void init(NodeIntegerWithUnit &node, const CPack &cpack) {
-            static NodeInteger nodeInteger("INTEGER", u"整数", std::nullopt, std::nullopt);
             node.nodeUnits = NodeNormalId("UNITS", u"单位", node.units, false);
-            node.nodeIntegerWithUnit = NodeAnd({nodeInteger, node.nodeUnits});
-            node.nodeIntegerMaybeHaveUnit = NodeOr({node.nodeIntegerWithUnit, nodeInteger}, false, true);
+            node.nodeIntegerWithUnit = NodeAnd({NodeIntegerWithUnit::nodeInteger, node.nodeUnits});
+            node.nodeIntegerMaybeHaveUnit = NodeOr({node.nodeIntegerWithUnit, NodeIntegerWithUnit::nodeInteger}, false, true);
         }
     };
 
@@ -191,7 +190,7 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodeTargetSelector> {
         static void init(NodeTargetSelector &node, const CPack &cpack) {
-            std::vector<NodeWithType> nodes;
+            std::pmr::vector<NodeWithType> nodes;
             nodes.reserve(node.isWildcard ? 3 : 2);
             if (node.isWildcard) {
                 nodes.emplace_back(Node::TargetSelectorData::nodeWildcard);
@@ -223,14 +222,14 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonEntry> {
         static void init(NodeJsonEntry &node, const CPack &cpack) {
         }
-        static void init(NodeJsonEntry &node, const std::vector<NodeWithType> &dataList) {
+        static void init(NodeJsonEntry &node, const std::pmr::vector<NodeWithType> &dataList) {
             if (node.value.empty()) [[unlikely]] {
                 //value为空会产生childNodes为空的OR节点，Parser访问orNode的childNodes[whichBest]时会越界
                 Profile::push("checking json entry \"{}\"", FORMAT_ARG(utf8::utf16to8(node.key)));
                 Profile::push("json entry must have at least one value node");
                 throw std::runtime_error("json entry value cannot be empty");
             }
-            std::vector<NodeWithType> valueNodes;
+            std::pmr::vector<NodeWithType> valueNodes;
             for (const auto &item: node.value) {
                 bool notFind = true;
                 for (const auto &item2: dataList) {
@@ -258,7 +257,7 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonList> {
         static void init(NodeJsonList &node, const CPack &cpack) {
         }
-        static void init(NodeJsonList &node, const std::vector<NodeWithType> &dataList) {
+        static void init(NodeJsonList &node, const std::pmr::vector<NodeWithType> &dataList) {
             for (const auto &item: dataList) {
                 if (reinterpret_cast<const NodeSerializable *>(item.data)->id == node.data) [[unlikely]] {
                     node.nodeList = NodeList(Node::NodeJsonList::nodeLeft, item, Node::NodeJsonList::nodeSeparator, Node::NodeJsonList::nodeRight);
@@ -311,24 +310,24 @@ namespace CHelper::Node {
             if (node.data.empty()) [[unlikely]] {
                 node.nodeElement1 = std::nullopt;
             } else {
-                std::vector<NodeWithType> nodeElementData;
+                std::pmr::vector<NodeWithType> nodeElementData;
                 nodeElementData.reserve(node.data.size());
                 for (const auto &item: node.data) {
                     nodeElementData.emplace_back(item);
                 }
                 node.nodeElement1 = NodeOr(std::move(nodeElementData), false);
             }
-            std::vector<NodeWithType> nodeElementData;
+            std::pmr::vector<NodeWithType> nodeElementData;
             if (node.nodeElement1.has_value()) [[likely]] {
                 nodeElementData.reserve(2);
                 nodeElementData.emplace_back(node.nodeElement1.value());
             }
             nodeElementData.emplace_back(NodeJsonEntry::getNodeJsonAllEntry());
             node.nodeElement2 = NodeOr(std::move(nodeElementData), false, true);
-            static NodeSingleSymbol nodeListLeft(u'{', u"JSON列表左括号");
-            static NodeSingleSymbol nodeListRight(u'}', u"JSON列表右括号");
-            static NodeSingleSymbol nodeListSeparator(u',', u"JSON列表分隔符");
-            node.nodeList = NodeList(nodeListLeft, node.nodeElement2, nodeListSeparator, nodeListRight);
+            node.nodeList = NodeList(NodeJsonObject::nodeListLeft,
+                                     node.nodeElement2,
+                                     NodeJsonObject::nodeListSeparator,
+                                     NodeJsonObject::nodeListRight);
         }
     };
 
@@ -339,7 +338,7 @@ namespace CHelper::Node {
                 for (const auto &item: node.data.value().nodes) {
                     initNode(item, cpack);
                 }
-                std::vector<NodeWithType> nodeDataElement;
+                std::pmr::vector<NodeWithType> nodeDataElement;
                 nodeDataElement.reserve(node.data.value().nodes.size());
                 for (const auto &item: node.data.value().nodes) {
                     nodeDataElement.push_back(item);

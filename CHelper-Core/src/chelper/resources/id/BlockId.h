@@ -36,7 +36,7 @@ namespace CHelper {
     }
 
     union PropertyValue {
-        std::u16string *string;
+        std::pmr::u16string *string;
         bool boolean = true;
         int32_t integer;
     };
@@ -44,9 +44,9 @@ namespace CHelper {
     class Property {
     public:
         PropertyType::PropertyType type = PropertyType::BOOLEAN;
-        std::u16string name;
+        std::pmr::u16string name;
         PropertyValue defaultValue;
-        std::optional<std::vector<PropertyValue>> valid;
+        std::optional<std::pmr::vector<PropertyValue>> valid;
 
         Property() = default;
 
@@ -66,15 +66,15 @@ namespace CHelper {
     class BlockPropertyValueDescription {
     public:
         PropertyValue valueName;
-        std::optional<std::u16string> description;
+        std::optional<std::pmr::u16string> description;
     };
 
     class BlockPropertyDescription {
     public:
         PropertyType::PropertyType type = PropertyType::BOOLEAN;
-        std::u16string propertyName;
-        std::optional<std::u16string> description;
-        std::vector<BlockPropertyValueDescription> values;
+        std::pmr::u16string propertyName;
+        std::optional<std::pmr::u16string> description;
+        std::pmr::vector<BlockPropertyValueDescription> values;
 
         BlockPropertyDescription() = default;
 
@@ -93,24 +93,24 @@ namespace CHelper {
 
     class PerBlockPropertyDescription {
     public:
-        std::vector<std::u16string> blocks;
-        std::vector<BlockPropertyDescription> properties;
+        std::pmr::vector<std::pmr::u16string> blocks;
+        std::pmr::vector<BlockPropertyDescription> properties;
     };
 
     class BlockPropertyDescriptions {
     public:
-        std::vector<BlockPropertyDescription> common;
-        std::vector<PerBlockPropertyDescription> block;
+        std::pmr::vector<BlockPropertyDescription> common;
+        std::pmr::vector<PerBlockPropertyDescription> block;
 
         [[nodiscard]] const BlockPropertyDescription &getPropertyDescription(
-                const std::u16string &blockIdWithNamespace,
-                const std::u16string &blockId,
-                const std::u16string &propertyName) const;
+                std::u16string_view blockIdWithNamespace,
+                std::u16string_view blockId,
+                std::u16string_view propertyName) const;
     };
 
     class BlockId : public NamespaceId {
     public:
-        std::optional<std::vector<Property>> properties;
+        std::optional<std::pmr::vector<Property>> properties;
 
     private:
         Node::FreeableNodeWithTypes nodeChildren;
@@ -124,7 +124,7 @@ namespace CHelper {
 
     class BlockIds {
     public:
-        std::shared_ptr<std::vector<std::shared_ptr<BlockId>>> blockStateValues;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<BlockId>>> blockStateValues;
         BlockPropertyDescriptions blockPropertyDescriptions;
     };
 

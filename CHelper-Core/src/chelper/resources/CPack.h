@@ -26,29 +26,30 @@
 #include <chelper/resources/Manifest.h>
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
 
     // id 数据条目：由 "type" 键区分（normal / namespace / block / item）
     struct NormalIdEntry {
-        std::string id;
-        std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> content;
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> content;
     };
 
     struct NamespaceIdEntry {
-        std::string id;
-        std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>> content;
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> content;
     };
 
     struct BlockIdsEntry {
-        std::optional<std::string> id;
+        std::optional<std::pmr::string> id;
         std::shared_ptr<BlockIds> content;
     };
 
     struct ItemIdsEntry {
-        std::string id;
-        std::shared_ptr<std::vector<std::shared_ptr<ItemId>>> content;
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> content;
     };
 
     using IdEntry = std::variant<NormalIdEntry, NamespaceIdEntry, BlockIdsEntry, ItemIdsEntry>;
@@ -56,22 +57,22 @@ namespace CHelper {
     // 单文件 JSON 格式
     struct CPackJsonData {
         Manifest manifest;
-        std::vector<IdEntry> id;
-        std::vector<Node::NodeJsonElement> json;
-        std::vector<Node::RepeatData> repeat;
-        std::vector<Node::NodePerCommand> command;
+        std::pmr::vector<IdEntry> id;
+        std::pmr::vector<Node::NodeJsonElement> json;
+        std::pmr::vector<Node::RepeatData> repeat;
+        std::pmr::vector<Node::NodePerCommand> command;
     };
 
     // 二进制（MessagePack）格式
     struct CPackData {
         Manifest manifest;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>> normalIds;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
-        std::shared_ptr<std::vector<std::shared_ptr<ItemId>>> itemIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::shared_ptr<BlockIds> blockIds;
-        std::vector<Node::NodeJsonElement> jsonNodes;
-        std::vector<Node::RepeatData> repeatNodeData;
-        std::shared_ptr<std::vector<Node::NodePerCommand>> commands;
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
+        std::pmr::vector<Node::RepeatData> repeatNodeData;
+        std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
     };
 
 }// namespace CHelper
@@ -94,8 +95,13 @@ namespace CHelper {
 
     class CPack {
     private:
+        CPackMemoryScope destructionMemoryScope;
+
         // 默认构造不做任何工作，成员由 Serialization.h 的读取函数填充
         CPack() = default;
+
+        // 必须声明在 ID 容器之前，确保销毁 CPack 对象后再销毁内存资源
+        std::shared_ptr<CPackMemoryResource> cpackMemory;
 
 #ifndef CHELPER_NO_FILESYSTEM
         friend std::unique_ptr<CPack> serialization::createCPackByDirectory(const std::filesystem::path &path);
@@ -109,15 +115,15 @@ namespace CHelper {
 
     public:
         Manifest manifest;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>> normalIds;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
         std::shared_ptr<BlockIds> blockIds;
-        std::shared_ptr<std::vector<std::shared_ptr<ItemId>>> itemIds;
-        std::vector<Node::NodeJsonElement> jsonNodes;
-        std::vector<Node::RepeatData> repeatNodeData;
-        std::unordered_map<std::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
+        std::pmr::vector<Node::RepeatData> repeatNodeData;
+        std::pmr::unordered_map<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
         Node::TargetSelectorData targetSelectorData;
-        std::shared_ptr<std::vector<Node::NodePerCommand>> commands = std::make_shared<std::vector<Node::NodePerCommand>>();
+        std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
         Node::NodeCommand mainNode;
 
     private:
@@ -152,11 +158,11 @@ namespace CHelper {
         void writeBinToFile(const std::filesystem::path &path) const;
 #endif
 
-        [[nodiscard]] std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>
-        getNormalId(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>
+        getNormalId(std::string_view key) const;
 
-        [[nodiscard]] std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>
-        getNamespaceId(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
+        getNamespaceId(std::string_view key) const;
     };
 
 }// namespace CHelper

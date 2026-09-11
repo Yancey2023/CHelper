@@ -44,12 +44,12 @@ namespace CHelper {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
-                valid = std::vector<PropertyValue>(size);
+                valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -73,12 +73,12 @@ namespace CHelper {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
-                valid = std::vector<PropertyValue>(size);
+                valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -135,7 +135,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::u16string(*t2.valueName.string);
+                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {
@@ -161,7 +161,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::u16string(*t2.valueName.string);
+                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {
@@ -197,9 +197,9 @@ namespace CHelper {
     }
 
     const BlockPropertyDescription &BlockPropertyDescriptions::getPropertyDescription(
-            const std::u16string &blockIdWithNamespace,
-            const std::u16string &blockId,
-            const std::u16string &propertyName) const {
+            const std::u16string_view blockIdWithNamespace,
+            const std::u16string_view blockId,
+            const std::u16string_view propertyName) const {
         for (const auto &item: block) {
             if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
                 std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
@@ -226,10 +226,10 @@ namespace CHelper {
     Node::NodeText *getBlockStateValueNode(
             const BlockPropertyValueDescription &blockPropertyValueDescription,
             const PropertyType::PropertyType &type,
-            const std::optional<std::u16string> &defaultDescription,
+            const std::optional<std::pmr::u16string> &defaultDescription,
             bool isDefaultValue,
             bool isInvalid) {
-        std::optional<std::u16string> description;
+        std::optional<std::pmr::u16string> description;
         if (blockPropertyValueDescription.description.has_value()) {
             description = blockPropertyValueDescription.description.value();
         } else if (defaultDescription.has_value()) {
@@ -237,14 +237,18 @@ namespace CHelper {
         }
         if (isDefaultValue) {
             if (description.has_value()) {
-                description = u"（默认值）" + description.value();
+                std::pmr::u16string prefix = u"（默认值）";
+                prefix.append(description.value());
+                description = std::move(prefix);
             } else {
                 description = u"（默认值）";
             }
         }
         if (isInvalid) {
             if (description.has_value()) {
-                description = u"（无效）" + description.value();
+                std::pmr::u16string prefix = u"（无效）";
+                prefix.append(description.value());
+                description = std::move(prefix);
             } else {
                 description = u"（无效）";
             }
@@ -271,11 +275,11 @@ namespace CHelper {
     }
 
     Node::NodeEntry *getBlockStateNode(
-            std::vector<Node::NodeWithType> &nodeChildren,
+            std::pmr::vector<Node::NodeWithType> &nodeChildren,
             const BlockPropertyDescription &blockPropertyDescription,
             PropertyValue defaultValue,
-            const std::optional<std::vector<PropertyValue>> &valid) {
-        std::vector<Node::NodeWithType> valueNodes;
+            const std::optional<std::pmr::vector<PropertyValue>> &valid) {
+        std::pmr::vector<Node::NodeWithType> valueNodes;
         valueNodes.reserve(blockPropertyDescription.values.size());
         for (auto &item: blockPropertyDescription.values) {
             bool isDefaultValue;
@@ -345,26 +349,26 @@ namespace CHelper {
 
     const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions) {
         if (!node.has_value()) {
-            std::vector<Node::NodeWithType> blockStateEntryChildNode2;
+            std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2;
             //已知的方块状态
             if (properties.has_value()) [[likely]] {
                 blockStateEntryChildNode2.reserve(2);
-                std::vector<Node::NodeWithType> blockStateEntryChildNode1;
+                std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
                 blockStateEntryChildNode1.reserve(properties.value().size());
                 std::ranges::transform(
-                    properties.value(),
-                    std::back_inserter(blockStateEntryChildNode1),
-                    [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
-                        const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
-                                getIdWithNamespace()->name,
-                                name,
-                                item.name);
-                        Node::NodeEntry *result = getBlockStateNode(
-                                nodeChildren.nodes, blockPropertyDescription,
-                                item.defaultValue, item.valid);
-                        nodeChildren.nodes.emplace_back(*result);
-                        return *result;
-                    });
+                        properties.value(),
+                        std::back_inserter(blockStateEntryChildNode1),
+                        [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
+                            const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
+                                    getIdWithNamespace()->name,
+                                    name,
+                                    item.name);
+                            Node::NodeEntry *result = getBlockStateNode(
+                                    nodeChildren.nodes, blockPropertyDescription,
+                                    item.defaultValue, item.valid);
+                            nodeChildren.nodes.emplace_back(*result);
+                            return *result;
+                        });
                 auto nodeChild = new Node::NodeOr(std::move(blockStateEntryChildNode1), false);
                 blockStateEntryChildNode2.emplace_back(*nodeChild);
                 nodeChildren.nodes.emplace_back(*nodeChild);

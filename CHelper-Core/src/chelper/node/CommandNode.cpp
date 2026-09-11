@@ -28,8 +28,8 @@ namespace CHelper::Node {
     NodeSerializable::NodeSerializable(const std::optional<std::string> &id,
                                        const std::optional<std::u16string> &description,
                                        bool isMustAfterSpace)
-        : id(id),
-          description(description),
+        : id(copyPmrStringOptional(id)),
+          description(copyPmrU16StringOptional(description)),
           isMustAfterSpace(isMustAfterSpace) {}
 
     bool NodeSerializable::getIsMustAfterSpace() const {
@@ -42,18 +42,20 @@ namespace CHelper::Node {
 
     NodeCommand::NodeCommand(const std::optional<std::string> &id,
                              const std::optional<std::u16string> &description,
-                             std::vector<Node::NodePerCommand> *commands)
+                             std::pmr::vector<Node::NodePerCommand> *commands)
         : NodeSerializable(id, description, false),
           commands(commands) {}
 
     NodeInteger NodeItem::nodeCount("ITEM_COUNT", u"物品数量", 0, std::nullopt);
     NodeInteger NodeItem::nodeAllData("ITEM_DATA", u"物品附加值", -1, std::nullopt);
 
+    NodeInteger NodeIntegerWithUnit::nodeInteger("INTEGER", u"整数", std::nullopt, std::nullopt);
+
     NodeJson::NodeJson(const std::optional<std::string> &id,
                        const std::optional<std::u16string> &description,
-                       std::string key)
+                       const std::string_view key)
         : NodeSerializable(id, description, false),
-          key(std::move(key)) {}
+          key(key.data(), key.size()) {}
 
     NodeLF::NodeLF(const std::optional<std::string> &id,
                    const std::optional<std::u16string> &description)
@@ -70,7 +72,7 @@ namespace CHelper::Node {
                                      const std::optional<std::string> &key,
                                      bool ignoreError)
         : NodeSerializable(id, description, false),
-          key(key),
+          key(copyPmrStringOptional(key)),
           ignoreError(ignoreError) {}
 
     NodeNormalId::NodeNormalId(
@@ -81,7 +83,7 @@ namespace CHelper::Node {
             bool allowMissingID,
             const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getNormalIdASTNode)
         : NodeSerializable(id, description, false),
-          key(key),
+          key(std::pmr::string(key.data(), key.size())),
           ignoreError(ignoreError),
           allowMissingID(allowMissingID),
           getNormalIdASTNode(getNormalIdASTNode) {}
@@ -89,7 +91,7 @@ namespace CHelper::Node {
     NodeNormalId::NodeNormalId(
             const std::optional<std::string> &id,
             const std::optional<std::u16string> &description,
-            const std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> &contents,
+            const std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> &contents,
             bool ignoreError,
             bool allowMissingID,
             const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getNormalIdASTNode)
@@ -162,12 +164,11 @@ namespace CHelper::Node {
         static NodeSingleSymbol nodeHasPermissionValueSeparator(u',', u"目标选择器haspermission参数分隔符");
         static NodeNormalId nodeHasPermissionState(
                 "PERMISSION_STATUS", u"权限状态",
-                std::make_shared<std::vector<std::shared_ptr<NormalId>>>(std::vector<std::shared_ptr<NormalId>>{
-                        NormalId::make(u"enabled", u"启用"),
-                        NormalId::make(u"disabled", u"禁用")}),
+                allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>({NormalId::make(u"enabled", u"启用"),
+                                                                               NormalId::make(u"disabled", u"禁用")}),
                 false);
         static NodeEqualEntry nodeHasPermissionEntry(
-                std::vector<EqualData>{
+                std::pmr::vector<EqualData>{
                         {u"camera", u"玩家能否转动相机视角", false, nodeHasPermissionState},
                         {u"movement", u"玩家能否移动", false, nodeHasPermissionState}});
         static NodeList nodeHasPermission(nodeHasPermissionValueLeft, nodeHasPermissionEntry, nodeHasPermissionValueSeparator, nodeHasPermissionValueRight);
@@ -186,7 +187,7 @@ namespace CHelper::Node {
         nodeSlot = NodeNormalId("SLOT", u"物品栏", "entitySlot", true),
         nodeEntities = NodeNamespaceId("ENTITIES", u"实体", "entity", true),
         nodeHasItemElement = NodeEqualEntry(
-                std::vector<EqualData>{
+                std::pmr::vector<EqualData>{
                         {u"item", u"要检测的物品", false, nodeItem},
                         {u"data", u"要检测的物品的数据值", false, nodeHasItemData},
                         {u"quantity", u"限制范围内的所有槽位中符合条件的物品的总和数量", true, nodeHasItemQuantity},
@@ -196,7 +197,7 @@ namespace CHelper::Node {
         nodeHasItemList2 = NodeList(nodeHasItemValueLeft2, nodeHasItemList1, nodeHasItemValueSeparator, nodeHasItemValueRight2),
         nodeHasItem = NodeOr({nodeHasItemList1, nodeHasItemList2}, false),
         nodeArgument = NodeEqualEntry(
-                std::vector<EqualData>{
+                std::pmr::vector<EqualData>{
                         {u"x", u"x坐标", false, TargetSelectorData::nodeRelativeFloat},
                         {u"y", u"y坐标", false, TargetSelectorData::nodeRelativeFloat},
                         {u"z", u"z坐标", false, TargetSelectorData::nodeRelativeFloat},
@@ -229,14 +230,13 @@ namespace CHelper::Node {
     void TargetSelectorData::init(const CPack &cpack) {
         nodeTargetSelectorVariable = NodeNormalId(
                 "TARGET_SELECTOR_VARIABLE", u"目标选择器变量",
-                std::make_shared<std::vector<std::shared_ptr<NormalId>>>(std::vector<std::shared_ptr<NormalId>>{
-                        NormalId::make(u"@e", u"选择所有实体(只选择活着的实体)"),
-                        NormalId::make(u"@a", u"选择所有玩家(无论死活)"),
-                        NormalId::make(u"@r", u"选择一名随机玩家(可通过type选择非玩家实体)(只选择活着的实体)"),
-                        NormalId::make(u"@p", u"选择最近的玩家(只选择活着的玩家)"),
-                        NormalId::make(u"@s", u"命令的执行者(只选择1个实体)(无论是否濒死)"),
-                        NormalId::make(u"@n", u"选择最近的一个实体(只选择活着的实体)"),
-                        NormalId::make(u"@initiator", u"当前与该NPC进行交互的玩家(在NPC内置的命令界面中使用)")}),
+                allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>({NormalId::make(u"@e", u"选择所有实体(只选择活着的实体)"),
+                                                                               NormalId::make(u"@a", u"选择所有玩家(无论死活)"),
+                                                                               NormalId::make(u"@r", u"选择一名随机玩家(可通过type选择非玩家实体)(只选择活着的实体)"),
+                                                                               NormalId::make(u"@p", u"选择最近的玩家(只选择活着的玩家)"),
+                                                                               NormalId::make(u"@s", u"命令的执行者(只选择1个实体)(无论是否濒死)"),
+                                                                               NormalId::make(u"@n", u"选择最近的一个实体(只选择活着的实体)"),
+                                                                               NormalId::make(u"@initiator", u"当前与该NPC进行交互的玩家(在NPC内置的命令界面中使用)")}),
                 true, false,
                 [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
                     tokenReader.push();
@@ -259,14 +259,14 @@ namespace CHelper::Node {
     }
 
     NodeText::NodeText(const std::optional<std::string> &id,
-                       const std::optional<std::u16string> &description,
+                       const std::u16string_view description,
                        const std::shared_ptr<NormalId> &data,
                        const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getTextASTNode)
-        : NodeSerializable(id, description, false),
+        : NodeSerializable(id, std::optional<std::u16string>(std::in_place, description), false),
           data(data),
           getTextASTNode(getTextASTNode) {}
 
-    NodeAnd::NodeAnd(std::vector<NodeWithType> childNodes)
+    NodeAnd::NodeAnd(std::pmr::vector<NodeWithType> childNodes)
         : childNodes(std::move(childNodes)) {
 #ifdef CHelperDebug
         if (this->childNodes.empty()) {
@@ -304,12 +304,12 @@ namespace CHelper::Node {
           nodeSeparator(nodeSeparator),
           nodeValue(nodeValue) {}
 
-    EqualData::EqualData(std::u16string name,
+    EqualData::EqualData(const std::u16string_view name,
                          const std::optional<std::u16string> &description,
                          bool canUseNotEqual,
                          NodeWithType nodeValue)
-        : name(std::move(name)),
-          description(description),
+        : name(name.data(), name.size()),
+          description(copyPmrU16StringOptional(description)),
           canUseNotEqual(canUseNotEqual),
           nodeValue(nodeValue) {}
 
@@ -329,9 +329,9 @@ namespace CHelper::Node {
             });
     NodeOr NodeEqualEntry::nodeEqualOrNotEqual({nodeEqual, nodeNotEqual}, false);
 
-    NodeEqualEntry::NodeEqualEntry(std::vector<EqualData> equalDatas)
+    NodeEqualEntry::NodeEqualEntry(std::pmr::vector<EqualData> equalDatas)
         : equalDatas(std::move(equalDatas)) {
-        nodeKeyContent = std::make_shared<std::vector<std::shared_ptr<NormalId>>>();
+        nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
         for (const auto &item: this->equalDatas) {
             nodeKeyContent->push_back(NormalId::make(item.name, item.description));
         }
@@ -355,7 +355,7 @@ namespace CHelper::Node {
 #endif
     }
 
-    NodeOr::NodeOr(std::vector<NodeWithType> childNodes,
+    NodeOr::NodeOr(std::pmr::vector<NodeWithType> childNodes,
                    bool isAttachToEnd,
                    bool isUseFirst,
                    bool noSuggestion,
@@ -380,7 +380,7 @@ namespace CHelper::Node {
     }
 
     static std::shared_ptr<NormalId> getNormalId(char16_t symbol, const std::optional<std::u16string> &description) {
-        std::u16string name;
+        std::pmr::u16string name;
         name.push_back(symbol);
         return NormalId::make(name, description);
     }
@@ -444,6 +444,10 @@ namespace CHelper::Node {
         return jsonElement;
     }
 
+    NodeSingleSymbol NodeJsonObject::nodeListLeft(u'{', u"JSON列表左括号");
+    NodeSingleSymbol NodeJsonObject::nodeListRight(u'}', u"JSON列表右括号");
+    NodeSingleSymbol NodeJsonObject::nodeListSeparator(u',', u"JSON列表分隔符");
+
     NodeSingleSymbol NodeJsonEntry::nodeSeparator(u':', u"冒号");
     static NodeJsonString jsonString("JSON_STRING", u"JSON字符串");
 
@@ -451,10 +455,10 @@ namespace CHelper::Node {
 
     NodeJsonEntry::NodeJsonEntry(const std::optional<std::string> &id,
                                  const std::optional<std::u16string> &description,
-                                 std::u16string key,
-                                 std::vector<std::string> value)
+                                 const std::u16string_view key,
+                                 std::pmr::vector<std::pmr::string> value)
         : NodeSerializable(id, description, false),
-          key(std::move(key)),
+          key(key.data(), key.size()),
           value(std::move(value)) {}
 
     NodeWithType NodeJsonEntry::getNodeJsonAllEntry() {
@@ -469,9 +473,9 @@ namespace CHelper::Node {
 
     NodeJsonList::NodeJsonList(const std::optional<std::string> &id,
                                const std::optional<std::u16string> &description,
-                               std::string data)
+                               const std::string_view data)
         : NodeSerializable(id, description, false),
-          data(std::move(data)) {}
+          data(data.data(), data.size()) {}
 
     NodeJsonNull::NodeJsonNull(const std::optional<std::string> &id,
                                const std::optional<std::u16string> &description)
@@ -482,10 +486,10 @@ namespace CHelper::Node {
         : NodeSerializable(id, description, false) {
         nodeElement1 = std::nullopt;
         nodeElement2 = NodeOr({NodeJsonEntry::getNodeJsonAllEntry()}, false, true);
-        static NodeSingleSymbol nodeListLeft(u'{', u"JSON列表左括号");
-        static NodeSingleSymbol nodeListRight(u'}', u"JSON列表右括号");
-        static NodeSingleSymbol nodeListSeparator(u',', u"JSON列表分隔符");
-        nodeList = NodeList(nodeListLeft, nodeElement2, nodeListSeparator, nodeListRight);
+        nodeList = NodeList(NodeJsonObject::nodeListLeft,
+                            nodeElement2,
+                            NodeJsonObject::nodeListSeparator,
+                            NodeJsonObject::nodeListRight);
     }
 
     NodeJsonString::NodeJsonString(const std::optional<std::string> &id,

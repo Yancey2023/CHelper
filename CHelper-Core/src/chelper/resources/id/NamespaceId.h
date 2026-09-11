@@ -22,13 +22,14 @@
 #define CHELPER_NAMESPACEID_H
 
 #include <chelper/resources/id/NormalId.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
 
     class NamespaceId : public NormalId {
     public:
-        std::optional<std::u16string> idNamespace;
+        std::optional<std::pmr::u16string> idNamespace;
 
     private:
         std::shared_ptr<NormalId> idWithNamespace;

@@ -37,6 +37,7 @@ namespace CHelper {
      */
     struct NodeReadContext : glz::context {
         Node::NodeCreateStage::NodeCreateStage createStage = Node::NodeCreateStage::JSON_NODE;
+        std::shared_ptr<CPackMemoryResource> cpackMemory;
     };
 
     /**
@@ -57,79 +58,101 @@ namespace CHelper {
 // 转换函数必须写全限定名 ::CHelper::U16Conv::。这里在 glz 命名空间内，
 // MSVC 的非限定查找不会继续向外找到 CHelper，会直接报 identifier not found
 namespace glz {
-    template<>
-    struct from<JSON, std::u16string> {
+    template<class Traits, class Alloc>
+    struct from<JSON, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&it,
+                       auto &&end) {
             std::string utf8;
             parse<JSON>::op<Opts>(utf8, ctx, it, end);
-            value = ::CHelper::U16Conv::toU16(utf8);
+            ::CHelper::U16Conv::convertToU16(utf8, value);
         }
     };
 
-    template<>
-    struct to<JSON, std::u16string> {
+    template<class Traits, class Alloc>
+    struct to<JSON, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&b,
+                       auto &&ix) noexcept {
             serialize<JSON>::op<Opts>(utf8::utf16to8(value), ctx, b, ix);
         }
     };
 
-    template<>
-    struct from<MSGPACK, std::u16string> {
+    template<class Traits, class Alloc>
+    struct from<MSGPACK, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(std::u16string &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value,
+                       uint8_t tag,
+                       glz::is_context auto &&ctx,
+                       auto &&it,
+                       auto &&end) {
             // tag 已由分发器消费，直接交给 std::string 读取
             std::string utf8;
             from<MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
-            value = ::CHelper::U16Conv::toU16(utf8);
+            ::CHelper::U16Conv::convertToU16(utf8, value);
         }
     };
 
-    template<>
-    struct to<MSGPACK, std::u16string> {
+    template<class Traits, class Alloc>
+    struct to<MSGPACK, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&b,
+                       auto &&ix) noexcept {
             serialize<MSGPACK>::op<Opts>(utf8::utf16to8(value), ctx, b, ix);
         }
     };
 
     // 其余 glaze 自带格式的 u16string 支持（均以 UTF-8 字符串承载）
-#define CHELPER_GLZ_U16STRING_FORMAT(Fmt)                                                                       \
-    template<>                                                                                                  \
-    struct from<Fmt, std::u16string> {                                                                          \
-        template<auto Opts>                                                                                     \
-        static void op(std::u16string &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {              \
-            std::string utf8;                                                                                   \
-            parse<Fmt>::template op<Opts>(utf8, ctx, it, end);                                                  \
-            value = ::CHelper::U16Conv::toU16(utf8);                                                            \
-        }                                                                                                       \
-    };                                                                                                          \
-    template<>                                                                                                  \
-    struct to<Fmt, std::u16string> {                                                                            \
-        template<auto Opts>                                                                                     \
-        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept { \
-            serialize<Fmt>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);                               \
-        }                                                                                                       \
+#define CHELPER_GLZ_U16STRING_FORMAT(Fmt)                                                                        \
+    template<class Traits, class Alloc>                                                                          \
+    struct from<Fmt, std::basic_string<char16_t, Traits, Alloc>> {                                               \
+        template<auto Opts>                                                                                      \
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value, glz::is_context auto &&ctx, auto &&it, \
+                       auto &&end) {                                                                             \
+            std::string utf8;                                                                                    \
+            parse<Fmt>::template op<Opts>(utf8, ctx, it, end);                                                   \
+            ::CHelper::U16Conv::convertToU16(utf8, value);                                                       \
+        }                                                                                                        \
+    };                                                                                                           \
+    template<class Traits, class Alloc>                                                                          \
+    struct to<Fmt, std::basic_string<char16_t, Traits, Alloc>> {                                                 \
+        template<auto Opts>                                                                                      \
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value, glz::is_context auto &&ctx,      \
+                       auto &&b, auto &&ix) noexcept {                                                           \
+            serialize<Fmt>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);                                \
+        }                                                                                                        \
     };
 
     CHELPER_GLZ_U16STRING_FORMAT(BEVE)
     CHELPER_GLZ_U16STRING_FORMAT(CBOR)
-    template<>
-    struct to<BSON, std::u16string> {
+    template<class Traits, class Alloc>
+    struct to<BSON, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(const std::u16string &value, glz::is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&b,
+                       auto &&ix) noexcept {
             serialize<BSON>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);
         }
     };
 
-    template<>
-    struct from<BSON, std::u16string> {
+    template<class Traits, class Alloc>
+    struct from<BSON, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
-        static void op(std::u16string &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value,
+                       uint8_t tag,
+                       glz::is_context auto &&ctx,
+                       auto &&it,
+                       auto &&end) {
             std::string utf8;
             from<BSON, std::string>::template op<Opts>(utf8, tag, ctx, it, end);
-            value = ::CHelper::U16Conv::toU16(utf8);
+            ::CHelper::U16Conv::convertToU16(utf8, value);
         }
     };
 
@@ -146,7 +169,15 @@ namespace glz {
                 return;
             }
             if (!value) {
-                value = std::make_shared<T>();
+                if constexpr (requires { ctx.cpackMemory; }) {
+                    if (ctx.cpackMemory) {
+                        value = CHelper::allocateShared<T>(ctx.cpackMemory);
+                    } else {
+                        value = std::make_shared<T>();
+                    }
+                } else {
+                    value = std::make_shared<T>();
+                }
             }
             from<MSGPACK, T>::template op<Opts>(*value, tag, ctx, it, end);
         }
@@ -295,6 +326,18 @@ namespace CHelper {
 }// namespace CHelper
 
 namespace CHelper {
+
+    template<class T>
+    [[nodiscard]] T *createNode(glz::is_context auto &&ctx) {
+        (void) ctx;
+        return new T();
+    }
+
+    template<class T>
+    void destroyNode(T *const node, glz::is_context auto &&ctx) noexcept {
+        (void) ctx;
+        delete node;
+    }
 
 #define CHELPER_NODE_WRITE_CASE(v1)                    \
     case Node::NodeTypeId::v1:                         \
@@ -544,14 +587,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeBlock();
+        auto *node = createNode<Node::NodeBlock>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeBlockType);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -567,14 +610,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeBoolean();
+        auto *node = createNode<Node::NodeBoolean>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -590,14 +633,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeCommand();
+        auto *node = createNode<Node::NodeCommand>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -613,14 +656,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeCommandName();
+        auto *node = createNode<Node::NodeCommandName>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -636,14 +679,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeFloat();
+        auto *node = createNode<Node::NodeFloat>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -659,14 +702,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeInteger();
+        auto *node = createNode<Node::NodeInteger>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -682,14 +725,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeIntegerWithUnit();
+        auto *node = createNode<Node::NodeIntegerWithUnit>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.units);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -705,14 +748,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeItem();
+        auto *node = createNode<Node::NodeItem>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.nodeItemType);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -728,14 +771,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJson();
+        auto *node = createNode<Node::NodeJson>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -751,14 +794,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonBoolean();
+        auto *node = createNode<Node::NodeJsonBoolean>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.descriptionTrue, n.descriptionFalse);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -774,14 +817,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonFloat();
+        auto *node = createNode<Node::NodeJsonFloat>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -797,14 +840,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonInteger();
+        auto *node = createNode<Node::NodeJsonInteger>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.min, n.max);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -820,14 +863,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonList();
+        auto *node = createNode<Node::NodeJsonList>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -843,14 +886,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonNull();
+        auto *node = createNode<Node::NodeJsonNull>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -866,14 +909,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonEntry();
+        auto *node = createNode<Node::NodeJsonEntry>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.value);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -889,14 +932,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonObject();
+        auto *node = createNode<Node::NodeJsonObject>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -912,14 +955,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeJsonString();
+        auto *node = createNode<Node::NodeJsonString>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.data);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -935,14 +978,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeNamespaceId();
+        auto *node = createNode<Node::NodeNamespaceId>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -958,14 +1001,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeNormalId();
+        auto *node = createNode<Node::NodeNormalId>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key, n.ignoreError, n.contents);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -981,14 +1024,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodePosition();
+        auto *node = createNode<Node::NodePosition>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1004,14 +1047,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeRange();
+        auto *node = createNode<Node::NodeRange>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1027,14 +1070,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeRelativeFloat();
+        auto *node = createNode<Node::NodeRelativeFloat>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.canUseCaretNotation);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1050,14 +1093,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeRepeat();
+        auto *node = createNode<Node::NodeRepeat>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.key);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1073,14 +1116,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeString();
+        auto *node = createNode<Node::NodeString>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.canContainSpace, n.ignoreLater);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1096,14 +1139,14 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeTargetSelector();
+        auto *node = createNode<Node::NodeTargetSelector>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
         };
         read(n.id, n.brief, n.description, n.isMustAfterSpace, n.isMustPlayer, n.isMustNPC, n.isOnlyOne, n.isWildcard);
         if (bool(ctx.error)) [[unlikely]] {
-            delete node;
+            destroyNode(node, ctx);
             return;
         }
         if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
@@ -1119,7 +1162,7 @@ namespace CHelper {
             ctx.error = glz::error_code::no_matching_variant_type;
             return;
         }
-        auto *node = new Node::NodeText();
+        auto *node = createNode<Node::NodeText>(ctx);
         auto &n = *node;
         auto read = [&](auto &&...args) {
             (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...);
@@ -1245,10 +1288,10 @@ namespace CHelper {
             return;                                                                                                  \
         }                                                                                                            \
         using NT = Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type;                                                 \
-        auto *node = new NT();                                                                                       \
+        auto *node = createNode<NT>(ctx);                                                                            \
         glz::parse<Fmt>::template op<Opts>(*node, ctx, it, end);                                                     \
         if (bool(ctx.error)) [[unlikely]] {                                                                          \
-            delete node;                                                                                             \
+            destroyNode(node, ctx);                                                                                  \
             return;                                                                                                  \
         }                                                                                                            \
         if (!node->isMustAfterSpace.has_value()) [[unlikely]] {                                                      \
@@ -1501,7 +1544,7 @@ struct glz::from<glz::MSGPACK, CHelper::Node::FreeableNodeWithTypes> {
     template<auto Opts>
     static void op(auto &&value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         // tag 已由分发器消费，直接传递给 vector 读取
-        from<MSGPACK, std::vector<CHelper::Node::NodeWithType>>::op<Opts>(value.nodes, tag, ctx, it, end);
+        from<MSGPACK, std::pmr::vector<CHelper::Node::NodeWithType>>::op<Opts>(value.nodes, tag, ctx, it, end);
     }
 };
 
@@ -2119,7 +2162,7 @@ namespace CHelper {
                     if (bool(ctx.error)) [[unlikely]] {
                         return;
                     }
-                    static_cast<Node::NodeSerializable *>(node.data)->id = std::move(id);
+                    static_cast<Node::NodeSerializable *>(node.data)->id = std::pmr::string(id.data(), id.size());
                     t.nodes.nodes.push_back(std::move(node));
                 });
             } else if (key == "wrappedNodes") {
@@ -2155,7 +2198,7 @@ namespace CHelper {
         for (const auto &node: t.nodes.nodes) {
             const auto *serializable = static_cast<const Node::NodeSerializable *>(node.data);
             if (serializable->id.has_value()) {
-                nodes.try_emplace(*serializable->id, node);
+                nodes.try_emplace(std::string(serializable->id->data(), serializable->id->size()), node);
             }
         }
         std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
@@ -2179,7 +2222,7 @@ namespace CHelper {
             glz::skip_ws<Opts>(ctx, it, end);
             if (*it == '"') [[likely]] {
                 type = PropertyType::STRING;
-                v.string = new std::u16string();
+                v.string = new std::pmr::u16string();
                 glz::parse<glz::JSON>::op<Opts>(*v.string, ctx, it, end);
             } else if (*it == 't' || *it == 'f') [[likely]] {
                 type = PropertyType::BOOLEAN;
@@ -2197,7 +2240,7 @@ namespace CHelper {
                                  glz::is_context auto &&ctx, auto &&it, auto &&end) {
         switch (type) {
             case PropertyType::STRING:
-                v.string = new std::u16string();
+                v.string = new std::pmr::u16string();
                 glz::parse<CHelper::BinaryFormat>::template op<Opts>(*v.string, ctx, it, end);
                 break;
             case PropertyType::BOOLEAN:
@@ -2217,10 +2260,10 @@ namespace CHelper {
                            glz::is_context auto &&ctx, auto &&it, auto &&end) {
         if ((tag >= 0xa0 && tag <= 0xbf) || tag == 0xd9 || tag == 0xda || tag == 0xdb) [[likely]] {
             type = PropertyType::STRING;
-            v.string = new std::u16string();
+            v.string = new std::pmr::u16string();
             std::string utf8;
             glz::from<glz::MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
-            *v.string = ::CHelper::U16Conv::toU16(utf8);
+            ::CHelper::U16Conv::convertToU16(utf8, *v.string);
         } else if (tag == 0xc2 || tag == 0xc3) [[likely]] {
             type = PropertyType::BOOLEAN;
             v.boolean = tag == 0xc3;
@@ -2231,6 +2274,28 @@ namespace CHelper {
     }
 }// namespace CHelper
 
+template<>
+struct glz::to<glz::JSON, std::pmr::vector<bool>> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        std::vector<bool> standardValue(value.begin(), value.end());
+        glz::serialize<glz::JSON>::template op<Opts>(standardValue, ctx, b, ix);
+    }
+};
+
+template<>
+struct glz::from<glz::JSON, std::pmr::vector<bool>> {
+    template<auto Opts>
+    static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        value.clear();
+        CHelper::forEachArrayElement<glz::JSON, Opts>(ctx, it, end, [&](auto &&ctx2, auto &&it2, auto &&end2) {
+            glz::skip_ws<Opts>(ctx2, it2, end2);
+            bool item = false;
+            glz::parse<glz::JSON>::template op<Opts>(item, ctx2, it2, end2);
+            value.push_back(item);
+        });
+    }
+};
 
 namespace CHelper {
 
@@ -2278,7 +2343,7 @@ namespace CHelper {
                     t.valid = std::nullopt;
                     return;
                 }
-                t.valid = std::make_optional<std::vector<PropertyValue>>();
+                t.valid = std::make_optional<std::pmr::vector<PropertyValue>>();
                 forEachArrayElement<Fmt, Opts>(ctx2, it2, end2, [&](auto &&ctx3, auto &&it3, auto &&end3) {
                     PropertyValue propertyValue;
                     PropertyType::PropertyType type = t.type;
@@ -2332,7 +2397,7 @@ namespace CHelper {
         if (hasValid) {
             std::uint32_t size = 0;
             glz::parse<CHelper::BinaryFormat>::template op<Opts>(size, ctx, it, end);
-            t.valid = std::make_optional<std::vector<PropertyValue>>();
+            t.valid = std::make_optional<std::pmr::vector<PropertyValue>>();
             t.valid.value().reserve(size);
             for (std::uint32_t i = 0; i < size; ++i) {
                 PropertyValue propertyValue;
@@ -2833,10 +2898,17 @@ namespace CHelper::serialization {
 #if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
         size_t stackSize = Profile::stack.size();
 #endif
+        Node::initializeStaticNodes();
+        auto cpackMemory = std::make_shared<CPackMemoryResource>();
+        CPackMemoryScope memoryScope(cpackMemory);
         auto cpack = std::unique_ptr<CPack>(new CPack());
+        cpack->cpackMemory = cpackMemory;
+        cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
+        cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
         // 加载阶段随上下文传递，各段落只允许反序列化自己合法的节点类型
         NodeReadContext ctx;
         ctx.createStage = Node::NodeCreateStage::NONE;
+        ctx.cpackMemory = cpackMemory;
         Profile::push("loading manifest");
         readJsonFromFile(cpack->manifest, path / "manifest.json", ctx);
         Profile::next("loading id data");
@@ -2893,11 +2965,18 @@ namespace CHelper::serialization {
         size_t stackSize = Profile::stack.size();
 #endif
         // 单文件格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+        Node::initializeStaticNodes();
+        auto cpackMemory = std::make_shared<CPackMemoryResource>();
+        CPackMemoryScope memoryScope(cpackMemory);
         NodeReadContext ctx;
         ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+        ctx.cpackMemory = cpackMemory;
         CPackJsonData data;
         readJson(data, json, ctx);
         auto cpack = std::unique_ptr<CPack>(new CPack());
+        cpack->cpackMemory = cpackMemory;
+        cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
+        cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
         Profile::push("loading manifest");
         cpack->manifest = std::move(data.manifest);
         Profile::next("loading id data");
@@ -2934,11 +3013,17 @@ namespace CHelper::serialization {
         size_t stackSize = Profile::stack.size();
 #endif
         // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+        Node::initializeStaticNodes();
+        auto cpackMemory = std::make_shared<CPackMemoryResource>();
+        CPackMemoryScope memoryScope(cpackMemory);
         NodeReadContext ctx;
         ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+        ctx.cpackMemory = cpackMemory;
         CPackData cpackData;
         readBinary(cpackData, data, ctx);
         auto cpack = std::unique_ptr<CPack>(new CPack());
+        cpack->cpackMemory = std::move(cpackMemory);
+        cpack->destructionMemoryScope.bindAsOwner(cpack->cpackMemory);
         Profile::push("loading manifest");
         cpack->manifest = std::move(cpackData.manifest);
         Profile::next("loading normal id data");

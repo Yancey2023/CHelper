@@ -53,9 +53,9 @@ namespace CHelper::Test {
     }
 
     static bool hasSuggestionWithContent(const std::vector<AutoSuggestion::Suggestion> &suggestions,
-                                         const std::u16string &name) {
+                                         const std::u16string_view name) {
         for (const auto &item: suggestions) {
-            if (item.content->name == name) {
+            if (std::u16string_view(item.content->name) == name) {
                 return true;
             }
         }

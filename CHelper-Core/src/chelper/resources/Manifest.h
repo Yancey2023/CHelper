@@ -21,14 +21,15 @@
 #ifndef CHELPER_MANIFEST_H
 #define CHELPER_MANIFEST_H
 
+#include <memory_resource>
 #include <pch.h>
 
 namespace CHelper {
 
     class Manifest {
     public:
-        std::optional<std::u16string> name, description, version, versionType, branch, author, updateDate;
-        std::u16string packId;
+        std::optional<std::pmr::u16string> name, description, version, versionType, branch, author, updateDate;
+        std::pmr::u16string packId;
         int32_t versionCode;
         std::optional<bool> isBasicPack, isDefault;
     };

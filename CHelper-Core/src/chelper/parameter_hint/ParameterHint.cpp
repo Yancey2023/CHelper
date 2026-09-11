@@ -36,7 +36,11 @@ namespace CHelper::ParameterHint {
     template<class NodeType>
     struct ParameterHint<NodeType, std::enable_if_t<std::is_base_of_v<Node::NodeSerializable, NodeType>>> {
         static std::optional<std::u16string> getHint(const ASTNode &astNode) {
-            return static_cast<const NodeType *>(astNode.node.data)->description;
+            const auto &description = static_cast<const NodeType *>(astNode.node.data)->description;
+            if (description.has_value()) {
+                return std::u16string(description->data(), description->size());
+            }
+            return std::nullopt;
         }
     };
 
@@ -75,7 +79,11 @@ namespace CHelper::ParameterHint {
     struct ParameterHint<Node::NodeRepeat> {
         static std::optional<std::u16string> getHint(const ASTNode &astNode) {
             if (astNode.tokens.isEmpty()) [[unlikely]] {
-                return reinterpret_cast<const Node::NodeRepeat *>(astNode.node.data)->description;
+                const auto &description = reinterpret_cast<const Node::NodeRepeat *>(astNode.node.data)->description;
+                if (description.has_value()) {
+                    return std::u16string(description->data(), description->size());
+                }
+                return std::nullopt;
             } else {
                 return std::nullopt;
             }

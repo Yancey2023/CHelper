@@ -44,7 +44,8 @@ namespace CHelper {
          * 纯 ASCII 是这些字符串的绝大多数形态（ID、状态值），走一次性赋值的快速路径；
          * 含非 ASCII 时仍交给解码器，此时字符串长度通常很短，重分配次数可以忽略
          */
-        inline void convertToU16(const std::string_view input, std::u16string &output) {
+        template<class String>
+        inline void convertToU16(const std::string_view input, String &output) {
             output.clear();
             if (input.empty()) {
                 return;

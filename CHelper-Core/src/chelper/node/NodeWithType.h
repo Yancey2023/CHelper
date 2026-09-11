@@ -21,6 +21,7 @@
 #ifndef CHELPER_NODEWITHTYPE_H
 #define CHELPER_NODEWITHTYPE_H
 
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 #define CHELPER_NODE_TYPES WRAPPED,           \
@@ -97,7 +98,7 @@ namespace CHelper::Node {
 
     class FreeableNodeWithTypes {
     public:
-        std::vector<NodeWithType> nodes;
+        std::pmr::vector<NodeWithType> nodes;
 
         FreeableNodeWithTypes() = default;
 
@@ -111,6 +112,12 @@ namespace CHelper::Node {
 
         FreeableNodeWithTypes &operator=(FreeableNodeWithTypes &&node) = default;
     };
+
+    /**
+     * Initializes lazily-created shared node definitions while the global PMR
+     * resource is still active, before a CPack-specific resource is installed.
+     */
+    void initializeStaticNodes();
 
 }// namespace CHelper::Node
 

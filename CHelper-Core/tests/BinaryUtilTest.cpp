@@ -449,7 +449,7 @@ TEST(BinaryUtilTest, Property) {
         aProperty.name = u"name1";
         aProperty.type = CHelper::PropertyType::BOOLEAN;
         aProperty.defaultValue.boolean = true;
-        aProperty.valid = std::vector<CHelper::PropertyValue>(2);
+        aProperty.valid = std::pmr::vector<CHelper::PropertyValue>(2);
         aProperty.valid->at(0).boolean = true;
         aProperty.valid->at(1).boolean = false;
         return aProperty;
@@ -459,7 +459,7 @@ TEST(BinaryUtilTest, Property) {
         aProperty.name = u"name2";
         aProperty.type = CHelper::PropertyType::INTEGER;
         aProperty.defaultValue.integer = 0;
-        aProperty.valid = std::vector<CHelper::PropertyValue>(3);
+        aProperty.valid = std::pmr::vector<CHelper::PropertyValue>(3);
         aProperty.valid->at(0).integer = 0;
         aProperty.valid->at(1).integer = 1;
         aProperty.valid->at(2).integer = 2;
@@ -469,11 +469,11 @@ TEST(BinaryUtilTest, Property) {
         CHelper::Property aProperty;
         aProperty.name = u"name3";
         aProperty.type = CHelper::PropertyType::STRING;
-        aProperty.defaultValue.string = new std::u16string(u"aaa");
-        aProperty.valid = std::vector<CHelper::PropertyValue>(3);
-        aProperty.valid->at(0).string = new std::u16string(u"a1");
-        aProperty.valid->at(1).string = new std::u16string(u"a2");
-        aProperty.valid->at(2).string = new std::u16string(u"a3");
+        aProperty.defaultValue.string = new std::pmr::u16string(u"aaa");
+        aProperty.valid = std::pmr::vector<CHelper::PropertyValue>(3);
+        aProperty.valid->at(0).string = new std::pmr::u16string(u"a1");
+        aProperty.valid->at(1).string = new std::pmr::u16string(u"a2");
+        aProperty.valid->at(2).string = new std::pmr::u16string(u"a3");
         return aProperty;
     };
     testHandwritten<CHelper::Property>({getInstance1, getInstance2, getInstance3});
@@ -557,13 +557,13 @@ TEST(BinaryUtilTest, PerCPackNormalIds) {
         exit(-1);
     }
     std::vector<std::function<
-            std::shared_ptr<std::vector<std::shared_ptr<CHelper::NormalId>>>()>>
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<CHelper::NormalId>>>()>>
             getInstance;
     for (const auto &item: cpack->normalIds) {
         const auto &ids = item.second;
         getInstance.emplace_back([&ids]() { return ids; });
     }
-    test<std::shared_ptr<std::vector<std::shared_ptr<CHelper::NormalId>>>>(getInstance);
+    test<std::shared_ptr<std::pmr::vector<std::shared_ptr<CHelper::NormalId>>>>(getInstance);
 }
 
 TEST(BinaryUtilTest, CPackNormalIds) {
@@ -576,7 +576,7 @@ TEST(BinaryUtilTest, CPackNormalIds) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
     }
-    test<std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<CHelper::NormalId>>>>>(
+    test<decltype(cpack->normalIds)>(
             [&cpack]() { return cpack->normalIds; });
 }
 
@@ -590,9 +590,7 @@ TEST(BinaryUtilTest, CPackNamespaceId) {
         CHelper::Profile::printAndClear(e);
         exit(-1);
     }
-    test<std::unordered_map<
-            std::string,
-            std::shared_ptr<std::vector<std::shared_ptr<CHelper::NamespaceId>>>>>(
+    test<decltype(cpack->namespaceIds)>(
             [&cpack]() { return cpack->namespaceIds; });
 }
 

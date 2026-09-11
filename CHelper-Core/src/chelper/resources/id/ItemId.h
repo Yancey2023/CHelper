@@ -23,6 +23,7 @@
 
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -30,7 +31,7 @@ namespace CHelper {
     class ItemId : public NamespaceId {
     public:
         std::optional<int32_t> max;
-        std::optional<std::vector<std::u16string>> descriptions;
+        std::optional<std::pmr::vector<std::pmr::u16string>> descriptions;
 
     private:
         Node::FreeableNodeWithTypes nodeChildren;

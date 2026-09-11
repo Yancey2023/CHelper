@@ -21,6 +21,7 @@
 #ifndef CHELPER_BINARY_FORMAT_H
 #define CHELPER_BINARY_FORMAT_H
 
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -157,17 +158,18 @@ namespace glz {
 
     // ================= 字符串（uint32 长度 + UTF-8 字节） =================
     template<class T>
-        requires(std::is_same_v<T, std::string> || std::is_same_v<T, std::u16string>)
+        requires requires { typename T::value_type; typename T::allocator_type; } &&
+                 (std::is_same_v<typename T::value_type, char> || std::is_same_v<typename T::value_type, char16_t>)
     struct to<CHelper::BinaryFormat, T> {
         template<auto Opts>
         static void op(auto &&value, is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
-            const std::string utf8 = []<class Str>(const Str &str) {
-                if constexpr (std::is_same_v<Str, std::string>) {
-                    return str;
+            const std::string utf8 = [&value] {
+                if constexpr (std::is_same_v<typename T::value_type, char>) {
+                    return std::string(value.data(), value.size());
                 } else {
-                    return utf8::utf16to8(str);
+                    return utf8::utf16to8(std::u16string_view(value.data(), value.size()));
                 }
-            }(value);
+            }();
             to<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(static_cast<std::uint32_t>(utf8.size()), ctx, b, ix);
             maybe_pad(utf8.size(), b, ix);
             if (utf8.size() > 0) {
@@ -178,7 +180,8 @@ namespace glz {
     };
 
     template<class T>
-        requires(std::is_same_v<T, std::string> || std::is_same_v<T, std::u16string>)
+        requires requires { typename T::value_type; typename T::allocator_type; } &&
+                 (std::is_same_v<typename T::value_type, char> || std::is_same_v<typename T::value_type, char16_t>)
     struct from<CHelper::BinaryFormat, T> {
         template<auto Opts>
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
@@ -188,12 +191,15 @@ namespace glz {
                 ctx.error = error_code::unexpected_end;
                 return;
             }
-            const std::string utf8(static_cast<const char *>(&(*it)), size);
-            it += size;
-            if constexpr (std::is_same_v<T, std::string>) {
-                value = utf8;
+            std::string_view utf8;
+            if (size > 0) {
+                utf8 = std::string_view(static_cast<const char *>(&(*it)), size);
+                it += size;
+            }
+            if constexpr (std::is_same_v<typename T::value_type, char>) {
+                value.assign(utf8);
             } else {
-                value = CHelper::U16Conv::toU16(utf8);
+                CHelper::U16Conv::convertToU16(utf8, value);
             }
         }
     };
@@ -242,7 +248,15 @@ namespace glz {
         template<auto Opts>
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             if (!value) {
-                value = std::make_shared<T>();
+                if constexpr (requires { ctx.cpackMemory; }) {
+                    if (ctx.cpackMemory) {
+                        value = CHelper::allocateShared<T>(ctx.cpackMemory);
+                    } else {
+                        value = std::make_shared<T>();
+                    }
+                } else {
+                    value = std::make_shared<T>();
+                }
             }
             from<CHelper::BinaryFormat, T>::template op<Opts>(*value, ctx, it, end);
         }
@@ -455,9 +469,20 @@ namespace CHelper {
         if (!is.is_open()) [[unlikely]] {
             throw std::runtime_error("fail to open file: " + path.string());
         }
-        std::ostringstream ss;
-        ss << is.rdbuf();
-        return std::move(ss).str();
+        is.seekg(0, std::ios::end);
+        const auto fileSize = is.tellg();
+        if (fileSize == std::streampos(-1)) [[unlikely]] {
+            throw std::runtime_error("fail to get file size: " + path.string());
+        }
+        std::string content(static_cast<size_t>(fileSize), '\0');
+        is.seekg(0, std::ios::beg);
+        if (!is) [[unlikely]] {
+            throw std::runtime_error("fail to seek file: " + path.string());
+        }
+        if (!content.empty() && !is.read(content.data(), static_cast<std::streamsize>(content.size()))) [[unlikely]] {
+            throw std::runtime_error("fail to read file: " + path.string());
+        }
+        return content;
     }
 #endif
 
