@@ -19,7 +19,7 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/resources/CPack.h>
-#include <chelper/serialization/Serialization.h>
+#include <chelper/serialization/SerializationInternal.h>
 #include <gtest/gtest.h>
 
 namespace std {

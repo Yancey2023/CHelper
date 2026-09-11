@@ -22,7 +22,7 @@
 #define CHELPER_CPACK_TEST_HELPER_H
 
 #include <chelper/CHelperCore.h>
-#include <chelper/serialization/Serialization.h>
+#include <chelper/serialization/SerializationInternal.h>
 #include <chelper/util/Profile.h>
 #include <gtest/gtest.h>
 

@@ -80,7 +80,7 @@ namespace CHelper {
 
 namespace CHelper {
 
-    // CPack 的读取函数（唯一允许构建 CPack 的入口），定义在 Serialization.h
+    // CPack 的读取函数（唯一允许构建 CPack 的入口），定义在 Serialization.cpp
     namespace serialization {
 #ifndef CHELPER_NO_FILESYSTEM
         std::unique_ptr<CPack> createCPackByDirectory(const std::filesystem::path &path);
@@ -97,7 +97,7 @@ namespace CHelper {
     private:
         CPackMemoryScope destructionMemoryScope;
 
-        // 默认构造不做任何工作，成员由 Serialization.h 的读取函数填充
+        // 默认构造不做任何工作，成员由 Serialization.cpp 的读取函数填充
         CPack() = default;
 
         // 必须声明在 ID 容器之前，确保销毁 CPack 对象后再销毁内存资源
