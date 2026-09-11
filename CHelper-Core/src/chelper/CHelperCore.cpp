@@ -28,7 +28,7 @@ namespace CHelper {
      */
     template<class T>
     T *forceEmit(T *pointer) {
-        static volatile T *emitted = nullptr;
+        static T *volatile emitted = nullptr;
         emitted = pointer;
         return pointer;
     }

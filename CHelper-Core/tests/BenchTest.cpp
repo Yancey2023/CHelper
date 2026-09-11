@@ -20,6 +20,48 @@
 
 #include <gtest/gtest.h>
 
+// 只在测试可执行文件中替换全局分配器，避免把非标准 operator new/delete
+// 放进头文件导致 MSVC C4595，同时保证所有测试翻译单元共用同一套计数器。
+void *operator new(size_t size) {
+    return chelperBenchAlloc(size, _ReturnAddress());
+}
+
+void *operator new[](size_t size) {
+    return chelperBenchAlloc(size, _ReturnAddress());
+}
+
+void *operator new(size_t size, const std::nothrow_t &) noexcept {
+    return chelperBenchAlloc(size, _ReturnAddress());
+}
+
+void *operator new[](size_t size, const std::nothrow_t &) noexcept {
+    return chelperBenchAlloc(size, _ReturnAddress());
+}
+
+void operator delete(void *p) noexcept {
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+}
+
+void operator delete[](void *p) noexcept {
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+}
+
+void operator delete(void *p, size_t size) noexcept {
+    chelperBenchFree(p, size, _ReturnAddress());
+}
+
+void operator delete[](void *p, size_t size) noexcept {
+    chelperBenchFree(p, size, _ReturnAddress());
+}
+
+void operator delete(void *p, const std::nothrow_t &) noexcept {
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+}
+
+void operator delete[](void *p, const std::nothrow_t &) noexcept {
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+}
+
 using namespace CHelper;
 using namespace CHelper::Test;
 
@@ -133,22 +175,22 @@ TEST(Bench, RequestPhases) {
         const size_t cursor = command.size();
         benchmark(total, repeat, [&] {
             std::unique_ptr<CommandContext> context(core.createContext(command));
-            context->getSuggestions(cursor);
-            context->getParamHint(cursor);
-            context->getStructure();
-            context->getSyntaxResult();
-            context->getErrorReasons();
+            (void) context->getSuggestions(cursor);
+            (void) context->getParamHint(cursor);
+            (void) context->getStructure();
+            (void) context->getSyntaxResult();
+            (void) context->getErrorReasons();
         });
         benchmark(create, repeat, [&] {
             std::unique_ptr<CommandContext> context(core.createContext(command));
         });
         // 以下阶段都在同一个 context 上重复调用，避免把解析开销算进来
         std::unique_ptr<CommandContext> context(core.createContext(command));
-        benchmark(suggestions, repeat, [&] { context->getSuggestions(cursor); });
-        benchmark(hint, repeat, [&] { context->getParamHint(cursor); });
-        benchmark(structure, repeat, [&] { context->getStructure(); });
-        benchmark(syntax, repeat, [&] { context->getSyntaxResult(); });
-        benchmark(errors, repeat, [&] { context->getErrorReasons(); });
+        benchmark(suggestions, repeat, [&] { (void) context->getSuggestions(cursor); });
+        benchmark(hint, repeat, [&] { (void) context->getParamHint(cursor); });
+        benchmark(structure, repeat, [&] { (void) context->getStructure(); });
+        benchmark(syntax, repeat, [&] { (void) context->getSyntaxResult(); });
+        benchmark(errors, repeat, [&] { (void) context->getErrorReasons(); });
     }
 
     std::printf("\n--- per keystroke phase breakdown (summed over %zu sample commands) ---\n", commands.size());
@@ -209,7 +251,7 @@ TEST(Bench, RequestPerCommand) {
         {
             std::unique_ptr<CommandContext> context(core.createContext(command));
             Stats stats{"getSuggestions | " + label};
-            benchmark(stats, repeat, [&] { context->getSuggestions(cursor); });
+            benchmark(stats, repeat, [&] { (void) context->getSuggestions(cursor); });
             stats.print();
         }
     }

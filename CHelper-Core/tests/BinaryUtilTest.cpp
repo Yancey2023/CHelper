@@ -487,7 +487,6 @@ TEST(BinaryUtilTest, NodeJsonElementBinary) {
     std::string buffer;
     ASSERT_FALSE(bool(glz::write<glz::opts{.format = CHelper::BinaryFormat}>(element, buffer)));
     std::u16string idBack = u"mismatch";
-    std::size_t pos = 0;
     std::uint32_t len = 0;
     // 手动按旧格式解码校验：uint32 长度 + UTF-8 字节
     len = (static_cast<std::uint32_t>(buffer[0]) | (static_cast<std::uint32_t>(buffer[1]) << 8) |
