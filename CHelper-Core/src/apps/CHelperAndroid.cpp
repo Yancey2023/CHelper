@@ -37,7 +37,7 @@ std::u16string jstring2u16string(JNIEnv *env, jstring jString) {
 }
 
 jstring u16string2jstring(JNIEnv *env, const std::u16string_view u16string) {
-    return env->NewString(reinterpret_cast<const jchar *>(u16string.c_str()), static_cast<jsize>(u16string.size()));
+    return env->NewString(reinterpret_cast<const jchar *>(u16string.data()), static_cast<jsize>(u16string.size()));
 }
 
 std::string jstring2string(JNIEnv *env, jstring jString) {

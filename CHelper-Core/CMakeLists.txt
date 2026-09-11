@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(CHELPER_RESTRICT_PLATFORM_EXPORTS
+       "Export only JNIEXPORT/EMSCRIPTEN_KEEPALIVE platform entry points" ON)
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
@@ -33,63 +35,43 @@ set(CHELPER_THIRDPARTY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty_download
 file(MAKE_DIRECTORY "${CHELPER_THIRDPARTY_SOURCE_DIR}")
 
 # 拉取第三方库源码到 3rdparty_downloads（只含源码，不含构建产物）。
-# - 首次缺失或损坏时由本函数负责 clone + checkout 到锁定版本（含嵌套子模块）；
-# - 之后通过 FETCHCONTENT_SOURCE_DIR_<NAME> 让 FetchContent 直接复用，不再执行
-#   下载/删除步骤。这样多个构建目录（如 CLion 的多个 profile）并发配置只会读取
-#   同一份源码、互不破坏，也避免每次新建构建目录都重新下载 emscripten 等大仓库。
+# FetchContent 负责缺失源码的下载和版本检出；已有缓存则通过
+# FETCHCONTENT_SOURCE_DIR_<NAME> 直接复用。这样多个构建目录（如 CLion 的多个
+# profile）只共享同一份源码，构建元数据和编译产物仍留在各自的 build/_deps 中。
 # 调用处用关键字参数：GIT_REPOSITORY / GIT_TAG，可选 SOURCE_SUBDIR / EXCLUDE_FROM_ALL。
-# 注意：GIT_TAG 需用完整 commit 哈希，以便与已检出的 HEAD 精确比对决定是否需要重新拉取。
+# GIT_TAG 使用完整 commit 哈希，保证 FetchContent 检出确定的源码版本。
 function(chelper_fetch_thirdparty name)
     cmake_parse_arguments(ARG "EXCLUDE_FROM_ALL;SYSTEM" "GIT_REPOSITORY;GIT_TAG;SOURCE_SUBDIR" "" ${ARGN})
 
     set(sourceDir "${CHELPER_THIRDPARTY_SOURCE_DIR}/${name}")
     string(TOUPPER "${name}" nameUpper)
-
-    # 校验源码目录是否已是目标版本的 git 仓库
-    set(sourceValid FALSE)
-    if(EXISTS "${sourceDir}/.git")
-        execute_process(
-            COMMAND "${GIT_EXECUTABLE}" rev-parse --verify HEAD
-            WORKING_DIRECTORY "${sourceDir}"
-            OUTPUT_VARIABLE head
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            RESULT_VARIABLE rc)
-        if(rc EQUAL 0 AND head STREQUAL ARG_GIT_TAG)
-            set(sourceValid TRUE)
-        endif()
+    set(contentOptions
+        GIT_REPOSITORY "${ARG_GIT_REPOSITORY}"
+        GIT_TAG "${ARG_GIT_TAG}"
+        SOURCE_DIR "${sourceDir}")
+    if(ARG_SOURCE_SUBDIR)
+        list(APPEND contentOptions SOURCE_SUBDIR "${ARG_SOURCE_SUBDIR}")
+    endif()
+    if(ARG_EXCLUDE_FROM_ALL)
+        list(APPEND contentOptions EXCLUDE_FROM_ALL)
+    endif()
+    if(ARG_SYSTEM)
+        list(APPEND contentOptions SYSTEM)
     endif()
 
-    if(NOT sourceValid)
-        message(STATUS "[FetchContent] Third-party ${name}: cloning ${ARG_GIT_TAG} ...")
-        file(REMOVE_RECURSE "${sourceDir}")
-        execute_process(
-            COMMAND "${GIT_EXECUTABLE}" clone --no-checkout "${ARG_GIT_REPOSITORY}" "${name}"
-            WORKING_DIRECTORY "${CHELPER_THIRDPARTY_SOURCE_DIR}"
-            RESULT_VARIABLE rc)
-        if(NOT rc EQUAL 0)
-            message(FATAL_ERROR "Failed to clone ${ARG_GIT_REPOSITORY} for ${name}")
-        endif()
-        execute_process(
-            COMMAND "${GIT_EXECUTABLE}" checkout "${ARG_GIT_TAG}" --
-            WORKING_DIRECTORY "${sourceDir}"
-            RESULT_VARIABLE rc)
-        if(NOT rc EQUAL 0)
-            message(FATAL_ERROR "Failed to checkout ${ARG_GIT_TAG} for ${name}")
-        endif()
-        execute_process(
-            COMMAND "${GIT_EXECUTABLE}" submodule update --init --recursive
-            WORKING_DIRECTORY "${sourceDir}"
-            RESULT_VARIABLE rc)
-        if(NOT rc EQUAL 0)
-            message(FATAL_ERROR "Failed to init submodules for ${name}")
-        endif()
-    else()
-        message(STATUS "[FetchContent] Third-party ${name}: using cached source")
+    # An existing source cache is supplied through FetchContent's documented
+    # override.  When it does not exist, FetchContent populates SOURCE_DIR
+    # directly.  In both cases, build metadata stays under build/_deps.
+    if(IS_DIRECTORY "${sourceDir}" AND
+       (EXISTS "${sourceDir}/.git" OR EXISTS "${sourceDir}/CMakeLists.txt" OR
+        (ARG_SOURCE_SUBDIR AND EXISTS "${sourceDir}/${ARG_SOURCE_SUBDIR}/CMakeLists.txt")))
+        set(FETCHCONTENT_SOURCE_DIR_${nameUpper} "${sourceDir}")
     endif()
 
-    # 让 FetchContent 直接复用已就绪的源码：不下载、不 rm -rf、不产生 -src/-subbuild
-    set(FETCHCONTENT_SOURCE_DIR_${nameUpper} "${sourceDir}")
-    FetchContent_Declare(${name} ${ARGN})
+    # FetchContent owns population and keeps downloaded sources in the shared
+    # source cache.  Its per-build source/build metadata remains under the
+    # current build directory's _deps directory.
+    FetchContent_Declare(${name} ${contentOptions})
     FetchContent_MakeAvailable(${name})
     message(STATUS "[FetchContent] Third-party ${name}: ready")
 endfunction()
@@ -151,6 +133,12 @@ add_library(CHelperCore STATIC ${CHELPER_CORE_SOURCE_FILE})
 target_precompile_headers(CHelperCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
 target_include_directories(CHelperCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
+if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
+    # Core is embedded into the platform wrapper.  It is not a dynamic API;
+    # only the wrapper's explicitly annotated entry points are exported.
+    set_property(TARGET CHelperCore PROPERTY CXX_VISIBILITY_PRESET hidden)
+    set_property(TARGET CHelperCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+endif()
 if(MSVC)
     set_property(TARGET CHelperCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
@@ -162,6 +150,10 @@ target_precompile_headers(CHelperNoFilesystemCore PRIVATE ${CMAKE_CURRENT_SOURCE
 target_include_directories(CHelperNoFilesystemCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
 target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
+if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
+    set_property(TARGET CHelperNoFilesystemCore PROPERTY CXX_VISIBILITY_PRESET hidden)
+    set_property(TARGET CHelperNoFilesystemCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+endif()
 if(MSVC)
     set_property(TARGET CHelperNoFilesystemCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
@@ -173,8 +165,18 @@ if(NOT MSVC AND NOT EMSCRIPTEN)
     target_compile_definitions(CHelperAndroid PUBLIC CHelperAndroid)
     if(ANDROID)
         target_link_libraries(CHelperAndroid PUBLIC android log)
+        # CHelperCore, fmt, spdlog and xxHash are static archives embedded in
+        # this .so.  None of their symbols are part of the Android ABI.
+        # JNIEXPORT on the wrapper functions remains the export whitelist.
+        if(CHELPER_RESTRICT_PLATFORM_EXPORTS)
+            target_link_options(CHelperAndroid PRIVATE "-Wl,--exclude-libs,ALL")
+        endif()
     else()
         target_include_directories(CHelperAndroid PUBLIC include_android)
+    endif()
+    if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
+        set_property(TARGET CHelperAndroid PROPERTY CXX_VISIBILITY_PRESET hidden)
+        set_property(TARGET CHelperAndroid PROPERTY VISIBILITY_INLINES_HIDDEN ON)
     endif()
     target_link_libraries(CHelperAndroid PRIVATE CHelper::Core)
 endif()
@@ -201,6 +203,12 @@ endif()
 # Web Application
 if(NOT ANDROID)
     add_library(CHelperWeb src/apps/CHelperWeb.cpp)
+    if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND EMSCRIPTEN)
+        # The public Web ABI is defined by EMSCRIPTEN_KEEPALIVE functions in
+        # CHelperWeb.cpp.  All other C++ symbols stay hidden.
+        set_property(TARGET CHelperWeb PROPERTY CXX_VISIBILITY_PRESET hidden)
+        set_property(TARGET CHelperWeb PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+    endif()
     if(NOT EMSCRIPTEN)
         target_include_directories(CHelperWeb PRIVATE ${CHELPER_THIRDPARTY_SOURCE_DIR}/emscripten/system/include)
     endif()

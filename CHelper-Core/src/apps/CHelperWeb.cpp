@@ -122,8 +122,8 @@ namespace {
     // 注意：name/description 的长度已作为 u32 写在前面，这里只写 u16 数据本身，
     // 不能使用带长度前缀的 writeUtf16。
     size_t writeSuggestion(size_t offset, const CHelper::AutoSuggestion::Suggestion &suggestion) {
-        const std::u16string &name = suggestion.content->name;
-        const std::optional<std::u16string> &description = suggestion.content->description;
+        const auto &name = suggestion.content->name;
+        const auto &description = suggestion.content->description;
         size_t nameLength = name.size();
         size_t descriptionLength = description.has_value() ? description->size() : 0;
         offset = writeU32(offset, static_cast<std::uint32_t>(nameLength));
