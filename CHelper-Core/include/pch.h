@@ -45,6 +45,14 @@
 #define CHELPER_UNREACHABLE() __builtin_unreachable()
 #endif
 
+// 禁止编译器丢弃"只为强制生成符号、本身永不被调用"的函数：
+// GCC / Clang / clang-cl 需要 used 属性，MSVC 会保留未使用的非 static 函数
+#if defined(__GNUC__) || defined(__clang__)
+#define CHELPER_USED gnu::used
+#else
+#define CHELPER_USED maybe_unused
+#endif
+
 // 宏展开工具：CHELPER_PASTE(func, v1, v2, ...) 展开为 func(v1) func(v2) ...
 #define CHELPER_EXPAND(x) x
 #define CHELPER_GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \

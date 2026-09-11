@@ -50,6 +50,17 @@ namespace glz {
     template<class T>
     inline constexpr bool is_std_vector_v = is_std_vector<T>::value;
 
+    // std::vector<bool> 是位压缩特化：迭代器和 back() 给的是代理引用而不是 bool&，
+    // 不能取地址、不能绑定非 const 引用，也不能直接传给按元素类型实例化的编解码
+    template<class T>
+    struct is_vector_bool : std::false_type {};
+
+    template<class A>
+    struct is_vector_bool<std::vector<bool, A>> : std::true_type {};
+
+    template<class T>
+    inline constexpr bool is_vector_bool_v = is_vector_bool<T>::value;
+
     // pair 被 glz::reflectable 排除（glaze 对 pair 有各格式自己的处理），需要专用编解码
     template<class T>
     struct is_std_pair : std::false_type {};
@@ -287,7 +298,15 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
             to<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(static_cast<std::uint32_t>(value.size()), ctx, b, ix);
             for (const auto &item: value) {
-                serialize<CHelper::BinaryFormat>::template op<Opts>(item, ctx, b, ix);
+                if constexpr (is_vector_bool_v<T>) {
+                    // 迭代器给的是位代理引用：先落成 bool 再写。
+                    // libc++ 的代理是纯右值、不会像 MSVC 那样退化成 bool，
+                    // 直接把代理当元素类型会实例化出未定义的 to<BinaryFormat, 代理类型>
+                    const bool bit = item;
+                    serialize<CHelper::BinaryFormat>::template op<Opts>(bit, ctx, b, ix);
+                } else {
+                    serialize<CHelper::BinaryFormat>::template op<Opts>(item, ctx, b, ix);
+                }
             }
         }
     };
@@ -303,10 +322,20 @@ namespace glz {
             if (size > 0) {
                 value.reserve(size);
                 for (std::uint32_t i = 0; i < size; ++i) {
-                    value.emplace_back();
-                    from<CHelper::BinaryFormat, typename T::value_type>::template op<Opts>(value.back(), ctx, it, end);
-                    if (bool(ctx.error)) [[unlikely]] {
-                        return;
+                    if constexpr (is_vector_bool_v<T>) {
+                        // 同 to：back() 也是代理，不能取地址或绑定非 const 引用
+                        bool bit = false;
+                        from<CHelper::BinaryFormat, bool>::template op<Opts>(bit, ctx, it, end);
+                        if (bool(ctx.error)) [[unlikely]] {
+                            return;
+                        }
+                        value.push_back(bit);
+                    } else {
+                        from<CHelper::BinaryFormat, typename T::value_type>::template op<Opts>(
+                                value.emplace_back(), ctx, it, end);
+                        if (bool(ctx.error)) [[unlikely]] {
+                            return;
+                        }
                     }
                 }
             }

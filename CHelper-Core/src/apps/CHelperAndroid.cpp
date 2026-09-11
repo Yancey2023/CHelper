@@ -139,7 +139,9 @@ Java_yancey_chelper_core_CHelperCore_create0(
     try {
         std::string cpackPath = jstring2string(env, cpack_path);
         if (assetManager == nullptr) [[unlikely]] {
-            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(cpackPath);
+            // 显式构造 string_view：Android 同时可见 createByBinary(path) 与
+            // createByBinary(string_view) 两个重载，直接传 std::string 会产生歧义
+            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(cpackPath));
             return reinterpret_cast<jlong>(core);
         } else {
             AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);

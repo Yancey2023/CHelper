@@ -320,7 +320,8 @@ namespace CHelper::Test {
 }// namespace CHelper::Test
 
 // ================= 全局 operator new / delete =================
-// 定义在头文件中，由测试可执行文件提供（测试目标是本项目唯一的使用者）
+// 定义在头文件中供测试可执行文件使用，必须全部标 inline：
+// 该头会被多个 .cpp 包含，否则链接期报重复定义（MSVC 报 LNK2005）
 inline void *chelperBenchAlloc(size_t size, const void *callSite) {
     if (CHelper::Test::Detail::gCounting.load(std::memory_order_relaxed)) {
         CHelper::Test::Detail::gAllocCalls.fetch_add(1, std::memory_order_relaxed);
@@ -355,43 +356,43 @@ inline void chelperBenchFree(void *p, size_t size, const void *callSite) {
     }
 }
 
-void *operator new(size_t size) {
+inline void *operator new(size_t size) {
     return chelperBenchAlloc(size, _ReturnAddress());
 }
 
-void *operator new[](size_t size) {
+inline void *operator new[](size_t size) {
     return chelperBenchAlloc(size, _ReturnAddress());
 }
 
-void *operator new(size_t size, const std::nothrow_t &) noexcept {
+inline void *operator new(size_t size, const std::nothrow_t &) noexcept {
     return chelperBenchAlloc(size, _ReturnAddress());
 }
 
-void *operator new[](size_t size, const std::nothrow_t &) noexcept {
+inline void *operator new[](size_t size, const std::nothrow_t &) noexcept {
     return chelperBenchAlloc(size, _ReturnAddress());
 }
 
-void operator delete(void *p) noexcept {
+inline void operator delete(void *p) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
 }
 
-void operator delete[](void *p) noexcept {
+inline void operator delete[](void *p) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
 }
 
-void operator delete(void *p, size_t size) noexcept {
+inline void operator delete(void *p, size_t size) noexcept {
     chelperBenchFree(p, size, _ReturnAddress());
 }
 
-void operator delete[](void *p, size_t size) noexcept {
+inline void operator delete[](void *p, size_t size) noexcept {
     chelperBenchFree(p, size, _ReturnAddress());
 }
 
-void operator delete(void *p, const std::nothrow_t &) noexcept {
+inline void operator delete(void *p, const std::nothrow_t &) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
 }
 
-void operator delete[](void *p, const std::nothrow_t &) noexcept {
+inline void operator delete[](void *p, const std::nothrow_t &) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
 }
 

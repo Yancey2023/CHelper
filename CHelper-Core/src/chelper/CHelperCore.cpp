@@ -22,22 +22,39 @@
 
 namespace CHelper {
 
+    /**
+     * 强制 odr-use：只取地址不调用，让编译器必须为 inline 函数产出实体。
+     * volatile 防止优化器把"只取地址"判定为无用而删掉
+     */
+    template<class T>
+    T *forceEmit(T *pointer) {
+        static volatile T *emitted = nullptr;
+        emitted = pointer;
+        return pointer;
+    }
+
 #ifndef CHELPER_NO_FILESYSTEM
-    // 下游只 include CHelperCore.h，而序列化函数以 inline 形式定义在 Serialization.h；
-    // 编译器不会为未被本翻译单元使用的 inline 函数生成符号，链接时会出现未解析符号。
-    // 外部链接的函数一定会被生成，其函数体对这些函数的调用会强制编译器
-    // 在本目标文件中同时生成它们的符号。此函数本身永远不会被调用
+    /**
+     * 强制生成 inline 序列化函数的符号。本身永远不会被调用，
+     * 因此必须挂 CHELPER_USED：否则 Clang 在 -O3 下会直接丢掉整个函数体，
+     * 连带着不再为这些函数生成符号。MSVC 会保留未使用的非 static 函数，
+     * 所以桌面构建此前没有暴露这个问题
+     */
+    [[CHELPER_USED]]
     void emitSerializationSymbols(const CPack &cpack, const std::filesystem::path &path) {
         std::ignore = cpack.toJson();
         cpack.writeJsonToFile(path);
         cpack.writeJsonToDirectory(path);
         cpack.writeBinToFile(path);
-        std::ignore = Old2New::blockFixDataFromJson(path);
-        std::ignore = Old2New::blockFixDataToBinary(Old2New::blockFixDataFromBinary({}));
+        std::ignore = forceEmit(&Old2New::blockFixDataFromJson);
+        std::ignore = forceEmit(&Old2New::blockFixDataToBinary);
+        std::ignore = forceEmit(&Old2New::blockFixDataFromBinary);
     }
 #else
+    [[CHELPER_USED]]
     void emitSerializationSymbols() {
-        std::ignore = Old2New::blockFixDataToBinary(Old2New::blockFixDataFromBinary({}));
+        std::ignore = forceEmit(&Old2New::blockFixDataToBinary);
+        std::ignore = forceEmit(&Old2New::blockFixDataFromBinary);
     }
 #endif
 
