@@ -117,6 +117,45 @@ TEST(Bench, LoadCPack) {
 }
 
 /**
+ * CPack 写出：目录 JSON、单文件 JSON 与二进制文件
+ */
+TEST(Bench, WriteCPack) {
+    const size_t repeat = 20;
+    const auto data = readBinaryFile(vanillaBin());
+    const auto cpack = serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
+    const auto outputDir = resourceDir() / "generated" / "benchmark-output";
+    // Windows 不允许 '?' 出现在文件名中，而 vanilla 的 help 命令正好使用 '?'
+    // 作为第一个别名；仅在基准副本中换成等长的合法别名，避免写目录基准被平台文件名规则阻断。
+    for (auto &command: *cpack->commands) {
+        if (!command.name.empty() && command.name.front() == u"?") {
+            command.name.front() = u"help";
+        }
+    }
+
+    {
+        Stats stats{"write cpack by directory (vanilla)"};
+        benchmark(stats, repeat, [&] {
+            cpack->writeJsonToDirectory(outputDir / "directory");
+        });
+        stats.print();
+    }
+    {
+        Stats stats{"write cpack by json (vanilla)"};
+        benchmark(stats, repeat, [&] {
+            cpack->writeJsonToFile(outputDir / "vanilla.json");
+        });
+        stats.print();
+    }
+    {
+        Stats stats{"write cpack by binary (vanilla)"};
+        benchmark(stats, repeat, [&] {
+            cpack->writeBinToFile(outputDir / "vanilla.cpack");
+        });
+        stats.print();
+    }
+}
+
+/**
  * CPack 卸载：销毁整个资源包对象图的成本（网页版切换分支时会走这条路）
  */
 TEST(Bench, UnloadCPack) {
