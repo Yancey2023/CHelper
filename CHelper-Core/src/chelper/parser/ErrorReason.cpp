@@ -33,7 +33,7 @@ namespace CHelper {
         : level(level),
           start(start),
           end(end),
-          errorReason(errorReason.data(), errorReason.size()) {}
+          errorReason(errorReason.data(), errorReason.size(), std::pmr::new_delete_resource()) {}
 
     ErrorReason::ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                              const TokensView &tokens,
@@ -41,7 +41,7 @@ namespace CHelper {
         : level(level),
           start(tokens.startIndex),
           end(tokens.endIndex),
-          errorReason(errorReason.data(), errorReason.size()) {}
+          errorReason(errorReason.data(), errorReason.size(), std::pmr::new_delete_resource()) {}
 
     bool ErrorReason::operator==(const ErrorReason &reason) const {
         return start == reason.start &&

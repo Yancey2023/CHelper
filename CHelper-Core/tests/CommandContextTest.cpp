@@ -207,4 +207,17 @@ namespace CHelper::Test {
         CHelperCore::deleteContext(context.release());
     }
 
+    TEST(CommandContextTest, ErrorReasonsOutliveContext) {
+        std::shared_ptr<const CPack> cpack = loadCPack();
+        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        {
+            CommandContext context(cpack, uR"(give @s)");
+            errorReasons = context.getErrorReasons();
+            ASSERT_FALSE(errorReasons.empty());
+        }
+
+        ASSERT_FALSE(errorReasons.empty());
+        EXPECT_FALSE(errorReasons.front()->errorReason.empty());
+    }
+
 }// namespace CHelper::Test

@@ -17,6 +17,7 @@
  */
 
 #include "CpackTestHelper.h"
+#include <chelper/parser/Parser.h>
 #include <future>
 #include <gtest/gtest.h>
 
@@ -169,6 +170,78 @@ namespace CHelper::Test {
             ASSERT_EQ(nodes.nodes.size(), size_t{1});
             EXPECT_EQ(nodes.nodes[0].nodeTypeId, Node::NodeTypeId::JSON_NULL);
         }
+    }
+
+    TEST(CPackValidationTest, GrammarStageAllowsOnlyGrammarNodes) {
+        const std::string grammar = R"({
+          "type": "AND",
+          "id": "AND_NODE",
+          "nodes": []
+        })";
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+            Node::NodeWithType node;
+            EXPECT_NO_THROW(readJson(node, grammar, ctx));
+            EXPECT_EQ(node.nodeTypeId, Node::NodeTypeId::AND);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+            Node::NodeWithType node;
+            EXPECT_THROW(readJson(node, grammar, ctx), std::runtime_error);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+            Node::NodeWithType node;
+            EXPECT_THROW(readJson(node, R"({"type":"COMMAND"})", ctx), std::runtime_error);
+        }
+    }
+
+    TEST(CPackValidationTest, GrammarResourceCanAddNodeWithoutCxxChanges) {
+        // 只增加资源节点和 ID 引用，C++ 不需要认识 custom。
+        const std::string grammar = R"([
+          {"id":"dynamic","type":"grammar","content":{
+            "id":"dynamic","node":[
+              {"type":"LITERAL","id":"CUSTOM_LITERAL","value":"custom"},
+              {"type":"SINGLE_SYMBOL","id":"CUSTOM_EQUAL","symbol":"=","isAddSpace":false},
+              {"type":"INTEGER","id":"CUSTOM_INTEGER"},
+              {"type":"AND","id":"CUSTOM_ROOT","nodes":["CUSTOM_LITERAL","CUSTOM_EQUAL","CUSTOM_INTEGER"]}
+            ],"start":"CUSTOM_ROOT"}}
+        ])";
+        auto cpackJson = makeCpackJson("[]", "[]", R"([
+          {"name":["list"],"description":"list","syntax":["/list"],"node":{}}
+        ])");
+        const auto grammarPosition = cpackJson.rfind("\n}");
+        ASSERT_NE(grammarPosition, std::string::npos);
+        cpackJson.insert(grammarPosition, ",\n  \"grammar\": " + grammar);
+        std::unique_ptr<CPack> cpack;
+        ASSERT_TRUE(tryCreateCpack(cpackJson, cpack));
+        ASSERT_NE(cpack, nullptr);
+        const auto *root = cpack->getGrammar("dynamic");
+        ASSERT_NE(root, nullptr);
+        EXPECT_TRUE(Parser::parse(u"custom=123", *root).errorReasons.empty());
+    }
+
+    TEST(CPackValidationTest, GrammarGraphBinaryRoundTrip) {
+        const std::filesystem::path resourceDir(RESOURCE_DIR);
+        auto source = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "experiment");
+        ASSERT_NE(source, nullptr);
+        const auto binaryPath = std::filesystem::temp_directory_path() / "chelper-grammar-graph-test.cpack";
+        std::error_code error;
+        std::filesystem::remove(binaryPath, error);
+        ASSERT_NO_THROW(source->writeBinToFile(binaryPath));
+
+        std::ifstream stream(binaryPath, std::ios::binary);
+        ASSERT_TRUE(stream.is_open());
+        const std::string binary((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+        auto restored = CHelper::serialization::createCPackByBinary(binary);
+        ASSERT_NE(restored, nullptr);
+        const auto *root = restored->getGrammar("target_selector");
+        ASSERT_NE(root, nullptr);
+        EXPECT_TRUE(Parser::parse(u"@e[type=minecraft:zombie]", *root).errorReasons.empty());
+        std::filesystem::remove(binaryPath, error);
     }
 
     TEST(CPackValidationTest, PeekNodeTypeName) {

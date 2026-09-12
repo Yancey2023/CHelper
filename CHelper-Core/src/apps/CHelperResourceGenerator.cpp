@@ -253,7 +253,7 @@ namespace CHelper::Test {
                         std::u16string result = command.substr(0, item.start)
                                                         .append(item.content->name)
                                                         .append(command.substr(item.end));
-                        std::u16string greenPart = item.content->name;
+                        std::u16string greenPart(item.content->name.begin(), item.content->name.end());
                         if (item.end == command.length()) {
                             ASTNode astNode = Parser::parse(result, core->getCPack());
                             if (item.isAddSpace && astNode.isAllSpaceError()) {

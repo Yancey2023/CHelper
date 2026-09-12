@@ -31,7 +31,6 @@ namespace CHelper::Node {
         static const bool initialized = [] {
             (void) NodeLF::getInstance();
             (void) NodeAny::getNodeAny();
-            TargetSelectorData targetSelectorData;
             (void) NodeJsonElement::getNodeJsonElement();
             (void) NodeJsonEntry::getNodeJsonAllEntry();
             return true;

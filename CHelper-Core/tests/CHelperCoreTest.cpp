@@ -49,4 +49,23 @@ namespace CHelper::Test {
         delete core;
     }
 
+    TEST(CHelperCoreTest, TargetSelectorGrammarComesFromResource) {
+        std::filesystem::path resourceDir(RESOURCE_DIR);
+        auto cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "experiment");
+        ASSERT_NE(cpack, nullptr);
+        auto core = std::make_unique<CHelperCore>(std::shared_ptr<const CPack>(std::move(cpack)));
+        const std::vector<std::u16string> selectors{
+                u"kill @e",
+                u"kill @e[x=~1]",
+                u"kill @e[type=minecraft:zombie]",
+                u"kill @e[type=!minecraft:zombie]",
+                u"kill @e[scores={test=1..10}]",
+                u"kill @e[hasitem={item=minecraft:stone}]",
+                u"kill @a[haspermission={camera=enabled}]"};
+        for (const auto &command: selectors) {
+            auto context = std::unique_ptr<CommandContext>(core->createContext(command));
+            EXPECT_TRUE(context->getErrorReasons().empty()) << utf8::utf16to8(command);
+        }
+    }
+
 }// namespace CHelper::Test

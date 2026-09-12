@@ -29,7 +29,7 @@
 namespace CHelper::Test {
 
     //测试用的最小CPack模板。
-    //id里的数据是TargetSelectorData::init的硬性要求(item/entity命名空间和族/游戏模式/物品栏)，
+    //id里的数据是目标选择器 Grammar 初始化的硬性要求(item/entity命名空间和族/游戏模式/物品栏)，
     //其余部分由各个测试通过参数填充。
     //extraIds是追加到id数组里的额外id对象(不带方括号，多个对象用逗号分隔)
     inline std::string makeCpackJson(const std::string &jsonNodes = "[]",

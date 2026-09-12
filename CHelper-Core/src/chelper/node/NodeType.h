@@ -38,7 +38,8 @@ namespace CHelper {
                 NODE_TYPE,
                 JSON_NODE,
                 REPEAT_NODE,
-                COMMAND_PARAM_NODE
+                COMMAND_PARAM_NODE,
+                GRAMMAR_NODE
             };
         }// namespace NodeCreateStage
 
@@ -66,6 +67,21 @@ namespace CHelper {
             static constexpr bool isMustAfterSpace = false;
         };
 
+        struct GrammarNodeTypeDetail {
+            static constexpr std::array<NodeCreateStage::NodeCreateStage, 1> nodeCreateStage = {
+                    NodeCreateStage::GRAMMAR_NODE};
+            static constexpr bool isMustAfterSpace = false;
+        };
+
+        struct CommandParamGrammarNodeTypeDetail {
+            static constexpr std::array<NodeCreateStage::NodeCreateStage, 4> nodeCreateStage = {
+                    NodeCreateStage::JSON_NODE,
+                    NodeCreateStage::REPEAT_NODE,
+                    NodeCreateStage::COMMAND_PARAM_NODE,
+                    NodeCreateStage::GRAMMAR_NODE};
+            static constexpr bool isMustAfterSpace = true;
+        };
+
         template<>
         struct NodeTypeDetail<NodeTypeId::WRAPPED> : UnserializableNodeTypeDetail {
             using Type = NodeWrapped;
@@ -81,7 +97,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::BOOLEAN> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::BOOLEAN> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeBoolean;
             static_assert(Type::nodeTypeId == NodeTypeId::BOOLEAN, "nodTypeId not equal");
             static constexpr auto name = "BOOLEAN";
@@ -102,14 +118,14 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::FLOAT> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::FLOAT> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeFloat;
             static_assert(Type::nodeTypeId == NodeTypeId::FLOAT, "nodTypeId not equal");
             static constexpr auto name = "FLOAT";
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::INTEGER> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::INTEGER> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeInteger;
             static_assert(Type::nodeTypeId == NodeTypeId::INTEGER, "nodTypeId not equal");
             static constexpr auto name = "INTEGER";
@@ -137,14 +153,14 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::NAMESPACE_ID> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::NAMESPACE_ID> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeNamespaceId;
             static_assert(Type::nodeTypeId == NodeTypeId::NAMESPACE_ID, "nodTypeId not equal");
             static constexpr auto name = "NAMESPACE_ID";
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::NORMAL_ID> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::NORMAL_ID> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeNormalId;
             static_assert(Type::nodeTypeId == NodeTypeId::NORMAL_ID, "nodTypeId not equal");
             static constexpr auto name = "NORMAL_ID";
@@ -166,7 +182,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::RELATIVE_FLOAT> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::RELATIVE_FLOAT> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeRelativeFloat;
             static_assert(Type::nodeTypeId == NodeTypeId::RELATIVE_FLOAT, "nodTypeId not equal");
             static constexpr auto name = "RELATIVE_FLOAT";
@@ -182,7 +198,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::STRING> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::STRING> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeString;
             static_assert(Type::nodeTypeId == NodeTypeId::STRING, "nodTypeId not equal");
             static constexpr auto name = "STRING";
@@ -203,7 +219,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::RANGE> : CommandParamNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::RANGE> : CommandParamGrammarNodeTypeDetail {
             using Type = NodeRange;
             static_assert(Type::nodeTypeId == NodeTypeId::RANGE, "nodTypeId not equal");
             static constexpr auto name = "RANGE";
@@ -280,7 +296,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::AND> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::AND> : GrammarNodeTypeDetail {
             using Type = NodeAnd;
             static_assert(Type::nodeTypeId == NodeTypeId::AND, "nodTypeId not equal");
             static constexpr auto name = "AND";
@@ -308,31 +324,38 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::LIST> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::LIST> : GrammarNodeTypeDetail {
             using Type = NodeList;
             static_assert(Type::nodeTypeId == NodeTypeId::LIST, "nodTypeId not equal");
             static constexpr auto name = "LIST";
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::OR> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::OR> : GrammarNodeTypeDetail {
             using Type = NodeOr;
             static_assert(Type::nodeTypeId == NodeTypeId::OR, "nodTypeId not equal");
             static constexpr auto name = "OR";
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::SINGLE_SYMBOL> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::SINGLE_SYMBOL> : GrammarNodeTypeDetail {
             using Type = NodeSingleSymbol;
             static_assert(Type::nodeTypeId == NodeTypeId::SINGLE_SYMBOL, "nodTypeId not equal");
             static constexpr auto name = "SINGLE_SYMBOL";
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::OPTIONAL> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::OPTIONAL> : GrammarNodeTypeDetail {
             using Type = NodeOptional;
             static_assert(Type::nodeTypeId == NodeTypeId::OPTIONAL, "nodTypeId not equal");
             static constexpr auto name = "OPTIONAL";
+        };
+
+        template<>
+        struct NodeTypeDetail<NodeTypeId::LITERAL> : GrammarNodeTypeDetail {
+            using Type = NodeLiteral;
+            static_assert(Type::nodeTypeId == NodeTypeId::LITERAL, "nodTypeId not equal");
+            static constexpr auto name = "LITERAL";
         };
 
         const char *getNodeTypeName(NodeTypeId::NodeTypeId id);

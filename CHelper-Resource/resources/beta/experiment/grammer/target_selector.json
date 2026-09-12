@@ -1,0 +1,911 @@
+{
+  "id": "target_selector",
+  "type": "grammar",
+  "content": {
+    "id": "target_selector",
+    "node": [
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_at",
+        "symbol": "@",
+        "description": "目标选择器开始字符",
+        "isAddSpace": false
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_all_entities",
+        "value": "e",
+        "description": "选择所有实体(只选择活着的实体)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_all_players",
+        "value": "a",
+        "description": "选择所有玩家(无论死活)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_random_target",
+        "value": "r",
+        "description": "选择一名随机玩家(可通过type选择非玩家实体)(只选择活着的实体)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_nearest_player",
+        "value": "p",
+        "description": "选择最近的玩家(只选择活着的玩家)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_self",
+        "value": "s",
+        "description": "命令的执行者(只选择1个实体)(无论是否濒死)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_nearest_entity",
+        "value": "n",
+        "description": "选择最近的一个实体(只选择活着的实体)"
+      },
+      {
+        "type": "LITERAL",
+        "id": "selector_kind_initiator",
+        "value": "initiator",
+        "description": "当前与该NPC进行交互的玩家(在NPC内置的命令界面中使用)"
+      },
+      {
+        "type": "OR",
+        "id": "selector_kind",
+        "nodes": [
+          "selector_kind_all_entities",
+          "selector_kind_all_players",
+          "selector_kind_random_target",
+          "selector_kind_nearest_player",
+          "selector_kind_self",
+          "selector_kind_nearest_entity",
+          "selector_kind_initiator"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "AND",
+        "id": "selector_head",
+        "nodes": [
+          "symbol_at",
+          "selector_kind"
+        ]
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_lbracket",
+        "symbol": "[",
+        "description": "左方括号",
+        "isAddSpace": false
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_x_key",
+        "value": "x",
+        "description": "x坐标"
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_equal",
+        "symbol": "=",
+        "description": "等于",
+        "isAddSpace": false
+      },
+      {
+        "type": "RELATIVE_FLOAT",
+        "id": "value_relative_float",
+        "description": "目标选择器参数(相对坐标)",
+        "canUseCaretNotation": false
+      },
+      {
+        "type": "AND",
+        "id": "arg_x",
+        "nodes": [
+          "arg_x_key",
+          "symbol_equal",
+          "value_relative_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_y_key",
+        "value": "y",
+        "description": "y坐标"
+      },
+      {
+        "type": "AND",
+        "id": "arg_y",
+        "nodes": [
+          "arg_y_key",
+          "symbol_equal",
+          "value_relative_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_z_key",
+        "value": "z",
+        "description": "z坐标"
+      },
+      {
+        "type": "AND",
+        "id": "arg_z",
+        "nodes": [
+          "arg_z_key",
+          "symbol_equal",
+          "value_relative_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_r_key",
+        "value": "r",
+        "description": "最大半径"
+      },
+      {
+        "type": "FLOAT",
+        "id": "value_float",
+        "description": "目标选择器参数(小数)",
+        "min": null,
+        "max": null
+      },
+      {
+        "type": "AND",
+        "id": "arg_r",
+        "nodes": [
+          "arg_r_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_rm_key",
+        "value": "rm",
+        "description": "最小半径"
+      },
+      {
+        "type": "AND",
+        "id": "arg_rm",
+        "nodes": [
+          "arg_rm_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_dx_key",
+        "value": "dx",
+        "description": "x坐标差异(检查实体的腿部位置)"
+      },
+      {
+        "type": "AND",
+        "id": "arg_dx",
+        "nodes": [
+          "arg_dx_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_dy_key",
+        "value": "dy",
+        "description": "y坐标差异(检查实体的腿部位置)"
+      },
+      {
+        "type": "AND",
+        "id": "arg_dy",
+        "nodes": [
+          "arg_dy_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_dz_key",
+        "value": "dz",
+        "description": "z坐标差异(检查实体的腿部位置)"
+      },
+      {
+        "type": "AND",
+        "id": "arg_dz",
+        "nodes": [
+          "arg_dz_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_scores_key",
+        "value": "scores",
+        "description": "分数"
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_lbrace",
+        "symbol": "{",
+        "description": "左花括号",
+        "isAddSpace": false
+      },
+      {
+        "type": "STRING",
+        "id": "value_string_flexible",
+        "description": "目标选择器参数(字符串)",
+        "allowMissingString": true,
+        "canContainSpace": true,
+        "ignoreLater": false
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_not",
+        "symbol": "!",
+        "description": "不等于",
+        "isAddSpace": false
+      },
+      {
+        "type": "AND",
+        "id": "operator_not_equal",
+        "nodes": [
+          "symbol_equal",
+          "symbol_not"
+        ]
+      },
+      {
+        "type": "OR",
+        "id": "operator_equal_or_not_equal",
+        "nodes": [
+          "operator_not_equal",
+          "symbol_equal"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "RANGE",
+        "id": "value_score_range",
+        "description": "目标选择器scores参数值的分数范围"
+      },
+      {
+        "type": "AND",
+        "id": "score_entry",
+        "nodes": [
+          "value_string_flexible",
+          "operator_equal_or_not_equal",
+          "value_score_range"
+        ]
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_comma",
+        "symbol": ",",
+        "description": "分隔符",
+        "isAddSpace": false
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_rbrace",
+        "symbol": "}",
+        "description": "右花括号",
+        "isAddSpace": false
+      },
+      {
+        "type": "LIST",
+        "id": "scores_object",
+        "left": "symbol_lbrace",
+        "element": "score_entry",
+        "separator": "symbol_comma",
+        "right": "symbol_rbrace"
+      },
+      {
+        "type": "AND",
+        "id": "arg_scores",
+        "nodes": [
+          "arg_scores_key",
+          "symbol_equal",
+          "scores_object"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_tag_key",
+        "value": "tag",
+        "description": "标签"
+      },
+      {
+        "type": "AND",
+        "id": "arg_tag",
+        "nodes": [
+          "arg_tag_key",
+          "operator_equal_or_not_equal",
+          "value_string_flexible"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_name_key",
+        "value": "name",
+        "description": "名字"
+      },
+      {
+        "type": "AND",
+        "id": "arg_name",
+        "nodes": [
+          "arg_name_key",
+          "operator_equal_or_not_equal",
+          "value_string_flexible"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_type_key",
+        "value": "type",
+        "description": "实体类型"
+      },
+      {
+        "type": "NAMESPACE_ID",
+        "id": "value_entity_id",
+        "description": "实体",
+        "key": "entity",
+        "ignoreError": true
+      },
+      {
+        "type": "AND",
+        "id": "arg_type",
+        "nodes": [
+          "arg_type_key",
+          "operator_equal_or_not_equal",
+          "value_entity_id"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_family_key",
+        "value": "family",
+        "description": "族"
+      },
+      {
+        "type": "STRING",
+        "id": "value_family",
+        "description": "族",
+        "allowMissingString": false,
+        "canContainSpace": false,
+        "ignoreLater": false
+      },
+      {
+        "type": "AND",
+        "id": "arg_family",
+        "nodes": [
+          "arg_family_key",
+          "operator_equal_or_not_equal",
+          "value_family"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_rx_key",
+        "value": "rx",
+        "description": "最大垂直旋转"
+      },
+      {
+        "type": "AND",
+        "id": "arg_rx",
+        "nodes": [
+          "arg_rx_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_rxm_key",
+        "value": "rxm",
+        "description": "最小垂直旋转"
+      },
+      {
+        "type": "AND",
+        "id": "arg_rxm",
+        "nodes": [
+          "arg_rxm_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_ry_key",
+        "value": "ry",
+        "description": "最大水平旋转"
+      },
+      {
+        "type": "AND",
+        "id": "arg_ry",
+        "nodes": [
+          "arg_ry_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_rym_key",
+        "value": "rym",
+        "description": "最小水平旋转"
+      },
+      {
+        "type": "AND",
+        "id": "arg_rym",
+        "nodes": [
+          "arg_rym_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_hasitem_key",
+        "value": "hasitem",
+        "description": "物品栏"
+      },
+      {
+        "type": "LITERAL",
+        "id": "hasitem_item_key",
+        "value": "item",
+        "description": "要检测的物品"
+      },
+      {
+        "type": "NAMESPACE_ID",
+        "id": "value_item_id",
+        "description": "物品ID",
+        "key": "item",
+        "ignoreError": true
+      },
+      {
+        "type": "AND",
+        "id": "hasitem_item_field",
+        "nodes": [
+          "hasitem_item_key",
+          "symbol_equal",
+          "value_item_id"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "hasitem_data_key",
+        "value": "data",
+        "description": "要检测的物品的数据值"
+      },
+      {
+        "type": "INTEGER",
+        "id": "value_item_data",
+        "description": "目标选择器hasitem参数物品数据值",
+        "min": 0,
+        "max": 32767
+      },
+      {
+        "type": "AND",
+        "id": "hasitem_data_field",
+        "nodes": [
+          "hasitem_data_key",
+          "symbol_equal",
+          "value_item_data"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "hasitem_quantity_key",
+        "value": "quantity",
+        "description": "限制范围内的所有槽位中符合条件的物品的总和数量"
+      },
+      {
+        "type": "RANGE",
+        "id": "value_quantity_range",
+        "description": "限制范围内的所有槽位中符合条件的物品的总和数量"
+      },
+      {
+        "type": "AND",
+        "id": "hasitem_quantity_field",
+        "nodes": [
+          "hasitem_quantity_key",
+          "operator_equal_or_not_equal",
+          "value_quantity_range"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "hasitem_location_key",
+        "value": "location",
+        "description": "要检测的物品栏"
+      },
+      {
+        "type": "STRING",
+        "id": "value_inventory_location",
+        "description": "物品栏",
+        "allowMissingString": false,
+        "canContainSpace": false,
+        "ignoreLater": false
+      },
+      {
+        "type": "AND",
+        "id": "hasitem_location_field",
+        "nodes": [
+          "hasitem_location_key",
+          "symbol_equal",
+          "value_inventory_location"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "hasitem_slot_key",
+        "value": "slot",
+        "description": "用于指定要检测的槽位范围"
+      },
+      {
+        "type": "RANGE",
+        "id": "value_slot_range",
+        "description": "要检测的槽位范围"
+      },
+      {
+        "type": "AND",
+        "id": "hasitem_slot_field",
+        "nodes": [
+          "hasitem_slot_key",
+          "operator_equal_or_not_equal",
+          "value_slot_range"
+        ]
+      },
+      {
+        "type": "OR",
+        "id": "hasitem_field",
+        "nodes": [
+          "hasitem_item_field",
+          "hasitem_data_field",
+          "hasitem_quantity_field",
+          "hasitem_location_field",
+          "hasitem_slot_field"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "LIST",
+        "id": "hasitem_object",
+        "left": "symbol_lbrace",
+        "element": "hasitem_field",
+        "separator": "symbol_comma",
+        "right": "symbol_rbrace"
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_rbracket",
+        "symbol": "]",
+        "description": "右方括号",
+        "isAddSpace": false
+      },
+      {
+        "type": "LIST",
+        "id": "hasitem_array",
+        "left": "symbol_lbracket",
+        "element": "hasitem_object",
+        "separator": "symbol_comma",
+        "right": "symbol_rbracket"
+      },
+      {
+        "type": "OR",
+        "id": "hasitem_value",
+        "nodes": [
+          "hasitem_object",
+          "hasitem_array"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "AND",
+        "id": "arg_hasitem",
+        "nodes": [
+          "arg_hasitem_key",
+          "symbol_equal",
+          "hasitem_value"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_haspermission_key",
+        "value": "haspermission",
+        "description": "权限"
+      },
+      {
+        "type": "LITERAL",
+        "id": "permission_camera_key",
+        "value": "camera",
+        "description": "玩家能否转动相机视角"
+      },
+      {
+        "type": "LITERAL",
+        "id": "permission_enabled",
+        "value": "enabled",
+        "description": "启用"
+      },
+      {
+        "type": "LITERAL",
+        "id": "permission_disabled",
+        "value": "disabled",
+        "description": "禁用"
+      },
+      {
+        "type": "OR",
+        "id": "permission_state",
+        "nodes": [
+          "permission_enabled",
+          "permission_disabled"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "AND",
+        "id": "permission_camera_field",
+        "nodes": [
+          "permission_camera_key",
+          "symbol_equal",
+          "permission_state"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "permission_movement_key",
+        "value": "movement",
+        "description": "玩家能否移动"
+      },
+      {
+        "type": "AND",
+        "id": "permission_movement_field",
+        "nodes": [
+          "permission_movement_key",
+          "symbol_equal",
+          "permission_state"
+        ]
+      },
+      {
+        "type": "OR",
+        "id": "permission_field",
+        "nodes": [
+          "permission_camera_field",
+          "permission_movement_field"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "LIST",
+        "id": "permission_object",
+        "left": "symbol_lbrace",
+        "element": "permission_field",
+        "separator": "symbol_comma",
+        "right": "symbol_rbrace"
+      },
+      {
+        "type": "AND",
+        "id": "arg_haspermission",
+        "nodes": [
+          "arg_haspermission_key",
+          "symbol_equal",
+          "permission_object"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_has_property_key",
+        "value": "has_property",
+        "description": "属性"
+      },
+      {
+        "type": "BOOLEAN",
+        "id": "value_boolean",
+        "description": "布尔值"
+      },
+      {
+        "type": "OR",
+        "id": "property_value",
+        "nodes": [
+          "value_boolean",
+          "value_score_range",
+          "value_string_flexible",
+          "value_float"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "AND",
+        "id": "property_entry",
+        "nodes": [
+          "value_string_flexible",
+          "operator_equal_or_not_equal",
+          "property_value"
+        ]
+      },
+      {
+        "type": "LIST",
+        "id": "property_object",
+        "left": "symbol_lbrace",
+        "element": "property_entry",
+        "separator": "symbol_comma",
+        "right": "symbol_rbrace"
+      },
+      {
+        "type": "AND",
+        "id": "arg_has_property",
+        "nodes": [
+          "arg_has_property_key",
+          "symbol_equal",
+          "property_object"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_l_key",
+        "value": "l",
+        "description": "最大经验等级"
+      },
+      {
+        "type": "AND",
+        "id": "arg_l",
+        "nodes": [
+          "arg_l_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_lm_key",
+        "value": "lm",
+        "description": "最小经验等级"
+      },
+      {
+        "type": "AND",
+        "id": "arg_lm",
+        "nodes": [
+          "arg_lm_key",
+          "symbol_equal",
+          "value_float"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_m_key",
+        "value": "m",
+        "description": "游戏模式"
+      },
+      {
+        "type": "STRING",
+        "id": "value_game_mode",
+        "description": "游戏模式",
+        "allowMissingString": false,
+        "canContainSpace": false,
+        "ignoreLater": false
+      },
+      {
+        "type": "AND",
+        "id": "arg_m",
+        "nodes": [
+          "arg_m_key",
+          "operator_equal_or_not_equal",
+          "value_game_mode"
+        ]
+      },
+      {
+        "type": "LITERAL",
+        "id": "arg_c_key",
+        "value": "c",
+        "description": "目标数量(按照距离排序)"
+      },
+      {
+        "type": "INTEGER",
+        "id": "value_integer",
+        "description": "目标选择器参数(整数)",
+        "min": null,
+        "max": null
+      },
+      {
+        "type": "AND",
+        "id": "arg_c",
+        "nodes": [
+          "arg_c_key",
+          "symbol_equal",
+          "value_integer"
+        ]
+      },
+      {
+        "type": "OR",
+        "id": "selector_argument",
+        "nodes": [
+          "arg_x",
+          "arg_y",
+          "arg_z",
+          "arg_r",
+          "arg_rm",
+          "arg_dx",
+          "arg_dy",
+          "arg_dz",
+          "arg_scores",
+          "arg_tag",
+          "arg_name",
+          "arg_type",
+          "arg_family",
+          "arg_rx",
+          "arg_rxm",
+          "arg_ry",
+          "arg_rym",
+          "arg_hasitem",
+          "arg_haspermission",
+          "arg_has_property",
+          "arg_l",
+          "arg_lm",
+          "arg_m",
+          "arg_c"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      },
+      {
+        "type": "LIST",
+        "id": "selector_arguments",
+        "left": "symbol_lbracket",
+        "element": "selector_argument",
+        "separator": "symbol_comma",
+        "right": "symbol_rbracket"
+      },
+      {
+        "type": "OPTIONAL",
+        "id": "selector_arguments_optional",
+        "node": "selector_arguments"
+      },
+      {
+        "type": "AND",
+        "id": "selector_expression",
+        "nodes": [
+          "selector_head",
+          "selector_arguments_optional"
+        ]
+      },
+      {
+        "type": "STRING",
+        "id": "player_name",
+        "description": "玩家名字",
+        "allowMissingString": false,
+        "canContainSpace": true,
+        "ignoreLater": false
+      },
+      {
+        "type": "SINGLE_SYMBOL",
+        "id": "symbol_star",
+        "symbol": "*",
+        "description": "所有正被记分板跟踪的实体",
+        "isAddSpace": false
+      },
+      {
+        "type": "OR",
+        "id": "target_selector_root",
+        "nodes": [
+          "selector_expression",
+          "player_name",
+          "symbol_star"
+        ],
+        "isUseFirst": false,
+        "noSuggestion": false
+      }
+    ],
+    "start": "target_selector_root"
+  }
+}

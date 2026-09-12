@@ -224,20 +224,21 @@ namespace CHelper::Linter {
         }
     }
 
-    std::vector<std::shared_ptr<ErrorReason>> sortByLevel(const std::vector<std::shared_ptr<ErrorReason>> &input) {
+    std::vector<std::shared_ptr<ErrorReason>> sortByLevel(std::vector<std::shared_ptr<ErrorReason>> &&input) {
+        // 错误等级是固定的7个桶；按桶扫描保持同等级错误的原有顺序，时间复杂度为O(7n)=O(n)。
         std::vector<std::shared_ptr<ErrorReason>> output;
         output.reserve(input.size());
-        uint8_t i = ErrorReasonLevel::maxLevel;
+        uint8_t level = ErrorReasonLevel::maxLevel;
         while (true) {
-            for (const auto &item: input) {
-                if (item->level == i) [[unlikely]] {
+            for (auto &item: input) {
+                if (item->level == level) [[unlikely]] {
                     output.push_back(item);
                 }
             }
-            if (i == 0) [[unlikely]] {
+            if (level == 0) [[unlikely]] {
                 break;
             }
-            --i;
+            --level;
         }
         return output;
     }
@@ -251,7 +252,7 @@ namespace CHelper::Linter {
 #ifdef CHelperTest
         Profile::pop();
 #endif
-        return sortByLevel(input);
+        return sortByLevel(std::move(input));
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode) {
@@ -265,7 +266,7 @@ namespace CHelper::Linter {
 #ifdef CHelperTest
         Profile::pop();
 #endif
-        return sortByLevel(result);
+        return sortByLevel(std::move(result));
     }
 
 }// namespace CHelper::Linter

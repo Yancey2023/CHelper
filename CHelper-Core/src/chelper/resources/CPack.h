@@ -54,10 +54,19 @@ namespace CHelper {
 
     using IdEntry = std::variant<NormalIdEntry, NamespaceIdEntry, BlockIdsEntry, ItemIdsEntry>;
 
+    // Grammar 资源条目：content 复用 JSON 节点表格式，组合节点通过节点 id 绑定。
+    // type 用于资源类型校验，避免把其他资源误当作 Grammar 读取。
+    struct GrammarEntry {
+        std::pmr::string id;
+        std::pmr::string type = "grammar";
+        std::shared_ptr<Node::NodeJsonElement> content;
+    };
+
     // 单文件 JSON 格式
     struct CPackJsonData {
         Manifest manifest;
         std::pmr::vector<IdEntry> id;
+        std::pmr::vector<GrammarEntry> grammar;
         std::pmr::vector<Node::NodeJsonElement> json;
         std::pmr::vector<Node::RepeatData> repeat;
         std::pmr::vector<Node::NodePerCommand> command;
@@ -70,6 +79,7 @@ namespace CHelper {
         std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::shared_ptr<BlockIds> blockIds;
+        std::pmr::vector<GrammarEntry> grammar;
         std::pmr::vector<Node::NodeJsonElement> jsonNodes;
         std::pmr::vector<Node::RepeatData> repeatNodeData;
         std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
@@ -127,7 +137,8 @@ namespace CHelper {
         std::pmr::vector<Node::NodeJsonElement> jsonNodes;
         std::pmr::vector<Node::RepeatData> repeatNodeData;
         std::pmr::unordered_map<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
-        Node::TargetSelectorData targetSelectorData;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs;
+        std::pmr::unordered_map<std::pmr::string, Node::NodeWithType> grammarNodes;
         std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
         Node::NodeCommand mainNode;
 
@@ -141,6 +152,8 @@ namespace CHelper {
         void validate() const;
 
         void applyId(const IdEntry &entry);
+
+        void applyGrammar(GrammarEntry &&entry);
 
         void applyJson(Node::NodeJsonElement &&item);
 
@@ -172,6 +185,8 @@ namespace CHelper {
         [[nodiscard]] std::pmr::memory_resource *getMemoryResource() const noexcept {
             return cpackMemory->getResource();
         }
+
+        [[nodiscard]] const Node::NodeWithType *getGrammar(std::string_view key) const;
     };
 
 }// namespace CHelper

@@ -38,6 +38,29 @@ namespace CHelper {
                    entry);
     }
 
+    void CPack::applyGrammar(GrammarEntry &&entry) {
+        if (entry.type != "grammar") [[unlikely]] {
+            throw std::runtime_error("invalid grammar resource type");
+        }
+        if (entry.id.empty()) [[unlikely]] {
+            throw std::runtime_error("grammar resource id cannot be empty");
+        }
+        if (entry.content == nullptr) [[unlikely]] {
+            throw std::runtime_error("grammar resource content is missing");
+        }
+        if (grammarNodes.contains(entry.id) || grammarGraphs.contains(entry.id)) [[unlikely]] {
+            throw std::runtime_error("duplicate grammar resource id");
+        }
+        Node::initNode(*entry.content, *this);
+        if (entry.content->start.data == nullptr) [[unlikely]] {
+            throw std::runtime_error("grammar resource content has no start node");
+        }
+        const auto root = entry.content->start;
+        const auto graph = std::move(entry.content);
+        grammarGraphs.emplace(entry.id, graph);
+        grammarNodes.emplace(std::move(entry.id), root);
+    }
+
     void CPack::applyJson(Node::NodeJsonElement &&item) {
         if (!item.id.has_value() || item.id.value().empty()) [[unlikely]] {
             Profile::push("loading json element");
@@ -55,9 +78,7 @@ namespace CHelper {
     }
 
     void CPack::afterApply() {
-        Profile::push("init selector nodes");
-        targetSelectorData.init(*this);
-        Profile::next("init json nodes");
+        Profile::push("init json nodes");
         for (const auto &item: jsonNodes) {
             Node::initNode(item, *this);
         }
@@ -149,6 +170,12 @@ namespace CHelper {
         Profile::next("create main node");
         mainNode = Node::NodeCommand("MAIN_NODE", u"欢迎使用命令助手(作者：Yancey)", commands.get());
         Profile::pop();
+    }
+
+    const Node::NodeWithType *CPack::getGrammar(const std::string_view key) const {
+        const std::pmr::string searchKey(key.data(), key.size(), grammarNodes.get_allocator().resource());
+        const auto it = grammarNodes.find(searchKey);
+        return it == grammarNodes.end() ? nullptr : &it->second;
     }
 
     void CPack::validate() const {

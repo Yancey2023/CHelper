@@ -480,6 +480,17 @@ namespace CHelper::AutoSuggestion {
     };
 
     template<>
+    struct AutoSuggestion<Node::NodeLiteral> {
+        static bool collectSuggestions(const ASTNode &astNode, size_t index, Suggestions &suggestions) {
+            const auto &node = *reinterpret_cast<const Node::NodeLiteral *>(astNode.node.data);
+            if (astNode.tokens.startIndex == index) {
+                suggestions.addLiteralSuggestion({index, index, false, node.normalId});
+            }
+            return true;
+        }
+    };
+
+    template<>
     struct AutoSuggestion<Node::NodeOptional> {
         static bool collectSuggestions(const ASTNode &astNode, size_t index, Suggestions &suggestions) {
             if (astNode.mode == ASTNodeMode::OR && astNode.tokens.startIndex == index) {

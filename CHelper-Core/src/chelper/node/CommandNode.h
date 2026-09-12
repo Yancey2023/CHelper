@@ -124,20 +124,22 @@ namespace CHelper {
         using NodeJsonFloat = NodeTemplateNumber<float, true>;
         using NodeJsonInteger = NodeTemplateNumber<int32_t, true>;
 
-        class NodeAnd : public NodeBase {
+        class NodeAnd : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::AND;
             std::pmr::vector<NodeWithType> childNodes;
+            std::pmr::vector<std::pmr::string> childNodeIds;
 
             NodeAnd() = default;
 
             explicit NodeAnd(std::pmr::vector<NodeWithType> childNodes);
         };
 
-        class NodeOr : public NodeBase {
+        class NodeOr : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OR;
             std::pmr::vector<NodeWithType> childNodes;
+            std::pmr::vector<std::pmr::string> childNodeIds;
             bool isAttachToEnd = false, isUseFirst = false;
             bool noSuggestion = false;
             const char16_t *defaultErrorReason = nullptr;
@@ -247,13 +249,17 @@ namespace CHelper {
             explicit NodeEqualEntry(std::pmr::vector<EqualData> equalDatas);
         };
 
-        class NodeList : public NodeBase {
+        class NodeList : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::LIST;
             NodeWithType nodeLeft;
             NodeWithType nodeElement;
             NodeWithType nodeSeparator;
             NodeWithType nodeRight;
+            std::pmr::string nodeLeftId;
+            std::pmr::string nodeElementId;
+            std::pmr::string nodeSeparatorId;
+            std::pmr::string nodeRightId;
             NodeOr nodeElementOrRight;
             NodeOr nodeSeparatorOrRight;
 
@@ -280,7 +286,7 @@ namespace CHelper {
             static NodeWithType getNodeAny();
         };
 
-        class NodeSingleSymbol : public NodeBase {
+        class NodeSingleSymbol : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::SINGLE_SYMBOL;
             char16_t symbol = ' ';
@@ -294,10 +300,22 @@ namespace CHelper {
                              bool isAddSpace = true);
         };
 
-        class NodeOptional : public NodeBase {
+        class NodeLiteral : public NodeSerializable {
+        public:
+            static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::LITERAL;
+            std::pmr::u16string value;
+            std::shared_ptr<NormalId> normalId;
+
+            NodeLiteral() = default;
+            NodeLiteral(std::u16string_view value,
+                        const std::optional<std::u16string> &description = std::nullopt);
+        };
+
+        class NodeOptional : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OPTIONAL;
             NodeWithType optionalNode;
+            std::pmr::string optionalNodeId;
 
             NodeOptional() = default;
 
@@ -509,36 +527,11 @@ namespace CHelper {
                        bool ignoreLater);
         };
 
-        struct TargetSelectorData {
-            static NodeString nodePlayerName;
-            static NodeSingleSymbol nodeWildcard;
-            static NodeSingleSymbol nodeAt;
-            static NodeSingleSymbol nodeSeparator;
-            static NodeString nodeString;
-            static NodeBoolean nodeBoolean;
-            static NodeRelativeFloat nodeRelativeFloat;
-            NodeNormalId nodeTargetSelectorVariable;
-            NodeNamespaceId nodeItem;
-            NodeNormalId nodeFamily, nodeGameMode, nodeSlot;
-            NodeNamespaceId nodeEntities;
-            NodeEqualEntry nodeHasItemElement;
-            NodeList nodeHasItemList1, nodeHasItemList2;
-            NodeOr nodeHasItem;
-            NodeEqualEntry nodeArgument;
-            NodeList nodeArguments;
-            NodeOptional nodeOptionalArguments;
-            NodeAnd nodeTargetSelectorVariableWithArgument;
-
-            TargetSelectorData();
-
-            void init(const CPack &cpack);
-        };
-
         class NodeTargetSelector : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::TARGET_SELECTOR;
             bool isMustPlayer = false, isMustNPC = false, isOnlyOne = false, isWildcard = false;
-            NodeOr nodeTargetSelector;
+            NodeWithType nodeTargetSelector;
 
             NodeTargetSelector() = default;
         };

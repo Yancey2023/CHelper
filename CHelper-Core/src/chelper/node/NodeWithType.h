@@ -61,7 +61,8 @@
                            LIST,              \
                            OR,                \
                            SINGLE_SYMBOL,     \
-                           OPTIONAL
+                           OPTIONAL,          \
+                           LITERAL
 
 namespace CHelper::Node {
 

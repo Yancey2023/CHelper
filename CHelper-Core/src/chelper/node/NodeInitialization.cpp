@@ -190,16 +190,41 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodeTargetSelector> {
         static void init(NodeTargetSelector &node, const CPack &cpack) {
-            std::pmr::vector<NodeWithType> nodes;
-            nodes.reserve(node.isWildcard ? 3 : 2);
-            if (node.isWildcard) {
-                nodes.emplace_back(Node::TargetSelectorData::nodeWildcard);
+            const auto *grammar = cpack.getGrammar("target_selector");
+            if (grammar == nullptr || grammar->data == nullptr) [[unlikely]] {
+                throw std::runtime_error("target selector grammar is not loaded");
             }
-            nodes.emplace_back(cpack.targetSelectorData.nodeTargetSelectorVariableWithArgument);
-            nodes.emplace_back(TargetSelectorData::nodePlayerName);
-            node.nodeTargetSelector = NodeOr(std::move(nodes), false);
-            initNode(node.nodeTargetSelector, cpack);
+            node.nodeTargetSelector = *grammar;
         }
+    };
+
+    template<>
+    struct NodeInitialization<NodeAnd> {
+        static void init(NodeAnd &node, const CPack &cpack) {
+            for (auto &child: node.childNodes) initNode(child, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeOr> {
+        static void init(NodeOr &node, const CPack &cpack) {
+            for (auto &child: node.childNodes) initNode(child, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeList> {
+        static void init(NodeList &node, const CPack &cpack) {
+            initNode(node.nodeLeft, cpack);
+            initNode(node.nodeElement, cpack);
+            initNode(node.nodeSeparator, cpack);
+            initNode(node.nodeRight, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeOptional> {
+        static void init(NodeOptional &node, const CPack &cpack) { initNode(node.optionalNode, cpack); }
     };
 
     template<>
@@ -276,7 +301,78 @@ namespace CHelper::Node {
         static void init(NodeJsonElement &node, const CPack &cpack) {
             Profile::push("linking startNode \"{}\" to nodes", FORMAT_ARG(node.startNodeId));
             for (const auto &item: node.nodes.nodes) {
-                initNode(item, cpack);
+                // Grammar 组合节点的子节点此时仍是 ID，先跳过会解引用子节点的初始化，
+                // 等下面完成图绑定后再初始化组合节点。
+                if (item.nodeTypeId != NodeTypeId::AND && item.nodeTypeId != NodeTypeId::OR &&
+                    item.nodeTypeId != NodeTypeId::LIST && item.nodeTypeId != NodeTypeId::OPTIONAL) {
+                    initNode(item, cpack);
+                }
+            }
+
+            const auto findNode = [&](const std::string_view id) -> NodeWithType {
+                for (const auto &item: node.nodes.nodes) {
+                    if (item.data == nullptr) {
+                        continue;
+                    }
+                    const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
+                    if (serializable->id.has_value() && serializable->id.value() == id) {
+                        return item;
+                    }
+                }
+                Profile::push("failed to find node id -> {}", FORMAT_ARG(id));
+                throw std::runtime_error("unknown node id");
+            };
+            const auto linkNode = [&](NodeWithType &target, const std::pmr::string &id) {
+                if (id.empty()) {
+                    Profile::push("empty node id in grammar node");
+                    throw std::runtime_error("grammar node reference cannot be empty");
+                }
+                target = findNode(id);
+            };
+            for (const auto &item: node.nodes.nodes) {
+                switch (item.nodeTypeId) {
+                    case NodeTypeId::AND: {
+                        auto &value = *reinterpret_cast<NodeAnd *>(item.data);
+                        value.childNodes.clear();
+                        value.childNodes.reserve(value.childNodeIds.size());
+                        for (const auto &id: value.childNodeIds) {
+                            value.childNodes.emplace_back(findNode(id));
+                        }
+                        break;
+                    }
+                    case NodeTypeId::OR: {
+                        auto &value = *reinterpret_cast<NodeOr *>(item.data);
+                        value.childNodes.clear();
+                        value.childNodes.reserve(value.childNodeIds.size());
+                        for (const auto &id: value.childNodeIds) {
+                            value.childNodes.emplace_back(findNode(id));
+                        }
+                        break;
+                    }
+                    case NodeTypeId::LIST: {
+                        auto &value = *reinterpret_cast<NodeList *>(item.data);
+                        linkNode(value.nodeLeft, value.nodeLeftId);
+                        linkNode(value.nodeElement, value.nodeElementId);
+                        linkNode(value.nodeSeparator, value.nodeSeparatorId);
+                        linkNode(value.nodeRight, value.nodeRightId);
+                        value.nodeElementOrRight = NodeOr({value.nodeElement, value.nodeRight}, false);
+                        value.nodeSeparatorOrRight = NodeOr({value.nodeSeparator, value.nodeRight}, false);
+                        break;
+                    }
+                    case NodeTypeId::OPTIONAL: {
+                        auto &value = *reinterpret_cast<NodeOptional *>(item.data);
+                        linkNode(value.optionalNode, value.optionalNodeId);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            for (const auto &item: node.nodes.nodes) {
+                if (item.nodeTypeId == NodeTypeId::AND || item.nodeTypeId == NodeTypeId::OR ||
+                    item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL) {
+                    initNode(item, cpack);
+                }
             }
             if (node.startNodeId != "LF") [[likely]] {
                 for (auto &item: node.nodes.nodes) {
