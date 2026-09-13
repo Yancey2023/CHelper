@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_NODEBASE_H
-#define CHELPER_NODEBASE_H
-
 #include <chelper/lexer/TokenReader.h>
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/BlockId.h>
@@ -621,5 +618,3 @@ namespace CHelper {
     }// namespace Node
 
 }// namespace CHelper
-
-#endif//CHELPER_NODEBASE_H

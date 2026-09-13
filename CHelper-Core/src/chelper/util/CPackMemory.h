@@ -10,9 +10,6 @@
 
 #pragma once
 
-#ifndef CHELPER_CPACK_MEMORY_H
-#define CHELPER_CPACK_MEMORY_H
-
 #include <atomic>
 #include <cstddef>
 #include <memory>
@@ -255,5 +252,3 @@ namespace CHelper {
     }
 
 }// namespace CHelper
-
-#endif// CHELPER_CPACK_MEMORY_H

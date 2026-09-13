@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_SYNTAXHIGHLIGHT_H
-#define CHELPER_SYNTAXHIGHLIGHT_H
-
 #include <chelper/parser/ASTNode.h>
 #include <chelper/syntax_highlight/SyntaxResult.h>
 
@@ -29,5 +26,3 @@ namespace CHelper::SyntaxHighlight {
     SyntaxResult getSyntaxResult(const ASTNode &astNode);
 
 }// namespace CHelper::SyntaxHighlight
-
-#endif//CHELPER_SYNTAXHIGHLIGHT_H

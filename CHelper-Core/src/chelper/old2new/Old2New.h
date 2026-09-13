@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CHELPER_OLD2NEW_H
-#define CHELPER_OLD2NEW_H
+#pragma once
 
 #include <chelper/lexer/Lexer.h>
 #include <chelper/lexer/TokenReader.h>
@@ -89,5 +88,3 @@ namespace CHelper::Old2New {
 
 
 }// namespace CHelper::Old2New
-
-#endif//CHELPER_OLD2NEW_H

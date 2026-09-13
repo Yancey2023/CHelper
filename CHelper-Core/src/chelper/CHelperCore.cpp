@@ -73,14 +73,13 @@ namespace CHelper {
             //provider返回nullptr说明资源包加载失败，不允许产生内部cpack为nullptr的CHelperCore，
             //否则后续getCPack()/createContext()会解引用空指针
             if (cPack == nullptr) [[unlikely]] {
-                Profile::push("getCPack returned nullptr");
                 throw std::runtime_error("getCPack returned nullptr");
             }
             SPDLOG_INFO("CPack load successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             return new CHelperCore(std::move(cPack));
         } catch (const std::exception &e) {
-            SPDLOG_ERROR("CPack load failed");
-            Profile::printAndClear(e);
+            //CPackLoadError 的 what() 已内嵌原始错误与完整加载轨迹，整体打印给资源包作者
+            SPDLOG_ERROR("{}", e.what());
             return nullptr;
         }
     }
@@ -104,8 +103,7 @@ namespace CHelper {
             std::string fileType = ".cpack";
             std::string cpackPathStr = cpackPath.string();
             if (cpackPathStr.size() < fileType.size() || cpackPathStr.substr(cpackPathStr.length() - fileType.size()) != fileType) [[unlikely]] {
-                Profile::push("error file type -> {}", FORMAT_ARG(cpackPathStr));
-                throw std::runtime_error("error file type");
+                throw std::runtime_error(fmt::format("error file type -> {}", cpackPathStr));
             }
             // 读取文件
             std::string buffer = readFileToString(cpackPath);

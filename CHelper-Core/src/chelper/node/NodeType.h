@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_NODETYPE_H
-#define CHELPER_NODETYPE_H
-
 #include <chelper/node/CommandNode.h>
 #include <chelper/util/TypeList.h>
 #include <pch.h>
@@ -387,7 +384,7 @@ namespace CHelper {
                 switch (id) {
                     CHELPER_NODE_TYPES(CHELPER_NODE_DISPATCH_CASE)
                     default:
-#ifdef CHelperDebug
+#if CHelperDebug
                         throw std::runtime_error("invalid nodeTypeId");
 #else
                         CHELPER_UNREACHABLE();
@@ -436,5 +433,3 @@ namespace CHelper {
     }// namespace Node
 
 }// namespace CHelper
-
-#endif//CHELPER_NODETYPE_H

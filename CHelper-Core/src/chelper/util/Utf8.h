@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_UTF8_H
-#define CHELPER_UTF8_H
-
 // 自带依赖，不依赖 pch.h 的包含顺序：BinaryFormat.h 会在 pch.h 之前被包含
 #include <algorithm>
 #include <string>
@@ -71,5 +68,3 @@ namespace CHelper {
 
     }// namespace U16Conv
 }// namespace CHelper
-
-#endif//CHELPER_UTF8_H

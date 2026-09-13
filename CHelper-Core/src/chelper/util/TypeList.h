@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_TYPELIST_H
-#define CHELPER_TYPELIST_H
-
 #include <cstddef>
 #include <type_traits>
 #include <utility>
@@ -62,5 +59,3 @@ namespace CHelper::Meta {
     }
 
 }// namespace CHelper::Meta
-
-#endif//CHELPER_TYPELIST_H

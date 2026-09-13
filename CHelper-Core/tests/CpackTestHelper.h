@@ -18,12 +18,8 @@
 
 #pragma once
 
-#ifndef CHELPER_CPACK_TEST_HELPER_H
-#define CHELPER_CPACK_TEST_HELPER_H
-
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/SerializationInternal.h>
-#include <chelper/util/Profile.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -76,7 +72,8 @@ namespace CHelper::Test {
             out = CHelper::serialization::createCPackByJson(json);
             return true;
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            //无论预期与否，失败时把内嵌加载轨迹的错误消息打到日志，便于定位非法数据
+            SPDLOG_ERROR("{}", e.what());
             return false;
         }
     }
@@ -90,5 +87,3 @@ namespace CHelper::Test {
     }
 
 }// namespace CHelper::Test
-
-#endif//CHELPER_CPACK_TEST_HELPER_H

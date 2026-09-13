@@ -157,6 +157,14 @@ Java_yancey_chelper_core_CHelperCore_create0(
             delete[] buffer;
             return reinterpret_cast<jlong>(core);
         }
+    } catch (const std::exception &e) {
+        //CPackLoadError 的 what() 内嵌原始错误与完整加载轨迹，
+        //抛成 Java 异常后由 CHelperCore.kt 拼进 init 的报错信息，直达资源包作者
+        SPDLOG_WARN("fail to init CHelper Core: {}", e.what());
+        if (const auto clazz = env->FindClass("java/lang/RuntimeException"); clazz != nullptr) {
+            env->ThrowNew(clazz, e.what());
+        }
+        return reinterpret_cast<jlong>(nullptr);
     } catch (...) {
         SPDLOG_WARN("fail to init CHelper Core");
         return reinterpret_cast<jlong>(nullptr);

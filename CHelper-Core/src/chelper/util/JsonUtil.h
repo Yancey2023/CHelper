@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_JSONUTIL_H
-#define CHELPER_JSONUTIL_H
-
 namespace CHelper {
 
     class ErrorReason;
@@ -44,5 +41,3 @@ namespace CHelper {
     }// namespace JsonUtil
 
 }// namespace CHelper
-
-#endif//CHELPER_JSONUTIL_H

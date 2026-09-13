@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_ITEMID_H
-#define CHELPER_ITEMID_H
-
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
 #include <chelper/util/CPackMemory.h>
@@ -44,6 +41,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-
-#endif//CHELPER_ITEMID_H

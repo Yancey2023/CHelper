@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_COMMANDCONTEXT_H
-#define CHELPER_COMMANDCONTEXT_H
-
 #include <chelper/auto_suggestion/Suggestion.h>
 #include <chelper/parser/ASTNode.h>
 #include <chelper/resources/CPack.h>
@@ -197,5 +194,3 @@ namespace CHelper {
     [[nodiscard]] size_t countSemanticNodes(const ASTNode &astNode);
 
 }// namespace CHelper
-
-#endif//CHELPER_COMMANDCONTEXT_H

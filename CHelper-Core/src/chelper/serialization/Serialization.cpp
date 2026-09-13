@@ -110,29 +110,55 @@ namespace glz {
         }
     };
 
-    // 其余 glaze 自带格式的 u16string 支持（均以 UTF-8 字符串承载）
-#define CHELPER_GLZ_U16STRING_FORMAT(Fmt)                                                                        \
-    template<class Traits, class Alloc>                                                                          \
-    struct from<Fmt, std::basic_string<char16_t, Traits, Alloc>> {                                               \
-        template<auto Opts>                                                                                      \
-        static void op(std::basic_string<char16_t, Traits, Alloc> &value, glz::is_context auto &&ctx, auto &&it, \
-                       auto &&end) {                                                                             \
-            std::string utf8;                                                                                    \
-            parse<Fmt>::template op<Opts>(utf8, ctx, it, end);                                                   \
-            ::CHelper::U16Conv::convertToU16(utf8, value);                                                       \
-        }                                                                                                        \
-    };                                                                                                           \
-    template<class Traits, class Alloc>                                                                          \
-    struct to<Fmt, std::basic_string<char16_t, Traits, Alloc>> {                                                 \
-        template<auto Opts>                                                                                      \
-        static void op(const std::basic_string<char16_t, Traits, Alloc> &value, glz::is_context auto &&ctx,      \
-                       auto &&b, auto &&ix) noexcept {                                                           \
-            serialize<Fmt>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);                                \
-        }                                                                                                        \
+    // BEVE / CBOR 的 u16string 支持（均以 UTF-8 字符串承载），与下方 BSON 的手写版本同构
+    template<class Traits, class Alloc>
+    struct from<BEVE, std::basic_string<char16_t, Traits, Alloc>> {
+        template<auto Opts>
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&it,
+                       auto &&end) {
+            std::string utf8;
+            parse<BEVE>::template op<Opts>(utf8, ctx, it, end);
+            ::CHelper::U16Conv::convertToU16(utf8, value);
+        }
     };
 
-    CHELPER_GLZ_U16STRING_FORMAT(BEVE)
-    CHELPER_GLZ_U16STRING_FORMAT(CBOR)
+    template<class Traits, class Alloc>
+    struct to<BEVE, std::basic_string<char16_t, Traits, Alloc>> {
+        template<auto Opts>
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&b,
+                       auto &&ix) noexcept {
+            serialize<BEVE>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);
+        }
+    };
+
+    template<class Traits, class Alloc>
+    struct from<CBOR, std::basic_string<char16_t, Traits, Alloc>> {
+        template<auto Opts>
+        static void op(std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&it,
+                       auto &&end) {
+            std::string utf8;
+            parse<CBOR>::template op<Opts>(utf8, ctx, it, end);
+            ::CHelper::U16Conv::convertToU16(utf8, value);
+        }
+    };
+
+    template<class Traits, class Alloc>
+    struct to<CBOR, std::basic_string<char16_t, Traits, Alloc>> {
+        template<auto Opts>
+        static void op(const std::basic_string<char16_t, Traits, Alloc> &value,
+                       glz::is_context auto &&ctx,
+                       auto &&b,
+                       auto &&ix) noexcept {
+            serialize<CBOR>::template op<Opts>(utf8::utf16to8(value), ctx, b, ix);
+        }
+    };
+
     template<class Traits, class Alloc>
     struct to<BSON, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
@@ -157,8 +183,6 @@ namespace glz {
             ::CHelper::U16Conv::convertToU16(utf8, value);
         }
     };
-
-#undef CHELPER_GLZ_U16STRING_FORMAT
 
     // 修复 glaze msgpack 读取器对 nullable 类型直接调用 emplace() 的问题
     // （v8.3.0 起，shared_ptr / unique_ptr 没有 emplace，见官方 msgpack_test 中被跳过的用例）
@@ -292,19 +316,13 @@ namespace CHelper::Node {
     concept NodeSerializableType = std::derived_from<T, NodeSerializable>;
 }// namespace CHelper::Node
 
-#define CHELPER_GLZ_NODE_META(Type, ...)                                                                                  \
-    template<>                                                                                                            \
-    struct glz::meta<Type> {                                                                                              \
-        using T = Type;                                                                                                   \
-        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace, __VA_ARGS__); \
+#define CHELPER_GLZ_NODE_META(Type, ...)                                                                                                \
+    template<>                                                                                                                          \
+    struct glz::meta<Type> {                                                                                                            \
+        using T = Type;                                                                                                                 \
+        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace __VA_OPT__(, ) __VA_ARGS__); \
     };
 
-#define CHELPER_GLZ_NODE_META_NONE(Type)                                                                     \
-    template<>                                                                                               \
-    struct glz::meta<Type> {                                                                                 \
-        using T = Type;                                                                                      \
-        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace); \
-    };
 
 namespace CHelper {
     //各可序列化节点类型的 JSON/MSGPACK 写出（"type" 位于首位），按节点类型特化，
@@ -328,8 +346,8 @@ namespace CHelper {
 // 节点类型元数据（读取用；glz::meta 特化须在全局作用域，使用全限定名）
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeBlock, &CHelper::Node::NodeBlock::nodeBlockType)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeBoolean, &CHelper::Node::NodeBoolean::descriptionTrue, &CHelper::Node::NodeBoolean::descriptionFalse)
-CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeCommand)
-CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeCommandName)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeCommand)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeCommandName)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeFloat, &CHelper::Node::NodeFloat::min, &CHelper::Node::NodeFloat::max)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeInteger, &CHelper::Node::NodeInteger::min, &CHelper::Node::NodeInteger::max)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeIntegerWithUnit, &CHelper::Node::NodeIntegerWithUnit::units)
@@ -339,14 +357,14 @@ CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonBoolean, &CHelper::Node::NodeJsonBo
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonFloat, &CHelper::Node::NodeJsonFloat::min, &CHelper::Node::NodeJsonFloat::max)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonInteger, &CHelper::Node::NodeJsonInteger::min, &CHelper::Node::NodeJsonInteger::max)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonList, &CHelper::Node::NodeJsonList::data)
-CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeJsonNull)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonNull)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonEntry, &CHelper::Node::NodeJsonEntry::key, &CHelper::Node::NodeJsonEntry::value)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonObject, &CHelper::Node::NodeJsonObject::data)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonString, &CHelper::Node::NodeJsonString::data)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeNamespaceId, &CHelper::Node::NodeNamespaceId::key, &CHelper::Node::NodeNamespaceId::ignoreError, &CHelper::Node::NodeNamespaceId::contents)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeNormalId, &CHelper::Node::NodeNormalId::key, &CHelper::Node::NodeNormalId::ignoreError, &CHelper::Node::NodeNormalId::contents)
-CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodePosition)
-CHELPER_GLZ_NODE_META_NONE(CHelper::Node::NodeRange)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodePosition)
+CHELPER_GLZ_NODE_META(CHelper::Node::NodeRange)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeRelativeFloat, &CHelper::Node::NodeRelativeFloat::canUseCaretNotation)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeRepeat, &CHelper::Node::NodeRepeat::key)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeString, &CHelper::Node::NodeString::allowMissingString, &CHelper::Node::NodeString::canContainSpace, &CHelper::Node::NodeString::ignoreLater)
@@ -2514,7 +2532,7 @@ namespace CHelper {
             return;
         }
         if (t.name.empty()) [[unlikely]] {
-            throw std::runtime_error("command size cannot be zero");
+            throw std::runtime_error("command name cannot be empty");
         }
         if (wrappedNodes.has_value()) {
             const std::vector<uint32_t> noStartNodes;
@@ -3288,7 +3306,6 @@ namespace CHelper {
 
     void CPack::writeBinToFile(const std::filesystem::path &path) const {
         std::filesystem::create_directories(path.parent_path());
-        Profile::push("writing binary cpack to file: {}", FORMAT_ARG(path.string()));
         std::string buffer;
         // 按 CPackData 的 meta 成员顺序顺序写出（jsonNodes 不可拷贝，直接引用写出）
         glz::context ctx{};
@@ -3325,12 +3342,10 @@ namespace CHelper {
         buffer.resize(ix);
         std::ofstream ostream(path, std::ios::binary);
         if (!ostream.is_open()) [[unlikely]] {
-            Profile::pop();
             throw std::runtime_error("fail to open file: " + path.string());
         }
         ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
         ostream.close();
-        Profile::pop();
     }
 }// namespace CHelper
 #endif
@@ -3340,99 +3355,90 @@ namespace CHelper::serialization {
 
 #ifndef CHELPER_NO_FILESYSTEM
     std::unique_ptr<CPack> createCPackByDirectory(const std::filesystem::path &path) {
-        Profile::push("start load CPack by DIRECTORY: {}", FORMAT_ARG(path.string()));
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        Node::initializeStaticNodes();
-        auto cpackMemory = std::make_shared<CPackMemoryResource>();
-        CPackMemoryScope memoryScope(cpackMemory);
-        auto cpack = std::unique_ptr<CPack>(new CPack());
-        cpack->cpackMemory = cpackMemory;
-        cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
-        cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
-        // 加载阶段随上下文传递，各段落只允许反序列化自己合法的节点类型
-        NodeReadContext ctx;
-        ctx.createStage = Node::NodeCreateStage::NONE;
-        ctx.cpackMemory = cpackMemory;
-        Profile::push("loading manifest");
-        readJsonFromFile(cpack->manifest, path / "manifest.json", ctx);
-        Profile::next("loading id data");
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "id")) {
-            Profile::next(R"(loading id data in path "{}")", FORMAT_ARG(file.path().string()));
-            IdEntry entry;
-            readJsonFromFile(entry, file.path(), ctx);
-            cpack->applyId(entry);
-        }
-        // Grammar 是按资源类型目录发现的，不绑定 target_selector 或任何固定文件名。
-        // 资源包之间可以共享父目录中的 Grammar 资源（例如 vanilla/experiment）。
-        std::vector<std::filesystem::path> grammarDirectories;
-        const auto collectGrammarDirectories = [&](const std::filesystem::path &root) {
-            if (!std::filesystem::exists(root)) {
-                return;
+        LoadTrail trail;
+        try {
+            trail.push("start load CPack by DIRECTORY: {}", path.string());
+            Node::initializeStaticNodes();
+            auto cpackMemory = std::make_shared<CPackMemoryResource>();
+            CPackMemoryScope memoryScope(cpackMemory);
+            auto cpack = std::unique_ptr<CPack>(new CPack());
+            cpack->cpackMemory = cpackMemory;
+            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
+            cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
+            // 加载阶段随上下文传递，各段落只允许反序列化自己合法的节点类型
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::NONE;
+            ctx.cpackMemory = cpackMemory;
+            // 每个文件解析前压入其路径身份，文件处理完成自动弹出：
+            // 失败时 trail 里恰好是"出错的那个文件"
+            LoadTrail::Scope manifestScope(trail, R"(file "{}")", (path / "manifest.json").string());
+            readJsonFromFile(cpack->manifest, path / "manifest.json", ctx);
+            for (const auto &file: std::filesystem::recursive_directory_iterator(path / "id")) {
+                LoadTrail::Scope fileScope(trail, R"(file "{}")", file.path().string());
+                IdEntry entry;
+                readJsonFromFile(entry, file.path(), ctx);
+                cpack->applyId(entry);
             }
-            for (const auto &item: std::filesystem::recursive_directory_iterator(root)) {
-                if (item.is_directory() && item.path().filename() == "grammer") {
-                    grammarDirectories.push_back(item.path());
+            // Grammar 是按资源类型目录发现的，不绑定 target_selector 或任何固定文件名。
+            // 资源包之间可以共享父目录中的 Grammar 资源（例如 vanilla/experiment）。
+            std::vector<std::filesystem::path> grammarDirectories;
+            const auto collectGrammarDirectories = [&](const std::filesystem::path &root) {
+                if (!std::filesystem::exists(root)) {
+                    return;
                 }
-            }
-        };
-        collectGrammarDirectories(path);
-        for (auto root = path.parent_path(); grammarDirectories.empty() && !root.empty(); root = root.parent_path()) {
-            collectGrammarDirectories(root);
-            if (root == root.parent_path()) {
-                break;
-            }
-        }
-        if (!grammarDirectories.empty()) {
-            Profile::next("loading grammar data");
-            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
-            for (const auto &grammarDirectory: grammarDirectories) {
-                for (const auto &file: std::filesystem::recursive_directory_iterator(grammarDirectory)) {
-                    if (!file.is_regular_file()) {
-                        continue;
+                for (const auto &item: std::filesystem::recursive_directory_iterator(root)) {
+                    if (item.is_directory() && item.path().filename() == "grammer") {
+                        grammarDirectories.push_back(item.path());
                     }
-                    Profile::next(R"(loading grammar in path "{}")", FORMAT_ARG(file.path().string()));
-                    GrammarEntry entry;
-                    readJsonFromFile(entry, file.path(), ctx);
-                    cpack->applyGrammar(std::move(entry));
+                }
+            };
+            collectGrammarDirectories(path);
+            for (auto root = path.parent_path(); grammarDirectories.empty() && !root.empty(); root = root.parent_path()) {
+                collectGrammarDirectories(root);
+                if (root == root.parent_path()) {
+                    break;
                 }
             }
+            if (!grammarDirectories.empty()) {
+                ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+                for (const auto &grammarDirectory: grammarDirectories) {
+                    for (const auto &file: std::filesystem::recursive_directory_iterator(grammarDirectory)) {
+                        if (!file.is_regular_file()) {
+                            continue;
+                        }
+                        LoadTrail::Scope fileScope(trail, R"(file "{}")", file.path().string());
+                        GrammarEntry entry;
+                        readJsonFromFile(entry, file.path(), ctx);
+                        cpack->applyGrammar(std::move(entry), trail);
+                    }
+                }
+            }
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            for (const auto &file: std::filesystem::recursive_directory_iterator(path / "json")) {
+                LoadTrail::Scope fileScope(trail, R"(file "{}")", file.path().string());
+                Node::NodeJsonElement item;
+                readJsonFromFile(item, file.path(), ctx);
+                cpack->applyJson(std::move(item));
+            }
+            ctx.createStage = Node::NodeCreateStage::REPEAT_NODE;
+            for (const auto &file: std::filesystem::recursive_directory_iterator(path / "repeat")) {
+                LoadTrail::Scope fileScope(trail, R"(file "{}")", file.path().string());
+                Node::RepeatData item;
+                readJsonFromFile(item, file.path(), ctx);
+                cpack->applyRepeat(std::move(item));
+            }
+            ctx.createStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+            for (const auto &file: std::filesystem::recursive_directory_iterator(path / "command")) {
+                LoadTrail::Scope fileScope(trail, R"(file "{}")", file.path().string());
+                Node::NodePerCommand item;
+                readJsonFromFile(item, file.path(), ctx);
+                cpack->applyCommand(std::move(item));
+            }
+            cpack->afterApply(trail);
+            return cpack;
+        } catch (const std::exception &e) {
+            throw CPackLoadError(e, trail);
         }
-        Profile::next("loading json data");
-        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "json")) {
-            Profile::next(R"(loading json data in path "{}")", FORMAT_ARG(file.path().string()));
-            Node::NodeJsonElement item;
-            readJsonFromFile(item, file.path(), ctx);
-            cpack->applyJson(std::move(item));
-        }
-        Profile::next("loading repeat data");
-        ctx.createStage = Node::NodeCreateStage::REPEAT_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "repeat")) {
-            Profile::next(R"(loading repeat data in path "{}")", FORMAT_ARG(file.path().string()));
-            Node::RepeatData item;
-            readJsonFromFile(item, file.path(), ctx);
-            cpack->applyRepeat(std::move(item));
-        }
-        Profile::next("loading commands");
-        ctx.createStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "command")) {
-            Profile::next(R"(loading command in path "{}")", FORMAT_ARG(file.path().string()));
-            Node::NodePerCommand item;
-            readJsonFromFile(item, file.path(), ctx);
-            cpack->applyCommand(std::move(item));
-        }
-        Profile::next("init cpack");
-        cpack->afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
-        }
-#endif
-        Profile::pop();
-        return cpack;
     }
 
     std::unique_ptr<CPack> createCPackByJsonFile(const std::filesystem::path &cpackPath) {
@@ -3441,124 +3447,106 @@ namespace CHelper::serialization {
 #endif
 
     std::unique_ptr<CPack> createCPackByJson(const std::string &json) {
-        Profile::push("start load CPack by JSON");
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        // 单文件格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
-        Node::initializeStaticNodes();
-        auto cpackMemory = std::make_shared<CPackMemoryResource>();
-        CPackMemoryScope memoryScope(cpackMemory);
-        NodeReadContext ctx;
-        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
-        ctx.cpackMemory = cpackMemory;
-        CPackJsonData data;
-        readJson(data, json, ctx);
-        auto cpack = std::unique_ptr<CPack>(new CPack());
-        cpack->cpackMemory = cpackMemory;
-        cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
-        cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
-        Profile::push("loading manifest");
-        cpack->manifest = std::move(data.manifest);
-        Profile::next("loading id data");
-        for (const auto &entry: data.id) {
-            cpack->applyId(entry);
+        LoadTrail trail;
+        try {
+            trail.push("start load CPack by JSON");
+            // 单文件格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+            Node::initializeStaticNodes();
+            auto cpackMemory = std::make_shared<CPackMemoryResource>();
+            CPackMemoryScope memoryScope(cpackMemory);
+            // cpack 必须先于 ctx/data 构造（从而后于它们析构）：
+            // ~CPack 会把路由 current 重置，若 ctx/data 晚于 cpack 析构，
+            // 其 pmr 成员的池内存会在 current 失效后被错误交还给全局堆
+            auto cpack = std::unique_ptr<CPack>(new CPack());
+            cpack->cpackMemory = cpackMemory;
+            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
+            cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = cpackMemory;
+            CPackJsonData data;
+            readJson(data, json, ctx);
+            //readJson 的 glaze 解析错误自带出错位置与 JSON 片段，无需 trail 条目；
+            //apply 阶段的失败由各消息自带的 id/key 定位
+            cpack->manifest = std::move(data.manifest);
+            for (const auto &entry: data.id) {
+                cpack->applyId(entry);
+            }
+            for (auto &entry: data.grammar) {
+                cpack->applyGrammar(std::move(entry), trail);
+            }
+            for (auto &item: data.json) {
+                cpack->applyJson(std::move(item));
+            }
+            for (auto &item: data.repeat) {
+                cpack->applyRepeat(std::move(item));
+            }
+            for (auto &item: data.command) {
+                cpack->applyCommand(std::move(item));
+            }
+            cpack->afterApply(trail);
+            return cpack;
+        } catch (const std::exception &e) {
+            throw CPackLoadError(e, trail);
         }
-        Profile::next("loading grammar data");
-        for (auto &entry: data.grammar) {
-            cpack->applyGrammar(std::move(entry));
-        }
-        Profile::next("loading json data");
-        for (auto &item: data.json) {
-            cpack->applyJson(std::move(item));
-        }
-        Profile::next("loading repeat data");
-        for (auto &item: data.repeat) {
-            cpack->applyRepeat(std::move(item));
-        }
-        Profile::next("loading command data");
-        for (auto &item: data.command) {
-            cpack->applyCommand(std::move(item));
-        }
-        Profile::next("init cpack");
-        cpack->afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
-        }
-#endif
-        Profile::pop();
-        return cpack;
     }
 
     std::unique_ptr<CPack> createCPackByBinary(std::string_view data) {
-        Profile::push("start load CPack by binary");
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
-        Node::initializeStaticNodes();
-        auto cpackMemory = std::make_shared<CPackMemoryResource>();
-        CPackMemoryScope memoryScope(cpackMemory);
-        NodeReadContext ctx;
-        ctx.createStage = Node::NodeCreateStage::JSON_NODE;
-        ctx.cpackMemory = cpackMemory;
-        CPackData cpackData;
-        auto it = data.data();
-        const auto end = it + data.size();
-        auto readOne = [&](auto &value) {
-            glz::parse<CHelper::BinaryFormat>::template op<glz::opts{}>(value, ctx, it, end);
-            if (bool(ctx.error)) [[unlikely]] {
-                throw std::runtime_error("fail to parse binary cpack");
+        LoadTrail trail;
+        try {
+            trail.push("start load CPack by binary");
+            // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
+            Node::initializeStaticNodes();
+            auto cpackMemory = std::make_shared<CPackMemoryResource>();
+            CPackMemoryScope memoryScope(cpackMemory);
+            // cpack 必须先于 ctx/cpackData 构造（从而后于它们析构），理由同 createCPackByJson
+            auto cpack = std::unique_ptr<CPack>(new CPack());
+            cpack->cpackMemory = cpackMemory;
+            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = cpackMemory;
+            CPackData cpackData;
+            auto it = data.data();
+            const auto end = it + data.size();
+            //段名条目压入后随作用域自动弹出：解析失败时 trail 末尾即出错段，
+            //错误消息也直接带上段名
+            auto readSection = [&](auto &value, std::string_view section) {
+                LoadTrail::Scope sectionScope(trail, section);
+                glz::parse<CHelper::BinaryFormat>::template op<glz::opts{}>(value, ctx, it, end);
+                if (bool(ctx.error)) [[unlikely]] {
+                    throw std::runtime_error(fmt::format("fail to parse binary cpack section: {}", section));
+                }
+            };
+            // 先读旧格式的公共前缀；Grammar 作为尾部资源读取，因而旧二进制仍可被识别到资源末尾。
+            readSection(cpackData.manifest, "manifest");
+            readSection(cpackData.normalIds, "normal id data");
+            readSection(cpackData.namespaceIds, "namespace id data");
+            readSection(cpackData.itemIds, "item id data");
+            readSection(cpackData.blockIds, "block id data");
+            readSection(cpackData.jsonNodes, "json data");
+            readSection(cpackData.repeatNodeData, "repeat data");
+            readSection(cpackData.commands, "command data");
+            if (it < end) {
+                ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+                readSection(cpackData.grammar, "grammar data");
             }
-        };
-        // 先读旧格式的公共前缀；Grammar 作为尾部资源读取，因而旧二进制仍可被识别到资源末尾。
-        readOne(cpackData.manifest);
-        readOne(cpackData.normalIds);
-        readOne(cpackData.namespaceIds);
-        readOne(cpackData.itemIds);
-        readOne(cpackData.blockIds);
-        readOne(cpackData.jsonNodes);
-        readOne(cpackData.repeatNodeData);
-        readOne(cpackData.commands);
-        if (it < end) {
-            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
-            readOne(cpackData.grammar);
+            cpack->manifest = std::move(cpackData.manifest);
+            cpack->normalIds = std::move(cpackData.normalIds);
+            cpack->namespaceIds = std::move(cpackData.namespaceIds);
+            cpack->itemIds = std::move(cpackData.itemIds);
+            cpack->blockIds = std::move(cpackData.blockIds);
+            cpack->jsonNodes = std::move(cpackData.jsonNodes);
+            cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
+            cpack->commands = std::move(cpackData.commands);
+            for (auto &entry: cpackData.grammar) {
+                cpack->applyGrammar(std::move(entry), trail);
+            }
+            cpack->afterApply(trail);
+            return cpack;
+        } catch (const std::exception &e) {
+            throw CPackLoadError(e, trail);
         }
-        auto cpack = std::unique_ptr<CPack>(new CPack());
-        cpack->cpackMemory = std::move(cpackMemory);
-        cpack->destructionMemoryScope.bindAsOwner(cpack->cpackMemory);
-        Profile::push("loading manifest");
-        cpack->manifest = std::move(cpackData.manifest);
-        Profile::next("loading normal id data");
-        cpack->normalIds = std::move(cpackData.normalIds);
-        Profile::next("loading namespace id data");
-        cpack->namespaceIds = std::move(cpackData.namespaceIds);
-        Profile::next("loading item id data");
-        cpack->itemIds = std::move(cpackData.itemIds);
-        Profile::next("loading block id data");
-        cpack->blockIds = std::move(cpackData.blockIds);
-        Profile::next("loading grammar data");
-        for (auto &entry: cpackData.grammar) {
-            cpack->applyGrammar(std::move(entry));
-        }
-        Profile::next("loading json data");
-        cpack->jsonNodes = std::move(cpackData.jsonNodes);
-        Profile::next("loading repeat data");
-        cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
-        Profile::next("loading command data");
-        cpack->commands = std::move(cpackData.commands);
-        Profile::next("init cpack");
-        cpack->afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
-        }
-#endif
-        Profile::pop();
-        return cpack;
     }
 }// namespace CHelper::serialization
 

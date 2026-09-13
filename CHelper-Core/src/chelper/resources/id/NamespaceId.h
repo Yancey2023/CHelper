@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_NAMESPACEID_H
-#define CHELPER_NAMESPACEID_H
-
 #include <chelper/resources/id/NormalId.h>
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
@@ -39,6 +36,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-
-#endif//CHELPER_NAMESPACEID_H

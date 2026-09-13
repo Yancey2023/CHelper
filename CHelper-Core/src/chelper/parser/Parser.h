@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_PARSER_H
-#define CHELPER_PARSER_H
-
 #include <chelper/parser/ASTNode.h>
 #include <chelper/resources/CPack.h>
 #include <pch.h>
@@ -32,5 +29,3 @@ namespace CHelper::Parser {
     ASTNode parse(std::u16string_view content, const CPack &cpack);
 
 }// namespace CHelper::Parser
-
-#endif//CHELPER_PARSER_H

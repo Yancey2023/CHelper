@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_NORMALID_H
-#define CHELPER_NORMALID_H
-
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
@@ -68,6 +65,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-
-#endif//CHELPER_NORMALID_H

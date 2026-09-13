@@ -13,9 +13,6 @@
 
 #pragma once
 
-#ifndef CHELPER_KMPMATCHER_H
-#define CHELPER_KMPMATCHER_H
-
 #include <string>
 #include <string_view>
 
@@ -54,5 +51,3 @@ namespace CHelper {
 
 
 }// namespace CHelper
-
-#endif// CHELPER_KMPMATCHER_H

@@ -217,10 +217,10 @@ namespace CHelper {
         if (it != common.end()) [[likely]] {
             return *it;
         }
-        Profile::push("fail to find block property value by block id {} and property name {}",
-                      FORMAT_ARG(utf8::utf16to8(blockIdWithNamespace)),
-                      FORMAT_ARG(utf8::utf16to8(propertyName)));
-        throw std::runtime_error("fail to find block property value by block id and property name");
+        throw std::runtime_error(fmt::format(
+                "fail to find block property value by block id {} and property name {}",
+                utf8::utf16to8(blockIdWithNamespace),
+                utf8::utf16to8(propertyName)));
     }
 
     Node::NodeText *getBlockStateValueNode(

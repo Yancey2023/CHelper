@@ -19,7 +19,7 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
 
-#ifdef CHelperDebug
+#if CHelperDebug
 #include <chelper/node/NodeType.h>
 #endif
 
@@ -100,7 +100,7 @@ namespace CHelper::Node {
           ignoreError(ignoreError),
           allowMissingID(allowMissingID),
           getNormalIdASTNode(getNormalIdASTNode) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (contents == nullptr) [[unlikely]] {
             throw std::runtime_error("contents should not be nullptr");
         }
@@ -147,7 +147,7 @@ namespace CHelper::Node {
 
     NodeAnd::NodeAnd(std::pmr::vector<NodeWithType> childNodes)
         : childNodes(std::move(childNodes)) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (this->childNodes.empty()) {
             throw std::runtime_error("childNodes is empty");
         }
@@ -213,7 +213,7 @@ namespace CHelper::Node {
           nodeRight(nodeRight),
           nodeElementOrRight({nodeElement, nodeRight}, false),
           nodeSeparatorOrRight({nodeSeparator, nodeRight}, false) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (nodeLeft.data == nullptr || nodeElement.data == nullptr || nodeSeparator.data == nullptr || nodeRight.data == nullptr) [[unlikely]] {
             throw std::runtime_error("NodeOr has a null child node");
         }
@@ -232,7 +232,7 @@ namespace CHelper::Node {
           noSuggestion(noSuggestion),
           defaultErrorReason(defaultErrorReason),
           nodeId(nodeId) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (this->childNodes.empty()) {
             throw std::runtime_error("childNodes is empty");
         }
@@ -261,7 +261,7 @@ namespace CHelper::Node {
     NodeOptional::NodeOptional(NodeWithType optionalNode)
         : optionalNode(optionalNode) {}
 
-#ifdef CHelperDebug
+#if CHelperDebug
     bool isNodeSerializable(NodeWithType innerNode) {
         return Node::dispatchNodeType(
                 innerNode.nodeTypeId,
@@ -272,7 +272,7 @@ namespace CHelper::Node {
 
     NodeWrapped::NodeWrapped(NodeWithType innerNode)
         : innerNode(innerNode) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (!isNodeSerializable(innerNode)) {
             throw std::runtime_error("invalid innerNode in NodeWrapped");
         }

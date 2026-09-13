@@ -156,7 +156,7 @@ namespace CHelper::Test {
                 return;
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
         test(core, commands, isTestTime);
         delete core;
@@ -175,7 +175,7 @@ namespace CHelper::Test {
                 return;
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
         test(core, commands, isTestTime);
         delete core;
@@ -269,7 +269,7 @@ namespace CHelper::Test {
                 fmt::print("\n");
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
     }
 
@@ -299,7 +299,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("{} commands", FORMAT_ARG(commands.size()));
             SPDLOG_INFO("run successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         delete core;
@@ -329,7 +329,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("CPack write successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByDirectory(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;
@@ -361,7 +361,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("CPack write successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByJson(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;
@@ -393,7 +393,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("run successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByBinary(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;

@@ -1,4 +1,6 @@
-/**
+/*
+
+*
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Yancey
  *
@@ -51,7 +53,7 @@ namespace CHelper::Test {
                 }
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             FAIL();
         }
     }
@@ -65,7 +67,7 @@ namespace CHelper::Test {
         try {
             core = std::shared_ptr<CHelperCore>(CHelperCore::createByDirectory(cpackPath));
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             FAIL();
         }
         if (core == nullptr) [[unlikely]] {
@@ -151,7 +153,7 @@ namespace CHelper::Test {
                 SPDLOG_INFO("-----");
             } catch (const std::exception &e) {
                 flag = true;
-                CHelper::Profile::printAndClear(e);
+                SPDLOG_ERROR("{}", e.what());
             }
         }
         if (flag) [[unlikely]] {

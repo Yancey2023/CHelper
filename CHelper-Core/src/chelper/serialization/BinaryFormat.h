@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_BINARY_FORMAT_H
-#define CHELPER_BINARY_FORMAT_H
-
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
@@ -457,7 +454,6 @@ namespace glz {
     };
 }// namespace glz
 
-#endif//CHELPER_BINARY_FORMAT_H
 
 // ================= 通用 I/O 辅助函数（所有文件通过 pch.h 可用） =================
 namespace CHelper {

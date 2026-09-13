@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_NODEWITHTYPE_H
-#define CHELPER_NODEWITHTYPE_H
-
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
@@ -127,5 +124,3 @@ namespace CHelper::Node {
     void initializeStaticNodes();
 
 }// namespace CHelper::Node
-
-#endif//CHELPER_NODEWITHTYPE_H

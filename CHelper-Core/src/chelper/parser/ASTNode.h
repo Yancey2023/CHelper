@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_ASTNODE_H
-#define CHELPER_ASTNODE_H
-
 #include <chelper/node/NodeWithType.h>
 #include <chelper/parser/ErrorReason.h>
 #include <pch.h>
@@ -116,5 +113,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_ASTNODE_H

@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_CHELPERCORE_H
-#define CHELPER_CHELPERCORE_H
-
 #include "old2new/Old2New.h"
 #include <chelper/CommandContext.h>
 #include <chelper/resources/CPack.h>
@@ -78,5 +75,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_CHELPERCORE_H

@@ -500,15 +500,9 @@ namespace CHelper::AutoSuggestion {
             return;
         }
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-#ifdef CHelperTest
-            Profile::push("collect suggestions: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
             bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
                 return AutoSuggestion<NodeType>::collectSuggestions(astNode, index, suggestions);
             });
-#ifdef CHelperTest
-            Profile::pop();
-#endif
             if (isDirty) [[unlikely]] {
                 return;
             }

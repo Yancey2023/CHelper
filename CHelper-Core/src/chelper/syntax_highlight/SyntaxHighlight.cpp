@@ -198,15 +198,9 @@ namespace CHelper::SyntaxHighlight {
     };
 
     void collectSyntaxResult(const ASTNode &astNode, SyntaxResult &syntaxResult) {
-#ifdef CHelperTest
-        Profile::push("collect syntax result: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
         bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
             return SyntaxToken<NodeType>::collectSyntax(astNode, syntaxResult);
         });
-#ifdef CHelperTest
-        Profile::pop();
-#endif
         if (isDirty) [[unlikely]] {
             return;
         }

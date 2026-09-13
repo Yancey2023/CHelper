@@ -68,7 +68,7 @@ namespace CHelper {
                             const TokensView *tokens,
                             const char16_t *errorReason,
                             const ASTNodeId::ASTNodeId &id) {
-#ifdef CHelperDebug
+#if CHelperDebug
         //正常情况下OR节点不会有空的子节点，非法CPack数据应当在加载阶段被CPack::validate拦截，
         //这里是Debug模式下的最后一道防线，防止访问childNodes[whichBest]时越界
         if (childNodes.empty()) [[unlikely]] {
@@ -149,7 +149,7 @@ namespace CHelper {
     }
 
     [[nodiscard]] const ASTNode &ASTNode::getBestNode() const {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (mode != ASTNodeMode::OR) {
             throw std::runtime_error("invalid mode");
         }

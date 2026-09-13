@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_STRUCTUREBUILDER_H
-#define CHELPER_STRUCTUREBUILDER_H
-
 #include <pch.h>
 
 namespace CHelper::CommandStructure {
@@ -48,5 +45,3 @@ namespace CHelper::CommandStructure {
     };
 
 }// namespace CHelper::CommandStructure
-
-#endif//CHELPER_STRUCTUREBUILDER_H

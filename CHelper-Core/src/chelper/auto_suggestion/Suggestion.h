@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_SUGGESTION_H
-#define CHELPER_SUGGESTION_H
-
 #include <chelper/parser/TokensView.h>
 #include <chelper/resources/id/NormalId.h>
 
@@ -50,5 +47,3 @@ namespace CHelper {
     }// namespace AutoSuggestion
 
 }// namespace CHelper
-
-#endif//CHELPER_SUGGESTION_H

@@ -51,13 +51,17 @@ class CHelperCore private constructor(
      * @param path         资源包路径
      */
     init {
+        var loadError: String? = null
         pointer = try {
             create0(assetManager, path)
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            //create0 失败时会抛出携带加载轨迹（哪个文件/哪个阶段/什么错）的 Java 异常，
+            //把轨迹透传给上层 UI，帮助资源包作者定位问题
+            loadError = t.message
             0
         }
         if (pointer == 0L) {
-            throw RuntimeException("fail to init CHelper Core: $path")
+            throw RuntimeException("fail to init CHelper Core: $path" + (loadError?.let { "\n$it" } ?: ""))
         }
     }
 

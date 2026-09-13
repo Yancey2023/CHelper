@@ -18,8 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_TOKENSVIEW_H
-#define CHELPER_TOKENSVIEW_H
 
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
@@ -55,5 +53,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif

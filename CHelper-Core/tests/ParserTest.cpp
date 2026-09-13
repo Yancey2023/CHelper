@@ -173,7 +173,7 @@ namespace CHelper::Test {
 
     //orNode的子节点为空时，Debug模式下必须抛出异常，不能访问childNodes[whichBest]导致越界
     //Release下该检查被编译掉，直接测试会是未定义行为
-#ifdef CHelperDebug
+#if CHelperDebug
     TEST(ParserTest, OrNodeWithEmptyChildNodes) {
         Node::NodeText node("OR_NODE_TEST", u"test", NormalId::make(u"x", u"test"));
         Node::NodeWithType nodeWithType(node);

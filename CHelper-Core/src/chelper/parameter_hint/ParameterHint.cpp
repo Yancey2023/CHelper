@@ -90,15 +90,9 @@ namespace CHelper::ParameterHint {
             return std::nullopt;
         }
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-#ifdef CHelperTest
-            Profile::push("get parameter hint: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
             std::optional<std::u16string> parameterHint = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
                 return ParameterHint<NodeType>::getHint(astNode);
             });
-#ifdef CHelperTest
-            Profile::pop();
-#endif
             if (parameterHint.has_value()) {
                 return parameterHint;
             }

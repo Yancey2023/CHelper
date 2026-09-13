@@ -553,7 +553,7 @@ TEST(BinaryUtilTest, PerCPackNormalIds) {
         cpack = CHelper::serialization::createCPackByDirectory(
                 std::filesystem::path(resourceDir / "resources" / "beta" / "vanilla"));
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     std::vector<std::function<
@@ -573,7 +573,7 @@ TEST(BinaryUtilTest, CPackNormalIds) {
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
                                                                "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     test<decltype(cpack->normalIds)>(
@@ -587,7 +587,7 @@ TEST(BinaryUtilTest, CPackNamespaceId) {
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
                                                                "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     test<decltype(cpack->namespaceIds)>(
@@ -600,7 +600,7 @@ TEST(BinaryUtilTest, NodeJsonBoolean) {
     try {
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     CHelper::Node::NodeJsonBoolean node("ID", u"description", u"descriptionTrue", u"descriptionFalse");
@@ -614,7 +614,7 @@ TEST(BinaryUtilTest, NodeJsonInteger) {
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
                                                                "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     testNode<CHelper::Node::NodeJsonInteger>(
@@ -666,7 +666,7 @@ TEST(BinaryUtilTest, NodeJsonFloat) {
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" /
                                                                "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     testNode<CHelper::Node::NodeJsonFloat>(
@@ -717,7 +717,7 @@ TEST(BinaryUtilTest, NodeJsonNull) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     testNode<CHelper::Node::NodeJsonNull>(
@@ -731,7 +731,7 @@ TEST(BinaryUtilTest, NodePerCommandMsgpack) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
         cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     } catch (const std::exception &e) {
-        CHelper::Profile::printAndClear(e);
+        SPDLOG_ERROR("{}", e.what());
         exit(-1);
     }
     const auto getDefinitionIndex = [](const CHelper::Node::NodePerCommand &command, const CHelper::Node::NodeWithType &node) {

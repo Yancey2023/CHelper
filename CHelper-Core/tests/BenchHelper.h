@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CHELPER_BENCHHELPER_H
-#define CHELPER_BENCHHELPER_H
+#pragma once
 
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/Serialization.h>
@@ -355,5 +354,3 @@ inline void chelperBenchFree(void *p, size_t size, const void *callSite) {
         std::free(p);
     }
 }
-
-#endif//CHELPER_BENCHHELPER_H

@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_SERIALIZATION_H
-#define CHELPER_SERIALIZATION_H
-
 #include <chelper/resources/CPack.h>
 
 namespace CHelper::serialization {
@@ -36,5 +33,3 @@ namespace CHelper::serialization {
     std::unique_ptr<CPack> createCPackByBinary(std::string_view data);
 
 }// namespace CHelper::serialization
-
-#endif//CHELPER_SERIALIZATION_H

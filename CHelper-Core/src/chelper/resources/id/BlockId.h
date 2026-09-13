@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_BLOCKID_H
-#define CHELPER_BLOCKID_H
-
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
 #include <pch.h>
@@ -130,5 +127,3 @@ namespace CHelper {
 
 
 }// namespace CHelper
-
-#endif//CHELPER_BLOCKID_H

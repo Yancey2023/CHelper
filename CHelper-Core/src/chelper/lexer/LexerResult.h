@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_LEXERRESULT_H
-#define CHELPER_LEXERRESULT_H
-
 #include <chelper/lexer/Token.h>
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
@@ -44,5 +41,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_LEXERRESULT_H

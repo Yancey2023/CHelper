@@ -18,14 +18,7 @@
 
 #pragma once
 
-#ifndef CHELPER_PCH_H
-#define CHELPER_PCH_H
-
 #include <ParamDeliver.h>
-
-#if _CHELPER_DEBUG == true
-#define CHelperDebug
-#endif
 
 #ifdef CHELPER_NO_FILESYSTEM
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
@@ -116,9 +109,5 @@
 // clang-format on
 // json工具
 #include <chelper/util/JsonUtil.h>
-// 简单的调用栈
-#include <chelper/util/Profile.h>
 // KMP字符串匹配算法
 #include <chelper/util/KMPMatcher.h>
-
-#endif// CHELPER_PCH_H

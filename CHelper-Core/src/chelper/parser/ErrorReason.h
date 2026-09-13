@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_ERRORREASON_H
-#define CHELPER_ERRORREASON_H
-
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
 
@@ -147,5 +144,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_ERRORREASON_H

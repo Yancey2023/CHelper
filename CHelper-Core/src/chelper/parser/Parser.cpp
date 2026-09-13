@@ -21,25 +21,21 @@
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/CPack.h>
 
-#ifdef CHelperDebug
-#define DEBUG_GET_NODE_BEGIN(node, index) size_t index = tokenReader.indexStack.size()
-#else
-#define DEBUG_GET_NODE_BEGIN(node, index) ;
-#endif
-
-#ifdef CHelperDebug
-#define DEBUG_GET_NODE_END(node, index)                                                                       \
-    do {                                                                                                      \
-        if ((index) != tokenReader.indexStack.size()) [[unlikely]] {                                          \
-            Profile::push("TokenReaderIndexError: {}", FORMAT_ARG(Node::getNodeTypeName((node).nodeTypeId))); \
-            throw std::runtime_error("TokenReaderIndexError");                                                \
-        }                                                                                                     \
-    } while (0)
-#else
-#define DEBUG_GET_NODE_END(node, index) ;
-#endif
-
 namespace CHelper::Parser {
+
+    namespace {
+        //Debug 下校验解析过程没有丢失或重复消费 token；Release 编译为空
+        void debugCheckTokenIndex([[maybe_unused]] const Node::NodeWithType &node,
+                                  [[maybe_unused]] size_t index,
+                                  [[maybe_unused]] TokenReader &tokenReader) {
+#if CHelperDebug
+            if (index != tokenReader.indexStack.size()) [[unlikely]] {
+                throw std::runtime_error(
+                        fmt::format("TokenReaderIndexError: {}", Node::getNodeTypeName(node.nodeTypeId)));
+            }
+#endif
+        }
+    }// namespace
 
     ASTNode parse(const Node::NodeWithType &node, TokenReader &tokenReader);
 
@@ -71,9 +67,9 @@ namespace CHelper::Parser {
             }
             //当前节点
             tokenReader.push();
-            DEBUG_GET_NODE_BEGIN(node.innerNode, index);
+            size_t index = tokenReader.indexStack.size();
             ASTNode currentASTNode = parse(node.innerNode, tokenReader);
-            DEBUG_GET_NODE_END(node.innerNode, index);
+            debugCheckTokenIndex(node.innerNode, index, tokenReader);
             if (currentASTNode.isError() || node.nextNodes.empty()) [[unlikely]] {
                 return ASTNode::andNode(node, {std::move(currentASTNode)}, tokenReader.collect());
             }
@@ -170,13 +166,7 @@ namespace CHelper::Parser {
             convertResult.errorReason->end += tokens.startIndex;
             return {ASTNode::simpleNode(node, tokens, convertResult.errorReason), std::move(convertResult)};
         }
-#ifdef CHelperTest
-        Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(convertResult.result)));
-#endif
         ASTNode result = parse(convertResult.result, mainNode);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
         return {std::move(result), std::move(convertResult)};
     }
 
@@ -314,9 +304,9 @@ namespace CHelper::Parser {
         for (const auto &item: childNodes) {
             tokenReader.push();
             tokenReader.push();
-            DEBUG_GET_NODE_BEGIN(item, index);
+            size_t index = tokenReader.indexStack.size();
             ASTNode astNode = parse(item, tokenReader);
-            DEBUG_GET_NODE_END(item, index);
+            debugCheckTokenIndex(item, index, tokenReader);
             bool isError = astNode.isError();
             const TokensView tokens = tokenReader.collect();
             if (isError && (isIgnoreChildNodesError || tokens.isEmpty())) [[unlikely]] {
@@ -396,9 +386,9 @@ namespace CHelper::Parser {
         static ASTNode getASTNode(const Node::NodeNamespaceId &node, TokenReader &tokenReader) {
             // namespace:id
             // 字符串中已经包含冒号，因为冒号不是结束字符
-            DEBUG_GET_NODE_BEGIN(node, index);
+            size_t index = tokenReader.indexStack.size();
             auto result = tokenReader.readStringASTNode(node);
-            DEBUG_GET_NODE_END(node, index);
+            debugCheckTokenIndex(node, index, tokenReader);
             if (result.tokens.isEmpty()) [[unlikely]] {
                 TokensView tokens = result.tokens;
                 return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, u"命令不完整"));
@@ -421,9 +411,9 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeNormalId> {
         static ASTNode getASTNode(const Node::NodeNormalId &node, TokenReader &tokenReader) {
             tokenReader.push();
-            DEBUG_GET_NODE_BEGIN(node, index);
+            size_t index = tokenReader.indexStack.size();
             ASTNode result = node.getNormalIdASTNode(node, tokenReader);
-            DEBUG_GET_NODE_END(node, index);
+            debugCheckTokenIndex(node, index, tokenReader);
             if (node.allowMissingID) [[unlikely]] {
                 if (result.isError()) [[unlikely]] {
                     tokenReader.restore();
@@ -459,9 +449,9 @@ namespace CHelper::Parser {
             childASTNodes.reserve(node.startNodes.size());
             for (const auto &item: node.startNodes) {
                 tokenReader.push();
-                DEBUG_GET_NODE_BEGIN(*item, index);
+                size_t index = tokenReader.indexStack.size();
                 childASTNodes.push_back(Parser<Node::NodeWrapped>::getASTNodeWithIsMustAfterSpace(*item, tokenReader, true));
-                DEBUG_GET_NODE_END(*item, index);
+                debugCheckTokenIndex(*item, index, tokenReader);
                 tokenReader.restore();
             }
             tokenReader.push();
@@ -692,9 +682,9 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeText> {
         static ASTNode getASTNode(const Node::NodeText &node, TokenReader &tokenReader) {
             tokenReader.skipSpace();
-            DEBUG_GET_NODE_BEGIN(node, index);
+            size_t index = tokenReader.indexStack.size();
             auto result = node.getTextASTNode(node, tokenReader);
-            DEBUG_GET_NODE_END(node, index);
+            debugCheckTokenIndex(node, index, tokenReader);
             std::u16string_view str = result.tokens.string();
             if (str != node.data->name) [[unlikely]] {
                 TokensView tokens = result.tokens;
@@ -824,14 +814,14 @@ namespace CHelper::Parser {
             }
             std::pmr::vector<ASTNode> childNodes = {std::move(left)};
             {
-#ifdef CHelperDebug
+#if CHelperDebug
                 size_t startIndex = tokenReader.index;
 #endif
                 //检测[]中间有没有内容
                 tokenReader.push();
-                DEBUG_GET_NODE_BEGIN(node.nodeRight, nodeRightIndex);
+                size_t nodeRightIndex = tokenReader.indexStack.size();
                 auto rightBracket1 = parse(node.nodeRight, tokenReader);
-                DEBUG_GET_NODE_END(node.nodeRight, nodeRightIndex);
+                debugCheckTokenIndex(node.nodeRight, nodeRightIndex, tokenReader);
                 tokenReader.restore();
                 auto elementOrRight = parse(node.nodeElementOrRight, tokenReader);
                 bool flag = !rightBracket1.isError() || elementOrRight.isError();
@@ -839,7 +829,7 @@ namespace CHelper::Parser {
                 if (flag) [[unlikely]] {
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
                 }
-#ifdef CHelperDebug
+#if CHelperDebug
                 if (startIndex == tokenReader.index) [[unlikely]] {
                     SPDLOG_WARN("NodeList has some error");
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
@@ -847,33 +837,33 @@ namespace CHelper::Parser {
 #endif
             }
             while (true) {
-#ifdef CHelperDebug
+#if CHelperDebug
                 size_t startIndex = tokenReader.index;
 #endif
                 //检测是分隔符还是右括号
                 tokenReader.push();
-                DEBUG_GET_NODE_BEGIN(node.nodeRight, nodeRightIndex);
+                size_t nodeRightIndex = tokenReader.indexStack.size();
                 auto rightBracket = parse(node.nodeRight, tokenReader);
-                DEBUG_GET_NODE_END(node.nodeRight, nodeRightIndex);
+                debugCheckTokenIndex(node.nodeRight, nodeRightIndex, tokenReader);
                 tokenReader.restore();
-                DEBUG_GET_NODE_BEGIN(node.nodeSeparatorOrRight, nodeSeparatorOrRightIndex);
+                size_t nodeSeparatorOrRightIndex = tokenReader.indexStack.size();
                 auto separatorOrRight = parse(node.nodeSeparatorOrRight, tokenReader);
-                DEBUG_GET_NODE_END(node.nodeSeparatorOrRight, nodeSeparatorOrRightIndex);
+                debugCheckTokenIndex(node.nodeSeparatorOrRight, nodeSeparatorOrRightIndex, tokenReader);
                 bool flag = !rightBracket.isError() || separatorOrRight.isError();
                 childNodes.push_back(std::move(separatorOrRight));
                 if (flag) [[unlikely]] {
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
                 }
                 //检测是不是元素
-                DEBUG_GET_NODE_BEGIN(node.nodeElement, nodeElementIndex);
+                size_t nodeElementIndex = tokenReader.indexStack.size();
                 ASTNode element = parse(node.nodeElement, tokenReader);
-                DEBUG_GET_NODE_END(node.nodeElement, nodeElementIndex);
+                debugCheckTokenIndex(node.nodeElement, nodeElementIndex, tokenReader);
                 flag = element.isError();
                 childNodes.push_back(std::move(element));
                 if (flag) [[unlikely]] {
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
                 }
-#ifdef CHelperDebug
+#if CHelperDebug
                 if (startIndex == tokenReader.index) [[unlikely]] {
                     SPDLOG_WARN("NodeList has some error");
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
@@ -987,7 +977,7 @@ namespace CHelper::Parser {
     };
 
     ASTNode parse(const Node::NodeWithType &node, TokenReader &tokenReader) {
-#ifdef CHelperDebug
+#if CHelperDebug
         //正常情况下data不会为nullptr，未正确初始化的节点应当在CPack加载阶段被拦截，
         //这里是Debug模式下的最后一道防线，防止分发到nullptr的节点数据
         if (node.data == nullptr) [[unlikely]] {
@@ -1001,15 +991,9 @@ namespace CHelper::Parser {
 
     ASTNode parse(const std::u16string_view content, const Node::NodeWithType &mainNode) {
         TokenReader tokenReader(Lexer::lex(content));
-#ifdef CHelperTest
-        Profile::push("start parsing: {}", FORMAT_ARG(utf8::utf16to8(tokenReader.lexerResult->content)));
-#endif
-        DEBUG_GET_NODE_BEGIN(mainNode, index);
+        size_t index = tokenReader.indexStack.size();
         auto result = parse(mainNode, tokenReader);
-        DEBUG_GET_NODE_END(mainNode, index);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
+        debugCheckTokenIndex(mainNode, index, tokenReader);
         return result;
     }
 

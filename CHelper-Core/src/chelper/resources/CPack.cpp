@@ -38,7 +38,7 @@ namespace CHelper {
                    entry);
     }
 
-    void CPack::applyGrammar(GrammarEntry &&entry) {
+    void CPack::applyGrammar(GrammarEntry &&entry, LoadTrail &trail) {
         if (entry.type != "grammar") [[unlikely]] {
             throw std::runtime_error("invalid grammar resource type");
         }
@@ -46,14 +46,17 @@ namespace CHelper {
             throw std::runtime_error("grammar resource id cannot be empty");
         }
         if (entry.content == nullptr) [[unlikely]] {
-            throw std::runtime_error("grammar resource content is missing");
+            throw std::runtime_error(fmt::format("grammar resource content is missing: {}", entry.id));
         }
         if (grammarNodes.contains(entry.id) || grammarGraphs.contains(entry.id)) [[unlikely]] {
-            throw std::runtime_error("duplicate grammar resource id");
+            throw std::runtime_error(fmt::format("duplicate grammar resource id: {}", entry.id));
         }
+        //节点初始化失败时，trail 里的 grammar 身份让资源包作者能定位到具体的 grammar 资源；
+        //加载成功时条目随作用域弹出，只有失败的 grammar 会被保留到异常消息里
+        LoadTrail::Scope grammarScope(trail, fmt::format(R"(grammar "{}")", entry.id));
         Node::initNode(*entry.content, *this);
         if (entry.content->start.data == nullptr) [[unlikely]] {
-            throw std::runtime_error("grammar resource content has no start node");
+            throw std::runtime_error(fmt::format("grammar resource content has no start node: {}", entry.id));
         }
         const auto root = entry.content->start;
         const auto graph = std::move(entry.content);
@@ -63,7 +66,6 @@ namespace CHelper {
 
     void CPack::applyJson(Node::NodeJsonElement &&item) {
         if (!item.id.has_value() || item.id.value().empty()) [[unlikely]] {
-            Profile::push("loading json element");
             throw std::runtime_error("json element id cannot be empty");
         }
         jsonNodes.push_back(std::move(item));
@@ -77,16 +79,15 @@ namespace CHelper {
         commands->push_back(std::move(item));
     }
 
-    void CPack::afterApply() {
-        Profile::push("init json nodes");
+    void CPack::afterApply(LoadTrail &trail) {
         for (const auto &item: jsonNodes) {
+            LoadTrail::Scope jsonScope(trail, fmt::format(R"(json "{}")", item.id.value_or("?")));
             Node::initNode(item, *this);
         }
-        Profile::next("init repeat nodes");
         for (const auto &item: repeatNodeData) {
             if (item.repeatNodes.size() != item.isEnd.size()) [[unlikely]] {
-                Profile::push("checking repeat node: {}", FORMAT_ARG(item.id));
-                throw std::runtime_error("fail to check repeat id because repeatNodes size not equal isEnd size");
+                throw std::runtime_error(fmt::format(
+                        "fail to check repeat id {} because repeatNodes size not equal isEnd size", item.id));
             }
         }
         for (const auto &item: repeatNodeData) {
@@ -120,6 +121,7 @@ namespace CHelper {
             cacheNodes.nodes.emplace_back(*orNode);
         }
         for (const auto &item: repeatNodeData) {
+            LoadTrail::Scope repeatScope(trail, fmt::format(R"(repeat "{}")", item.id));
             for (const auto &item2: item.repeatNodes) {
                 for (const auto &item3: item2.nodes) {
                     Node::initNode(item3, *this);
@@ -130,7 +132,8 @@ namespace CHelper {
             }
         }
         for (const auto &item: *commands) {
-            Profile::next(R"(init command: "{}")", FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(item.name, u",")))));
+            LoadTrail::Scope commandScope(trail, fmt::format(
+                                                         R"(command "{}")", utf8::utf16to8(fmt::format(u"{}", fmt::join(item.name, u",")))));
             Node::initNode(item, *this);
         }
         // 解析阶段只读共享的 CPack。提前完成所有惰性缓存，避免第一次解析时
@@ -162,14 +165,11 @@ namespace CHelper {
                 item->getNode(blockIds->blockPropertyDescriptions);
             }
         }
-        Profile::next("sort command nodes");
         validate();
         std::ranges::sort(*commands, [](const auto &item1, const auto &item2) {
             return item1.name[0] < item2.name[0];
         });
-        Profile::next("create main node");
         mainNode = Node::NodeCommand("MAIN_NODE", u"欢迎使用命令助手(作者：Yancey)", commands.get());
-        Profile::pop();
     }
 
     const Node::NodeWithType *CPack::getGrammar(const std::string_view key) const {
@@ -181,21 +181,18 @@ namespace CHelper {
     void CPack::validate() const {
         for (const auto &item: *commands) {
             if (item.name.empty()) [[unlikely]] {
-                Profile::push("validating command");
-                Profile::push("command name cannot be empty");
                 throw std::runtime_error("command name cannot be empty");
             }
             if (item.startNodes.empty()) [[unlikely]] {
-                Profile::push("validating command \"{}\"", FORMAT_ARG(utf8::utf16to8(item.name[0])));
-                Profile::push("command must have at least one start node, check the syntax field");
-                throw std::runtime_error("command start nodes cannot be empty");
+                throw std::runtime_error(fmt::format(
+                        R"(command "{}" must have at least one start node, check the syntax field)",
+                        utf8::utf16to8(item.name[0])));
             }
         }
         for (const auto &item: repeatNodeData) {
             if (item.repeatNodes.empty()) [[unlikely]] {
-                Profile::push("checking repeat node: {}", FORMAT_ARG(item.id));
-                Profile::push("repeat node must have at least one repeat node");
-                throw std::runtime_error("repeat nodes cannot be empty");
+                throw std::runtime_error(fmt::format(
+                        "repeat node {} must have at least one repeat node", item.id));
             }
         }
     }
@@ -205,7 +202,7 @@ namespace CHelper {
         const std::pmr::string searchKey(key.data(), key.size(), normalIds.get_allocator().resource());
         auto it = normalIds.find(searchKey);
         if (it == normalIds.end()) [[unlikely]] {
-#ifdef CHelperDebug
+#if CHelperDebug
             SPDLOG_WARN(R"(fail to find normal ids by key: "{}")", FORMAT_ARG(key));
 #endif
             return nullptr;
@@ -223,7 +220,7 @@ namespace CHelper {
         const std::pmr::string searchKey(key.data(), key.size(), namespaceIds.get_allocator().resource());
         auto it = namespaceIds.find(searchKey);
         if (it == namespaceIds.end()) [[unlikely]] {
-#ifdef CHelperDebug
+#if CHelperDebug
             SPDLOG_WARN(R"(fail to find namespace ids by key: "{}")", FORMAT_ARG(key));
 #endif
             return nullptr;

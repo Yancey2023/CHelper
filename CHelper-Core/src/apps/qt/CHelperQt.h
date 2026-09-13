@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CHELPER_CHELPERQT_H
-#define CHELPER_CHELPERQT_H
+#pragma once
 
 #include <QMainWindow>
 #include <QStyledItemDelegate>
@@ -56,5 +55,3 @@ private:
 };
 
 int main(int argc, char *argv[]);
-
-#endif//CHELPER_CHELPERQT_H

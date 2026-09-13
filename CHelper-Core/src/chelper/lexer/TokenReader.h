@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_TOKENREADER_H
-#define CHELPER_TOKENREADER_H
-
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
 #include <chelper/node/NodeWithType.h>
@@ -89,5 +86,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_TOKENREADER_H

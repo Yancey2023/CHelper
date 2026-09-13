@@ -118,9 +118,9 @@ endif()
 
 # Param Deliver
 if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-    set(CHelperDebug true)
+    set(CHelperDebug 1)
 else()
-    set(CHelperDebug false)
+    set(CHelperDebug 0)
 endif()
 set(RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../CHelper-Resource)
 configure_file(ParamDeliver.h.in ${CMAKE_BINARY_DIR}/include/ParamDeliver.h @ONLY)

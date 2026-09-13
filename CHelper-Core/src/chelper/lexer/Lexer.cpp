@@ -205,16 +205,10 @@ namespace CHelper::Lexer {
     };
 
     std::shared_ptr<LexerResult> lex(const std::u16string_view content) {
-#ifdef CHelperTest
-        Profile::push("start lex: {}", FORMAT_ARG(utf8::utf16to8(content)));
-#endif
         auto result = allocateSharedFromDefault<LexerResult>(
                 std::pmr::u16string(content.data(), content.size()), std::pmr::vector<Token>{});
         Lexer lexer(result->content, result->allTokens);
         lexer.run();
-#ifdef CHelperTest
-        Profile::pop();
-#endif
         return result;
     }
 

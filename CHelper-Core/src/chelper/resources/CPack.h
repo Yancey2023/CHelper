@@ -18,11 +18,9 @@
 
 #pragma once
 
-#ifndef CHELPER_CPACK_H
-#define CHELPER_CPACK_H
-
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/resources/LoadTrail.h>
 #include <chelper/resources/Manifest.h>
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
@@ -153,7 +151,7 @@ namespace CHelper {
 
         void applyId(const IdEntry &entry);
 
-        void applyGrammar(GrammarEntry &&entry);
+        void applyGrammar(GrammarEntry &&entry, LoadTrail &trail);
 
         void applyJson(Node::NodeJsonElement &&item);
 
@@ -161,7 +159,7 @@ namespace CHelper {
 
         void applyCommand(Node::NodePerCommand &&item) const;
 
-        void afterApply();
+        void afterApply(LoadTrail &trail);
 
     public:
 #ifndef CHELPER_NO_FILESYSTEM
@@ -190,5 +188,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_CPACK_H

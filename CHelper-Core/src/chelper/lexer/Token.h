@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_TOKEN_H
-#define CHELPER_TOKEN_H
-
 #include <pch.h>
 
 namespace CHelper {
@@ -53,5 +50,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_TOKEN_H

@@ -92,9 +92,7 @@ namespace CHelper::Node {
                     return;
                 }
             }
-            Profile::push("linking contents to {}", FORMAT_ARG(node.key));
-            Profile::push("failed to find json data in the cpack -> {}", FORMAT_ARG(node.key));
-            throw std::runtime_error("failed to find json data");
+            throw std::runtime_error(fmt::format("failed to find json data in the cpack -> {}", node.key));
         }
     };
 
@@ -108,9 +106,7 @@ namespace CHelper::Node {
             }
             if (node.customContents == nullptr) [[unlikely]] {
                 if (node.key.has_value()) [[unlikely]] {
-                    Profile::push("linking contents to {}", FORMAT_ARG(node.key.value()));
-                    Profile::push("failed to find namespace id in the cpack -> {}", FORMAT_ARG(node.key.value()));
-                    throw std::runtime_error("failed to find namespace id");
+                    throw std::runtime_error(fmt::format("failed to find namespace id in the cpack -> {}", node.key.value()));
                 } else {
                     throw std::runtime_error("missing content");
                 }
@@ -133,9 +129,7 @@ namespace CHelper::Node {
             }
             if (node.customContents == nullptr) [[unlikely]] {
                 if (node.key.has_value()) [[unlikely]] {
-                    Profile::push("linking contents to {}", FORMAT_ARG(node.key.value()));
-                    Profile::push("failed to find normal id in the cpack -> ", FORMAT_ARG(node.key.value()));
-                    throw std::runtime_error("failed to find normal id");
+                    throw std::runtime_error(fmt::format("failed to find normal id in the cpack -> {}", node.key.value()));
                 } else {
                     throw std::runtime_error("missing content");
                 }
@@ -147,14 +141,10 @@ namespace CHelper::Node {
     struct NodeInitialization<NodePerCommand> {
         static void init(NodePerCommand &node, const CPack &cpack) {
             for (auto &definition: node.nodes.nodes) {
-                Profile::push(R"(init node {}: "{}")",
-                              FORMAT_ARG(getNodeTypeName(definition.nodeTypeId)),
-                              FORMAT_ARG(reinterpret_cast<NodeSerializable *>(definition.data)->id.value_or("UNKNOWN")));
                 initNode(definition, cpack);
-                Profile::pop();
             }
 
-#ifdef CHelperDebug
+#if CHelperDebug
             for (const auto &item: node.wrappedNodes) {
                 bool flag1 = item.innerNode.nodeTypeId == NodeTypeId::POSITION ||
                              item.innerNode.nodeTypeId == NodeTypeId::RELATIVE_FLOAT;
@@ -165,11 +155,10 @@ namespace CHelper::Node {
                     bool flag2 = item2->innerNode.nodeTypeId == NodeTypeId::POSITION ||
                                  item2->innerNode.nodeTypeId == NodeTypeId::RELATIVE_FLOAT;
                     if (flag1 && flag2 == item2->getNodeSerializable().isMustAfterSpace) [[unlikely]] {
-                        Profile::push(R"({} should be {} in node "{}")",
-                                      "isMustAfterSpace",
-                                      item2->getNodeSerializable().isMustAfterSpace ? "false" : "true",
-                                      item2->getNodeSerializable().id.value_or("UNKNOWN"));
-                        throw std::runtime_error("value is wrong");
+                        throw std::runtime_error(fmt::format(
+                                R"(isMustAfterSpace should be {} in node "{}")",
+                                item2->getNodeSerializable().isMustAfterSpace ? "false" : "true",
+                                item2->getNodeSerializable().id.value_or("UNKNOWN")));
                     }
                 }
             }
@@ -186,9 +175,7 @@ namespace CHelper::Node {
                 node.nodeElement = it->second.second;
                 return;
             }
-            Profile::push("link repeat data {} to content", FORMAT_ARG(node.key));
-            Profile::push("fail to find repeat data by id {}", FORMAT_ARG(node.key));
-            throw std::runtime_error("fail to find repeat data");
+            throw std::runtime_error(fmt::format("fail to find repeat data by id {}", node.key));
         }
     };
 
@@ -208,8 +195,8 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeEqualEntry> {
         static void init(NodeEqualEntry &node, const CPack &cpack) {
             if (node.equalDatas.empty()) [[unlikely]] {
-                Profile::push("initializing equal entry \"{}\"", FORMAT_ARG(node.id.value_or("UNKNOWN")));
-                throw std::runtime_error("equal entry must have at least one value");
+                throw std::runtime_error(
+                        fmt::format(R"(equal entry "{}" must have at least one value)", node.id.value_or("UNKNOWN")));
             }
             node.nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
             for (const auto &item: node.equalDatas) {
@@ -218,8 +205,8 @@ namespace CHelper::Node {
             node.nodeKey = NodeNormalId("KEY", u"参数名", node.nodeKeyContent, true);
             for (auto &item: node.equalDatas) {
                 if (item.nodeValue.data == nullptr) [[unlikely]] {
-                    Profile::push("initializing equal entry \"{}\"", FORMAT_ARG(node.id.value_or("UNKNOWN")));
-                    throw std::runtime_error("equal entry value node is not linked");
+                    throw std::runtime_error(
+                            fmt::format(R"(equal entry "{}" value node is not linked)", node.id.value_or("UNKNOWN")));
                 }
                 initNode(item.nodeValue, cpack);
             }
@@ -287,9 +274,8 @@ namespace CHelper::Node {
         static void init(NodeJsonEntry &node, const std::pmr::vector<NodeWithType> &dataList) {
             if (node.value.empty()) [[unlikely]] {
                 //value为空会产生childNodes为空的OR节点，Parser访问orNode的childNodes[whichBest]时会越界
-                Profile::push("checking json entry \"{}\"", FORMAT_ARG(utf8::utf16to8(node.key)));
-                Profile::push("json entry must have at least one value node");
-                throw std::runtime_error("json entry value cannot be empty");
+                throw std::runtime_error(
+                        fmt::format(R"(json entry "{}" must have at least one value node)", utf8::utf16to8(node.key)));
             }
             std::pmr::vector<NodeWithType> valueNodes;
             for (const auto &item: node.value) {
@@ -302,10 +288,8 @@ namespace CHelper::Node {
                     }
                 }
                 if (notFind) {
-                    Profile::push("linking contents to {}", FORMAT_ARG(item));
-                    Profile::push("failed to find node id -> {}", FORMAT_ARG(item));
-                    Profile::push("unknown node id -> {} (in node \"{}\")", FORMAT_ARG(node.id.value_or("UNKNOWN")), FORMAT_ARG(item));
-                    throw std::runtime_error("unknown node id");
+                    throw std::runtime_error(
+                            fmt::format(R"(unknown node id -> {} (in node "{}"))", item, node.id.value_or("UNKNOWN")));
                 }
             }
             node.nodeKey = NodeText("JSON_OBJECT_ENTRY_KEY", u"JSON对象键",
@@ -326,17 +310,14 @@ namespace CHelper::Node {
                     return;
                 }
             }
-            Profile::push("linking contents to {}", FORMAT_ARG(node.data));
-            Profile::push("failed to find node id -> {}", FORMAT_ARG(node.data));
-            Profile::push("unknown node id -> {} (in node \"{}\")", FORMAT_ARG(node.data), FORMAT_ARG(node.id.value_or("UNKNOWN")));
-            throw std::runtime_error("unknown node id");
+            throw std::runtime_error(
+                    fmt::format(R"(unknown node id -> {} (in node "{}"))", node.data, node.id.value_or("UNKNOWN")));
         }
     };
 
     template<>
     struct NodeInitialization<NodeJsonElement> {
         static void init(NodeJsonElement &node, const CPack &cpack) {
-            Profile::push("linking startNode \"{}\" to nodes", FORMAT_ARG(node.startNodeId));
             for (const auto &item: node.nodes.nodes) {
                 // Grammar 组合节点的子节点此时仍是 ID，先跳过会解引用子节点的初始化，
                 // 等下面完成图绑定后再初始化组合节点。
@@ -365,12 +346,10 @@ namespace CHelper::Node {
                         return item;
                     }
                 }
-                Profile::push("failed to find node id -> {}", FORMAT_ARG(id));
-                throw std::runtime_error("unknown node id");
+                throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
             };
             const auto linkNode = [&](NodeWithType &target, const std::pmr::string &id) {
                 if (id.empty()) {
-                    Profile::push("empty node id in grammar node");
                     throw std::runtime_error("grammar node reference cannot be empty");
                 }
                 target = findNode(id);
@@ -414,8 +393,9 @@ namespace CHelper::Node {
                         auto &value = *reinterpret_cast<NodeEqualEntry *>(item.data);
                         for (auto &entry: value.equalDatas) {
                             if (entry.valueNodeId.empty()) [[unlikely]] {
-                                Profile::push("linking equal entry \"{}\"", FORMAT_ARG(value.id.value_or("UNKNOWN")));
-                                throw std::runtime_error("equal entry value id cannot be empty");
+                                throw std::runtime_error(
+                                        fmt::format(R"(equal entry "{}" value id cannot be empty)",
+                                                    value.id.value_or("UNKNOWN")));
                             }
                             entry.nodeValue = findNode(entry.valueNodeId);
                         }
@@ -442,7 +422,6 @@ namespace CHelper::Node {
             }
             if (node.start.data == nullptr) [[unlikely]] {
                 //start node无法解析时不能继续，否则Parser会使用data为nullptr的节点导致未定义行为
-                Profile::push("unknown node id -> {}", FORMAT_ARG(node.startNodeId));
                 throw std::runtime_error(fmt::format("unknown start node id: {}", node.startNodeId));
             }
             for (auto &item: node.nodes.nodes) {
@@ -454,7 +433,6 @@ namespace CHelper::Node {
                     }
                 }
             }
-            Profile::pop();
         }
     };
 

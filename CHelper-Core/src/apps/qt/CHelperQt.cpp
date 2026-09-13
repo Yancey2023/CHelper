@@ -36,7 +36,7 @@ CHelperApp::CHelperApp(QWidget *parent)
       ui(new Ui::CHelperApp) {
     ui->setupUi(this);
     setWindowIcon(QIcon(":/img/logo.webp"));
-#ifdef CHelperDebug
+#if CHelperDebug
     std::filesystem::path resourcePath(RESOURCE_DIR);
     core = CHelper::CHelperCore::createByDirectory(resourcePath / "resources" / "beta" / "vanilla");
 #else

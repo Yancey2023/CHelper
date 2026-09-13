@@ -189,15 +189,9 @@ namespace CHelper::Linter {
 
     void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-#ifdef CHelperTest
-            Profile::push("collect id errors: {}", FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
             bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
                 return Linter<NodeType>::lint(astNode, errorReasons);
             });
-#ifdef CHelperTest
-            Profile::pop();
-#endif
             if (isDirty) [[unlikely]] {
                 return;
             }
@@ -237,13 +231,7 @@ namespace CHelper::Linter {
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode) {
         std::vector<std::shared_ptr<ErrorReason>> input;
-#ifdef CHelperTest
-        Profile::push("start get errors except parse error: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
         lint(astNode, input);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
         return sortByLevel(std::move(input));
     }
 
@@ -251,13 +239,7 @@ namespace CHelper::Linter {
         std::vector<std::shared_ptr<ErrorReason>> result;
         result.reserve(astNode.errorReasons.size());
         result.insert(result.end(), astNode.errorReasons.begin(), astNode.errorReasons.end());
-#ifdef CHelperTest
-        Profile::push("start getting error reasons: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
         lint(astNode, result);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
         return sortByLevel(std::move(result));
     }
 
