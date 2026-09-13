@@ -24,6 +24,13 @@
 #include <QListWidget>
 #include <QStringListModel>
 
+namespace {
+    // 内核的ErrorReason和NormalId使用pmr字符串，QString无法直接从pmr字符串构造
+    QString toQString(const std::pmr::u16string &string) {
+        return QString::fromUtf16(string.data(), static_cast<qsizetype>(string.size()));
+    }
+}// namespace
+
 CHelperApp::CHelperApp(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::CHelperApp) {
@@ -70,7 +77,9 @@ void CHelperApp::onSelectionChanged() {
         return;
     }
     QString string = ui->lineEdit->text();
-    if (string != lastText) [[likely]] {
+    // lastText初值是null QString，与空文本比较相等，
+    // 首次调用要靠context==nullptr触发创建，否则context保持nullptr导致解引用空指针
+    if (context == nullptr || string != lastText) [[likely]] {
         // 文本内容改变时重新解析命令，生成新的命令上下文
         lastText = string;
         CHelper::CHelperCore::deleteContext(context);
@@ -88,7 +97,7 @@ void CHelperApp::onSelectionChanged() {
         if (errorReasons.empty()) [[unlikely]] {
             ui->errorReasonLabel->setText(nullptr);
         } else if (errorReasons.size() == 1) [[unlikely]] {
-            ui->errorReasonLabel->setText(QString::fromStdU16String(errorReasons[0]->errorReason));
+            ui->errorReasonLabel->setText(toQString(errorReasons[0]->errorReason));
         } else {
             std::u16string result = u"可能的错误原因：";
             for (size_t i = 0; i < errorReasons.size(); ++i) {
@@ -101,7 +110,7 @@ void CHelperApp::onSelectionChanged() {
     std::vector<CHelper::AutoSuggestion::Suggestion> suggestions = context->getSuggestions(cursorPosition);
     QStringList list;
     for (const CHelper::AutoSuggestion::Suggestion &suggestion: suggestions) {
-        list.append(QString::fromStdU16String(
+        list.append(toQString(
                 suggestion.content->description.has_value()
                         ? suggestion.content->name + u" - " + suggestion.content->description.value()
                         : suggestion.content->name));

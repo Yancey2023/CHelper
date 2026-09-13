@@ -21,12 +21,26 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
 
-#define CHELPER_INIT(v1)                                                                                                                                                        \
-    case Node::NodeTypeId::v1:                                                                                                                                                  \
-        NodeInitialization<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::init(*reinterpret_cast<NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data), cpack); \
-        break;
+//反序列化只读原始字段：isMustAfterSpace缺省值等类型相关的数据补齐统一在初始化阶段完成
+#define CHELPER_INIT(v1)                                                                                  \
+    case Node::NodeTypeId::v1: {                                                                          \
+        auto *typedNode = reinterpret_cast<NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data);      \
+        applyTypeDefault(*typedNode);                                                                     \
+        NodeInitialization<typename NodeTypeDetail<Node::NodeTypeId::v1>::Type>::init(*typedNode, cpack); \
+        break;                                                                                            \
+    }
 
 namespace CHelper::Node {
+
+    //仅对NodeSerializable派生类型生效，非序列化节点(NodeWrapped/NodeEntry等)编译期跳过
+    template<class NodeType>
+    void applyTypeDefault(NodeType &node) {
+        if constexpr (std::derived_from<NodeType, NodeSerializable>) {
+            if (!node.isMustAfterSpace.has_value()) [[unlikely]] {
+                node.isMustAfterSpace = NodeTypeDetail<NodeType::nodeTypeId>::isMustAfterSpace;
+            }
+        }
+    }
 
     template<class NodeType>
     struct NodeInitialization {
@@ -198,6 +212,29 @@ namespace CHelper::Node {
         }
     };
 
+    //nodeKeyContent/nodeKey是从equalDatas派生的数据，与C++侧构造职责一致，在初始化阶段构建
+    template<>
+    struct NodeInitialization<NodeEqualEntry> {
+        static void init(NodeEqualEntry &node, const CPack &cpack) {
+            if (node.equalDatas.empty()) [[unlikely]] {
+                Profile::push("initializing equal entry \"{}\"", FORMAT_ARG(node.id.value_or("UNKNOWN")));
+                throw std::runtime_error("equal entry must have at least one value");
+            }
+            node.nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
+            for (const auto &item: node.equalDatas) {
+                node.nodeKeyContent->push_back(NormalId::make(item.name, item.description));
+            }
+            node.nodeKey = NodeNormalId("KEY", u"参数名", node.nodeKeyContent, true);
+            for (auto &item: node.equalDatas) {
+                if (item.nodeValue.data == nullptr) [[unlikely]] {
+                    Profile::push("initializing equal entry \"{}\"", FORMAT_ARG(node.id.value_or("UNKNOWN")));
+                    throw std::runtime_error("equal entry value node is not linked");
+                }
+                initNode(item.nodeValue, cpack);
+            }
+        }
+    };
+
     template<>
     struct NodeInitialization<NodeAnd> {
         static void init(NodeAnd &node, const CPack &cpack) {
@@ -233,6 +270,15 @@ namespace CHelper::Node {
             node.getTextASTNode = [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
                 return tokenReader.readUntilSpace(node);
             };
+        }
+    };
+
+    //normalId是从symbol/value派生的数据，反序列化只负责读取原始字段，
+    //这里和C++侧构造函数(NodeSingleSymbol::NodeSingleSymbol等)保持同一构建时机：加载初始化阶段
+    template<>
+    struct NodeInitialization<NodeSingleSymbol> {
+        static void init(NodeSingleSymbol &node, const CPack &cpack) {
+            node.normalId = NormalId::make(std::u16string(1, node.symbol), node.description);
         }
     };
 
@@ -304,8 +350,17 @@ namespace CHelper::Node {
                 // Grammar 组合节点的子节点此时仍是 ID，先跳过会解引用子节点的初始化，
                 // 等下面完成图绑定后再初始化组合节点。
                 if (item.nodeTypeId != NodeTypeId::AND && item.nodeTypeId != NodeTypeId::OR &&
-                    item.nodeTypeId != NodeTypeId::LIST && item.nodeTypeId != NodeTypeId::OPTIONAL) {
+                    item.nodeTypeId != NodeTypeId::LIST && item.nodeTypeId != NodeTypeId::OPTIONAL &&
+                    item.nodeTypeId != NodeTypeId::EQUAL_ENTRY) {
                     initNode(item, cpack);
+                    //语法资源里的NORMAL_ID（键表/值表）读单个符号界token：
+                    //键和值后面紧跟 = ] } 等符号，不能用反序列化默认的readUntilSpace（会吞掉符号）
+                    if (item.nodeTypeId == NodeTypeId::NORMAL_ID) [[unlikely]] {
+                        auto &normalIdNode = *reinterpret_cast<NodeNormalId *>(item.data);
+                        normalIdNode.getNormalIdASTNode = [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
+                            return tokenReader.readStringOrNumberASTNode(node);
+                        };
+                    }
                 }
             }
 
@@ -364,13 +419,25 @@ namespace CHelper::Node {
                         linkNode(value.optionalNode, value.optionalNodeId);
                         break;
                     }
+                    case NodeTypeId::EQUAL_ENTRY: {
+                        auto &value = *reinterpret_cast<NodeEqualEntry *>(item.data);
+                        for (auto &entry: value.equalDatas) {
+                            if (entry.valueNodeId.empty()) [[unlikely]] {
+                                Profile::push("linking equal entry \"{}\"", FORMAT_ARG(value.id.value_or("UNKNOWN")));
+                                throw std::runtime_error("equal entry value id cannot be empty");
+                            }
+                            entry.nodeValue = findNode(entry.valueNodeId);
+                        }
+                        break;
+                    }
                     default:
                         break;
                 }
             }
             for (const auto &item: node.nodes.nodes) {
                 if (item.nodeTypeId == NodeTypeId::AND || item.nodeTypeId == NodeTypeId::OR ||
-                    item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL) {
+                    item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL ||
+                    item.nodeTypeId == NodeTypeId::EQUAL_ENTRY) {
                     initNode(item, cpack);
                 }
             }

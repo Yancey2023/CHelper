@@ -249,7 +249,7 @@ namespace glz {
             JSON_INTEGER, JSON_LIST, JSON_NULL, JSON_ENTRY, JSON_OBJECT, JSON_STRING, NAMESPACE_ID, NORMAL_ID, POSITION, \
             RANGE, RELATIVE_FLOAT, REPEAT, STRING, TARGET_SELECTOR, TEXT
 
-#define CHELPER_GRAMMAR_NODE_TYPES AND, OR, LIST, OPTIONAL, SINGLE_SYMBOL
+#define CHELPER_GRAMMAR_NODE_TYPES AND, OR, LIST, OPTIONAL, SINGLE_SYMBOL, EQUAL_ENTRY
 
 // 各节点类型的特有字段（写出用；键名与成员名一致，和旧版 CODEC_REGISTER_JSON_KEY 相同）
 #define CHELPER_NODE_FIELDS_BLOCK(n) , "nodeBlockType", n.nodeBlockType
@@ -279,7 +279,6 @@ namespace glz {
 #define CHELPER_NODE_FIELDS_TARGET_SELECTOR(n) \
     , "isMustPlayer", n.isMustPlayer, "isMustNPC", n.isMustNPC, "isOnlyOne", n.isOnlyOne, "isWildcard", n.isWildcard
 #define CHELPER_NODE_FIELDS_TEXT(n) , "data", n.data
-#define CHELPER_NODE_FIELDS_LITERAL(n) , "value", n.value, "description", n.description
 
 
 namespace CHelper::Node {
@@ -369,9 +368,15 @@ struct glz::meta<CHelper::Node::NodeSingleSymbol> {
                                               "isAddSpace", &T::isAddSpace);
 };
 template<>
-struct glz::meta<CHelper::Node::NodeLiteral> {
-    using T = CHelper::Node::NodeLiteral;
-    static constexpr auto value = glz::object("id", &T::id, &T::value, &T::description);
+struct glz::meta<CHelper::Node::EqualData> {
+    using T = CHelper::Node::EqualData;
+    static constexpr auto value = glz::object("name", &T::name, "description", &T::description,
+                                              "canUseNotEqual", &T::canUseNotEqual, "value", &T::valueNodeId);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeEqualEntry> {
+    using T = CHelper::Node::NodeEqualEntry;
+    static constexpr auto value = glz::object("id", &T::id, "values", &T::equalDatas);
 };
 
 namespace CHelper {
@@ -460,9 +465,9 @@ namespace CHelper {
                                "isAddSpace", n.isAddSpace});
                 break;
             }
-            case Node::NodeTypeId::LITERAL: {
-                const auto &n = *static_cast<const Node::NodeLiteral *>(t.data);
-                write(glz::obj{"type", "LITERAL", "id", n.id, "value", n.value, "description", n.description});
+            case Node::NodeTypeId::EQUAL_ENTRY: {
+                const auto &n = *static_cast<const Node::NodeEqualEntry *>(t.data);
+                write(glz::obj{"type", "EQUAL_ENTRY", "id", n.id, "values", n.equalDatas});
                 break;
             }
             default:
@@ -476,10 +481,7 @@ namespace CHelper {
     inline void writeNodeValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
         switch (t.nodeTypeId) {
             CHELPER_PASTE(CHELPER_NODE_WRITE_GRAMMAR_CASE, CHELPER_GRAMMAR_NODE_TYPES)
-            case Node::NodeTypeId::LITERAL:
-                writeGrammarNodeValue<Fmt, Opts>(t, ctx, b, ix);
-                break;
-                CHELPER_PASTE(CHELPER_NODE_WRITE_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_NODE_WRITE_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
             default:
                 ctx.error = glz::error_code::no_matching_variant_type;
                 break;
@@ -737,11 +739,10 @@ namespace CHelper {
                 write(n.isAddSpace);
                 break;
             }
-            case Node::NodeTypeId::LITERAL: {
-                const auto &n = *static_cast<const Node::NodeLiteral *>(t.data);
+            case Node::NodeTypeId::EQUAL_ENTRY: {
+                const auto &n = *static_cast<const Node::NodeEqualEntry *>(t.data);
                 write(n.id);
-                write(n.value);
-                write(n.description);
+                write(n.equalDatas);
                 break;
             }
             default:
@@ -764,7 +765,7 @@ namespace CHelper {
             case Node::NodeTypeId::LIST:
             case Node::NodeTypeId::OPTIONAL:
             case Node::NodeTypeId::SINGLE_SYMBOL:
-            case Node::NodeTypeId::LITERAL:
+            case Node::NodeTypeId::EQUAL_ENTRY:
                 nodeWriteBinaryGrammar<Opts>(t, ctx, b, ix);
                 break;
                 CHELPER_PASTE(CHELPER_NODE_WRITE_BINARY_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
@@ -789,9 +790,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::BLOCK>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::BLOCK;
         t.data = node;
     }
@@ -811,9 +809,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::BOOLEAN>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::BOOLEAN;
         t.data = node;
@@ -835,9 +830,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::COMMAND;
         t.data = node;
     }
@@ -857,9 +849,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::COMMAND_NAME>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::COMMAND_NAME;
         t.data = node;
@@ -881,9 +870,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::FLOAT>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::FLOAT;
         t.data = node;
     }
@@ -903,9 +889,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::INTEGER;
         t.data = node;
@@ -927,9 +910,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::INTEGER_WITH_UNIT>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::INTEGER_WITH_UNIT;
         t.data = node;
     }
@@ -949,9 +929,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::ITEM>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::ITEM;
         t.data = node;
@@ -973,9 +950,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::JSON;
         t.data = node;
     }
@@ -995,9 +969,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_BOOLEAN>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::JSON_BOOLEAN;
         t.data = node;
@@ -1019,9 +990,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_FLOAT>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::JSON_FLOAT;
         t.data = node;
     }
@@ -1041,9 +1009,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_INTEGER>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::JSON_INTEGER;
         t.data = node;
@@ -1065,9 +1030,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_LIST>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::JSON_LIST;
         t.data = node;
     }
@@ -1087,9 +1049,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_NULL>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::JSON_NULL;
         t.data = node;
@@ -1111,9 +1070,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_ENTRY>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::JSON_ENTRY;
         t.data = node;
     }
@@ -1133,9 +1089,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_OBJECT>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::JSON_OBJECT;
         t.data = node;
@@ -1157,9 +1110,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::JSON_STRING>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::JSON_STRING;
         t.data = node;
     }
@@ -1179,9 +1129,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::NAMESPACE_ID>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::NAMESPACE_ID;
         t.data = node;
@@ -1203,9 +1150,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::NORMAL_ID>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::NORMAL_ID;
         t.data = node;
     }
@@ -1225,9 +1169,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::POSITION>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::POSITION;
         t.data = node;
@@ -1249,9 +1190,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::RANGE>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::RANGE;
         t.data = node;
     }
@@ -1271,9 +1209,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::RELATIVE_FLOAT>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::RELATIVE_FLOAT;
         t.data = node;
@@ -1295,9 +1230,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::REPEAT>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::REPEAT;
         t.data = node;
     }
@@ -1317,9 +1249,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             destroyNode(node, ctx);
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::STRING>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::STRING;
         t.data = node;
@@ -1341,9 +1270,6 @@ namespace CHelper {
             destroyNode(node, ctx);
             return;
         }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::TARGET_SELECTOR>::isMustAfterSpace;
-        }
         t.nodeTypeId = Node::NodeTypeId::TARGET_SELECTOR;
         t.data = node;
     }
@@ -1363,9 +1289,6 @@ namespace CHelper {
         if (bool(ctx.error)) [[unlikely]] {
             delete node;
             return;
-        }
-        if (!n.isMustAfterSpace.has_value()) [[unlikely]] {
-            n.isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::TEXT>::isMustAfterSpace;
         }
         t.nodeTypeId = Node::NodeTypeId::TEXT;
         t.data = node;
@@ -1394,10 +1317,8 @@ namespace CHelper {
             std::u16string symbol;
             read(node->id, symbol, node->description, node->isAddSpace);
             if (!symbol.empty()) node->symbol = symbol.front();
-            node->normalId = NormalId::make(symbol, node->description);
-        } else if constexpr (std::is_same_v<T, Node::NodeLiteral>) {
-            read(node->id, node->value, node->description);
-            node->normalId = NormalId::make(node->value, node->description);
+        } else if constexpr (std::is_same_v<T, Node::NodeEqualEntry>) {
+            read(node->id, node->equalDatas);
         }
         if (bool(ctx.error)) {
             destroyNode(node, ctx);
@@ -1434,10 +1355,7 @@ namespace CHelper {
         }
         switch (typeId) {
             CHELPER_PASTE(CHELPER_NODE_READ_BINARY_GRAMMAR_CASE, CHELPER_GRAMMAR_NODE_TYPES)
-            case Node::NodeTypeId::LITERAL:
-                readBinaryGrammarNode<Node::NodeLiteral, Opts>(t, ctx, it, end);
-                break;
-                CHELPER_PASTE(CHELPER_NODE_READ_BINARY_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_NODE_READ_BINARY_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
             default:
                 ctx.error = glz::error_code::no_matching_variant_type;
                 break;
@@ -1540,9 +1458,6 @@ namespace CHelper {
             destroyNode(node, ctx);                                                                                  \
             return;                                                                                                  \
         }                                                                                                            \
-        if (!node->isMustAfterSpace.has_value()) [[unlikely]] {                                                      \
-            node->isMustAfterSpace = Node::NodeTypeDetail<Node::NodeTypeId::v1>::isMustAfterSpace;                   \
-        }                                                                                                            \
         t.nodeTypeId = Node::NodeTypeId::v1;                                                                         \
         t.data = node;                                                                                               \
         break;                                                                                                       \
@@ -1560,14 +1475,6 @@ namespace CHelper {
         if (bool(ctx.error)) {
             destroyNode(node, ctx);
             return;
-        }
-        if constexpr (std::is_same_v<T, Node::NodeSingleSymbol>) {
-            node->normalId = NormalId::make(std::u16string(1, node->symbol), node->description);
-        } else if constexpr (std::is_same_v<T, Node::NodeLiteral>) {
-            node->normalId = NormalId::make(node->value, node->description);
-        } else if constexpr (std::is_same_v<T, Node::NodeList>) {
-            node->nodeElementOrRight = Node::NodeOr({node->nodeElement, node->nodeRight}, false);
-            node->nodeSeparatorOrRight = Node::NodeOr({node->nodeSeparator, node->nodeRight}, false);
         }
         t.nodeTypeId = T::nodeTypeId;
         t.data = node;
@@ -1597,10 +1504,7 @@ namespace CHelper {
         }
         switch (id.value()) {
             CHELPER_PASTE(CHELPER_NODE_READ_GRAMMAR_CASE, CHELPER_GRAMMAR_NODE_TYPES)
-            case Node::NodeTypeId::LITERAL:
-                readGrammarNode<Node::NodeLiteral, Opts, Fmt>(t, ctx, it, end);
-                break;
-                CHELPER_PASTE(CHELPER_NODE_READ_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
+            CHELPER_PASTE(CHELPER_NODE_READ_CASE, CHELPER_SERIALIZABLE_NODE_TYPES)
             default:
                 CHELPER_UNREACHABLE();
         }

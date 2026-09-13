@@ -187,15 +187,6 @@ namespace CHelper::Node {
           nodeSeparator(nodeSeparator),
           nodeValue(nodeValue) {}
 
-    EqualData::EqualData(const std::u16string_view name,
-                         const std::optional<std::u16string> &description,
-                         bool canUseNotEqual,
-                         NodeWithType nodeValue)
-        : name(name.data(), name.size()),
-          description(copyPmrU16StringOptional(description)),
-          canUseNotEqual(canUseNotEqual),
-          nodeValue(nodeValue) {}
-
     NodeText NodeEqualEntry::nodeEqual(
             "TARGET_SELECTOR_ARGUMENT_EQUAL", u"等于",
             NormalId::make(u"=", u"等于"),
@@ -211,15 +202,6 @@ namespace CHelper::Node {
                 return ASTNode::andNode(node, childNodes, tokenReader.collect());
             });
     NodeOr NodeEqualEntry::nodeEqualOrNotEqual({nodeEqual, nodeNotEqual}, false);
-
-    NodeEqualEntry::NodeEqualEntry(std::pmr::vector<EqualData> equalDatas)
-        : equalDatas(std::move(equalDatas)) {
-        nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
-        for (const auto &item: this->equalDatas) {
-            nodeKeyContent->push_back(NormalId::make(item.name, item.description));
-        }
-        nodeKey = NodeNormalId("KEY", u"参数名", nodeKeyContent, true);
-    }
 
     NodeList::NodeList(const NodeWithType &nodeLeft,
                        const NodeWithType &nodeElement,
@@ -275,12 +257,6 @@ namespace CHelper::Node {
           symbol(symbol),
           normalId(getNormalId(symbol, description)),
           isAddSpace(isAddSpace) {}
-
-    NodeLiteral::NodeLiteral(const std::u16string_view value,
-                             const std::optional<std::u16string> &description)
-        : NodeSerializable(std::nullopt, description, false),
-          value(value.data(), value.size()),
-          normalId(NormalId::make(this->value, this->description)) {}
 
     NodeOptional::NodeOptional(NodeWithType optionalNode)
         : optionalNode(optionalNode) {}

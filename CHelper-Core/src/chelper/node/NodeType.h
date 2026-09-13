@@ -317,7 +317,7 @@ namespace CHelper {
         };
 
         template<>
-        struct NodeTypeDetail<NodeTypeId::EQUAL_ENTRY> : UnserializableNodeTypeDetail {
+        struct NodeTypeDetail<NodeTypeId::EQUAL_ENTRY> : GrammarNodeTypeDetail {
             using Type = NodeEqualEntry;
             static_assert(Type::nodeTypeId == NodeTypeId::EQUAL_ENTRY, "nodTypeId not equal");
             static constexpr auto name = "EQUAL_ENTRY";
@@ -349,13 +349,6 @@ namespace CHelper {
             using Type = NodeOptional;
             static_assert(Type::nodeTypeId == NodeTypeId::OPTIONAL, "nodTypeId not equal");
             static constexpr auto name = "OPTIONAL";
-        };
-
-        template<>
-        struct NodeTypeDetail<NodeTypeId::LITERAL> : GrammarNodeTypeDetail {
-            using Type = NodeLiteral;
-            static_assert(Type::nodeTypeId == NodeTypeId::LITERAL, "nodTypeId not equal");
-            static constexpr auto name = "LITERAL";
         };
 
         const char *getNodeTypeName(NodeTypeId::NodeTypeId id);

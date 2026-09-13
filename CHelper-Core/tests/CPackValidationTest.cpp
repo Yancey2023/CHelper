@@ -201,13 +201,18 @@ namespace CHelper::Test {
 
     TEST(CPackValidationTest, GrammarResourceCanAddNodeWithoutCxxChanges) {
         // 只增加资源节点和 ID 引用，C++ 不需要认识 custom。
+        // NORMAL_ID 用内联键表匹配整段token；EQUAL_ENTRY 用键表+值节点表达键值对
         const std::string grammar = R"([
           {"id":"dynamic","type":"grammar","content":{
             "id":"dynamic","node":[
-              {"type":"LITERAL","id":"CUSTOM_LITERAL","value":"custom"},
+              {"type":"NORMAL_ID","id":"CUSTOM_KEY","contents":[
+                {"name":"custom","description":"自定义键"}
+              ]},
               {"type":"SINGLE_SYMBOL","id":"CUSTOM_EQUAL","symbol":"=","isAddSpace":false},
               {"type":"INTEGER","id":"CUSTOM_INTEGER"},
-              {"type":"AND","id":"CUSTOM_ROOT","nodes":["CUSTOM_LITERAL","CUSTOM_EQUAL","CUSTOM_INTEGER"]}
+              {"type":"EQUAL_ENTRY","id":"CUSTOM_ROOT","values":[
+                {"name":"custom","description":"自定义键","canUseNotEqual":false,"value":"CUSTOM_INTEGER"}
+              ]}
             ],"start":"CUSTOM_ROOT"}}
         ])";
         auto cpackJson = makeCpackJson("[]", "[]", R"([
@@ -222,6 +227,23 @@ namespace CHelper::Test {
         const auto *root = cpack->getGrammar("dynamic");
         ASSERT_NE(root, nullptr);
         EXPECT_TRUE(Parser::parse(u"custom=123", *root).errorReasons.empty());
+    }
+
+    TEST(CPackValidationTest, EmptyEqualEntryValues) {
+        //equalDatas为空会导致键表为空，任何键都无法匹配，必须在加载阶段拒绝
+        std::string cpackJson = makeCpackJson("[]", "[]", R"([
+          {"name":["list"],"description":"list","syntax":["/list"],"node":{}}
+        ])");
+        const auto grammarPosition = cpackJson.rfind("\n}");
+        ASSERT_NE(grammarPosition, std::string::npos);
+        cpackJson.insert(grammarPosition, R"(,
+  "grammar": [
+    {"id":"broken","type":"grammar","content":{
+      "id":"broken","node":[
+        {"type":"INTEGER","id":"CUSTOM_INTEGER"}
+      ],"start":"CUSTOM_ROOT"}}
+  ])");
+        expectCpackRejected(cpackJson);
     }
 
     TEST(CPackValidationTest, GrammarGraphBinaryRoundTrip) {

@@ -172,13 +172,12 @@ namespace CHelper {
         struct EqualData {
             std::pmr::u16string name;
             std::optional<std::pmr::u16string> description;
-            bool canUseNotEqual;
+            bool canUseNotEqual = false;
+            //序列化用：值节点在同文件节点表里的id，初始化阶段解析到nodeValue
+            std::pmr::string valueNodeId;
             NodeWithType nodeValue;
 
-            EqualData(std::u16string_view name,
-                      const std::optional<std::u16string> &description,
-                      bool canUseNotEqual,
-                      NodeWithType nodeValue);
+            EqualData() = default;
         };
 
         class NodeNormalId : public NodeSerializable {
@@ -234,7 +233,7 @@ namespace CHelper {
                     });
         };
 
-        class NodeEqualEntry : public NodeBase {
+        class NodeEqualEntry : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::EQUAL_ENTRY;
             static NodeText nodeEqual;
@@ -245,8 +244,6 @@ namespace CHelper {
             NodeNormalId nodeKey;
 
             NodeEqualEntry() = default;
-
-            explicit NodeEqualEntry(std::pmr::vector<EqualData> equalDatas);
         };
 
         class NodeList : public NodeSerializable {
@@ -298,17 +295,6 @@ namespace CHelper {
             NodeSingleSymbol(char16_t symbol,
                              const std::optional<std::u16string> &description,
                              bool isAddSpace = true);
-        };
-
-        class NodeLiteral : public NodeSerializable {
-        public:
-            static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::LITERAL;
-            std::pmr::u16string value;
-            std::shared_ptr<NormalId> normalId;
-
-            NodeLiteral() = default;
-            NodeLiteral(std::u16string_view value,
-                        const std::optional<std::u16string> &description = std::nullopt);
         };
 
         class NodeOptional : public NodeSerializable {

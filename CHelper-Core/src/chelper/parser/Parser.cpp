@@ -941,26 +941,6 @@ namespace CHelper::Parser {
     };
 
     template<>
-    struct Parser<Node::NodeLiteral> {
-        static ASTNode getASTNode(const Node::NodeLiteral &node, TokenReader &tokenReader) {
-            tokenReader.push();
-            tokenReader.skipSpace();
-            std::u16string actual;
-            while (tokenReader.ready() && tokenReader.peek()->type != TokenType::SPACE && tokenReader.peek()->type != TokenType::LF) {
-                actual.append(tokenReader.read()->content);
-                if (actual.size() >= node.value.size()) break;
-            }
-            TokensView tokens = tokenReader.collect();
-            const std::u16string_view expected(node.value.data(), node.value.size());
-            if (std::u16string_view(actual) == expected) return ASTNode::simpleNode(node, tokens);
-            if (actual.empty()) {
-                return ASTNode::simpleNode(node, tokens, ErrorReason::incomplete(tokens, fmt::format(u"命令不完整，需要{}", expected)));
-            }
-            return ASTNode::simpleNode(node, tokens, ErrorReason::contentError(tokens, fmt::format(u"内容不匹配，需要{}，但当前内容为{}", expected, actual)));
-        }
-    };
-
-    template<>
     struct Parser<Node::NodeOptional> {
         static ASTNode getASTNode(const Node::NodeOptional &node, TokenReader &tokenReader) {
             tokenReader.push();
