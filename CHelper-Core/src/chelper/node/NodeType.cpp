@@ -18,28 +18,25 @@
 
 #include <chelper/node/NodeType.h>
 
-#define CHELPER_GET_NAME(v1) \
-    case NodeTypeId::v1:     \
-        return NodeTypeDetail<CHelper::Node::NodeTypeId::v1>::name;
-
-#define CHELPER_GET_NODE_TYPE_BY_NAME(v1)                                             \
-    if (CHelper::Node::NodeTypeDetail<CHelper::Node::NodeTypeId::v1>::name == name) { \
-        return CHelper::Node::NodeTypeId::v1;                                         \
-    }
-
 namespace CHelper::Node {
 
     const char *getNodeTypeName(const NodeTypeId::NodeTypeId id) {
-        switch (id) {
-            CHELPER_PASTE(CHELPER_GET_NAME, CHELPER_NODE_TYPES)
-            default:
-                return "UNKNOWN";
-        }
+        return dispatchNodeType(
+                id,
+                [&]<class NodeType>() { return NodeTypeDetail<NodeType::nodeTypeId>::name; },
+                [] { return "UNKNOWN"; });
     }
 
     std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &name) {
-        CHELPER_PASTE(CHELPER_GET_NODE_TYPE_BY_NAME, CHELPER_NODE_TYPES)
-        return std::nullopt;
+        std::optional<NodeTypeId::NodeTypeId> result;
+        anyNodeType([&]<class NodeType>() {
+            if (NodeTypeDetail<NodeType::nodeTypeId>::name != name) {
+                return false;
+            }
+            result = NodeType::nodeTypeId;
+            return true;
+        });
+        return result;
     }
 
 }// namespace CHelper::Node

@@ -19,11 +19,6 @@
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
 
-#define CHELPER_LINT(v1)                                                                                          \
-    case Node::NodeTypeId::v1:                                                                                    \
-        isDirty = Linter<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::lint(astNode, errorReasons); \
-        break;
-
 namespace CHelper::Linter {
 
     template<class NodeType>
@@ -197,12 +192,9 @@ namespace CHelper::Linter {
 #ifdef CHelperTest
             Profile::push("collect id errors: {}", FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif
-            bool isDirty = false;
-            switch (astNode.node.nodeTypeId) {
-                CHELPER_PASTE(CHELPER_LINT, CHELPER_NODE_TYPES)
-                default:
-                    CHELPER_UNREACHABLE();
-            }
+            bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+                return Linter<NodeType>::lint(astNode, errorReasons);
+            });
 #ifdef CHelperTest
             Profile::pop();
 #endif

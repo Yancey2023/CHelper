@@ -262,16 +262,11 @@ namespace CHelper::Node {
         : optionalNode(optionalNode) {}
 
 #ifdef CHelperDebug
-#define CHELPER_IS_BASE_OF_NODE_SERIALIZABLE(v1) \
-    case Node::NodeTypeId::v1:                   \
-        return std::is_base_of_v<NodeSerializable, NodeTypeDetail<Node::NodeTypeId::v1>::Type>;
-
     bool isNodeSerializable(NodeWithType innerNode) {
-        switch (innerNode.nodeTypeId) {
-            CHELPER_PASTE(CHELPER_IS_BASE_OF_NODE_SERIALIZABLE, CHELPER_NODE_TYPES)
-            default:
-                return false;
-        }
+        return Node::dispatchNodeType(
+                innerNode.nodeTypeId,
+                [&]<class NodeType>() { return std::is_base_of_v<NodeSerializable, NodeType>; },
+                [] { return false; });
     }
 #endif
 

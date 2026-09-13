@@ -22,6 +22,7 @@
 #define CHELPER_NODETYPE_H
 
 #include <chelper/node/CommandNode.h>
+#include <chelper/util/TypeList.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -350,6 +351,83 @@ namespace CHelper {
             static_assert(Type::nodeTypeId == NodeTypeId::OPTIONAL, "nodTypeId not equal");
             static constexpr auto name = "OPTIONAL";
         };
+
+        // ============ 节点类型注册表 ============
+        // AllNodeTypes 是"全部节点类型"的编译期列表，逐项由 NodeTypeDetail 特化推导，
+        // 顺序与 NodeTypeId 枚举一致。新增节点类型只需要：
+        //   1. 在 NodeWithType.h 的 CHELPER_NODE_TYPES 列表末尾追加枚举项；
+        //   2. 实现节点类（带 static constexpr nodeTypeId 成员）；
+        //   3. 为其新增 NodeTypeDetail 特化（其中的 static_assert 校验 Type::nodeTypeId 一致）。
+        // 此处与各分发点都不需要再手工登记类型。
+        namespace detail {
+            template<std::size_t... Is>
+            constexpr auto makeNodeTypeList(std::index_sequence<Is...>)
+                    -> Meta::TypeList<typename NodeTypeDetail<static_cast<NodeTypeId::NodeTypeId>(Is)>::Type...>;
+        }
+
+        using AllNodeTypes = decltype(detail::makeNodeTypeList(
+                std::make_index_sequence<static_cast<std::size_t>(NodeTypeId::NodeTypeIdCount)>{}));
+
+        static_assert(Meta::typeListSize<AllNodeTypes> == static_cast<std::size_t>(NodeTypeId::NodeTypeIdCount),
+                      "NodeTypeDetail 未覆盖全部 NodeTypeId 枚举项");
+
+        //运行时 nodeTypeId -> 具体节点类型的统一分发，替代各模块重复的 switch(NodeTypeId)。
+        //onMatch 以 <class NodeType> 模板形参接收 id 对应的节点类型；
+        //各分支返回类型必须一致（与手写 switch 的返回约束相同）。
+        //两参版本：id 非法（数据损坏）时 Debug 直接抛异常，Release 走 CHELPER_UNREACHABLE，
+        //与旧 switch 的 default: CHELPER_UNREACHABLE() 行为一致；
+        //三参版本：id 非法时调用 onMiss，用于反序列化等不可信输入场景。
+        namespace detail {
+#define CHELPER_NODE_DISPATCH_CASE(v1) \
+    case NodeTypeId::v1:               \
+        return std::forward<F>(onMatch).template operator()<NodeTypeDetail<NodeTypeId::v1>::Type>();
+
+            template<class F>
+            CHELPER_FORCEINLINE decltype(auto) dispatchNodeType(NodeTypeId::NodeTypeId id, F &&onMatch) {
+                switch (id) {
+                    CHELPER_NODE_TYPES(CHELPER_NODE_DISPATCH_CASE)
+                    default:
+#ifdef CHelperDebug
+                        throw std::runtime_error("invalid nodeTypeId");
+#else
+                        CHELPER_UNREACHABLE();
+#endif
+                }
+            }
+
+            template<class F, class G>
+            CHELPER_FORCEINLINE decltype(auto) dispatchNodeType(NodeTypeId::NodeTypeId id, F &&onMatch, G &&onMiss) {
+                switch (id) {
+                    CHELPER_NODE_TYPES(CHELPER_NODE_DISPATCH_CASE)
+                    default:
+                        return std::forward<G>(onMiss)();
+                }
+            }
+
+#undef CHELPER_NODE_DISPATCH_CASE
+        }// namespace detail
+
+        template<class F>
+        CHELPER_FORCEINLINE decltype(auto) dispatchNodeType(NodeTypeId::NodeTypeId id, F &&onMatch) {
+            return detail::dispatchNodeType(id, std::forward<F>(onMatch));
+        }
+
+        template<class F, class G>
+        CHELPER_FORCEINLINE decltype(auto) dispatchNodeType(NodeTypeId::NodeTypeId id, F &&onMatch, G &&onMiss) {
+            return detail::dispatchNodeType(id, std::forward<F>(onMatch), std::forward<G>(onMiss));
+        }
+
+        //编译期遍历全部节点类型：对每个类型 T 调用一次 f.template operator()<T>()
+        template<class F>
+        constexpr void forEachNodeType(F &&f) {
+            Meta::forEachType<AllNodeTypes>(std::forward<F>(f));
+        }
+
+        //带短路的编译期遍历：f<T>() 返回 true 时停止，返回是否发生过命中
+        template<class F>
+        constexpr bool anyNodeType(F &&f) {
+            return Meta::anyType<AllNodeTypes>(std::forward<F>(f));
+        }
 
         const char *getNodeTypeName(NodeTypeId::NodeTypeId id);
 

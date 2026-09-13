@@ -20,10 +20,6 @@
 #include <chelper/command_structure/StructureBuilder.h>
 #include <chelper/node/NodeType.h>
 
-#define CHELPER_COLLECT_STRUCTURE(v1) \
-    case Node::NodeTypeId::v1:        \
-        return CommandStructure<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::collectStructure(astNode, *reinterpret_cast<Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data), structure, isMustHave);
-
 namespace CHelper::CommandStructure {
 
     bool collectNodeStructure(const ASTNode *astNode, const Node::NodeWithType &node, StructureBuilder &structure, bool isMustHave);
@@ -364,11 +360,11 @@ namespace CHelper::CommandStructure {
     };
 
     bool collectNodeStructure(const ASTNode *astNode, const Node::NodeWithType &node, StructureBuilder &structure, bool isMustHave) {
-        switch (node.nodeTypeId) {
-            CHELPER_PASTE(CHELPER_COLLECT_STRUCTURE, CHELPER_NODE_TYPES)
-            default:
-                CHELPER_UNREACHABLE();
-        }
+        return Node::dispatchNodeType(node.nodeTypeId, [&]<class NodeType>() {
+            return CommandStructure<NodeType>::collectStructure(astNode,
+                                                                *reinterpret_cast<NodeType *>(node.data),
+                                                                structure, isMustHave);
+        });
     }
 
     std::u16string getStructure(const ASTNode &astNode) {

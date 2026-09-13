@@ -19,11 +19,6 @@
 #include <chelper/auto_suggestion/AutoSuggestion.h>
 #include <chelper/node/NodeType.h>
 
-#define CHELPER_COLLECT_AUTO_SUGGESTION(v1)                                                                                                   \
-    case Node::NodeTypeId::v1:                                                                                                                \
-        isDirty = AutoSuggestion<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::collectSuggestions(astNode, index, suggestions); \
-        break;
-
 namespace CHelper::AutoSuggestion {
 
     static std::shared_ptr<NormalId> spaceId = NormalId::make(u" ", u"空格");
@@ -505,15 +500,12 @@ namespace CHelper::AutoSuggestion {
             return;
         }
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-            bool isDirty;
 #ifdef CHelperTest
             Profile::push("collect suggestions: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif
-            switch (astNode.node.nodeTypeId) {
-                CHELPER_PASTE(CHELPER_COLLECT_AUTO_SUGGESTION, CHELPER_NODE_TYPES)
-                default:
-                    CHELPER_UNREACHABLE();
-            }
+            bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+                return AutoSuggestion<NodeType>::collectSuggestions(astNode, index, suggestions);
+            });
 #ifdef CHelperTest
             Profile::pop();
 #endif

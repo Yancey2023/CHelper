@@ -19,11 +19,6 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 
-#define CHELPER_COLLECT_SYNTAX(v1)                                                                                              \
-    case Node::NodeTypeId::v1:                                                                                                  \
-        isDirty = SyntaxToken<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::collectSyntax(astNode, syntaxResult); \
-        break;
-
 namespace CHelper::SyntaxHighlight {
 
     template<class NodeType>
@@ -206,12 +201,9 @@ namespace CHelper::SyntaxHighlight {
 #ifdef CHelperTest
         Profile::push("collect syntax result: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif
-        bool isDirty;
-        switch (astNode.node.nodeTypeId) {
-            CHELPER_PASTE(CHELPER_COLLECT_SYNTAX, CHELPER_NODE_TYPES)
-            default:
-                CHELPER_UNREACHABLE();
-        }
+        bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+            return SyntaxToken<NodeType>::collectSyntax(astNode, syntaxResult);
+        });
 #ifdef CHelperTest
         Profile::pop();
 #endif

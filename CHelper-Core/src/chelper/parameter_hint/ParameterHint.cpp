@@ -19,11 +19,6 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/parameter_hint/ParameterHint.h>
 
-#define CHELPER_GET_PARAMETER_HINT(v1)                                                                              \
-    case Node::NodeTypeId::v1:                                                                                      \
-        parameterHint = ParameterHint<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::getHint(astNode); \
-        break;
-
 namespace CHelper::ParameterHint {
 
     template<class NodeType, class = void>
@@ -98,12 +93,9 @@ namespace CHelper::ParameterHint {
 #ifdef CHelperTest
             Profile::push("get parameter hint: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
 #endif
-            std::optional<std::u16string> parameterHint;
-            switch (astNode.node.nodeTypeId) {
-                CHELPER_PASTE(CHELPER_GET_PARAMETER_HINT, CHELPER_NODE_TYPES)
-                default:
-                    CHELPER_UNREACHABLE();
-            }
+            std::optional<std::u16string> parameterHint = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+                return ParameterHint<NodeType>::getHint(astNode);
+            });
 #ifdef CHelperTest
             Profile::pop();
 #endif

@@ -39,10 +39,6 @@
 #define DEBUG_GET_NODE_END(node, index) ;
 #endif
 
-#define CHELPER_GET_AST_NODE(v1) \
-    case Node::NodeTypeId::v1:   \
-        return Parser<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::getASTNode(*reinterpret_cast<const typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data), tokenReader);
-
 namespace CHelper::Parser {
 
     ASTNode parse(const Node::NodeWithType &node, TokenReader &tokenReader);
@@ -998,11 +994,9 @@ namespace CHelper::Parser {
             throw std::runtime_error("node data is null");
         }
 #endif
-        switch (node.nodeTypeId) {
-            CHELPER_PASTE(CHELPER_GET_AST_NODE, CHELPER_NODE_TYPES)
-            default:
-                CHELPER_UNREACHABLE();
-        }
+        return Node::dispatchNodeType(node.nodeTypeId, [&]<class NodeType>() {
+            return Parser<NodeType>::getASTNode(*reinterpret_cast<const NodeType *>(node.data), tokenReader);
+        });
     }
 
     ASTNode parse(const std::u16string_view content, const Node::NodeWithType &mainNode) {

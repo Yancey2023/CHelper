@@ -21,15 +21,6 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
 
-//反序列化只读原始字段：isMustAfterSpace缺省值等类型相关的数据补齐统一在初始化阶段完成
-#define CHELPER_INIT(v1)                                                                                  \
-    case Node::NodeTypeId::v1: {                                                                          \
-        auto *typedNode = reinterpret_cast<NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data);      \
-        applyTypeDefault(*typedNode);                                                                     \
-        NodeInitialization<typename NodeTypeDetail<Node::NodeTypeId::v1>::Type>::init(*typedNode, cpack); \
-        break;                                                                                            \
-    }
-
 namespace CHelper::Node {
 
     //仅对NodeSerializable派生类型生效，非序列化节点(NodeWrapped/NodeEntry等)编译期跳过
@@ -512,11 +503,11 @@ namespace CHelper::Node {
     };
 
     void initNode(Node::NodeWithType node, const CPack &cpack) {
-        switch (node.nodeTypeId) {
-            CHELPER_PASTE(CHELPER_INIT, CHELPER_NODE_TYPES)
-            default:
-                CHELPER_UNREACHABLE();
-        }
+        Node::dispatchNodeType(node.nodeTypeId, [&]<class NodeType>() {
+            auto *typedNode = reinterpret_cast<NodeType *>(node.data);
+            applyTypeDefault(*typedNode);
+            NodeInitialization<NodeType>::init(*typedNode, cpack);
+        });
     }
 
 }// namespace CHelper::Node

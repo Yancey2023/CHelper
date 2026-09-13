@@ -24,50 +24,57 @@
 #include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
-#define CHELPER_NODE_TYPES WRAPPED,           \
-                           BLOCK,             \
-                           BOOLEAN,           \
-                           COMMAND,           \
-                           COMMAND_NAME,      \
-                           FLOAT,             \
-                           INTEGER,           \
-                           INTEGER_WITH_UNIT, \
-                           ITEM,              \
-                           LF,                \
-                           NAMESPACE_ID,      \
-                           NORMAL_ID,         \
-                           PER_COMMAND,       \
-                           POSITION,          \
-                           RELATIVE_FLOAT,    \
-                           REPEAT,            \
-                           STRING,            \
-                           TARGET_SELECTOR,   \
-                           TEXT,              \
-                           RANGE,             \
-                           JSON,              \
-                           JSON_BOOLEAN,      \
-                           JSON_ELEMENT,      \
-                           JSON_ENTRY,        \
-                           JSON_FLOAT,        \
-                           JSON_INTEGER,      \
-                           JSON_LIST,         \
-                           JSON_NULL,         \
-                           JSON_OBJECT,       \
-                           JSON_STRING,       \
-                           AND,               \
-                           ANY,               \
-                           ENTRY,             \
-                           EQUAL_ENTRY,       \
-                           LIST,              \
-                           OR,                \
-                           SINGLE_SYMBOL,     \
-                           OPTIONAL
+//所有节点类型的唯一登记处：新增节点类型时在列表末尾追加一行，并为其补充 NodeTypeDetail 特化。
+//枚举项顺序即序列化格式中的类型 id（二进制格式直接写出该数值），禁止插入或重排已有项。
+#define CHELPER_NODE_TYPES(X) \
+    X(WRAPPED)                \
+    X(BLOCK)                  \
+    X(BOOLEAN)                \
+    X(COMMAND)                \
+    X(COMMAND_NAME)           \
+    X(FLOAT)                  \
+    X(INTEGER)                \
+    X(INTEGER_WITH_UNIT)      \
+    X(ITEM)                   \
+    X(LF)                     \
+    X(NAMESPACE_ID)           \
+    X(NORMAL_ID)              \
+    X(PER_COMMAND)            \
+    X(POSITION)               \
+    X(RELATIVE_FLOAT)         \
+    X(REPEAT)                 \
+    X(STRING)                 \
+    X(TARGET_SELECTOR)        \
+    X(TEXT)                   \
+    X(RANGE)                  \
+    X(JSON)                   \
+    X(JSON_BOOLEAN)           \
+    X(JSON_ELEMENT)           \
+    X(JSON_ENTRY)             \
+    X(JSON_FLOAT)             \
+    X(JSON_INTEGER)           \
+    X(JSON_LIST)              \
+    X(JSON_NULL)              \
+    X(JSON_OBJECT)            \
+    X(JSON_STRING)            \
+    X(AND)                    \
+    X(ANY)                    \
+    X(ENTRY)                  \
+    X(EQUAL_ENTRY)            \
+    X(LIST)                   \
+    X(OR)                     \
+    X(SINGLE_SYMBOL)          \
+    X(OPTIONAL)
 
 namespace CHelper::Node {
 
     namespace NodeTypeId {
         enum NodeTypeId : uint8_t {
-            CHELPER_NODE_TYPES
+#define CHELPER_NODE_ENUM_ENTRY(v1) v1,
+            CHELPER_NODE_TYPES(CHELPER_NODE_ENUM_ENTRY)
+#undef CHELPER_NODE_ENUM_ENTRY
+            //哨兵项：节点类型总数，编译期遍历与运行时合法性检查都以它为界
+            NodeTypeIdCount,
         };
     }// namespace NodeTypeId
 
