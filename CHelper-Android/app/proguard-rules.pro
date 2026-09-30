@@ -41,6 +41,14 @@
 
 -keep class yancey.chelper.network.library.service.**{ *; }
 
+# Retrofit reads DTO types from generic signatures at runtime, including nested
+# BaseResult<T> in suspend methods. Keep their class identities even when callers
+# only consume status/message; otherwise R8 can replace T with java.lang.Object.
+# Members remain eligible for optimization and obfuscation. Serialization's
+# bundled rules retain the companions and serializers required for JSON decoding.
+-keepattributes Signature
+-keep,allowoptimization,allowobfuscation @kotlinx.serialization.Serializable class yancey.chelper.network.library.data.**
+
 # ----- umeng -----
 
 -keep class com.umeng.** { *; }
