@@ -95,6 +95,8 @@ namespace CHelper::Test {
         int64_t netBytes = 0;
         std::vector<double> samplesMs;
 
+        explicit Stats(std::string name) : name(std::move(name)) {}
+
         void add(double ms, const AllocSnapshot &allocs) {
             if (count == 0 || ms < minMs) {
                 minMs = ms;

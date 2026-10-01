@@ -291,7 +291,7 @@ namespace CHelper::Test {
                     std::unique_ptr<CommandContext> context(core->createContext(command));
                     auto description = context->getParamHint(command.length());// NOLINT(*-unused-local-non-trivial-variable)
                     auto errorReasons = context->getErrorReasons();
-                    context->getSuggestions(command.length());
+                    (void) context->getSuggestions(command.length());
                     auto structure = context->getStructure();// NOLINT(*-unused-local-non-trivial-variable)
                 }
             }

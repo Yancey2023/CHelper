@@ -92,6 +92,16 @@
 #include <fmt/color.h>
 #endif
 // 日志库
+#include <spdlog/common.h>
+#if FMT_VERSION >= 120200 && !defined(SPDLOG_USE_STD_FORMAT)
+namespace spdlog::details {
+    // spdlog 1.17 predates fmt 12.2's deprecated implicit format-string conversion.
+    template<typename... Args>
+    inline spdlog::string_view_t to_string_view(const fmt::fstring<Args...> &format) noexcept {
+        return format.get();
+    }
+}// namespace spdlog::details
+#endif
 #include <spdlog/spdlog.h>
 // 哈希算法
 #define XXH_STATIC_LINKING_ONLY
