@@ -5,7 +5,7 @@ import sys
 import zipfile
 from urllib.request import urlretrieve
 
-NDK_VERSION = "r29"
+NDK_VERSION = "r30"
 
 
 def ensure_download_android_ndk(toolchain_dir: str):

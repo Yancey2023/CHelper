@@ -17,7 +17,11 @@
  */
 
 #include <chelper/CHelperCore.h>
-#include <emscripten/emscripten.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/em_macros.h>
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
 
 #include <cstdint>
 #include <cstring>

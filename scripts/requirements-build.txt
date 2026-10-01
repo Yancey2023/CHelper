@@ -1,0 +1,3 @@
+# Shared native build tools for local builds and CI.
+cmake==4.4.3
+ninja==1.13.2

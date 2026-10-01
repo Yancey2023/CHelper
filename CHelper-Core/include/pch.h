@@ -43,7 +43,7 @@
 #if defined(_MSC_VER) && !defined(__clang__)
 #define CHELPER_FORCEINLINE __forceinline
 #else
-#define CHELPER_FORCEINLINE [[gnu::always_inline]]
+#define CHELPER_FORCEINLINE inline __attribute__((always_inline))
 #endif
 
 // 禁止编译器丢弃"只为强制生成符号、本身永不被调用"的函数：

@@ -2,10 +2,14 @@ name: Deploy CHelper-Doc
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     paths:
-      - '.github/workflows/deploy-doc.yml'
-      - 'CHelper-Doc/**'
+      - ".github/workflows/deploy-doc.yml"
+      - "CHelper-Doc/**"
+      - ".node-version"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
 jobs:
   deploy:
@@ -19,19 +23,20 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          cache: 'pnpm'
+          node-version-file: ".node-version"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         working-directory: ${{ github.workspace }}/CHelper-Doc
-        run: npx vitepress build --base=/chelper_doc/
-  
+        run: pnpm exec vitepress build --base=/chelper_doc/
+
       - name: Deploy
-        uses: easingthemes/ssh-deploy@main
+        uses: easingthemes/ssh-deploy@v6.0.3
         env:
           SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
           ARGS: "-avz --delete"

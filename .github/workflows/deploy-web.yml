@@ -2,10 +2,14 @@ name: Deploy CHelper-Web
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     paths:
-      - '.github/workflows/deploy-web.yml'
-      - 'CHelper-Web/**'
+      - ".github/workflows/deploy-web.yml"
+      - "CHelper-Web/**"
+      - ".node-version"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
 permissions:
   contents: read
@@ -13,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
@@ -32,16 +36,17 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          cache: 'pnpm'
+          node-version-file: ".node-version"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build For GitHub Page
         working-directory: ${{ github.workspace }}/CHelper-Web
-        run: npx vite build --base=/${{ github.event.repository.name }}/ --mode production
+        run: pnpm run build --base=/${{ github.event.repository.name }}/ --mode production
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
@@ -49,7 +54,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: './CHelper-Web/dist'
+          path: "./CHelper-Web/dist"
 
       - name: Deploy to GitHub Pages
         id: deployment
@@ -57,10 +62,10 @@ jobs:
 
       - name: Build For My Server
         working-directory: ${{ github.workspace }}/CHelper-Web
-        run: npx vite build --base=/chelper/ --mode my_server
-  
+        run: pnpm run build --base=/chelper/ --mode my_server
+
       - name: Deploy
-        uses: easingthemes/ssh-deploy@main
+        uses: easingthemes/ssh-deploy@v6.0.3
         env:
           SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
           ARGS: "-avz --delete"

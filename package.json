@@ -1,7 +1,7 @@
 {
   "name": "chelper",
   "version": "1.0.0",
-  "packageManager": "pnpm@12.4.1+sha512.LoHjmdc/6DkNqyXgaqeIq3pZCCSNL1o3D4K0gRR6ano2e/gEj5pv22Rg8hpm8FQt7bi5TKLIcjWWdBkgsWVtTA==",
+  "packageManager": "pnpm@12.8.1",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @chelper/web dev",

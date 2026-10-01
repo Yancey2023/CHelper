@@ -1,13 +1,11 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.31)
 project(CHelper LANGUAGES CXX)
 
 # set options
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-option(CHELPER_RESTRICT_PLATFORM_EXPORTS
-       "Export only JNIEXPORT/EMSCRIPTEN_KEEPALIVE platform entry points" ON)
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
@@ -30,25 +28,21 @@ endif()
 include(FetchContent)
 find_package(Git REQUIRED)
 set(CHELPER_THIRDPARTY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty_downloads")
-# fresh checkout 下该目录（.gitignore 中的生成目录）不存在，且 execute_process
-# 不会自动创建 WORKING_DIRECTORY，必须在使用前显式创建，否则 git clone 无法启动。
+# fresh checkout 下该目录（.gitignore 中的生成目录）不存在，且 execute_process 不会自动创建
+# WORKING_DIRECTORY，必须在使用前显式创建，否则 git clone 无法启动。
 file(MAKE_DIRECTORY "${CHELPER_THIRDPARTY_SOURCE_DIR}")
 
-# 拉取第三方库源码到 3rdparty_downloads（只含源码，不含构建产物）。
-# FetchContent 负责缺失源码的下载和版本检出；已有缓存则通过
+# 拉取第三方库源码到 3rdparty_downloads（只含源码，不含构建产物）。 FetchContent 负责缺失源码的下载和版本检出；已有缓存则通过
 # FETCHCONTENT_SOURCE_DIR_<NAME> 直接复用。这样多个构建目录（如 CLion 的多个
-# profile）只共享同一份源码，构建元数据和编译产物仍留在各自的 build/_deps 中。
-# 调用处用关键字参数：GIT_REPOSITORY / GIT_TAG，可选 SOURCE_SUBDIR / EXCLUDE_FROM_ALL。
-# GIT_TAG 使用完整 commit 哈希，保证 FetchContent 检出确定的源码版本。
+# profile）只共享同一份源码，构建元数据和编译产物仍留在各自的 build/_deps 中。 调用处用关键字参数：GIT_REPOSITORY /
+# GIT_TAG，可选 SOURCE_SUBDIR / EXCLUDE_FROM_ALL。 GIT_TAG 固定为带版本号的发布标签，
+# 仅在主动升级依赖时修改，不跟踪开发分支。
 function(chelper_fetch_thirdparty name)
     cmake_parse_arguments(ARG "EXCLUDE_FROM_ALL;SYSTEM" "GIT_REPOSITORY;GIT_TAG;SOURCE_SUBDIR" "" ${ARGN})
 
     set(sourceDir "${CHELPER_THIRDPARTY_SOURCE_DIR}/${name}")
     string(TOUPPER "${name}" nameUpper)
-    set(contentOptions
-        GIT_REPOSITORY "${ARG_GIT_REPOSITORY}"
-        GIT_TAG "${ARG_GIT_TAG}"
-        SOURCE_DIR "${sourceDir}")
+    set(contentOptions GIT_REPOSITORY "${ARG_GIT_REPOSITORY}" GIT_TAG "${ARG_GIT_TAG}" SOURCE_DIR "${sourceDir}")
     if(ARG_SOURCE_SUBDIR)
         list(APPEND contentOptions SOURCE_SUBDIR "${ARG_SOURCE_SUBDIR}")
     endif()
@@ -62,15 +56,66 @@ function(chelper_fetch_thirdparty name)
     # An existing source cache is supplied through FetchContent's documented
     # override.  When it does not exist, FetchContent populates SOURCE_DIR
     # directly.  In both cases, build metadata stays under build/_deps.
-    if(IS_DIRECTORY "${sourceDir}" AND
-       (EXISTS "${sourceDir}/.git" OR EXISTS "${sourceDir}/CMakeLists.txt" OR
-        (ARG_SOURCE_SUBDIR AND EXISTS "${sourceDir}/${ARG_SOURCE_SUBDIR}/CMakeLists.txt")))
+    if(EXISTS "${sourceDir}/.git")
+        # Resolve the release tag to a commit before comparing with HEAD.
+        # Fetch only when the requested tag is not available in the local cache.
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" rev-parse --verify "refs/tags/${ARG_GIT_TAG}^{commit}"
+            WORKING_DIRECTORY "${sourceDir}"
+            RESULT_VARIABLE tagResult
+            OUTPUT_VARIABLE targetRevision
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        if(NOT tagResult EQUAL 0)
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" fetch origin "refs/tags/${ARG_GIT_TAG}:refs/tags/${ARG_GIT_TAG}"
+                WORKING_DIRECTORY "${sourceDir}"
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" rev-parse --verify "refs/tags/${ARG_GIT_TAG}^{commit}"
+                WORKING_DIRECTORY "${sourceDir}"
+                OUTPUT_VARIABLE targetRevision
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+        endif()
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+            WORKING_DIRECTORY "${sourceDir}"
+            OUTPUT_VARIABLE sourceRevision
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        if(NOT sourceRevision STREQUAL targetRevision)
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" status --porcelain --untracked-files=no
+                WORKING_DIRECTORY "${sourceDir}"
+                OUTPUT_VARIABLE sourceChanges
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+            if(sourceChanges)
+                message(FATAL_ERROR "${name}: source cache has local changes; cannot update to ${ARG_GIT_TAG}")
+            endif()
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" checkout --detach "${targetRevision}"
+                WORKING_DIRECTORY "${sourceDir}"
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+        endif()
+    endif()
+    if(IS_DIRECTORY "${sourceDir}"
+        AND (EXISTS "${sourceDir}/.git"
+             OR EXISTS "${sourceDir}/CMakeLists.txt"
+             OR (ARG_SOURCE_SUBDIR AND EXISTS "${sourceDir}/${ARG_SOURCE_SUBDIR}/CMakeLists.txt")))
         set(FETCHCONTENT_SOURCE_DIR_${nameUpper} "${sourceDir}")
     endif()
 
     # FetchContent owns population and keeps downloaded sources in the shared
-    # source cache.  Its per-build source/build metadata remains under the
-    # current build directory's _deps directory.
+    # source cache.  Its per-build source/build metadata remains under the current
+    # build directory's _deps directory.
     FetchContent_Declare(${name} ${contentOptions})
     FetchContent_MakeAvailable(${name})
     message(STATUS "[FetchContent] Third-party ${name}: ready")
@@ -78,37 +123,30 @@ endfunction()
 
 chelper_fetch_thirdparty(fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG c0cd0fcfece8ac1541857a6dc5955745f1ec165
+    GIT_TAG 12.2.0
 )
 chelper_fetch_thirdparty(utfcpp
     GIT_REPOSITORY https://github.com/nemtrif/utfcpp.git
-    GIT_TAG cfc9112cee3e817e8b72948a675f78479546f0cf
+    GIT_TAG v4.2.1
 )
 chelper_fetch_thirdparty(xxHash
     GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
-    GIT_TAG e626a72bc2321cd320e953a0ccf1584cad60f363
-    SOURCE_SUBDIR cmake_unofficial
+    GIT_TAG v0.8.4
+    SOURCE_SUBDIR build/cmake
     EXCLUDE_FROM_ALL
 )
 chelper_fetch_thirdparty(glaze
     GIT_REPOSITORY https://github.com/stephenberry/glaze.git
-    GIT_TAG dce5e0f7ec572725ec369a0bc59a00eeb2270a9a
+    GIT_TAG v9.0.0
 )
 chelper_fetch_thirdparty(spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG 0f7562a0f9273cfc71fddc6ae52ebff7a490fa04
+    GIT_TAG v1.17.0
 )
 chelper_fetch_thirdparty(googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG 85087857ad10bd407cd6ed2f52f7ea9752db621f
+    GIT_TAG v1.18.0
 )
-if(NOT ANDROID AND NOT EMSCRIPTEN)
-    chelper_fetch_thirdparty(
-        emscripten
-        GIT_REPOSITORY https://github.com/emscripten-core/emscripten.git
-        GIT_TAG 0c06f7235acc1d63037f088025f76bc013f84bbb
-    )
-endif()
 if(MSVC)
     set_property(TARGET fmt PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -131,14 +169,14 @@ file(GLOB_RECURSE CHELPER_CORE_SOURCE_FILE src/chelper/*.cpp)
 # CHelper Core
 add_library(CHelperCore STATIC ${CHELPER_CORE_SOURCE_FILE})
 target_precompile_headers(CHelperCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
-target_include_directories(CHelperCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(CHelperCore PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
-if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
-    # Core is embedded into the platform wrapper.  It is not a dynamic API;
-    # only the wrapper's explicitly annotated entry points are exported.
-    set_property(TARGET CHelperCore PROPERTY CXX_VISIBILITY_PRESET hidden)
-    set_property(TARGET CHelperCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-endif()
+set_property(TARGET CHelperCore PROPERTY CXX_VISIBILITY_PRESET hidden)
+set_property(TARGET CHelperCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 if(MSVC)
     set_property(TARGET CHelperCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
@@ -147,37 +185,28 @@ add_library(CHelper::Core ALIAS CHelperCore)
 # CHelper Core (no filesystem)
 add_library(CHelperNoFilesystemCore STATIC ${CHELPER_CORE_SOURCE_FILE})
 target_precompile_headers(CHelperNoFilesystemCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
-target_include_directories(CHelperNoFilesystemCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(CHelperNoFilesystemCore PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
 target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
-if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
-    set_property(TARGET CHelperNoFilesystemCore PROPERTY CXX_VISIBILITY_PRESET hidden)
-    set_property(TARGET CHelperNoFilesystemCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-endif()
+set_property(TARGET CHelperNoFilesystemCore PROPERTY CXX_VISIBILITY_PRESET hidden)
+set_property(TARGET CHelperNoFilesystemCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 if(MSVC)
     set_property(TARGET CHelperNoFilesystemCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 add_library(CHelper::NoFilesystemCore ALIAS CHelperNoFilesystemCore)
 
 # CHelper Android
-if(NOT MSVC AND NOT EMSCRIPTEN)
+if(ANDROID)
     add_library(CHelperAndroid SHARED src/apps/CHelperAndroid.cpp)
     target_compile_definitions(CHelperAndroid PUBLIC CHelperAndroid)
-    if(ANDROID)
-        target_link_libraries(CHelperAndroid PUBLIC android log)
-        # CHelperCore, fmt, spdlog and xxHash are static archives embedded in
-        # this .so.  None of their symbols are part of the Android ABI.
-        # JNIEXPORT on the wrapper functions remains the export whitelist.
-        if(CHELPER_RESTRICT_PLATFORM_EXPORTS)
-            target_link_options(CHelperAndroid PRIVATE "-Wl,--exclude-libs,ALL")
-        endif()
-    else()
-        target_include_directories(CHelperAndroid PUBLIC include_android)
-    endif()
-    if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND (ANDROID OR EMSCRIPTEN))
-        set_property(TARGET CHelperAndroid PROPERTY CXX_VISIBILITY_PRESET hidden)
-        set_property(TARGET CHelperAndroid PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-    endif()
+    target_link_libraries(CHelperAndroid PUBLIC android log)
+    target_link_options(CHelperAndroid PRIVATE "-Wl,--exclude-libs,ALL")
+    set_property(TARGET CHelperAndroid PROPERTY CXX_VISIBILITY_PRESET hidden)
+    set_property(TARGET CHelperAndroid PROPERTY VISIBILITY_INLINES_HIDDEN ON)
     target_link_libraries(CHelperAndroid PRIVATE CHelper::Core)
 endif()
 
@@ -201,17 +230,10 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
 endif()
 
 # Web Application
-if(NOT ANDROID)
+if(EMSCRIPTEN)
     add_library(CHelperWeb src/apps/CHelperWeb.cpp)
-    if(CHELPER_RESTRICT_PLATFORM_EXPORTS AND EMSCRIPTEN)
-        # The public Web ABI is defined by EMSCRIPTEN_KEEPALIVE functions in
-        # CHelperWeb.cpp.  All other C++ symbols stay hidden.
-        set_property(TARGET CHelperWeb PROPERTY CXX_VISIBILITY_PRESET hidden)
-        set_property(TARGET CHelperWeb PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-    endif()
-    if(NOT EMSCRIPTEN)
-        target_include_directories(CHelperWeb PRIVATE ${CHELPER_THIRDPARTY_SOURCE_DIR}/emscripten/system/include)
-    endif()
+    set_property(TARGET CHelperWeb PROPERTY CXX_VISIBILITY_PRESET hidden)
+    set_property(TARGET CHelperWeb PROPERTY VISIBILITY_INLINES_HIDDEN ON)
     target_link_libraries(CHelperWeb PRIVATE CHelper::NoFilesystemCore)
 endif()
 

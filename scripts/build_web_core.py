@@ -4,6 +4,9 @@ import subprocess
 import sys
 
 
+EMSCRIPTEN_VERSION = "6.0.10"
+
+
 def ensure_download_emsdk(toolchain_dir: str):
     emsdk_path = os.path.join(toolchain_dir, "emsdk")
     if not os.path.exists(emsdk_path):
@@ -15,10 +18,14 @@ def ensure_download_emsdk(toolchain_dir: str):
     else:
         subprocess.run(["git", "pull"], cwd=emsdk_path, check=True)
     subprocess.run(
-        ["python", "./emsdk.py", "install", "latest"], cwd=emsdk_path, check=True
+        ["python", "./emsdk.py", "install", EMSCRIPTEN_VERSION],
+        cwd=emsdk_path,
+        check=True,
     )
     subprocess.run(
-        ["python", "./emsdk.py", "activate", "latest"], cwd=emsdk_path, check=True
+        ["python", "./emsdk.py", "activate", EMSCRIPTEN_VERSION],
+        cwd=emsdk_path,
+        check=True,
     )
 
 

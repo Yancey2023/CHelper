@@ -10,6 +10,7 @@ plugins {
 
 android {
     namespace = "yancey.chelper"
+    buildToolsVersion = "37.0.0"
     compileSdk {
         version = release(37)
     }
@@ -85,7 +86,7 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
-    ndkVersion = "29.0.14206865"
+    ndkVersion = "30.0.16248370"
 
     gradle.projectsEvaluated {
         tasks.withType<JavaCompile> {

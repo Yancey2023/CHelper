@@ -2,15 +2,23 @@ name: Build CHelper-Doc
 
 on:
   push:
-    branches: [ "master", "dev" ]
+    branches: ["master", "dev"]
     paths:
-      - '.github/workflows/build-doc.yml'
-      - 'CHelper-Doc/**'
+      - ".github/workflows/build-doc.yml"
+      - "CHelper-Doc/**"
+      - ".node-version"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
   pull_request:
-    branches: [ "master", "dev" ]
+    branches: ["master", "dev"]
     paths:
-      - '.github/workflows/build-doc.yml'
-      - 'CHelper-Doc/**'
+      - ".github/workflows/build-doc.yml"
+      - "CHelper-Doc/**"
+      - ".node-version"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
 jobs:
   build:
@@ -24,13 +32,14 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          cache: 'pnpm'
+          node-version-file: ".node-version"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         working-directory: ${{ github.workspace }}/CHelper-Doc
-        run: npx vitepress build --base=/chelper_doc/
+        run: pnpm exec vitepress build --base=/chelper_doc/

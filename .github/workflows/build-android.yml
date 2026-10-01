@@ -2,29 +2,28 @@ name: Android CI
 
 on:
   push:
-    branches: [ "master", "dev" ]
+    branches: ["master", "dev"]
     paths:
-      - '.github/workflows/build-android.yml'
-      - 'CHelper-Android/**'
+      - ".github/workflows/build-android.yml"
+      - "CHelper-Android/**"
   pull_request:
-    branches: [ "master", "dev" ]
+    branches: ["master", "dev"]
     paths:
-      - '.github/workflows/build-android.yml'
-      - 'CHelper-Android/**'
+      - ".github/workflows/build-android.yml"
+      - "CHelper-Android/**"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
+      - name: Set up JDK 27
+        uses: actions/setup-java@v6
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "27"
+          distribution: "temurin"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
