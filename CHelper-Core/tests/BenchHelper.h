@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <intrin.h>
 #include <memory>
 #include <new>
 #include <string_view>
@@ -37,6 +36,7 @@
 #ifndef _MSC_VER
 #include <malloc.h>
 #else
+#include <intrin.h>
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -86,7 +86,7 @@ namespace CHelper::Test {
     // ================= 统计工具 =================
 
     struct Stats {
-        std::string_view name;
+        std::string name;
         size_t count = 0;
         double totalMs = 0;
         double minMs = 0;
@@ -259,7 +259,12 @@ namespace CHelper::Test {
         inline void printSites(const char *title, const uintptr_t *keys, const size_t *bytes, const size_t *counts,
                                size_t top) {
             // 输出 RVA 而不是绝对地址：ASLR 下配合运行时镜像基址即可换算成绝对地址
+#ifdef _MSC_VER
             const auto imageBase = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+#else
+            // Print absolute call-site addresses on platforms without the Windows image API.
+            const uintptr_t imageBase = 0;
+#endif
             std::printf("runtime image base: %llX\n", static_cast<unsigned long long>(imageBase));
             std::vector<std::pair<uintptr_t, std::pair<size_t, size_t>>> sorted;
             for (size_t i = 0; i < SITE_CAPACITY; ++i) {

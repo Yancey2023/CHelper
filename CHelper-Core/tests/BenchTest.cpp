@@ -20,46 +20,52 @@
 
 #include <gtest/gtest.h>
 
+#ifdef _MSC_VER
+#define CHELPER_BENCH_RETURN_ADDRESS() _ReturnAddress()
+#else
+#define CHELPER_BENCH_RETURN_ADDRESS() __builtin_extract_return_addr(__builtin_return_address(0))
+#endif
+
 // 只在测试可执行文件中替换全局分配器，避免把非标准 operator new/delete
 // 放进头文件导致 MSVC C4595，同时保证所有测试翻译单元共用同一套计数器。
 void *operator new(size_t size) {
-    return chelperBenchAlloc(size, _ReturnAddress());
+    return chelperBenchAlloc(size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void *operator new[](size_t size) {
-    return chelperBenchAlloc(size, _ReturnAddress());
+    return chelperBenchAlloc(size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void *operator new(size_t size, const std::nothrow_t &) noexcept {
-    return chelperBenchAlloc(size, _ReturnAddress());
+    return chelperBenchAlloc(size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void *operator new[](size_t size, const std::nothrow_t &) noexcept {
-    return chelperBenchAlloc(size, _ReturnAddress());
+    return chelperBenchAlloc(size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete(void *p) noexcept {
-    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete[](void *p) noexcept {
-    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete(void *p, size_t size) noexcept {
-    chelperBenchFree(p, size, _ReturnAddress());
+    chelperBenchFree(p, size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete[](void *p, size_t size) noexcept {
-    chelperBenchFree(p, size, _ReturnAddress());
+    chelperBenchFree(p, size, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete(void *p, const std::nothrow_t &) noexcept {
-    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 void operator delete[](void *p, const std::nothrow_t &) noexcept {
-    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, _ReturnAddress());
+    chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
 using namespace CHelper;
