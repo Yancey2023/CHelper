@@ -22,6 +22,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -186,23 +187,33 @@ class CommandEditText : AppCompatEditText {
         lastTokens = tokens
 
         if (theme == null || tokens == null || tokens.isEmpty()) {
-            if (text is SpannableStringBuilder) {
-                text.getSpans(0, text.length, ForegroundColorSpan::class.java).forEach {
-                    text.removeSpan(it)
-                }
-            }
+            removeForegroundColorSpans()
             return
         }
+        installColorSpans(buildColorSpans(tokens))
+    }
 
+    /** 摘除全部前景色 span（清空高亮用） */
+    private fun removeForegroundColorSpans() {
+        val text = getText()
+        if (text is Spannable) {
+            text.getSpans(0, text.length, ForegroundColorSpan::class.java).forEach {
+                text.removeSpan(it)
+            }
+        }
+    }
+
+    /** 由 token 序列生成非普通色的着色段（相邻同色已合并） */
+    private fun buildColorSpans(tokens: IntArray): List<SpanInfo> {
+        val t = theme ?: return emptyList()
         // 普通文本颜色跟随调用方传入的当前主题，而不是按系统 uiMode 解析的资源颜色，
         // 否则应用设置为夜间、系统为亮色时（例如悬浮窗）会解析出亮色主题的文字颜色
         val normalColor = this.normalColor
         val targetSpans = mutableListOf<SpanInfo>()
-
         var lastIndex = 0
-        var lastColor = theme!!.getColorByToken(tokens[0], normalColor)
+        var lastColor = t.getColorByToken(tokens[0], normalColor)
         for (i in 1..<tokens.size) {
-            val color = theme!!.getColorByToken(tokens[i], normalColor)
+            val color = t.getColorByToken(tokens[i], normalColor)
             if (color != lastColor) {
                 if (lastColor != normalColor) { // 普通颜色没必要加Span，可以节省Span对象数
                     targetSpans.add(SpanInfo(lastColor, lastIndex, i))
@@ -214,45 +225,46 @@ class CommandEditText : AppCompatEditText {
         if (lastColor != normalColor) {
             targetSpans.add(SpanInfo(lastColor, lastIndex, tokens.size))
         }
+        return targetSpans
+    }
 
+    /** 把目标段与现有 span 做哈希 diff 后应用到文本 */
+    private fun installColorSpans(targetSpans: List<SpanInfo>) {
+        val text = getText()
         if (text is SpannableStringBuilder) {
             val existSpans = text.getSpans(0, text.length, ForegroundColorSpan::class.java)
-            val matchedSpans = BooleanArray(targetSpans.size)
+            // 哈希 diff：O(目标段 + 已有段)，取代原来的 O(段²) 双重循环——
+            // 长命令（如大段 rawtext JSON）颜色段可达数百，每键一次二次循环会明显掉帧。
+            // key = (start, end) 打包成 Long
+            val targetMap = HashMap<Long, Int>(targetSpans.size * 2 + 1)
+            for (target in targetSpans) {
+                targetMap[(target.start.toLong() shl 32) or target.end.toLong()] = target.color
+            }
 
             for (span in existSpans) {
                 val spanStart = text.getSpanStart(span)
                 val spanEnd = text.getSpanEnd(span)
-                val color = span.foregroundColor
-
-                var found = false
-                for (j in targetSpans.indices) {
-                    if (!matchedSpans[j]) {
-                        val target = targetSpans[j]
-                        if (target.start == spanStart && target.end == spanEnd && target.color == color) {
-                            matchedSpans[j] = true
-                            found = true
-                            break
-                        }
-                    }
-                }
-
-                if (!found) {
+                val key = (spanStart.toLong() shl 32) or spanEnd.toLong()
+                val targetColor = targetMap[key]
+                if (targetColor != null && targetColor == span.foregroundColor) {
+                    // 命中：保留并消费，后续不再重复添加
+                    targetMap.remove(key)
+                } else {
                     text.removeSpan(span)
                 }
             }
 
-            for (j in targetSpans.indices) {
-                if (!matchedSpans[j]) {
-                    val target = targetSpans[j]
-                    text.setSpan(
-                        ForegroundColorSpan(target.color),
-                        target.start,
-                        target.end,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                }
+            for ((key, color) in targetMap) {
+                val start = (key shr 32).toInt()
+                val end = key.toInt()
+                text.setSpan(
+                    ForegroundColorSpan(color),
+                    start,
+                    end,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
             }
-        } else {
+        } else if (text != null) {
             val spannableStringBuilder = SpannableStringBuilder(text)
             for (target in targetSpans) {
                 spannableStringBuilder.setSpan(
@@ -361,4 +373,5 @@ class CommandEditText : AppCompatEditText {
             }
         }
     }
+
 }

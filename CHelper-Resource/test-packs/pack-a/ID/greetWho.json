@@ -1,0 +1,10 @@
+{
+  // ===== ID 候选表（被 command 里 NORMAL_ID 的 key 引用）=====
+  "id": "greetWho",
+  "type": "normal",
+  "content": [
+    { "name": "player", "description": "所有玩家" },
+    { "name": "vip",    "description": "VIP 玩家" },
+    { "name": "admin",  "description": "管理员" }
+  ]
+}

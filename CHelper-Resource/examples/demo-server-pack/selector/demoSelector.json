@@ -1,0 +1,24 @@
+{
+  "id": "demoSelector",
+  "description": "（规划能力：选择器数据化落地后生效。schema 草案见设计文档 selector-data.md）",
+  "variables": [
+    {
+      "name": "@x",
+      "description": "示例服务器在线白名单玩家",
+      "arguments": [
+        "type",
+        "name",
+        "myflag"
+      ]
+    }
+  ],
+  "arguments": [
+    {
+      "name": "myflag",
+      "brief": "服务器标记",
+      "description": "是否启用服务器标记",
+      "operator": "=",
+      "valueType": "BOOLEAN"
+    }
+  ]
+}

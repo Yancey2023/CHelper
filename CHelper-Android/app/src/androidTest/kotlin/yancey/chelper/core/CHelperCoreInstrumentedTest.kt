@@ -12,32 +12,39 @@ import org.junit.runner.RunWith
 /**
  * CHelperCore 是整个软件的命令解析中枢，但它依赖 JNI（libCHelperAndroid.so）。
  * 所以这套测试只能在 arm64-v8a 设备/模拟器上跑（abiFilter 限定）。
- * 如果是 x86 模拟器，create0 会因为找不到 .so 抛异常，构造里会 catch 掉并把 pointer 置 0，
- * 然后向外抛 RuntimeException——这就是这里 try-catch 的意义：
+ * 如果是 x86 模拟器，compose 会因为找不到 .so 抛异常——这就是这里 try-catch 的意义：
  * 让测试只在能加载 .so 的环境下真正断言，其他环境下"跳过"而不是误报。
  *
- * 资源包用打包进 assets 的 release-vanilla 版本，因为它是稳定发布版，
- * 比 beta/experiment 包更适合做长期回归基线。
+ * 内核按主包段 compose（main-pack.chepack 内置资产，段取 beta/vanilla 与桌面测试一致），
+ * 旧 assets/cpack/*.cpack 加载通道（fromAssets/fromFile）已随主路径切换删除。
  */
 @RunWith(AndroidJUnit4::class)
 class CHelperCoreInstrumentedTest {
 
-    private val cpackPath = "cpack/release-vanilla-1.21.132.1.cpack"
+    private val segment = "beta/vanilla"
+
+    /** 打开主包并合成段内核；环境不满足（主包缺失/JNI 未就绪/合成失败）时跳过而非失败 */
+    private fun openCore(): CHelperCore? {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val mainPack = MainPackProvider.get(ctx)
+        if (mainPack == null) {
+            Assume.assumeTrue("跳过：main-pack.chepack 不可用", false)
+            return null
+        }
+        return try {
+            CHelperCore.compose(mainPack, arrayOf(segment), emptyList())
+        } catch (e: Throwable) {
+            Assume.assumeNoException("跳过：compose 在当前环境失败", e)
+            null
+        }
+    }
 
     /**
      * 把"加载内核+做点事+关掉"这套流程封一层，避免每个测试方法重复写
      * try-finally。同时统一处理"环境没 .so 就跳过"的情况。
      */
     private fun withCore(block: (CHelperCore) -> Unit) {
-        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-        val core = try {
-            CHelperCore.fromAssets(ctx.assets, cpackPath)
-        } catch (e: Throwable) {
-            // 当前 ABI 不匹配或资源缺失时不算测试失败——
-            // 这种环境下根本跑不起来这个测试，硬挂只会污染 CI 信号
-            Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
-            return
-        }
+        val core = openCore() ?: return
         try {
             block(core)
         } finally {
@@ -46,11 +53,8 @@ class CHelperCoreInstrumentedTest {
     }
 
     @Test
-    fun fromAssetsCreatesBuiltinResourceCore() {
-        withCore { core ->
-            assertTrue("从 assets 加载的 core.isAssets 必须为 true", core.isAssets)
-            assertEquals(cpackPath, core.path)
-        }
+    fun composeFromMainPackCreatesCore() {
+        withCore { /* 能走到这里即说明主包打开 + compose 成功 */ }
     }
 
     @Test
@@ -72,13 +76,7 @@ class CHelperCoreInstrumentedTest {
 
     @Test
     fun closedCoreApisRemainSafe() {
-        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-        val core = try {
-            CHelperCore.fromAssets(ctx.assets, cpackPath)
-        } catch (e: Throwable) {
-            Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
-            return
-        }
+        val core = openCore() ?: return
         val context = core.createContext("list")
         core.close()
         // CommandContext 持有资源包的共享引用，core 关闭后依然可用
@@ -157,13 +155,7 @@ class CHelperCoreInstrumentedTest {
 
     @Test
     fun contextOutlivesClosedCore() {
-        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-        val core = try {
-            CHelperCore.fromAssets(ctx.assets, cpackPath)
-        } catch (e: Throwable) {
-            Assume.assumeNoException("跳过：CHelperCore 在当前环境无法初始化", e)
-            return
-        }
+        val core = openCore() ?: return
         val context = core.createContext("list")
         core.close()
         try {

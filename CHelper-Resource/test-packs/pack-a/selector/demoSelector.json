@@ -1,0 +1,28 @@
+{
+  // ===== 选择器数据化（V1）：自定义变量 @x + 自定义参数 myflag =====
+  // 引擎按本文件把 @x 追加进目标选择器变量表；myflag（BOOLEAN）并入全局参数表，
+  // 内置变量（@a/@e/...）与自定义变量共用参数表。
+  // 注：variables[].arguments 白名单为 V1 子集暂不生效（提示后忽略），见 selector-data.md。
+  "id": "demoSelector",
+  "description": "（选择器数据化 V1：@x 变量 + myflag 布尔参数）",
+  "variables": [
+    {
+      "name": "@x",
+      "description": "示例服务器在线白名单玩家",
+      "arguments": [
+        "type",
+        "name",
+        "myflag"
+      ]
+    }
+  ],
+  "arguments": [
+    {
+      "name": "myflag",
+      "brief": "服务器标记",
+      "description": "是否启用服务器标记",
+      "operator": "=",
+      "valueType": "BOOLEAN"
+    }
+  ]
+}

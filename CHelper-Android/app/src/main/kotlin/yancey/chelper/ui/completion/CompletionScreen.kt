@@ -84,182 +84,14 @@ import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.HistoryScreenKey
 import yancey.chelper.ui.LocalLibraryListScreenKey
 import yancey.chelper.ui.PublicLibraryListScreenKey
+import yancey.chelper.core.Suggestion
 import yancey.chelper.ui.common.CHelperTheme
+import yancey.chelper.ui.common.SuggestionUi.oneLineText
+import yancey.chelper.ui.common.SuggestionUi.sourceLabel
 import yancey.chelper.ui.common.layout.RootView
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
-//@Composable
-//fun CommandTextField(
-//    value: TextFieldState,
-//    modifier: Modifier = Modifier,
-//    hint: String? = null,
-//    errorReasons: Array<ErrorReason?>?,
-//    syntaxHighlightTokens: IntArray?,
-//) {
-//    var textLayoutResult: TextLayoutResult? = null
-//    val scrollState = rememberScrollState()
-//    val syntaxHighlightBoolean = CHelperTheme.colors.syntaxHighlightBoolean
-//    val syntaxHighlightFloat = CHelperTheme.colors.syntaxHighlightFloat
-//    val syntaxHighlightInteger = CHelperTheme.colors.syntaxHighlightInteger
-//    val syntaxHighlightSymbol = CHelperTheme.colors.syntaxHighlightSymbol
-//    val syntaxHighlightId = CHelperTheme.colors.syntaxHighlightId
-//    val syntaxHighlightTargetSelector = CHelperTheme.colors.syntaxHighlightTargetSelector
-//    val syntaxHighlightCommand = CHelperTheme.colors.syntaxHighlightCommand
-//    val syntaxHighlightBrackets1 = CHelperTheme.colors.syntaxHighlightBrackets1
-//    val syntaxHighlightBrackets2 = CHelperTheme.colors.syntaxHighlightBrackets2
-//    val syntaxHighlightBrackets3 = CHelperTheme.colors.syntaxHighlightBrackets3
-//    val syntaxHighlightString = CHelperTheme.colors.syntaxHighlightString
-//    val syntaxHighlightNull = CHelperTheme.colors.syntaxHighlightNull
-//    val syntaxHighlightRange = CHelperTheme.colors.syntaxHighlightRange
-//    val syntaxHighlightLiteral = CHelperTheme.colors.syntaxHighlightLiteral
-//    val outputTransform = remember(
-//        syntaxHighlightTokens,
-//        syntaxHighlightBoolean,
-//        syntaxHighlightFloat,
-//        syntaxHighlightInteger,
-//        syntaxHighlightSymbol,
-//        syntaxHighlightId,
-//        syntaxHighlightTargetSelector,
-//        syntaxHighlightCommand,
-//        syntaxHighlightBrackets1,
-//        syntaxHighlightBrackets2,
-//        syntaxHighlightBrackets3,
-//        syntaxHighlightString,
-//        syntaxHighlightNull,
-//        syntaxHighlightRange,
-//        syntaxHighlightLiteral,
-//    ) {
-//        OutputTransformation {
-//            if (syntaxHighlightTokens == null || syntaxHighlightTokens.isEmpty()) {
-//                return@OutputTransformation
-//            }
-//            val getColorByToken = { token: Int ->
-//                when (token) {
-//                    1 -> syntaxHighlightBoolean
-//                    2 -> syntaxHighlightFloat
-//                    3 -> syntaxHighlightInteger
-//                    4 -> syntaxHighlightSymbol
-//                    5 -> syntaxHighlightId
-//                    6 -> syntaxHighlightTargetSelector
-//                    7 -> syntaxHighlightCommand
-//                    8 -> syntaxHighlightBrackets1
-//                    9 -> syntaxHighlightBrackets2
-//                    10 -> syntaxHighlightBrackets3
-//                    11 -> syntaxHighlightString
-//                    12 -> syntaxHighlightNull
-//                    13 -> syntaxHighlightRange
-//                    14 -> syntaxHighlightLiteral
-//                    else -> null
-//                }
-//            }
-//            var lastIndex = 0
-//            var lastColor = getColorByToken(syntaxHighlightTokens[0])
-//            for (i in 1..<syntaxHighlightTokens.size) {
-//                val color = getColorByToken(syntaxHighlightTokens[i])
-//                if (color != lastColor) {
-//                    if (lastColor != null) {
-//                        addStyle(SpanStyle(color = lastColor), lastIndex, i)
-//                    }
-//                    lastIndex = i
-//                    lastColor = color
-//                }
-//            }
-//            if (lastColor != null) {
-//                addStyle(SpanStyle(color = lastColor), lastIndex, syntaxHighlightTokens.size)
-//            }
-//        }
-//    }
-//    val underlineErrorReason = CHelperTheme.colors.underlineErrorReason
-//    val density = LocalDensity.current
-//    val strokeWidth: Float = remember(density) {
-//        with(density) {
-//            1.dp.toPx()
-//        }
-//    }
-//    val underlineDeltaY: Float = remember(density) {
-//        with(density) {
-//            10.sp.toPx()
-//        }
-//    }
-//    BasicTextField(
-//        state = value,
-//        modifier = modifier.drawWithContent {
-//            drawContent()
-//            val length = value.text.length
-//            if (errorReasons != null && textLayoutResult != null) {
-//                clipRect {
-//                    for (errorReason in errorReasons) {
-//                        var start = errorReason!!.start
-//                        var end = errorReason.end
-//                        if (start < 0 || end > length) {
-//                            continue
-//                        }
-//                        if (start == end && length != 0) {
-//                            if (start == length) {
-//                                start--
-//                            } else {
-//                                end++
-//                            }
-//                        }
-//                        val lineStart = textLayoutResult!!.getLineForOffset(start)
-//                        val lineEnd = textLayoutResult!!.getLineForOffset(end)
-//                        if (lineStart == lineEnd) {
-//                            val y = (textLayoutResult!!.getLineBottom(lineStart) + underlineDeltaY)
-//                            drawLine(
-//                                color = underlineErrorReason,
-//                                start = Offset(
-//                                    x = textLayoutResult!!.getHorizontalPosition(
-//                                        start,
-//                                        true
-//                                    ),
-//                                    y = y
-//                                ),
-//                                end = Offset(
-//                                    x = textLayoutResult!!.getHorizontalPosition(
-//                                        end,
-//                                        false
-//                                    ),
-//                                    y = y
-//                                ),
-//                                strokeWidth = strokeWidth,
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        },
-//        onTextLayout = { getResult ->
-//            textLayoutResult = getResult()
-//        },
-//        textStyle = TextStyle(
-//            color = CHelperTheme.colors.textMain,
-//            fontSize = 16.sp,
-//            textAlign = TextAlign.Start,
-//        ),
-//        outputTransformation = outputTransform,
-//        cursorBrush = SolidColor(CHelperTheme.colors.mainColor),
-//        lineLimits = TextFieldLineLimits.SingleLine,
-//        decorator = { innerTextField ->
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.CenterStart
-//            ) {
-//                innerTextField()
-//                if (value.text.isEmpty() && hint != null) {
-//                    Text(
-//                        text = hint,
-//                        modifier = Modifier.fillMaxWidth(),
-//                        style = TextStyle(
-//                            color = CHelperTheme.colors.textHint,
-//                        ),
-//                    )
-//                }
-//            }
-//        },
-//        scrollState = scrollState
-//    )
-//}
 
 @Composable
 fun ToolbarItem(@DrawableRes id: Int, description: String, onClick: () -> Unit) {
@@ -432,6 +264,19 @@ fun CompletionScreen(
         )
         onDispose { }
     }
+    // 回到前台（含从设置/资源包管理页返回）时按最新段与启用拓展包配置刷新内核
+    // （refresh 内部会比对段与配置指纹，无变化时零成本跳过）
+    LaunchedEffect(isLifecycleResumed) {
+        if (isLifecycleResumed) {
+            viewModel.refreshCHelperCore(
+                context,
+                cpackBranch,
+                isCheckingBySelection,
+                isSyntaxHighlight,
+                isShowErrorReason
+            )
+        }
+    }
     val clipboard = LocalClipboard.current
     val commandEditText = remember { arrayOfNulls<CommandEditText>(1) }
     val onErrorClick: (ErrorReason) -> Unit = { error ->
@@ -456,89 +301,92 @@ fun CompletionScreen(
                         onErrorClick = onErrorClick
                     )
                 }
+                // tellraw/titleraw 的 JSON 参数位：以"补全项"样式在列表首行提供 rawtext 编辑器入口
+                val commandText = viewModel.command.text.toString()
+                val caretPosition = viewModel.command.selection.start
+                val jsonParamStart = remember(commandText) { detectJsonParameterStart(commandText) }
+                val jsonEntryActive = jsonParamStart != null && caretPosition >= jsonParamStart
+                // 返回本页时自动回填编辑器产物（会话 revision 驱动，与页面生命周期无关）
+                JsonEditorSessionConsumer(
+                    viewModel = viewModel,
+                    isCheckingBySelection = isCheckingBySelection,
+                    isSyntaxHighlight = isSyntaxHighlight,
+                    isShowErrorReason = isShowErrorReason,
+                )
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f)
                 ) {
-                    items(if (isCrowded) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
+                    items(
+                        viewModel.suggestionsSize +
+                                (if (isCrowded) 1 else 0) +
+                                (if (jsonEntryActive) 1 else 0)
+                    ) { listIndex ->
                         if (isCrowded) {
-                            if (suggestionIndex == 0) {
-                                CompletionScreenTopBar(
+                            when {
+                                listIndex == 0 -> CompletionScreenTopBar(
                                     viewModel.structure,
                                     viewModel.paramHint,
                                     if (isShowErrorReason) viewModel.errorReasons else null,
                                     14.sp,
                                     onErrorClick
                                 )
-                            } else {
-                                val realIndex = suggestionIndex - 1
-                                val suggestionText =
-                                    remember(viewModel.suggestionsUpdateTimes, realIndex) {
-                                        val suggestion = viewModel.getSuggestion(realIndex)
-                                        if (suggestion != null && suggestion.description != null) {
-                                            (suggestion.name
-                                                ?: "") + " - " + suggestion.description!!
-                                        } else {
-                                            suggestion?.name ?: ""
-                                        }
-                                    }
-                                Text(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable(onClick = {
-                                            viewModel.onItemClick(realIndex)
-                                            viewModel.onSelectionChanged(
-                                                isCheckingBySelection,
-                                                isSyntaxHighlight,
-                                                isShowErrorReason
-                                            )
-                                        })
-                                        .padding(5.dp),
-                                    text = suggestionText,
-                                    style = TextStyle(
-                                        fontSize = 14.sp
-                                    )
+
+                                jsonEntryActive && listIndex == 1 -> JsonEditorActionRow(
+                                    text = commandText,
+                                    jsonStart = jsonParamStart,
+                                    navController = navController,
                                 )
+
+                                else -> {
+                                    val realIndex = listIndex - 1 - (if (jsonEntryActive) 1 else 0)
+                                    val suggestionText =
+                                        remember(viewModel.suggestionsUpdateTimes, realIndex, listIndex) {
+                                            viewModel.getSuggestion(realIndex)?.oneLineText().orEmpty()
+                                        }
+                                    Text(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(onClick = {
+                                                viewModel.onItemClick(realIndex)
+                                                viewModel.onSelectionChanged(
+                                                    isCheckingBySelection,
+                                                    isSyntaxHighlight,
+                                                    isShowErrorReason
+                                                )
+                                            })
+                                            .padding(5.dp),
+                                        text = suggestionText,
+                                        style = TextStyle(
+                                            fontSize = 14.sp
+                                        )
+                                    )
+                                }
                             }
                         } else {
-                            Column(
-                                modifier = Modifier
-                                    .clickable(onClick = {
-                                        viewModel.onItemClick(suggestionIndex)
+                            if (jsonEntryActive && listIndex == 0) {
+                                JsonEditorActionRow(
+                                    text = commandText,
+                                    jsonStart = jsonParamStart,
+                                    navController = navController,
+                                )
+                            } else {
+                                val realIndex = listIndex - (if (jsonEntryActive) 1 else 0)
+                                SuggestionDoubleLineRow(
+                                    suggestionProvider = { viewModel.getSuggestion(realIndex) },
+                                    updateTimes = viewModel.suggestionsUpdateTimes,
+                                    index = realIndex,
+                                    listIndex = listIndex,
+                                    onClick = {
+                                        viewModel.onItemClick(realIndex)
                                         viewModel.onSelectionChanged(
                                             isCheckingBySelection,
                                             isSyntaxHighlight,
                                             isShowErrorReason
                                         )
-                                    })
-                                    .padding(5.dp)
-                            ) {
-                                val suggestion =
-                                    remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
-                                        viewModel.getSuggestion(suggestionIndex)
-                                    }
-                                suggestion?.name?.let {
-                                    Text(
-                                        text = it,
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        style = TextStyle(
-                                            fontSize = 14.sp
-                                        )
-                                    )
-                                }
-                                suggestion?.description?.let {
-                                    Text(
-                                        text = it,
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 14.sp
-                                        )
-                                    )
-                                }
+                                    },
+                                )
                             }
                         }
                     }
@@ -669,15 +517,6 @@ fun CompletionScreen(
                     contentDescription = stringResource(R.string.layout_completion_icon_show_menu_content_description) +
                             if (viewModel.isCommandEditorMode) "，长按退出多行编辑" else "，长按进入多行编辑"
                 )
-//                CommandTextField(
-//                    value = viewModel.command,
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .weight(1f),
-//                    hint = stringResource(R.string.layout_completion_command_hint),
-//                    errorReasons = viewModel.errorReasons,
-//                    syntaxHighlightTokens = viewModel.syntaxHighlightTokens
-//                )
                 val theme = CHelperTheme.theme
                 val textMain = CHelperTheme.colors.textMain
                 val textSecondary = CHelperTheme.colors.textSecondary
@@ -806,5 +645,45 @@ fun CompletionScreenDarkThemePreview() {
         CompletionScreen(
             viewModel = viewModel
         )
+    }
+}
+
+/** 双行建议行：名字 + 说明 +（来源徽标）。点击整行应用该建议。 */
+@Composable
+private fun SuggestionDoubleLineRow(
+    suggestionProvider: () -> Suggestion?,
+    updateTimes: Int,
+    index: Int,
+    listIndex: Int,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(5.dp)
+    ) {
+        val suggestion = remember(updateTimes, index, listIndex) { suggestionProvider() }
+        suggestion?.name?.let {
+            Text(
+                text = it,
+                modifier = Modifier.fillMaxWidth(),
+                style = TextStyle(fontSize = 14.sp)
+            )
+        }
+        suggestion?.description?.let {
+            Text(
+                text = it,
+                modifier = Modifier.fillMaxWidth(),
+                style = TextStyle(color = CHelperTheme.colors.textSecondary, fontSize = 14.sp)
+            )
+        }
+        // 来源标注：拓展包候选在说明下方显示"来自 XX"（文案统一见 SuggestionUi）
+        suggestion?.sourceLabel()?.let { source ->
+            Text(
+                text = source,
+                modifier = Modifier.fillMaxWidth(),
+                style = TextStyle(color = CHelperTheme.colors.mainColorSecondary, fontSize = 12.sp)
+            )
+        }
     }
 }

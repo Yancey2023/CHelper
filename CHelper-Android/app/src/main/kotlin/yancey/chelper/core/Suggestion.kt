@@ -29,4 +29,18 @@ class Suggestion {
 
     @Native
     var description: String? = null
+
+    @Native
+    var packName: String? = null
+
+    /** 建议替换的文本区间（命令/片段内绝对坐标） */
+    @Native
+    var start: Int = 0
+
+    @Native
+    var end: Int = 0
+
+    /** 光标在末尾时是否补一个空格 */
+    @Native
+    var isAddSpace: Boolean = false
 }

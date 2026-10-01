@@ -1,0 +1,170 @@
+{
+    "id": "enchantType",
+    "type": "normal",
+    "content": [
+        {
+            "name": "aqua_affinity",
+            "description": "水下速掘"
+        },
+        {
+            "name": "bane_of_arthropods",
+            "description": "节肢杀手"
+        },
+        {
+            "name": "binding",
+            "description": "绑定诅咒"
+        },
+        {
+            "name": "blast_protection",
+            "description": "爆炸保护"
+        },
+        {
+            "name": "breach",
+            "description": "破甲"
+        },
+        {
+            "name": "channeling",
+            "description": "引雷"
+        },
+        {
+            "name": "density",
+            "description": "致密"
+        },
+        {
+            "name": "depth_strider",
+            "description": "深海探索者"
+        },
+        {
+            "name": "efficiency",
+            "description": "效率"
+        },
+        {
+            "name": "feather_falling",
+            "description": "摔落缓冲"
+        },
+        {
+            "name": "fire_aspect",
+            "description": "火焰附加"
+        },
+        {
+            "name": "fire_protection",
+            "description": "火焰保护"
+        },
+        {
+            "name": "flame",
+            "description": "火矢"
+        },
+        {
+            "name": "fortune",
+            "description": "时运"
+        },
+        {
+            "name": "frost_walker",
+            "description": "冰霜行者"
+        },
+        {
+            "name": "impaling",
+            "description": "穿刺"
+        },
+        {
+            "name": "infinity",
+            "description": "无限"
+        },
+        {
+            "name": "knockback",
+            "description": "击退"
+        },
+        {
+            "name": "looting",
+            "description": "抢夺"
+        },
+        {
+            "name": "loyalty",
+            "description": "忠诚"
+        },
+        {
+            "name": "luck_of_the_sea",
+            "description": "海之眷顾"
+        },
+        {
+            "name": "lure",
+            "description": "饵钓"
+        },
+        {
+            "name": "mending",
+            "description": "经验修补"
+        },
+        {
+            "name": "multishot",
+            "description": "多重射击"
+        },
+        {
+            "name": "piercing",
+            "description": "穿透"
+        },
+        {
+            "name": "power",
+            "description": "力量"
+        },
+        {
+            "name": "projectile_protection",
+            "description": "弹射物保护"
+        },
+        {
+            "name": "protection",
+            "description": "保护"
+        },
+        {
+            "name": "punch",
+            "description": "冲击"
+        },
+        {
+            "name": "quick_charge",
+            "description": "快速装填"
+        },
+        {
+            "name": "respiration",
+            "description": "水下呼吸"
+        },
+        {
+            "name": "riptide",
+            "description": "激流"
+        },
+        {
+            "name": "sharpness",
+            "description": "锋利"
+        },
+        {
+            "name": "silk_touch",
+            "description": "精准采集"
+        },
+        {
+            "name": "smite",
+            "description": "亡灵杀手"
+        },
+        {
+            "name": "soul_speed",
+            "description": "灵魂疾行"
+        },
+        {
+            "name": "swift_sneak",
+            "description": "迅捷潜行"
+        },
+        {
+            "name": "thorns",
+            "description": "荆棘"
+        },
+        {
+            "name": "unbreaking",
+            "description": "耐久"
+        },
+        {
+            "name": "vanishing",
+            "description": "消失诅咒"
+        },
+        {
+            "name": "wind_burst",
+            "description": "风爆"
+        }
+    ]
+}

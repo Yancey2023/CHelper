@@ -1,0 +1,20 @@
+{
+  "name": [
+    "hub",
+    "spawn"
+  ],
+  "description": "传送回大厅（双命令头示例：/hub 与 /spawn 等效）",
+  "syntax": [
+    "/hub",
+    "/hub <server: string>"
+  ],
+  "node": {
+    "<server: string>": {
+      "type": "STRING",
+      "brief": "目标大厅",
+      "description": "要传送到的子服务器大厅名",
+      "canContainSpace": false,
+      "ignoreLater": false
+    }
+  }
+}

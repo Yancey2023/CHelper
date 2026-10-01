@@ -1,0 +1,13 @@
+{
+  // ===== 测试资源包 B：与 A 同名命令冲突测试 =====
+  "name": "测试资源包 B",
+  "description": "冲突/排序测试包：与 A 同样注册 /welcome，但本包是 max 分支且没有 /hi 别名；两包同开时列表靠上者生效",
+  "version": "0.1.0",
+  "versionCode": 1,
+  "versionType": "beta",
+  "branch": "thirdparty",
+  "author": "CHelper",
+  "packId": "chelper-test-pack-b-0.1.0", // 与 A 的 packId 不同，可同时导入
+  "isBasicPack": false,
+  "priority": 100                        // 预留字段：实际按管理页列表顺序裁决
+}

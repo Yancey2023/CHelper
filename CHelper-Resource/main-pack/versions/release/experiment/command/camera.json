@@ -1,0 +1,378 @@
+{
+  "name": [
+    "camera"
+  ],
+  "description": "修改玩家的相机视角",
+  "syntax": [
+    "/camera <players: target> attach_to_entity <entity: target>",
+    "/camera <players: target> clear",
+    "/camera <players: target> detach_from_entity",
+    "/camera <players: target> fade",
+    "/camera <players: target> fade color <red: int> <green: int> <blue: int>",
+    "/camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float>",
+    "/camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float> color <red: int> <green: int> <blue: int>",
+    "/camera <players: target> fov_clear [fovEaseTime: float] [fovEaseType: Easing]",
+    "/camera <players: target> fov_set <fov_value: float> [fovEaseTime: float] [fovEaseType: Easing]",
+    "/camera <players: target> remove_target",
+    "/camera <players: target> set <preset: string> [default: default]",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> [default: default]",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> facing <lookAtEntity: target>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> facing <lookAtPosition: x y z>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> pos <position: x y z>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> pos <position: x y z> facing <lookAtEntity: target>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> pos <position: x y z> facing <lookAtPosition: x y z>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> pos <position: x y z> rot <xRot: value> <yRot: value>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> rot <xRot: value> <yRot: value>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> rot <xRot: value> <yRot: value> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> rot <xRot: value> <yRot: value> view_offset <xViewOffset: float> <yViewOffset: float>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> rot <xRot: value> <yRot: value> view_offset <xViewOffset: float> <yViewOffset: float> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> view_offset <xViewOffset: float> <yViewOffset: float>",
+    "/camera <players: target> set <preset: string> ease <easeTime: float> <easeType: Easing> view_offset <xViewOffset: float> <yViewOffset: float> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> facing <lookAtEntity: target>",
+    "/camera <players: target> set <preset: string> facing <lookAtPosition: x y z>",
+    "/camera <players: target> set <preset: string> pos <position: x y z>",
+    "/camera <players: target> set <preset: string> pos <position: x y z> facing <lookAtEntity: target>",
+    "/camera <players: target> set <preset: string> pos <position: x y z> facing <lookAtPosition: x y z>",
+    "/camera <players: target> set <preset: string> pos <position: x y z> rot <xRot: value> <yRot: value>",
+    "/camera <players: target> set <preset: string> rot <xRot: value> <yRot: value>",
+    "/camera <players: target> set <preset: string> rot <xRot: value> <yRot: value> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> rot <xRot: value> <yRot: value> view_offset <xViewOffset: float> <yViewOffset: float>",
+    "/camera <players: target> set <preset: string> rot <xRot: value> <yRot: value> view_offset <xViewOffset: float> <yViewOffset: float> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> set <preset: string> view_offset <xViewOffset: float> <yViewOffset: float>",
+    "/camera <players: target> set <preset: string> view_offset <xViewOffset: float> <yViewOffset: float> entity_offset <xEntityOffset: float> <yEntityOffset: float> <zEntityOffset: float>",
+    "/camera <players: target> target_entity <entity: target>",
+    "/camera <players: target> target_entity <entity: target> target_center_offset <xTargetCenterOffset: float> <yTargetCenterOffset: float> <zTargetCenterOffset: float>"
+  ],
+  "node": {
+    "<players: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "将被修改相机视角的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "attach_to_entity": {
+      "type": "TEXT",
+      "description": "将相机固定于实体上",
+      "data": {
+        "name": "attach_to_entity",
+        "description": "将相机固定于实体上"
+      }
+    },
+    "<entity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "要将相机视角聚焦的实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "clear": {
+      "type": "TEXT",
+      "description": "清除玩家的相机视角效果",
+      "data": {
+        "name": "clear",
+        "description": "清除玩家的相机视角效果"
+      }
+    },
+    "detach_from_entity": {
+      "type": "TEXT",
+      "description": "将相机取消固定于实体上",
+      "data": {
+        "name": "detach_from_entity",
+        "description": "将相机取消固定于实体上"
+      }
+    },
+    "fade": {
+      "type": "TEXT",
+      "description": "相机视角的RGB颜色和淡入、保持和淡出持续时间",
+      "data": {
+        "name": "fade",
+        "description": "相机视角的RGB颜色和淡入、保持和淡出持续时间"
+      }
+    },
+    "color": {
+      "type": "TEXT",
+      "description": "相机视角的RGB颜色",
+      "data": {
+        "name": "color",
+        "description": "相机视角的RGB颜色"
+      }
+    },
+    "<red: int>": {
+      "type": "INTEGER",
+      "brief": "红",
+      "description": "相机视角RGB颜色的红色强度",
+      "min": 0,
+      "max": 255
+    },
+    "<green: int>": {
+      "type": "INTEGER",
+      "brief": "绿",
+      "description": "相机视角RGB颜色的绿色强度",
+      "min": 0,
+      "max": 255
+    },
+    "<blue: int>": {
+      "type": "INTEGER",
+      "brief": "蓝",
+      "description": "相机视角RGB颜色的蓝色强度",
+      "min": 0,
+      "max": 255
+    },
+    "time": {
+      "type": "TEXT",
+      "description": "相机视角的淡入、保持和淡出持续时间",
+      "data": {
+        "name": "time",
+        "description": "相机视角的淡入、保持和淡出持续时间"
+      }
+    },
+    "<fadeInSeconds: float>": {
+      "type": "FLOAT",
+      "brief": "淡入时间",
+      "description": "相机视角的淡入时间",
+      "min": 0,
+      "max": 10
+    },
+    "<holdSeconds: float>": {
+      "type": "FLOAT",
+      "brief": "保持时间",
+      "description": "相机视角的保持持续时间",
+      "min": 0,
+      "max": 10
+    },
+    "<fadeOutSeconds: float>": {
+      "type": "FLOAT",
+      "brief": "淡出时间",
+      "description": "相机视角的淡出持续时间",
+      "min": 0,
+      "max": 10
+    },
+    "fov_clear": {
+      "type": "TEXT",
+      "description": "重置相机的视场角",
+      "data": {
+        "name": "fov_clear",
+        "description": "重置相机的视场角"
+      }
+    },
+    "[fovEaseTime: float]": {
+      "type": "FLOAT",
+      "brief": "持续时间",
+      "description": "指定相机视场角过渡的持续时间",
+      "min": 0
+    },
+    "[fovEaseType: Easing]": {
+      "type": "NORMAL_ID",
+      "brief": "运镜函数",
+      "description": "相机视角运镜的移动函数/类型",
+      "ignoreError": true,
+      "key": "cameraEasing"
+    },
+    "fov_set": {
+      "type": "TEXT",
+      "description": "指定相机的视场角",
+      "data": {
+        "name": "fov_set",
+        "description": "指定相机的视场角"
+      }
+    },
+    "<fov_value: float>": {
+      "type": "FLOAT",
+      "brief": "视场角",
+      "description": "指定相机的视场角",
+      "min": 30,
+      "max": 110
+    },
+    "remove_target": {
+      "type": "TEXT",
+      "description": "移除玩家相机视角聚焦的实体",
+      "data": {
+        "name": "remove_target",
+        "description": "移除玩家相机视角聚焦的实体"
+      }
+    },
+    "set": {
+      "type": "TEXT",
+      "description": "给玩家设置相机视角/预设",
+      "data": {
+        "name": "set",
+        "description": "给玩家设置相机视角/预设"
+      }
+    },
+    "<preset: string>": {
+      "type": "NORMAL_ID",
+      "brief": "相机视角",
+      "description": "相机视角/预设",
+      "ignoreError": true,
+      "key": "cameraPreset"
+    },
+    "[default: default]": {
+      "type": "STRING",
+      "brief": "default",
+      "description": "未知参数，需要更多信息",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "ease": {
+      "type": "TEXT",
+      "description": "相机视角平滑过渡",
+      "data": {
+        "name": "ease",
+        "description": "相机视角平滑过渡"
+      }
+    },
+    "<easeTime: float>": {
+      "type": "FLOAT",
+      "brief": "过渡时间",
+      "description": "相机视角平滑过渡的持续时间",
+      "min": 0
+    },
+    "<easeType: Easing>": {
+      "type": "NORMAL_ID",
+      "brief": "运镜函数",
+      "description": "相机视角运镜的移动函数/类型",
+      "ignoreError": true,
+      "key": "cameraEasing"
+    },
+    "entity_offset": {
+      "type": "TEXT",
+      "description": "相机视角相对于实体的偏移量",
+      "data": {
+        "name": "entity_offset",
+        "description": "相机视角相对于实体的偏移量"
+      }
+    },
+    "<xEntityOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "x方向相对于实体的偏移量",
+      "description": "相机视角x方向相对于实体的偏移量",
+      "canUseCaretNotation": true
+    },
+    "<yEntityOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "y方向相对于实体的偏移量",
+      "description": "相机视角y方向相对于实体的偏移量",
+      "canUseCaretNotation": true
+    },
+    "<zEntityOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "z方向相对于实体的偏移量",
+      "description": "相机视角z方向相对于实体的偏移量",
+      "canUseCaretNotation": true
+    },
+    "facing": {
+      "type": "TEXT",
+      "description": "相机视角朝向实体或坐标",
+      "data": {
+        "name": "facing",
+        "description": "相机视角朝向实体或坐标"
+      }
+    },
+    "<lookAtEntity: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "相机视角朝向的实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "<lookAtPosition: x y z>": {
+      "type": "POSITION",
+      "brief": "朝向的坐标",
+      "description": "相机视角朝向的坐标"
+    },
+    "pos": {
+      "type": "TEXT",
+      "brief": "位置",
+      "description": "相机视角的位置",
+      "data": {
+        "name": "pos",
+        "description": "相机视角的位置"
+      }
+    },
+    "<position: x y z>": {
+      "type": "POSITION",
+      "brief": "位置",
+      "description": "相机视角的位置"
+    },
+    "rot": {
+      "type": "TEXT",
+      "description": "相机视角的旋转角度",
+      "data": {
+        "name": "rot",
+        "description": "相机视角的旋转角度"
+      }
+    },
+    "<xRot: value>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "rx",
+      "description": "相机视角绕X轴旋转的旋转角度(竖直上方为-90.0，至竖直下方90.0)",
+      "canUseCaretNotation": false
+    },
+    "<yRot: value>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "ry",
+      "description": "相机视角绕Y轴旋转的旋转角度(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
+      "canUseCaretNotation": false
+    },
+    "view_offset": {
+      "type": "TEXT",
+      "description": "设置视角的偏移量",
+      "data": {
+        "name": "view_offset",
+        "description": "设置视角的偏移量"
+      }
+    },
+    "<xViewOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "x方向偏移量",
+      "description": "相机视角x方向偏移量",
+      "canUseCaretNotation": false
+    },
+    "<yViewOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "y方向偏移量",
+      "description": "相机视角y方向偏移量",
+      "canUseCaretNotation": false
+    },
+    "target_entity": {
+      "type": "TEXT",
+      "description": "设置玩家相机视角聚焦的实体",
+      "data": {
+        "name": "target_entity",
+        "description": "设置玩家相机视角聚焦的实体"
+      }
+    },
+    "target_center_offset": {
+      "type": "TEXT",
+      "description": "设置目标中心的偏移量, 调整摄像机对准实体时的中心点",
+      "data": {
+        "name": "target_center_offset",
+        "description": "设置目标中心的偏移量, 调整摄像机对准实体时的中心点"
+      }
+    },
+    "<xTargetCenterOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "x方向中心偏移量",
+      "description": "x方向中心偏移量",
+      "canUseCaretNotation": true
+    },
+    "<yTargetCenterOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "y方向中心偏移量",
+      "description": "y方向中心偏移量",
+      "canUseCaretNotation": true
+    },
+    "<zTargetCenterOffset: float>": {
+      "type": "RELATIVE_FLOAT",
+      "brief": "z方向中心偏移量",
+      "description": "z方向中心偏移量",
+      "canUseCaretNotation": true
+    }
+  }
+}

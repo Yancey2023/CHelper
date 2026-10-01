@@ -24,42 +24,25 @@ import com.hjq.toast.Toaster
 import java.io.Closeable
 
 /**
- * 软件的内核，与c++代码交互，负责持有资源包
- * 支持为不同的资源包同时创建多个内核实例
+ * 软件的内核，与c++代码交互，负责持有合成后的资源包数据
+ * 支持为不同的主包段/拓展包组合同时创建多个内核实例
  *
  * 所有和命令相关的功能都在[CommandContext]上执行：
  * 通过[createContext]把命令文本解析成AST生成命令上下文，
  * 然后在CommandContext上获取命令结构、参数注释、补全提示、语法高亮等
  * 内核本身没有可变状态，可以被多个线程同时使用
+ *
+ * 内核只通过 [compose]（主包段 + 拓展包）创建；旧的 assets/文件直接加载通道
+ * （fromAssets/fromFile）已随主路径切换删除。
  */
-class CHelperCore private constructor(
-    assetManager: AssetManager?,
-    val path: String
-) : Closeable {
-    /**
-     * 读取的资源包是否是软件内置的资源包
-     */
-    val isAssets: Boolean = assetManager != null
-
+class CHelperCore private constructor() : Closeable {
     /**
      * c++内核的内存地址
      */
     private var pointer: Long = 0
 
-    /**
-     * @param assetManager 软件内置资源管理器
-     * @param path         资源包路径
-     */
-    init {
-        pointer = try {
-            create0(assetManager, path)
-        } catch (_: Throwable) {
-            0
-        }
-        if (pointer == 0L) {
-            throw RuntimeException("fail to init CHelper Core: $path")
-        }
-    }
+    /** 供 FragmentContext 等打开（同模块可见） */
+    internal val pointerValue: Long get() = pointer
 
     /**
      * 把命令文本解析成AST，生成独立的命令上下文
@@ -99,30 +82,49 @@ class CHelperCore private constructor(
         }
 
         /**
+         * compose 串行锁：C++ 合成复用全局构造阶段，任意两个线程同时合成会互相踩状态，
+         * 所有调用方（命令补全 / 库 MCD 高亮）都必须经过它。
+         */
+        private val composeLock = Any()
+
+        /**
          * "旧命令转新命令"功能是否已经初始化
          */
         private var isOld2NewInit = false
 
         /**
-         * 从软件内置资源包加载内核
+         * 合成主包启用段 + 已启用拓展包为内核（P0）。
          *
-         * @param assetManager 软件内置资源管理器
-         * @param path         文件路径
-         * @return 软件内核
+         * @param mainPack       已打开的[MainPack]
+         * @param enabledSegments 启用段，如 arrayOf("beta/vanilla")（当前取第一个）
+         * @param extensionPacks 拓展包列表：每项为"包内相对路径 → 文件字节"映射（平台层已解压 .chepack）
+         * @return 合成后的内核
          */
-        fun fromAssets(assetManager: AssetManager, path: String): CHelperCore {
-            return CHelperCore(assetManager, path)
-        }
-
-        /**
-         * 从文件加载内核
-         *
-         * @param path 文件路径
-         * @return 软件内核
-         */
-        fun fromFile(path: String): CHelperCore {
-            return CHelperCore(null, path)
-        }
+        fun compose(mainPack: MainPack, enabledSegments: Array<String>, extensionPacks: List<Map<String, ByteArray>>): CHelperCore =
+            synchronized(composeLock) {
+                val relPaths = ArrayList<String>()
+                val contents = ArrayList<ByteArray>()
+                val counts = IntArray(extensionPacks.size)
+                extensionPacks.forEachIndexed { index, files ->
+                    counts[index] = files.size
+                    files.forEach { (rel, bytes) ->
+                        relPaths.add(rel)
+                        contents.add(bytes)
+                    }
+                }
+                val core = CHelperCore()
+                var failure: String? = null
+                core.pointer = try {
+                    compose0(mainPack.pointerValue, enabledSegments, relPaths.toTypedArray(), contents.toTypedArray(), counts)
+                } catch (throwable: Throwable) {
+                    failure = throwable.message ?: throwable.javaClass.simpleName
+                    0
+                }
+                if (core.pointer == 0L) {
+                    throw RuntimeException(failure ?: "fail to compose core")
+                }
+                core
+            }
 
         /**
          * 是否是软件内置的资源包
@@ -150,16 +152,6 @@ class CHelperCore private constructor(
         }
 
         /**
-         * 调用c++创建内核
-         *
-         * @param assetManager 软件内置资源管理器
-         * @param cpackPath    资源包路径
-         * @return 内核的内存地址
-         */
-        @JvmStatic
-        private external fun create0(assetManager: AssetManager?, cpackPath: String): Long
-
-        /**
          * 调用c++释放内核
          *
          * @param pointer 内核的内存地址
@@ -176,6 +168,18 @@ class CHelperCore private constructor(
          */
         @JvmStatic
         private external fun createContext0(pointer: Long, command: String): Long
+
+        /**
+         * 调用c++合成主包段 + 拓展包
+         */
+        @JvmStatic
+        private external fun compose0(
+            mainPackPointer: Long,
+            segments: Array<String>,
+            packRelPaths: Array<String>,
+            packContents: Array<ByteArray>,
+            packCounts: IntArray
+        ): Long
 
         /**
          * 初始化"旧命令转新命令"功能

@@ -1,0 +1,74 @@
+{
+    "id": "structure",
+    "type": "normal",
+    "content": [
+        {
+            "name": "minecraft:ancient_city",
+            "description": "远古城市"
+        },
+        {
+            "name": "minecraft:bastion_remnant",
+            "description": "堡垒遗迹"
+        },
+        {
+            "name": "minecraft:buried_treasure",
+            "description": "埋藏的宝藏"
+        },
+        {
+            "name": "minecraft:end_city",
+            "description": "末地城"
+        },
+        {
+            "name": "minecraft:fortress",
+            "description": "下界要塞"
+        },
+        {
+            "name": "minecraft:mansion",
+            "description": "林地府邸"
+        },
+        {
+            "name": "minecraft:mineshaft",
+            "description": "废弃矿井"
+        },
+        {
+            "name": "minecraft:monument",
+            "description": "海底神殿"
+        },
+        {
+            "name": "minecraft:pillager_outpost",
+            "description": "掠夺者前哨站"
+        },
+        {
+            "name": "minecraft:ruined_portal",
+            "description": "废弃传送门"
+        },
+        {
+            "name": "minecraft:ruins",
+            "description": "海底废墟"
+        },
+        {
+            "name": "minecraft:shipwreck",
+            "description": "沉船"
+        },
+        {
+            "name": "minecraft:stronghold",
+            "description": "要塞"
+        },
+        {
+            "name": "minecraft:temple",
+            "description": "沙漠神殿/雪屋/丛林神庙/沼泽小屋"
+        },
+        {
+            "name": "minecraft:trail_ruins",
+            "description": "古迹废墟"
+        },
+        {
+            "name": "minecraft:trial_chambers",
+            "description": "试炼密室"
+        },
+        {
+            "name": "minecraft:village",
+            "description": "村庄"
+        }
+    ]
+}

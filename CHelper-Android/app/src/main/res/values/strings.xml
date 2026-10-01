@@ -193,10 +193,46 @@
 
     <!--    use in RawTextView    -->
     <string name="layout_rawtext_title">原始 Json 文本生成器</string>
-    <string name="layout_rawtext_text_hint">请输入文字，选择要上色的文字，点击对应颜色即可插入样式代码</string>
     <string name="layout_rawtext_copy">复制</string>
-    <string name="layout_rawtext_preview">预览</string>
-    <string name="layout_rawtext_color">颜色</string>
+    <string name="layout_rawtext_import">导入</string>
+    <string name="layout_rawtext_preset">预设</string>
+    <string name="layout_rawtext_copied">已复制</string>
+    <string name="layout_rawtext_add_element">添加元素</string>
+    <string name="layout_rawtext_section_elements">元素</string>
+    <string name="layout_rawtext_section_debug">调试</string>
+    <string name="layout_rawtext_section_output">输出</string>
+    <string name="layout_rawtext_import_title">导入 JSON / 命令</string>
+    <string name="layout_rawtext_import_hint">粘贴 rawtext JSON 数组（形如 [{&#34;text&#34;:&#34;你好&#34;}]），或整条 /titleraw 命令。</string>
+    <string name="layout_rawtext_import_placeholder">JSON 内容</string>
+    <string name="layout_rawtext_import_cancel">取消</string>
+    <string name="layout_rawtext_import_confirm">导入</string>
+    <string name="layout_rawtext_import_error">JSON 解析失败</string>
+    <string name="layout_rawtext_help_close">关闭</string>
+    <string name="layout_rawtext_help_ok">知道了</string>
+    <string name="layout_rawtext_collapse">收起</string>
+    <string name="layout_rawtext_debug_title">调试面板</string>
+    <string name="layout_rawtext_debug_hint">模拟一名玩家的状态，下方实时显示该玩家实际看到的内容。</string>
+    <string name="layout_rawtext_debug_scores">计分板分数（条件 scores）</string>
+    <string name="layout_rawtext_debug_scores_hint">单值或数组（如 1,3,8 / 10..100 / 1.. / ..-1）</string>
+    <string name="layout_rawtext_debug_tags">拥有的标签（tag）</string>
+    <string name="layout_rawtext_debug_items">拥有的物品（hasitem）</string>
+    <string name="layout_rawtext_debug_types">实体类型（type）</string>
+    <string name="layout_rawtext_debug_families">族（family）</string>
+    <string name="layout_rawtext_debug_names">名称（name）</string>
+    <string name="layout_rawtext_debug_counts">数量限制（c）</string>
+    <string name="layout_rawtext_debug_gamemode">游戏模式（m）</string>
+    <string name="layout_rawtext_debug_distance">距离（方块 r / rm）</string>
+    <string name="layout_rawtext_debug_level">经验等级（l / lm）</string>
+    <string name="layout_rawtext_debug_pos">坐标（x / y / z）</string>
+    <string name="layout_rawtext_debug_rotation">朝向（rx / ry）</string>
+    <string name="layout_rawtext_debug_display_scores">显示用计分板（score 元素）</string>
+    <string name="layout_rawtext_debug_display_scores_hint">单值或数组（数组显示首个激活值或表达式原文）</string>
+    <string name="layout_rawtext_debug_display_selectors">显示用选择器（selector 元素）</string>
+    <string name="layout_rawtext_debug_display_selectors_hint">取消勾选 = 隐藏该选择器，用于逐个测试分支命中。</string>
+    <string name="layout_rawtext_preview_title">玩家实际看到的内容</string>
+    <string name="layout_rawtext_preview_auto_scale">自动缩放</string>
+    <string name="layout_rawtext_output_title">输出 JSON</string>
+    <string name="layout_rawtext_output_hint">与导入时字节一致，可直接粘贴进 /titleraw 使用。</string>
 
     <!--    use in SettingsView    -->
     <string name="layout_settings_title">设置</string>

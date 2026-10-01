@@ -1,0 +1,506 @@
+{
+    "id": "entity",
+    "type": "namespace",
+    "content": [
+        {
+            "name": "allay",
+            "description": "悦灵"
+        },
+        {
+            "name": "area_effect_cloud",
+            "description": "区域效果云"
+        },
+        {
+            "name": "armadillo",
+            "description": "犰狳"
+        },
+        {
+            "name": "armor_stand",
+            "description": "盔甲架"
+        },
+        {
+            "name": "arrow",
+            "description": "箭"
+        },
+        {
+            "name": "axolotl",
+            "description": "美西螈"
+        },
+        {
+            "name": "bat",
+            "description": "蝙蝠"
+        },
+        {
+            "name": "bee",
+            "description": "蜜蜂"
+        },
+        {
+            "name": "blaze",
+            "description": "烈焰人"
+        },
+        {
+            "name": "boat",
+            "description": "船"
+        },
+        {
+            "name": "bogged",
+            "description": "沼骸"
+        },
+        {
+            "name": "breeze",
+            "description": "旋风人"
+        },
+        {
+            "name": "breeze_wind_charge_projectile",
+            "description": "风弹"
+        },
+        {
+            "name": "camel",
+            "description": "骆驼"
+        },
+        {
+            "name": "cat",
+            "description": "猫"
+        },
+        {
+            "name": "cave_spider",
+            "description": "洞穴蜘蛛"
+        },
+        {
+            "name": "chest_boat",
+            "description": "运输船"
+        },
+        {
+            "name": "chest_minecart",
+            "description": "运输矿车"
+        },
+        {
+            "name": "chicken",
+            "description": "鸡"
+        },
+        {
+            "name": "cod",
+            "description": "鳕鱼"
+        },
+        {
+            "name": "command_block_minecart",
+            "description": "命令方块矿车"
+        },
+        {
+            "name": "cow",
+            "description": "牛"
+        },
+        {
+            "name": "creaking",
+            "description": "嘎枝"
+        },
+        {
+            "name": "creeper",
+            "description": "苦力怕"
+        },
+        {
+            "name": "dolphin",
+            "description": "海豚"
+        },
+        {
+            "name": "donkey",
+            "description": "驴"
+        },
+        {
+            "name": "dragon_fireball",
+            "description": "末影龙火球"
+        },
+        {
+            "name": "drowned",
+            "description": "溺尸"
+        },
+        {
+            "name": "egg",
+            "description": "鸡蛋"
+        },
+        {
+            "name": "elder_guardian",
+            "description": "远古守卫者"
+        },
+        {
+            "name": "elder_guardian_ghost",
+            "description": "远古守卫者幽灵"
+        },
+        {
+            "name": "ender_crystal",
+            "description": "末地水晶"
+        },
+        {
+            "name": "ender_dragon",
+            "description": "末影龙"
+        },
+        {
+            "name": "ender_pearl",
+            "description": "末影珍珠"
+        },
+        {
+            "name": "enderman",
+            "description": "末影人"
+        },
+        {
+            "name": "endermite",
+            "description": "末影螨"
+        },
+        {
+            "name": "evocation_fang",
+            "description": "唤魔者尖牙"
+        },
+        {
+            "name": "evocation_illager",
+            "description": "唤魔者"
+        },
+        {
+            "name": "eye_of_ender_signal",
+            "description": "末影之眼"
+        },
+        {
+            "name": "falling_block",
+            "description": "下落的方块"
+        },
+        {
+            "name": "fireball",
+            "description": "火球"
+        },
+        {
+            "name": "fireworks_rocket",
+            "description": "烟花火箭"
+        },
+        {
+            "name": "fishing_hook",
+            "description": "浮漂"
+        },
+        {
+            "name": "fox",
+            "description": "狐狸"
+        },
+        {
+            "name": "frog",
+            "description": "青蛙"
+        },
+        {
+            "name": "ghast",
+            "description": "恶魂"
+        },
+        {
+            "name": "glow_squid",
+            "description": "发光鱿鱼"
+        },
+        {
+            "name": "goat",
+            "description": "山羊"
+        },
+        {
+            "name": "guardian",
+            "description": "守卫者"
+        },
+        {
+            "name": "hoglin",
+            "description": "疣猪兽"
+        },
+        {
+            "name": "hopper_minecart",
+            "description": "漏斗矿车"
+        },
+        {
+            "name": "horse",
+            "description": "马"
+        },
+        {
+            "name": "husk",
+            "description": "尸壳"
+        },
+        {
+            "name": "iron_golem",
+            "description": "铁傀儡"
+        },
+        {
+            "name": "item",
+            "description": "物品"
+        },
+        {
+            "name": "leash_knot",
+            "description": "拴绳结"
+        },
+        {
+            "name": "lightning_bolt",
+            "description": "闪电束"
+        },
+        {
+            "name": "lingering_potion",
+            "description": "滞留药水"
+        },
+        {
+            "name": "llama",
+            "description": "羊驼"
+        },
+        {
+            "name": "llama_spit",
+            "description": "羊驼唾沫"
+        },
+        {
+            "name": "magma_cube",
+            "description": "岩浆怪"
+        },
+        {
+            "name": "minecart",
+            "description": "矿车"
+        },
+        {
+            "name": "mooshroom",
+            "description": "哞菇"
+        },
+        {
+            "name": "mule",
+            "description": "骡"
+        },
+        {
+            "name": "npc",
+            "description": "NPC"
+        },
+        {
+            "name": "ocelot",
+            "description": "豹猫"
+        },
+        {
+            "name": "ominous_item_spawner",
+            "description": "不祥之物生成器"
+        },
+        {
+            "name": "painting",
+            "description": "画"
+        },
+        {
+            "name": "panda",
+            "description": "熊猫"
+        },
+        {
+            "name": "parrot",
+            "description": "鹦鹉"
+        },
+        {
+            "name": "phantom",
+            "description": "幻翼"
+        },
+        {
+            "name": "pig",
+            "description": "猪"
+        },
+        {
+            "name": "piglin",
+            "description": "猪灵"
+        },
+        {
+            "name": "piglin_brute",
+            "description": "猪灵蛮兵"
+        },
+        {
+            "name": "pillager",
+            "description": "掠夺者"
+        },
+        {
+            "name": "player",
+            "description": "玩家"
+        },
+        {
+            "name": "polar_bear",
+            "description": "北极熊"
+        },
+        {
+            "name": "pufferfish",
+            "description": "河豚"
+        },
+        {
+            "name": "rabbit",
+            "description": "兔子"
+        },
+        {
+            "name": "ravager",
+            "description": "劫掠兽"
+        },
+        {
+            "name": "salmon",
+            "description": "鲑鱼"
+        },
+        {
+            "name": "sheep",
+            "description": "绵羊"
+        },
+        {
+            "name": "shulker",
+            "description": "潜影贝"
+        },
+        {
+            "name": "shulker_bullet",
+            "description": "潜影弹"
+        },
+        {
+            "name": "silverfish",
+            "description": "蠹虫"
+        },
+        {
+            "name": "skeleton",
+            "description": "骷髅"
+        },
+        {
+            "name": "skeleton_horse",
+            "description": "骷髅马"
+        },
+        {
+            "name": "slime",
+            "description": "史莱姆"
+        },
+        {
+            "name": "small_fireball",
+            "description": "小火球"
+        },
+        {
+            "name": "sniffer",
+            "description": "嗅探兽"
+        },
+        {
+            "name": "snow_golem",
+            "description": "雪傀儡"
+        },
+        {
+            "name": "snowball",
+            "description": "雪球"
+        },
+        {
+            "name": "spider",
+            "description": "蜘蛛"
+        },
+        {
+            "name": "splash_potion",
+            "description": "喷溅药水"
+        },
+        {
+            "name": "squid",
+            "description": "鱿鱼"
+        },
+        {
+            "name": "stray",
+            "description": "流浪者"
+        },
+        {
+            "name": "strider",
+            "description": "炽足兽"
+        },
+        {
+            "name": "tadpole",
+            "description": "蝌蚪"
+        },
+        {
+            "name": "thrown_trident",
+            "description": "三叉戟"
+        },
+        {
+            "name": "tnt",
+            "description": "被激活的TNT"
+        },
+        {
+            "name": "tnt_minecart",
+            "description": "TNT矿车"
+        },
+        {
+            "name": "trader_llama",
+            "description": "行商羊驼"
+        },
+        {
+            "name": "tropicalfish",
+            "description": "热带鱼"
+        },
+        {
+            "name": "turtle",
+            "description": "海龟"
+        },
+        {
+            "name": "vex",
+            "description": "恼鬼"
+        },
+        {
+            "name": "villager",
+            "description": "村民"
+        },
+        {
+            "name": "villager_v2",
+            "description": "村民"
+        },
+        {
+            "name": "vindicator",
+            "description": "卫道士"
+        },
+        {
+            "name": "wandering_trader",
+            "description": "流浪商人"
+        },
+        {
+            "name": "warden",
+            "description": "监守者"
+        },
+        {
+            "name": "wind_charge_projectile",
+            "description": "风弹"
+        },
+        {
+            "name": "witch",
+            "description": "女巫"
+        },
+        {
+            "name": "wither",
+            "description": "凋灵"
+        },
+        {
+            "name": "wither_skeleton",
+            "description": "凋灵骷髅"
+        },
+        {
+            "name": "wither_skull",
+            "description": "凋灵之首"
+        },
+        {
+            "name": "wither_skull_dangerous",
+            "description": "蓝色凋灵之首"
+        },
+        {
+            "name": "wolf",
+            "description": "狼"
+        },
+        {
+            "name": "xp_bottle",
+            "description": "附魔之瓶"
+        },
+        {
+            "name": "xp_orb",
+            "description": "经验球"
+        },
+        {
+            "name": "zoglin",
+            "description": "僵尸疣猪兽"
+        },
+        {
+            "name": "zombie",
+            "description": "僵尸"
+        },
+        {
+            "name": "zombie_horse",
+            "description": "僵尸马"
+        },
+        {
+            "name": "zombie_pigman",
+            "description": "僵尸猪灵"
+        },
+        {
+            "name": "zombie_villager",
+            "description": "僵尸村民"
+        },
+        {
+            "name": "zombie_villager_v2",
+            "description": "僵尸村民"
+        }
+    ]
+}

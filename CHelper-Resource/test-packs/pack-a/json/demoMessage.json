@@ -1,0 +1,24 @@
+{
+  // ===== JSON 结构声明（rawtext 等场景的结构补全数据）=====
+  "id": "demoMessage",
+  "start": "PARENT",
+  "node": [
+    {
+      "type": "JSON_OBJECT",
+      "id": "PARENT",
+      "description": "消息对象：{ \"text\": \"...\" }",
+      "data": [
+        {
+          "key": "text",
+          "description": "消息文本",
+          "value": ["TEXT"]
+        }
+      ]
+    },
+    {
+      "type": "JSON_STRING",
+      "id": "TEXT",
+      "description": "原始文本字符串"
+    }
+  ]
+}

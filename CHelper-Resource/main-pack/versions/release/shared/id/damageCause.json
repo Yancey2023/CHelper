@@ -1,0 +1,154 @@
+{
+    "id": "damageCause",
+    "type": "normal",
+    "content": [
+        {
+            "name": "anvil",
+            "description": "铁砧"
+        },
+        {
+            "name": "block_explosion",
+            "description": "方块爆炸"
+        },
+        {
+            "name": "campfire",
+            "description": "营火"
+        },
+        {
+            "name": "charging",
+            "description": "（未使用）"
+        },
+        {
+            "name": "contact",
+            "description": "仙人掌或甜浆果丛"
+        },
+        {
+            "name": "dehydration",
+            "description": "脱水"
+        },
+        {
+            "name": "drowning",
+            "description": "溺水或淋雨"
+        },
+        {
+            "name": "entity_attack",
+            "description": "近战攻击"
+        },
+        {
+            "name": "entity_explosion",
+            "description": "实体爆炸"
+        },
+        {
+            "name": "fall",
+            "description": "摔落或末影珍珠"
+        },
+        {
+            "name": "falling_block",
+            "description": "下落的方块（除铁砧外）"
+        },
+        {
+            "name": "fire",
+            "description": "火或篝火"
+        },
+        {
+            "name": "fire_tick",
+            "description": "着火"
+        },
+        {
+            "name": "fireworks",
+            "description": "烟花爆炸"
+        },
+        {
+            "name": "fly_into_wall",
+            "description": "动能"
+        },
+        {
+            "name": "freezing",
+            "description": "冰冻"
+        },
+        {
+            "name": "lava",
+            "description": "熔岩"
+        },
+        {
+            "name": "lightning",
+            "description": "闪电"
+        },
+        {
+            "name": "mace_smash",
+            "description": "重锤下落攻击"
+        },
+        {
+            "name": "magic",
+            "description": "药水、龙息、唤魔者尖牙或守卫者激光"
+        },
+        {
+            "name": "magma",
+            "description": "岩浆块"
+        },
+        {
+            "name": "none",
+            "description": "无"
+        },
+        {
+            "name": "override",
+            "description": "程序直接覆写生命值"
+        },
+        {
+            "name": "piston",
+            "description": "活塞"
+        },
+        {
+            "name": "projectile",
+            "description": "弹射物"
+        },
+        {
+            "name": "ram_attack",
+            "description": "冲撞攻击"
+        },
+        {
+            "name": "self_destruct",
+            "description": "/kill 命令"
+        },
+        {
+            "name": "sonic_boom",
+            "description": "监守者远程攻击"
+        },
+        {
+            "name": "soul_campfire",
+            "description": "灵魂营火"
+        },
+        {
+            "name": "stalactite",
+            "description": "钟乳石"
+        },
+        {
+            "name": "stalagmite",
+            "description": "石笋"
+        },
+        {
+            "name": "starve",
+            "description": "饥饿"
+        },
+        {
+            "name": "suffocation",
+            "description": "窒息"
+        },
+        {
+            "name": "temperature",
+            "description": "雪傀儡在干燥、温暖或下界生物群系中"
+        },
+        {
+            "name": "thorns",
+            "description": "荆棘"
+        },
+        {
+            "name": "void",
+            "description": "虚空"
+        },
+        {
+            "name": "wither",
+            "description": "凋零"
+        }
+    ]
+}

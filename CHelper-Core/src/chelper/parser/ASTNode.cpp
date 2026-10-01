@@ -100,7 +100,9 @@ namespace CHelper {
             }
             errorCount++;
         } else {
-            // 收集错误原因，尝试找出错误节点中最好的节点
+            // 收集错误原因，尝试找出错误节点中最好的节点。
+            // 同一位置的多个分支错误只保留"最先到达该位置"（whichBest）分支的，
+            // 避免可选/替代分支的错误（如坐标 ~ ^ 前缀缺失）与真实错误（类型不匹配）混报。
             size_t start = 0;
             for (size_t i = 0; i < childNodes.size(); ++i) {
                 const ASTNode &item = childNodes[i];
@@ -114,6 +116,9 @@ namespace CHelper {
                         whichBest = i;
                         errorReasons.clear();
                     } else {
+                        if (i != whichBest) [[likely]] {
+                            continue;
+                        }
                         for (const auto &item3: errorReasons) {
                             if (*item2 == *item3) [[unlikely]] {
                                 isAdd = false;

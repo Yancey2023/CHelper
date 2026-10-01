@@ -1,0 +1,20 @@
+{
+  "name": "Demo 服务器命令包",
+  "description": "演示 CHelper 拓展包：自定义命令、候选表与 JSON 结构；execute 子命令扩展与选择器变量为规划能力（依赖合成器与选择器数据化落地）",
+  "version": "0.1.0",
+  "versionCode": 1,
+  "versionType": "beta",
+  "branch": "thirdparty",
+  "author": "CHelper",
+  "packId": "demo-server-pack-0.1.0",
+  "isBasicPack": false,
+  "priority": 100,
+  "extends": {
+    "repeat": {
+      "execute": {
+        "mode": "append",
+        "file": "extensions/execute-addon.json"
+      }
+    }
+  }
+}

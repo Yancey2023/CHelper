@@ -1,0 +1,150 @@
+{
+    "id": "effect",
+    "type": "normal",
+    "content": [
+        {
+            "name": "absorption",
+            "description": "伤害吸收"
+        },
+        {
+            "name": "bad_omen",
+            "description": "不祥之兆"
+        },
+        {
+            "name": "blindness",
+            "description": "失明"
+        },
+        {
+            "name": "conduit_power",
+            "description": "潮涌能量"
+        },
+        {
+            "name": "darkness",
+            "description": "黑暗"
+        },
+        {
+            "name": "fatal_poison",
+            "description": "中毒（致命）"
+        },
+        {
+            "name": "fire_resistance",
+            "description": "抗火"
+        },
+        {
+            "name": "haste",
+            "description": "急迫"
+        },
+        {
+            "name": "health_boost",
+            "description": "生命提升"
+        },
+        {
+            "name": "hunger",
+            "description": "饥饿"
+        },
+        {
+            "name": "infested",
+            "description": "寄生"
+        },
+        {
+            "name": "instant_damage",
+            "description": "瞬间伤害"
+        },
+        {
+            "name": "instant_health",
+            "description": "瞬间治疗"
+        },
+        {
+            "name": "invisibility",
+            "description": "隐身"
+        },
+        {
+            "name": "jump_boost",
+            "description": "跳跃提升"
+        },
+        {
+            "name": "levitation",
+            "description": "飘浮"
+        },
+        {
+            "name": "mining_fatigue",
+            "description": "挖掘疲劳"
+        },
+        {
+            "name": "nausea",
+            "description": "反胃"
+        },
+        {
+            "name": "night_vision",
+            "description": "夜视"
+        },
+        {
+            "name": "oozing",
+            "description": "渗浆"
+        },
+        {
+            "name": "poison",
+            "description": "中毒"
+        },
+        {
+            "name": "raid_omen",
+            "description": "袭击之兆"
+        },
+        {
+            "name": "regeneration",
+            "description": "生命恢复"
+        },
+        {
+            "name": "resistance",
+            "description": "抗性提升"
+        },
+        {
+            "name": "saturation",
+            "description": "饱和"
+        },
+        {
+            "name": "slow_falling",
+            "description": "缓降"
+        },
+        {
+            "name": "slowness",
+            "description": "缓慢"
+        },
+        {
+            "name": "speed",
+            "description": "迅捷"
+        },
+        {
+            "name": "strength",
+            "description": "力量"
+        },
+        {
+            "name": "trial_omen",
+            "description": "试炼之兆"
+        },
+        {
+            "name": "village_hero",
+            "description": "村庄英雄"
+        },
+        {
+            "name": "water_breathing",
+            "description": "水下呼吸"
+        },
+        {
+            "name": "weakness",
+            "description": "虚弱"
+        },
+        {
+            "name": "weaving",
+            "description": "盘丝"
+        },
+        {
+            "name": "wind_charged",
+            "description": "蓄风"
+        },
+        {
+            "name": "wither",
+            "description": "凋零"
+        }
+    ]
+}

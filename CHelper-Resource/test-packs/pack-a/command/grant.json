@@ -1,0 +1,31 @@
+{
+  // ===== 第二条命令：演示"目标选择器"参数 =====
+  "name": [
+    "grant"
+  ],
+  "description": "【A】向目标授予测试头衔（TARGET_SELECTOR 参数演示）",
+
+  "syntax": [
+    "/grant <target: target>",  // 目标选择器参数
+    "/grant all"
+  ],
+
+  "node": {
+    "<target: target>": {         // 键与 syntax 占位符一致
+      "type": "TARGET_SELECTOR",  // 值 = 目标选择器，如 @a[scores={...}]；补全/校验内核内置
+      "description": "授予对象（选择器）",
+      "isOnlyOne": false,         // false=允许多个目标（@a/@e）
+      "isMustPlayer": true,       // 是否只允许玩家（@a/@p/@r/@s）
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "all": {
+      "type": "TEXT",
+      "description": "授予所有玩家",
+      "data": {
+        "name": "all",
+        "description": "授予所有玩家"
+      }
+    }
+  }
+}

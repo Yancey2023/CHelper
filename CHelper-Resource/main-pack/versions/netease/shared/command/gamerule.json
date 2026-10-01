@@ -1,0 +1,39 @@
+{
+  "name": [
+    "gamerule"
+  ],
+  "description": "设置或查询游戏规则",
+  "syntax": [
+    "/gamerule",
+    "/gamerule <rule: BoolGameRule> [value: Boolean]",
+    "/gamerule <rule: IntGameRule> [value: int]"
+  ],
+  "node": {
+    "[value: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "值",
+      "description": "将游戏规则设置的值",
+      "descriptionFalse": "设置为false",
+      "descriptionTrue": "设置为true"
+    },
+    "[value: int]": {
+      "type": "INTEGER",
+      "brief": "值",
+      "description": "将游戏规则设置的值"
+    },
+    "<rule: BoolGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": false,
+      "key": "gameRuleBoolean"
+    },
+    "<rule: IntGameRule>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏规则",
+      "description": "要设置或查询的游戏规则",
+      "ignoreError": false,
+      "key": "gameRuleInteger"
+    }
+  }
+}

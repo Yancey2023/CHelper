@@ -1,0 +1,552 @@
+{
+    "id": "animationController",
+    "type": "normal",
+    "content": [
+        {
+            "name": "controller.animation.agent.move"
+        },
+        {
+            "name": "controller.animation.allay.dancing"
+        },
+        {
+            "name": "controller.animation.allay.general"
+        },
+        {
+            "name": "controller.animation.allay.holding"
+        },
+        {
+            "name": "controller.animation.allay.look_at_target"
+        },
+        {
+            "name": "controller.animation.armadillo.look_at_target"
+        },
+        {
+            "name": "controller.animation.armadillo.roll_up"
+        },
+        {
+            "name": "controller.animation.armadillo.walk"
+        },
+        {
+            "name": "controller.animation.armor_stand.holding_heavy_core"
+        },
+        {
+            "name": "controller.animation.armor_stand.pose"
+        },
+        {
+            "name": "controller.animation.armor_stand.wiggle"
+        },
+        {
+            "name": "controller.animation.axolotl.general"
+        },
+        {
+            "name": "controller.animation.axolotl.move"
+        },
+        {
+            "name": "controller.animation.bat.move"
+        },
+        {
+            "name": "controller.animation.bee.drip"
+        },
+        {
+            "name": "controller.animation.bee.root"
+        },
+        {
+            "name": "controller.animation.bee.sting"
+        },
+        {
+            "name": "controller.animation.blaze.flame"
+        },
+        {
+            "name": "controller.animation.blaze.move"
+        },
+        {
+            "name": "controller.animation.breeze.ground_particles"
+        },
+        {
+            "name": "controller.animation.breeze.idle"
+        },
+        {
+            "name": "controller.animation.breeze.idle_ground_sound"
+        },
+        {
+            "name": "controller.animation.breeze.jump"
+        },
+        {
+            "name": "controller.animation.breeze.look_at"
+        },
+        {
+            "name": "controller.animation.breeze.move"
+        },
+        {
+            "name": "controller.animation.breeze.shoot"
+        },
+        {
+            "name": "controller.animation.camel.general"
+        },
+        {
+            "name": "controller.animation.camel.idle"
+        },
+        {
+            "name": "controller.animation.cat.baby"
+        },
+        {
+            "name": "controller.animation.cat.look_at_target"
+        },
+        {
+            "name": "controller.animation.cat.move"
+        },
+        {
+            "name": "controller.animation.copper_golem.chest_interaction"
+        },
+        {
+            "name": "controller.animation.copper_golem.idle"
+        },
+        {
+            "name": "controller.animation.copper_golem.walk"
+        },
+        {
+            "name": "controller.animation.creaking.attack"
+        },
+        {
+            "name": "controller.animation.creaking.look_at_target"
+        },
+        {
+            "name": "controller.animation.creaking.sway"
+        },
+        {
+            "name": "controller.animation.creaking.twitch"
+        },
+        {
+            "name": "controller.animation.creaking.walk"
+        },
+        {
+            "name": "controller.animation.creeper.head"
+        },
+        {
+            "name": "controller.animation.creeper.legs"
+        },
+        {
+            "name": "controller.animation.creeper.swelling"
+        },
+        {
+            "name": "controller.animation.dolphin.general"
+        },
+        {
+            "name": "controller.animation.drowned.attack.rotations"
+        },
+        {
+            "name": "controller.animation.elytra.default"
+        },
+        {
+            "name": "controller.animation.enderman.base_pose"
+        },
+        {
+            "name": "controller.animation.enderman.carrying"
+        },
+        {
+            "name": "controller.animation.enderman.scary_face"
+        },
+        {
+            "name": "controller.animation.endermite.move"
+        },
+        {
+            "name": "controller.animation.evoker.general"
+        },
+        {
+            "name": "controller.animation.evoker.general.v1.0"
+        },
+        {
+            "name": "controller.animation.fish.general"
+        },
+        {
+            "name": "controller.animation.fox.move"
+        },
+        {
+            "name": "controller.animation.frog.croaking"
+        },
+        {
+            "name": "controller.animation.frog.eat_mob"
+        },
+        {
+            "name": "controller.animation.frog.general"
+        },
+        {
+            "name": "controller.animation.ghast.move"
+        },
+        {
+            "name": "controller.animation.ghast.scale"
+        },
+        {
+            "name": "controller.animation.goat.move"
+        },
+        {
+            "name": "controller.animation.happy_ghast.move"
+        },
+        {
+            "name": "controller.animation.happy_ghast.scale"
+        },
+        {
+            "name": "controller.animation.hoglin.attack"
+        },
+        {
+            "name": "controller.animation.hoglin.baby_scaling"
+        },
+        {
+            "name": "controller.animation.hoglin.look_at_target"
+        },
+        {
+            "name": "controller.animation.hoglin.walk"
+        },
+        {
+            "name": "controller.animation.humanoid.attack"
+        },
+        {
+            "name": "controller.animation.humanoid.baby_big_head"
+        },
+        {
+            "name": "controller.animation.humanoid.base_pose"
+        },
+        {
+            "name": "controller.animation.humanoid.bob"
+        },
+        {
+            "name": "controller.animation.humanoid.bow_and_arrow"
+        },
+        {
+            "name": "controller.animation.humanoid.brandish_spear"
+        },
+        {
+            "name": "controller.animation.humanoid.charging"
+        },
+        {
+            "name": "controller.animation.humanoid.damage_nearby_mobs"
+        },
+        {
+            "name": "controller.animation.humanoid.holding"
+        },
+        {
+            "name": "controller.animation.humanoid.holding_spyglass"
+        },
+        {
+            "name": "controller.animation.humanoid.look_at_target"
+        },
+        {
+            "name": "controller.animation.humanoid.melee_spear"
+        },
+        {
+            "name": "controller.animation.humanoid.move"
+        },
+        {
+            "name": "controller.animation.humanoid.riding"
+        },
+        {
+            "name": "controller.animation.humanoid.riding_legs_only"
+        },
+        {
+            "name": "controller.animation.humanoid.sneaking"
+        },
+        {
+            "name": "controller.animation.humanoid.swimming"
+        },
+        {
+            "name": "controller.animation.humanoid.use_item_progress"
+        },
+        {
+            "name": "controller.animation.iron_golem.arm_movement"
+        },
+        {
+            "name": "controller.animation.iron_golem.move"
+        },
+        {
+            "name": "controller.animation.llama.baby"
+        },
+        {
+            "name": "controller.animation.llama.move"
+        },
+        {
+            "name": "controller.animation.magma_cube.general"
+        },
+        {
+            "name": "controller.animation.mooshroom.baby"
+        },
+        {
+            "name": "controller.animation.mooshroom.move"
+        },
+        {
+            "name": "controller.animation.mooshroom.setup"
+        },
+        {
+            "name": "controller.animation.nautilus.general"
+        },
+        {
+            "name": "controller.animation.nautilus.sound"
+        },
+        {
+            "name": "controller.animation.ocelot.baby"
+        },
+        {
+            "name": "controller.animation.ocelot.look_at_target"
+        },
+        {
+            "name": "controller.animation.ocelot.move"
+        },
+        {
+            "name": "controller.animation.ocelot_v1.0.baby"
+        },
+        {
+            "name": "controller.animation.ocelot_v1.0.look_at_target"
+        },
+        {
+            "name": "controller.animation.ocelot_v1.0.move"
+        },
+        {
+            "name": "controller.animation.ocelot_v1.0.setup"
+        },
+        {
+            "name": "controller.animation.panda.baby"
+        },
+        {
+            "name": "controller.animation.panda.move"
+        },
+        {
+            "name": "controller.animation.panda.sneezing"
+        },
+        {
+            "name": "controller.animation.panda.unhappy"
+        },
+        {
+            "name": "controller.animation.parrot.move"
+        },
+        {
+            "name": "controller.animation.parrot.setup"
+        },
+        {
+            "name": "controller.animation.persona.blink"
+        },
+        {
+            "name": "controller.animation.phantom.base_pose"
+        },
+        {
+            "name": "controller.animation.phantom.move"
+        },
+        {
+            "name": "controller.animation.piglin.attack"
+        },
+        {
+            "name": "controller.animation.pillager.attack"
+        },
+        {
+            "name": "controller.animation.pillager.root"
+        },
+        {
+            "name": "controller.animation.player.base"
+        },
+        {
+            "name": "controller.animation.player.crossbow"
+        },
+        {
+            "name": "controller.animation.player.first_person_attack"
+        },
+        {
+            "name": "controller.animation.player.first_person_map"
+        },
+        {
+            "name": "controller.animation.player.first_person_melee_spear"
+        },
+        {
+            "name": "controller.animation.player.hudplayer"
+        },
+        {
+            "name": "controller.animation.player.melee_spear"
+        },
+        {
+            "name": "controller.animation.player.root"
+        },
+        {
+            "name": "controller.animation.polarbear.baby"
+        },
+        {
+            "name": "controller.animation.polarbear.move"
+        },
+        {
+            "name": "controller.animation.rabbit.baby"
+        },
+        {
+            "name": "controller.animation.rabbit.general"
+        },
+        {
+            "name": "controller.animation.ravager.head_movement"
+        },
+        {
+            "name": "controller.animation.ravager.move"
+        },
+        {
+            "name": "controller.animation.sheep.move"
+        },
+        {
+            "name": "controller.animation.shield.wield"
+        },
+        {
+            "name": "controller.animation.shulker.facing"
+        },
+        {
+            "name": "controller.animation.shulker.move"
+        },
+        {
+            "name": "controller.animation.silverfish.move"
+        },
+        {
+            "name": "controller.animation.skeleton.attack"
+        },
+        {
+            "name": "controller.animation.sniffer.baby"
+        },
+        {
+            "name": "controller.animation.sniffer.dig"
+        },
+        {
+            "name": "controller.animation.sniffer.feeling_happy"
+        },
+        {
+            "name": "controller.animation.sniffer.general"
+        },
+        {
+            "name": "controller.animation.sniffer.long_sniff"
+        },
+        {
+            "name": "controller.animation.sniffer.search"
+        },
+        {
+            "name": "controller.animation.sniffer.sniffsniff"
+        },
+        {
+            "name": "controller.animation.sniffer.stand_up"
+        },
+        {
+            "name": "controller.animation.sniffer.walk"
+        },
+        {
+            "name": "controller.animation.snowgolem.move"
+        },
+        {
+            "name": "controller.animation.snowgolem.move.v1.8"
+        },
+        {
+            "name": "controller.animation.spear.held"
+        },
+        {
+            "name": "controller.animation.spear.hit"
+        },
+        {
+            "name": "controller.animation.spider.move"
+        },
+        {
+            "name": "controller.animation.tadpole.general"
+        },
+        {
+            "name": "controller.animation.trident.wield"
+        },
+        {
+            "name": "controller.animation.tripod_camera.base_pose"
+        },
+        {
+            "name": "controller.animation.turtle.general"
+        },
+        {
+            "name": "controller.animation.turtle.move"
+        },
+        {
+            "name": "controller.animation.vex.charge"
+        },
+        {
+            "name": "controller.animation.vex.idle"
+        },
+        {
+            "name": "controller.animation.vex.move"
+        },
+        {
+            "name": "controller.animation.villager.baby"
+        },
+        {
+            "name": "controller.animation.villager.general"
+        },
+        {
+            "name": "controller.animation.villager.move"
+        },
+        {
+            "name": "controller.animation.villager_v2.baby"
+        },
+        {
+            "name": "controller.animation.villager_v2.general"
+        },
+        {
+            "name": "controller.animation.villager_v2.move"
+        },
+        {
+            "name": "controller.animation.villager_v2.raise_arms"
+        },
+        {
+            "name": "controller.animation.vindicator.base"
+        },
+        {
+            "name": "controller.animation.vindicator.base.v1.0"
+        },
+        {
+            "name": "controller.animation.warden.hurt"
+        },
+        {
+            "name": "controller.animation.warden.melee_attacking"
+        },
+        {
+            "name": "controller.animation.warden.roar"
+        },
+        {
+            "name": "controller.animation.warden.shiver"
+        },
+        {
+            "name": "controller.animation.warden.sniff"
+        },
+        {
+            "name": "controller.animation.warden.sonic_boom"
+        },
+        {
+            "name": "controller.animation.witch.general"
+        },
+        {
+            "name": "controller.animation.wither_boss.move"
+        },
+        {
+            "name": "controller.animation.wither_skeleton.attack"
+        },
+        {
+            "name": "controller.animation.wolf.angry"
+        },
+        {
+            "name": "controller.animation.wolf.baby_scaling"
+        },
+        {
+            "name": "controller.animation.wolf.head_rot_z"
+        },
+        {
+            "name": "controller.animation.wolf.look_at"
+        },
+        {
+            "name": "controller.animation.wolf.setup"
+        },
+        {
+            "name": "controller.animation.wolf.shaking"
+        },
+        {
+            "name": "controller.animation.wolf.sitting"
+        },
+        {
+            "name": "controller.animation.wolf.tail_default"
+        },
+        {
+            "name": "controller.animation.zombie.attack_bare_hand"
+        },
+        {
+            "name": "controller.animation.zombie.swimming"
+        }
+    ]
+}

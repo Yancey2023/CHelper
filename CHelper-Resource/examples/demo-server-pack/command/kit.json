@@ -1,0 +1,34 @@
+{
+  "name": [
+    "kit"
+  ],
+  "description": "领取礼包（示例服务器命令）",
+  "syntax": [
+    "/kit <kitName: Kit> [player: target]",
+    "/kit list"
+  ],
+  "node": {
+    "<kitName: Kit>": {
+      "type": "NORMAL_ID",
+      "brief": "礼包名",
+      "description": "要领取的礼包",
+      "key": "kit"
+    },
+    "[player: target]": {
+      "type": "TARGET_SELECTOR",
+      "description": "礼包发放对象，默认为自己",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    },
+    "list": {
+      "type": "TEXT",
+      "description": "列出本服务器全部礼包",
+      "data": {
+        "name": "list",
+        "description": "列出本服务器全部礼包"
+      }
+    }
+  }
+}

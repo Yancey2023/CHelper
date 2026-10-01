@@ -17,6 +17,7 @@
  */
 
 #include <chelper/node/CommandNode.h>
+#include <chelper/resources/CPack.h>
 #include <chelper/node/NodeInitialization.h>
 
 #ifdef CHelperDebug
@@ -134,11 +135,24 @@ namespace CHelper::Node {
           canContainSpace(canContainSpace),
           ignoreLater(ignoreLater) {}
 
+    // 内置选择器变量/参数名单（单一来源：合成器冲突校验也走这两个函数，勿直接复制文字表）
+    std::vector<std::u16string> TargetSelectorData::builtinVariableNames() {
+        return {u"@e", u"@a", u"@r", u"@p", u"@s", u"@n", u"@initiator"};
+    }
+
+    std::vector<std::u16string> TargetSelectorData::builtinArgumentNames() {
+        return {u"x", u"y", u"z", u"r", u"rm", u"dx", u"dy", u"dz", u"scores", u"tag", u"name",
+                u"type", u"family", u"rx", u"rxm", u"ry", u"rym", u"hasitem", u"haspermission",
+                u"has_property", u"l", u"lm", u"m", u"c"};
+    }
+
     NodeString TargetSelectorData::nodePlayerName("TARGET_SELECTOR_PLAYER_NAME", u"玩家名字", false, true, false);
     NodeSingleSymbol TargetSelectorData::nodeWildcard(u'*', u"所有正被记分板跟踪的实体");
     NodeSingleSymbol TargetSelectorData::nodeSeparator(u',', u"目标选择器参数分隔符");
     NodeString TargetSelectorData::nodeString("TARGET_SELECTOR_ARGUMENT_STRING", u"目标选择器参数(字符串)", true, true, false);
-    NodeBoolean TargetSelectorData::nodeBoolean("BOOLEAN", u"布尔值", std::nullopt, std::nullopt);
+    NodeBoolean TargetSelectorData::nodeBoolean(
+            "BOOLEAN", u"布尔值",
+            std::optional<std::u16string>(u"开（是）"), std::optional<std::u16string>(u"关（否）"));
     NodeRelativeFloat TargetSelectorData::nodeRelativeFloat("TARGET_SELECTOR_ARGUMENT_RELATIVE_FLOAT", u"目标选择器参数(相对坐标)", false);
 
     TargetSelectorData::TargetSelectorData() {
@@ -227,17 +241,34 @@ namespace CHelper::Node {
     }
 
     void TargetSelectorData::init(const CPack &cpack) {
+        // 内置变量（保留字，不可被覆盖）
+        auto variableContent = std::make_shared<std::vector<std::shared_ptr<NormalId>>>(std::vector<std::shared_ptr<NormalId>>{
+                NormalId::make(u"@e", u"选择所有实体(只选择活着的实体)"),
+                NormalId::make(u"@a", u"选择所有玩家(无论死活)"),
+                NormalId::make(u"@r", u"选择一名随机玩家(可通过type选择非玩家实体)(只选择活着的实体)"),
+                NormalId::make(u"@p", u"选择最近的玩家(只选择活着的玩家)"),
+                NormalId::make(u"@s", u"命令的执行者(只选择1个实体)(无论是否濒死)"),
+                NormalId::make(u"@n", u"选择最近的一个实体(只选择活着的实体)"),
+                NormalId::make(u"@initiator", u"当前与该NPC进行交互的玩家(在NPC内置的命令界面中使用)")});
+        // selector/*.json V1：追加自定义变量（与内置同名在合成器整包拒绝，此处防御性去重）
+        for (const auto &v: cpack.selectorVariables) {
+            bool dup = false;
+            for (const auto &e: *variableContent) {
+                if (e->name == v.name) {
+                    dup = true;
+                    break;
+                }
+            }
+            if (!dup) {
+                auto id = NormalId::make(v.name, v.description);
+                if (v.packName.has_value()) {
+                    id->packName = v.packName; // 变量候选来源徽标
+                }
+                variableContent->push_back(std::move(id));
+            }
+        }
         nodeTargetSelectorVariable = NodeNormalId(
-                "TARGET_SELECTOR_VARIABLE", u"目标选择器变量",
-                std::make_shared<std::vector<std::shared_ptr<NormalId>>>(std::vector<std::shared_ptr<NormalId>>{
-                        NormalId::make(u"@e", u"选择所有实体(只选择活着的实体)"),
-                        NormalId::make(u"@a", u"选择所有玩家(无论死活)"),
-                        NormalId::make(u"@r", u"选择一名随机玩家(可通过type选择非玩家实体)(只选择活着的实体)"),
-                        NormalId::make(u"@p", u"选择最近的玩家(只选择活着的玩家)"),
-                        NormalId::make(u"@s", u"命令的执行者(只选择1个实体)(无论是否濒死)"),
-                        NormalId::make(u"@n", u"选择最近的一个实体(只选择活着的实体)"),
-                        NormalId::make(u"@initiator", u"当前与该NPC进行交互的玩家(在NPC内置的命令界面中使用)")}),
-                true, false,
+                "TARGET_SELECTOR_VARIABLE", u"目标选择器变量", variableContent, true, false,
                 [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
                     tokenReader.push();
                     auto childNodes = {tokenReader.readSymbolASTNode(node), tokenReader.readStringASTNode(node)};
@@ -253,6 +284,66 @@ namespace CHelper::Node {
         initNode(nodeHasItemList1, cpack);
         initNode(nodeHasItemList2, cpack);
         initNode(nodeHasItem, cpack);
+        // selector/*.json V1：自定义简单参数并入全局参数表（合成器已处理与内置同名）
+        if (!cpack.selectorArguments.empty()) {
+            auto &datas = nodeArgument.equalDatas;
+            // 参数名候选（KEY）来源徽标：扩展参数与其 EqualData 一一对应记录来源
+            std::vector<std::optional<std::u16string>> extensionArgSources;
+            for (const auto &a: cpack.selectorArguments) {
+                if (std::ranges::find_if(datas, [&a](const EqualData &d) { return d.name == a.name; }) != datas.end()) {
+                    continue; // 防御：同名已存在（内置或先前包）
+                }
+                NodeWithType value;
+                if (a.valueType == "BOOLEAN") {
+                    value = nodeBoolean;
+                } else if (a.valueType == "STRING") {
+                    value = nodeString;
+                } else if (a.valueType == "RELATIVE_FLOAT") {
+                    value = nodeRelativeFloat;
+                } else if (a.valueType == "INTEGER") {
+                    auto node = std::make_shared<NodeInteger>("SELECTOR_ARGUMENT_INTEGER", u"目标选择器参数(整数)", std::nullopt, std::nullopt);
+                    extraValueNodes.push_back(node);
+                    value = *node;
+                } else if (a.valueType == "FLOAT") {
+                    auto node = std::make_shared<NodeFloat>("SELECTOR_ARGUMENT_FLOAT", u"目标选择器参数(小数)", std::nullopt, std::nullopt);
+                    extraValueNodes.push_back(node);
+                    value = *node;
+                } else if (a.valueType == "RANGE") {
+                    auto node = std::make_shared<NodeRange>("SELECTOR_ARGUMENT_RANGE", u"目标选择器参数(范围)");
+                    extraValueNodes.push_back(node);
+                    value = *node;
+                } else if (a.valueType == "NORMAL_ID") {
+                    auto node = std::make_shared<NodeNormalId>("SELECTOR_ARGUMENT_NORMAL_ID", a.description, *a.key, false);
+                    extraValueNodes.push_back(node);
+                    initNode(*node, cpack);
+                    value = *node;
+                } else if (a.valueType == "NAMESPACE_ID") {
+                    auto node = std::make_shared<NodeNamespaceId>("SELECTOR_ARGUMENT_NAMESPACE_ID", a.description, *a.key, false);
+                    extraValueNodes.push_back(node);
+                    initNode(*node, cpack);
+                    value = *node;
+                } else {
+                    continue; // 合成器已校验，不会到这里
+                }
+                datas.emplace_back(a.name, a.description, a.canUseNotEqual, value);
+                extensionArgSources.push_back(a.packName);
+            }
+            // 参数名补全表（nodeKey）随扩展行重建（内置键无来源；扩展键按记录对齐打包名）
+            const size_t builtinArgCount = datas.size() - extensionArgSources.size();
+            nodeArgument.nodeKeyContent = std::make_shared<std::vector<std::shared_ptr<NormalId>>>();
+            nodeArgument.nodeKeyContent->reserve(datas.size());
+            for (size_t i = 0; i < datas.size(); ++i) {
+                auto id = NormalId::make(datas[i].name, datas[i].description);
+                if (i >= builtinArgCount) {
+                    const auto &source = extensionArgSources[i - builtinArgCount];
+                    if (source.has_value()) {
+                        id->packName = source; // 参数名候选来源徽标
+                    }
+                }
+                nodeArgument.nodeKeyContent->push_back(std::move(id));
+            }
+            nodeArgument.nodeKey = NodeNormalId("KEY", u"参数名", nodeArgument.nodeKeyContent, true);
+        }
         initNode(nodeArgument, cpack);
         initNode(nodeArguments, cpack);
         initNode(nodeTargetSelectorVariableWithArgument, cpack);

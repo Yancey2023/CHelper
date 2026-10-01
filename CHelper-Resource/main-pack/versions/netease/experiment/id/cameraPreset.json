@@ -1,0 +1,30 @@
+{
+    "id": "cameraPreset",
+    "type": "normal",
+    "content": [
+        {
+            "name": "minecraft:first_person",
+            "description": "第一人称视角"
+        },
+        {
+            "name": "minecraft:fixed_boom",
+            "description": "第三人称固定视角"
+        },
+        {
+            "name": "minecraft:follow_orbit",
+            "description": "第三人称越肩视角"
+        },
+        {
+            "name": "minecraft:free",
+            "description": "自由视角"
+        },
+        {
+            "name": "minecraft:third_person",
+            "description": "第三人称背面视角"
+        },
+        {
+            "name": "minecraft:third_person_front",
+            "description": "第三人称正面视角"
+        }
+    ]
+}

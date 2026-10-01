@@ -1,0 +1,534 @@
+{
+    "id": "entityFamily",
+    "type": "normal",
+    "content": [
+        {
+            "name": "adult_piglin",
+            "description": "成年猪灵"
+        },
+        {
+            "name": "allay",
+            "description": "悦灵"
+        },
+        {
+            "name": "animal",
+            "description": "动物"
+        },
+        {
+            "name": "armadillo",
+            "description": "犰狳"
+        },
+        {
+            "name": "armor_stand",
+            "description": "盔甲架"
+        },
+        {
+            "name": "armorer",
+            "description": "盔甲匠"
+        },
+        {
+            "name": "arthropod",
+            "description": "节肢生物"
+        },
+        {
+            "name": "artisan",
+            "description": "工匠（屠夫/皮匠/石匠）"
+        },
+        {
+            "name": "axolotl",
+            "description": "美西螈"
+        },
+        {
+            "name": "baby_turtle",
+            "description": "幼年海龟"
+        },
+        {
+            "name": "bat",
+            "description": "蝙蝠"
+        },
+        {
+            "name": "bee",
+            "description": "蜜蜂"
+        },
+        {
+            "name": "blacksmith",
+            "description": "铁匠（盔甲匠/工具匠/武器匠）"
+        },
+        {
+            "name": "blaze",
+            "description": "烈焰人"
+        },
+        {
+            "name": "boat",
+            "description": "船"
+        },
+        {
+            "name": "bogged",
+            "description": "沼骸"
+        },
+        {
+            "name": "breeze",
+            "description": "旋风人"
+        },
+        {
+            "name": "butcher",
+            "description": "屠夫"
+        },
+        {
+            "name": "camel",
+            "description": "骆驼"
+        },
+        {
+            "name": "cartographer",
+            "description": "制图师"
+        },
+        {
+            "name": "cat",
+            "description": "猫"
+        },
+        {
+            "name": "cavespider",
+            "description": "洞穴蜘蛛"
+        },
+        {
+            "name": "chicken",
+            "description": "鸡"
+        },
+        {
+            "name": "cleric",
+            "description": "牧师"
+        },
+        {
+            "name": "cod",
+            "description": "鳕鱼"
+        },
+        {
+            "name": "cow",
+            "description": "牛"
+        },
+        {
+            "name": "creaking",
+            "description": "嘎枝"
+        },
+        {
+            "name": "creeper",
+            "description": "苦力怕"
+        },
+        {
+            "name": "dolphin",
+            "description": "海豚"
+        },
+        {
+            "name": "donkey",
+            "description": "驴"
+        },
+        {
+            "name": "dragon",
+            "description": "末影龙"
+        },
+        {
+            "name": "drowned",
+            "description": "溺尸"
+        },
+        {
+            "name": "enderman",
+            "description": "末影人"
+        },
+        {
+            "name": "endermite",
+            "description": "末影螨"
+        },
+        {
+            "name": "evocation_illager",
+            "description": "唤魔者"
+        },
+        {
+            "name": "farmer",
+            "description": "农民"
+        },
+        {
+            "name": "fish",
+            "description": "鱼"
+        },
+        {
+            "name": "fisherman",
+            "description": "渔夫"
+        },
+        {
+            "name": "fletcher",
+            "description": "制箭师"
+        },
+        {
+            "name": "fox",
+            "description": "狐狸"
+        },
+        {
+            "name": "frog",
+            "description": "青蛙"
+        },
+        {
+            "name": "ghast",
+            "description": "恶魂"
+        },
+        {
+            "name": "goat",
+            "description": "山羊"
+        },
+        {
+            "name": "guardian",
+            "description": "守卫者"
+        },
+        {
+            "name": "guardian_elder",
+            "description": "远古守卫者"
+        },
+        {
+            "name": "hoglin",
+            "description": "疣猪兽"
+        },
+        {
+            "name": "hoglin_adult",
+            "description": "成年疣猪兽"
+        },
+        {
+            "name": "hoglin_baby",
+            "description": "幼年疣猪兽"
+        },
+        {
+            "name": "hoglin_huntable",
+            "description": "会被猪灵猎杀的疣猪兽"
+        },
+        {
+            "name": "horse",
+            "description": "马"
+        },
+        {
+            "name": "husk",
+            "description": "尸壳"
+        },
+        {
+            "name": "illager",
+            "description": "灾厄村民"
+        },
+        {
+            "name": "inanimate",
+            "description": "非生物"
+        },
+        {
+            "name": "irongolem",
+            "description": "铁傀儡"
+        },
+        {
+            "name": "leatherworker",
+            "description": "皮匠"
+        },
+        {
+            "name": "librarian",
+            "description": "图书管理员"
+        },
+        {
+            "name": "lightning",
+            "description": "闪电束"
+        },
+        {
+            "name": "lightweight",
+            "description": "轻型生物"
+        },
+        {
+            "name": "llama",
+            "description": "羊驼"
+        },
+        {
+            "name": "magmacube",
+            "description": "岩浆怪"
+        },
+        {
+            "name": "mason",
+            "description": "石匠（僵尸村民）"
+        },
+        {
+            "name": "minecart",
+            "description": "矿车"
+        },
+        {
+            "name": "mob",
+            "description": "生物"
+        },
+        {
+            "name": "monster",
+            "description": "怪物"
+        },
+        {
+            "name": "mule",
+            "description": "骡"
+        },
+        {
+            "name": "mushroomcow",
+            "description": "哞菇"
+        },
+        {
+            "name": "nitwit",
+            "description": "傻子村民"
+        },
+        {
+            "name": "npc",
+            "description": "NPC"
+        },
+        {
+            "name": "ocelot",
+            "description": "豹猫"
+        },
+        {
+            "name": "pacified",
+            "description": "失去螫针的蜜蜂"
+        },
+        {
+            "name": "panda",
+            "description": "熊猫"
+        },
+        {
+            "name": "panda_aggressive",
+            "description": "好斗的熊猫"
+        },
+        {
+            "name": "parrot_tame",
+            "description": "驯服的鹦鹉"
+        },
+        {
+            "name": "parrot_wild",
+            "description": "野生的鹦鹉"
+        },
+        {
+            "name": "peasant",
+            "description": "农民/渔夫/制箭师/牧羊人/傻子村民/失业村民"
+        },
+        {
+            "name": "phantom",
+            "description": "幻翼"
+        },
+        {
+            "name": "pig",
+            "description": "猪"
+        },
+        {
+            "name": "piglin",
+            "description": "猪灵"
+        },
+        {
+            "name": "piglin_brute",
+            "description": "猪灵蛮兵"
+        },
+        {
+            "name": "piglin_hunter",
+            "description": "会猎杀疣猪兽的猪灵"
+        },
+        {
+            "name": "pillager",
+            "description": "掠夺者"
+        },
+        {
+            "name": "player",
+            "description": "玩家"
+        },
+        {
+            "name": "polarbear",
+            "description": "北极熊"
+        },
+        {
+            "name": "priest",
+            "description": "神职人员（牧师）"
+        },
+        {
+            "name": "pufferfish",
+            "description": "河豚"
+        },
+        {
+            "name": "rabbit",
+            "description": "兔子"
+        },
+        {
+            "name": "ravager",
+            "description": "劫掠兽"
+        },
+        {
+            "name": "salmon",
+            "description": "鲑鱼"
+        },
+        {
+            "name": "sheep",
+            "description": "绵羊"
+        },
+        {
+            "name": "shepherd",
+            "description": "牧羊人"
+        },
+        {
+            "name": "shulker",
+            "description": "潜影贝"
+        },
+        {
+            "name": "silverfish",
+            "description": "蠹虫"
+        },
+        {
+            "name": "skeleton",
+            "description": "骷髅"
+        },
+        {
+            "name": "skeletonhorse",
+            "description": "骷髅马"
+        },
+        {
+            "name": "slime",
+            "description": "史莱姆"
+        },
+        {
+            "name": "sniffer",
+            "description": "嗅探兽"
+        },
+        {
+            "name": "snowgolem",
+            "description": "雪傀儡"
+        },
+        {
+            "name": "spider",
+            "description": "蜘蛛"
+        },
+        {
+            "name": "squid",
+            "description": "鱿鱼"
+        },
+        {
+            "name": "stone_mason",
+            "description": "石匠"
+        },
+        {
+            "name": "stray",
+            "description": "流浪者"
+        },
+        {
+            "name": "strider",
+            "description": "炽足兽"
+        },
+        {
+            "name": "strider_adult",
+            "description": "成年炽足兽"
+        },
+        {
+            "name": "strider_baby",
+            "description": "幼年炽足兽"
+        },
+        {
+            "name": "tadpole",
+            "description": "蝌蚪"
+        },
+        {
+            "name": "tnt",
+            "description": "TNT"
+        },
+        {
+            "name": "toolsmith",
+            "description": "工具匠"
+        },
+        {
+            "name": "trader_llama",
+            "description": "行商羊驼"
+        },
+        {
+            "name": "tripodcamera",
+            "description": "摄像机"
+        },
+        {
+            "name": "tropicalfish",
+            "description": "热带鱼"
+        },
+        {
+            "name": "turtle",
+            "description": "海龟"
+        },
+        {
+            "name": "undead",
+            "description": "亡灵生物"
+        },
+        {
+            "name": "unskilled",
+            "description": "失业村民"
+        },
+        {
+            "name": "vex",
+            "description": "恼鬼"
+        },
+        {
+            "name": "villager",
+            "description": "村民"
+        },
+        {
+            "name": "vindicator",
+            "description": "卫道士"
+        },
+        {
+            "name": "wandering_trader",
+            "description": "流浪商人"
+        },
+        {
+            "name": "wandering_trader_despawning",
+            "description": "即将消失的流浪商人"
+        },
+        {
+            "name": "warden",
+            "description": "监守者"
+        },
+        {
+            "name": "weaponsmith",
+            "description": "武器匠"
+        },
+        {
+            "name": "wind_charge",
+            "description": "风弹"
+        },
+        {
+            "name": "wind_charge_projectile",
+            "description": "风弹"
+        },
+        {
+            "name": "witch",
+            "description": "女巫"
+        },
+        {
+            "name": "wither",
+            "description": "凋灵"
+        },
+        {
+            "name": "wolf",
+            "description": "狼"
+        },
+        {
+            "name": "zoglin",
+            "description": "僵尸疣猪兽"
+        },
+        {
+            "name": "zoglin_adult",
+            "description": "成年僵尸疣猪兽"
+        },
+        {
+            "name": "zoglin_baby",
+            "description": "幼年僵尸疣猪兽"
+        },
+        {
+            "name": "zombie",
+            "description": "僵尸"
+        },
+        {
+            "name": "zombie_pigman",
+            "description": "僵尸猪灵"
+        },
+        {
+            "name": "zombie_villager",
+            "description": "僵尸村民"
+        },
+        {
+            "name": "zombiehorse",
+            "description": "僵尸马"
+        }
+    ]
+}

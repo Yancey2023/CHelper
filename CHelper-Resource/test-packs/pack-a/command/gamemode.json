@@ -1,0 +1,21 @@
+{
+  // ===== 游戏模式参数：引用【内置】normal 表 gameMode（跨包引用示例 2）=====
+  // NORMAL_ID 的 key 指向主包内置 normal 表（id = gameMode，含 survival/creative/…）。
+  "name": [
+    "pgamemode"
+  ],
+  "description": "【A】游戏模式参数（内置 gameMode 表引用：/pgamemode survival）",
+
+  "syntax": [
+    "/pgamemode <mode: GameMode>"
+  ],
+
+  "node": {
+    "<mode: GameMode>": {
+      "type": "NORMAL_ID",
+      "brief": "游戏模式",
+      "description": "候选来自内置 gameMode 表（survival/creative/adventure/spectator/default）",
+      "key": "gameMode"           // 主包 shared/id/gameMode.json 的 id（注意大小写）
+    }
+  }
+}

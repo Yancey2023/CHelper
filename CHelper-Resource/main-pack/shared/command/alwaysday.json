@@ -1,0 +1,19 @@
+{
+  "name": [
+    "alwaysday",
+    "daylock"
+  ],
+  "description": "锁定或解锁日夜循环",
+  "syntax": [
+    "/alwaysday [lock: Boolean]"
+  ],
+  "node": {
+    "[lock: Boolean]": {
+      "type": "BOOLEAN",
+      "brief": "是否锁定日夜更替",
+      "description": "是否锁定日夜更替",
+      "descriptionTrue": "锁定昼夜更替",
+      "descriptionFalse": "不锁定昼夜更替"
+    }
+  }
+}

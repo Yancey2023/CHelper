@@ -1,0 +1,276 @@
+{
+  "name": [
+    "scoreboard"
+  ],
+  "description": "管理记分板的目标、玩家和队伍",
+  "syntax": [
+    "/scoreboard objectives add <objective: string> dummy [displayName: string]",
+    "/scoreboard objectives list",
+    "/scoreboard objectives remove <objective: string>",
+    "/scoreboard objectives setdisplay <list|sidebar> [objective: string] [ascending|descending]",
+    "/scoreboard objectives setdisplay belowname [objective: string]",
+    "/scoreboard players <set|add|remove> <player: target> <objective: string> <count: int>",
+    "/scoreboard players list [playername: target]",
+    "/scoreboard players operation <targetName: target> <targetObjective: string> <operation: operator> <selector: target> <objective: string>",
+    "/scoreboard players random <player: target> <objective: string> <min: int> <max: int>",
+    "/scoreboard players reset <player: target> [objective: string]",
+    "/scoreboard players test <player: target> <objective: string> <min: wildcard int> [max: wildcard int]"
+  ],
+  "node": {
+    "objectives": {
+      "type": "TEXT",
+      "description": "创建、列出、删除、显示记分项",
+      "data": {
+        "name": "objectives",
+        "description": "创建、列出、删除、显示记分项"
+      }
+    },
+    "add": {
+      "type": "TEXT",
+      "description": "创建记分项",
+      "data": {
+        "name": "add",
+        "description": "创建记分项"
+      }
+    },
+    "<objective: string>|[objective: string]": {
+      "type": "STRING",
+      "brief": "记分项",
+      "description": "记分项的名字",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "[ascending|descending]": {
+      "type": "NORMAL_ID",
+      "description": "排序顺序",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "ascending",
+          "description": "升序"
+        },
+        {
+          "name": "descending",
+          "description": "降序"
+        }
+      ]
+    },
+    "dummy": {
+      "type": "TEXT",
+      "description": "虚拟型",
+      "data": {
+        "name": "dummy",
+        "description": "虚拟型"
+      }
+    },
+    "[displayName: string]": {
+      "type": "STRING",
+      "brief": "记分项显示的名字",
+      "description": "记分项显示的名字",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "list": {
+      "type": "TEXT",
+      "description": "列出所有存在的记分项、显示名称与准则，或显示所有被记分板系统追踪的实体",
+      "data": {
+        "name": "list",
+        "description": "列出所有存在的记分项、显示名称与准则，或显示所有被记分板系统追踪的实体"
+      }
+    },
+    "remove": {
+      "type": "TEXT",
+      "description": "删除记分项",
+      "data": {
+        "name": "remove",
+        "description": "删除记分项"
+      }
+    },
+    "setdisplay": {
+      "type": "TEXT",
+      "description": "显示分数项",
+      "data": {
+        "name": "setdisplay",
+        "description": "显示分数项"
+      }
+    },
+    "<list|sidebar>": {
+      "type": "NORMAL_ID",
+      "description": "位置",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "list",
+          "description": "玩家列表"
+        },
+        {
+          "name": "sidebar",
+          "description": "侧边栏"
+        }
+      ]
+    },
+    "belowname": {
+      "type": "TEXT",
+      "description": "名称下方",
+      "data": {
+        "name": "belowname",
+        "description": "名称下方"
+      }
+    },
+    "players": {
+      "type": "TEXT",
+      "description": "设置、增加、扣除、列出、运算、清空、检测实体分数",
+      "data": {
+        "name": "players",
+        "description": "设置、增加、扣除、列出、运算、清空、检测实体分数"
+      }
+    },
+    "<set|add|remove>": {
+      "type": "NORMAL_ID",
+      "description": "设置、增加或移除",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "set",
+          "description": "设置分数（并在已有分数存在时覆盖之）"
+        },
+        {
+          "name": "add",
+          "description": "增加分数（如果没有分数则当作0分修改）"
+        },
+        {
+          "name": "remove",
+          "description": "扣除分数（如果没有分数则当作0分修改）"
+        }
+      ]
+    },
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": true
+    },
+    "<count: int>": {
+      "type": "INTEGER",
+      "brief": "分数数值",
+      "description": "要设置、增加、扣除的实体分数数值"
+    },
+    "[playername: target]": {
+      "type": "TARGET_SELECTOR",
+      "brief": "分数持有者",
+      "description": "分数持有者。指定名称对应的玩家无需在线，且不必是一个真实存在的玩家名。",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": true
+    },
+    "operation": {
+      "type": "TEXT",
+      "description": "分数运算",
+      "data": {
+        "name": "operation",
+        "description": "分数运算"
+      }
+    },
+    "<targetName: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": true
+    },
+    "<targetObjective: string>": {
+      "type": "STRING",
+      "brief": "记分项",
+      "description": "记分项的名字",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "<operation: operator>": {
+      "type": "NORMAL_ID",
+      "description": "运算操作",
+      "ignoreError": false,
+      "contents": [
+        {
+          "name": "+=",
+          "description": "求和"
+        },
+        {
+          "name": "-=",
+          "description": "求差"
+        },
+        {
+          "name": "*=",
+          "description": "求积"
+        },
+        {
+          "name": "/=",
+          "description": "求商"
+        },
+        {
+          "name": "%=",
+          "description": "求余"
+        },
+        {
+          "name": "=",
+          "description": "赋值"
+        },
+        {
+          "name": "<",
+          "description": "取较小值"
+        },
+        {
+          "name": ">",
+          "description": "取较大值"
+        },
+        {
+          "name": "><",
+          "description": "交换分数"
+        }
+      ]
+    },
+    "<selector: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "目标实体",
+      "isOnlyOne": false,
+      "isMustPlayer": false,
+      "isMustNPC": false,
+      "isWildcard": true
+    },
+    "random": {
+      "type": "TEXT",
+      "description": "随机生成分数（包含最小值和最大值）",
+      "data": {
+        "name": "random",
+        "description": "随机生成分数（包含最小值和最大值）"
+      }
+    },
+    "<min: wildcard int>|<min: int>": {
+      "type": "INTEGER",
+      "description": "最小值"
+    },
+    "[max: wildcard int]|<max: int>": {
+      "type": "INTEGER",
+      "description": "最大值"
+    },
+    "reset": {
+      "type": "TEXT",
+      "description": "重置分数",
+      "data": {
+        "name": "reset",
+        "description": "重置分数"
+      }
+    },
+    "test": {
+      "type": "TEXT",
+      "description": "检测目标分数是否在区间内",
+      "data": {
+        "name": "test",
+        "description": "检测目标分数是否在区间内"
+      }
+    }
+  }
+}

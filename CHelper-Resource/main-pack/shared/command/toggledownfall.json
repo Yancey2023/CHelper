@@ -1,0 +1,10 @@
+{
+  "name": [
+    "toggledownfall"
+  ],
+  "description": "切换天气",
+  "syntax": [
+    "/toggledownfall"
+  ],
+  "node": {}
+}

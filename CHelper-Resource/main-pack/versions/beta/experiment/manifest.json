@@ -1,0 +1,13 @@
+{
+    "name": "[内置] 测试版实验性玩法",
+    "description": "CHelper内置资源包",
+    "version": "1.26.0.29",
+    "versionType": "beta",
+    "branch": "experiment",
+    "author": "Yancey",
+    "updateDate": "2026-02-13",
+    "packId": "BasicPack-1.26.0.29-experiment",
+    "versionCode": 1,
+    "isBasicPack": true,
+    "isDefault": true
+}

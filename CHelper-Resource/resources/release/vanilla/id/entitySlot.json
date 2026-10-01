@@ -7,7 +7,8 @@
             "description": "马铠/地毯"
         },
         {
-            "name": "slot.armor.body"
+            "name": "slot.armor.body",
+            "description": "实体护甲栏（如狼铠）"
         },
         {
             "name": "slot.armor.chest",

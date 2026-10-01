@@ -134,22 +134,8 @@ class CommandContext internal constructor(
     }
 
     /**
-     * 获取指定位置的所有补全提示
-     * 由于性能原因，不建议使用这个方法，建议按需获取
-     *
-     * @param index 光标位置
-     * @return 所有补全提示
-     */
-    fun getSuggestions(index: Int): Array<Suggestion?>? {
-        if (pointer == 0L) {
-            return null
-        }
-        return getSuggestions0(pointer, index)
-    }
-
-    /**
      * 把指定位置的其中一个补全提示应用到命令文本
-     * 和CHelperCore.onSuggestionClick不同，这个方法不会修改自身的状态
+     * 该方法不修改 CommandContext 自身状态（无副作用）
      *
      * @param index 计算补全提示时的光标位置
      * @param which 第几个补全提示，从0开始
@@ -233,17 +219,6 @@ class CommandContext internal constructor(
          */
         @JvmStatic
         private external fun getSuggestion0(pointer: Long, index: Int, which: Int): Suggestion?
-
-        /**
-         * 调用c++获取指定位置的所有补全提示
-         * 由于性能原因，不建议使用这个方法，建议按需获取
-         *
-         * @param pointer 命令上下文的内存地址
-         * @param index   光标位置
-         * @return 所有补全提示
-         */
-        @JvmStatic
-        private external fun getSuggestions0(pointer: Long, index: Int): Array<Suggestion?>?
 
         /**
          * 调用c++获取最佳解析路径中已经匹配的命令语义节点数量

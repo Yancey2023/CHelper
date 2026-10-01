@@ -102,6 +102,9 @@ data class LibraryEditScreenKey(
 object RawtextScreenKey
 
 @Serializable
+object PackManagerScreenKey
+
+@Serializable
 object AboutScreenKey
 
 @Serializable
@@ -202,9 +205,13 @@ fun NavHost(
         }
         composable<SettingsScreenKey> {
             SettingsScreen(
+                navController = navController,
                 chooseBackground = chooseBackground,
                 restoreBackground = restoreBackground,
             )
+        }
+        composable<PackManagerScreenKey> {
+            yancey.chelper.ui.packmanager.PackManagerScreen()
         }
         composable<Old2NewScreenKey> {
             val context = LocalContext.current
@@ -237,7 +244,7 @@ fun NavHost(
             )
         }
         composable<RawtextScreenKey> {
-            RawtextScreen()
+            RawtextScreen(navController = navController)
         }
         composable<AboutScreenKey> {
             AboutScreen(navController)
@@ -372,7 +379,7 @@ fun FloatingWindowNavHost(
             )
         }
         composable<RawtextScreenKey> {
-            RawtextScreen()
+            RawtextScreen(navController = navController)
         }
         composable<AboutScreenKey> {
             AboutScreen(navController)

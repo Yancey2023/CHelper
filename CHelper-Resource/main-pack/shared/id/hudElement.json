@@ -1,0 +1,62 @@
+{
+    "id": "hudElement",
+    "type": "normal",
+    "content": [
+        {
+            "name": "air_bubbles",
+            "description": "氧气槽"
+        },
+        {
+            "name": "all",
+            "description": "全部"
+        },
+        {
+            "name": "armor",
+            "description": "盔甲条"
+        },
+        {
+            "name": "crosshair",
+            "description": "十字准星"
+        },
+        {
+            "name": "health",
+            "description": "生命条"
+        },
+        {
+            "name": "horse_health",
+            "description": "骑乘生物生命条"
+        },
+        {
+            "name": "hotbar",
+            "description": "快捷栏"
+        },
+        {
+            "name": "hunger",
+            "description": "饥饿条"
+        },
+        {
+            "name": "item_text",
+            "description": "物品提示"
+        },
+        {
+            "name": "paperdoll",
+            "description": "纸娃娃"
+        },
+        {
+            "name": "progress_bar",
+            "description": "经验条"
+        },
+        {
+            "name": "status_effects",
+            "description": "状态效果"
+        },
+        {
+            "name": "tooltips",
+            "description": "提示消息"
+        },
+        {
+            "name": "touch_controls",
+            "description": "触屏按键"
+        }
+    ]
+}

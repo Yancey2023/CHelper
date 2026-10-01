@@ -1,0 +1,79 @@
+{
+  "name": [
+    "schedule"
+  ],
+  "description": "在指定的区域全部被加载时执行函数",
+  "syntax": [
+    "/schedule on_area_loaded add <from: x y z> <to: x y z> <function: filepath>",
+    "/schedule on_area_loaded add circle <center: x y z> <radius: int> <function: filepath>",
+    "/schedule on_area_loaded add tickingarea <name: string> <function: filepath>"
+  ],
+  "node": {
+    "on_area_loaded": {
+      "type": "TEXT",
+      "description": "在指定的区域加载后运行",
+      "data": {
+        "name": "on_area_loaded",
+        "description": "在指定的区域加载后运行"
+      }
+    },
+    "add": {
+      "type": "TEXT",
+      "description": "增加",
+      "data": {
+        "name": "add",
+        "description": "增加"
+      }
+    },
+    "<from: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标1",
+      "description": "用于定义矩形加载区域的两个对角坐标的第一个"
+    },
+    "<to: x y z>": {
+      "type": "POSITION",
+      "brief": "坐标2",
+      "description": "用于定义矩形加载区域的两个对角坐标的第二个"
+    },
+    "<function: filepath>": {
+      "type": "STRING",
+      "brief": "函数",
+      "description": "要执行的函数或函数标签",
+      "canContainSpace": true,
+      "ignoreLater": false
+    },
+    "circle": {
+      "type": "TEXT",
+      "description": "在与圆形区域有重叠部分的区域全部被加载时执行函数",
+      "data": {
+        "name": "circle",
+        "description": "在与圆形区域有重叠部分的区域全部被加载时执行函数"
+      }
+    },
+    "<center: x y z>": {
+      "type": "POSITION",
+      "brief": "中心坐标",
+      "description": "用于定义圆形加载区域的圆心的坐标"
+    },
+    "<radius: int>": {
+      "type": "INTEGER",
+      "brief": "半径",
+      "description": "圆形常加载区域的半径作为从中心到圆周的区块数"
+    },
+    "tickingarea": {
+      "type": "TEXT",
+      "description": "在常加载区域被添加时运行函数",
+      "data": {
+        "name": "tickingarea",
+        "description": "在常加载区域被添加时运行函数"
+      }
+    },
+    "<name: string>": {
+      "type": "STRING",
+      "brief": "常加载区域名称",
+      "description": "常加载区域的名称",
+      "canContainSpace": true,
+      "ignoreLater": false
+    }
+  }
+}

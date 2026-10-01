@@ -1,0 +1,19 @@
+{
+  "name": [
+    "deop"
+  ],
+  "description": "撤销玩家的管理员权限",
+  "syntax": [
+    "/deop <player: target>"
+  ],
+  "node": {
+    "<player: target>": {
+      "type": "TARGET_SELECTOR",
+      "description": "从管理员列表中移除的玩家",
+      "isOnlyOne": false,
+      "isMustPlayer": true,
+      "isMustNPC": false,
+      "isWildcard": false
+    }
+  }
+}

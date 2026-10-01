@@ -223,6 +223,7 @@ namespace CHelper {
 
     ASTNode TokenReader::readUntilSpace(const Node::NodeWithType &node,
                                         const ASTNodeId::ASTNodeId &astNodeId) {
+        skipSpace(); // 与 readSimpleASTNode 一致：先跳过前导空格，避免空读（如 ", hasitem"）
         push();
         while (ready()) {
             TokenType::TokenType tokenType = peek()->type;
@@ -236,6 +237,7 @@ namespace CHelper {
 
     ASTNode TokenReader::readStringOrNumberASTNode(const Node::NodeWithType &node,
                                                    const ASTNodeId::ASTNodeId &astNodeId) {
+        skipSpace(); // 与 readSimpleASTNode 一致：先跳过前导空格，避免空读（如 ", hasitem"）
         push();
         while (ready()) {
             TokenType::TokenType tokenType = peek()->type;

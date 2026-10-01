@@ -1,0 +1,20 @@
+{
+  // ===== 方块参数：引用【内置】block 大表（type=block，不随包带数据）=====
+  // 与主包 /setblock 同机制：BLOCK 节点按内置 blockIds 补全（stone/dirt…）。
+  "name": [
+    "pblock"
+  ],
+  "description": "【A】方块参数（内置 block 大表引用：/pblock stone 等）",
+
+  "syntax": [
+    "/pblock <tileName: Block>"
+  ],
+
+  "node": {
+    "<tileName: Block>": {
+      "type": "BLOCK",            // 内置方块大表节点（同 /setblock）
+      "description": "候选来自内置方块表（stone/dirt/grass_block…）",
+      "nodeBlockType": 0          // 0=普通方块（同主包 /setblock 声明）
+    }
+  }
+}

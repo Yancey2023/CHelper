@@ -37,11 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
+import yancey.chelper.core.MainPackProvider
 import yancey.chelper.data.SettingsDataStore
+import yancey.chelper.ui.PackManagerScreenKey
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.InputStringDialog
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
@@ -55,6 +58,7 @@ import yancey.chelper.ui.common.widget.Divider
 
 @Composable
 fun SettingsScreen(
+    navController: NavHostController? = null,
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
 ) {
@@ -122,51 +126,21 @@ fun SettingsScreen(
             ambiguousLineDefault = ambiguousLineDefaultFlow
         }
     }
-    var cpackBranchesWithTranslate by remember {
-        mutableStateOf(
-            arrayOf(
-                "release-vanilla" to "正式版-原版",
-                "release-experiment" to "正式版-实验性玩法",
-                "beta-vanilla" to "测试版-原版",
-                "beta-experiment" to "测试版-实验性玩法",
-                "netease-vanilla" to "中国版-原版",
-                "netease-experiment" to "中国版-实验性玩法",
-            )
-        )
+    // 可选的版本/分支列表：由主包（数据包）manifest 的 segments 动态提供，
+    // 数据包添加新段后这里自动出现，不在此硬编码。
+    var segmentChoices by remember {
+        mutableStateOf(emptyArray<Pair<String, String>>())
     }
     LaunchedEffect(context) {
-        val filenames = withContext(Dispatchers.IO) { context.assets.list("cpack")!! }
-        val cpackBranches =
-            arrayOf(
-                "release-vanilla",
-                "release-experiment",
-                "beta-vanilla",
-                "beta-experiment",
-                "netease-vanilla",
-                "netease-experiment"
-            )
-        val cpackBranchTranslations =
-            arrayOf(
-                "正式版-原版-",
-                "正式版-实验性玩法-",
-                "测试版-原版-",
-                "测试版-实验性玩法-",
-                "中国版-原版-",
-                "中国版-实验性玩法-"
-            )
-        val newCPackBranchesWithTranslate = mutableListOf<Pair<String, String>>()
-        for (filename in filenames) {
-            for (i in 0..<cpackBranches.size) {
-                if (filename!!.startsWith(cpackBranches[i])) {
-                    val version = filename.substring(
-                        cpackBranches[i].length,
-                        filename.length - ".cpack".length
-                    )
-                    newCPackBranchesWithTranslate.add("${cpackBranchTranslations[i]}${version}" to cpackBranches[i])
-                }
+        val pack = withContext(Dispatchers.IO) { MainPackProvider.get(context) }
+        segmentChoices = pack?.segments.orEmpty().map { segment ->
+            val label = if (segment.version.isBlank()) {
+                segment.name.ifBlank { segment.id }
+            } else {
+                "${segment.name.ifBlank { segment.id }}（${segment.version}）"
             }
-        }
-        cpackBranchesWithTranslate = newCPackBranchesWithTranslate.toTypedArray()
+            label to segment.id
+        }.toTypedArray()
     }
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_settings_title)) {
         Column(
@@ -242,16 +216,26 @@ fun SettingsScreen(
                     isShowInputFloatingWindowIconSizeDialog = true
                 }
             }
+            CollectionName("资源包")
+            Collection {
+                NameAndAction(
+                    name = "资源包管理",
+                    description = "内置主资源包（可切换命令分支）+ 拓展包导入/启停/删除/排序，列表靠上优先",
+                ) {
+                    navController?.navigate(PackManagerScreenKey)
+                }
+            }
             CollectionName(stringResource(R.string.layout_settings_completion_settings))
             Collection {
                 val currentCpackBranchTranslation =
-                    remember(cpackBranch, cpackBranchesWithTranslate) {
-                        for (pair in cpackBranchesWithTranslate) {
-                            if (cpackBranch == pair.second) {
+                    remember(cpackBranch, segmentChoices) {
+                        val normalized = normalizeSegmentId(cpackBranch)
+                        for (pair in segmentChoices) {
+                            if (pair.second == normalized) {
                                 return@remember pair.first
                             }
                         }
-                        return@remember cpackBranch
+                        return@remember normalized
                     }
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_cpack),
@@ -498,9 +482,9 @@ fun SettingsScreen(
     if (isShowChooseCpackBranchDialog) {
         SelectionDialog(
             title = "选择命令分支",
-            initialValue = cpackBranch,
+            initialValue = normalizeSegmentId(cpackBranch),
             onDismissRequest = { isShowChooseCpackBranchDialog = false },
-            data = cpackBranchesWithTranslate,
+            data = segmentChoices,
             onChoose = {
                 coroutineScope.launch {
                     settingsDataStore.setCpackBranch(it)
@@ -612,3 +596,9 @@ fun SettingsScreenDarkThemePreview() {
         )
     }
 }
+
+/**
+ * 把旧设置值（如 "beta-vanilla"）归一化成主包段 id 形式（"beta/vanilla"）。
+ * 数据包由 manifest 的 segments 提供段列表，id 一律为 "版本类型/分支"。
+ */
+private fun normalizeSegmentId(branch: String?): String? = branch?.replace('-', '/')

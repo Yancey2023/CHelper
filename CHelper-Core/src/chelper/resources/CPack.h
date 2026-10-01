@@ -40,10 +40,17 @@ namespace CHelper {
         std::vector<Node::RepeatData> repeatNodeData;
         std::unordered_map<std::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
         Node::TargetSelectorData targetSelectorData;
+        // selector/*.json V1 数据化（拓展包，内存态不落二进制；供 targetSelectorData.init 装配）
+        std::vector<Node::SelectorPackVariable> selectorVariables;
+        std::vector<Node::SelectorPackArgument> selectorArguments;
+        // 命令名 → 来源包名（合成器挂载，内存态不落二进制；空/缺失 = 内置，供一级补全徽标）
+        std::unordered_map<std::u16string, std::u16string> commandNameSources;
         std::shared_ptr<std::vector<Node::NodePerCommand>> commands = std::make_shared<std::vector<Node::NodePerCommand>>();
         Node::NodeCommand mainNode;
 
     private:
+        // 供 CPackBuilder 从"文件集合"装载后统一物化（见 CPackBuilder.h/.cpp）
+        CPack() = default;
         Node::FreeableNodeWithTypes cacheNodes;
 
         /**
@@ -51,6 +58,8 @@ namespace CHelper {
          * 非法数据在这里fail-fast，而不是进入Parser导致越界/空指针/未定义行为
          */
         void validate() const;
+
+        friend class CPackBuilder;
 
     public:
 #ifndef CHELPER_NO_FILESYSTEM

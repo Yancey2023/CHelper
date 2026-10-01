@@ -32,6 +32,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -74,6 +75,21 @@ data class Settings(
     val isEnableMcdHighlight: Boolean? = null,
     val isEnableLoongFlowImportMiniIcon: Boolean? = null,
     val hasShownCommandEditorHint: Boolean? = null,
+    /** 已安装资源包（拓展包）列表，JSON 数组字符串，顺序 = 列表顺序（列表靠前 = 叠加时优先） */
+    val extensionPacksJson: String? = null,
+)
+
+/**
+ * 已安装的拓展包条目（settings.extensionPacksJson 内每一项）。
+ * @param fileName 包文件在 filesDir/packs/ 下的文件名（导入时以 <packId>-<versionCode>.chepack 命名）
+ */
+@Serializable
+data class ExtensionPackEntry(
+    val packId: String,
+    val name: String,
+    val version: String,
+    val fileName: String,
+    val enabled: Boolean = true,
 )
 
 object SettingsSerializer : Serializer<Settings> {
@@ -156,11 +172,32 @@ class SettingsDataStore(private val context: Context) {
     fun isSyntaxHighlight(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isSyntaxHighlight ?: true }
 
+    /** 已安装拓展包列表（顺序 = 列表顺序，列表靠前 = 叠加时优先） */
+    fun extensionPacks(): Flow<List<ExtensionPackEntry>> =
+        context.settingsDataStore.data.map { settings ->
+            val json = settings.extensionPacksJson ?: return@map emptyList()
+            runCatching {
+                Json.decodeFromString(ListSerializer(ExtensionPackEntry.serializer()), json)
+            }.getOrDefault(emptyList())
+        }
+
+    suspend fun setExtensionPacks(entries: List<ExtensionPackEntry>) {
+        context.settingsDataStore.updateData {
+            it.copy(
+                extensionPacksJson = Json.encodeToString(
+                    ListSerializer(ExtensionPackEntry.serializer()),
+                    entries
+                )
+            )
+        }
+    }
+
     fun syntaxHighlightMaxLength(): Flow<Int> =
         context.settingsDataStore.data.map { it.syntaxHighlightMaxLength ?: 4000 }
 
     fun cpackBranch(): Flow<String> =
-        context.settingsDataStore.data.map { it.cpackBranch ?: "release-experiment" }
+        // 主包段 id（"release/experiment"）；兼容旧值（"release-experiment"，'-' 视作 '/'）
+        context.settingsDataStore.data.map { it.cpackBranch ?: "release/experiment" }
 
     fun isShowPublicLibrary(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isShowPublicLibrary ?: true }
@@ -289,7 +326,7 @@ class SettingsDataStore(private val context: Context) {
 }
 
 /**
- * 0.4.0 版本之后，软件设置存储从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
+ * 0.4.0 版本之后，软件设置存储从自己写的框架改为使用官方方案 DataStore，该文件用于数据迁移
  */
 class SettingsMigrationToV74(private val context: Context) : DataMigration<Settings> {
     override suspend fun shouldMigrate(currentData: Settings): Boolean {

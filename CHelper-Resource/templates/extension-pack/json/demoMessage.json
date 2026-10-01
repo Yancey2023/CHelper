@@ -1,0 +1,28 @@
+{
+  // ===== JSON 结构声明 =====
+  // 供 "type": "JSON", "key": "demoMessage" 的节点引用（如自定义命令里的 JSON 参数）：
+  // 描述"这段 JSON 允许长什么样"，补全时按结构给出键/值提示。
+  "id": "demoMessage",        // 结构名：命令节点用 "key": "demoMessage" 引用
+  "start": "PARENT",          // 起始节点 id（下面 node 数组里的节点）
+  "node": [
+    {
+      // 根 = 一个 JSON 对象
+      "type": "JSON_OBJECT",
+      "id": "PARENT",
+      "description": "消息对象：{ \"text\": \"...\" }",
+      "data": [
+        {
+          "key": "text",             // 允许的键
+          "description": "消息文本",
+          "value": ["TEXT"]          // 键的值类型 = 节点 id TEXT（引用下面节点）
+        }
+      ]
+    },
+    {
+      // 字符串值类型
+      "type": "JSON_STRING",
+      "id": "TEXT",
+      "description": "原始文本字符串"
+    }
+  ]
+}

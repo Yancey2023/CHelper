@@ -20,6 +20,9 @@
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 #include <chelper/CHelperCore.h>
+#include <chelper/FragmentContext.h>
+#include <chelper/extension/Composer.h>
+#include <chelper/extension/MainPack.h>
 #include <jni.h>
 #include <pch.h>
 #include <spdlog/sinks/android_sink.h>
@@ -88,6 +91,20 @@ jobject suggestion2jobject(JNIEnv *env, jclass suggestionClass, const CHelper::A
                         suggestion.content->description.has_value()
                                 ? u16string2jstring(env, suggestion.content->description.value())
                                 : nullptr);
+    env->SetObjectField(javaSuggestion,
+                        env->GetFieldID(suggestionClass, "packName", "Ljava/lang/String;"),
+                        suggestion.content->packName.has_value()
+                                ? u16string2jstring(env, suggestion.content->packName.value())
+                                : nullptr);
+    env->SetIntField(javaSuggestion,
+                     env->GetFieldID(suggestionClass, "start", "I"),
+                     static_cast<jint>(suggestion.start));
+    env->SetIntField(javaSuggestion,
+                     env->GetFieldID(suggestionClass, "end", "I"),
+                     static_cast<jint>(suggestion.end));
+    env->SetBooleanField(javaSuggestion,
+                         env->GetFieldID(suggestionClass, "isAddSpace", "Z"),
+                         suggestion.isAddSpace);
     return javaSuggestion;
 }
 
@@ -129,40 +146,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 
-extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
-Java_yancey_chelper_core_CHelperCore_create0(
-        JNIEnv *env, [[maybe_unused]] jobject thiz, jobject assetManager, jstring cpack_path) {
-    if (cpack_path == nullptr) {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_create0 when cpack_path is null");
-        return reinterpret_cast<jlong>(nullptr);
-    }
-    try {
-        std::string cpackPath = jstring2string(env, cpack_path);
-        if (assetManager == nullptr) [[unlikely]] {
-            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(cpackPath);
-            return reinterpret_cast<jlong>(core);
-        } else {
-            AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
-            AAsset *asset = AAssetManager_open(mgr, cpackPath.c_str(), AASSET_MODE_BUFFER);
-            if (asset == nullptr) [[unlikely]] {
-                return reinterpret_cast<jlong>(nullptr);
-            }
-            auto dataFileSize = static_cast<size_t>(AAsset_getLength(asset));
-            char *buffer = new char[dataFileSize];
-            int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
-            AAsset_close(asset);
-            std::istringstream iss(std::string(buffer, numBytesRead));
-            CHelper::CHelperCore *core = CHelper::CHelperCore::create([&iss]() {
-                return CHelper::CPack::createByBinary(iss);
-            });
-            delete[] buffer;
-            return reinterpret_cast<jlong>(core);
-        }
-    } catch (...) {
-        SPDLOG_WARN("fail to init CHelper Core");
-        return reinterpret_cast<jlong>(nullptr);
-    }
-}
+// 旧的 assets/文件 .cpack 加载通道（create0/fromAssets/fromFile）已随主路径切换删除，
+// 内核只经 compose0（主包段 + 拓展包）创建。
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_yancey_chelper_core_CHelperCore_release0(
@@ -362,4 +347,266 @@ Java_yancey_chelper_core_CommandContext_getColors0(
         return nullptr;
     }
     return syntaxTokenTypes2jintArray(env, context->getSyntaxResult().tokenTypes);
+}
+
+// ---------------------------------------------------------------------------
+// 主包（MainPack）与合成器（Composer）JNI 导出（P0）
+// ---------------------------------------------------------------------------
+
+namespace {
+
+    std::shared_ptr<std::vector<uint8_t>> jbyteArray2bytes(JNIEnv *env, jbyteArray bytesJ) {
+        jsize len = env->GetArrayLength(bytesJ);
+        jbyte *data = env->GetByteArrayElements(bytesJ, nullptr);
+        auto bytes = std::make_shared<std::vector<uint8_t>>(
+                reinterpret_cast<uint8_t *>(data), reinterpret_cast<uint8_t *>(data) + len);
+        env->ReleaseByteArrayElements(bytesJ, data, JNI_ABORT);
+        return bytes;
+    }
+
+    // 把 C++ 异常原因抛成 Java RuntimeException，供 Kotlin 层显示/上报
+    void throwJniError(JNIEnv *env, const std::string &message) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+        jclass cls = env->FindClass("java/lang/RuntimeException");
+        if (cls != nullptr) {
+            env->ThrowNew(cls, message.c_str());
+            env->DeleteLocalRef(cls);
+        }
+    }
+
+}// namespace
+
+extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
+Java_yancey_chelper_core_MainPack_open0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jobjectArray relPaths, jobjectArray contents) {
+    if (relPaths == nullptr || contents == nullptr) [[unlikely]] {
+        SPDLOG_WARN("call MainPack_open0 when relPaths/contents is null");
+        return 0;
+    }
+    try {
+        jsize n = env->GetArrayLength(relPaths);
+        std::vector<CHelper::Extension::PackFile> files;
+        files.reserve(static_cast<size_t>(n));
+        for (jsize i = 0; i < n; ++i) {
+            auto relJ = static_cast<jstring>(env->GetObjectArrayElement(relPaths, i));
+            auto bytesJ = static_cast<jbyteArray>(env->GetObjectArrayElement(contents, i));
+            std::string rel = jstring2string(env, relJ);
+            files.push_back({rel, jbyteArray2bytes(env, bytesJ)});
+        }
+        auto pack = CHelper::Extension::MainPack::open(
+                CHelper::Extension::MainPackSource{CHelper::Extension::MainPackSource::Kind::Files, std::move(files), {}});
+        return reinterpret_cast<jlong>(pack.release());
+    } catch (const std::exception &e) {
+        SPDLOG_WARN("fail to open MainPack: {}", e.what());
+        throwJniError(env, std::string("open MainPack failed: ") + e.what());
+        return 0;
+    } catch (...) {
+        SPDLOG_WARN("fail to open MainPack (unknown)");
+        throwJniError(env, "open MainPack failed: unknown error");
+        return 0;
+    }
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_yancey_chelper_core_MainPack_release0(
+        [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
+    delete reinterpret_cast<CHelper::Extension::MainPack *>(pointer);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
+Java_yancey_chelper_core_MainPack_listSegments0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
+    auto *pack = reinterpret_cast<CHelper::Extension::MainPack *>(pointer);
+    if (pack == nullptr) [[unlikely]] {
+        return nullptr;
+    }
+    const auto &segments = pack->listSegments();
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray result = env->NewObjectArray(static_cast<jsize>(segments.size()), stringClass, nullptr);
+    for (size_t i = 0; i < segments.size(); ++i) {
+        const std::string line = segments[i].id + "\t" + segments[i].version + "\t" +
+                                 segments[i].packId + "\t" + utf8::utf16to8(segments[i].name);
+        env->SetObjectArrayElement(result, static_cast<jsize>(i), string2jstring(env, line));
+    }
+    return result;
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jbyteArray JNICALL
+Java_yancey_chelper_core_MainPack_readFile0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jstring versionType, jstring branch, jstring relPath) {
+    auto *pack = reinterpret_cast<CHelper::Extension::MainPack *>(pointer);
+    if (pack == nullptr || relPath == nullptr) [[unlikely]] {
+        return nullptr;
+    }
+    try {
+        auto seg = pack->loadSegment(jstring2string(env, versionType), jstring2string(env, branch));
+        std::string rel = jstring2string(env, relPath);
+        for (const auto &f: seg.files) {
+            if (f.relPath == rel && f.bytes) {
+                jbyteArray result = env->NewByteArray(static_cast<jsize>(f.bytes->size()));
+                env->SetByteArrayRegion(result, 0, static_cast<jsize>(f.bytes->size()),
+                                        reinterpret_cast<const jbyte *>(f.bytes->data()));
+                return result;
+            }
+        }
+        return nullptr;
+    } catch (const std::exception &e) {
+        SPDLOG_WARN("fail to read file {} from {}: {}", jstring2string(env, relPath),
+                    jstring2string(env, versionType) + "/" + jstring2string(env, branch), e.what());
+        throwJniError(env, std::string("read file failed: ") + e.what());
+        return nullptr;
+    } catch (...) {
+        throwJniError(env, "read file failed: unknown error");
+        return nullptr;
+    }
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
+Java_yancey_chelper_core_CHelperCore_compose0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong mainPackPtr,
+        jobjectArray segments, jobjectArray packRelPaths, jobjectArray packContents, jintArray packCounts) {
+    auto *pack = reinterpret_cast<CHelper::Extension::MainPack *>(mainPackPtr);
+    if (pack == nullptr || segments == nullptr) [[unlikely]] {
+        return 0;
+    }
+    try {
+        // 启用段（当前取第一个）
+        auto segJ = static_cast<jstring>(env->GetObjectArrayElement(segments, 0));
+        std::string seg = jstring2string(env, segJ);
+        size_t slash = seg.find('/');
+        CHelper::Extension::SegmentData segData = pack->loadSegment(seg.substr(0, slash), seg.substr(slash + 1));
+
+        // 拓展包切分（packCounts 记录每包文件数）
+        std::vector<CHelper::Extension::ExtensionPackData> packs;
+        if (packRelPaths != nullptr && packContents != nullptr && packCounts != nullptr) {
+            jsize packCount = env->GetArrayLength(packCounts);
+            jint *counts = env->GetIntArrayElements(packCounts, nullptr);
+            size_t idx = 0;
+            for (jsize p = 0; p < packCount; ++p) {
+                CHelper::Extension::ExtensionPackData pd;
+                for (jint c = 0; c < counts[p]; ++c) {
+                    auto relJ = static_cast<jstring>(env->GetObjectArrayElement(packRelPaths, static_cast<jsize>(idx)));
+                    auto bytesJ = static_cast<jbyteArray>(env->GetObjectArrayElement(packContents, static_cast<jsize>(idx)));
+                    pd.files.push_back({jstring2string(env, relJ), jbyteArray2bytes(env, bytesJ)});
+                    ++idx;
+                }
+                packs.push_back(std::move(pd));
+            }
+            env->ReleaseIntArrayElements(packCounts, counts, JNI_ABORT);
+        }
+
+        auto result = CHelper::Extension::compose(segData, packs);
+        auto *core = new CHelper::CHelperCore(result.cpack);
+        return reinterpret_cast<jlong>(core);
+    } catch (const std::exception &e) {
+        SPDLOG_WARN("fail to compose main pack + extension packs: {}", e.what());
+        throwJniError(env, std::string("compose failed: ") + e.what());
+        return 0;
+    } catch (...) {
+        SPDLOG_WARN("fail to compose main pack + extension packs (unknown)");
+        throwJniError(env, "compose failed: unknown error");
+        return 0;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// FragmentContext（片段补全：目标选择器 / ID 键表）JNI 导出
+// ---------------------------------------------------------------------------
+
+extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
+Java_yancey_chelper_core_FragmentContext_openSelector0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong corePtr, jstring content) {
+    auto *core = reinterpret_cast<CHelper::CHelperCore *>(corePtr);
+    if (core == nullptr || content == nullptr) [[unlikely]] {
+        return 0;
+    }
+    try {
+        auto ctx = CHelper::FragmentContext::createTargetSelector(
+                core->getSharedCPack(), jstring2u16string(env, content));
+        return reinterpret_cast<jlong>(ctx.release());
+    } catch (...) {
+        return 0;
+    }
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
+Java_yancey_chelper_core_FragmentContext_openId0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong corePtr, jstring key, jstring content) {
+    auto *core = reinterpret_cast<CHelper::CHelperCore *>(corePtr);
+    if (core == nullptr || key == nullptr || content == nullptr) [[unlikely]] {
+        return 0;
+    }
+    try {
+        auto ctx = CHelper::FragmentContext::createId(
+                core->getSharedCPack(), jstring2string(env, key), jstring2u16string(env, content));
+        return reinterpret_cast<jlong>(ctx.release());
+    } catch (...) {
+        return 0;
+    }
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
+Java_yancey_chelper_core_FragmentContext_release0(
+        [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
+    delete reinterpret_cast<CHelper::FragmentContext *>(pointer);
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_yancey_chelper_core_FragmentContext_getSuggestionsSize0(
+        [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index) {
+    auto *ctx = reinterpret_cast<CHelper::FragmentContext *>(pointer);
+    if (ctx == nullptr) [[unlikely]] {
+        return 0;
+    }
+    return static_cast<jint>(ctx->getSuggestions(static_cast<size_t>(index)).size());
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+Java_yancey_chelper_core_FragmentContext_getSuggestion0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index, jint which) {
+    auto *ctx = reinterpret_cast<CHelper::FragmentContext *>(pointer);
+    if (ctx == nullptr) [[unlikely]] {
+        return nullptr;
+    }
+    auto suggestions = ctx->getSuggestions(static_cast<size_t>(index));
+    if (which < 0 || static_cast<jint>(suggestions.size()) <= which) [[unlikely]] {
+        return nullptr;
+    }
+    return suggestion2jobject(env, env->FindClass("yancey/chelper/core/Suggestion"), suggestions.at(which));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
+Java_yancey_chelper_core_FragmentContext_getSuggestions0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index) {
+    auto *ctx = reinterpret_cast<CHelper::FragmentContext *>(pointer);
+    if (ctx == nullptr) [[unlikely]] {
+        return suggestions2jobjectArray(env, {});
+    }
+    return suggestions2jobjectArray(env, ctx->getSuggestions(static_cast<size_t>(index)));
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
+Java_yancey_chelper_core_FragmentContext_getErrorReasons0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
+    auto *ctx = reinterpret_cast<CHelper::FragmentContext *>(pointer);
+    if (ctx == nullptr) [[unlikely]] {
+        return errorReasons2jobjectArray(env, {});
+    }
+    return errorReasons2jobjectArray(env, ctx->getErrorReasons());
+}
+
+extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
+Java_yancey_chelper_core_FragmentContext_applySuggestion0(
+        JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index, jint which) {
+    auto *ctx = reinterpret_cast<CHelper::FragmentContext *>(pointer);
+    if (ctx == nullptr) [[unlikely]] {
+        return nullptr;
+    }
+    auto result = ctx->applySuggestion(static_cast<size_t>(index), static_cast<size_t>(which));
+    if (result.has_value()) [[likely]] {
+        return clickSuggestionResult2jobject(env, result.value());
+    }
+    return nullptr;
 }

@@ -358,6 +358,8 @@ namespace CHelper {
             static NodeSingleSymbol nodeCommandStart;
 
             std::vector<NodePerCommand> *commands = nullptr;
+            /** 宿主 CPack（命令名来源表入口；null = 非合成路径） */
+            CPack *cpack = nullptr;
 
             NodeCommand(const std::optional<std::string> &id,
                         const std::optional<std::u16string> &description,
@@ -370,6 +372,8 @@ namespace CHelper {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::COMMAND_NAME;
             std::vector<NodePerCommand> *commands = nullptr;
+            /** 宿主 CPack（命令名来源表入口；null = 非合成路径） */
+            CPack *cpack = nullptr;
         };
 
         class NodeIntegerWithUnit : public NodeSerializable {
@@ -526,10 +530,39 @@ namespace CHelper {
             NodeList nodeArguments;
             NodeOptional nodeOptionalArguments;
             NodeAnd nodeTargetSelectorVariableWithArgument;
+            /** 扩展值节点（selector 目录 V1 数据驱动装配时创建，生命周期随本对象） */
+            std::vector<std::shared_ptr<NodeBase>> extraValueNodes;
 
             TargetSelectorData();
 
             void init(const CPack &cpack);
+
+            /** 内置选择器变量名（含 @ 前缀；与合成器冲突校验共用，单一来源见 CommandNode.cpp） */
+            static std::vector<std::u16string> builtinVariableNames();
+
+            /** 内置选择器参数名（与合成器冲突校验共用，单一来源见 CommandNode.cpp） */
+            static std::vector<std::u16string> builtinArgumentNames();
+        };
+
+        // selector/*.json V1 数据化：拓展包声明的自定义变量/参数（仅内存态，不落二进制）。
+        // 由合成器解析/合并后挂在 CPack 上，TargetSelectorData::init 据此装配。
+        struct SelectorPackVariable {
+            std::u16string name;                                    // 含 @ 前缀（如 @x）
+            std::optional<std::u16string> description;
+            /** 来源包名（内存态；供变量候选来源徽标） */
+            std::optional<std::u16string> packName;
+        };
+
+        struct SelectorPackArgument {
+            std::u16string name;                                    // 参数名（如 myflag）
+            std::optional<std::u16string> description;
+            bool canUseNotEqual = false;                            // 支持 !=
+            std::string valueType;                                  // BOOLEAN/NORMAL_ID/NAMESPACE_ID/INTEGER/FLOAT/RELATIVE_FLOAT/RANGE/STRING
+            std::optional<std::string> key;                         // ID 类值类型引用的候选表
+            std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> normalContents;      // NORMAL_ID 内联候选
+            std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>> namespaceContents; // NAMESPACE_ID 内联候选
+            /** 来源包名（内存态；供参数名候选来源徽标） */
+            std::optional<std::u16string> packName;
         };
 
         class NodeTargetSelector : public NodeSerializable {

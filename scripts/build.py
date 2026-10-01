@@ -87,6 +87,11 @@ if __name__ == "__main__":
         os.path.join(".", "CHelper-Android", "app", "src", "main", "assets", "cpack"),
         ignore_errors=True,
     )
+    main_pack_asset = os.path.join(
+        ".", "CHelper-Android", "app", "src", "main", "assets", "main-pack.chepack"
+    )
+    if os.path.exists(main_pack_asset):
+        os.remove(main_pack_asset)
     shutil.rmtree(
         os.path.join(".", "CHelper-Android", "app", "build", "outputs"),
         ignore_errors=True,
@@ -128,15 +133,37 @@ if __name__ == "__main__":
         ],
         check=True,
     )
-    shutil.copytree(
-        os.path.join(".", "CHelper-Resource", "generated", "cpack"),
-        os.path.join(".", "CHelper-Android", "app", "src", "main", "assets", "cpack"),
-        dirs_exist_ok=True,
-    )
+    # 旧版 .cpack 只供 Web 使用（安卓已全面切到主包 main-pack.chepack，不再拷贝回 assets）
     shutil.copytree(
         os.path.join(".", "CHelper-Resource", "generated", "cpack"),
         os.path.join(".", "CHelper-Web", "src", "assets"),
         dirs_exist_ok=True,
+    )
+    # 生成并分发主包（内置补全包，安卓）：main-pack.chepack
+    print("generating main pack")
+    subprocess.run(
+        [
+            "node",
+            os.path.join(".", "CHelper-Resource", "tools", "build_main_pack.mjs"),
+            "--zip",
+        ],
+        check=True,
+    )
+    shutil.copyfile(
+        os.path.join(".", "CHelper-Resource", "generated", "main-packs", "main-pack.chepack"),
+        os.path.join(
+            ".", "CHelper-Android", "app", "src", "main", "assets", "main-pack.chepack"
+        ),
+    )
+    # 同步 old2new 转换数据（旧命令 → 新命令）：生成器产物 → 安卓 assets
+    # （assets 里旧的 git 静态副本会过期，此后以生成器产物为准）
+    old2new_asset_dir = os.path.join(
+        ".", "CHelper-Android", "app", "src", "main", "assets", "old2new"
+    )
+    os.makedirs(old2new_asset_dir, exist_ok=True)
+    shutil.copyfile(
+        os.path.join(".", "CHelper-Resource", "generated", "old2new", "old2new.dat"),
+        os.path.join(old2new_asset_dir, "old2new.dat"),
     )
     with open(
         os.path.join(

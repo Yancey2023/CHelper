@@ -47,6 +47,17 @@ namespace CHelper::Parser {
 
     ASTNode parse(const Node::NodeWithType &node, TokenReader &tokenReader);
 
+    /** 按输入 token 哈希在命名空间表里找首条命中（全名或可省略的短名，统一 matchesToken 语义） */
+    template<class T>
+    std::shared_ptr<T> findTableEntry(const std::vector<std::shared_ptr<T>> &items, XXH64_hash_t tokenHash) {
+        for (const auto &item: items) {
+            if (item->matchesToken(tokenHash)) [[unlikely]] {
+                return item;
+            }
+        }
+        return nullptr;
+    }
+
     ASTNode parseByChildNode(const Node::NodeWithType &node,
                              TokenReader &tokenReader,
                              const Node::NodeWithType &childNode,
@@ -237,16 +248,10 @@ namespace CHelper::Parser {
             }
             std::u16string_view str = blockId.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            std::shared_ptr<NamespaceId> currentBlock = nullptr;
-            for (const auto &item: *node.blockIds->blockStateValues) {
-                if (item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash)) [[unlikely]] {
-                    currentBlock = item;
-                    break;
-                }
-            }
+            auto currentBlock = findTableEntry(*node.blockIds->blockStateValues, strHash);
             auto nodeBlockState = currentBlock == nullptr
                                           ? BlockId::getNodeAllBlockState()
-                                          : std::static_pointer_cast<BlockId>(currentBlock)->getNode(node.blockIds->blockPropertyDescriptions);
+                                          : currentBlock->getNode(node.blockIds->blockPropertyDescriptions);
             auto astNodeBlockState = parseByChildNode(node, tokenReader, nodeBlockState, ASTNodeId::NODE_BLOCK_BLOCK_STATE);
             return ASTNode::andNode(node, {(std::move(blockId)), (std::move(astNodeBlockState))}, tokenReader.collect(),
                                     nullptr, ASTNodeId::NODE_BLOCK_BLOCK_AND_BLOCK_STATE);
@@ -343,15 +348,9 @@ namespace CHelper::Parser {
             ASTNode itemId = parse(node.nodeItemId, tokenReader);
             std::u16string_view str = itemId.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            std::shared_ptr<NamespaceId> currentItem = nullptr;
-            for (const auto &item: *node.itemIds) {
-                if (item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash)) [[unlikely]] {
-                    currentItem = item;
-                    break;
-                }
-            }
+            auto currentItem = findTableEntry(*node.itemIds, strHash);
             std::vector<ASTNode> childNodes = {std::move(itemId)};
-            Node::NodeWithType nodeData = currentItem == nullptr ? CHelper::Node::NodeItem::nodeAllData : std::static_pointer_cast<ItemId>(currentItem)->getNode();
+            Node::NodeWithType nodeData = currentItem == nullptr ? CHelper::Node::NodeItem::nodeAllData : currentItem->getNode();
             switch (node.nodeItemType) {
                 case Node::NodeItemType::ITEM_GIVE:
                     childNodes.push_back(getOptionalASTNode(
@@ -412,7 +411,7 @@ namespace CHelper::Parser {
                 std::u16string_view str = tokens.string();
                 XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
                 if (std::ranges::all_of(*node.customContents, [&strHash](const auto &item) {
-                        return !item->fastMatch(strHash) && !item->getIdWithNamespace()->fastMatch(strHash);
+                        return !item->matchesToken(strHash);
                     })) [[unlikely]] {
                     return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, fmt::format(u"找不到含义 -> {}", str)));
                 }
