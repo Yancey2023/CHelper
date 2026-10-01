@@ -121,8 +121,8 @@ TEST(Bench, LoadCPack) {
  */
 TEST(Bench, WriteCPack) {
     const size_t repeat = 20;
-    const auto data = readBinaryFile(vanillaBin());
-    const auto cpack = serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
+    // Load tracked JSON resources so this benchmark also runs before binary generation.
+    const auto cpack = serialization::createCPackByDirectory(vanillaDir());
     const auto outputDir = resourceDir() / "generated" / "benchmark-output";
     // Windows 不允许 '?' 出现在文件名中，而 vanilla 的 help 命令正好使用 '?'
     // 作为第一个别名；仅在基准副本中换成等长的合法别名，避免写目录基准被平台文件名规则阻断。
