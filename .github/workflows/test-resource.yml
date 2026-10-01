@@ -14,18 +14,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
 
       matrix:
         build_type: [Release]
-        c_compiler: [clang]
+        c_compiler: [clang-19]
         include:
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+          - os: ubuntu-24.04
+            c_compiler: clang-19
+            cpp_compiler: clang++-19
 
     steps:
       - uses: actions/checkout@v7
@@ -34,9 +34,25 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
+          cache: pip
+          cache-dependency-path: scripts/requirements-build.txt
+
+      - name: Install Linux compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-19
 
       - name: Install native build tools
         run: python -m pip install -r scripts/requirements-build.txt
+
+      - name: Restore third-party sources
+        id: thirdparty-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: CHelper-Core/3rdparty_downloads
+          key: thirdparty-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('CHelper-Core/CMakeLists.txt') }}
+          restore-keys: |
+            thirdparty-v1-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Set reusable strings
         id: strings
@@ -51,6 +67,13 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}/CHelper-Core
+
+      - name: Save third-party sources
+        if: steps.thirdparty-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: CHelper-Core/3rdparty_downloads
+          key: ${{ steps.thirdparty-cache.outputs.cache-primary-key }}
 
       - name: Build Resource Generator
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperResourceGenerator
