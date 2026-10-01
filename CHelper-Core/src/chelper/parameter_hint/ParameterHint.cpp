@@ -19,11 +19,6 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/parameter_hint/ParameterHint.h>
 
-#define CHELPER_GET_PARAMETER_HINT(v1)                                                                              \
-    case Node::NodeTypeId::v1:                                                                                      \
-        parameterHint = ParameterHint<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::getHint(astNode); \
-        break;
-
 namespace CHelper::ParameterHint {
 
     template<class NodeType, class = void>
@@ -36,7 +31,11 @@ namespace CHelper::ParameterHint {
     template<class NodeType>
     struct ParameterHint<NodeType, std::enable_if_t<std::is_base_of_v<Node::NodeSerializable, NodeType>>> {
         static std::optional<std::u16string> getHint(const ASTNode &astNode) {
-            return static_cast<const NodeType *>(astNode.node.data)->description;
+            const auto &description = static_cast<const NodeType *>(astNode.node.data)->description;
+            if (description.has_value()) {
+                return std::u16string(description->data(), description->size());
+            }
+            return std::nullopt;
         }
     };
 
@@ -75,7 +74,11 @@ namespace CHelper::ParameterHint {
     struct ParameterHint<Node::NodeRepeat> {
         static std::optional<std::u16string> getHint(const ASTNode &astNode) {
             if (astNode.tokens.isEmpty()) [[unlikely]] {
-                return reinterpret_cast<const Node::NodeRepeat *>(astNode.node.data)->description;
+                const auto &description = reinterpret_cast<const Node::NodeRepeat *>(astNode.node.data)->description;
+                if (description.has_value()) {
+                    return std::u16string(description->data(), description->size());
+                }
+                return std::nullopt;
             } else {
                 return std::nullopt;
             }
@@ -87,18 +90,9 @@ namespace CHelper::ParameterHint {
             return std::nullopt;
         }
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-#ifdef CHelperTest
-            Profile::push("get parameter hint: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
-            std::optional<std::u16string> parameterHint;
-            switch (astNode.node.nodeTypeId) {
-                CODEC_PASTE(CHELPER_GET_PARAMETER_HINT, CHELPER_NODE_TYPES)
-                default:
-                    CHELPER_UNREACHABLE();
-            }
-#ifdef CHelperTest
-            Profile::pop();
-#endif
+            std::optional<std::u16string> parameterHint = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+                return ParameterHint<NodeType>::getHint(astNode);
+            });
             if (parameterHint.has_value()) {
                 return parameterHint;
             }

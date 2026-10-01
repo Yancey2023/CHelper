@@ -75,10 +75,11 @@ bool outputOld2New() {
     std::filesystem::path resourceDir(RESOURCE_DIR);
     std::filesystem::path input = resourceDir / "resources" / "old2new" / "blockFixData.json";
     std::filesystem::path output = resourceDir / "generated" / "old2new" / "old2new.dat";
-    CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(serialization::get_json_from_file(input));
+    CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(input);
     std::filesystem::create_directories(output.parent_path());
+    const std::string buffer = CHelper::Old2New::blockFixDataToBinary(blockFixData);
     std::ofstream ostream(output, std::ios::binary);
-    serialization::Codec<decltype(blockFixData)>::to_binary<false>(ostream, blockFixData);
+    ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
     ostream.close();
     return true;
 }
@@ -155,7 +156,7 @@ namespace CHelper::Test {
                 return;
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
         test(core, commands, isTestTime);
         delete core;
@@ -174,7 +175,7 @@ namespace CHelper::Test {
                 return;
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
         test(core, commands, isTestTime);
         delete core;
@@ -252,7 +253,7 @@ namespace CHelper::Test {
                         std::u16string result = command.substr(0, item.start)
                                                         .append(item.content->name)
                                                         .append(command.substr(item.end));
-                        std::u16string greenPart = item.content->name;
+                        std::u16string greenPart(item.content->name.begin(), item.content->name.end());
                         if (item.end == command.length()) {
                             ASTNode astNode = Parser::parse(result, core->getCPack());
                             if (item.isAddSpace && astNode.isAllSpaceError()) {
@@ -268,7 +269,7 @@ namespace CHelper::Test {
                 fmt::print("\n");
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
         }
     }
 
@@ -298,7 +299,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("{} commands", FORMAT_ARG(commands.size()));
             SPDLOG_INFO("run successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         delete core;
@@ -328,7 +329,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("CPack write successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByDirectory(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;
@@ -360,7 +361,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("CPack write successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByJson(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;
@@ -392,7 +393,7 @@ namespace CHelper::Test {
             SPDLOG_INFO("run successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             core2 = CHelperCore::createByBinary(realOutput);
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             exit(-1);
         }
         bool isSuccess = core2 != nullptr;

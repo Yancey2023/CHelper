@@ -17,6 +17,8 @@
  */
 
 #include "CpackTestHelper.h"
+#include <chelper/parser/Parser.h>
+#include <future>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -141,6 +143,206 @@ namespace CHelper::Test {
             {"name": ["cmd"], "description": "repeat command", "syntax": ["/cmd <r: repeat>"],
              "node": {"<r: repeat>": {"type": "REPEAT", "key": "nonexistent"}}}
           ])"));
+    }
+
+    TEST(CPackValidationTest, NodeCreateStageFollowsContext) {
+        //加载阶段随反序列化上下文传递：JSON节点在JSON_NODE阶段合法，在其他阶段必须被拒绝。
+        //阶段曾经是全局变量，多线程同时创建CPack时会互相覆盖，这里锁住上下文这条路径
+        const std::string jsonNodes = R"([{"type": "JSON_NULL", "id": "N", "description": "null"}])";
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_NO_THROW(readJson(nodes, jsonNodes, ctx));
+            ASSERT_EQ(nodes.nodes.size(), size_t{1});
+            EXPECT_EQ(nodes.nodes[0].nodeTypeId, Node::NodeTypeId::JSON_NULL);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::REPEAT_NODE;
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_THROW(readJson(nodes, jsonNodes, ctx), std::runtime_error);
+        }
+        {
+            //未携带阶段的普通上下文不限制节点类型
+            Node::FreeableNodeWithTypes nodes;
+            EXPECT_NO_THROW(readJson(nodes, jsonNodes));
+            ASSERT_EQ(nodes.nodes.size(), size_t{1});
+            EXPECT_EQ(nodes.nodes[0].nodeTypeId, Node::NodeTypeId::JSON_NULL);
+        }
+    }
+
+    TEST(CPackValidationTest, GrammarStageAllowsOnlyGrammarNodes) {
+        const std::string grammar = R"({
+          "type": "AND",
+          "id": "AND_NODE",
+          "nodes": []
+        })";
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+            Node::NodeWithType node;
+            EXPECT_NO_THROW(readJson(node, grammar, ctx));
+            EXPECT_EQ(node.nodeTypeId, Node::NodeTypeId::AND);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
+            Node::NodeWithType node;
+            EXPECT_THROW(readJson(node, grammar, ctx), std::runtime_error);
+        }
+        {
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
+            Node::NodeWithType node;
+            EXPECT_THROW(readJson(node, R"({"type":"COMMAND"})", ctx), std::runtime_error);
+        }
+    }
+
+    TEST(CPackValidationTest, GrammarResourceCanAddNodeWithoutCxxChanges) {
+        // 只增加资源节点和 ID 引用，C++ 不需要认识 custom。
+        // NORMAL_ID 用内联键表匹配整段token；EQUAL_ENTRY 用键表+值节点表达键值对
+        const std::string grammar = R"([
+          {"id":"dynamic","type":"grammar","content":{
+            "id":"dynamic","node":[
+              {"type":"NORMAL_ID","id":"CUSTOM_KEY","contents":[
+                {"name":"custom","description":"自定义键"}
+              ]},
+              {"type":"SINGLE_SYMBOL","id":"CUSTOM_EQUAL","symbol":"=","isAddSpace":false},
+              {"type":"INTEGER","id":"CUSTOM_INTEGER"},
+              {"type":"EQUAL_ENTRY","id":"CUSTOM_ROOT","values":[
+                {"name":"custom","description":"自定义键","canUseNotEqual":false,"value":"CUSTOM_INTEGER"}
+              ]}
+            ],"start":"CUSTOM_ROOT"}}
+        ])";
+        auto cpackJson = makeCpackJson("[]", "[]", R"([
+          {"name":["list"],"description":"list","syntax":["/list"],"node":{}}
+        ])");
+        const auto grammarPosition = cpackJson.rfind("\n}");
+        ASSERT_NE(grammarPosition, std::string::npos);
+        cpackJson.insert(grammarPosition, ",\n  \"grammar\": " + grammar);
+        std::unique_ptr<CPack> cpack;
+        ASSERT_TRUE(tryCreateCpack(cpackJson, cpack));
+        ASSERT_NE(cpack, nullptr);
+        const auto *root = cpack->getGrammar("dynamic");
+        ASSERT_NE(root, nullptr);
+        EXPECT_TRUE(Parser::parse(u"custom=123", *root).errorReasons.empty());
+    }
+
+    TEST(CPackValidationTest, EmptyEqualEntryValues) {
+        //equalDatas为空会导致键表为空，任何键都无法匹配，必须在加载阶段拒绝
+        std::string cpackJson = makeCpackJson("[]", "[]", R"([
+          {"name":["list"],"description":"list","syntax":["/list"],"node":{}}
+        ])");
+        const auto grammarPosition = cpackJson.rfind("\n}");
+        ASSERT_NE(grammarPosition, std::string::npos);
+        cpackJson.insert(grammarPosition, R"(,
+  "grammar": [
+    {"id":"broken","type":"grammar","content":{
+      "id":"broken","node":[
+        {"type":"INTEGER","id":"CUSTOM_INTEGER"}
+      ],"start":"CUSTOM_ROOT"}}
+  ])");
+        expectCpackRejected(cpackJson);
+    }
+
+    TEST(CPackValidationTest, GrammarGraphBinaryRoundTrip) {
+        const std::filesystem::path resourceDir(RESOURCE_DIR);
+        auto source = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "experiment");
+        ASSERT_NE(source, nullptr);
+        const auto binaryPath = std::filesystem::temp_directory_path() / "chelper-grammar-graph-test.cpack";
+        std::error_code error;
+        std::filesystem::remove(binaryPath, error);
+        ASSERT_NO_THROW(source->writeBinToFile(binaryPath));
+
+        std::ifstream stream(binaryPath, std::ios::binary);
+        ASSERT_TRUE(stream.is_open());
+        const std::string binary((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+        auto restored = CHelper::serialization::createCPackByBinary(binary);
+        ASSERT_NE(restored, nullptr);
+        const auto *root = restored->getGrammar("target_selector");
+        ASSERT_NE(root, nullptr);
+        EXPECT_TRUE(Parser::parse(u"@e[type=minecraft:zombie]", *root).errorReasons.empty());
+        std::filesystem::remove(binaryPath, error);
+    }
+
+    TEST(CPackValidationTest, PeekNodeTypeName) {
+        //写入端把 "type" 固定放在第一个成员，节点读取靠预读第一个成员直接取到类型名，
+        //因此预读必须命中该布局；顺序不同时返回 false，由完整扫描兜底
+        constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
+        NodeReadContext ctx;
+        {
+            std::string json = R"({"type": "JSON_NULL", "id": "N"})";
+            std::string_view typeName;
+            auto it = json.data();
+            const auto end = json.data() + json.size();
+            EXPECT_TRUE((peekNodeTypeName<glz::JSON, opts>(typeName, ctx, it, end)));
+            EXPECT_EQ(typeName, "JSON_NULL");
+        }
+        {
+            std::string json = R"({"id": "N", "type": "JSON_NULL"})";
+            std::string_view typeName;
+            auto it = json.data();
+            const auto end = json.data() + json.size();
+            EXPECT_FALSE((peekNodeTypeName<glz::JSON, opts>(typeName, ctx, it, end)));
+        }
+        {
+            std::string msgpack;
+            auto obj = glz::obj{"type", "JSON_NULL", "id", "N"};
+            EXPECT_FALSE(bool(glz::write_msgpack(obj, msgpack)));
+            std::string_view typeName;
+            auto it = msgpack.data();
+            const auto end = msgpack.data() + msgpack.size();
+            EXPECT_TRUE((peekNodeTypeName<glz::MSGPACK, opts>(typeName, ctx, it, end)));
+            EXPECT_EQ(typeName, "JSON_NULL");
+        }
+    }
+
+    TEST(CPackValidationTest, NodeTypeNotFirst) {
+        //"type" 不在第一个成员时回退到完整扫描，节点仍然要能被正确读取
+        std::unique_ptr<CPack> cpack;
+        EXPECT_TRUE(tryCreateCpack(makeCpackJson(R"([
+            {"id": "json1", "start": "N", "node": [
+              {"id": "N", "description": "null", "type": "JSON_NULL"}
+            ]}
+          ])"),
+                                   cpack));
+        ASSERT_NE(cpack, nullptr);
+        EXPECT_EQ(cpack->jsonNodes.size(), size_t{1});
+    }
+
+    TEST(CPackValidationTest, ConcurrentCpackCreation) {
+        //多个线程同时创建CPack：任何一个线程的加载阶段都不能影响其他线程，
+        //否则后完成的线程会把自己的阶段覆盖到正在读取节点的线程上，导致加载随机失败
+        const std::string json = makeCpackJson(R"([
+            {"id": "json1", "start": "N", "node": [
+              {"type": "JSON_NULL", "id": "N", "description": "null"}
+            ]}
+          ])",
+                                               R"([
+            {"id": "repeat1",
+             "breakNodes": [{"type": "STRING", "id": "B", "description": "break"}],
+             "isEnd": [true],
+             "repeatNodes": [[{"type": "STRING", "id": "S", "description": "string"}]]}
+          ])",
+                                               R"([
+            {"name": ["list"], "description": "list command", "syntax": ["/list"], "node": {}}
+          ])");
+        constexpr int32_t roundCount = 4;
+        constexpr int32_t threadCount = 8;
+        for (int32_t round = 0; round < roundCount; ++round) {
+            std::vector<std::future<bool>> futures;
+            futures.reserve(threadCount);
+            for (int32_t i = 0; i < threadCount; ++i) {
+                futures.emplace_back(std::async(std::launch::async, [&json]() {
+                    std::unique_ptr<CPack> cpack;
+                    return tryCreateCpack(json, cpack);
+                }));
+            }
+            for (auto &future: futures) {
+                EXPECT_TRUE(future.get()) << "round " << round;
+            }
+        }
     }
 
 }// namespace CHelper::Test

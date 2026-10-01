@@ -18,17 +18,14 @@
 
 #pragma once
 
-#ifndef CHELPER_CPACK_TEST_HELPER_H
-#define CHELPER_CPACK_TEST_HELPER_H
-
 #include <chelper/CHelperCore.h>
-#include <chelper/util/Profile.h>
+#include <chelper/serialization/SerializationInternal.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
 
     //测试用的最小CPack模板。
-    //id里的数据是TargetSelectorData::init的硬性要求(item/entity命名空间和族/游戏模式/物品栏)，
+    //id里的数据是目标选择器 Grammar 初始化的硬性要求(item/entity命名空间和族/游戏模式/物品栏)，
     //其余部分由各个测试通过参数填充。
     //extraIds是追加到id数组里的额外id对象(不带方括号，多个对象用逗号分隔)
     inline std::string makeCpackJson(const std::string &jsonNodes = "[]",
@@ -71,14 +68,12 @@ namespace CHelper::Test {
      * 尝试从JSON字符串加载CPack，返回是否加载成功
      */
     inline bool tryCreateCpack(const std::string &json, std::unique_ptr<CPack> &out) {
-        rapidjson::GenericDocument<rapidjson::UTF8<>> doc;
-        doc.Parse(json.c_str());
-        EXPECT_FALSE(doc.HasParseError()) << "test json has parse error: " << json;
         try {
-            out = CPack::createByJson(doc);
+            out = CHelper::serialization::createCPackByJson(json);
             return true;
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            //无论预期与否，失败时把内嵌加载轨迹的错误消息打到日志，便于定位非法数据
+            SPDLOG_ERROR("{}", e.what());
             return false;
         }
     }
@@ -92,5 +87,3 @@ namespace CHelper::Test {
     }
 
 }// namespace CHelper::Test
-
-#endif//CHELPER_CPACK_TEST_HELPER_H

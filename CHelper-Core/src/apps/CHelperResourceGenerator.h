@@ -18,15 +18,11 @@
 
 #pragma once
 
-#ifndef CHELPER_CHELPERCMD_H
-#define CHELPER_CHELPERCMD_H
-
 #include <chelper/CHelperCore.h>
 #include <pch.h>
 
 int main();
 
-#if CHelperOnlyReadBinary != true
 
 [[maybe_unused]] void testDir();
 
@@ -59,7 +55,3 @@ namespace CHelper::Test {
     [[maybe_unused]] bool writeBinary(const std::filesystem::path &input, const std::filesystem::path &output, const std::string &fileType);
 
 }// namespace CHelper::Test
-
-#endif
-
-#endif//CHELPER_CHELPERCMD_H

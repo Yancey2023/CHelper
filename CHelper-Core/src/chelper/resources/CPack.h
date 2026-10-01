@@ -18,29 +18,126 @@
 
 #pragma once
 
-#ifndef CHELPER_CPACK_H
-#define CHELPER_CPACK_H
-
 #include <chelper/node/CommandNode.h>
+#include <chelper/node/NodeType.h>
+#include <chelper/resources/LoadTrail.h>
 #include <chelper/resources/Manifest.h>
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
 
-    class CPack {
-    public:
+    // id 数据条目：由 "type" 键区分（normal / namespace / block / item）
+    struct NormalIdEntry {
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> content;
+    };
+
+    struct NamespaceIdEntry {
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> content;
+    };
+
+    struct BlockIdsEntry {
+        std::optional<std::pmr::string> id;
+        std::shared_ptr<BlockIds> content;
+    };
+
+    struct ItemIdsEntry {
+        std::pmr::string id;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> content;
+    };
+
+    using IdEntry = std::variant<NormalIdEntry, NamespaceIdEntry, BlockIdsEntry, ItemIdsEntry>;
+
+    // Grammar 资源条目：content 复用 JSON 节点表格式，组合节点通过节点 id 绑定。
+    // type 用于资源类型校验，避免把其他资源误当作 Grammar 读取。
+    struct GrammarEntry {
+        std::pmr::string id;
+        std::pmr::string type = "grammar";
+        std::shared_ptr<Node::NodeJsonElement> content;
+    };
+
+    // 单文件 JSON 格式
+    struct CPackJsonData {
         Manifest manifest;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>> normalIds;
-        std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        std::pmr::vector<IdEntry> id;
+        std::pmr::vector<GrammarEntry> grammar;
+        std::pmr::vector<Node::NodeJsonElement> json;
+        std::pmr::vector<Node::RepeatData> repeat;
+        std::pmr::vector<Node::NodePerCommand> command;
+    };
+
+    // 二进制（MessagePack）格式
+    struct CPackData {
+        Manifest manifest;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::shared_ptr<BlockIds> blockIds;
-        std::shared_ptr<std::vector<std::shared_ptr<ItemId>>> itemIds;
-        std::vector<Node::NodeJsonElement> jsonNodes;
-        std::vector<Node::RepeatData> repeatNodeData;
-        std::unordered_map<std::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
-        Node::TargetSelectorData targetSelectorData;
-        std::shared_ptr<std::vector<Node::NodePerCommand>> commands = std::make_shared<std::vector<Node::NodePerCommand>>();
+        std::pmr::vector<GrammarEntry> grammar;
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
+        std::pmr::vector<Node::RepeatData> repeatNodeData;
+        std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
+    };
+
+}// namespace CHelper
+
+
+namespace CHelper {
+
+    // CPack 的读取函数（唯一允许构建 CPack 的入口），定义在 Serialization.cpp
+    namespace serialization {
+#ifndef CHELPER_NO_FILESYSTEM
+        std::unique_ptr<CPack> createCPackByDirectory(const std::filesystem::path &path);
+
+        std::unique_ptr<CPack> createCPackByJsonFile(const std::filesystem::path &cpackPath);
+#endif
+
+        std::unique_ptr<CPack> createCPackByJson(const std::string &json);
+
+        std::unique_ptr<CPack> createCPackByBinary(std::string_view data);
+    }// namespace serialization
+
+    class CPack {
+    private:
+        CPackMemoryScope destructionMemoryScope;
+
+        // 默认构造不做任何工作，成员由 Serialization.cpp 的读取函数填充
+        CPack() = default;
+
+        // 必须声明在 ID 容器之前，确保销毁 CPack 对象后再销毁内存资源
+        std::shared_ptr<CPackMemoryResource> cpackMemory;
+
+#ifndef CHELPER_NO_FILESYSTEM
+        friend std::unique_ptr<CPack> serialization::createCPackByDirectory(const std::filesystem::path &path);
+
+        friend std::unique_ptr<CPack> serialization::createCPackByJsonFile(const std::filesystem::path &cpackPath);
+#endif
+
+        friend std::unique_ptr<CPack> serialization::createCPackByJson(const std::string &json);
+
+        friend std::unique_ptr<CPack> serialization::createCPackByBinary(std::string_view data);
+
+    public:
+        ~CPack() {
+            CPackMemoryRouter::install();
+            CPackMemoryRouter::setCurrent(cpackMemory->getResource());
+        }
+
+        Manifest manifest;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        std::shared_ptr<BlockIds> blockIds;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
+        std::pmr::vector<Node::RepeatData> repeatNodeData;
+        std::pmr::unordered_map<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
+        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs;
+        std::pmr::unordered_map<std::pmr::string, Node::NodeWithType> grammarNodes;
+        std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
         Node::NodeCommand mainNode;
 
     private:
@@ -52,40 +149,24 @@ namespace CHelper {
          */
         void validate() const;
 
-    public:
-#ifndef CHELPER_NO_FILESYSTEM
-        explicit CPack(const std::filesystem::path &path);
-#endif
+        void applyId(const IdEntry &entry);
 
-        explicit CPack(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
+        void applyGrammar(GrammarEntry &&entry, LoadTrail &trail);
 
-        explicit CPack(std::istream &istream);
+        void applyJson(Node::NodeJsonElement &&item);
 
-    private:
-        void applyId(const rapidjson::GenericValue<rapidjson::UTF8<>> &j);
+        void applyRepeat(Node::RepeatData &&item);
 
-        void applyJson(const rapidjson::GenericValue<rapidjson::UTF8<>> &j);
+        void applyCommand(Node::NodePerCommand &&item) const;
 
-        void applyRepeat(const rapidjson::GenericValue<rapidjson::UTF8<>> &j);
-
-        void applyCommand(const rapidjson::GenericValue<rapidjson::UTF8<>> &j) const;
-
-        void afterApply();
+        void afterApply(LoadTrail &trail);
 
     public:
-#ifndef CHELPER_NO_FILESYSTEM
-        static std::unique_ptr<CPack> createByDirectory(const std::filesystem::path &path);
-#endif
-
-        static std::unique_ptr<CPack> createByJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j);
-
-        static std::unique_ptr<CPack> createByBinary(std::istream &istream);
-
 #ifndef CHELPER_NO_FILESYSTEM
         void writeJsonToDirectory(const std::filesystem::path &path) const;
 #endif
 
-        [[nodiscard]] rapidjson::GenericDocument<rapidjson::UTF8<>> toJson() const;
+        [[nodiscard]] std::string toJson() const;
 
 #ifndef CHELPER_NO_FILESYSTEM
         void writeJsonToFile(const std::filesystem::path &path) const;
@@ -93,13 +174,17 @@ namespace CHelper {
         void writeBinToFile(const std::filesystem::path &path) const;
 #endif
 
-        [[nodiscard]] std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>
-        getNormalId(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>
+        getNormalId(std::string_view key) const;
 
-        [[nodiscard]] std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>
-        getNamespaceId(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
+        getNamespaceId(std::string_view key) const;
+
+        [[nodiscard]] std::pmr::memory_resource *getMemoryResource() const noexcept {
+            return cpackMemory->getResource();
+        }
+
+        [[nodiscard]] const Node::NodeWithType *getGrammar(std::string_view key) const;
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_CPACK_H

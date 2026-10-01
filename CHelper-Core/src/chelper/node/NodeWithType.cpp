@@ -16,24 +16,34 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/node/NodeWithType.h>
 
-#define CHELPER_DELETE(v1)                                                           \
-    case Node::NodeTypeId::v1:                                                       \
-        delete static_cast<NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(item.data); \
-        break;
-
 namespace CHelper::Node {
+
+    void initializeStaticNodes() {
+        static const bool initialized = [] {
+            (void) NodeLF::getInstance();
+            (void) NodeAny::getNodeAny();
+            (void) NodeJsonElement::getNodeJsonElement();
+            (void) NodeJsonEntry::getNodeJsonAllEntry();
+            return true;
+        }();
+        (void) initialized;
+    }
 
     FreeableNodeWithTypes::~FreeableNodeWithTypes() {
         for (auto &item: nodes) {
             if (item.data == nullptr) {
                 continue;
             }
-            switch (item.nodeTypeId) {
-                CODEC_PASTE(CHELPER_DELETE, CHELPER_NODE_TYPES);
-            }
+            Node::dispatchNodeType(
+                    item.nodeTypeId,
+                    [&]<class NodeType>() { delete static_cast<NodeType *>(item.data); },
+                    [] {
+                        //非法类型 id 不属于任何节点类型，旧实现同样直接跳过释放
+                    });
             item.data = nullptr;
         }
     }

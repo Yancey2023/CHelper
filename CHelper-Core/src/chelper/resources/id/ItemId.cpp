@@ -31,7 +31,7 @@ namespace CHelper {
             if (!descriptions.has_value()) [[unlikely]] {
                 node = std::make_unique<Node::NodeWithType>(*nodeAllData);
             } else {
-                std::vector<Node::NodeWithType> nodeDataChildren;
+                std::pmr::vector<Node::NodeWithType> nodeDataChildren;
                 nodeDataChildren.reserve(descriptions.value().size());
                 size_t i = 0;
                 for (const auto &item: descriptions.value()) {

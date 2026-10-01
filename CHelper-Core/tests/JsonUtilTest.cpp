@@ -132,7 +132,7 @@ namespace CHelper::Test {
             EXPECT_EQ(result.convert(3), 4);
         }
         //Debug模式下越界访问convert会直接抛出异常定位问题，Release下不检查
-#ifdef CHelperDebug
+#if CHelperDebug
         {
             const auto result = JsonUtil::jsonString2String(uR"("ab")");
             EXPECT_ANY_THROW(result.convert(100));

@@ -19,11 +19,6 @@
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
 
-#define CHELPER_LINT(v1)                                                                                          \
-    case Node::NodeTypeId::v1:                                                                                    \
-        isDirty = Linter<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::lint(astNode, errorReasons); \
-        break;
-
 namespace CHelper::Linter {
 
     template<class NodeType>
@@ -194,18 +189,9 @@ namespace CHelper::Linter {
 
     void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
         if (!astNode.isAllSpaceError()) [[unlikely]] {
-#ifdef CHelperTest
-            Profile::push("collect id errors: {}", FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
-            bool isDirty = false;
-            switch (astNode.node.nodeTypeId) {
-                CODEC_PASTE(CHELPER_LINT, CHELPER_NODE_TYPES)
-                default:
-                    CHELPER_UNREACHABLE();
-            }
-#ifdef CHelperTest
-            Profile::pop();
-#endif
+            bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+                return Linter<NodeType>::lint(astNode, errorReasons);
+            });
             if (isDirty) [[unlikely]] {
                 return;
             }
@@ -224,46 +210,37 @@ namespace CHelper::Linter {
         }
     }
 
-    std::vector<std::shared_ptr<ErrorReason>> sortByLevel(const std::vector<std::shared_ptr<ErrorReason>> &input) {
+    std::vector<std::shared_ptr<ErrorReason>> sortByLevel(std::vector<std::shared_ptr<ErrorReason>> &&input) {
+        // 错误等级是固定的7个桶；按桶扫描保持同等级错误的原有顺序，时间复杂度为O(7n)=O(n)。
         std::vector<std::shared_ptr<ErrorReason>> output;
         output.reserve(input.size());
-        uint8_t i = ErrorReasonLevel::maxLevel;
+        uint8_t level = ErrorReasonLevel::maxLevel;
         while (true) {
-            for (const auto &item: input) {
-                if (item->level == i) [[unlikely]] {
+            for (auto &item: input) {
+                if (item->level == level) [[unlikely]] {
                     output.push_back(item);
                 }
             }
-            if (i == 0) [[unlikely]] {
+            if (level == 0) [[unlikely]] {
                 break;
             }
-            --i;
+            --level;
         }
         return output;
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode) {
         std::vector<std::shared_ptr<ErrorReason>> input;
-#ifdef CHelperTest
-        Profile::push("start get errors except parse error: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
         lint(astNode, input);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
-        return sortByLevel(input);
+        return sortByLevel(std::move(input));
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode) {
-        std::vector<std::shared_ptr<ErrorReason>> result = astNode.errorReasons;
-#ifdef CHelperTest
-        Profile::push("start getting error reasons: {} {}", FORMAT_ARG(utf8::utf16to8(astNode.tokens.toString())), FORMAT_ARG(Node::getNodeTypeName(astNode.node.nodeTypeId)));
-#endif
+        std::vector<std::shared_ptr<ErrorReason>> result;
+        result.reserve(astNode.errorReasons.size());
+        result.insert(result.end(), astNode.errorReasons.begin(), astNode.errorReasons.end());
         lint(astNode, result);
-#ifdef CHelperTest
-        Profile::pop();
-#endif
-        return sortByLevel(result);
+        return sortByLevel(std::move(result));
     }
 
 }// namespace CHelper::Linter

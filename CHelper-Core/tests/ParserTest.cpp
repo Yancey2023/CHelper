@@ -20,6 +20,7 @@
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/id/NormalId.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -111,7 +112,7 @@ namespace CHelper::Test {
     // NUMBER token可能包含连续的0-9 . + -，Parser必须校验完整的数字格式
     TEST(ParserTest, NumberFormatValidation) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
-        std::unique_ptr<CPack> vanillaCpack = CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+        std::unique_ptr<CPack> vanillaCpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
         const auto cpack = std::shared_ptr<const CPack>(std::move(vanillaCpack));
         ASSERT_NE(cpack, nullptr);
         const auto hasErrorWithText = [](const std::vector<std::shared_ptr<ErrorReason>> &errors,
@@ -172,11 +173,11 @@ namespace CHelper::Test {
 
     //orNode的子节点为空时，Debug模式下必须抛出异常，不能访问childNodes[whichBest]导致越界
     //Release下该检查被编译掉，直接测试会是未定义行为
-#ifdef CHelperDebug
+#if CHelperDebug
     TEST(ParserTest, OrNodeWithEmptyChildNodes) {
         Node::NodeText node("OR_NODE_TEST", u"test", NormalId::make(u"x", u"test"));
         Node::NodeWithType nodeWithType(node);
-        std::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes;
         EXPECT_ANY_THROW(ASTNode::orNode(nodeWithType, std::move(childNodes), nullptr));
     }
 #endif

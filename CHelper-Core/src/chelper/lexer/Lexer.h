@@ -18,16 +18,11 @@
 
 #pragma once
 
-#ifndef CHELPER_LEXER_H
-#define CHELPER_LEXER_H
-
 #include <chelper/lexer/LexerResult.h>
 #include <pch.h>
 
 namespace CHelper::Lexer {
 
-    std::shared_ptr<LexerResult> lex(std::u16string content);
+    std::shared_ptr<LexerResult> lex(std::u16string_view content);
 
 }// namespace CHelper::Lexer
-
-#endif//CHELPER_LEXER_H

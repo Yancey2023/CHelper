@@ -19,7 +19,6 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/old2new/Old2New.h>
 
-CODEC_REGISTER_JSON_KEY(CHelper::Old2New::DataFix, name, data, newBlockId, blockState)
 
 namespace CHelper::Old2New {
 
@@ -640,30 +639,6 @@ namespace CHelper::Old2New {
         }
         result.append(tokenReader.lexerResult->content.substr(index));
         return result;
-    }
-
-    BlockFixData blockFixDataFromJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericDocument<rapidjson::UTF8<>>;
-        if (!j.IsArray()) [[unlikely]] {
-            throw serialization::exceptions::JsonSerializationTypeException("array", serialization::getJsonTypeStr(j.GetType()));
-        }
-        BlockFixData blockFixData;
-        for (const auto &item: j.GetArray()) {
-            if (!item.IsObject()) [[unlikely]] {
-                throw serialization::exceptions::JsonSerializationTypeException("object", serialization::getJsonTypeStr(j.GetType()));
-            }
-            std::u16string name;
-            serialization::Codec<decltype(name)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::name_(), name);
-            uint32_t data;
-            serialization::Codec<decltype(data)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::data_(), data);
-            std::optional<std::u16string> newBlockId;
-            serialization::Codec<decltype(newBlockId)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::newBlockId_(), newBlockId);
-            std::optional<std::u16string> blockState;
-            serialization::Codec<decltype(blockState)>::template from_json_member<typename JsonValueType::ValueType>(item, serialization::details::JsonKey<DataFix, JsonValueType::Ch>::blockState_(), blockState);
-            const auto &iter = blockFixData.try_emplace(std::move(name)).first;
-            iter->second.insert({data, {std::move(newBlockId), std::move(blockState)}});
-        }
-        return blockFixData;
     }
 
 }// namespace CHelper::Old2New

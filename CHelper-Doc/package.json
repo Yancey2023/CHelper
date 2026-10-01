@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "markdown-it": "^15.0.1"
+    "markdown-it": "catalog:"
   },
   "devDependencies": {
-    "vitepress": "2.0.0-alpha.18"
+    "@types/node": "catalog:",
+    "vitepress": "catalog:"
   },
   "scripts": {
     "docs:dev": "vitepress dev",

@@ -17,8 +17,46 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <chelper/old2new/Old2New.h>
+#include <chelper/serialization/Serialization.h>
 
 namespace CHelper {
+
+    /**
+     * 强制 odr-use：只取地址不调用，让编译器必须为 inline 函数产出实体。
+     * volatile 防止优化器把"只取地址"判定为无用而删掉
+     */
+    template<class T>
+    T *forceEmit(T *pointer) {
+        static T *volatile emitted = nullptr;
+        emitted = pointer;
+        return pointer;
+    }
+
+#ifndef CHELPER_NO_FILESYSTEM
+    /**
+     * 强制生成 inline 序列化函数的符号。本身永远不会被调用，
+     * 因此必须挂 CHELPER_USED：否则 Clang 在 -O3 下会直接丢掉整个函数体，
+     * 连带着不再为这些函数生成符号。MSVC 会保留未使用的非 static 函数，
+     * 所以桌面构建此前没有暴露这个问题
+     */
+    [[CHELPER_USED]]
+    void emitSerializationSymbols(const CPack &cpack, const std::filesystem::path &path) {
+        std::ignore = cpack.toJson();
+        cpack.writeJsonToFile(path);
+        cpack.writeJsonToDirectory(path);
+        cpack.writeBinToFile(path);
+        std::ignore = forceEmit(&Old2New::blockFixDataFromJson);
+        std::ignore = forceEmit(&Old2New::blockFixDataToBinary);
+        std::ignore = forceEmit(&Old2New::blockFixDataFromBinary);
+    }
+#else
+    [[CHELPER_USED]]
+    void emitSerializationSymbols() {
+        std::ignore = forceEmit(&Old2New::blockFixDataToBinary);
+        std::ignore = forceEmit(&Old2New::blockFixDataFromBinary);
+    }
+#endif
 
     CHelperCore::CHelperCore(std::shared_ptr<const CPack> cpack)
         : cpack(std::move(cpack)) {}
@@ -35,14 +73,13 @@ namespace CHelper {
             //provider返回nullptr说明资源包加载失败，不允许产生内部cpack为nullptr的CHelperCore，
             //否则后续getCPack()/createContext()会解引用空指针
             if (cPack == nullptr) [[unlikely]] {
-                Profile::push("getCPack returned nullptr");
                 throw std::runtime_error("getCPack returned nullptr");
             }
             SPDLOG_INFO("CPack load successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
             return new CHelperCore(std::move(cPack));
         } catch (const std::exception &e) {
-            SPDLOG_ERROR("CPack load failed");
-            CHelper::Profile::printAndClear(e);
+            //CPackLoadError 的 what() 已内嵌原始错误与完整加载轨迹，整体打印给资源包作者
+            SPDLOG_ERROR("{}", e.what());
             return nullptr;
         }
     }
@@ -50,13 +87,13 @@ namespace CHelper {
 #ifndef CHELPER_NO_FILESYSTEM
     CHelperCore *CHelperCore::createByDirectory(const std::filesystem::path &cpackPath) {
         return create([&cpackPath]() {
-            return CPack::createByDirectory(cpackPath);
+            return serialization::createCPackByDirectory(cpackPath);
         });
     }
 
     CHelperCore *CHelperCore::createByJson(const std::filesystem::path &cpackPath) {
         return create([&cpackPath]() {
-            return CPack::createByJson(serialization::get_json_from_file(cpackPath));
+            return serialization::createCPackByJsonFile(cpackPath);
         });
     }
 
@@ -66,32 +103,20 @@ namespace CHelper {
             std::string fileType = ".cpack";
             std::string cpackPathStr = cpackPath.string();
             if (cpackPathStr.size() < fileType.size() || cpackPathStr.substr(cpackPathStr.length() - fileType.size()) != fileType) [[unlikely]] {
-                Profile::push("error file type -> {}", FORMAT_ARG(cpackPathStr));
-                throw std::runtime_error("error file type");
-            }
-            // 打开文件
-            std::ifstream is(cpackPath, std::ios::binary);
-            if (!is.is_open()) [[unlikely]] {
-                Profile::push("fail to read file -> {}", FORMAT_ARG(cpackPathStr));
-                throw std::runtime_error("fail to read file");
+                throw std::runtime_error(fmt::format("error file type -> {}", cpackPathStr));
             }
             // 读取文件
-            std::unique_ptr<CPack> result = CPack::createByBinary(is);
-            // 检查文件是否读完
-            if (!is.eof()) [[unlikely]] {
-                char ch;
-                is.read(&ch, 1);
-                if (is.gcount() > 0) [[unlikely]] {
-                    Profile::push("file is not read completed -> {}", FORMAT_ARG(cpackPathStr));
-                    throw std::runtime_error("file is not read completed");
-                }
-            }
-            // 关闭文件
-            is.close();
-            return result;
+            std::string buffer = readFileToString(cpackPath);
+            return serialization::createCPackByBinary(buffer);
         });
     }
 #endif
+
+    CHelperCore *CHelperCore::createByBinary(std::string_view data) {
+        return create([&data]() {
+            return serialization::createCPackByBinary(data);
+        });
+    }
 
     const CPack &CHelperCore::getCPack() const {
         return *cpack;
@@ -108,5 +133,4 @@ namespace CHelper {
     std::u16string CHelperCore::old2new(const Old2New::BlockFixData &blockFixData, std::u16string old) {
         return Old2New::old2new(blockFixData, std::move(old));
     }
-
 }// namespace CHelper

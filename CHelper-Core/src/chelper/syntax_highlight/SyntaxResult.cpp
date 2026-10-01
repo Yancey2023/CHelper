@@ -25,7 +25,7 @@ namespace CHelper::SyntaxHighlight {
           tokenTypes(str.length(), SyntaxTokenType::UNKNOWN) {}
 
     void SyntaxResult::update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
-#ifdef CHelperDebug
+#if CHelperDebug
         if (tokenTypes[index] != SyntaxTokenType::UNKNOWN && str[index] != '[' && str[index] != ']' && str[index] != '{' && str[index] != '}') {
             SPDLOG_ERROR("replace syntax");
         }
@@ -38,7 +38,7 @@ namespace CHelper::SyntaxHighlight {
     }
 
     void SyntaxResult::update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
-#ifdef CHelperDebug
+#if CHelperDebug
         for (size_t i = start; i < end; i++) {
             if (tokenTypes[i] != SyntaxTokenType::UNKNOWN && str[i] != '[' && str[i] != ']' && str[i] != '{' && str[i] != '}') {
                 SPDLOG_ERROR("replace syntax");

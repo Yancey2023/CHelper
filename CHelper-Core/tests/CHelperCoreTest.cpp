@@ -17,6 +17,7 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -33,7 +34,7 @@ namespace CHelper::Test {
     TEST(CHelperCoreTest, CreateWithValidCPack) {
         std::filesystem::path resourceDir(RESOURCE_DIR);
         CHelperCore *core = CHelperCore::create([&resourceDir]() -> std::unique_ptr<CPack> {
-            return CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+            return CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
         });
         ASSERT_NE(core, nullptr);
         //创建成功后core必须完全可用
@@ -46,6 +47,25 @@ namespace CHelper::Test {
         EXPECT_TRUE(context->getErrorReasons().empty());
         CHelperCore::deleteContext(context);
         delete core;
+    }
+
+    TEST(CHelperCoreTest, TargetSelectorGrammarComesFromResource) {
+        std::filesystem::path resourceDir(RESOURCE_DIR);
+        auto cpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "experiment");
+        ASSERT_NE(cpack, nullptr);
+        auto core = std::make_unique<CHelperCore>(std::shared_ptr<const CPack>(std::move(cpack)));
+        const std::vector<std::u16string> selectors{
+                u"kill @e",
+                u"kill @e[x=~1]",
+                u"kill @e[type=minecraft:zombie]",
+                u"kill @e[type=!minecraft:zombie]",
+                u"kill @e[scores={test=1..10}]",
+                u"kill @e[hasitem={item=minecraft:stone}]",
+                u"kill @a[haspermission={camera=enabled}]"};
+        for (const auto &command: selectors) {
+            auto context = std::unique_ptr<CommandContext>(core->createContext(command));
+            EXPECT_TRUE(context->getErrorReasons().empty()) << utf8::utf16to8(command);
+        }
     }
 
 }// namespace CHelper::Test

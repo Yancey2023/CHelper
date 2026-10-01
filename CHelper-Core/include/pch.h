@@ -18,14 +18,7 @@
 
 #pragma once
 
-#ifndef CHELPER_PCH_H
-#define CHELPER_PCH_H
-
 #include <ParamDeliver.h>
-
-#if _CHELPER_DEBUG == true
-#define CHelperDebug
-#endif
 
 #ifdef CHELPER_NO_FILESYSTEM
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
@@ -43,6 +36,22 @@
 #define CHELPER_UNREACHABLE() __assume(false)
 #else
 #define CHELPER_UNREACHABLE() __builtin_unreachable()
+#endif
+
+//分发层的调用链必须完全内联，否则每个节点分发要穿过多层真实函数调用，
+//调用开销与跨函数的寄存器隔离会造成可测的性能回退
+#if defined(_MSC_VER) && !defined(__clang__)
+#define CHELPER_FORCEINLINE __forceinline
+#else
+#define CHELPER_FORCEINLINE [[gnu::always_inline]]
+#endif
+
+// 禁止编译器丢弃"只为强制生成符号、本身永不被调用"的函数：
+// GCC / Clang / clang-cl 需要 used 属性，MSVC 会保留未使用的非 static 函数
+#if defined(__GNUC__) || defined(__clang__)
+#define CHELPER_USED gnu::used
+#else
+#define CHELPER_USED maybe_unused
 #endif
 
 // 数据结构
@@ -88,17 +97,17 @@
 #define XXH_STATIC_LINKING_ONLY
 #include <xxhash.h>
 // UTF编码处理
+#include <chelper/util/Utf8.h>
 #include <utf8.h>
-// 序列化
-#ifdef CHELPER_NO_FILESYSTEM
-#define SERIALIZATION_NO_FILESYSTEM
-#endif
-#include <serialization/serialization.h>
+// 序列化（glaze：JSON / BEVE / CBOR / BSON / MessagePack 等 + 自定义二进制格式）
+#include <glaze/bson.hpp>
+#include <glaze/cbor.hpp>
+#include <glaze/glaze.hpp>
+#include <glaze/msgpack.hpp>
+// clang-format off：BinaryFormat.h 依赖上述 glaze 头文件，需保持在其后
+#include <chelper/serialization/BinaryFormat.h>
+// clang-format on
 // json工具
 #include <chelper/util/JsonUtil.h>
-// 简单的调用栈
-#include <chelper/util/Profile.h>
 // KMP字符串匹配算法
 #include <chelper/util/KMPMatcher.h>
-
-#endif// CHELPER_PCH_H

@@ -1,2 +1,2 @@
-#define _CHELPER_DEBUG @CHelperDebug@
+#define CHelperDebug @CHelperDebug@
 #define RESOURCE_DIR "@RESOURCE_DIR@"

@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_TOKENREADER_H
-#define CHELPER_TOKENREADER_H
-
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
 #include <chelper/node/NodeWithType.h>
@@ -34,7 +31,7 @@ namespace CHelper {
     public:
         const std::shared_ptr<LexerResult> lexerResult;
         size_t index = 0;
-        std::vector<size_t> indexStack;
+        std::pmr::vector<size_t> indexStack;
 
         explicit TokenReader(const std::shared_ptr<LexerResult> &lexerResult);
 
@@ -89,5 +86,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_TOKENREADER_H

@@ -18,9 +18,6 @@
 
 #pragma once
 
-#ifndef CHELPER_ERRORREASON_H
-#define CHELPER_ERRORREASON_H
-
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
 
@@ -54,16 +51,16 @@ namespace CHelper {
     public:
         ErrorReasonLevel::ErrorReasonLevel level;
         size_t start, end;
-        std::u16string errorReason;
+        std::pmr::u16string errorReason;
 
         ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                     size_t start,
                     size_t end,
-                    std::u16string errorReason);
+                    std::u16string_view errorReason);
 
         ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
                     const TokensView &tokens,
-                    std::u16string errorReason);
+                    std::u16string_view errorReason);
 
         //命令后面有多余部分
         [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(size_t start,
@@ -147,5 +144,3 @@ namespace CHelper {
     };
 
 }// namespace CHelper
-
-#endif//CHELPER_ERRORREASON_H

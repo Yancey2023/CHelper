@@ -19,198 +19,82 @@
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
-#include <chelper/resources/Manifest.h>
-#include <chelper/serialization/Serialization.h>
 
 namespace CHelper {
 
-#ifndef CHELPER_NO_FILESYSTEM
-    CPack::CPack(const std::filesystem::path &path) {
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        Profile::push("loading manifest");
-        auto jsonManifest = serialization::get_json_from_file(path / "manifest.json");
-        serialization::Codec<Manifest>::from_json(jsonManifest, manifest);
-        Profile::next("loading id data");
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "id")) {
-            Profile::next(R"(loading id data in path "{}")", FORMAT_ARG(file.path().string()));
-            applyId(serialization::get_json_from_file(file));
-        }
-        Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "json")) {
-            Profile::next(R"(loading json data in path "{}")", FORMAT_ARG(file.path().string()));
-            applyJson(serialization::get_json_from_file(file));
-        }
-        Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "repeat")) {
-            Profile::next(R"(loading repeat data in path "{}")", FORMAT_ARG(file.path().string()));
-            applyRepeat(serialization::get_json_from_file(file));
-        }
-        Profile::next("loading commands");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
-        for (const auto &file: std::filesystem::recursive_directory_iterator(path / "command")) {
-            Profile::next(R"(loading command in path "{}")", FORMAT_ARG(file.path().string()));
-            applyCommand(serialization::get_json_from_file(file));
-        }
-        Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
-        }
-#endif
-    }
-#endif
-
-    CPack::CPack(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericDocument<rapidjson::UTF8<>>;
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        Profile::push("loading manifest");
-        serialization::Codec<Manifest>::template from_json_member<JsonValueType>(j, "manifest", manifest);
-        Profile::next("loading id data");
-        for (const auto &item: serialization::find_array_member_or_throw(j, "id")) {
-            applyId(item);
-        }
-        Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
-        for (const auto &item: serialization::find_array_member_or_throw(j, "json")) {
-            applyJson(item);
-        }
-        Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
-        for (const auto &item: serialization::find_array_member_or_throw(j, "repeat")) {
-            applyRepeat(item);
-        }
-        Profile::next("loading command data");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
-        for (const auto &item: serialization::find_array_member_or_throw(j, "command")) {
-            applyCommand(item);
-        }
-        Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
-        }
-#endif
+    void CPack::applyId(const IdEntry &entry) {
+        std::visit([&](const auto &item) {
+            using T = std::decay_t<decltype(item)>;
+            if constexpr (std::is_same_v<T, NormalIdEntry>) {
+                normalIds.emplace(item.id, item.content);
+            } else if constexpr (std::is_same_v<T, NamespaceIdEntry>) {
+                namespaceIds.emplace(item.id, item.content);
+            } else if constexpr (std::is_same_v<T, BlockIdsEntry>) {
+                blockIds = item.content;
+            } else {
+                itemIds = item.content;
+            }
+        },
+                   entry);
     }
 
-    CPack::CPack(std::istream &istream) {
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        size_t stackSize = Profile::stack.size();
-#endif
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        Profile::push("loading manifest");
-        serialization::from_binary(istream, manifest);
-        Profile::next("loading normal id data");
-        serialization::from_binary(istream, normalIds);
-        Profile::next("loading namespace id data");
-        serialization::from_binary(istream, namespaceIds);
-        Profile::next("loading item id data");
-        serialization::from_binary(istream, itemIds);
-        Profile::next("loading block id data");
-        serialization::from_binary(istream, blockIds);
-        Profile::next("loading json data");
-        currentCreateStage = Node::NodeCreateStage::JSON_NODE;
-        serialization::from_binary(istream, jsonNodes);
-        Profile::next("loading repeat data");
-        currentCreateStage = Node::NodeCreateStage::REPEAT_NODE;
-        serialization::from_binary(istream, repeatNodeData);
-        Profile::next("loading command data");
-        currentCreateStage = Node::NodeCreateStage::COMMAND_PARAM_NODE;
-        serialization::from_binary(istream, commands);
-        Profile::next("init cpack");
-        currentCreateStage = Node::NodeCreateStage::NONE;
-        afterApply();
-        Profile::pop();
-#if defined(CHelperDebug) && !defined(CHELPER_NO_FILESYSTEM)
-        if (Profile::stack.size() != stackSize) [[unlikely]] {
-            SPDLOG_WARN("error profile stack after loading cpack");
+    void CPack::applyGrammar(GrammarEntry &&entry, LoadTrail &trail) {
+        if (entry.type != "grammar") [[unlikely]] {
+            throw std::runtime_error("invalid grammar resource type");
         }
-#endif
+        if (entry.id.empty()) [[unlikely]] {
+            throw std::runtime_error("grammar resource id cannot be empty");
+        }
+        if (entry.content == nullptr) [[unlikely]] {
+            throw std::runtime_error(fmt::format("grammar resource content is missing: {}", entry.id));
+        }
+        if (grammarNodes.contains(entry.id) || grammarGraphs.contains(entry.id)) [[unlikely]] {
+            throw std::runtime_error(fmt::format("duplicate grammar resource id: {}", entry.id));
+        }
+        //节点初始化失败时，trail 里的 grammar 身份让资源包作者能定位到具体的 grammar 资源；
+        //加载成功时条目随作用域弹出，只有失败的 grammar 会被保留到异常消息里
+        LoadTrail::Scope grammarScope(trail, fmt::format(R"(grammar "{}")", entry.id));
+        Node::initNode(*entry.content, *this);
+        if (entry.content->start.data == nullptr) [[unlikely]] {
+            throw std::runtime_error(fmt::format("grammar resource content has no start node: {}", entry.id));
+        }
+        const auto root = entry.content->start;
+        const auto graph = std::move(entry.content);
+        grammarGraphs.emplace(entry.id, graph);
+        grammarNodes.emplace(std::move(entry.id), root);
     }
 
-    void CPack::applyId(const rapidjson::GenericValue<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericValue<rapidjson::UTF8<>>;
-        std::u16string type;
-        serialization::Codec<decltype(type)>::template from_json_member<JsonValueType>(j, "type", type);
-        if (type == u"normal") [[likely]] {
-            std::string id;
-            serialization::Codec<decltype(id)>::template from_json_member<JsonValueType>(j, "id", id);
-            std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> content;
-            serialization::Codec<decltype(content)>::template from_json_member<JsonValueType>(j, "content", content);
-            normalIds.emplace(std::move(id), std::move(content));
-        } else if (type == u"namespace") [[likely]] {
-            std::string id;
-            serialization::Codec<decltype(id)>::template from_json_member<JsonValueType>(j, "id", id);
-            std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>> content;
-            serialization::Codec<decltype(content)>::template from_json_member<JsonValueType>(j, "content", content);
-            namespaceIds.emplace(std::move(id), std::move(content));
-        } else if (type == u"block") [[likely]] {
-            serialization::Codec<decltype(blockIds)>::template from_json_member<JsonValueType>(j, "content", blockIds);
-        } else if (type == u"item") [[likely]] {
-            serialization::Codec<decltype(itemIds)>::template from_json_member<JsonValueType>(j, "content", itemIds);
-        } else {
-            Profile::push("unknown id type -> {}", FORMAT_ARG(utf8::utf16to8(type)));
-            throw std::runtime_error("unknown id type");
+    void CPack::applyJson(Node::NodeJsonElement &&item) {
+        if (!item.id.has_value() || item.id.value().empty()) [[unlikely]] {
+            throw std::runtime_error("json element id cannot be empty");
         }
-    }
-
-    void CPack::applyJson(const rapidjson::GenericValue<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericValue<rapidjson::UTF8<>>;
-        Node::NodeJsonElement item;
-        serialization::Codec<decltype(item)>::template from_json<JsonValueType>(j, item);
         jsonNodes.push_back(std::move(item));
     }
 
-    void CPack::applyRepeat(const rapidjson::GenericValue<rapidjson::UTF8<>> &j) {
-        using JsonValueType = rapidjson::GenericValue<rapidjson::UTF8<>>;
-        Node::RepeatData item;
-        serialization::Codec<decltype(item)>::template from_json<JsonValueType>(j, item);
+    void CPack::applyRepeat(Node::RepeatData &&item) {
         repeatNodeData.push_back(std::move(item));
     }
 
-    void CPack::applyCommand(const rapidjson::GenericValue<rapidjson::UTF8<>> &j) const {
-        using JsonValueType = rapidjson::GenericValue<rapidjson::UTF8<>>;
-        Node::NodePerCommand item;
-        serialization::Codec<decltype(item)>::template from_json<JsonValueType>(j, item);
+    void CPack::applyCommand(Node::NodePerCommand &&item) const {
         commands->push_back(std::move(item));
     }
 
-    void CPack::afterApply() {
-        // selector nodes
-        Profile::push("init selector nodes");
-        targetSelectorData.init(*this);
-        // json nodes
-        Profile::next("init json nodes");
+    void CPack::afterApply(LoadTrail &trail) {
         for (const auto &item: jsonNodes) {
+            LoadTrail::Scope jsonScope(trail, fmt::format(R"(json "{}")", item.id.value_or("?")));
             Node::initNode(item, *this);
         }
-        // repeat nodes
-        Profile::next("init repeat nodes");
         for (const auto &item: repeatNodeData) {
             if (item.repeatNodes.size() != item.isEnd.size()) [[unlikely]] {
-                Profile::push("checking repeat node: {}", FORMAT_ARG(item.id));
-                throw std::runtime_error("fail to check repeat id because repeatNodes size not equal isEnd size");
+                throw std::runtime_error(fmt::format(
+                        "fail to check repeat id {} because repeatNodes size not equal isEnd size", item.id));
             }
         }
-        // command param nodes
         for (const auto &item: repeatNodeData) {
-            std::vector<Node::NodeWithType> content;
+            std::pmr::vector<Node::NodeWithType> content;
             content.reserve(item.repeatNodes.size());
             for (const auto &item2: item.repeatNodes) {
-                std::vector<Node::NodeWithType> perContent;
+                std::pmr::vector<Node::NodeWithType> perContent;
                 perContent.reserve(item2.nodes.size());
                 for (const auto &item3: item2.nodes) {
                     auto nodeWrapped = new Node::NodeWrapped(item3);
@@ -221,7 +105,7 @@ namespace CHelper {
                 content.emplace_back(*node);
                 cacheNodes.nodes.emplace_back(*node);
             }
-            std::vector<Node::NodeWithType> breakChildNodes;
+            std::pmr::vector<Node::NodeWithType> breakChildNodes;
             breakChildNodes.reserve(item.breakNodes.nodes.size());
             for (const auto &item2: item.breakNodes.nodes) {
                 auto nodeWrapped = new Node::NodeWrapped(item2);
@@ -237,6 +121,7 @@ namespace CHelper {
             cacheNodes.nodes.emplace_back(*orNode);
         }
         for (const auto &item: repeatNodeData) {
+            LoadTrail::Scope repeatScope(trail, fmt::format(R"(repeat "{}")", item.id));
             for (const auto &item2: item.repeatNodes) {
                 for (const auto &item3: item2.nodes) {
                     Node::initNode(item3, *this);
@@ -247,222 +132,77 @@ namespace CHelper {
             }
         }
         for (const auto &item: *commands) {
-            Profile::next(R"(init command: "{}")", FORMAT_ARG(utf8::utf16to8(fmt::format(u"{}", fmt::join(item.name, u",")))));
+            LoadTrail::Scope commandScope(trail, fmt::format(
+                                                         R"(command "{}")", utf8::utf16to8(fmt::format(u"{}", fmt::join(item.name, u",")))));
             Node::initNode(item, *this);
         }
-        Profile::next("sort command nodes");
+        // 解析阶段只读共享的 CPack。提前完成所有惰性缓存，避免第一次解析时
+        // 把 CPack 内部节点或 ID 缓存分配到调用方的临时内存资源中。
+        for (const auto &[key, values]: normalIds) {
+            (void) key;
+            for (const auto &item: *values) {
+                item->buildHash();
+            }
+        }
+        for (const auto &[key, values]: namespaceIds) {
+            (void) key;
+            for (const auto &item: *values) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+            }
+        }
+        if (itemIds != nullptr) {
+            for (const auto &item: *itemIds) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+                item->getNode();
+            }
+        }
+        if (blockIds != nullptr && blockIds->blockStateValues != nullptr) {
+            for (const auto &item: *blockIds->blockStateValues) {
+                item->buildHash();
+                item->getIdWithNamespace()->buildHash();
+                item->getNode(blockIds->blockPropertyDescriptions);
+            }
+        }
         validate();
         std::ranges::sort(*commands, [](const auto &item1, const auto &item2) {
             return item1.name[0] < item2.name[0];
         });
-        Profile::next("create main node");
         mainNode = Node::NodeCommand("MAIN_NODE", u"欢迎使用命令助手(作者：Yancey)", commands.get());
-        Profile::pop();
+    }
+
+    const Node::NodeWithType *CPack::getGrammar(const std::string_view key) const {
+        const std::pmr::string searchKey(key.data(), key.size(), grammarNodes.get_allocator().resource());
+        const auto it = grammarNodes.find(searchKey);
+        return it == grammarNodes.end() ? nullptr : &it->second;
     }
 
     void CPack::validate() const {
-        //命令的名字不能为空，排序和命令匹配都会访问name[0]
         for (const auto &item: *commands) {
             if (item.name.empty()) [[unlikely]] {
-                Profile::push("validating command");
-                Profile::push("command name cannot be empty");
                 throw std::runtime_error("command name cannot be empty");
             }
-            //startNodes为空会使Parser在解析命令时创建childNodes为空的OR节点
             if (item.startNodes.empty()) [[unlikely]] {
-                Profile::push("validating command \"{}\"", FORMAT_ARG(utf8::utf16to8(item.name[0])));
-                Profile::push("command must have at least one start node, check the syntax field");
-                throw std::runtime_error("command start nodes cannot be empty");
+                throw std::runtime_error(fmt::format(
+                        R"(command "{}" must have at least one start node, check the syntax field)",
+                        utf8::utf16to8(item.name[0])));
             }
         }
-        //repeatNodes为空会使Parser创建childNodes为空的OR节点
         for (const auto &item: repeatNodeData) {
             if (item.repeatNodes.empty()) [[unlikely]] {
-                Profile::push("checking repeat node: {}", FORMAT_ARG(item.id));
-                Profile::push("repeat node must have at least one repeat node");
-                throw std::runtime_error("repeat nodes cannot be empty");
+                throw std::runtime_error(fmt::format(
+                        "repeat node {} must have at least one repeat node", item.id));
             }
         }
     }
 
-#ifndef CHELPER_NO_FILESYSTEM
-    std::unique_ptr<CPack> CPack::createByDirectory(const std::filesystem::path &path) {
-        Profile::push("start load CPack by DIRECTORY: {}", FORMAT_ARG(path.string()));
-        auto cpack = std::make_unique<CPack>(path);
-        Profile::pop();
-        return cpack;
-    }
-#endif
-
-    std::unique_ptr<CPack> CPack::createByJson(const rapidjson::GenericDocument<rapidjson::UTF8<>> &j) {
-        Profile::push("start load CPack by JSON");
-        auto cpack = std::make_unique<CPack>(j);
-        Profile::pop();
-        return cpack;
-    }
-
-    std::unique_ptr<CPack> CPack::createByBinary(std::istream &istream) {
-        Profile::push("start load CPack by binary");
-        auto cpack = std::make_unique<CPack>(istream);
-        Profile::pop();
-        return cpack;
-    }
-
-#ifndef CHELPER_NO_FILESYSTEM
-    template<class JsonType>
-    void writeJsonToFileWithCreateDirectory(const std::filesystem::path &path, const JsonType &j) {
-        if (!exists(path)) {
-            std::filesystem::create_directories(path.parent_path());
-        }
-        serialization::template write_json_to_file<JsonType>(path, j);
-    }
-#endif
-
-#ifndef CHELPER_NO_FILESYSTEM
-    void CPack::writeJsonToDirectory(const std::filesystem::path &path) const {
-        using JsonValueType = rapidjson::GenericDocument<rapidjson::UTF8<>>;
-        {
-            JsonValueType j;
-            serialization::Codec<decltype(manifest)>::template to_json<JsonValueType>(j.GetAllocator(), j, manifest);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "manifest.json", j);
-        }
-        for (const auto &item: normalIds) {
-            JsonValueType j;
-            j.SetObject();
-            j.MemberReserve(3, j.GetAllocator());
-            serialization::Codec<decltype(item.first)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "id", item.first);
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "type", "normal");
-            serialization::Codec<decltype(item.second)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "content", item.second);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "id" / (item.first + ".json"), j);
-        }
-        for (const auto &item: namespaceIds) {
-            JsonValueType j;
-            j.SetObject();
-            j.MemberReserve(3, j.GetAllocator());
-            serialization::Codec<decltype(item.first)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "id", item.first);
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "type", "namespace");
-            serialization::Codec<decltype(item.second)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "content", item.second);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "id" / (item.first + ".json"), j);
-        }
-        {
-            JsonValueType j;
-            j.SetObject();
-            j.MemberReserve(3, j.GetAllocator());
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "id", "item");
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "type", "item");
-            serialization::Codec<decltype(itemIds)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "content", itemIds);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "id" / "items.json", j);
-        }
-        {
-            JsonValueType j;
-            j.SetObject();
-            j.MemberReserve(3, j.GetAllocator());
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "id", "block");
-            serialization::Codec<std::string>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "type", "block");
-            serialization::Codec<decltype(blockIds)>::template to_json_member<JsonValueType>(j.GetAllocator(), j, "content", blockIds);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "id" / "block.json", j);
-        }
-        for (const auto &item: jsonNodes) {
-            JsonValueType j;
-            serialization::Codec<decltype(item)>::template to_json<JsonValueType>(j.GetAllocator(), j, item);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "json" / (item.id.value() + ".json"), j);
-        }
-        for (const auto &item: repeatNodeData) {
-            JsonValueType j;
-            serialization::Codec<decltype(item)>::template to_json<JsonValueType>(j.GetAllocator(), j, item);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "repeat" / (item.id + ".json"), j);
-        }
-        for (const auto &item: *commands) {
-            JsonValueType j;
-            serialization::Codec<decltype(item)>::template to_json<JsonValueType>(j.GetAllocator(), j, item);
-            writeJsonToFileWithCreateDirectory<JsonValueType>(path / "command" / (utf8::utf16to8(item.name[0]) + ".json"), j);
-        }
-    }
-#endif
-
-    [[nodiscard]] rapidjson::GenericDocument<rapidjson::UTF8<>> CPack::toJson() const {
-        using JsonValueType = rapidjson::GenericDocument<rapidjson::UTF8<>>;
-        rapidjson::GenericDocument<rapidjson::UTF8<>> result;
-        result.SetObject();
-        serialization::Codec<decltype(manifest)>::template to_json_member<JsonValueType>(result.GetAllocator(), result, "manifest", manifest);
-        JsonValueType::ValueType idJson;
-        idJson.SetArray();
-        idJson.Reserve(static_cast<rapidjson::SizeType>(normalIds.size() + namespaceIds.size() + 2), result.GetAllocator());
-        for (const auto &item: normalIds) {
-            JsonValueType::ValueType j;
-            j.SetObject();
-            serialization::Codec<decltype(item.first)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "id", item.first);
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "type", "normal");
-            serialization::Codec<decltype(item.second)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "content", item.second);
-            idJson.PushBack(std::move(j), result.GetAllocator());
-        }
-        for (const auto &item: namespaceIds) {
-            JsonValueType::ValueType j;
-            j.SetObject();
-            serialization::Codec<decltype(item.first)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "id", item.first);
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "type", "namespace");
-            serialization::Codec<decltype(item.second)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "content", item.second);
-            idJson.PushBack(std::move(j), result.GetAllocator());
-        }
-        {
-            JsonValueType::ValueType j;
-            j.SetObject();
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "id", "item");
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "type", "item");
-            serialization::Codec<decltype(itemIds)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "content", itemIds);
-            idJson.PushBack(std::move(j), result.GetAllocator());
-        }
-        {
-            JsonValueType::ValueType j;
-            j.SetObject();
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "id", "block");
-            serialization::Codec<std::string>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "type", "block");
-            serialization::Codec<decltype(blockIds)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), j, "content", blockIds);
-            idJson.PushBack(std::move(j), result.GetAllocator());
-        }
-        result.AddMember(rapidjson::GenericValue<rapidjson::UTF8<>>("id"), std::move(idJson), result.GetAllocator());
-        serialization::Codec<decltype(jsonNodes)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), result, "json", jsonNodes);
-        serialization::Codec<decltype(repeatNodeData)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), result, "repeat", repeatNodeData);
-        serialization::Codec<decltype(commands)>::template to_json_member<typename JsonValueType::ValueType>(result.GetAllocator(), result, "command", commands);
-        return result;
-    }
-
-#ifndef CHELPER_NO_FILESYSTEM
-    void CPack::writeJsonToFile(const std::filesystem::path &path) const {
-        writeJsonToFileWithCreateDirectory<rapidjson::GenericDocument<rapidjson::UTF8<>>>(path, toJson());
-    }
-
-    void CPack::writeBinToFile(const std::filesystem::path &path) const {
-        std::filesystem::create_directories(path.parent_path());
-        Profile::push("writing binary cpack to file: {}", FORMAT_ARG(path.string()));
-        std::ofstream ostream(path, std::ios::binary);
-        //manifest
-        serialization::to_binary(ostream, manifest);
-        //normal id
-        serialization::to_binary(ostream, normalIds);
-        //namespace id
-        serialization::to_binary(ostream, namespaceIds);
-        //item id
-        serialization::to_binary(ostream, itemIds);
-        //block id
-        serialization::to_binary(ostream, blockIds);
-        //json node
-        serialization::to_binary(ostream, jsonNodes);
-        //repeat node
-        serialization::to_binary(ostream, repeatNodeData);
-        //command
-        serialization::to_binary(ostream, commands);
-
-        ostream.close();
-        Profile::pop();
-    }
-#endif
-
-    std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>
-    CPack::getNormalId(const std::string &key) const {
-        auto it = normalIds.find(key);
+    std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>
+    CPack::getNormalId(const std::string_view key) const {
+        const std::pmr::string searchKey(key.data(), key.size(), normalIds.get_allocator().resource());
+        auto it = normalIds.find(searchKey);
         if (it == normalIds.end()) [[unlikely]] {
-#ifdef CHelperDebug
+#if CHelperDebug
             SPDLOG_WARN(R"(fail to find normal ids by key: "{}")", FORMAT_ARG(key));
 #endif
             return nullptr;
@@ -470,16 +210,17 @@ namespace CHelper {
         return it->second;
     }
 
-    std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>
-    CPack::getNamespaceId(const std::string &key) const {
+    std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
+    CPack::getNamespaceId(const std::string_view key) const {
         if (key == "block") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::vector<std::shared_ptr<NamespaceId>>>(blockIds->blockStateValues);
+            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(blockIds->blockStateValues);
         } else if (key == "item") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::vector<std::shared_ptr<NamespaceId>>>(itemIds);
+            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(itemIds);
         }
-        auto it = namespaceIds.find(key);
+        const std::pmr::string searchKey(key.data(), key.size(), namespaceIds.get_allocator().resource());
+        auto it = namespaceIds.find(searchKey);
         if (it == namespaceIds.end()) [[unlikely]] {
-#ifdef CHelperDebug
+#if CHelperDebug
             SPDLOG_WARN(R"(fail to find namespace ids by key: "{}")", FORMAT_ARG(key));
 #endif
             return nullptr;

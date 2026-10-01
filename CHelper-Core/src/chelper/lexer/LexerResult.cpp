@@ -20,8 +20,8 @@
 
 namespace CHelper {
 
-    LexerResult::LexerResult(std::u16string content,
-                             std::vector<Token> allTokens)
+    LexerResult::LexerResult(std::pmr::u16string content,
+                             std::pmr::vector<Token> allTokens)
         : content(std::move(content)),
           allTokens(std::move(allTokens)) {}
 

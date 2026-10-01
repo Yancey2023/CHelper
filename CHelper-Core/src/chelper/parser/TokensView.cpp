@@ -27,7 +27,7 @@ namespace CHelper {
         startIndex = lexerResult->getIndex(start);
         endIndex = lexerResult->getIndex(end);
         cacheString = {lexerResult->content.c_str() + startIndex, endIndex - startIndex};
-#ifdef CHelperDebug
+#if CHelperDebug
         if (start > end) [[unlikely]] {
             throw std::runtime_error(fmt::format("TokensView: wrong range: ({}, {})", start, end));
         }

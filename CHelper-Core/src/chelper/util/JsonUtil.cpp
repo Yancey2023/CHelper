@@ -22,7 +22,7 @@
 namespace CHelper::JsonUtil {
 
     size_t ConvertResult::convert(size_t index) const {
-#ifdef CHelperDebug
+#if CHelperDebug
         //indexConvertList的大小是解码后字符串长度+1(最后一个映射到结束引号/字符串末尾)，
         //正常情况下index不会越界，越界说明内层AST的坐标换算出了问题，Debug模式下直接抛出异常定位
         if (index >= indexConvertList.size()) [[unlikely]] {

@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef CHELPER_SYNTAXRESULT_H
-#define CHELPER_SYNTAXRESULT_H
+#pragma once
 
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
@@ -59,5 +58,3 @@ namespace CHelper::SyntaxHighlight {
     };
 
 }// namespace CHelper::SyntaxHighlight
-
-#endif//CHELPER_SYNTAXRESULT_H

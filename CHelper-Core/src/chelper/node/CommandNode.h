@@ -18,14 +18,12 @@
 
 #pragma once
 
-#ifndef CHELPER_NODEBASE_H
-#define CHELPER_NODEBASE_H
-
 #include <chelper/lexer/TokenReader.h>
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
 #include <chelper/resources/id/NormalId.h>
+#include <chelper/util/CPackMemory.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -39,9 +37,9 @@ namespace CHelper {
 
         class NodeSerializable : public NodeBase {
         public:
-            std::optional<std::string> id;
-            std::optional<std::u16string> brief;
-            std::optional<std::u16string> description;
+            std::optional<std::pmr::string> id;
+            std::optional<std::pmr::u16string> brief;
+            std::optional<std::pmr::u16string> description;
             std::optional<bool> isMustAfterSpace;
 
             NodeSerializable() = default;
@@ -58,7 +56,7 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::WRAPPED;
             NodeWithType innerNode;
             //存储下一个节点，需要调用构造函数之后再进行添加
-            std::vector<NodeWrapped *> nextNodes;
+            std::pmr::vector<NodeWrapped *> nextNodes;
             bool hasNextLF = false;
 
             explicit NodeWrapped(NodeWithType innerNode);
@@ -72,7 +70,7 @@ namespace CHelper {
         class NodeTemplateBoolean : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = isJson ? NodeTypeId::JSON_BOOLEAN : NodeTypeId::BOOLEAN;
-            std::optional<std::u16string> descriptionTrue, descriptionFalse;
+            std::optional<std::pmr::u16string> descriptionTrue, descriptionFalse;
 
             NodeTemplateBoolean() = default;
 
@@ -81,8 +79,8 @@ namespace CHelper {
                                 const std::optional<std::u16string> &descriptionTrue,
                                 const std::optional<std::u16string> &descriptionFalse)
                 : NodeSerializable(id, description, false),
-                  descriptionTrue(descriptionTrue),
-                  descriptionFalse(descriptionFalse) {}
+                  descriptionTrue(copyPmrU16StringOptional(descriptionTrue)),
+                  descriptionFalse(copyPmrU16StringOptional(descriptionFalse)) {}
         };
 
         using NodeBoolean = NodeTemplateBoolean<false>;
@@ -123,20 +121,22 @@ namespace CHelper {
         using NodeJsonFloat = NodeTemplateNumber<float, true>;
         using NodeJsonInteger = NodeTemplateNumber<int32_t, true>;
 
-        class NodeAnd : public NodeBase {
+        class NodeAnd : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::AND;
-            std::vector<NodeWithType> childNodes;
+            std::pmr::vector<NodeWithType> childNodes;
+            std::pmr::vector<std::pmr::string> childNodeIds;
 
             NodeAnd() = default;
 
-            explicit NodeAnd(std::vector<NodeWithType> childNodes);
+            explicit NodeAnd(std::pmr::vector<NodeWithType> childNodes);
         };
 
-        class NodeOr : public NodeBase {
+        class NodeOr : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OR;
-            std::vector<NodeWithType> childNodes;
+            std::pmr::vector<NodeWithType> childNodes;
+            std::pmr::vector<std::pmr::string> childNodeIds;
             bool isAttachToEnd = false, isUseFirst = false;
             bool noSuggestion = false;
             const char16_t *defaultErrorReason = nullptr;
@@ -144,7 +144,7 @@ namespace CHelper {
 
             NodeOr() = default;
 
-            NodeOr(std::vector<NodeWithType> childNodes,
+            NodeOr(std::pmr::vector<NodeWithType> childNodes,
                    bool isAttachToEnd,
                    bool isUseFirst = false,
                    bool noSuggestion = false,
@@ -167,26 +167,25 @@ namespace CHelper {
         };
 
         struct EqualData {
-            std::u16string name;
-            std::optional<std::u16string> description;
-            bool canUseNotEqual;
-            const NodeWithType nodeValue;
+            std::pmr::u16string name;
+            std::optional<std::pmr::u16string> description;
+            bool canUseNotEqual = false;
+            //序列化用：值节点在同文件节点表里的id，初始化阶段解析到nodeValue
+            std::pmr::string valueNodeId;
+            NodeWithType nodeValue;
 
-            EqualData(std::u16string name,
-                      const std::optional<std::u16string> &description,
-                      bool canUseNotEqual,
-                      NodeWithType nodeValue);
+            EqualData() = default;
         };
 
         class NodeNormalId : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::NORMAL_ID;
-            std::optional<std::string> key;
-            std::optional<std::shared_ptr<std::vector<std::shared_ptr<NormalId>>>> contents;
+            std::optional<std::pmr::string> key;
+            std::optional<std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> contents;
             std::optional<bool> ignoreError;
             bool allowMissingID = false;
             std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> getNormalIdASTNode;
-            std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> customContents;
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> customContents;
 
             NodeNormalId() = default;
 
@@ -204,7 +203,7 @@ namespace CHelper {
             NodeNormalId(
                     const std::optional<std::string> &id,
                     const std::optional<std::u16string> &description,
-                    const std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> &contents,
+                    const std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> &contents,
                     bool ignoreError,
                     bool allowMissingID = false,
                     const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getNormalIdASTNode =
@@ -223,7 +222,7 @@ namespace CHelper {
 
             NodeText(
                     const std::optional<std::string> &id,
-                    const std::optional<std::u16string> &description,
+                    std::u16string_view description,
                     const std::shared_ptr<NormalId> &data,
                     const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getTextASTNode =
                             [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
@@ -231,28 +230,30 @@ namespace CHelper {
                     });
         };
 
-        class NodeEqualEntry : public NodeBase {
+        class NodeEqualEntry : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::EQUAL_ENTRY;
             static NodeText nodeEqual;
             static NodeText nodeNotEqual;
             static NodeOr nodeEqualOrNotEqual;
-            std::vector<EqualData> equalDatas;
-            std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> nodeKeyContent;
+            std::pmr::vector<EqualData> equalDatas;
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> nodeKeyContent;
             NodeNormalId nodeKey;
 
             NodeEqualEntry() = default;
-
-            explicit NodeEqualEntry(std::vector<EqualData> equalDatas);
         };
 
-        class NodeList : public NodeBase {
+        class NodeList : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::LIST;
             NodeWithType nodeLeft;
             NodeWithType nodeElement;
             NodeWithType nodeSeparator;
             NodeWithType nodeRight;
+            std::pmr::string nodeLeftId;
+            std::pmr::string nodeElementId;
+            std::pmr::string nodeSeparatorId;
+            std::pmr::string nodeRightId;
             NodeOr nodeElementOrRight;
             NodeOr nodeSeparatorOrRight;
 
@@ -279,7 +280,7 @@ namespace CHelper {
             static NodeWithType getNodeAny();
         };
 
-        class NodeSingleSymbol : public NodeBase {
+        class NodeSingleSymbol : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::SINGLE_SYMBOL;
             char16_t symbol = ' ';
@@ -293,10 +294,11 @@ namespace CHelper {
                              bool isAddSpace = true);
         };
 
-        class NodeOptional : public NodeBase {
+        class NodeOptional : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OPTIONAL;
             NodeWithType optionalNode;
+            std::pmr::string optionalNodeId;
 
             NodeOptional() = default;
 
@@ -306,10 +308,10 @@ namespace CHelper {
         class NodeNamespaceId : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::NAMESPACE_ID;
-            std::optional<std::string> key;
-            std::optional<std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>>> contents;
+            std::optional<std::pmr::string> key;
+            std::optional<std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> contents;
             std::optional<bool> ignoreError;
-            std::shared_ptr<std::vector<std::shared_ptr<NamespaceId>>> customContents;
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> customContents;
 
             NodeNamespaceId() = default;
 
@@ -342,12 +344,12 @@ namespace CHelper {
         class NodePerCommand : public NodeBase {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::PER_COMMAND;
-            std::vector<std::u16string> name;
-            std::optional<std::u16string> description;
-            std::vector<std::u16string> syntax;
+            std::pmr::vector<std::pmr::u16string> name;
+            std::optional<std::pmr::u16string> description;
+            std::pmr::vector<std::pmr::u16string> syntax;
             FreeableNodeWithTypes nodes;
-            std::vector<NodeWrapped> wrappedNodes;
-            std::vector<NodeWrapped *> startNodes;
+            std::pmr::vector<NodeWrapped> wrappedNodes;
+            std::pmr::vector<NodeWrapped *> startNodes;
 
             NodePerCommand() = default;
         };
@@ -357,11 +359,11 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::COMMAND;
             static NodeSingleSymbol nodeCommandStart;
 
-            std::vector<NodePerCommand> *commands = nullptr;
+            std::pmr::vector<NodePerCommand> *commands = nullptr;
 
             NodeCommand(const std::optional<std::string> &id,
                         const std::optional<std::u16string> &description,
-                        std::vector<NodePerCommand> *commands);
+                        std::pmr::vector<NodePerCommand> *commands);
 
             NodeCommand() = default;
         };
@@ -369,13 +371,14 @@ namespace CHelper {
         class NodeCommandName : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::COMMAND_NAME;
-            std::vector<NodePerCommand> *commands = nullptr;
+            std::pmr::vector<NodePerCommand> *commands = nullptr;
         };
 
         class NodeIntegerWithUnit : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::INTEGER_WITH_UNIT;
-            std::shared_ptr<std::vector<std::shared_ptr<NormalId>>> units;
+            static NodeInteger nodeInteger;
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> units;
             NodeNormalId nodeUnits;
             NodeAnd nodeIntegerWithUnit;
             NodeOr nodeIntegerMaybeHaveUnit;
@@ -395,12 +398,12 @@ namespace CHelper {
         class NodeJson : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON;
-            std::string key;
+            std::pmr::string key;
             NodeWithType nodeJson;
 
             NodeJson(const std::optional<std::string> &id,
                      const std::optional<std::u16string> &description,
-                     std::string key);
+                     std::string_view key);
 
             NodeJson() = default;
         };
@@ -412,7 +415,7 @@ namespace CHelper {
             static NodeInteger nodeAllData;
             NodeItemType::NodeItemType nodeItemType = NodeItemType::ITEM_GIVE;
             NodeNamespaceId nodeItemId;
-            std::shared_ptr<std::vector<std::shared_ptr<ItemId>>> itemIds;
+            std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
             NodeJson nodeComponent;
 
             NodeItem() = default;
@@ -475,16 +478,16 @@ namespace CHelper {
         };
 
         struct RepeatData {
-            std::string id;
+            std::pmr::string id;
             FreeableNodeWithTypes breakNodes;
-            std::vector<FreeableNodeWithTypes> repeatNodes;
-            std::vector<bool> isEnd;
+            std::pmr::vector<FreeableNodeWithTypes> repeatNodes;
+            std::pmr::vector<bool> isEnd;
         };
 
         class NodeRepeat : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::REPEAT;
-            std::string key;
+            std::pmr::string key;
             const RepeatData *repeatData = nullptr;
             NodeWithType nodeElement;
 
@@ -507,36 +510,11 @@ namespace CHelper {
                        bool ignoreLater);
         };
 
-        struct TargetSelectorData {
-            static NodeString nodePlayerName;
-            static NodeSingleSymbol nodeWildcard;
-            static NodeSingleSymbol nodeAt;
-            static NodeSingleSymbol nodeSeparator;
-            static NodeString nodeString;
-            static NodeBoolean nodeBoolean;
-            static NodeRelativeFloat nodeRelativeFloat;
-            NodeNormalId nodeTargetSelectorVariable;
-            NodeNamespaceId nodeItem;
-            NodeNormalId nodeFamily, nodeGameMode, nodeSlot;
-            NodeNamespaceId nodeEntities;
-            NodeEqualEntry nodeHasItemElement;
-            NodeList nodeHasItemList1, nodeHasItemList2;
-            NodeOr nodeHasItem;
-            NodeEqualEntry nodeArgument;
-            NodeList nodeArguments;
-            NodeOptional nodeOptionalArguments;
-            NodeAnd nodeTargetSelectorVariableWithArgument;
-
-            TargetSelectorData();
-
-            void init(const CPack &cpack);
-        };
-
         class NodeTargetSelector : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::TARGET_SELECTOR;
             bool isMustPlayer = false, isMustNPC = false, isOnlyOne = false, isWildcard = false;
-            NodeOr nodeTargetSelector;
+            NodeWithType nodeTargetSelector;
 
             NodeTargetSelector() = default;
         };
@@ -545,7 +523,7 @@ namespace CHelper {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON_ELEMENT;
             FreeableNodeWithTypes nodes;
-            std::string startNodeId;
+            std::pmr::string startNodeId;
             NodeWithType start;
 
             NodeJsonElement() = default;
@@ -558,8 +536,8 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON_ENTRY;
             static NodeSingleSymbol nodeSeparator;
             static NodeEntry nodeAllEntry;
-            std::u16string key;
-            std::vector<std::string> value;
+            std::pmr::u16string key;
+            std::pmr::vector<std::pmr::string> value;
             NodeText nodeKey;
             NodeOr nodeValue;
             std::optional<NodeEntry> nodeEntry;
@@ -568,8 +546,8 @@ namespace CHelper {
 
             NodeJsonEntry(const std::optional<std::string> &id,
                           const std::optional<std::u16string> &description,
-                          std::u16string key = std::u16string(),
-                          std::vector<std::string> value = std::vector<std::string>());
+                          std::u16string_view key = std::u16string_view(),
+                          std::pmr::vector<std::pmr::string> value = {});
 
             static NodeWithType getNodeJsonAllEntry();
         };
@@ -581,14 +559,14 @@ namespace CHelper {
             static NodeSingleSymbol nodeRight;
             static NodeSingleSymbol nodeSeparator;
             static NodeList nodeAllList;
-            std::string data;
+            std::pmr::string data;
             std::optional<NodeList> nodeList;
 
             NodeJsonList() = default;
 
             NodeJsonList(const std::optional<std::string> &id,
                          const std::optional<std::u16string> &description,
-                         std::string data = std::string());
+                         std::string_view data = std::string_view());
         };
 
         class NodeJsonNull : public NodeSerializable {
@@ -603,7 +581,10 @@ namespace CHelper {
         class NodeJsonObject : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON_OBJECT;
-            std::vector<NodeJsonEntry> data;
+            static NodeSingleSymbol nodeListLeft;
+            static NodeSingleSymbol nodeListRight;
+            static NodeSingleSymbol nodeListSeparator;
+            std::pmr::vector<NodeJsonEntry> data;
             std::optional<NodeOr> nodeElement1;
             NodeOr nodeElement2;
             NodeList nodeList;
@@ -637,5 +618,3 @@ namespace CHelper {
     }// namespace Node
 
 }// namespace CHelper
-
-#endif//CHELPER_NODEBASE_H

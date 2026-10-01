@@ -10,12 +10,6 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],
   },
-  build: {
-    minify: 'esbuild',
-  },
-  esbuild: {
-    drop: ['debugger'],
-  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -18,15 +18,20 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
+#include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
-#include <chelper/serialization/Serialization.h>
-
-#define CHELPER_INIT(v1)                                                                                                                                                        \
-    case Node::NodeTypeId::v1:                                                                                                                                                  \
-        NodeInitialization<typename Node::NodeTypeDetail<Node::NodeTypeId::v1>::Type>::init(*reinterpret_cast<NodeTypeDetail<Node::NodeTypeId::v1>::Type *>(node.data), cpack); \
-        break;
 
 namespace CHelper::Node {
+
+    //仅对NodeSerializable派生类型生效，非序列化节点(NodeWrapped/NodeEntry等)编译期跳过
+    template<class NodeType>
+    void applyTypeDefault(NodeType &node) {
+        if constexpr (std::derived_from<NodeType, NodeSerializable>) {
+            if (!node.isMustAfterSpace.has_value()) [[unlikely]] {
+                node.isMustAfterSpace = NodeTypeDetail<NodeType::nodeTypeId>::isMustAfterSpace;
+            }
+        }
+    }
 
     template<class NodeType>
     struct NodeInitialization {
@@ -60,10 +65,9 @@ namespace CHelper::Node {
     template<>
     struct NodeInitialization<NodeIntegerWithUnit> {
         static void init(NodeIntegerWithUnit &node, const CPack &cpack) {
-            static NodeInteger nodeInteger("INTEGER", u"整数", std::nullopt, std::nullopt);
             node.nodeUnits = NodeNormalId("UNITS", u"单位", node.units, false);
-            node.nodeIntegerWithUnit = NodeAnd({nodeInteger, node.nodeUnits});
-            node.nodeIntegerMaybeHaveUnit = NodeOr({node.nodeIntegerWithUnit, nodeInteger}, false, true);
+            node.nodeIntegerWithUnit = NodeAnd({NodeIntegerWithUnit::nodeInteger, node.nodeUnits});
+            node.nodeIntegerMaybeHaveUnit = NodeOr({node.nodeIntegerWithUnit, NodeIntegerWithUnit::nodeInteger}, false, true);
         }
     };
 
@@ -88,9 +92,7 @@ namespace CHelper::Node {
                     return;
                 }
             }
-            Profile::push("linking contents to {}", FORMAT_ARG(node.key));
-            Profile::push("failed to find json data in the cpack -> {}", FORMAT_ARG(node.key));
-            throw std::runtime_error("failed to find json data");
+            throw std::runtime_error(fmt::format("failed to find json data in the cpack -> {}", node.key));
         }
     };
 
@@ -104,9 +106,7 @@ namespace CHelper::Node {
             }
             if (node.customContents == nullptr) [[unlikely]] {
                 if (node.key.has_value()) [[unlikely]] {
-                    Profile::push("linking contents to {}", FORMAT_ARG(node.key.value()));
-                    Profile::push("failed to find namespace id in the cpack -> {}", FORMAT_ARG(node.key.value()));
-                    throw std::runtime_error("failed to find namespace id");
+                    throw std::runtime_error(fmt::format("failed to find namespace id in the cpack -> {}", node.key.value()));
                 } else {
                     throw std::runtime_error("missing content");
                 }
@@ -129,9 +129,7 @@ namespace CHelper::Node {
             }
             if (node.customContents == nullptr) [[unlikely]] {
                 if (node.key.has_value()) [[unlikely]] {
-                    Profile::push("linking contents to {}", FORMAT_ARG(node.key.value()));
-                    Profile::push("failed to find normal id in the cpack -> ", FORMAT_ARG(node.key.value()));
-                    throw std::runtime_error("failed to find normal id");
+                    throw std::runtime_error(fmt::format("failed to find normal id in the cpack -> {}", node.key.value()));
                 } else {
                     throw std::runtime_error("missing content");
                 }
@@ -143,14 +141,10 @@ namespace CHelper::Node {
     struct NodeInitialization<NodePerCommand> {
         static void init(NodePerCommand &node, const CPack &cpack) {
             for (auto &definition: node.nodes.nodes) {
-                Profile::push(R"(init node {}: "{}")",
-                              FORMAT_ARG(getNodeTypeName(definition.nodeTypeId)),
-                              FORMAT_ARG(reinterpret_cast<NodeSerializable *>(definition.data)->id.value_or("UNKNOWN")));
                 initNode(definition, cpack);
-                Profile::pop();
             }
 
-#ifdef CHelperDebug
+#if CHelperDebug
             for (const auto &item: node.wrappedNodes) {
                 bool flag1 = item.innerNode.nodeTypeId == NodeTypeId::POSITION ||
                              item.innerNode.nodeTypeId == NodeTypeId::RELATIVE_FLOAT;
@@ -161,11 +155,10 @@ namespace CHelper::Node {
                     bool flag2 = item2->innerNode.nodeTypeId == NodeTypeId::POSITION ||
                                  item2->innerNode.nodeTypeId == NodeTypeId::RELATIVE_FLOAT;
                     if (flag1 && flag2 == item2->getNodeSerializable().isMustAfterSpace) [[unlikely]] {
-                        Profile::push(R"({} should be {} in node "{}")",
-                                      "isMustAfterSpace",
-                                      item2->getNodeSerializable().isMustAfterSpace ? "false" : "true",
-                                      item2->getNodeSerializable().id.value_or("UNKNOWN"));
-                        throw std::runtime_error("value is wrong");
+                        throw std::runtime_error(fmt::format(
+                                R"(isMustAfterSpace should be {} in node "{}")",
+                                item2->getNodeSerializable().isMustAfterSpace ? "false" : "true",
+                                item2->getNodeSerializable().id.value_or("UNKNOWN")));
                     }
                 }
             }
@@ -182,25 +175,71 @@ namespace CHelper::Node {
                 node.nodeElement = it->second.second;
                 return;
             }
-            Profile::push("link repeat data {} to content", FORMAT_ARG(node.key));
-            Profile::push("fail to find repeat data by id {}", FORMAT_ARG(node.key));
-            throw std::runtime_error("fail to find repeat data");
+            throw std::runtime_error(fmt::format("fail to find repeat data by id {}", node.key));
         }
     };
 
     template<>
     struct NodeInitialization<NodeTargetSelector> {
         static void init(NodeTargetSelector &node, const CPack &cpack) {
-            std::vector<NodeWithType> nodes;
-            nodes.reserve(node.isWildcard ? 3 : 2);
-            if (node.isWildcard) {
-                nodes.emplace_back(Node::TargetSelectorData::nodeWildcard);
+            const auto *grammar = cpack.getGrammar("target_selector");
+            if (grammar == nullptr || grammar->data == nullptr) [[unlikely]] {
+                throw std::runtime_error("target selector grammar is not loaded");
             }
-            nodes.emplace_back(cpack.targetSelectorData.nodeTargetSelectorVariableWithArgument);
-            nodes.emplace_back(TargetSelectorData::nodePlayerName);
-            node.nodeTargetSelector = NodeOr(std::move(nodes), false);
-            initNode(node.nodeTargetSelector, cpack);
+            node.nodeTargetSelector = *grammar;
         }
+    };
+
+    //nodeKeyContent/nodeKey是从equalDatas派生的数据，与C++侧构造职责一致，在初始化阶段构建
+    template<>
+    struct NodeInitialization<NodeEqualEntry> {
+        static void init(NodeEqualEntry &node, const CPack &cpack) {
+            if (node.equalDatas.empty()) [[unlikely]] {
+                throw std::runtime_error(
+                        fmt::format(R"(equal entry "{}" must have at least one value)", node.id.value_or("UNKNOWN")));
+            }
+            node.nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
+            for (const auto &item: node.equalDatas) {
+                node.nodeKeyContent->push_back(NormalId::make(item.name, item.description));
+            }
+            node.nodeKey = NodeNormalId("KEY", u"参数名", node.nodeKeyContent, true);
+            for (auto &item: node.equalDatas) {
+                if (item.nodeValue.data == nullptr) [[unlikely]] {
+                    throw std::runtime_error(
+                            fmt::format(R"(equal entry "{}" value node is not linked)", node.id.value_or("UNKNOWN")));
+                }
+                initNode(item.nodeValue, cpack);
+            }
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeAnd> {
+        static void init(NodeAnd &node, const CPack &cpack) {
+            for (auto &child: node.childNodes) initNode(child, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeOr> {
+        static void init(NodeOr &node, const CPack &cpack) {
+            for (auto &child: node.childNodes) initNode(child, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeList> {
+        static void init(NodeList &node, const CPack &cpack) {
+            initNode(node.nodeLeft, cpack);
+            initNode(node.nodeElement, cpack);
+            initNode(node.nodeSeparator, cpack);
+            initNode(node.nodeRight, cpack);
+        }
+    };
+
+    template<>
+    struct NodeInitialization<NodeOptional> {
+        static void init(NodeOptional &node, const CPack &cpack) { initNode(node.optionalNode, cpack); }
     };
 
     template<>
@@ -209,6 +248,15 @@ namespace CHelper::Node {
             node.getTextASTNode = [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
                 return tokenReader.readUntilSpace(node);
             };
+        }
+    };
+
+    //normalId是从symbol/value派生的数据，反序列化只负责读取原始字段，
+    //这里和C++侧构造函数(NodeSingleSymbol::NodeSingleSymbol等)保持同一构建时机：加载初始化阶段
+    template<>
+    struct NodeInitialization<NodeSingleSymbol> {
+        static void init(NodeSingleSymbol &node, const CPack &cpack) {
+            node.normalId = NormalId::make(std::u16string(1, node.symbol), node.description);
         }
     };
 
@@ -223,14 +271,13 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonEntry> {
         static void init(NodeJsonEntry &node, const CPack &cpack) {
         }
-        static void init(NodeJsonEntry &node, const std::vector<NodeWithType> &dataList) {
+        static void init(NodeJsonEntry &node, const std::pmr::vector<NodeWithType> &dataList) {
             if (node.value.empty()) [[unlikely]] {
                 //value为空会产生childNodes为空的OR节点，Parser访问orNode的childNodes[whichBest]时会越界
-                Profile::push("checking json entry \"{}\"", FORMAT_ARG(utf8::utf16to8(node.key)));
-                Profile::push("json entry must have at least one value node");
-                throw std::runtime_error("json entry value cannot be empty");
+                throw std::runtime_error(
+                        fmt::format(R"(json entry "{}" must have at least one value node)", utf8::utf16to8(node.key)));
             }
-            std::vector<NodeWithType> valueNodes;
+            std::pmr::vector<NodeWithType> valueNodes;
             for (const auto &item: node.value) {
                 bool notFind = true;
                 for (const auto &item2: dataList) {
@@ -241,10 +288,8 @@ namespace CHelper::Node {
                     }
                 }
                 if (notFind) {
-                    Profile::push("linking contents to {}", FORMAT_ARG(item));
-                    Profile::push("failed to find node id -> {}", FORMAT_ARG(item));
-                    Profile::push("unknown node id -> {} (in node \"{}\")", FORMAT_ARG(node.id.value_or("UNKNOWN")), FORMAT_ARG(item));
-                    throw std::runtime_error("unknown node id");
+                    throw std::runtime_error(
+                            fmt::format(R"(unknown node id -> {} (in node "{}"))", item, node.id.value_or("UNKNOWN")));
                 }
             }
             node.nodeKey = NodeText("JSON_OBJECT_ENTRY_KEY", u"JSON对象键",
@@ -258,26 +303,114 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonList> {
         static void init(NodeJsonList &node, const CPack &cpack) {
         }
-        static void init(NodeJsonList &node, const std::vector<NodeWithType> &dataList) {
+        static void init(NodeJsonList &node, const std::pmr::vector<NodeWithType> &dataList) {
             for (const auto &item: dataList) {
                 if (reinterpret_cast<const NodeSerializable *>(item.data)->id == node.data) [[unlikely]] {
                     node.nodeList = NodeList(Node::NodeJsonList::nodeLeft, item, Node::NodeJsonList::nodeSeparator, Node::NodeJsonList::nodeRight);
                     return;
                 }
             }
-            Profile::push("linking contents to {}", FORMAT_ARG(node.data));
-            Profile::push("failed to find node id -> {}", FORMAT_ARG(node.data));
-            Profile::push("unknown node id -> {} (in node \"{}\")", FORMAT_ARG(node.data), FORMAT_ARG(node.id.value_or("UNKNOWN")));
-            throw std::runtime_error("unknown node id");
+            throw std::runtime_error(
+                    fmt::format(R"(unknown node id -> {} (in node "{}"))", node.data, node.id.value_or("UNKNOWN")));
         }
     };
 
     template<>
     struct NodeInitialization<NodeJsonElement> {
         static void init(NodeJsonElement &node, const CPack &cpack) {
-            Profile::push("linking startNode \"{}\" to nodes", FORMAT_ARG(node.startNodeId));
             for (const auto &item: node.nodes.nodes) {
-                initNode(item, cpack);
+                // Grammar 组合节点的子节点此时仍是 ID，先跳过会解引用子节点的初始化，
+                // 等下面完成图绑定后再初始化组合节点。
+                if (item.nodeTypeId != NodeTypeId::AND && item.nodeTypeId != NodeTypeId::OR &&
+                    item.nodeTypeId != NodeTypeId::LIST && item.nodeTypeId != NodeTypeId::OPTIONAL &&
+                    item.nodeTypeId != NodeTypeId::EQUAL_ENTRY) {
+                    initNode(item, cpack);
+                    //语法资源里的NORMAL_ID（键表/值表）读单个符号界token：
+                    //键和值后面紧跟 = ] } 等符号，不能用反序列化默认的readUntilSpace（会吞掉符号）
+                    if (item.nodeTypeId == NodeTypeId::NORMAL_ID) [[unlikely]] {
+                        auto &normalIdNode = *reinterpret_cast<NodeNormalId *>(item.data);
+                        normalIdNode.getNormalIdASTNode = [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
+                            return tokenReader.readStringOrNumberASTNode(node);
+                        };
+                    }
+                }
+            }
+
+            const auto findNode = [&](const std::string_view id) -> NodeWithType {
+                for (const auto &item: node.nodes.nodes) {
+                    if (item.data == nullptr) {
+                        continue;
+                    }
+                    const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
+                    if (serializable->id.has_value() && serializable->id.value() == id) {
+                        return item;
+                    }
+                }
+                throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
+            };
+            const auto linkNode = [&](NodeWithType &target, const std::pmr::string &id) {
+                if (id.empty()) {
+                    throw std::runtime_error("grammar node reference cannot be empty");
+                }
+                target = findNode(id);
+            };
+            for (const auto &item: node.nodes.nodes) {
+                switch (item.nodeTypeId) {
+                    case NodeTypeId::AND: {
+                        auto &value = *reinterpret_cast<NodeAnd *>(item.data);
+                        value.childNodes.clear();
+                        value.childNodes.reserve(value.childNodeIds.size());
+                        for (const auto &id: value.childNodeIds) {
+                            value.childNodes.emplace_back(findNode(id));
+                        }
+                        break;
+                    }
+                    case NodeTypeId::OR: {
+                        auto &value = *reinterpret_cast<NodeOr *>(item.data);
+                        value.childNodes.clear();
+                        value.childNodes.reserve(value.childNodeIds.size());
+                        for (const auto &id: value.childNodeIds) {
+                            value.childNodes.emplace_back(findNode(id));
+                        }
+                        break;
+                    }
+                    case NodeTypeId::LIST: {
+                        auto &value = *reinterpret_cast<NodeList *>(item.data);
+                        linkNode(value.nodeLeft, value.nodeLeftId);
+                        linkNode(value.nodeElement, value.nodeElementId);
+                        linkNode(value.nodeSeparator, value.nodeSeparatorId);
+                        linkNode(value.nodeRight, value.nodeRightId);
+                        value.nodeElementOrRight = NodeOr({value.nodeElement, value.nodeRight}, false);
+                        value.nodeSeparatorOrRight = NodeOr({value.nodeSeparator, value.nodeRight}, false);
+                        break;
+                    }
+                    case NodeTypeId::OPTIONAL: {
+                        auto &value = *reinterpret_cast<NodeOptional *>(item.data);
+                        linkNode(value.optionalNode, value.optionalNodeId);
+                        break;
+                    }
+                    case NodeTypeId::EQUAL_ENTRY: {
+                        auto &value = *reinterpret_cast<NodeEqualEntry *>(item.data);
+                        for (auto &entry: value.equalDatas) {
+                            if (entry.valueNodeId.empty()) [[unlikely]] {
+                                throw std::runtime_error(
+                                        fmt::format(R"(equal entry "{}" value id cannot be empty)",
+                                                    value.id.value_or("UNKNOWN")));
+                            }
+                            entry.nodeValue = findNode(entry.valueNodeId);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            for (const auto &item: node.nodes.nodes) {
+                if (item.nodeTypeId == NodeTypeId::AND || item.nodeTypeId == NodeTypeId::OR ||
+                    item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL ||
+                    item.nodeTypeId == NodeTypeId::EQUAL_ENTRY) {
+                    initNode(item, cpack);
+                }
             }
             if (node.startNodeId != "LF") [[likely]] {
                 for (auto &item: node.nodes.nodes) {
@@ -289,7 +422,6 @@ namespace CHelper::Node {
             }
             if (node.start.data == nullptr) [[unlikely]] {
                 //start node无法解析时不能继续，否则Parser会使用data为nullptr的节点导致未定义行为
-                Profile::push("unknown node id -> {}", FORMAT_ARG(node.startNodeId));
                 throw std::runtime_error(fmt::format("unknown start node id: {}", node.startNodeId));
             }
             for (auto &item: node.nodes.nodes) {
@@ -301,7 +433,6 @@ namespace CHelper::Node {
                     }
                 }
             }
-            Profile::pop();
         }
     };
 
@@ -311,24 +442,24 @@ namespace CHelper::Node {
             if (node.data.empty()) [[unlikely]] {
                 node.nodeElement1 = std::nullopt;
             } else {
-                std::vector<NodeWithType> nodeElementData;
+                std::pmr::vector<NodeWithType> nodeElementData;
                 nodeElementData.reserve(node.data.size());
                 for (const auto &item: node.data) {
                     nodeElementData.emplace_back(item);
                 }
                 node.nodeElement1 = NodeOr(std::move(nodeElementData), false);
             }
-            std::vector<NodeWithType> nodeElementData;
+            std::pmr::vector<NodeWithType> nodeElementData;
             if (node.nodeElement1.has_value()) [[likely]] {
                 nodeElementData.reserve(2);
                 nodeElementData.emplace_back(node.nodeElement1.value());
             }
             nodeElementData.emplace_back(NodeJsonEntry::getNodeJsonAllEntry());
             node.nodeElement2 = NodeOr(std::move(nodeElementData), false, true);
-            static NodeSingleSymbol nodeListLeft(u'{', u"JSON列表左括号");
-            static NodeSingleSymbol nodeListRight(u'}', u"JSON列表右括号");
-            static NodeSingleSymbol nodeListSeparator(u',', u"JSON列表分隔符");
-            node.nodeList = NodeList(nodeListLeft, node.nodeElement2, nodeListSeparator, nodeListRight);
+            node.nodeList = NodeList(NodeJsonObject::nodeListLeft,
+                                     node.nodeElement2,
+                                     NodeJsonObject::nodeListSeparator,
+                                     NodeJsonObject::nodeListRight);
         }
     };
 
@@ -339,7 +470,7 @@ namespace CHelper::Node {
                 for (const auto &item: node.data.value().nodes) {
                     initNode(item, cpack);
                 }
-                std::vector<NodeWithType> nodeDataElement;
+                std::pmr::vector<NodeWithType> nodeDataElement;
                 nodeDataElement.reserve(node.data.value().nodes.size());
                 for (const auto &item: node.data.value().nodes) {
                     nodeDataElement.push_back(item);
@@ -350,11 +481,11 @@ namespace CHelper::Node {
     };
 
     void initNode(Node::NodeWithType node, const CPack &cpack) {
-        switch (node.nodeTypeId) {
-            CODEC_PASTE(CHELPER_INIT, CHELPER_NODE_TYPES)
-            default:
-                CHELPER_UNREACHABLE();
-        }
+        Node::dispatchNodeType(node.nodeTypeId, [&]<class NodeType>() {
+            auto *typedNode = reinterpret_cast<NodeType *>(node.data);
+            applyTypeDefault(*typedNode);
+            NodeInitialization<NodeType>::init(*typedNode, cpack);
+        });
     }
 
 }// namespace CHelper::Node

@@ -13,9 +13,6 @@
 
 #pragma once
 
-#ifndef CHELPER_KMPMATCHER_H
-#define CHELPER_KMPMATCHER_H
-
 #include <string>
 #include <string_view>
 
@@ -49,10 +46,8 @@ namespace CHelper {
          * @returns the starting index of the pattern if found
          * @returns `std::string::npos` if not found
          */
-        [[nodiscard]] size_t match(const std::u16string &text) const;
+        [[nodiscard]] size_t match(std::u16string_view text) const;
     };
 
 
 }// namespace CHelper
-
-#endif// CHELPER_KMPMATCHER_H

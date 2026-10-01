@@ -42,10 +42,12 @@ namespace CHelper {
         return &hashState.value();
     }
 
-    std::shared_ptr<NormalId> NormalId::make(const std::u16string &name, const std::optional<std::u16string> &description) {
-        auto result = std::make_shared<NormalId>();
-        result->name = name;
-        result->description = description;
+    std::shared_ptr<NormalId> NormalId::make(const std::u16string_view name, const std::u16string_view description) {
+        auto result = allocateSharedFromDefault<NormalId>();
+        result->name.assign(name.data(), name.size());
+        if (!description.empty()) {
+            result->description.emplace(description.data(), description.size());
+        }
         return result;
     }
 

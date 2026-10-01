@@ -36,8 +36,8 @@ std::u16string jstring2u16string(JNIEnv *env, jstring jString) {
     return str;
 }
 
-jstring u16string2jstring(JNIEnv *env, const std::u16string &u16string) {
-    return env->NewString(reinterpret_cast<const jchar *>(u16string.c_str()), static_cast<jsize>(u16string.size()));
+jstring u16string2jstring(JNIEnv *env, const std::u16string_view u16string) {
+    return env->NewString(reinterpret_cast<const jchar *>(u16string.data()), static_cast<jsize>(u16string.size()));
 }
 
 std::string jstring2string(JNIEnv *env, jstring jString) {
@@ -139,7 +139,9 @@ Java_yancey_chelper_core_CHelperCore_create0(
     try {
         std::string cpackPath = jstring2string(env, cpack_path);
         if (assetManager == nullptr) [[unlikely]] {
-            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(cpackPath);
+            // 显式构造 string_view：Android 同时可见 createByBinary(path) 与
+            // createByBinary(string_view) 两个重载，直接传 std::string 会产生歧义
+            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(cpackPath));
             return reinterpret_cast<jlong>(core);
         } else {
             AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
@@ -151,13 +153,18 @@ Java_yancey_chelper_core_CHelperCore_create0(
             char *buffer = new char[dataFileSize];
             int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
             AAsset_close(asset);
-            std::istringstream iss(std::string(buffer, numBytesRead));
-            CHelper::CHelperCore *core = CHelper::CHelperCore::create([&iss]() {
-                return CHelper::CPack::createByBinary(iss);
-            });
+            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(buffer, numBytesRead));
             delete[] buffer;
             return reinterpret_cast<jlong>(core);
         }
+    } catch (const std::exception &e) {
+        //CPackLoadError 的 what() 内嵌原始错误与完整加载轨迹，
+        //抛成 Java 异常后由 CHelperCore.kt 拼进 init 的报错信息，直达资源包作者
+        SPDLOG_WARN("fail to init CHelper Core: {}", e.what());
+        if (const auto clazz = env->FindClass("java/lang/RuntimeException"); clazz != nullptr) {
+            env->ThrowNew(clazz, e.what());
+        }
+        return reinterpret_cast<jlong>(nullptr);
     } catch (...) {
         SPDLOG_WARN("fail to init CHelper Core");
         return reinterpret_cast<jlong>(nullptr);
@@ -211,8 +218,7 @@ Java_yancey_chelper_core_CHelperCore_old2newInit0(
         char *buffer = new char[dataFileSize];
         int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
         AAsset_close(asset);
-        std::istringstream iss(std::string(buffer, numBytesRead));
-        serialization::from_binary(iss, blockFixData0);
+        blockFixData0 = CHelper::Old2New::blockFixDataFromBinary(std::string_view(buffer, numBytesRead));
         delete[] buffer;
         return true;
     } catch (const std::exception &e) {

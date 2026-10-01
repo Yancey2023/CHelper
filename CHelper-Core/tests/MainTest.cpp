@@ -1,4 +1,6 @@
-/**
+/*
+
+*
  * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
  * Copyright (C) 2026  Yancey
  *
@@ -18,6 +20,7 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/parser/Parser.h>
+#include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -50,7 +53,7 @@ namespace CHelper::Test {
                 }
             }
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             FAIL();
         }
     }
@@ -64,7 +67,7 @@ namespace CHelper::Test {
         try {
             core = std::shared_ptr<CHelperCore>(CHelperCore::createByDirectory(cpackPath));
         } catch (const std::exception &e) {
-            Profile::printAndClear(e);
+            SPDLOG_ERROR("{}", e.what());
             FAIL();
         }
         if (core == nullptr) [[unlikely]] {
@@ -132,9 +135,9 @@ namespace CHelper::Test {
                                     fmt::styled(utf8::utf16to8(item.content->name), fg(fmt::color::lime_green)),
                                     fmt::styled(utf8::utf16to8(item.content->description.value_or(u"")), fg(fmt::color::cornflower_blue)));
                         std::u16string result = command.substr(0, item.start)
-                                                        .append(item.content->name)
+                                                        .append(item.content->name.data(), item.content->name.size())
                                                         .append(command.substr(item.end));
-                        std::u16string greenPart = item.content->name;
+                        std::u16string greenPart(item.content->name.data(), item.content->name.size());
                         if (item.end == command.length()) {
                             ASTNode astNode = Parser::parse(result, context->getCPack());
                             if (item.isAddSpace && astNode.isAllSpaceError()) {
@@ -150,7 +153,7 @@ namespace CHelper::Test {
                 SPDLOG_INFO("-----");
             } catch (const std::exception &e) {
                 flag = true;
-                CHelper::Profile::printAndClear(e);
+                SPDLOG_ERROR("{}", e.what());
             }
         }
         if (flag) [[unlikely]] {
@@ -236,7 +239,7 @@ TEST(MainTest, ParseCommand) {
 
 TEST(MainTest, SemanticNodeCount) {
     std::filesystem::path resourceDir(RESOURCE_DIR);
-    std::shared_ptr<const CHelper::CPack> cPack = CHelper::CPack::createByDirectory(resourceDir / "resources" / "beta" / "vanilla");
+    std::shared_ptr<const CHelper::CPack> cPack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
     CHelper::CHelperCore core(cPack);
 
     const auto expectNodeCount = [&core](const std::u16string &command, size_t expected) {
