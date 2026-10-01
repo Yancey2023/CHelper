@@ -268,6 +268,8 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
             src/apps/qt/chelper.qrc
             src/apps/qt/chelper.ui
         )
+        # Qt's emit macro conflicts with identifiers in Glaze headers.
+        target_compile_definitions(CHelperQt PRIVATE QT_NO_KEYWORDS)
         target_link_libraries(CHelperQt PRIVATE CHelper::Core Qt6::Core Qt6::Gui Qt6::Widgets)
         if(MSVC)
             set_property(TARGET CHelperQt PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

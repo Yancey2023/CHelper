@@ -36,7 +36,7 @@ public:
 
     ~CHelperApp() override;
 
-private slots:
+private Q_SLOTS:
     void onTextChanged(const QString &string);
 
     void onSelectionChanged();
