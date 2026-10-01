@@ -37,10 +37,19 @@ jobs:
           cache: pip
           cache-dependency-path: scripts/requirements-build.txt
 
+      - name: Cache Linux compiler packages
+        uses: actions/cache@v5
+        with:
+          path: .cache/apt
+          key: apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-${{ env.ImageVersion }}
+          restore-keys: |
+            apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-
+
       - name: Install Linux compiler
         run: |
+          mkdir -p "$GITHUB_WORKSPACE/.cache/apt/partial"
           sudo apt-get update
-          sudo apt-get install -y clang-19
+          sudo apt-get -o Dir::Cache::archives="$GITHUB_WORKSPACE/.cache/apt" install -y g++-13 clang-19
 
       - name: Install native build tools
         run: python -m pip install -r scripts/requirements-build.txt

@@ -41,5 +41,13 @@ jobs:
           restore-keys: |
             thirdparty-v1-${{ runner.os }}-${{ runner.arch }}-
 
+      - name: Cache Emscripten SDK
+        uses: actions/cache@v5
+        with:
+          path: toolchain/emsdk
+          key: emsdk-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build_web_core.py') }}
+          restore-keys: |
+            emsdk-v1-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Build Web Core
         run: python ./scripts/build_web_core.py
