@@ -3,7 +3,6 @@ import shutil
 import subprocess
 import sys
 
-
 EMSCRIPTEN_VERSION = "6.0.10"
 
 
@@ -18,12 +17,12 @@ def ensure_download_emsdk(toolchain_dir: str):
     else:
         subprocess.run(["git", "pull"], cwd=emsdk_path, check=True)
     subprocess.run(
-        ["python", "./emsdk.py", "install", EMSCRIPTEN_VERSION],
+        [sys.executable, "./emsdk.py", "install", EMSCRIPTEN_VERSION],
         cwd=emsdk_path,
         check=True,
     )
     subprocess.run(
-        ["python", "./emsdk.py", "activate", EMSCRIPTEN_VERSION],
+        [sys.executable, "./emsdk.py", "activate", EMSCRIPTEN_VERSION],
         cwd=emsdk_path,
         check=True,
     )
@@ -55,7 +54,7 @@ def build_web_core(toolchain_dir: str):
     # Link with em++ so Emscripten includes the C++ runtime required by static libraries.
     subprocess.run(
         [
-            "python",
+            sys.executable,
             os.path.join(emsdk_path, "upstream", "emscripten", "em++.py"),
             f"{build_directory}/libCHelperWeb.a",
             f"{build_directory}/libCHelperNoFilesystemCore.a",
