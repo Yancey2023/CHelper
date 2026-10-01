@@ -5,6 +5,22 @@ project(CHelper LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+    [=[
+    #include <expected>
+    int main() {
+        std::expected<int, int> value = 42;
+        return value.value() == 42 ? 0 : 1;
+    }
+]=]
+    CHELPER_HAS_STD_EXPECTED)
+if(NOT CHELPER_HAS_STD_EXPECTED)
+    message(FATAL_ERROR "CHelper requires C++23 std::expected. Use a compatible compiler and standard library "
+                        "(for Linux, GCC 13+ or Clang 19+ with libstdc++ 13+).")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(XXHASH_BUILD_XXHSUM OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

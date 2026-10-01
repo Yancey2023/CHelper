@@ -23,14 +23,14 @@ jobs:
 
       matrix:
         build_type: [Release, Debug]
-        c_compiler: [gcc, clang, cl]
+        c_compiler: [gcc-13, clang-19, cl]
         include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+          - os: ubuntu-24.04
+            c_compiler: gcc-13
+            cpp_compiler: g++-13
+          - os: ubuntu-24.04
+            c_compiler: clang-19
+            cpp_compiler: clang++-19
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
@@ -42,6 +42,12 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
+
+      - name: Install Linux compilers
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-13 clang-19
 
       - name: Install native build tools
         run: python -m pip install -r scripts/requirements-build.txt
