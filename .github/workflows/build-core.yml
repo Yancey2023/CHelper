@@ -49,10 +49,10 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/cache@v5
         with:
-          path: .cache/apt
-          key: apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-${{ env.ImageVersion }}
+          path: .cache/apt/*.deb
+          key: apt-v2-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-${{ env.ImageVersion }}
           restore-keys: |
-            apt-v1-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-
+            apt-v2-${{ runner.os }}-${{ runner.arch }}-ubuntu24-gcc13-clang19-
 
       - name: Install Linux compilers
         if: runner.os == 'Linux'
