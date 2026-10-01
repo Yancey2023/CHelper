@@ -320,7 +320,7 @@ namespace CHelper::Old2New {
         tokenReader.push();
         tokenReader.skipSpace();
         TokensView tokens = tokenReader.collect();
-        dataFixList.emplace_back(tokens, u" run ");
+        dataFixList.emplace_back(tokens, std::u16string(u" run ", 5));
         return true;
     }
 
@@ -350,7 +350,7 @@ namespace CHelper::Old2New {
         // end?
         tokenReader.push();
         TokensView tokens1 = tokenReader.collect();
-        dataFixList.emplace_back(tokens1, u" 0 0");
+        dataFixList.emplace_back(tokens1, std::u16string(u" 0 0", 4));
         // minecraft:become_charged
         if (!expectString(tokenReader)) {
             return true;
@@ -412,7 +412,7 @@ namespace CHelper::Old2New {
         // end?
         tokenReader.push();
         TokensView tokens1 = tokenReader.collect();
-        dataFixList.emplace_back(tokens1, u" true");
+        dataFixList.emplace_back(tokens1, std::u16string(u" true", 5));
         // [integrity: float]
         if (!expectNumber(tokenReader)) {
             return true;
