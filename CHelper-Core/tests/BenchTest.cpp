@@ -18,7 +18,9 @@
 
 #include "BenchHelper.h"
 
+#include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>
+#include <xxhash.h>
 
 #ifdef _MSC_VER
 #define CHELPER_BENCH_RETURN_ADDRESS() _ReturnAddress()
@@ -159,6 +161,52 @@ TEST(Bench, WriteCPack) {
         });
         stats.print();
     }
+}
+
+TEST(Bench, SerializationMemory) {
+    const auto cpack = serialization::createCPackByDirectory(vanillaDir());
+    ASSERT_NE(cpack, nullptr);
+    ASSERT_NE(cpack->commands, nullptr);
+    ASSERT_FALSE(cpack->commands->empty());
+    const auto &commands = *cpack->commands;
+    const auto run = [&]<std::uint32_t Format>(const char *name) {
+        constexpr auto opts = glz::opts{.format = Format, .error_on_unknown_keys = false};
+        std::string buffer;
+        ASSERT_FALSE(bool(glz::write<opts>(commands, buffer)));
+        std::printf("%s input: %zu bytes, xxh64=%016llx\n", name, buffer.size(),
+                    static_cast<unsigned long long>(XXH64(buffer.data(), buffer.size(), 0)));
+        using Commands = std::remove_cvref_t<decltype(commands)>;
+        const auto read = [&](Stats *stats) {
+            Commands restored;
+            NodeReadContext ctx;
+            if (stats) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto error = glz::read<opts>(restored, buffer, ctx);
+            const auto end = std::chrono::steady_clock::now();
+            if (stats) {
+                stats->add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            }
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, buffer);
+            ASSERT_EQ(restored.size(), commands.size());
+            for (std::size_t i = 0; i < commands.size(); ++i) {
+                ASSERT_EQ(restored[i].name, commands[i].name);
+                ASSERT_EQ(restored[i].nodes.nodes.size(), commands[i].nodes.nodes.size());
+            }
+        };
+        for (int i = 0; i < 5; ++i) read(nullptr);
+        Stats reads{std::string("read commands memory ") + name};
+        for (int i = 0; i < 100; ++i) read(&reads);
+        reads.print();
+        Stats writes{std::string("write commands memory ") + name};
+        benchmark(writes, 100, [&] {
+            const auto error = glz::write<opts>(commands, buffer);
+            if (bool(error)) throw std::runtime_error("benchmark serialization failed");
+        });
+        writes.print();
+    };
+    run.template operator()<glz::JSON>("JSON");
+    run.template operator()<glz::MSGPACK>("MSGPACK");
+    run.template operator()<CHelper::BinaryFormat>("BinaryFormat");
 }
 
 /**

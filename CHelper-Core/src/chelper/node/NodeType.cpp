@@ -28,15 +28,25 @@ namespace CHelper::Node {
     }
 
     std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &name) {
-        std::optional<NodeTypeId::NodeTypeId> result;
-        anyNodeType([&]<class NodeType>() {
-            if (NodeTypeDetail<NodeType::nodeTypeId>::name != name) {
-                return false;
-            }
-            result = NodeType::nodeTypeId;
-            return true;
-        });
-        return result;
+        //编译期生成按名称排序的注册表，读取时二分查找（替代逐类型线性比较）
+        static constexpr auto registry = [] {
+            std::array<std::pair<std::string_view, NodeTypeId::NodeTypeId>, Meta::typeListSize<AllNodeTypes>> entries{};
+            std::size_t index = 0;
+            forEachNodeType([&]<class NodeType>() {
+                entries[index++] = {NodeTypeDetail<NodeType::nodeTypeId>::name, NodeType::nodeTypeId};
+            });
+            std::sort(entries.begin(), entries.end(),
+                      [](const auto &left, const auto &right) { return left.first < right.first; });
+            return entries;
+        }();
+        const auto entry = std::lower_bound(registry.begin(), registry.end(), name,
+                                            [](const auto &left, const std::string_view key) {
+                                                return left.first < key;
+                                            });
+        if (entry == registry.end() || entry->first != name) {
+            return std::nullopt;
+        }
+        return entry->second;
     }
 
 }// namespace CHelper::Node

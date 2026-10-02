@@ -241,7 +241,6 @@ namespace CHelper::serialization {
                 }
             }
             if (!grammarDirectories.empty()) {
-                ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
                 for (const auto &grammarDirectory: grammarDirectories) {
                     for (const auto &file: std::filesystem::recursive_directory_iterator(grammarDirectory)) {
                         if (!file.is_regular_file()) {
@@ -369,7 +368,6 @@ namespace CHelper::serialization {
             readSection(cpackData.repeatNodeData, "repeat data");
             readSection(cpackData.commands, "command data");
             if (it < end) {
-                ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
                 readSection(cpackData.grammar, "grammar data");
             }
             cpack->manifest = std::move(cpackData.manifest);

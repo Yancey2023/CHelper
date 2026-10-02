@@ -47,10 +47,6 @@ namespace CHelper {
     struct NodeReadContext : glz::context {
         Node::NodeCreateStage::NodeCreateStage createStage = Node::NodeCreateStage::JSON_NODE;
         std::shared_ptr<CPackMemoryResource> cpackMemory;
-        Node::FreeableNodeWithTypes ownedGrammarNodes;
-        // GrammarEntry.content.nodes 是节点表的所有者；独立读取 NodeWithType 时，
-        // 仍用 ownedGrammarNodes 保持节点存活到调用方完成使用。
-        bool grammarNodeContainer = false;
     };
 
     /**
@@ -471,7 +467,6 @@ namespace CHelper::detail {
 
     template<class NodeType>
     constexpr auto makeNodeWriteViewMeta() {
-        using View = NodeWriteView<NodeType>;
         constexpr auto memberCount = glz::reflect<NodeType>::size;
         return [&]<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
             return glz::detail::Object{glz::tuple{viewMetaEntry<NodeType, Is>()...}};
@@ -561,7 +556,7 @@ namespace CHelper {
             return static_cast<std::uint32_t>(tag & 0x0f);
         }
         if (tag == 0xde) {
-            if (it + 2 > end) {
+            if (end - it < 2) {
                 return std::nullopt;
             }
             const std::uint32_t size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
@@ -569,7 +564,7 @@ namespace CHelper {
             return size;
         }
         if (tag == 0xdf) {
-            if (it + 4 > end) {
+            if (end - it < 4) {
                 return std::nullopt;
             }
             const std::uint32_t size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
@@ -581,7 +576,11 @@ namespace CHelper {
         return std::nullopt;
     }
 
-    // 逐成员遍历 JSON 对象 / msgpack map（f 以 (key, ctx, it, end) 回调处理每个值）
+    template<std::uint32_t Fmt>
+    inline bool peekString(std::string_view &result, auto &it, const auto &end);
+
+    // 逐成员遍历 JSON 对象 / msgpack map（f 以 (key, ctx, it, end) 回调处理每个值）。
+    // 键以 string_view 传递：无转义时直接指向缓冲区（零拷贝），含转义或格式异常时才解码到 std::string
     template<std::uint32_t Fmt, auto Opts, class F>
     void forEachObjectMember(glz::is_context auto &&ctx, auto &&it, auto &&end, F &&f) {
         if constexpr (Fmt == glz::JSON) {
@@ -598,9 +597,13 @@ namespace CHelper {
             }
             while (true) {
                 glz::skip_ws<Opts>(ctx, it, end);
-                std::string key;
-                glz::parse<glz::JSON>::op<Opts>(key, ctx, it, end);
-                if (bool(ctx.error)) return;
+                std::string decoded;
+                std::string_view key;
+                if (!peekString<Fmt>(key, it, end)) {
+                    glz::parse<glz::JSON>::op<Opts>(decoded, ctx, it, end);
+                    if (bool(ctx.error)) return;
+                    key = decoded;
+                }
                 glz::skip_ws<Opts>(ctx, it, end);
                 ++it;// ':'
                 glz::skip_ws<Opts>(ctx, it, end);
@@ -630,9 +633,13 @@ namespace CHelper {
                 return;
             }
             for (std::uint32_t i = 0; i < size.value(); ++i) {
-                std::string key;
-                glz::parse<glz::MSGPACK>::op<Opts>(key, ctx, it, end);
-                if (bool(ctx.error)) return;
+                std::string decoded;
+                std::string_view key;
+                if (!peekString<Fmt>(key, it, end)) {
+                    glz::parse<glz::MSGPACK>::op<Opts>(decoded, ctx, it, end);
+                    if (bool(ctx.error)) return;
+                    key = decoded;
+                }
                 f(key, ctx, it, end);
                 if (bool(ctx.error)) return;
             }
@@ -818,20 +825,6 @@ namespace CHelper {
 // ================= 节点对象读取（JSON / MessagePack） =================
 namespace CHelper {
 
-    // grammar 节点读取成功后登记到上下文持有（见 NodeReadContext 注释）；
-    // GrammarEntry.content 作为节点表所有者时（grammarNodeContainer = true），
-    // 节点存活由调用方管理，不重复登记
-    inline void trackGrammarNode(glz::is_context auto &&ctx, const Node::NodeWithType &t) {
-        if constexpr (requires { ctx.grammarNodeContainer; }) {
-            if (ctx.grammarNodeContainer) {
-                return;
-            }
-        }
-        if constexpr (requires { ctx.ownedGrammarNodes; }) {
-            ctx.ownedGrammarNodes.nodes.emplace_back(t);
-        }
-    }
-
     //按节点类型反序列化 JSON/MSGPACK 的节点对象（对象体由 glz::meta 描述）；
     //JSON_ENTRY 等带空 nodeCreateStage 的类型在运行时被拒绝，保持旧分发表内的行为
     template<class NodeType, std::uint32_t Fmt, auto Opts, class Ctx, class It, class End>
@@ -848,9 +841,6 @@ namespace CHelper {
         }
         t.nodeTypeId = NodeType::nodeTypeId;
         t.data = node;
-        if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes>) {
-            trackGrammarNode(ctx, t);
-        }
     }
 
     // 节点对象读取的统一分发：类型 id 已由调用方校验（名称查表或 uint8 范围检查），
@@ -885,7 +875,8 @@ namespace CHelper {
     // 预读一个不含转义的字符串（JSON 键名/类型名、msgpack str）：
     // 含转义、长度不足或不是字符串时返回 false，由调用方回退到完整扫描
     template<std::uint32_t Fmt>
-    inline bool peekString(std::string_view &result, auto &it, const auto &end) {
+    inline bool peekString(std::string_view &result, auto &source, const auto &end) {
+        auto it = source;
         if constexpr (Fmt == glz::JSON) {
             if (it >= end || *it != '"') {
                 return false;
@@ -903,6 +894,7 @@ namespace CHelper {
             }
             result = std::string_view(start, static_cast<std::size_t>(it - start));
             ++it;
+            source = it;
             return true;
         } else {
             // MSGPACK：fixstr / str8 / str16 / str32
@@ -917,11 +909,11 @@ namespace CHelper {
                 if (it >= end) return false;
                 size = static_cast<std::uint8_t>(*it++);
             } else if (tag == 0xda) {
-                if (it + 2 > end) return false;
+                if (end - it < 2) return false;
                 size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
                 it += 2;
             } else if (tag == 0xdb) {
-                if (it + 4 > end) return false;
+                if (end - it < 4) return false;
                 size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
                        (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[1])) << 16) |
                        (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[2])) << 8) | static_cast<std::uint8_t>(it[3]);
@@ -929,11 +921,12 @@ namespace CHelper {
             } else {
                 return false;
             }
-            if (it + size > end) {
+            if (size > static_cast<std::size_t>(end - it)) {
                 return false;
             }
             result = std::string_view(it, size);
             it += size;
+            source = it;
             return true;
         }
     }
@@ -977,7 +970,7 @@ namespace CHelper {
     // 未找到 "type" 时 typeName 保持为空，由 readNodeValue 按未知类型拒绝
     template<std::uint32_t Fmt, auto Opts>
     inline void scanNodeTypeName(std::string &typeName, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string_view key, auto &&ctx2, auto &&it2, auto &&end2) {
             if (key == "type") {
                 glz::parse<Fmt>::template op<Opts>(typeName, ctx2, it2, end2);
             } else {
@@ -1508,7 +1501,7 @@ namespace CHelper {
     inline void readNodePerCommand(Node::NodePerCommand &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
         std::optional<std::vector<std::uint32_t>> startNodes;
-        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string_view key, auto &&ctx2, auto &&it2, auto &&end2) {
             if (key == "name") [[likely]] {
                 glz::parse<Fmt>::template op<Opts>(t.name, ctx2, it2, end2);
             } else if (key == "description") [[likely]] {
@@ -1516,7 +1509,7 @@ namespace CHelper {
             } else if (key == "syntax") [[likely]] {
                 glz::parse<Fmt>::template op<Opts>(t.syntax, ctx2, it2, end2);
             } else if (key == "node") [[likely]] {
-                forEachObjectMember<Fmt, Opts>(ctx2, it2, end2, [&](std::string &id, auto &&ctx3, auto &&it3, auto &&end3) {
+                forEachObjectMember<Fmt, Opts>(ctx2, it2, end2, [&](const std::string_view id, auto &&ctx3, auto &&it3, auto &&end3) {
                     // 键即节点 id，直接写回节点（键重复时两个节点都会保留，与二进制格式一致）
                     Node::NodeWithType node;
                     glz::parse<Fmt>::template op<Opts>(node, ctx3, it3, end3);
@@ -1642,7 +1635,7 @@ namespace CHelper {
     void readProperty(Property &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         t.release();
         bool hasDefaultValue = false;
-        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string_view key, auto &&ctx2, auto &&it2, auto &&end2) {
             if (key == "name") [[likely]] {
                 glz::parse<Fmt>::template op<Opts>(t.name, ctx2, it2, end2);
             } else if (key == "defaultValue") [[likely]] {
@@ -1747,7 +1740,7 @@ namespace CHelper {
     void readBlockPropertyDescription(BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         t.release();
         bool hasPropertyType = false;
-        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
+        forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](const std::string_view key, auto &&ctx2, auto &&it2, auto &&end2) {
             if (key == "propertyName") [[likely]] {
                 glz::parse<Fmt>::template op<Opts>(t.propertyName, ctx2, it2, end2);
             } else if (key == "description") {
@@ -1764,7 +1757,7 @@ namespace CHelper {
                     PropertyType::PropertyType type = t.type;
                     bool hasValueName = false;
                     forEachObjectMember<Fmt, Opts>(ctx3, it3, end3,
-                                                   [&](const std::string &key2, auto &&ctx4, auto &&it4, auto &&end4) {
+                                                   [&](const std::string_view key2, auto &&ctx4, auto &&it4, auto &&end4) {
                                                        if (key2 == "valueName") [[likely]] {
                                                            readPropertyValue<Fmt, Opts>(
                                                                    blockPropertyValueDescription.valueName, type, ctx4, it4, end4);
@@ -2013,9 +2006,7 @@ namespace CHelper {
     void readGrammarEntryContent(GrammarEntry &value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         if constexpr (requires { ctx.createStage; }) {
             const auto oldStage = ctx.createStage;
-            const auto oldContainer = ctx.grammarNodeContainer;
             ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
-            ctx.grammarNodeContainer = true;
             if (value.content == nullptr) {
                 value.content = std::make_shared<Node::NodeJsonElement>();
             }
@@ -2024,7 +2015,6 @@ namespace CHelper {
                 value.content->id = value.id;
             }
             ctx.createStage = oldStage;
-            ctx.grammarNodeContainer = oldContainer;
         } else {
             ctx.error = glz::error_code::no_matching_variant_type;
         }
@@ -2039,7 +2029,7 @@ struct glz::from<glz::JSON, CHelper::GrammarEntry> {
         bool hasType = false;
         bool hasContent = false;
         CHelper::forEachObjectMember<glz::JSON, Opts>(ctx, it, end,
-                                                      [&](const std::string &key, auto &&memberCtx, auto &&memberIt, auto &&memberEnd) {
+                                                      [&](const std::string_view key, auto &&memberCtx, auto &&memberIt, auto &&memberEnd) {
                                                           if (key == "id") {
                                                               glz::parse<glz::JSON>::template op<Opts>(value.id, memberCtx, memberIt, memberEnd);
                                                               hasId = true;

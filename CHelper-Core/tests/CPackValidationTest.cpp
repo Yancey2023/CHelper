@@ -185,6 +185,9 @@ namespace CHelper::Test {
             Node::NodeWithType node;
             EXPECT_NO_THROW(readJson(node, grammar, ctx));
             EXPECT_EQ(node.nodeTypeId, Node::NodeTypeId::AND);
+            // 裸读的语法节点由调用方负责释放：交给按 nodeTypeId 分派析构的 FreeableNodeWithTypes
+            Node::FreeableNodeWithTypes owner;
+            owner.nodes.push_back(node);
         }
         {
             NodeReadContext ctx;
@@ -310,6 +313,67 @@ namespace CHelper::Test {
                                    cpack));
         ASSERT_NE(cpack, nullptr);
         EXPECT_EQ(cpack->jsonNodes.size(), size_t{1});
+    }
+
+    TEST(CPackValidationTest, EscapedObjectKeys) {
+        constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
+        for (const std::string json: {
+                     R"({"na\u006de":"value","a_very_long_escaped_\u006bey_for_heap_storage":7})",
+                     R"({"name":"value","a_very_long_plain_key_for_heap_storage":7})"}) {
+            glz::context ctx;
+            auto it = json.data();
+            const auto end = it + json.size();
+            std::vector<std::string> keys;
+            forEachObjectMember<glz::JSON, opts>(ctx, it, end,
+                                                 [&](std::string_view key, auto &memberCtx, auto &memberIt, auto &memberEnd) {
+                                                     keys.emplace_back(key);
+                                                     glz::skip_value<glz::JSON>::op<opts>(memberCtx, memberIt, memberEnd);
+                                                 });
+            ASSERT_FALSE(bool(ctx.error));
+            ASSERT_EQ(keys.size(), 2u);
+            EXPECT_EQ(keys.front(), "name");
+            EXPECT_TRUE(keys.back().ends_with("key_for_heap_storage"));
+            EXPECT_EQ(it, end);
+        }
+        std::unique_ptr<CPack> cpack;
+        EXPECT_TRUE(tryCreateCpack(makeCpackJson(R"([
+            {"id":"json1","start":"N","node":[
+              {"id":"N","ty\u0070e":"JSON_NULL","description":"null"}
+            ]}
+          ])"),
+                                   cpack));
+        ASSERT_NE(cpack, nullptr);
+        EXPECT_EQ(cpack->jsonNodes.size(), 1u);
+    }
+
+    TEST(CPackValidationTest, StringProbeFailurePreservesCursor) {
+        for (const std::string_view json: {R"("ty\u0070e")", R"("unfinished)", "7"}) {
+            auto it = json.data();
+            const auto start = it;
+            std::string_view value;
+            EXPECT_FALSE((peekString<glz::JSON>(value, it, it + json.size())));
+            EXPECT_EQ(it, start);
+        }
+        const std::array<std::string, 5> invalid{
+                "\xd9", "\xda", "\xdb", "\xa5"
+                                        "ab",
+                "\xc0"};
+        for (const auto &msgpack: invalid) {
+            auto it = msgpack.data();
+            const auto start = it;
+            std::string_view value;
+            EXPECT_FALSE((peekString<glz::MSGPACK>(value, it, it + msgpack.size())));
+            EXPECT_EQ(it, start);
+        }
+    }
+
+    TEST(CPackValidationTest, NodeTypeRegistry) {
+        Node::forEachNodeType([]<class T>() {
+            const auto name = Node::getNodeTypeName(T::nodeTypeId);
+            EXPECT_EQ(Node::getNodeTypeIdByName(name), T::nodeTypeId);
+        });
+        EXPECT_FALSE(Node::getNodeTypeIdByName("UNKNOWN_NODE_TYPE"));
+        EXPECT_FALSE(Node::getNodeTypeIdByName(""));
     }
 
     TEST(CPackValidationTest, ConcurrentCpackCreation) {
