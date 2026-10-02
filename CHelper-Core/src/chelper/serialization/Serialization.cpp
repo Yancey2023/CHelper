@@ -23,6 +23,7 @@
 #include <chelper/old2new/Old2New.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/serialization/BinaryFormat.h>
+#include <chelper/serialization/IO.h>
 #include <glaze/containers/ordered_small_map.hpp>
 
 // ================= 反序列化上下文 =================
@@ -216,40 +217,172 @@ namespace CHelper::Node {
 }// namespace CHelper::Node
 
 // 节点类型的字段声明只存在于 glz::meta 一处（键名与成员名一致，和旧版 CODEC_REGISTER_JSON_KEY 相同），
-// JSON/MSGPACK 的写出键、二进制的紧凑成员顺序都由它推导；glz::meta 特化须在全局作用域，使用全限定名
-#define CHELPER_GLZ_NODE_META(Type, ...)                                                                                                \
-    template<>                                                                                                                          \
-    struct glz::meta<Type> {                                                                                                            \
-        using T = Type;                                                                                                                 \
-        static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace __VA_OPT__(, ) __VA_ARGS__); \
-    };
-
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeBlock, &CHelper::Node::NodeBlock::nodeBlockType)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeBoolean, &CHelper::Node::NodeBoolean::descriptionTrue, &CHelper::Node::NodeBoolean::descriptionFalse)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeCommand)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeCommandName)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeFloat, &CHelper::Node::NodeFloat::min, &CHelper::Node::NodeFloat::max)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeInteger, &CHelper::Node::NodeInteger::min, &CHelper::Node::NodeInteger::max)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeIntegerWithUnit, &CHelper::Node::NodeIntegerWithUnit::units)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeItem, &CHelper::Node::NodeItem::nodeItemType)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJson, &CHelper::Node::NodeJson::key)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonBoolean, &CHelper::Node::NodeJsonBoolean::descriptionTrue, &CHelper::Node::NodeJsonBoolean::descriptionFalse)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonFloat, &CHelper::Node::NodeJsonFloat::min, &CHelper::Node::NodeJsonFloat::max)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonInteger, &CHelper::Node::NodeJsonInteger::min, &CHelper::Node::NodeJsonInteger::max)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonList, &CHelper::Node::NodeJsonList::data)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonNull)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonEntry, &CHelper::Node::NodeJsonEntry::key, &CHelper::Node::NodeJsonEntry::value)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonObject, &CHelper::Node::NodeJsonObject::data)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeJsonString, &CHelper::Node::NodeJsonString::data)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeNamespaceId, &CHelper::Node::NodeNamespaceId::key, &CHelper::Node::NodeNamespaceId::ignoreError, &CHelper::Node::NodeNamespaceId::contents)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeNormalId, &CHelper::Node::NodeNormalId::key, &CHelper::Node::NodeNormalId::ignoreError, &CHelper::Node::NodeNormalId::contents)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodePosition)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeRange)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeRelativeFloat, &CHelper::Node::NodeRelativeFloat::canUseCaretNotation)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeRepeat, &CHelper::Node::NodeRepeat::key)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeString, &CHelper::Node::NodeString::allowMissingString, &CHelper::Node::NodeString::canContainSpace, &CHelper::Node::NodeString::ignoreLater)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeTargetSelector, &CHelper::Node::NodeTargetSelector::isMustPlayer, &CHelper::Node::NodeTargetSelector::isMustNPC, &CHelper::Node::NodeTargetSelector::isOnlyOne, &CHelper::Node::NodeTargetSelector::isWildcard)
-CHELPER_GLZ_NODE_META(CHelper::Node::NodeText, &CHelper::Node::NodeText::data)
+// JSON/MSGPACK 的写出键、二进制的紧凑成员顺序都由它推导；键名统一显式写出，不依赖成员指针取名。
+// glz::meta 特化须在全局作用域，使用全限定名
+template<>
+struct glz::meta<CHelper::Node::NodeBlock> {
+    using T = CHelper::Node::NodeBlock;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "nodeBlockType", &T::nodeBlockType);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeBoolean> {
+    using T = CHelper::Node::NodeBoolean;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "descriptionTrue", &T::descriptionTrue,
+                                              "descriptionFalse", &T::descriptionFalse);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeCommand> {
+    using T = CHelper::Node::NodeCommand;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeCommandName> {
+    using T = CHelper::Node::NodeCommandName;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeFloat> {
+    using T = CHelper::Node::NodeFloat;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "min", &T::min, "max", &T::max);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeInteger> {
+    using T = CHelper::Node::NodeInteger;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "min", &T::min, "max", &T::max);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeIntegerWithUnit> {
+    using T = CHelper::Node::NodeIntegerWithUnit;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "units", &T::units);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeItem> {
+    using T = CHelper::Node::NodeItem;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "nodeItemType", &T::nodeItemType);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJson> {
+    using T = CHelper::Node::NodeJson;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "key", &T::key);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonBoolean> {
+    using T = CHelper::Node::NodeJsonBoolean;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "descriptionTrue", &T::descriptionTrue,
+                                              "descriptionFalse", &T::descriptionFalse);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonFloat> {
+    using T = CHelper::Node::NodeJsonFloat;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "min", &T::min, "max", &T::max);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonInteger> {
+    using T = CHelper::Node::NodeJsonInteger;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "min", &T::min, "max", &T::max);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonList> {
+    using T = CHelper::Node::NodeJsonList;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "data", &T::data);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonNull> {
+    using T = CHelper::Node::NodeJsonNull;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonEntry> {
+    using T = CHelper::Node::NodeJsonEntry;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "key", &T::key, "value", &T::value);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonObject> {
+    using T = CHelper::Node::NodeJsonObject;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "data", &T::data);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeJsonString> {
+    using T = CHelper::Node::NodeJsonString;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "data", &T::data);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeNamespaceId> {
+    using T = CHelper::Node::NodeNamespaceId;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "key", &T::key, "ignoreError",
+                                              &T::ignoreError, "contents", &T::contents);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeNormalId> {
+    using T = CHelper::Node::NodeNormalId;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "key", &T::key, "ignoreError",
+                                              &T::ignoreError, "contents", &T::contents);
+};
+template<>
+struct glz::meta<CHelper::Node::NodePosition> {
+    using T = CHelper::Node::NodePosition;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeRange> {
+    using T = CHelper::Node::NodeRange;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeRelativeFloat> {
+    using T = CHelper::Node::NodeRelativeFloat;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "canUseCaretNotation",
+                                              &T::canUseCaretNotation);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeRepeat> {
+    using T = CHelper::Node::NodeRepeat;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "key", &T::key);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeString> {
+    using T = CHelper::Node::NodeString;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "allowMissingString",
+                                              &T::allowMissingString, "canContainSpace", &T::canContainSpace, "ignoreLater",
+                                              &T::ignoreLater);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeTargetSelector> {
+    using T = CHelper::Node::NodeTargetSelector;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "isMustPlayer", &T::isMustPlayer,
+                                              "isMustNPC", &T::isMustNPC, "isOnlyOne", &T::isOnlyOne, "isWildcard", &T::isWildcard);
+};
+template<>
+struct glz::meta<CHelper::Node::NodeText> {
+    using T = CHelper::Node::NodeText;
+    static constexpr auto value = glz::object("id", &T::id, "brief", &T::brief, "description", &T::description,
+                                              "isMustAfterSpace", &T::isMustAfterSpace, "data", &T::data);
+};
 
 template<>
 struct glz::meta<CHelper::Node::NodeAnd> {
@@ -1026,65 +1159,66 @@ struct glz::meta<CHelper::Node::NodeJsonElement> {
 template<>
 struct glz::meta<CHelper::Node::RepeatData> {
     using T = CHelper::Node::RepeatData;
-    static constexpr auto value = glz::object(&T::id, &T::breakNodes, &T::repeatNodes, &T::isEnd);
+    static constexpr auto value = glz::object("id", &T::id, "breakNodes", &T::breakNodes, "repeatNodes", &T::repeatNodes, "isEnd", &T::isEnd);
 };
 
 // ================= 模型类型 meta 定义 =================
 template<>
 struct glz::meta<CHelper::NormalId> {
     using T = CHelper::NormalId;
-    static constexpr auto value = glz::object(&T::name, &T::description);
+    static constexpr auto value = glz::object("name", &T::name, "description", &T::description);
 };
 
 template<>
 struct glz::meta<CHelper::NamespaceId> {
     using T = CHelper::NamespaceId;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace);
+    static constexpr auto value = glz::object("name", &T::name, "description", &T::description, "idNamespace", &T::idNamespace);
 };
 
 template<>
 struct glz::meta<CHelper::ItemId> {
     using T = CHelper::ItemId;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace, &T::max, &T::descriptions);
+    static constexpr auto value = glz::object("name", &T::name, "description", &T::description, "idNamespace", &T::idNamespace, "max", &T::max, "descriptions", &T::descriptions);
 };
 
 template<>
 struct glz::meta<CHelper::Manifest> {
     using T = CHelper::Manifest;
     static constexpr auto value =
-            glz::object(&T::name, &T::description, &T::version, &T::versionType, &T::branch, &T::author,
-                        &T::updateDate, &T::packId, &T::versionCode, &T::isBasicPack, &T::isDefault);
+            glz::object("name", &T::name, "description", &T::description, "version", &T::version, "versionType", &T::versionType,
+                        "branch", &T::branch, "author", &T::author, "updateDate", &T::updateDate, "packId", &T::packId,
+                        "versionCode", &T::versionCode, "isBasicPack", &T::isBasicPack, "isDefault", &T::isDefault);
 };
 
 // ================= CPack 数据类型 meta 定义 =================
 template<>
 struct glz::meta<CHelper::NormalIdEntry> {
     using T = CHelper::NormalIdEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
+    static constexpr auto value = glz::object("id", &T::id, "content", &T::content);
 };
 
 template<>
 struct glz::meta<CHelper::NamespaceIdEntry> {
     using T = CHelper::NamespaceIdEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
+    static constexpr auto value = glz::object("id", &T::id, "content", &T::content);
 };
 
 template<>
 struct glz::meta<CHelper::BlockIdsEntry> {
     using T = CHelper::BlockIdsEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
+    static constexpr auto value = glz::object("id", &T::id, "content", &T::content);
 };
 
 template<>
 struct glz::meta<CHelper::ItemIdsEntry> {
     using T = CHelper::ItemIdsEntry;
-    static constexpr auto value = glz::object(&T::id, &T::content);
+    static constexpr auto value = glz::object("id", &T::id, "content", &T::content);
 };
 
 template<>
 struct glz::meta<CHelper::GrammarEntry> {
     using T = CHelper::GrammarEntry;
-    static constexpr auto value = glz::object(&T::id, &T::type, &T::content);
+    static constexpr auto value = glz::object("id", &T::id, "type", &T::type, "content", &T::content);
 };
 
 template<>
@@ -1096,20 +1230,21 @@ struct glz::meta<CHelper::IdEntry> {
 template<>
 struct glz::meta<CHelper::CPackJsonData> {
     using T = CHelper::CPackJsonData;
-    static constexpr auto value = glz::object(&T::manifest, &T::id, &T::grammar, &T::json, &T::repeat, &T::command);
+    static constexpr auto value = glz::object("manifest", &T::manifest, "id", &T::id, "grammar", &T::grammar, "json", &T::json, "repeat", &T::repeat, "command", &T::command);
 };
 
 template<>
 struct glz::meta<CHelper::CPackData> {
     using T = CHelper::CPackData;
-    static constexpr auto value = glz::object(&T::manifest, &T::normalIds, &T::namespaceIds, &T::itemIds, &T::blockIds,
-                                              &T::jsonNodes, &T::repeatNodeData, &T::commands, &T::grammar);
+    static constexpr auto value = glz::object("manifest", &T::manifest, "normalIds", &T::normalIds, "namespaceIds", &T::namespaceIds, "itemIds", &T::itemIds,
+                                              "blockIds", &T::blockIds, "jsonNodes", &T::jsonNodes, "repeatNodeData", &T::repeatNodeData,
+                                              "commands", &T::commands, "grammar", &T::grammar);
 };
 
 template<>
 struct glz::meta<CHelper::Old2New::BlockFixEntry> {
     using T = CHelper::Old2New::BlockFixEntry;
-    static constexpr auto value = glz::object(&T::name, &T::data, &T::newBlockId, &T::blockState);
+    static constexpr auto value = glz::object("name", &T::name, "data", &T::data, "newBlockId", &T::newBlockId, "blockState", &T::blockState);
 };
 
 // ================= NodePerCommand =================
@@ -1297,7 +1432,7 @@ namespace CHelper::Node {
 template<>
 struct glz::meta<CHelper::Node::WrappedNodeWire> {
     using T = CHelper::Node::WrappedNodeWire;
-    static constexpr auto value = glz::object(&T::definition, &T::next);
+    static constexpr auto value = glz::object("definition", &T::definition, "next", &T::next);
 };
 
 namespace glz {
@@ -1589,6 +1724,15 @@ namespace CHelper {
         glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);
     }
 
+    // BlockPropertyValueDescription 的写出体（JSON / MSGPACK 键布局一致）
+    template<std::uint32_t Fmt, auto Opts>
+    void writeBlockPropertyValueDescriptionView(const BlockPropertyValueDescriptionWriter &value,
+                                                glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        auto inner = glz::obj{"valueName", PropertyValueWriter{&value.value->valueName, value.type},
+                              "description", value.value->description};
+        glz::serialize<Fmt>::template op<Opts>(inner, ctx, b, ix);
+    }
+
     // 读取 BlockPropertyDescription：type 由第一个 valueName 的类型判定
     template<std::uint32_t Fmt, auto Opts>
     void readBlockPropertyDescription(BlockPropertyDescription &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
@@ -1739,9 +1883,7 @@ namespace glz {
     struct to<JSON, CHelper::BlockPropertyValueDescriptionWriter> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            auto inner = glz::obj{"valueName", CHelper::PropertyValueWriter{&value.value->valueName, value.type},
-                                  "description", value.value->description};
-            serialize<JSON>::op<Opts>(inner, ctx, b, ix);
+            CHelper::writeBlockPropertyValueDescriptionView<JSON, Opts>(value, ctx, b, ix);
         }
     };
 
@@ -1749,9 +1891,7 @@ namespace glz {
     struct to<MSGPACK, CHelper::BlockPropertyValueDescriptionWriter> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            auto inner = glz::obj{"valueName", CHelper::PropertyValueWriter{&value.value->valueName, value.type},
-                                  "description", value.value->description};
-            serialize<MSGPACK>::op<Opts>(inner, ctx, b, ix);
+            CHelper::writeBlockPropertyValueDescriptionView<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
 
@@ -1833,25 +1973,25 @@ namespace glz {
 template<>
 struct glz::meta<CHelper::PerBlockPropertyDescription> {
     using T = CHelper::PerBlockPropertyDescription;
-    static constexpr auto value = glz::object(&T::blocks, &T::properties);
+    static constexpr auto value = glz::object("blocks", &T::blocks, "properties", &T::properties);
 };
 
 template<>
 struct glz::meta<CHelper::BlockPropertyDescriptions> {
     using T = CHelper::BlockPropertyDescriptions;
-    static constexpr auto value = glz::object(&T::common, &T::block);
+    static constexpr auto value = glz::object("common", &T::common, "block", &T::block);
 };
 
 template<>
 struct glz::meta<CHelper::BlockId> {
     using T = CHelper::BlockId;
-    static constexpr auto value = glz::object(&T::name, &T::description, &T::idNamespace, &T::properties);
+    static constexpr auto value = glz::object("name", &T::name, "description", &T::description, "idNamespace", &T::idNamespace, "properties", &T::properties);
 };
 
 template<>
 struct glz::meta<CHelper::BlockIds> {
     using T = CHelper::BlockIds;
-    static constexpr auto value = glz::object(&T::blockStateValues, &T::blockPropertyDescriptions);
+    static constexpr auto value = glz::object("blockStateValues", &T::blockStateValues, "blockPropertyDescriptions", &T::blockPropertyDescriptions);
 };
 
 // Grammar 条目在读取 content 时切换到 GRAMMAR_NODE 阶段。

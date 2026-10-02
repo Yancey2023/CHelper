@@ -114,10 +114,3 @@ namespace spdlog::details {
 #include <glaze/cbor.hpp>
 #include <glaze/glaze.hpp>
 #include <glaze/msgpack.hpp>
-// clang-format off：BinaryFormat.h 依赖上述 glaze 头文件，需保持在其后
-#include <chelper/serialization/BinaryFormat.h>
-// clang-format on
-// json工具
-#include <chelper/util/JsonUtil.h>
-// KMP字符串匹配算法
-#include <chelper/util/KMPMatcher.h>

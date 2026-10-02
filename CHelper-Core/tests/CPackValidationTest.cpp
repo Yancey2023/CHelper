@@ -18,6 +18,7 @@
 
 #include "CpackTestHelper.h"
 #include <chelper/parser/Parser.h>
+#include <chelper/serialization/IO.h>
 #include <future>
 #include <gtest/gtest.h>
 

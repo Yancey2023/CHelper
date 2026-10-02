@@ -18,6 +18,7 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/old2new/Old2New.h>
+#include <chelper/serialization/IO.h>
 #include <chelper/serialization/Serialization.h>
 
 namespace CHelper {
