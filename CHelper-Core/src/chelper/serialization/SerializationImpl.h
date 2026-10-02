@@ -27,7 +27,6 @@
  * adapters directly.
  */
 
-
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/old2new/Old2New.h>
@@ -35,6 +34,7 @@
 #include <chelper/serialization/BinaryFormat.h>
 #include <chelper/serialization/IO.h>
 #include <glaze/containers/ordered_small_map.hpp>
+#include <utility>
 
 // ================= 反序列化上下文 =================
 namespace CHelper {
@@ -96,7 +96,7 @@ namespace glz {
     struct from<MSGPACK, std::basic_string<char16_t, Traits, Alloc>> {
         template<auto Opts>
         static void op(std::basic_string<char16_t, Traits, Alloc> &value,
-                       uint8_t tag,
+                       std::uint8_t tag,
                        glz::is_context auto &&ctx,
                        auto &&it,
                        auto &&end) {
@@ -134,7 +134,7 @@ namespace glz {
     template<class T>
     struct from<MSGPACK, std::shared_ptr<T>> {
         template<auto Opts>
-        static void op(std::shared_ptr<T> &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(std::shared_ptr<T> &value, std::uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             if (tag == msgpack::nil) {
                 value.reset();
                 return;
@@ -157,7 +157,7 @@ namespace glz {
     template<class T>
     struct from<MSGPACK, std::unique_ptr<T>> {
         template<auto Opts>
-        static void op(std::unique_ptr<T> &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(std::unique_ptr<T> &value, std::uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             if (tag == msgpack::nil) {
                 value.reset();
                 return;
@@ -193,7 +193,7 @@ namespace glz {
     template<>
     struct from<MSGPACK, char16_t> {
         template<auto Opts>
-        static void op(char16_t &value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(char16_t &value, std::uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             std::u16string text;
             from<MSGPACK, std::u16string>::template op<Opts>(text, tag, ctx, it, end);
             if (!bool(ctx.error) && text.size() == 1) value = text.front();
@@ -455,7 +455,7 @@ namespace CHelper::detail {
     // 视图 meta 条目：I==0 → "type" 键；I==1 → 类型名 lambda；
     // 其后每两项对应一个节点成员（键, 转发 functor），键与成员指针取自 glz::reflect
     //（同时兼容无键 meta——键名由成员指针推导——与手写带键 meta）
-    template<class NodeType, size_t I>
+    template<class NodeType, std::size_t I>
     constexpr auto viewMetaEntry() {
         using R = glz::reflect<NodeType>;
         if constexpr (I == 0) {
@@ -473,7 +473,7 @@ namespace CHelper::detail {
     constexpr auto makeNodeWriteViewMeta() {
         using View = NodeWriteView<NodeType>;
         constexpr auto memberCount = glz::reflect<NodeType>::size;
-        return [&]<size_t... Is>(std::index_sequence<Is...>) constexpr {
+        return [&]<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
             return glz::detail::Object{glz::tuple{viewMetaEntry<NodeType, Is>()...}};
         }(std::make_index_sequence<2 * memberCount + 2>{});
     }
@@ -490,7 +490,7 @@ namespace CHelper {
     // 成员按 glz::meta 顺序紧凑排列（无键名）。
     // 二进制格式非自描述，修改 glz::meta 字段列表后已分发的 .cpack 需要用资源生成器重新生成
     template<class NodeType, std::uint32_t Fmt, auto Opts, class Ctx, class B>
-    CHELPER_FORCEINLINE void writeNodeObjectValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+    void writeNodeObjectValue(const Node::NodeWithType &t, Ctx &ctx, B &b, std::size_t &ix) {
         static_assert(std::is_same_v<NodeType, typename Node::NodeTypeDetail<NodeType::nodeTypeId>::Type>);
         const auto &n = *static_cast<const NodeType *>(t.data);
         if constexpr (Fmt == CHelper::BinaryFormat) {
@@ -501,25 +501,24 @@ namespace CHelper {
         }
     }
 
-    // 把节点对象写入缓冲区。
-    // 用带 CHELPER_FORCEINLINE operator() 的 functor 而不是泛型 lambda：
-    // 写出函数体很大，MSVC 不会把 lambda 体自动内联进 switch 分支，
-    // 每个节点的写出会多穿两层真实调用，基准测试中可测出明显回退
+
+    // 把节点对象写入缓冲区。用 functor 承载分派体，而不是泛型 lambda：
+    // MSVC 对泛型 lambda 体的内联决策明显更差，基准实测写出耗时回退约 15%
     template<std::uint32_t Fmt, auto Opts, class Ctx, class B>
     struct WriteNodeValueFn {
         const Node::NodeWithType &t;
         Ctx &ctx;
         B &b;
-        size_t &ix;
+        std::size_t &ix;
 
         template<class NodeType>
-        CHELPER_FORCEINLINE void operator()() const {
+        void operator()() const {
             if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes> ||
                           Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
                 writeNodeObjectValue<NodeType, Fmt, Opts>(t, ctx, b, ix);
             } else if constexpr (Fmt == CHelper::BinaryFormat) {
                 //运行期节点不会出现在资源数据里，写出时类型只可能来自内存中的合法节点
-                CHELPER_UNREACHABLE();
+                std::unreachable();
             } else {
                 //运行期节点（WRAPPED / LF / PER_COMMAND 等）不作为资源对象写出
                 ctx.error = glz::error_code::no_matching_variant_type;
@@ -530,7 +529,7 @@ namespace CHelper {
     // 节点写出总入口：二进制先写 uint8 类型 ID；JSON/MSGPACK 的类型名由节点对象自带的 "type" 键承载。
     // 三种格式的成员键名/顺序都由 glz::meta 推导
     template<std::uint32_t Fmt, auto Opts, class Ctx, class B>
-    inline void writeNodeWithType(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+    inline void writeNodeWithType(const Node::NodeWithType &t, Ctx &ctx, B &b, std::size_t &ix) {
         if constexpr (Fmt == CHelper::BinaryFormat) {
             const std::uint8_t typeId = static_cast<std::uint8_t>(t.nodeTypeId);
             glz::serialize<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, b, ix);
@@ -540,7 +539,7 @@ namespace CHelper {
                 WriteNodeValueFn<Fmt, Opts, Ctx, B>{t, ctx, b, ix},
                 [&] {
                     if constexpr (Fmt == CHelper::BinaryFormat) {
-                        CHELPER_UNREACHABLE();
+                        std::unreachable();
                     } else {
                         ctx.error = glz::error_code::no_matching_variant_type;
                     }
@@ -553,19 +552,19 @@ namespace CHelper {
 
     // 解析 msgpack map 头（fixmap / map16 / map32），返回键值对数量；
     // 数据不足或不是 map 头时返回 nullopt（不设置 ctx.error，由调用方决定报错方式）
-    inline std::optional<uint32_t> readMsgpackMapSize(auto &it, const auto &end) {
+    inline std::optional<std::uint32_t> readMsgpackMapSize(auto &it, const auto &end) {
         if (it >= end) {
             return std::nullopt;
         }
-        const uint8_t tag = static_cast<uint8_t>(*it++);
+        const std::uint8_t tag = static_cast<std::uint8_t>(*it++);
         if (tag >= 0x80 && tag <= 0x8f) {
-            return static_cast<uint32_t>(tag & 0x0f);
+            return static_cast<std::uint32_t>(tag & 0x0f);
         }
         if (tag == 0xde) {
             if (it + 2 > end) {
                 return std::nullopt;
             }
-            const uint32_t size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+            const std::uint32_t size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
             it += 2;
             return size;
         }
@@ -573,9 +572,9 @@ namespace CHelper {
             if (it + 4 > end) {
                 return std::nullopt;
             }
-            const uint32_t size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
-                                  (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
-                                  (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+            const std::uint32_t size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
+                                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[1])) << 16) |
+                                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[2])) << 8) | static_cast<std::uint8_t>(it[3]);
             it += 4;
             return size;
         }
@@ -630,7 +629,7 @@ namespace CHelper {
                 ctx.error = glz::error_code::syntax_error;
                 return;
             }
-            for (uint32_t i = 0; i < size.value(); ++i) {
+            for (std::uint32_t i = 0; i < size.value(); ++i) {
                 std::string key;
                 glz::parse<glz::MSGPACK>::op<Opts>(key, ctx, it, end);
                 if (bool(ctx.error)) return;
@@ -676,23 +675,23 @@ namespace CHelper {
                 ctx.error = glz::error_code::unexpected_end;
                 return;
             }
-            const uint8_t tag = static_cast<uint8_t>(*it++);
-            uint32_t size = 0;
+            const std::uint8_t tag = static_cast<std::uint8_t>(*it++);
+            std::uint32_t size = 0;
             if (tag >= 0x90 && tag <= 0x9f) {
                 size = tag & 0x0f;
             } else if (tag == 0xdc) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
                 it += 2;
             } else if (tag == 0xdd) {
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
+                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[1])) << 16) |
+                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[2])) << 8) | static_cast<std::uint8_t>(it[3]);
                 it += 4;
             } else [[unlikely]] {
                 ctx.error = glz::error_code::syntax_error;
                 return;
             }
-            for (uint32_t i = 0; i < size; ++i) {
+            for (std::uint32_t i = 0; i < size; ++i) {
                 f(ctx, it, end);
                 if (bool(ctx.error)) return;
             }
@@ -706,7 +705,7 @@ namespace CHelper {
             glz::skip_ws<Opts>(ctx, it, end);
             return *it == 'n';
         } else {
-            return static_cast<uint8_t>(*it) == 0xc0;
+            return static_cast<std::uint8_t>(*it) == 0xc0;
         }
     }
 
@@ -748,7 +747,7 @@ namespace CHelper {
                 glz::serialize<Fmt>::template op<Opts>(v.integer, ctx, b, ix);
                 break;
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 
@@ -778,7 +777,7 @@ namespace CHelper {
             }
         } else {
             // MSGPACK
-            const uint8_t tag = static_cast<uint8_t>(*it++);
+            const std::uint8_t tag = static_cast<std::uint8_t>(*it++);
             if ((tag >= 0xa0 && tag <= 0xbf) || tag == 0xd9 || tag == 0xda || tag == 0xdb) [[likely]] {
                 type = PropertyType::STRING;
                 v.string = new std::pmr::u16string();
@@ -790,7 +789,7 @@ namespace CHelper {
                 v.boolean = tag == 0xc3;
             } else {
                 type = PropertyType::INTEGER;
-                glz::from<glz::MSGPACK, int32_t>::op<Opts>(v.integer, tag, ctx, it, end);
+                glz::from<glz::MSGPACK, std::int32_t>::op<Opts>(v.integer, tag, ctx, it, end);
             }
         }
     }
@@ -811,7 +810,7 @@ namespace CHelper {
                 glz::parse<CHelper::BinaryFormat>::template op<Opts>(v.integer, ctx, it, end);
                 break;
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 }// namespace CHelper
@@ -902,7 +901,7 @@ namespace CHelper {
             if (it >= end) {
                 return false;
             }
-            result = std::string_view(start, static_cast<size_t>(it - start));
+            result = std::string_view(start, static_cast<std::size_t>(it - start));
             ++it;
             return true;
         } else {
@@ -910,22 +909,22 @@ namespace CHelper {
             if (it >= end) {
                 return false;
             }
-            const uint8_t tag = static_cast<uint8_t>(*it++);
-            uint32_t size = 0;
+            const std::uint8_t tag = static_cast<std::uint8_t>(*it++);
+            std::uint32_t size = 0;
             if (tag >= 0xa0 && tag <= 0xbf) {
                 size = tag & 0x1f;
             } else if (tag == 0xd9) {
                 if (it >= end) return false;
-                size = static_cast<uint8_t>(*it++);
+                size = static_cast<std::uint8_t>(*it++);
             } else if (tag == 0xda) {
                 if (it + 2 > end) return false;
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 8) | static_cast<uint8_t>(it[1]);
+                size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
                 it += 2;
             } else if (tag == 0xdb) {
                 if (it + 4 > end) return false;
-                size = (static_cast<uint32_t>(static_cast<uint8_t>(it[0])) << 24) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(it[1])) << 16) |
-                       (static_cast<uint32_t>(static_cast<uint8_t>(it[2])) << 8) | static_cast<uint8_t>(it[3]);
+                size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
+                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[1])) << 16) |
+                       (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[2])) << 8) | static_cast<std::uint8_t>(it[3]);
                 it += 4;
             } else {
                 return false;
@@ -1030,7 +1029,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeNodeWithType<JSON, Opts>(value, ctx, b, ix);
         }
     };
@@ -1038,7 +1037,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeNodeWithType<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
@@ -1046,7 +1045,7 @@ namespace glz {
     template<>
     struct from<JSON, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readNodeWithType<JSON, Opts>(value, ctx, it, end);
         }
     };
@@ -1054,7 +1053,7 @@ namespace glz {
     template<>
     struct from<MSGPACK, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, std::uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             // tag 已被分发器消费，回退一个字节后走与 JSON 相同的节点读取路径
             --it;
             CHelper::readNodeWithType<MSGPACK, Opts>(value, ctx, it, end);
@@ -1065,7 +1064,7 @@ namespace glz {
     template<>
     struct to<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeNodeWithType<CHelper::BinaryFormat, Opts>(value, ctx, b, ix);
         }
     };
@@ -1073,7 +1072,7 @@ namespace glz {
     template<>
     struct from<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readNodeWithType<CHelper::BinaryFormat, Opts>(value, ctx, it, end);
         }
     };
@@ -1109,7 +1108,7 @@ struct glz::from<glz::JSON, CHelper::Node::FreeableNodeWithTypes> {
 template<>
 struct glz::from<glz::MSGPACK, CHelper::Node::FreeableNodeWithTypes> {
     template<auto Opts>
-    static void op(auto &&value, uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+    static void op(auto &&value, std::uint8_t tag, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         // tag 已由分发器消费，直接传递给 vector 读取
         from<MSGPACK, std::pmr::vector<CHelper::Node::NodeWithType>>::op<Opts>(value.nodes, tag, ctx, it, end);
     }
@@ -1261,8 +1260,8 @@ struct glz::meta<CHelper::Old2New::BlockFixEntry> {
 namespace CHelper::Node {
 
     struct WrappedNodeWire {
-        int32_t definition = -1;
-        std::vector<uint32_t> next;
+        std::int32_t definition = -1;
+        std::vector<std::uint32_t> next;
     };
 
     // 由 syntax 字符串构建语法树（JSON 格式路径，与旧版逻辑一致）
@@ -1275,8 +1274,8 @@ namespace CHelper::Node {
                 continue;
             }
             const auto &id = serializable->id.value();
-            for (size_t start = 0, end; start < id.size(); start = end + 1) {
-                const size_t findStart = (id[start] == '[' || id[start] == '<') ? id.find(id[start] == '[' ? ']' : '>', start) + 1 : start;
+            for (std::size_t start = 0, end; start < id.size(); start = end + 1) {
+                const std::size_t findStart = (id[start] == '[' || id[start] == '<') ? id.find(id[start] == '[' ? ']' : '>', start) + 1 : start;
                 end = std::min(id.find('|', findStart), id.size());
                 if (end > start) {
                     idMap.emplace_back(std::string_view(id.data() + start, end - start), &item);
@@ -1289,20 +1288,20 @@ namespace CHelper::Node {
         //flat trie: [0]=root, [i>0] maps to wrappedNodes[i-1]
         struct TrieNode {
             NodeWithType *definition = nullptr;
-            std::vector<size_t> children;
+            std::vector<std::size_t> children;
             bool needsLf = false;
         };
         std::vector<TrieNode> trie(1);
         bool hasOptionalFirst = false;
         for (const auto &syntaxUtf16: t.syntax) {
             const std::string syntax = utf8::utf16to8(syntaxUtf16);
-            size_t position = syntax.find(u' ');
+            std::size_t position = syntax.find(u' ');
             if (position == std::string::npos) {
                 hasOptionalFirst = true;
                 continue;
             }
             hasOptionalFirst |= position + 1 < syntax.size() && syntax[position + 1] == u'[';
-            size_t current = 0;
+            std::size_t current = 0;
             while (position < syntax.size()) {
                 while (position < syntax.size() && syntax[position] == u' ') {
                     ++position;
@@ -1310,7 +1309,7 @@ namespace CHelper::Node {
                 if (position >= syntax.size()) {
                     break;
                 }
-                const size_t tokenStartPos = position;
+                const std::size_t tokenStartPos = position;
                 NodeWithType *definition = nullptr;
                 for (auto &[tokenView, definitionView]: idMap) {
                     if (position + tokenView.size() <= syntax.size() &&
@@ -1326,7 +1325,7 @@ namespace CHelper::Node {
                 if (syntax[tokenStartPos] == u'[' && current != 0) {
                     trie[current].needsLf = true;
                 }
-                size_t childIndex = SIZE_MAX;
+                std::size_t childIndex = SIZE_MAX;
                 for (const auto child: trie[current].children) {
                     if (trie[child].definition == definition) {
                         childIndex = child;
@@ -1346,11 +1345,11 @@ namespace CHelper::Node {
         }
         //materialize wrappedNodes (trie[0] excluded)
         t.wrappedNodes.reserve(trie.size() - 1);
-        for (size_t i = 1; i < trie.size(); ++i) {
+        for (std::size_t i = 1; i < trie.size(); ++i) {
             t.wrappedNodes.emplace_back(*trie[i].definition);
         }
         //connect nextNodes
-        for (size_t i = 1; i < trie.size(); ++i) {
+        for (std::size_t i = 1; i < trie.size(); ++i) {
             auto &wrappedNode = t.wrappedNodes[i - 1];
             for (const auto child: trie[i].children) {
                 wrappedNode.pushNextNode(&t.wrappedNodes[child - 1]);
@@ -1371,17 +1370,17 @@ namespace CHelper::Node {
 
     // 由预解析的节点图构建（msgpack / 二进制格式路径，与旧版 from_binary 逻辑一致）
     inline void buildNodePerCommandGraph(NodePerCommand &t, const std::vector<WrappedNodeWire> &wrapped,
-                                         const std::vector<uint32_t> &startIndices) {
-        const size_t wrappedCount = wrapped.size();
+                                         const std::vector<std::uint32_t> &startIndices) {
+        const std::size_t wrappedCount = wrapped.size();
         t.wrappedNodes.reserve(wrappedCount);
-        for (size_t i = 0; i < wrappedCount; ++i) {
+        for (std::size_t i = 0; i < wrappedCount; ++i) {
             const auto defIdx = wrapped[i].definition;
-            if (defIdx < 0 || static_cast<size_t>(defIdx) >= t.nodes.nodes.size()) [[unlikely]] {
+            if (defIdx < 0 || static_cast<std::size_t>(defIdx) >= t.nodes.nodes.size()) [[unlikely]] {
                 throw std::runtime_error("invalid node definition index");
             }
-            t.wrappedNodes.emplace_back(t.nodes.nodes[static_cast<size_t>(defIdx)]);
+            t.wrappedNodes.emplace_back(t.nodes.nodes[static_cast<std::size_t>(defIdx)]);
         }
-        for (size_t i = 0; i < wrappedCount; ++i) {
+        for (std::size_t i = 0; i < wrappedCount; ++i) {
             auto &wrappedNode = t.wrappedNodes[i];
             for (const auto targetIdx: wrapped[i].next) {
                 if (targetIdx == UINT32_MAX) {
@@ -1410,13 +1409,13 @@ namespace CHelper::Node {
 
     // 由内存中的节点图（指针）生成写出的紧凑表示：定义/后继/起始都用下标表示
     inline void buildNodePerCommandWireGraph(const NodePerCommand &t, std::vector<WrappedNodeWire> &wrapped,
-                                             std::vector<uint32_t> &starts) {
+                                             std::vector<std::uint32_t> &starts) {
         wrapped.reserve(t.wrappedNodes.size());
         for (const auto &wrappedNode: t.wrappedNodes) {
             auto &item = wrapped.emplace_back();
-            for (size_t i = 0; i < t.nodes.nodes.size(); ++i) {
+            for (std::size_t i = 0; i < t.nodes.nodes.size(); ++i) {
                 if (t.nodes.nodes[i].data == wrappedNode.innerNode.data) {
-                    item.definition = static_cast<int32_t>(i);
+                    item.definition = static_cast<std::int32_t>(i);
                     break;
                 }
             }
@@ -1424,7 +1423,7 @@ namespace CHelper::Node {
                 if (next == NodeLF::getInstance()) {
                     item.next.push_back(UINT32_MAX);
                 } else {
-                    item.next.push_back(static_cast<uint32_t>(next - t.wrappedNodes.data()));
+                    item.next.push_back(static_cast<std::uint32_t>(next - t.wrappedNodes.data()));
                 }
             }
         }
@@ -1433,7 +1432,7 @@ namespace CHelper::Node {
             if (start == NodeLF::getInstance()) {
                 starts.push_back(UINT32_MAX);
             } else {
-                starts.push_back(static_cast<uint32_t>(start - t.wrappedNodes.data()));
+                starts.push_back(static_cast<std::uint32_t>(start - t.wrappedNodes.data()));
             }
         }
     }
@@ -1453,7 +1452,7 @@ namespace glz {
     template<>
     struct to<CHelper::BinaryFormat, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             serialize<CHelper::BinaryFormat>::template op<Opts>(value.name, ctx, b, ix);
             serialize<CHelper::BinaryFormat>::template op<Opts>(value.description, ctx, b, ix);
             serialize<CHelper::BinaryFormat>::template op<Opts>(value.syntax, ctx, b, ix);
@@ -1469,7 +1468,7 @@ namespace glz {
     template<>
     struct from<CHelper::BinaryFormat, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             parse<CHelper::BinaryFormat>::template op<Opts>(value.name, ctx, it, end);
             parse<CHelper::BinaryFormat>::template op<Opts>(value.description, ctx, it, end);
             parse<CHelper::BinaryFormat>::template op<Opts>(value.syntax, ctx, it, end);
@@ -1508,7 +1507,7 @@ namespace CHelper {
     template<std::uint32_t Fmt, auto Opts>
     inline void readNodePerCommand(Node::NodePerCommand &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
-        std::optional<std::vector<uint32_t>> startNodes;
+        std::optional<std::vector<std::uint32_t>> startNodes;
         forEachObjectMember<Fmt, Opts>(ctx, it, end, [&](std::string &key, auto &&ctx2, auto &&it2, auto &&end2) {
             if (key == "name") [[likely]] {
                 glz::parse<Fmt>::template op<Opts>(t.name, ctx2, it2, end2);
@@ -1544,7 +1543,7 @@ namespace CHelper {
             throw std::runtime_error("command name cannot be empty");
         }
         if (wrappedNodes.has_value()) {
-            const std::vector<uint32_t> noStartNodes;
+            const std::vector<std::uint32_t> noStartNodes;
             Node::buildNodePerCommandGraph(t, wrappedNodes.value(),
                                            startNodes.has_value() ? startNodes.value() : noStartNodes);
         } else {
@@ -1564,7 +1563,7 @@ namespace CHelper {
             }
         }
         std::optional<std::vector<Node::WrappedNodeWire>> wrappedNodes;
-        std::optional<std::vector<uint32_t>> startNodes;
+        std::optional<std::vector<std::uint32_t>> startNodes;
         if constexpr (Fmt == glz::MSGPACK) {
             // JSON 的节点图由 syntax 重建，只有 MessagePack 需要写出预解析的节点图
             Node::buildNodePerCommandWireGraph(t, wrappedNodes.emplace(), startNodes.emplace());
@@ -1581,7 +1580,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeNodePerCommand<JSON, Opts>(value, ctx, b, ix);
         }
     };
@@ -1589,7 +1588,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeNodePerCommand<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
@@ -1597,7 +1596,7 @@ namespace glz {
     template<>
     struct from<JSON, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readNodePerCommand<JSON, Opts>(value, ctx, it, end);
         }
     };
@@ -1605,7 +1604,7 @@ namespace glz {
     template<>
     struct from<MSGPACK, CHelper::Node::NodePerCommand> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, std::uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             // tag 已被分发器消费，回退后解析 map 头
             --it;
             CHelper::readNodePerCommand<MSGPACK, Opts>(value, ctx, it, end);
@@ -1842,7 +1841,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::PropertyValueWriter> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writePropertyValue<JSON, Opts>(*value.value, value.type, ctx, b, ix);
         }
     };
@@ -1850,7 +1849,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::PropertyValueWriter> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writePropertyValue<MSGPACK, Opts>(*value.value, value.type, ctx, b, ix);
         }
     };
@@ -1858,7 +1857,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeProperty<JSON, Opts>(value, ctx, b, ix);
         }
     };
@@ -1866,7 +1865,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeProperty<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
@@ -1874,7 +1873,7 @@ namespace glz {
     template<>
     struct from<JSON, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readProperty<JSON, Opts>(value, ctx, it, end);
         }
     };
@@ -1882,7 +1881,7 @@ namespace glz {
     template<>
     struct from<MSGPACK, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, std::uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             // tag 已被分发器消费，回退后由 readProperty 解析 map 头
             --it;
             CHelper::readProperty<MSGPACK, Opts>(value, ctx, it, end);
@@ -1892,7 +1891,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::BlockPropertyValueDescriptionWriter> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBlockPropertyValueDescriptionView<JSON, Opts>(value, ctx, b, ix);
         }
     };
@@ -1900,7 +1899,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::BlockPropertyValueDescriptionWriter> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBlockPropertyValueDescriptionView<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
@@ -1908,7 +1907,7 @@ namespace glz {
     template<>
     struct to<JSON, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBlockPropertyDescription<JSON, Opts>(value, ctx, b, ix);
         }
     };
@@ -1916,7 +1915,7 @@ namespace glz {
     template<>
     struct to<MSGPACK, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBlockPropertyDescription<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
@@ -1924,7 +1923,7 @@ namespace glz {
     template<>
     struct from<JSON, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readBlockPropertyDescription<JSON, Opts>(value, ctx, it, end);
         }
     };
@@ -1932,7 +1931,7 @@ namespace glz {
     template<>
     struct from<MSGPACK, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, std::uint8_t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             // tag 已被分发器消费，回退后由 readBlockPropertyDescription 解析 map 头
             --it;
             CHelper::readBlockPropertyDescription<MSGPACK, Opts>(value, ctx, it, end);
@@ -1942,7 +1941,7 @@ namespace glz {
     template<>
     struct to<CHelper::BinaryFormat, CHelper::PropertyValueWriter> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writePropertyValue<CHelper::BinaryFormat, Opts>(*value.value, value.type, ctx, b, ix);
         }
     };
@@ -1950,7 +1949,7 @@ namespace glz {
     template<>
     struct to<CHelper::BinaryFormat, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBinaryProperty<Opts>(value, ctx, b, ix);
         }
     };
@@ -1958,7 +1957,7 @@ namespace glz {
     template<>
     struct from<CHelper::BinaryFormat, CHelper::Property> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readBinaryProperty<Opts>(value, ctx, it, end);
         }
     };
@@ -1966,7 +1965,7 @@ namespace glz {
     template<>
     struct to<CHelper::BinaryFormat, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
             CHelper::writeBinaryBlockPropertyDescription<Opts>(value, ctx, b, ix);
         }
     };
@@ -1974,7 +1973,7 @@ namespace glz {
     template<>
     struct from<CHelper::BinaryFormat, CHelper::BlockPropertyDescription> {
         template<auto Opts>
-        static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
+        static void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
             CHelper::readBinaryBlockPropertyDescription<Opts>(value, ctx, it, end);
         }
     };
