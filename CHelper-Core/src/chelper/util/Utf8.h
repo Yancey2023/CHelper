@@ -47,14 +47,18 @@ namespace CHelper {
             if (input.empty()) {
                 return;
             }
-            // 纯 ASCII 时逐字符赋值即可，不能用 memcpy：
-            // 输入是 char（1 字节），输出是 char16_t（2 字节），字节数并不相等
-            if (std::ranges::all_of(input, [](unsigned char ch) { return ch < 0x80; })) {
-                output.resize(input.size());
-                std::copy(input.begin(), input.end(), output.begin());
-                return;
+            // 单遍处理：逐字节宽化写入（不能用 memcpy，输入 1 字节输出 2 字节）的同时判定 ASCII。
+            // 纯 ASCII（ID、状态值等的绝大多数形态）只扫一遍；遇到非 ASCII 字节即清空回退完整解码
+            output.resize(input.size());
+            for (std::size_t index = 0; index < input.size(); ++index) {
+                const auto ch = static_cast<unsigned char>(input[index]);
+                if (ch >= 0x80) [[unlikely]] {
+                    output.clear();
+                    utf8::utf8to16(input.begin(), input.end(), std::back_inserter(output));
+                    return;
+                }
+                output[index] = static_cast<char16_t>(ch);
             }
-            utf8::utf8to16(input.begin(), input.end(), std::back_inserter(output));
         }
 
         /**

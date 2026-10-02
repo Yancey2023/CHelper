@@ -196,19 +196,29 @@ namespace CHelper {
         values.clear();
     }
 
+    void BlockPropertyDescriptions::collectEntryProperties(
+            const std::u16string_view blockIdWithNamespace, const std::u16string_view blockId,
+            std::vector<const std::pmr::vector<BlockPropertyDescription> *> &entries) const {
+        for (const auto &item: block) {
+            if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
+                std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
+                entries.push_back(&item.properties);
+            }
+        }
+    }
+
     const BlockPropertyDescription &BlockPropertyDescriptions::getPropertyDescription(
             const std::u16string_view blockIdWithNamespace,
             const std::u16string_view blockId,
             const std::u16string_view propertyName) const {
-        for (const auto &item: block) {
-            if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
-                std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
-                const auto &it = std::ranges::find_if(item.properties, [&propertyName](const BlockPropertyDescription &item1) -> bool {
-                    return item1.propertyName == propertyName;
-                });
-                if (it != item.properties.end()) [[likely]] {
-                    return *it;
-                }
+        std::vector<const std::pmr::vector<BlockPropertyDescription> *> entries;
+        collectEntryProperties(blockIdWithNamespace, blockId, entries);
+        for (const auto *properties: entries) {
+            const auto &it = std::ranges::find_if(*properties, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                return item1.propertyName == propertyName;
+            });
+            if (it != properties->end()) [[likely]] {
+                return *it;
             }
         }
         const auto &it = std::ranges::find_if(common, [&propertyName](const BlockPropertyDescription &item1) -> bool {
@@ -355,14 +365,35 @@ namespace CHelper {
                 blockStateEntryChildNode2.reserve(2);
                 std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
                 blockStateEntryChildNode1.reserve(properties.value().size());
+                //所属条目只解析一次，避免每属性重复线性扫全部条目
+                std::vector<const std::pmr::vector<BlockPropertyDescription> *> entryProperties;
+                blockPropertyDescriptions.collectEntryProperties(getIdWithNamespace()->name, name, entryProperties);
+                const auto findDescription = [&](const std::u16string_view propertyName) -> const BlockPropertyDescription & {
+                    for (const auto *entry: entryProperties) {
+                        const auto &it = std::ranges::find_if(*entry, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                            return item1.propertyName == propertyName;
+                        });
+                        if (it != entry->end()) [[likely]] {
+                            return *it;
+                        }
+                    }
+                    const auto &it = std::ranges::find_if(blockPropertyDescriptions.common,
+                                                          [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                                                              return item1.propertyName == propertyName;
+                                                          });
+                    if (it != blockPropertyDescriptions.common.end()) [[likely]] {
+                        return *it;
+                    }
+                    throw std::runtime_error(fmt::format(
+                            "fail to find block property value by block id {} and property name {}",
+                            utf8::utf16to8(getIdWithNamespace()->name),
+                            utf8::utf16to8(propertyName)));
+                };
                 std::ranges::transform(
                         properties.value(),
                         std::back_inserter(blockStateEntryChildNode1),
-                        [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
-                            const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
-                                    getIdWithNamespace()->name,
-                                    name,
-                                    item.name);
+                        [&](const auto &item) -> Node::NodeWithType {
+                            const BlockPropertyDescription &blockPropertyDescription = findDescription(item.name);
                             Node::NodeEntry *result = getBlockStateNode(
                                     nodeChildren.nodes, blockPropertyDescription,
                                     item.defaultValue, item.valid);

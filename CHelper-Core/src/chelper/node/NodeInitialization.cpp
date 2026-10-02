@@ -336,17 +336,42 @@ namespace CHelper::Node {
                 }
             }
 
-            const auto findNode = [&](const std::string_view id) -> NodeWithType {
-                for (const auto &item: node.nodes.nodes) {
-                    if (item.data == nullptr) {
-                        continue;
-                    }
-                    const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
-                    if (serializable->id.has_value() && serializable->id.value() == id) {
-                        return item;
-                    }
+            //按 id 建排序索引（携带原始下标作并列决胜键，重复 id 时与线性首匹配语义一致），
+            //图绑定与 start 查找走二分，避免每引用线性扫全表
+            struct IdIndexEntry {
+                std::string_view id;
+                const NodeWithType *node;
+                std::size_t order;
+            };
+            std::vector<IdIndexEntry> idIndex;
+            for (std::size_t index = 0; index < node.nodes.nodes.size(); ++index) {
+                const auto &item = node.nodes.nodes[index];
+                if (item.data == nullptr) {
+                    continue;
                 }
-                throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
+                const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
+                if (serializable->id.has_value()) {
+                    idIndex.push_back({std::string_view(serializable->id.value()), &item, index});
+                }
+            }
+            std::sort(idIndex.begin(), idIndex.end(), [](const IdIndexEntry &left, const IdIndexEntry &right) {
+                if (left.id != right.id) {
+                    return left.id < right.id;
+                }
+                return left.order < right.order;
+            });
+            const auto findNodeEntry = [&](const std::string_view id) -> const IdIndexEntry & {
+                const auto entry = std::lower_bound(idIndex.begin(), idIndex.end(), id,
+                                                    [](const IdIndexEntry &left, const std::string_view key) {
+                                                        return left.id < key;
+                                                    });
+                if (entry == idIndex.end() || entry->id != id) {
+                    throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
+                }
+                return *entry;
+            };
+            const auto findNode = [&](const std::string_view id) -> NodeWithType {
+                return *findNodeEntry(id).node;
             };
             const auto linkNode = [&](NodeWithType &target, const std::pmr::string &id) {
                 if (id.empty()) {
@@ -413,11 +438,13 @@ namespace CHelper::Node {
                 }
             }
             if (node.startNodeId != "LF") [[likely]] {
-                for (auto &item: node.nodes.nodes) {
-                    if (reinterpret_cast<const NodeSerializable *>(item.data)->id == node.startNodeId) [[unlikely]] {
-                        node.start = item;
-                        break;
-                    }
+                //缺失时保持原有报错路径（start.data == nullptr 的后置检查），不在此处抛错
+                const auto entry = std::lower_bound(idIndex.begin(), idIndex.end(), node.startNodeId,
+                                                    [](const IdIndexEntry &left, const std::string_view key) {
+                                                        return left.id < key;
+                                                    });
+                if (entry != idIndex.end() && entry->id == node.startNodeId) [[likely]] {
+                    node.start = *entry->node;
                 }
             }
             if (node.start.data == nullptr) [[unlikely]] {

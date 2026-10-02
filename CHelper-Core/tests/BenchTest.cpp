@@ -98,28 +98,40 @@ namespace {
  */
 TEST(Bench, LoadCPack) {
     const size_t repeat = 20;
+    // 计时窗口只包含加载本体：时间戳在 createCPack 返回处取，cpack 的析构发生在窗口之外
+    const auto timedLoad = [&]<class Create>(Stats &stats, const Create &create) {
+        const size_t warmups = std::max<size_t>(repeat / 10, 1);
+        for (size_t i = 0; i < warmups; ++i) {
+            const auto cpack = create();
+            ASSERT_NE(cpack, nullptr);
+        }
+        for (size_t i = 0; i < repeat; ++i) {
+            startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto cpack = create();
+            const auto end = std::chrono::steady_clock::now();
+            stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            ASSERT_NE(cpack, nullptr);
+        }
+        stats.print();
+    };
 
     {
         Stats stats{"load cpack by directory (vanilla)"};
-        benchmark(stats, repeat, [] {
-            auto cpack = serialization::createCPackByDirectory(vanillaDir());
+        timedLoad(stats, [] {
+            return serialization::createCPackByDirectory(vanillaDir());
         });
-        stats.print();
     }
     {
-        std::vector<Stats> stats;
         for (const auto &path: {vanillaBin(), experimentBin()}) {
             if (!std::filesystem::exists(path)) {
                 continue;
             }
             const auto data = readBinaryFile(path);
-            std::string name = "load cpack by binary (" + path.stem().string() + ")";
-            stats.emplace_back(Stats{name});
-            auto &stat = stats.back();
-            benchmark(stat, repeat, [&data] {
-                auto cpack = serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
+            Stats stats{"load cpack by binary (" + path.stem().string() + ")"};
+            timedLoad(stats, [&data] {
+                return serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
             });
-            stat.print();
         }
     }
 }

@@ -2008,7 +2008,11 @@ namespace CHelper {
             const auto oldStage = ctx.createStage;
             ctx.createStage = Node::NodeCreateStage::GRAMMAR_NODE;
             if (value.content == nullptr) {
-                value.content = std::make_shared<Node::NodeJsonElement>();
+                if (ctx.cpackMemory) {
+                    value.content = CHelper::allocateShared<Node::NodeJsonElement>(ctx.cpackMemory);
+                } else {
+                    value.content = std::make_shared<Node::NodeJsonElement>();
+                }
             }
             glz::parse<Fmt>::template op<Opts>(*value.content, ctx, it, end);
             if (!value.content->id.has_value()) {

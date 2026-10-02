@@ -103,6 +103,11 @@ namespace CHelper {
                 std::u16string_view blockIdWithNamespace,
                 std::u16string_view blockId,
                 std::u16string_view propertyName) const;
+
+        //按条目顺序收集包含该方块 ID 的属性表（同一方块 ID 通常只属于一个条目）。
+        //供 getPropertyDescription 与 BlockId::getNode 共用：条目解析一次，属性查找在条目内进行
+        void collectEntryProperties(std::u16string_view blockIdWithNamespace, std::u16string_view blockId,
+                                    std::vector<const std::pmr::vector<BlockPropertyDescription> *> &entries) const;
     };
 
     class BlockId : public NamespaceId {
