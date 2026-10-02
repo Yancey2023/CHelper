@@ -10,11 +10,14 @@
 
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <memory_resource>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <string>
 #include <utility>
@@ -109,10 +112,68 @@ namespace CHelper {
         }
     };
 
+    namespace Detail {
+        struct CPackObjectAllocation {
+            std::pmr::memory_resource *resource;
+            void *allocation;
+            size_t bytes;
+            size_t alignment;
+        };
+    }// namespace Detail
+
+    // 节点本体与其 PMR 成员一样使用当前池。分配头记录实际资源，delete 不依赖
+    // 当时的线程路由；池资源必须活到节点析构完毕，与节点内 PMR 成员的生命周期一致。
+    [[nodiscard]] inline void *allocateCPackObject(const size_t bytes, size_t alignment) {
+        using Header = Detail::CPackObjectAllocation;
+        alignment = std::max(alignment, alignof(Header));
+        const size_t prefix = (sizeof(Header) + alignment - 1) & ~(alignment - 1);
+        if (bytes > std::numeric_limits<size_t>::max() - prefix) [[unlikely]] {
+            throw std::bad_alloc();
+        }
+        auto *resource = CPackMemoryRouter::getCurrent();
+        const size_t total = prefix + bytes;
+        void *storage;
+        if (resource != nullptr) {
+            storage = resource->allocate(total, alignment);
+        } else if (alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
+            storage = ::operator new(total, std::align_val_t(alignment));
+        } else {
+            storage = ::operator new(total);
+        }
+        auto *allocation = static_cast<std::byte *>(storage);
+        auto *object = allocation + prefix;
+        std::construct_at(reinterpret_cast<Header *>(object - sizeof(Header)),
+                          Header{resource, allocation, total, alignment});
+        return object;
+    }
+
+    [[nodiscard]] inline void *allocateCPackObjectNothrow(const size_t bytes, const size_t alignment) noexcept {
+        try {
+            return allocateCPackObject(bytes, alignment);
+        } catch (...) {
+            return nullptr;
+        }
+    }
+
+    inline void deallocateCPackObject(void *pointer) noexcept {
+        if (pointer == nullptr) return;
+        auto *header = reinterpret_cast<Detail::CPackObjectAllocation *>(
+                static_cast<std::byte *>(pointer) - sizeof(Detail::CPackObjectAllocation));
+        const auto allocation = *header;
+        std::destroy_at(header);
+        if (allocation.resource != nullptr) {
+            allocation.resource->deallocate(allocation.allocation, allocation.bytes, allocation.alignment);
+        } else if (allocation.alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
+            ::operator delete(allocation.allocation, std::align_val_t(allocation.alignment));
+        } else {
+            ::operator delete(allocation.allocation);
+        }
+    }
+
     /**
      * Makes default-constructed PMR containers created while loading a CPack
-     * use that CPack's resource. The owner scope remains active until all of
-     * its PMR members have been destroyed.
+     * use that CPack's resource. The owner's scope activates during destruction,
+     * after loading has restored the caller's resource, and outlives all PMR members.
      */
     class CPackMemoryScope {
     private:
@@ -120,7 +181,6 @@ namespace CHelper {
         std::shared_ptr<CPackMemoryResource> memory;
         size_t depth = 0;
         bool active = false;
-        bool owner = false;
 
     public:
         CPackMemoryScope() = default;
@@ -132,12 +192,11 @@ namespace CHelper {
         }
 
         void bindAsOwner(const std::shared_ptr<CPackMemoryResource> &ownerMemory) {
+            release();
             memory = ownerMemory;
             previous = nullptr;
-            active = true;
-            owner = true;
+            depth = 0;
             CPackMemoryRouter::install();
-            depth = CPackMemoryRouter::enter(memory->getResource());
         }
 
         void release() noexcept {
@@ -157,14 +216,7 @@ namespace CHelper {
         }
 
         ~CPackMemoryScope() {
-            if (active) {
-                if (owner) {
-                    CPackMemoryRouter::setCurrent(nullptr);
-                    CPackMemoryRouter::leave(depth, nullptr);
-                } else {
-                    release();
-                }
-            }
+            release();
         }
 
         CPackMemoryScope(const CPackMemoryScope &) = delete;

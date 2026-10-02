@@ -103,7 +103,7 @@ namespace CHelper {
     CommandContext::CommandContext(std::shared_ptr<const CPack> cpack, std::u16string command)
         : cpack(std::move(cpack)),
           memory(),
-          memoryScope(memory.getResource(), this->cpack->getMemoryResource()),
+          memoryScope(memory.getResource()),
           command(command.data(), command.size()),
           astNode(Parser::parse(this->command, *this->cpack)) {
         memoryScope.release();

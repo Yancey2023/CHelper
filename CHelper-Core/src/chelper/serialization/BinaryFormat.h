@@ -132,7 +132,7 @@ namespace glz {
         template<auto Opts, class V, is_context Ctx, class It, class End>
         static void op(V &&value, Ctx &&ctx, It &&it, End &&end) noexcept {
             using Raw = raw_type_t<T>;
-            if (it + sizeof(Raw) > end) [[unlikely]] {
+            if (static_cast<size_t>(end - it) < sizeof(Raw)) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
             }
@@ -184,7 +184,10 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
-            if (it + size > end) [[unlikely]] {
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
+            if (static_cast<size_t>(end - it) < size) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
             }
@@ -350,7 +353,28 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
             value.clear();
+            using Element = typename T::value_type;
+            // 固定宽度数值数组与线路布局一致，一次边界检查后直接拷贝。
+            // bool 是位代理，char16_t 在线路上是 UTF-8 字符串，都不能走此路径。
+            if constexpr (std::endian::native == std::endian::little &&
+                          (std::is_arithmetic_v<Element> || std::is_enum_v<Element>) &&
+                          !std::is_same_v<Element, bool> && !std::is_same_v<Element, char16_t>) {
+                if (size > static_cast<size_t>(end - it) / sizeof(Element)) [[unlikely]] {
+                    ctx.error = error_code::unexpected_end;
+                    return;
+                }
+                value.resize(size);
+                if (size != 0) {
+                    const size_t bytes = static_cast<size_t>(size) * sizeof(Element);
+                    std::memcpy(value.data(), &(*it), bytes);
+                    it += bytes;
+                }
+                return;
+            }
             if (size > 0) {
                 value.reserve(size);
                 for (std::uint32_t i = 0; i < size; ++i) {
@@ -395,7 +419,14 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
             value.clear();
+            if constexpr (requires { value.reserve(size); }) {
+                // 损坏的计数字段不能让预分配远超输入大小；不足的容量仍可按需增长。
+                value.reserve(std::min<size_t>(size, static_cast<size_t>(end - it)));
+            }
             for (std::uint32_t i = 0; i < size; ++i) {
                 using Key = typename T::key_type;
                 using Mapped = typename T::mapped_type;

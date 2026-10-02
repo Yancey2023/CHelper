@@ -123,8 +123,7 @@ namespace CHelper {
 
     public:
         ~CPack() {
-            CPackMemoryRouter::install();
-            CPackMemoryRouter::setCurrent(cpackMemory->getResource());
+            destructionMemoryScope.prepareForDestruction();
         }
 
         Manifest manifest;

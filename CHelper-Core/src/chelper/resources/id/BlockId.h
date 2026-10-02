@@ -110,6 +110,29 @@ namespace CHelper {
                                     std::vector<const std::pmr::vector<BlockPropertyDescription> *> &entries) const;
     };
 
+    // 仅在整包初始化期间使用；索引引用源描述，源数据在使用期间不得修改。
+    // 保留资源条目顺序与重复属性的首匹配规则，不向 CPack 添加永久缓存。
+    class BlockPropertyDescriptionIndex {
+        struct CommonEntry {
+            std::u16string_view key;
+            size_t order;
+            const BlockPropertyDescription *value;
+        };
+        struct BlockEntry {
+            std::u16string_view key;
+            size_t order;
+            const std::pmr::vector<BlockPropertyDescription> *values;
+        };
+        std::vector<CommonEntry> common;
+        std::vector<BlockEntry> block;
+
+    public:
+        explicit BlockPropertyDescriptionIndex(const BlockPropertyDescriptions &descriptions);
+
+        [[nodiscard]] const BlockPropertyDescription &getPropertyDescription(
+                std::u16string_view blockIdWithNamespace, std::u16string_view blockId, std::u16string_view propertyName) const;
+    };
+
     class BlockId : public NamespaceId {
     public:
         std::optional<std::pmr::vector<Property>> properties;
@@ -119,7 +142,8 @@ namespace CHelper {
         std::optional<Node::NodeWithType> node;
 
     public:
-        const Node::NodeWithType &getNode(const BlockPropertyDescriptions &blockPropertyDescriptions);
+        const Node::NodeWithType &getNode(const BlockPropertyDescriptions &blockPropertyDescriptions,
+                                          const BlockPropertyDescriptionIndex *index = nullptr);
 
         static Node::NodeWithType getNodeAllBlockState();
     };

@@ -233,41 +233,99 @@ namespace CHelper {
                 utf8::utf16to8(propertyName)));
     }
 
+    BlockPropertyDescriptionIndex::BlockPropertyDescriptionIndex(const BlockPropertyDescriptions &descriptions) {
+        common.reserve(descriptions.common.size());
+        for (size_t i = 0; i < descriptions.common.size(); ++i) {
+            const auto &entry = descriptions.common[i];
+            common.push_back({entry.propertyName, i, &entry});
+        }
+        size_t blockCount = 0;
+        for (const auto &entry: descriptions.block) blockCount += entry.blocks.size();
+        block.reserve(blockCount);
+        for (size_t i = 0; i < descriptions.block.size(); ++i) {
+            const auto &entry = descriptions.block[i];
+            for (const auto &id: entry.blocks) block.push_back({id, i, &entry.properties});
+        }
+        const auto less = [](const auto &left, const auto &right) {
+            return left.key != right.key ? left.key < right.key : left.order < right.order;
+        };
+        std::sort(common.begin(), common.end(), less);
+        std::sort(block.begin(), block.end(), less);
+        block.erase(std::unique(block.begin(), block.end(), [](const BlockEntry &left, const BlockEntry &right) {
+                        return left.key == right.key && left.order == right.order;
+                    }),
+                    block.end());
+    }
+
+    const BlockPropertyDescription &BlockPropertyDescriptionIndex::getPropertyDescription(
+            const std::u16string_view blockIdWithNamespace, const std::u16string_view blockId,
+            const std::u16string_view propertyName) const {
+        const auto findBlock = [&](const std::u16string_view id) {
+            return std::lower_bound(block.begin(), block.end(), id,
+                                    [](const BlockEntry &entry, const std::u16string_view key) { return entry.key < key; });
+        };
+        auto plain = findBlock(blockId);
+        auto qualified = findBlock(blockIdWithNamespace);
+        const auto matches = [&](const auto &it, const std::u16string_view id) {
+            return it != block.end() && it->key == id;
+        };
+        // 两种 ID 可能命中不同条目，按源顺序合并，并去掉同时匹配两种 ID 的同一条目。
+        while (matches(plain, blockId) || matches(qualified, blockIdWithNamespace)) {
+            const BlockEntry *entry;
+            if (matches(plain, blockId) && (!matches(qualified, blockIdWithNamespace) || plain->order <= qualified->order)) {
+                entry = &*plain++;
+                if (matches(qualified, blockIdWithNamespace) && qualified->order == entry->order) ++qualified;
+            } else {
+                entry = &*qualified++;
+            }
+            const auto property = std::ranges::find_if(*entry->values,
+                                                       [&](const auto &value) { return value.propertyName == propertyName; });
+            if (property != entry->values->end()) return *property;
+        }
+        const auto property = std::lower_bound(common.begin(), common.end(), propertyName,
+                                               [](const CommonEntry &entry, const std::u16string_view key) { return entry.key < key; });
+        if (property != common.end() && property->key == propertyName) return *property->value;
+        throw std::runtime_error(fmt::format(
+                "fail to find block property value by block id {} and property name {}",
+                utf8::utf16to8(blockIdWithNamespace), utf8::utf16to8(propertyName)));
+    }
+
+    template<class String>
+    static std::shared_ptr<NormalId> makeQuotedId(const std::u16string_view name, const std::optional<String> &description) {
+        auto result = allocateSharedFromDefault<NormalId>();
+        result->name.reserve(name.size() + 2);
+        result->name.push_back(u'"');
+        result->name.append(name);
+        result->name.push_back(u'"');
+        result->description = copyPmrU16StringOptional(description);
+        return result;
+    }
+
     Node::NodeText *getBlockStateValueNode(
             const BlockPropertyValueDescription &blockPropertyValueDescription,
             const PropertyType::PropertyType &type,
             const std::optional<std::pmr::u16string> &defaultDescription,
             bool isDefaultValue,
             bool isInvalid) {
-        std::optional<std::pmr::u16string> description;
+        std::optional<std::u16string_view> description;
         if (blockPropertyValueDescription.description.has_value()) {
-            description = blockPropertyValueDescription.description.value();
+            description = std::u16string_view(blockPropertyValueDescription.description.value());
         } else if (defaultDescription.has_value()) {
-            description = defaultDescription.value();
+            description = std::u16string_view(defaultDescription.value());
         }
-        if (isDefaultValue) {
-            if (description.has_value()) {
-                std::pmr::u16string prefix = u"（默认值）";
-                prefix.append(description.value());
-                description = std::move(prefix);
-            } else {
-                description = u"（默认值）";
-            }
-        }
-        if (isInvalid) {
-            if (description.has_value()) {
-                std::pmr::u16string prefix = u"（无效）";
-                prefix.append(description.value());
-                description = std::move(prefix);
-            } else {
-                description = u"（无效）";
-            }
+        std::pmr::u16string annotatedDescription;
+        if (isDefaultValue || isInvalid) {
+            annotatedDescription.reserve(description.value_or(u"").size() + (isDefaultValue ? 5 : 0) + (isInvalid ? 4 : 0));
+            if (isInvalid) annotatedDescription.append(u"（无效）");
+            if (isDefaultValue) annotatedDescription.append(u"（默认值）");
+            if (description.has_value()) annotatedDescription.append(*description);
+            description = std::u16string_view(annotatedDescription);
         }
         switch (type) {
             case PropertyType::STRING:
                 return new Node::NodeText(
                         "BLOCK_STATE_ENTRY_VALUE_STRING", u"方块状态键值对的键（字符串）",
-                        NormalId::make(u'\"' + *blockPropertyValueDescription.valueName.string + u'\"', description));
+                        makeQuotedId(*blockPropertyValueDescription.valueName.string, description));
             case PropertyType::INTEGER:
                 return new Node::NodeText(
                         "BLOCK_STATE_ENTRY_VALUE_INTEGER", u"方块状态键值对的键（整数）",
@@ -349,7 +407,7 @@ namespace CHelper {
         //key = value
         auto nodeKey = new Node::NodeText(
                 "BLOCK_STATE_ENTRY_KEY", u"方块状态键值对的键",
-                NormalId::make(u'\"' + blockPropertyDescription.propertyName + u'\"', blockPropertyDescription.description));
+                makeQuotedId(blockPropertyDescription.propertyName, blockPropertyDescription.description));
         auto nodeValue = new Node::NodeOr(std::move(valueNodes), false);
         auto result = new Node::NodeEntry(*nodeKey, nodeBlockStateEntrySeparator, *nodeValue);
         nodeChildren.emplace_back(*nodeKey);
@@ -357,7 +415,8 @@ namespace CHelper {
         return result;
     }
 
-    const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions) {
+    const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions,
+                                               const BlockPropertyDescriptionIndex *index) {
         if (!node.has_value()) {
             std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2;
             //已知的方块状态
@@ -367,8 +426,13 @@ namespace CHelper {
                 blockStateEntryChildNode1.reserve(properties.value().size());
                 //所属条目只解析一次，避免每属性重复线性扫全部条目
                 std::vector<const std::pmr::vector<BlockPropertyDescription> *> entryProperties;
-                blockPropertyDescriptions.collectEntryProperties(getIdWithNamespace()->name, name, entryProperties);
+                if (index == nullptr) {
+                    blockPropertyDescriptions.collectEntryProperties(getIdWithNamespace()->name, name, entryProperties);
+                }
                 const auto findDescription = [&](const std::u16string_view propertyName) -> const BlockPropertyDescription & {
+                    if (index != nullptr) {
+                        return index->getPropertyDescription(getIdWithNamespace()->name, name, propertyName);
+                    }
                     for (const auto *entry: entryProperties) {
                         const auto &it = std::ranges::find_if(*entry, [&propertyName](const BlockPropertyDescription &item1) -> bool {
                             return item1.propertyName == propertyName;

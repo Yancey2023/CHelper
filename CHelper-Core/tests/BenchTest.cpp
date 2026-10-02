@@ -70,6 +70,37 @@ void operator delete[](void *p, const std::nothrow_t &) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
+void *operator new(size_t size, std::align_val_t alignment) {
+    return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+}
+
+void *operator new[](size_t size, std::align_val_t alignment) {
+    return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+}
+
+void *operator new(size_t size, std::align_val_t alignment, const std::nothrow_t &) noexcept {
+    try {
+        return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+void *operator new[](size_t size, std::align_val_t alignment, const std::nothrow_t &) noexcept {
+    try {
+        return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+void operator delete(void *p, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete(void *p, size_t, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, size_t, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete(void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+
 using namespace CHelper;
 using namespace CHelper::Test;
 
@@ -189,8 +220,12 @@ TEST(Bench, SerializationMemory) {
                     static_cast<unsigned long long>(XXH64(buffer.data(), buffer.size(), 0)));
         using Commands = std::remove_cvref_t<decltype(commands)>;
         const auto read = [&](Stats *stats) {
+            // 每轮显式拥有读取池，避免借用源 CPack 的加载作用域，也把各轮分配隔离。
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope memoryScope(memory);
             Commands restored;
             NodeReadContext ctx;
+            ctx.cpackMemory = memory;
             if (stats) startAllocCounting();
             const auto start = std::chrono::steady_clock::now();
             const auto error = glz::read<opts>(restored, buffer, ctx);

@@ -1468,25 +1468,72 @@ namespace glz {
             parse<CHelper::BinaryFormat>::template op<Opts>(value.nodes, ctx, it, end);
             std::uint32_t wrappedCount = 0;
             parse<CHelper::BinaryFormat>::template op<Opts>(wrappedCount, ctx, it, end);
-            std::vector<CHelper::Node::WrappedNodeWire> wrapped(wrappedCount);
-            for (auto &wrappedWire: wrapped) {
+            if (bool(ctx.error)) [[unlikely]] { return; }
+            if (wrappedCount > static_cast<size_t>(end - it) / (2 * sizeof(std::uint32_t))) [[unlikely]] {
+                ctx.error = error_code::unexpected_end;
+                return;
+            }
+            // 先固定最终节点数组的地址，前向/后向引用都直接写入最终指针图。
+            // LF 仅用于构造占位节点，实际 definition 会在下面逐项覆盖。
+            value.wrappedNodes.clear();
+            value.startNodes.clear();
+            value.wrappedNodes.reserve(wrappedCount);
+            for (std::uint32_t i = 0; i < wrappedCount; ++i) {
+                value.wrappedNodes.emplace_back(CHelper::Node::NodeLF::getInstance()->innerNode);
+            }
+            const auto getWrappedNode = [&](const std::uint32_t index) {
+                if (index == UINT32_MAX) {
+                    return CHelper::Node::NodeLF::getInstance();
+                }
+                if (index >= wrappedCount) [[unlikely]] {
+                    throw std::runtime_error("invalid wrapped node index");
+                }
+                return &value.wrappedNodes[index];
+            };
+            for (auto &wrappedNode: value.wrappedNodes) {
                 std::int32_t defIdx = -1;
                 parse<CHelper::BinaryFormat>::template op<Opts>(defIdx, ctx, it, end);
-                wrappedWire.definition = defIdx;
+                if (bool(ctx.error)) [[unlikely]] { return; }
+                if (defIdx < 0 || static_cast<size_t>(defIdx) >= value.nodes.nodes.size()) [[unlikely]] {
+                    throw std::runtime_error("invalid node definition index");
+                }
+                wrappedNode.innerNode = value.nodes.nodes[static_cast<size_t>(defIdx)];
                 std::uint32_t nextCount = 0;
                 parse<CHelper::BinaryFormat>::template op<Opts>(nextCount, ctx, it, end);
-                wrappedWire.next.resize(nextCount);
-                for (auto &nextIdx: wrappedWire.next) {
-                    parse<CHelper::BinaryFormat>::template op<Opts>(nextIdx, ctx, it, end);
+                if (bool(ctx.error)) [[unlikely]] { return; }
+                if (nextCount > static_cast<size_t>(end - it) / sizeof(std::uint32_t)) [[unlikely]] {
+                    ctx.error = error_code::unexpected_end;
+                    return;
                 }
+                wrappedNode.nextNodes.reserve(nextCount);
+                for (std::uint32_t i = 0; i < nextCount; ++i) {
+                    std::uint32_t nextIdx = 0;
+                    parse<CHelper::BinaryFormat>::template op<Opts>(nextIdx, ctx, it, end);
+                    wrappedNode.nextNodes.push_back(getWrappedNode(nextIdx));
+                }
+            }
+            // 前向引用的 definition 至此已经全部填好，再计算与 pushNextNode 相同的 LF 缓存。
+            for (auto &wrappedNode: value.wrappedNodes) {
+                wrappedNode.hasNextLF = std::ranges::any_of(wrappedNode.nextNodes, [](const auto *next) {
+                    return next->innerNode.nodeTypeId == CHelper::Node::NodeTypeId::LF;
+                });
             }
             std::uint32_t startCount = 0;
             parse<CHelper::BinaryFormat>::template op<Opts>(startCount, ctx, it, end);
-            std::vector<std::uint32_t> startIndices(startCount);
-            for (auto &startIdx: startIndices) {
-                parse<CHelper::BinaryFormat>::template op<Opts>(startIdx, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] { return; }
+            if (startCount > static_cast<size_t>(end - it) / sizeof(std::uint32_t)) [[unlikely]] {
+                ctx.error = error_code::unexpected_end;
+                return;
             }
-            CHelper::Node::buildNodePerCommandGraph(value, wrapped, startIndices);
+            value.startNodes.reserve(startCount);
+            for (std::uint32_t i = 0; i < startCount; ++i) {
+                std::uint32_t startIdx = 0;
+                parse<CHelper::BinaryFormat>::template op<Opts>(startIdx, ctx, it, end);
+                if (startIdx != UINT32_MAX && startIdx >= wrappedCount) [[unlikely]] {
+                    throw std::runtime_error("invalid start node index");
+                }
+                value.startNodes.push_back(getWrappedNode(startIdx));
+            }
         }
     };
 }// namespace glz

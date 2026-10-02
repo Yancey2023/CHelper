@@ -20,6 +20,8 @@
 
 // 自带依赖，不依赖 pch.h 的包含顺序：BinaryFormat.h 会在 pch.h 之前被包含
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -38,8 +40,8 @@ namespace CHelper {
          *
          * utf8::utf8to16 配 back_inserter 是逐字符 push_back，目标串按几何增长反复重分配。
          * 资源包里含上万条字符串（方块状态值、ID、描述等），逐字符增长会产生上万次分配。
-         * 纯 ASCII 是这些字符串的绝大多数形态（ID、状态值），走一次性赋值的快速路径；
-         * 含非 ASCII 时仍交给解码器，此时字符串长度通常很短，重分配次数可以忽略
+         * ASCII 批量判定后直接宽化；非 ASCII 先计算 UTF-16 单元数再交给校验解码器，
+         * 避免按 UTF-8 字节数为中文串申请约三倍容量，也保留短串的内联存储。
          */
         template<class String>
         inline void convertToU16(const std::string_view input, String &output) {
@@ -47,18 +49,29 @@ namespace CHelper {
             if (input.empty()) {
                 return;
             }
-            // 单遍处理：逐字节宽化写入（不能用 memcpy，输入 1 字节输出 2 字节）的同时判定 ASCII。
-            // 纯 ASCII（ID、状态值等的绝大多数形态）只扫一遍；遇到非 ASCII 字节即清空回退完整解码
-            output.resize(input.size());
-            for (std::size_t index = 0; index < input.size(); ++index) {
-                const auto ch = static_cast<unsigned char>(input[index]);
-                if (ch >= 0x80) [[unlikely]] {
-                    output.clear();
-                    utf8::utf8to16(input.begin(), input.end(), std::back_inserter(output));
-                    return;
-                }
-                output[index] = static_cast<char16_t>(ch);
+            std::size_t asciiEnd = 0;
+            // memcpy 支持未对齐输入，不要求资源包中的字符串起始地址对齐。
+            while (input.size() - asciiEnd >= sizeof(std::uint64_t)) {
+                std::uint64_t bytes;
+                std::memcpy(&bytes, input.data() + asciiEnd, sizeof(bytes));
+                if ((bytes & UINT64_C(0x8080808080808080)) != 0) break;
+                asciiEnd += sizeof(bytes);
             }
+            while (asciiEnd < input.size() && static_cast<unsigned char>(input[asciiEnd]) < 0x80) ++asciiEnd;
+            if (asciiEnd == input.size()) {
+                output.resize(input.size());
+                std::copy(input.begin(), input.end(), output.begin());
+                return;
+            }
+            std::size_t units = asciiEnd;
+            for (std::size_t index = asciiEnd; index < input.size(); ++index) {
+                const auto byte = static_cast<unsigned char>(input[index]);
+                if ((byte & 0xc0) != 0x80) ++units;
+                if (byte >= 0xf0 && byte <= 0xf4) ++units;// 四字节码点对应两个 UTF-16 单元
+            }
+            output.reserve(units);
+            // 单元计数只决定容量，非法/截断 UTF-8 仍由 utf8cpp 拒绝。
+            utf8::utf8to16(input.begin(), input.end(), std::back_inserter(output));
         }
 
         /**

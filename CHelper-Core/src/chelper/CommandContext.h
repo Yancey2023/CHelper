@@ -65,9 +65,8 @@ namespace CHelper {
         bool active = false;
 
     public:
-        CommandContextMemoryScope(std::pmr::memory_resource *resource,
-                                  std::pmr::memory_resource *restore)
-            : resource(resource), restore(restore), active(true) {
+        explicit CommandContextMemoryScope(std::pmr::memory_resource *resource)
+            : resource(resource), restore(CPackMemoryRouter::getCurrent()), active(true) {
             CPackMemoryRouter::install();
             depth = CPackMemoryRouter::enter(resource);
         }
@@ -75,15 +74,13 @@ namespace CHelper {
         void release() noexcept {
             if (active) {
                 CPackMemoryRouter::leave(depth, restore);
-                if (restore != nullptr) {
-                    CPackMemoryRouter::setCurrent(nullptr);
-                }
                 active = false;
             }
         }
 
         void prepareForDestruction() noexcept {
             if (!active) {
+                restore = CPackMemoryRouter::getCurrent();
                 CPackMemoryRouter::install();
                 depth = CPackMemoryRouter::enter(resource);
                 active = true;
@@ -91,9 +88,7 @@ namespace CHelper {
         }
 
         ~CommandContextMemoryScope() {
-            if (active) {
-                CPackMemoryRouter::leave(depth, restore);
-            }
+            release();
         }
 
         CommandContextMemoryScope(const CommandContextMemoryScope &) = delete;
