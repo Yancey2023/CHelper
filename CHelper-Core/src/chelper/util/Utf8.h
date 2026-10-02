@@ -59,8 +59,10 @@ namespace CHelper {
             }
             while (asciiEnd < input.size() && static_cast<unsigned char>(input[asciiEnd]) < 0x80) ++asciiEnd;
             if (asciiEnd == input.size()) {
-                output.resize(input.size());
-                std::copy(input.begin(), input.end(), output.begin());
+                output.resize_and_overwrite(input.size(), [&](char16_t *buffer, std::size_t) noexcept {
+                    std::copy(input.begin(), input.end(), buffer);
+                    return input.size();
+                });
                 return;
             }
             std::size_t units = asciiEnd;
@@ -69,9 +71,11 @@ namespace CHelper {
                 if ((byte & 0xc0) != 0x80) ++units;
                 if (byte >= 0xf0 && byte <= 0xf4) ++units;// 四字节码点对应两个 UTF-16 单元
             }
-            output.reserve(units);
-            // 单元计数只决定容量，非法/截断 UTF-8 仍由 utf8cpp 拒绝。
-            utf8::utf8to16(input.begin(), input.end(), std::back_inserter(output));
+            output.resize(units);
+            std::copy_n(input.begin(), asciiEnd, output.data());
+            // 直接写入已定长的缓冲区，免去每个码元 push_back 的容量检查。
+            // 非法 UTF-8 在写入该码点前抛出；上面的计数始终覆盖已解码的有效前缀。
+            utf8::utf8to16(input.begin() + asciiEnd, input.end(), output.data() + asciiEnd);
         }
 
         /**

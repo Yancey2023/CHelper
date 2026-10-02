@@ -29,8 +29,8 @@ namespace CHelper {
         std::optional<std::pmr::u16string> description;
 
     private:
-        XXH64_hash_t nameHash = 0;
-        std::optional<XXH3_state_t> hashState;
+        // 名称匹配只缓存摘要；流式状态属于一次补全请求，不随每个 ID 常驻。
+        std::optional<XXH64_hash_t> nameHash;
 
     public:
         NormalId() = default;
@@ -41,7 +41,8 @@ namespace CHelper {
 
         [[nodiscard]] bool fastMatch(XXH64_hash_t strHash);
 
-        [[nodiscard]] XXH3_state_t *getHashState();
+        // 追加名称和描述，调用方负责初始化并持有流式状态。
+        void updateHashState(XXH3_state_t &state) const;
 
         static std::shared_ptr<NormalId> make(std::u16string_view name, std::u16string_view description);
 

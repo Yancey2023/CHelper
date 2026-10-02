@@ -885,7 +885,9 @@ TEST(BinaryUtilTest, NodeConstructorOwnsStringViews) {
 TEST(BinaryUtilTest, Utf16ConversionPreservesUnicodeAndRejectsInvalidUtf8) {
     const std::vector<std::u16string> cases{
             u"", u"1234567", u"12345678", u"abcdefghijklmnopq", u"中文短描述",
-            u"12345678中文", u"mixed 中🙂文", u"🙂🙂🙂🙂", std::u16string(u"a\0中", 3)};
+            u"12345678中文", u"mixed 中🙂文", u"🙂🙂🙂🙂", std::u16string(u"a\0中", 3),
+            std::u16string(1024, u'a') + u"中🙂文", std::u16string(1024, u'中'),
+            u"\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff\U00010000\U0010ffff"};
     for (const auto &expected: cases) {
         const auto input = utf8::utf16to8(expected);
         std::u16string text = u"old content";
@@ -900,8 +902,16 @@ TEST(BinaryUtilTest, Utf16ConversionPreservesUnicodeAndRejectsInvalidUtf8) {
         EXPECT_EQ(text, expected);
     }
     for (const std::string invalid: {"\x80", "\xc0\xaf", "\xe4\xb8", "\xed\xa0\x80", "\xf4\x90\x80\x80"}) {
-        std::u16string text;
-        EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(invalid, text));
+        for (const auto &prefix: {std::string{}, std::string(1024, 'a') + utf8::utf16to8(std::u16string_view(u"中🙂文"))}) {
+            std::u16string text;
+            EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(prefix + invalid, text));
+            std::pmr::u16string pmrText;
+            EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(prefix + invalid, pmrText));
+            CHelper::U16Conv::convertToU16("reused", text);
+            CHelper::U16Conv::convertToU16("reused", pmrText);
+            EXPECT_EQ(text, u"reused");
+            EXPECT_EQ(pmrText, u"reused");
+        }
     }
 }
 

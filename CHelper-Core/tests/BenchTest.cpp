@@ -167,6 +167,36 @@ TEST(Bench, LoadCPack) {
     }
 }
 
+// 单独测量二进制解码，排除 afterApply 中的缓存构建与节点初始化。
+TEST(Bench, DecodeCPack) {
+    Node::initializeStaticNodes();
+    std::printf("sizeof(NormalId)=%zu bytes\n", sizeof(NormalId));
+    for (const auto &path: {vanillaBin(), experimentBin()}) {
+        if (!std::filesystem::exists(path)) continue;
+        const auto data = readBinaryFile(path);
+        Stats stats{"decode cpack binary (" + path.stem().string() + ")"};
+        const auto read = [&](bool measure) {
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope scope(memory);
+            CPackData restored;
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = memory;
+            if (measure) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto error = glz::read<glz::opts{.format = BinaryFormat}>(restored, data, ctx);
+            const auto end = std::chrono::steady_clock::now();
+            if (measure) stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, data);
+            ASSERT_NE(restored.commands, nullptr);
+            ASSERT_FALSE(restored.commands->empty());
+        };
+        for (int i = 0; i < 2; ++i) read(false);
+        for (int i = 0; i < 20; ++i) read(true);
+        stats.print();
+    }
+}
+
 /**
  * CPack 写出：目录 JSON、单文件 JSON 与二进制文件
  */

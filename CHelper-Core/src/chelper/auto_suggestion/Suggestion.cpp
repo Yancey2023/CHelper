@@ -40,7 +40,8 @@ namespace CHelper::AutoSuggestion {
 
     [[nodiscard]] XXH64_hash_t Suggestion::hashCode() const {
         XXH3_state_t hashState;
-        XXH3_copyState(&hashState, content->getHashState());
+        XXH3_64bits_reset(&hashState);
+        content->updateHashState(hashState);
         XXH3_64bits_update(&hashState, &start, sizeof(start));
         XXH3_64bits_update(&hashState, &end, sizeof(end));
         return XXH3_64bits_digest(&hashState);
