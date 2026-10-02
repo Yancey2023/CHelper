@@ -21,7 +21,7 @@
 #include <chelper/resources/CPack.h>
 #include <chelper/serialization/BinaryFormat.h>
 #include <chelper/serialization/IO.h>
-#include <chelper/serialization/SerializationInternal.h>
+#include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>
 
 namespace std {

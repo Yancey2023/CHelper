@@ -19,7 +19,7 @@
 #pragma once
 
 #include <chelper/CHelperCore.h>
-#include <chelper/serialization/SerializationInternal.h>
+#include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
