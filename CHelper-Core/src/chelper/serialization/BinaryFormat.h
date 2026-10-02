@@ -201,6 +201,27 @@ namespace glz {
         }
     };
 
+    // char16_t（单字符）与 JSON/MSGPACK 一致按长度为 1 的字符串承载，三种格式语义统一
+    template<>
+    struct to<CHelper::BinaryFormat, char16_t> {
+        template<auto Opts>
+        static void op(auto &&value, is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+            serialize<CHelper::BinaryFormat>::template op<Opts>(std::u16string(1, value), ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<CHelper::BinaryFormat, char16_t> {
+        template<auto Opts>
+        static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
+            std::u16string text;
+            from<CHelper::BinaryFormat, std::u16string>::template op<Opts>(text, ctx, it, end);
+            if (!text.empty()) {
+                value = text.front();
+            }
+        }
+    };
+
     // ================= optional =================
     template<class T>
     struct to<CHelper::BinaryFormat, std::optional<T>> {

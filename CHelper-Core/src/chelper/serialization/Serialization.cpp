@@ -215,35 +215,8 @@ namespace CHelper::Node {
     using GrammarNodeTypes = Meta::TypeList<NodeAnd, NodeOr, NodeList, NodeOptional, NodeSingleSymbol, NodeEqualEntry>;
 }// namespace CHelper::Node
 
-// 各节点类型的特有字段（写出用；键名与成员名一致，和旧版 CODEC_REGISTER_JSON_KEY 相同）
-#define CHELPER_NODE_FIELDS_BLOCK(n) , "nodeBlockType", n.nodeBlockType
-#define CHELPER_NODE_FIELDS_BOOLEAN(n) , "descriptionTrue", n.descriptionTrue, "descriptionFalse", n.descriptionFalse
-#define CHELPER_NODE_FIELDS_COMMAND(n)
-#define CHELPER_NODE_FIELDS_COMMAND_NAME(n)
-#define CHELPER_NODE_FIELDS_FLOAT(n) , "min", n.min, "max", n.max
-#define CHELPER_NODE_FIELDS_INTEGER(n) , "min", n.min, "max", n.max
-#define CHELPER_NODE_FIELDS_INTEGER_WITH_UNIT(n) , "units", n.units
-#define CHELPER_NODE_FIELDS_ITEM(n) , "nodeItemType", n.nodeItemType
-#define CHELPER_NODE_FIELDS_JSON(n) , "key", n.key
-#define CHELPER_NODE_FIELDS_JSON_BOOLEAN(n) , "descriptionTrue", n.descriptionTrue, "descriptionFalse", n.descriptionFalse
-#define CHELPER_NODE_FIELDS_JSON_FLOAT(n) , "min", n.min, "max", n.max
-#define CHELPER_NODE_FIELDS_JSON_INTEGER(n) , "min", n.min, "max", n.max
-#define CHELPER_NODE_FIELDS_JSON_LIST(n) , "data", n.data
-#define CHELPER_NODE_FIELDS_JSON_NULL(n)
-#define CHELPER_NODE_FIELDS_JSON_ENTRY(n) , "key", n.key, "value", n.value
-#define CHELPER_NODE_FIELDS_JSON_OBJECT(n) , "data", n.data
-#define CHELPER_NODE_FIELDS_JSON_STRING(n) , "data", n.data
-#define CHELPER_NODE_FIELDS_NAMESPACE_ID(n) , "key", n.key, "ignoreError", n.ignoreError, "contents", n.contents
-#define CHELPER_NODE_FIELDS_NORMAL_ID(n) , "key", n.key, "ignoreError", n.ignoreError, "contents", n.contents
-#define CHELPER_NODE_FIELDS_POSITION(n)
-#define CHELPER_NODE_FIELDS_RANGE(n)
-#define CHELPER_NODE_FIELDS_RELATIVE_FLOAT(n) , "canUseCaretNotation", n.canUseCaretNotation
-#define CHELPER_NODE_FIELDS_REPEAT(n) , "key", n.key
-#define CHELPER_NODE_FIELDS_STRING(n) , "allowMissingString", n.allowMissingString, "canContainSpace", n.canContainSpace, "ignoreLater", n.ignoreLater
-#define CHELPER_NODE_FIELDS_TARGET_SELECTOR(n) \
-    , "isMustPlayer", n.isMustPlayer, "isMustNPC", n.isMustNPC, "isOnlyOne", n.isOnlyOne, "isWildcard", n.isWildcard
-#define CHELPER_NODE_FIELDS_TEXT(n) , "data", n.data
-
+// 节点类型的字段声明只存在于 glz::meta 一处（键名与成员名一致，和旧版 CODEC_REGISTER_JSON_KEY 相同），
+// JSON/MSGPACK 的写出键、二进制的紧凑成员顺序都由它推导；glz::meta 特化须在全局作用域，使用全限定名
 #define CHELPER_GLZ_NODE_META(Type, ...)                                                                                                \
     template<>                                                                                                                          \
     struct glz::meta<Type> {                                                                                                            \
@@ -251,7 +224,6 @@ namespace CHelper::Node {
         static constexpr auto value = glz::object(&T::id, &T::brief, &T::description, &T::isMustAfterSpace __VA_OPT__(, ) __VA_ARGS__); \
     };
 
-// 节点类型元数据（读取用；glz::meta 特化须在全局作用域，使用全限定名）
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeBlock, &CHelper::Node::NodeBlock::nodeBlockType)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeBoolean, &CHelper::Node::NodeBoolean::descriptionTrue, &CHelper::Node::NodeBoolean::descriptionFalse)
 CHELPER_GLZ_NODE_META(CHelper::Node::NodeCommand)
@@ -319,98 +291,74 @@ struct glz::meta<CHelper::Node::NodeEqualEntry> {
     static constexpr auto value = glz::object("id", &T::id, "values", &T::equalDatas);
 };
 
-namespace CHelper {
-    //各可序列化节点类型的 JSON/MSGPACK 写出（"type" 位于首位），按节点类型特化，
-    //由 Node::dispatchNodeType 统一分发；未特化的类型不允许实例化主模板
-    template<class NodeType, std::uint32_t Fmt, auto Opts, class Ctx, class B>
-    struct NodeJsonValueWriter;
-}// namespace CHelper
-
-#define CHELPER_GLZ_NODE_WRITE(NodeType, Id)                                                                                         \
-    template<std::uint32_t Fmt, auto Opts, class Ctx, class B>                                                                       \
-    struct NodeJsonValueWriter<NodeType, Fmt, Opts, Ctx, B> {                                                                        \
-        static CHELPER_FORCEINLINE void op(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {                                \
-            static_assert(std::is_same_v<NodeType, Node::NodeTypeDetail<Node::NodeTypeId::Id>::Type>);                               \
-            const auto &n = *static_cast<const NodeType *>(t.data);                                                                  \
-            auto value = glz::obj{"type", Node::NodeTypeDetail<Node::NodeTypeId::Id>::name, "id", n.id, "brief", n.brief,            \
-                                  "description", n.description, "isMustAfterSpace", n.isMustAfterSpace CHELPER_NODE_FIELDS_##Id(n)}; \
-            glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix);                                                               \
-        }                                                                                                                            \
+namespace CHelper::detail {
+    // 节点写出视图的成员转发：按节点 glz::meta 的成员指针取底层节点的成员
+    template<auto Member>
+    struct NodeMemberForward {
+        template<class View>
+        constexpr decltype(auto) operator()(const View &self) const {
+            return std::invoke(Member, *self.node);
+        }
     };
 
-namespace CHelper {
-    // 节点类型写出函数（写出用，"type" 位于首位）
-    CHELPER_GLZ_NODE_WRITE(Node::NodeBlock, BLOCK)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeBoolean, BOOLEAN)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeCommand, COMMAND)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeCommandName, COMMAND_NAME)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeFloat, FLOAT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeInteger, INTEGER)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeIntegerWithUnit, INTEGER_WITH_UNIT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeItem, ITEM)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJson, JSON)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonBoolean, JSON_BOOLEAN)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonFloat, JSON_FLOAT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonInteger, JSON_INTEGER)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonList, JSON_LIST)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonNull, JSON_NULL)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonEntry, JSON_ENTRY)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonObject, JSON_OBJECT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeJsonString, JSON_STRING)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeNamespaceId, NAMESPACE_ID)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeNormalId, NORMAL_ID)
-    CHELPER_GLZ_NODE_WRITE(Node::NodePosition, POSITION)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeRange, RANGE)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeRelativeFloat, RELATIVE_FLOAT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeRepeat, REPEAT)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeString, STRING)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeTargetSelector, TARGET_SELECTOR)
-    CHELPER_GLZ_NODE_WRITE(Node::NodeText, TEXT)
+    // 节点写出视图：包装节点引用。meta 由节点 glz::meta 程序化生成：
+    // "type"（节点类型名）置于首位，其余键/成员从节点 meta 推导。
+    // 仅用于写出——读取直接进入节点本身，从而避开 msgpack 读取端对 lambda 成员的限制
+    template<class NodeType>
+    struct NodeWriteView {
+        const NodeType *node;
+    };
 
-    template<std::uint32_t Fmt, auto Opts, class Ctx, class B>
-    inline void writeGrammarNodeValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
-        auto write = [&](const auto &value) { glz::serialize<Fmt>::template op<Opts>(value, ctx, b, ix); };
-        switch (t.nodeTypeId) {
-            case Node::NodeTypeId::AND: {
-                const auto &n = *static_cast<const Node::NodeAnd *>(t.data);
-                write(glz::obj{"type", "AND", "id", n.id, "nodes", n.childNodeIds});
-                break;
-            }
-            case Node::NodeTypeId::OR: {
-                const auto &n = *static_cast<const Node::NodeOr *>(t.data);
-                write(glz::obj{"type", "OR", "id", n.id, "nodes", n.childNodeIds, "isAttachToEnd", n.isAttachToEnd,
-                               "isUseFirst", n.isUseFirst, "noSuggestion", n.noSuggestion});
-                break;
-            }
-            case Node::NodeTypeId::LIST: {
-                const auto &n = *static_cast<const Node::NodeList *>(t.data);
-                write(glz::obj{"type", "LIST", "id", n.id, "left", n.nodeLeftId, "element", n.nodeElementId,
-                               "separator", n.nodeSeparatorId, "right", n.nodeRightId});
-                break;
-            }
-            case Node::NodeTypeId::OPTIONAL: {
-                const auto &n = *static_cast<const Node::NodeOptional *>(t.data);
-                write(glz::obj{"type", "OPTIONAL", "id", n.id, "node", n.optionalNodeId});
-                break;
-            }
-            case Node::NodeTypeId::SINGLE_SYMBOL: {
-                const auto &n = *static_cast<const Node::NodeSingleSymbol *>(t.data);
-                write(glz::obj{"type", "SINGLE_SYMBOL", "id", n.id, "symbol", std::u16string(1, n.symbol), "description", n.description,
-                               "isAddSpace", n.isAddSpace});
-                break;
-            }
-            case Node::NodeTypeId::EQUAL_ENTRY: {
-                const auto &n = *static_cast<const Node::NodeEqualEntry *>(t.data);
-                write(glz::obj{"type", "EQUAL_ENTRY", "id", n.id, "values", n.equalDatas});
-                break;
-            }
-            default:
-                ctx.error = glz::error_code::no_matching_variant_type;
-                break;
+    // 视图 meta 条目：I==0 → "type" 键；I==1 → 类型名 lambda；
+    // 其后每两项对应一个节点成员（键, 转发 functor），键与成员指针取自 glz::reflect
+    //（同时兼容无键 meta——键名由成员指针推导——与手写带键 meta）
+    template<class NodeType, size_t I>
+    constexpr auto viewMetaEntry() {
+        using R = glz::reflect<NodeType>;
+        if constexpr (I == 0) {
+            return glz::sv{"type"};
+        } else if constexpr (I == 1) {
+            return [](const NodeWriteView<NodeType> &) constexpr { return Node::NodeTypeDetail<NodeType::nodeTypeId>::name; };
+        } else if constexpr (I % 2 == 0) {
+            return R::keys[(I - 2) / 2];
+        } else {
+            return NodeMemberForward<glz::get<(I - 2) / 2>(R::values)>{};
         }
     }
 
-    // 把节点对象（含 "type" 键）写入缓冲区。
+    template<class NodeType>
+    constexpr auto makeNodeWriteViewMeta() {
+        using View = NodeWriteView<NodeType>;
+        constexpr auto memberCount = glz::reflect<NodeType>::size;
+        return [&]<size_t... Is>(std::index_sequence<Is...>) constexpr {
+            return glz::detail::Object{glz::tuple{viewMetaEntry<NodeType, Is>()...}};
+        }(std::make_index_sequence<2 * memberCount + 2>{});
+    }
+}// namespace CHelper::detail
+
+template<class NodeType>
+struct glz::meta<CHelper::detail::NodeWriteView<NodeType>> {
+    static constexpr auto value = CHelper::detail::makeNodeWriteViewMeta<NodeType>();
+};
+
+namespace CHelper {
+    // 按具体节点类型写出节点对象（由 Node::dispatchNodeType 分派）。
+    // JSON/MSGPACK 经写出视图自带 "type" 首键；二进制由 writeNodeWithType 先写 uint8 类型 ID，
+    // 成员按 glz::meta 顺序紧凑排列（无键名）。
+    // 二进制格式非自描述，修改 glz::meta 字段列表后已分发的 .cpack 需要用资源生成器重新生成
+    template<class NodeType, std::uint32_t Fmt, auto Opts, class Ctx, class B>
+    CHELPER_FORCEINLINE void writeNodeObjectValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        static_assert(std::is_same_v<NodeType, typename Node::NodeTypeDetail<NodeType::nodeTypeId>::Type>);
+        const auto &n = *static_cast<const NodeType *>(t.data);
+        if constexpr (Fmt == CHelper::BinaryFormat) {
+            glz::serialize<CHelper::BinaryFormat>::template op<Opts>(n, ctx, b, ix);
+        } else {
+            detail::NodeWriteView<NodeType> view{&n};
+            glz::serialize<Fmt>::template op<Opts>(view, ctx, b, ix);
+        }
+    }
+
+    // 把节点对象写入缓冲区。
     // 用带 CHELPER_FORCEINLINE operator() 的 functor 而不是泛型 lambda：
     // 写出函数体很大，MSVC 不会把 lambda 体自动内联进 switch 分支，
     // 每个节点的写出会多穿两层真实调用，基准测试中可测出明显回退
@@ -423,10 +371,12 @@ namespace CHelper {
 
         template<class NodeType>
         CHELPER_FORCEINLINE void operator()() const {
-            if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes>) {
-                writeGrammarNodeValue<Fmt, Opts>(t, ctx, b, ix);
-            } else if constexpr (Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
-                NodeJsonValueWriter<NodeType, Fmt, Opts, Ctx, B>::op(t, ctx, b, ix);
+            if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes> ||
+                          Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
+                writeNodeObjectValue<NodeType, Fmt, Opts>(t, ctx, b, ix);
+            } else if constexpr (Fmt == CHelper::BinaryFormat) {
+                //运行期节点不会出现在资源数据里，写出时类型只可能来自内存中的合法节点
+                CHELPER_UNREACHABLE();
             } else {
                 //运行期节点（WRAPPED / LF / PER_COMMAND 等）不作为资源对象写出
                 ctx.error = glz::error_code::no_matching_variant_type;
@@ -434,12 +384,24 @@ namespace CHelper {
         }
     };
 
+    // 节点写出总入口：二进制先写 uint8 类型 ID；JSON/MSGPACK 的类型名由节点对象自带的 "type" 键承载。
+    // 三种格式的成员键名/顺序都由 glz::meta 推导
     template<std::uint32_t Fmt, auto Opts, class Ctx, class B>
-    inline void writeNodeValue(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+    inline void writeNodeWithType(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
+        if constexpr (Fmt == CHelper::BinaryFormat) {
+            const std::uint8_t typeId = static_cast<std::uint8_t>(t.nodeTypeId);
+            glz::serialize<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, b, ix);
+        }
         Node::dispatchNodeType(
                 t.nodeTypeId,
                 WriteNodeValueFn<Fmt, Opts, Ctx, B>{t, ctx, b, ix},
-                [&] { ctx.error = glz::error_code::no_matching_variant_type; });
+                [&] {
+                    if constexpr (Fmt == CHelper::BinaryFormat) {
+                        CHELPER_UNREACHABLE();
+                    } else {
+                        ctx.error = glz::error_code::no_matching_variant_type;
+                    }
+                });
     }
 }// namespace CHelper
 
@@ -749,19 +711,12 @@ namespace CHelper {
         }
     }
 
-    // 按具体节点类型反序列化（由预读或完整扫描得到类型名后分派）
-    template<std::uint32_t Fmt, auto Opts>
-    inline void readNodeValue(Node::NodeWithType &t, const std::string_view typeName, glz::is_context auto &&ctx, auto &&it,
-                              auto &&end) {
-        const std::optional<Node::NodeTypeId::NodeTypeId> id = Node::getNodeTypeIdByName(typeName);
-        if (!id.has_value()) [[unlikely]] {
-            ctx.error = glz::error_code::no_matching_variant_type;
-            return;
-        }
-        //名称已通过 getNodeTypeIdByName 校验，id 必然落在合法枚举范围内，
-        //不在本格式处理范围的类型（如 WRAPPED）按不匹配处理（旧实现为 UB）
+    // 节点对象读取的统一分发：类型 id 已由调用方校验（名称查表或 uint8 范围检查），
+    // 可反序列化类型进入 readNodeObject，其余（WRAPPED / LF / PER_COMMAND 等运行期类型）按不匹配处理
+    template<std::uint32_t Fmt, auto Opts, class Ctx, class It, class End>
+    inline void readNodeByTypeId(Node::NodeWithType &t, const Node::NodeTypeId::NodeTypeId id, Ctx &ctx, It &it, End &end) {
         Node::dispatchNodeType(
-                id.value(),
+                id,
                 [&]<class NodeType>() {
                     if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes> ||
                                   Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
@@ -771,6 +726,18 @@ namespace CHelper {
                     }
                 },
                 [&] { ctx.error = glz::error_code::no_matching_variant_type; });
+    }
+
+    // 按类型名反序列化（JSON/MSGPACK：由预读或完整扫描得到类型名后分派）
+    template<std::uint32_t Fmt, auto Opts>
+    inline void readNodeValue(Node::NodeWithType &t, const std::string_view typeName, glz::is_context auto &&ctx, auto &&it,
+                              auto &&end) {
+        const std::optional<Node::NodeTypeId::NodeTypeId> id = Node::getNodeTypeIdByName(typeName);
+        if (!id.has_value()) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
+        readNodeByTypeId<Fmt, Opts>(t, id.value(), ctx, it, end);
     }
 
     // 预读一个不含转义的字符串（JSON 键名/类型名、msgpack str）：
@@ -877,26 +844,42 @@ namespace CHelper {
         });
     }
 
-    // 节点对象反序列化：写出端固定把 "type" 放在最前，因此先预读第一个成员即可确定类型，
+    // 节点读取总入口，三种格式共用：
+    // 二进制（非自描述）：先读 uint8 类型 ID，范围校验后分派；
+    // JSON/MSGPACK（自描述）：写出端固定把 "type" 放在最前，先预读第一个成员即可确定类型，
     // 整个节点只被完整解析一次；顺序不同或无法预读时回退到完整扫描（扫描 + 重置迭代器重读）
     template<std::uint32_t Fmt, auto Opts>
     inline void readNodeWithType(Node::NodeWithType &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-        constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
-        const auto start = it;
-        std::string_view peekedTypeName;
-        if (peekNodeTypeName<Fmt, opts>(peekedTypeName, ctx, it, end)) {
+        if constexpr (Fmt == CHelper::BinaryFormat) {
+            std::uint8_t typeId = 0;
+            glz::parse<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
+            //类型 id 来自外部数据，先做范围合法性检查（旧实现对非法值直接触发 UB）
+            if (typeId >= static_cast<std::uint8_t>(Node::NodeTypeId::NodeTypeIdCount)) [[unlikely]] {
+                ctx.error = glz::error_code::no_matching_variant_type;
+                return;
+            }
+            readNodeByTypeId<Fmt, Opts>(t, static_cast<Node::NodeTypeId::NodeTypeId>(typeId), ctx, it, end);
+        } else {
+            constexpr auto opts = glz::opts{.error_on_unknown_keys = false};
+            const auto start = it;
+            std::string_view peekedTypeName;
+            if (peekNodeTypeName<Fmt, opts>(peekedTypeName, ctx, it, end)) {
+                it = start;
+                readNodeValue<Fmt, opts>(t, peekedTypeName, ctx, it, end);
+                return;
+            }
             it = start;
-            readNodeValue<Fmt, opts>(t, peekedTypeName, ctx, it, end);
-            return;
+            std::string typeName;
+            scanNodeTypeName<Fmt, opts>(typeName, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
+            it = start;
+            readNodeValue<Fmt, opts>(t, typeName, ctx, it, end);
         }
-        it = start;
-        std::string typeName;
-        scanNodeTypeName<Fmt, opts>(typeName, ctx, it, end);
-        if (bool(ctx.error)) [[unlikely]] {
-            return;
-        }
-        it = start;
-        readNodeValue<Fmt, opts>(t, typeName, ctx, it, end);
     }
 }// namespace CHelper
 
@@ -905,7 +888,7 @@ namespace glz {
     struct to<JSON, CHelper::Node::NodeWithType> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            CHelper::writeNodeValue<JSON, Opts>(value, ctx, b, ix);
+            CHelper::writeNodeWithType<JSON, Opts>(value, ctx, b, ix);
         }
     };
 
@@ -913,7 +896,7 @@ namespace glz {
     struct to<MSGPACK, CHelper::Node::NodeWithType> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            CHelper::writeNodeValue<MSGPACK, Opts>(value, ctx, b, ix);
+            CHelper::writeNodeWithType<MSGPACK, Opts>(value, ctx, b, ix);
         }
     };
 
@@ -934,252 +917,13 @@ namespace glz {
             CHelper::readNodeWithType<MSGPACK, Opts>(value, ctx, it, end);
         }
     };
-}// namespace glz
 
-// ================= 节点的二进制格式读写 =================
-namespace CHelper {
-
-    // 每种节点类型的二进制布局 = 基类字段（id / brief / description / isMustAfterSpace）
-    // + 类型特有字段，按固定顺序紧凑读写（无键名，与 JSON 写出的字段列表一致）。
-    // 二进制格式非自描述，修改字段列表后已分发的 .cpack 需要用资源生成器重新生成。
-
-    template<class NodeType, auto Opts, class Ctx, class B>
-    struct NodeBinaryWriter;
-    template<class NodeType, auto Opts, class Ctx, class It, class End>
-    struct NodeBinaryReader;
-
-    // 二进制写出：按成员列表依次写出
-#define CHELPER_NODE_BINARY_WRITE(Type, ...)                                                          \
-    template<auto Opts, class Ctx, class B>                                                           \
-    struct NodeBinaryWriter<Node::Type, Opts, Ctx, B> {                                               \
-        static CHELPER_FORCEINLINE void op(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) { \
-            const auto &n = *static_cast<const Node::Type *>(t.data);                                 \
-            auto write = [&](auto &&...args) {                                                        \
-                (glz::serialize<CHelper::BinaryFormat>::template op<Opts>(args, ctx, b, ix), ...);    \
-            };                                                                                        \
-            write(n.id, n.brief, n.description, n.isMustAfterSpace __VA_OPT__(, ) __VA_ARGS__);       \
-        }                                                                                             \
-    };
-
-    // 二进制读取：校验加载阶段，构造节点并按成员列表依次读入（顺序与写出严格对应）
-#define CHELPER_NODE_BINARY_READ(Type, Id, ...)                                                  \
-    template<auto Opts, class Ctx, class It, class End>                                          \
-    struct NodeBinaryReader<Node::Type, Opts, Ctx, It, End> {                                    \
-        static CHELPER_FORCEINLINE void op(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {  \
-            if (!nodeCreateStageAllows<Node::NodeTypeId::Id>(ctx)) [[unlikely]] {                \
-                ctx.error = glz::error_code::no_matching_variant_type;                           \
-                return;                                                                          \
-            }                                                                                    \
-            auto *node = new Node::Type();                                                       \
-            auto &n = *node;                                                                     \
-            auto read = [&](auto &&...args) {                                                    \
-                (glz::parse<CHelper::BinaryFormat>::template op<Opts>(args, ctx, it, end), ...); \
-            };                                                                                   \
-            read(n.id, n.brief, n.description, n.isMustAfterSpace __VA_OPT__(, ) __VA_ARGS__);   \
-            if (bool(ctx.error)) [[unlikely]] {                                                  \
-                delete node;                                                                     \
-                return;                                                                          \
-            }                                                                                    \
-            t.nodeTypeId = Node::NodeTypeId::Id;                                                 \
-            t.data = node;                                                                       \
-        }                                                                                        \
-    };
-
-    CHELPER_NODE_BINARY_WRITE(NodeBlock, n.nodeBlockType)
-    CHELPER_NODE_BINARY_WRITE(NodeBoolean, n.descriptionTrue, n.descriptionFalse)
-    CHELPER_NODE_BINARY_WRITE(NodeCommand)
-    CHELPER_NODE_BINARY_WRITE(NodeCommandName)
-    CHELPER_NODE_BINARY_WRITE(NodeFloat, n.min, n.max)
-    CHELPER_NODE_BINARY_WRITE(NodeInteger, n.min, n.max)
-    CHELPER_NODE_BINARY_WRITE(NodeIntegerWithUnit, n.units)
-    CHELPER_NODE_BINARY_WRITE(NodeItem, n.nodeItemType)
-    CHELPER_NODE_BINARY_WRITE(NodeJson, n.key)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonBoolean, n.descriptionTrue, n.descriptionFalse)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonFloat, n.min, n.max)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonInteger, n.min, n.max)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonList, n.data)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonNull)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonEntry, n.key, n.value)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonObject, n.data)
-    CHELPER_NODE_BINARY_WRITE(NodeJsonString, n.data)
-    CHELPER_NODE_BINARY_WRITE(NodeNamespaceId, n.key, n.ignoreError, n.contents)
-    CHELPER_NODE_BINARY_WRITE(NodeNormalId, n.key, n.ignoreError, n.contents)
-    CHELPER_NODE_BINARY_WRITE(NodePosition)
-    CHELPER_NODE_BINARY_WRITE(NodeRange)
-    CHELPER_NODE_BINARY_WRITE(NodeRelativeFloat, n.canUseCaretNotation)
-    CHELPER_NODE_BINARY_WRITE(NodeRepeat, n.key)
-    CHELPER_NODE_BINARY_WRITE(NodeString, n.allowMissingString, n.canContainSpace, n.ignoreLater)
-    CHELPER_NODE_BINARY_WRITE(NodeTargetSelector, n.isMustPlayer, n.isMustNPC, n.isOnlyOne, n.isWildcard)
-    CHELPER_NODE_BINARY_WRITE(NodeText, n.data)
-
-    CHELPER_NODE_BINARY_READ(NodeBlock, BLOCK, n.nodeBlockType)
-    CHELPER_NODE_BINARY_READ(NodeBoolean, BOOLEAN, n.descriptionTrue, n.descriptionFalse)
-    CHELPER_NODE_BINARY_READ(NodeCommand, COMMAND)
-    CHELPER_NODE_BINARY_READ(NodeCommandName, COMMAND_NAME)
-    CHELPER_NODE_BINARY_READ(NodeFloat, FLOAT, n.min, n.max)
-    CHELPER_NODE_BINARY_READ(NodeInteger, INTEGER, n.min, n.max)
-    CHELPER_NODE_BINARY_READ(NodeIntegerWithUnit, INTEGER_WITH_UNIT, n.units)
-    CHELPER_NODE_BINARY_READ(NodeItem, ITEM, n.nodeItemType)
-    CHELPER_NODE_BINARY_READ(NodeJson, JSON, n.key)
-    CHELPER_NODE_BINARY_READ(NodeJsonBoolean, JSON_BOOLEAN, n.descriptionTrue, n.descriptionFalse)
-    CHELPER_NODE_BINARY_READ(NodeJsonFloat, JSON_FLOAT, n.min, n.max)
-    CHELPER_NODE_BINARY_READ(NodeJsonInteger, JSON_INTEGER, n.min, n.max)
-    CHELPER_NODE_BINARY_READ(NodeJsonList, JSON_LIST, n.data)
-    CHELPER_NODE_BINARY_READ(NodeJsonNull, JSON_NULL)
-    CHELPER_NODE_BINARY_READ(NodeJsonEntry, JSON_ENTRY, n.key, n.value)
-    CHELPER_NODE_BINARY_READ(NodeJsonObject, JSON_OBJECT, n.data)
-    CHELPER_NODE_BINARY_READ(NodeJsonString, JSON_STRING, n.data)
-    CHELPER_NODE_BINARY_READ(NodeNamespaceId, NAMESPACE_ID, n.key, n.ignoreError, n.contents)
-    CHELPER_NODE_BINARY_READ(NodeNormalId, NORMAL_ID, n.key, n.ignoreError, n.contents)
-    CHELPER_NODE_BINARY_READ(NodePosition, POSITION)
-    CHELPER_NODE_BINARY_READ(NodeRange, RANGE)
-    CHELPER_NODE_BINARY_READ(NodeRelativeFloat, RELATIVE_FLOAT, n.canUseCaretNotation)
-    CHELPER_NODE_BINARY_READ(NodeRepeat, REPEAT, n.key)
-    CHELPER_NODE_BINARY_READ(NodeString, STRING, n.allowMissingString, n.canContainSpace, n.ignoreLater)
-    CHELPER_NODE_BINARY_READ(NodeTargetSelector, TARGET_SELECTOR, n.isMustPlayer, n.isMustNPC, n.isOnlyOne, n.isWildcard)
-    CHELPER_NODE_BINARY_READ(NodeText, TEXT, n.data)
-
-    template<auto Opts, class Ctx, class B>
-    inline void nodeWriteBinaryGrammar(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
-        const auto write = [&](const auto &value) { glz::serialize<CHelper::BinaryFormat>::template op<Opts>(value, ctx, b, ix); };
-        switch (t.nodeTypeId) {
-            case Node::NodeTypeId::AND:
-                write(static_cast<const Node::NodeAnd *>(t.data)->id);
-                write(static_cast<const Node::NodeAnd *>(t.data)->childNodeIds);
-                break;
-            case Node::NodeTypeId::OR: {
-                const auto &n = *static_cast<const Node::NodeOr *>(t.data);
-                write(n.id);
-                write(n.childNodeIds);
-                write(n.isAttachToEnd);
-                write(n.isUseFirst);
-                write(n.noSuggestion);
-                break;
-            }
-            case Node::NodeTypeId::LIST: {
-                const auto &n = *static_cast<const Node::NodeList *>(t.data);
-                write(n.id);
-                write(n.nodeLeftId);
-                write(n.nodeElementId);
-                write(n.nodeSeparatorId);
-                write(n.nodeRightId);
-                break;
-            }
-            case Node::NodeTypeId::OPTIONAL: {
-                const auto &n = *static_cast<const Node::NodeOptional *>(t.data);
-                write(n.id);
-                write(n.optionalNodeId);
-                break;
-            }
-            case Node::NodeTypeId::SINGLE_SYMBOL: {
-                const auto &n = *static_cast<const Node::NodeSingleSymbol *>(t.data);
-                write(n.id);
-                write(std::u16string(1, n.symbol));
-                write(n.description);
-                write(n.isAddSpace);
-                break;
-            }
-            case Node::NodeTypeId::EQUAL_ENTRY: {
-                const auto &n = *static_cast<const Node::NodeEqualEntry *>(t.data);
-                write(n.id);
-                write(n.equalDatas);
-                break;
-            }
-            default:
-                ctx.error = glz::error_code::no_matching_variant_type;
-                break;
-        }
-    }
-
-    // 二进制格式写出节点：uint8 类型 ID + 成员（无键名）
-    template<auto Opts, class Ctx, class B>
-    inline void writeNodeBinary(const Node::NodeWithType &t, Ctx &ctx, B &b, size_t &ix) {
-        const std::uint8_t typeId = static_cast<std::uint8_t>(t.nodeTypeId);
-        glz::serialize<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, b, ix);
-        Node::dispatchNodeType(
-                t.nodeTypeId,
-                [&]<class NodeType>() {
-                    if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes>) {
-                        nodeWriteBinaryGrammar<Opts>(t, ctx, b, ix);
-                    } else if constexpr (Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
-                        NodeBinaryWriter<NodeType, Opts, Ctx, B>::op(t, ctx, b, ix);
-                    } else {
-                        //运行期节点不会出现在资源数据里，写出时类型只可能来自内存中的合法节点
-                        CHELPER_UNREACHABLE();
-                    }
-                },
-                [] { CHELPER_UNREACHABLE(); });
-    }
-
-    template<class T, auto Opts, class Ctx, class It, class End>
-    inline void readBinaryGrammarNode(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
-        if (!nodeCreateStageAllows<T::nodeTypeId>(ctx)) [[unlikely]] {
-            ctx.error = glz::error_code::no_matching_variant_type;
-            return;
-        }
-        auto *node = new T();
-        auto read = [&](auto &&...values) {
-            (glz::parse<CHelper::BinaryFormat>::template op<Opts>(values, ctx, it, end), ...);
-        };
-        if constexpr (std::is_same_v<T, Node::NodeAnd>) {
-            read(node->id, node->childNodeIds);
-        } else if constexpr (std::is_same_v<T, Node::NodeOr>) {
-            read(node->id, node->childNodeIds, node->isAttachToEnd, node->isUseFirst, node->noSuggestion);
-        } else if constexpr (std::is_same_v<T, Node::NodeList>) {
-            read(node->id, node->nodeLeftId, node->nodeElementId, node->nodeSeparatorId, node->nodeRightId);
-        } else if constexpr (std::is_same_v<T, Node::NodeOptional>) {
-            read(node->id, node->optionalNodeId);
-        } else if constexpr (std::is_same_v<T, Node::NodeSingleSymbol>) {
-            std::u16string symbol;
-            read(node->id, symbol, node->description, node->isAddSpace);
-            if (!symbol.empty()) node->symbol = symbol.front();
-        } else if constexpr (std::is_same_v<T, Node::NodeEqualEntry>) {
-            read(node->id, node->equalDatas);
-        }
-        if (bool(ctx.error)) {
-            delete node;
-            return;
-        }
-        t.nodeTypeId = T::nodeTypeId;
-        t.data = node;
-        trackGrammarNode(ctx, t);
-    }
-
-    // 二进制格式读取节点：uint8 类型 ID + 成员（与写出严格对应）
-    template<auto Opts, class Ctx, class It, class End>
-    inline void readNodeBinary(Node::NodeWithType &t, Ctx &ctx, It &it, End &end) {
-        std::uint8_t typeId = 0;
-        glz::parse<CHelper::BinaryFormat>::template op<Opts>(typeId, ctx, it, end);
-        if (bool(ctx.error)) [[unlikely]] {
-            return;
-        }
-        //类型 id 来自外部数据，先做范围合法性检查（旧实现对非法值直接触发 UB）
-        if (typeId >= static_cast<std::uint8_t>(Node::NodeTypeId::NodeTypeIdCount)) [[unlikely]] {
-            ctx.error = glz::error_code::no_matching_variant_type;
-            return;
-        }
-        Node::dispatchNodeType(
-                static_cast<Node::NodeTypeId::NodeTypeId>(typeId),
-                [&]<class NodeType>() {
-                    if constexpr (Meta::typeListContains<NodeType, Node::GrammarNodeTypes>) {
-                        readBinaryGrammarNode<NodeType, Opts>(t, ctx, it, end);
-                    } else if constexpr (Meta::typeListContains<NodeType, Node::JsonSerializableNodeTypes>) {
-                        NodeBinaryReader<NodeType, Opts, Ctx, It, End>::op(t, ctx, it, end);
-                    } else {
-                        //有效但不出现在二进制资源中的类型（WRAPPED / LF / PER_COMMAND 等），按不匹配处理
-                        ctx.error = glz::error_code::no_matching_variant_type;
-                    }
-                },
-                [&] { ctx.error = glz::error_code::no_matching_variant_type; });
-    }
-}// namespace CHelper
-
-namespace glz {
+    // 二进制格式：类型 ID 与成员顺序的读写实现见 readNodeWithType / writeNodeWithType
     template<>
     struct to<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&b, auto &&ix) {
-            CHelper::writeNodeBinary<Opts>(value, ctx, b, ix);
+            CHelper::writeNodeWithType<CHelper::BinaryFormat, Opts>(value, ctx, b, ix);
         }
     };
 
@@ -1187,7 +931,7 @@ namespace glz {
     struct from<CHelper::BinaryFormat, CHelper::Node::NodeWithType> {
         template<auto Opts>
         static CHELPER_FORCEINLINE void op(auto &&value, glz::is_context auto &&ctx, auto &&it, auto &&end) {
-            CHelper::readNodeBinary<Opts>(value, ctx, it, end);
+            CHelper::readNodeWithType<CHelper::BinaryFormat, Opts>(value, ctx, it, end);
         }
     };
 }// namespace glz

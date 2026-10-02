@@ -39,6 +39,8 @@ endif()
 if(MSVC)
     add_compile_options("/utf-8")
     add_compile_options("/Zc:__cplusplus")
+    # 序列化等重度模板的编译单元会超出 COFF 节段上限
+    add_compile_options("/bigobj")
 endif()
 
 include(FetchContent)
