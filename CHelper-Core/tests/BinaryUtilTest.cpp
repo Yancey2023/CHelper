@@ -983,3 +983,97 @@ TEST(BinaryUtilTest, BlockPropertyIndexPreservesSourceOrder) {
         EXPECT_THROW((void) index.getPropertyDescription(qualified, plain, u"missing"), std::runtime_error);
     }
 }
+
+TEST(BinaryUtilTest, SharedBlockPropertyNodesPreserveVariantsAndLifetime) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    auto &definition = descriptions.common.emplace_back();
+    definition.propertyName = u"shared_property";
+    definition.description = u"fallback";
+    definition.values.emplace_back().valueName.boolean = false;
+    definition.values.emplace_back().valueName.boolean = true;
+    const auto makeBlock = [&](bool defaultValue, bool emptyValid) {
+        auto block = std::make_unique<BlockId>();
+        block->name = u"test";
+        auto &property = block->properties.emplace().emplace_back();
+        property.name = definition.propertyName;
+        property.defaultValue.boolean = defaultValue;
+        if (emptyValid) property.valid.emplace();
+        return block;
+    };
+    auto first = makeBlock(false, false);
+    auto second = makeBlock(false, false);
+    auto differentDefault = makeBlock(true, false);
+    auto invalid = makeBlock(false, true);
+    auto uncached = makeBlock(false, false);
+    const auto overrideDefinition = definition;
+    const auto entryOf = [&](BlockId &block, BlockPropertyNodeCache *cache) {
+        const auto &root = *static_cast<Node::NodeList *>(block.getNode(descriptions, nullptr, cache).data);
+        const auto &all = *static_cast<Node::NodeOr *>(root.nodeElement.data);
+        const auto &known = *static_cast<Node::NodeOr *>(all.childNodes[0].data);
+        return static_cast<const Node::NodeEntry *>(known.childNodes[0].data);
+    };
+    const auto valueOf = [](const Node::NodeEntry &entry, size_t index) -> const NormalId & {
+        const auto &values = *static_cast<const Node::NodeOr *>(entry.nodeValue.data);
+        return *static_cast<const Node::NodeText *>(values.childNodes[index].data)->data;
+    };
+    const Node::NodeEntry *retained;
+    {
+        BlockPropertyNodeCache cache(descriptions);
+        const auto *a = entryOf(*first, &cache);
+        retained = entryOf(*second, &cache);
+        EXPECT_EQ(a, retained);
+        const auto *b = entryOf(*differentDefault, &cache);
+        EXPECT_NE(a, b);
+        EXPECT_EQ(valueOf(*a, 0).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
+        EXPECT_EQ(valueOf(*b, 1).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
+        const auto *c = entryOf(*invalid, &cache);
+        EXPECT_NE(a, c);
+        EXPECT_EQ(valueOf(*c, 0).description, std::optional<std::pmr::u16string>{u"（无效）（默认值）fallback"});
+        const auto *original = entryOf(*uncached, nullptr);
+        for (size_t i = 0; i < 2; ++i) {
+            EXPECT_EQ(valueOf(*a, i).name, valueOf(*original, i).name);
+            EXPECT_EQ(valueOf(*a, i).description, valueOf(*original, i).description);
+        }
+        // 内容相同的另一条描述仍保留独立身份，避免覆盖项互相污染。
+        EXPECT_NE(cache.getNode(overrideDefinition, first->properties->front())->node.data, a);
+    }
+    first.reset();
+    EXPECT_EQ(valueOf(*retained, 0).name, u"false");
+    EXPECT_EQ(valueOf(*retained, 1).description, std::optional<std::pmr::u16string>{u"fallback"});
+}
+
+TEST(BinaryUtilTest, SharedBlockPropertyCacheComparesValuesByContent) {
+    using namespace CHelper;
+    for (const auto type: {PropertyType::INTEGER, PropertyType::STRING}) {
+        BlockPropertyDescriptions descriptions;
+        auto &definition = descriptions.common.emplace_back();
+        definition.type = type;
+        definition.propertyName = u"property";
+        Property property;
+        property.type = type;
+        property.valid.emplace();
+        for (int i = 0; i < 2; ++i) {
+            auto &value = definition.values.emplace_back().valueName;
+            auto &valid = property.valid->emplace_back();
+            if (type == PropertyType::STRING) {
+                value.string = new std::pmr::u16string(i == 0 ? u"north" : u"south");
+                valid.string = new std::pmr::u16string(*value.string);
+            } else {
+                value.integer = valid.integer = i;
+            }
+        }
+        if (type == PropertyType::STRING) property.defaultValue.string = new std::pmr::u16string(u"north");
+        else
+            property.defaultValue.integer = 0;
+        const Property copy(property);
+        Property different(property);
+        if (type == PropertyType::STRING) *different.defaultValue.string = u"south";
+        else
+            different.defaultValue.integer = 1;
+        BlockPropertyNodeCache cache(descriptions);
+        const auto first = cache.getNode(definition, property);
+        EXPECT_EQ(cache.getNode(definition, copy).get(), first.get());
+        EXPECT_NE(cache.getNode(definition, different).get(), first.get());
+    }
+}

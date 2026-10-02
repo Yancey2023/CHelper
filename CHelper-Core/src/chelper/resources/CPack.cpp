@@ -167,10 +167,11 @@ namespace CHelper {
         }
         if (blockIds != nullptr && blockIds->blockStateValues != nullptr) {
             const BlockPropertyDescriptionIndex descriptionsIndex(blockIds->blockPropertyDescriptions);
+            BlockPropertyNodeCache propertyNodes(blockIds->blockPropertyDescriptions);
             for (const auto &item: *blockIds->blockStateValues) {
                 item->buildHash();
                 item->getIdWithNamespace()->buildHash();
-                item->getNode(blockIds->blockPropertyDescriptions, &descriptionsIndex);
+                item->getNode(blockIds->blockPropertyDescriptions, &descriptionsIndex, &propertyNodes);
             }
         }
         validate();

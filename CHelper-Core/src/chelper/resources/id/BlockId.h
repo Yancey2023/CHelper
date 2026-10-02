@@ -133,17 +133,45 @@ namespace CHelper {
                 std::u16string_view blockIdWithNamespace, std::u16string_view blockId, std::u16string_view propertyName) const;
     };
 
+    struct BlockPropertyNode {
+        Node::FreeableNodeWithTypes children;
+        Node::NodeWithType node;
+    };
+
+    // 仅在初始化期间查找重复属性；源描述和 Property 必须保持稳定直到缓存销毁。
+    // 节点图由每个使用它的 BlockId 共享持有，不依赖缓存或另一个方块的生命周期。
+    class BlockPropertyNodeCache {
+        struct Key {
+            const BlockPropertyDescription *description;
+            const Property *property;
+        };
+        struct Hash {
+            size_t operator()(const Key &key) const;
+        };
+        struct Equal {
+            bool operator()(const Key &left, const Key &right) const;
+        };
+        std::pmr::unordered_map<Key, std::shared_ptr<BlockPropertyNode>, Hash, Equal> nodes;
+
+    public:
+        explicit BlockPropertyNodeCache(const BlockPropertyDescriptions &descriptions);
+        [[nodiscard]] std::shared_ptr<BlockPropertyNode> getNode(const BlockPropertyDescription &description,
+                                                                 const Property &property);
+    };
+
     class BlockId : public NamespaceId {
     public:
         std::optional<std::pmr::vector<Property>> properties;
 
     private:
+        std::pmr::vector<std::shared_ptr<BlockPropertyNode>> sharedPropertyNodes;
         Node::FreeableNodeWithTypes nodeChildren;
         std::optional<Node::NodeWithType> node;
 
     public:
         const Node::NodeWithType &getNode(const BlockPropertyDescriptions &blockPropertyDescriptions,
-                                          const BlockPropertyDescriptionIndex *index = nullptr);
+                                          const BlockPropertyDescriptionIndex *index = nullptr,
+                                          BlockPropertyNodeCache *propertyNodes = nullptr);
 
         static Node::NodeWithType getNodeAllBlockState();
     };
