@@ -18,6 +18,7 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
+#include <chelper/old2new/Old2New.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/serialization/BinaryFormat.h>
 #include <chelper/serialization/IO.h>
@@ -863,6 +864,59 @@ TEST(BinaryUtilTest, MapBinaryCountBounds) {
     // 损坏的 map 长度必须正常报读取错误，不能先申请数十 GB 的哈希桶。
     std::unordered_map<std::string, std::uint32_t> map;
     EXPECT_THROW(CHelper::readBinary(map, std::string_view("\xff\xff\xff\xff", 4)), std::runtime_error);
+    CHelper::DenseMap<std::string, std::uint32_t> dense;
+    EXPECT_THROW(CHelper::readBinary(dense, std::string_view("\xff\xff\xff\xff", 4)), std::runtime_error);
+}
+
+TEST(BinaryUtilTest, DenseMapsReadAndWriteLegacyNestedBinary) {
+    using Legacy = std::unordered_map<std::u16string,
+                                      std::unordered_map<uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
+    Legacy legacy;
+    for (uint32_t group = 0; group < 80; ++group) {
+        auto &inner = legacy[utf8::utf8to16("long_block_name_" + std::to_string(group))];
+        for (uint32_t value = 0; value < 40; ++value) inner[value] = {u"新方块🙂", std::nullopt};
+    }
+    legacy[u"empty"] = {};
+    std::string binary;
+    CHelper::writeBinary(binary, legacy);
+    const auto dense = CHelper::Old2New::blockFixDataFromBinary(binary);
+    ASSERT_EQ(dense.size(), legacy.size());
+    for (const auto &[key, inner]: legacy) {
+        ASSERT_TRUE(dense.contains(std::u16string_view(key)));
+        const auto &restored = dense.at(std::u16string_view(key));
+        ASSERT_EQ(restored.size(), inner.size());
+        for (const auto &[index, value]: inner) EXPECT_EQ(restored.at(index), value);
+    }
+    Legacy back;
+    CHelper::readBinary(back, CHelper::Old2New::blockFixDataToBinary(dense));
+    EXPECT_EQ(back, legacy);
+
+    // 损坏输入中重复的键仍应被拒绝，不可静默覆盖。
+    CHelper::writeBinary(binary, uint32_t{2});
+    const auto append = [&](const auto &value) {
+        std::string part;
+        CHelper::writeBinary(part, value);
+        binary += part;
+    };
+    for (int i = 0; i < 2; ++i) {
+        append(std::string("duplicate"));
+        append(uint32_t{1});
+    }
+    CHelper::DenseMap<std::string, uint32_t> duplicate;
+    EXPECT_THROW(CHelper::readBinary(duplicate, binary), std::runtime_error);
+}
+
+TEST(BinaryUtilTest, DenseStringLookupPreservesLengthAndEncoding) {
+    CHelper::PmrDenseMap<std::pmr::string, int> map;
+    const std::string key = std::string(80, 'x') + std::string("\0tail", 5);
+    map.emplace(std::pmr::string(key), 42);
+    EXPECT_EQ(map.at(std::string_view(key)), 42);
+    EXPECT_FALSE(map.contains(std::string_view(key.data(), 80)));
+    EXPECT_FALSE(map.contains(std::string_view{}));
+    CHelper::DenseMap<std::u16string, int> unicode;
+    unicode.emplace(std::u16string(u"中文🙂\0尾", 6), 7);
+    EXPECT_EQ(unicode.at(std::u16string_view(u"中文🙂\0尾", 6)), 7);
+    EXPECT_FALSE(unicode.contains(std::u16string_view(u"中文🙂")));
 }
 
 TEST(BinaryUtilTest, NodeConstructorOwnsStringViews) {

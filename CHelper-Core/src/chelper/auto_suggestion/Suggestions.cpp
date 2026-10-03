@@ -40,6 +40,7 @@ namespace CHelper::AutoSuggestion {
 
     void Suggestions::reserveIdSuggestion(size_t size) {
         idSuggestions.reserve(idSuggestions.size() + size);
+        seenSuggestionHashes.reserve(seenSuggestionHashes.size() + size);
     }
 
     void Suggestions::addIdSuggestion(Suggestion &&suggestion) {
@@ -47,6 +48,7 @@ namespace CHelper::AutoSuggestion {
     }
 
     void Suggestions::combine(Suggestions &suggestions, const std::function<bool(Suggestion &suggestion)> &function) {
+        seenSuggestionHashes.reserve(seenSuggestionHashes.size() + suggestions.seenSuggestionHashes.size());
         spaceSuggestions.reserve(spaceSuggestions.size() + suggestions.spaceSuggestions.size());
         symbolSuggestions.reserve(symbolSuggestions.size() + suggestions.symbolSuggestions.size());
         literalSuggestions.reserve(literalSuggestions.size() + suggestions.literalSuggestions.size());
@@ -75,6 +77,7 @@ namespace CHelper::AutoSuggestion {
 
     std::vector<Suggestion> Suggestions::collect() {
         std::vector<Suggestion> result;
+        result.reserve(spaceSuggestions.size() + symbolSuggestions.size() + literalSuggestions.size() + idSuggestions.size());
         result.insert(result.end(), std::make_move_iterator(spaceSuggestions.begin()), std::make_move_iterator(spaceSuggestions.end()));
         result.insert(result.end(), std::make_move_iterator(symbolSuggestions.begin()), std::make_move_iterator(symbolSuggestions.end()));
         result.insert(result.end(), std::make_move_iterator(literalSuggestions.begin()), std::make_move_iterator(literalSuggestions.end()));

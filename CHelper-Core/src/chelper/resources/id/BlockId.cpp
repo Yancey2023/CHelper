@@ -415,14 +415,15 @@ namespace CHelper {
         return result;
     }
 
-    static size_t hashPropertyValue(const PropertyValue &value, const PropertyType::PropertyType type) {
+    static uint64_t hashPropertyValue(const PropertyValue &value, const PropertyType::PropertyType type,
+                                      const uint64_t seed = 0) noexcept {
         switch (type) {
             case PropertyType::STRING:
-                return std::hash<std::u16string_view>{}(*value.string);
+                return XXH3_64bits_withSeed(value.string->data(), value.string->size() * sizeof(char16_t), seed);
             case PropertyType::INTEGER:
-                return std::hash<int32_t>{}(value.integer);
+                return XXH3_64bits_withSeed(&value.integer, sizeof(value.integer), seed);
             case PropertyType::BOOLEAN:
-                return std::hash<bool>{}(value.boolean);
+                return XXH3_64bits_withSeed(&value.boolean, sizeof(value.boolean), seed);
             default:
                 CHELPER_UNREACHABLE();
         }
@@ -442,14 +443,15 @@ namespace CHelper {
         }
     }
 
-    size_t BlockPropertyNodeCache::Hash::operator()(const Key &key) const {
-        size_t hash = std::hash<const BlockPropertyDescription *>{}(key.description);
-        const auto combine = [&](const size_t value) { hash ^= value + size_t{0x9e3779b9} + (hash << 6) + (hash >> 2); };
-        combine(hashPropertyValue(key.property->defaultValue, key.description->type));
-        combine(key.property->valid.has_value());
+    uint64_t BlockPropertyNodeCache::Hash::operator()(const Key &key) const noexcept {
+        const std::array<uint64_t, 4> fields{
+                reinterpret_cast<std::uintptr_t>(key.description),
+                hashPropertyValue(key.property->defaultValue, key.description->type),
+                key.property->valid.has_value(),
+                key.property->valid.has_value() ? key.property->valid->size() : 0};
+        auto hash = XXH3_64bits(fields.data(), sizeof(fields));
         if (key.property->valid.has_value()) {
-            combine(key.property->valid->size());
-            for (const auto &value: *key.property->valid) combine(hashPropertyValue(value, key.description->type));
+            for (const auto &value: *key.property->valid) hash = hashPropertyValue(value, key.description->type, hash);
         }
         return hash;
     }

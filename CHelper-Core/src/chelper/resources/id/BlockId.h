@@ -20,6 +20,7 @@
 
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
+#include <chelper/util/HashContainer.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -146,12 +147,14 @@ namespace CHelper {
             const Property *property;
         };
         struct Hash {
-            size_t operator()(const Key &key) const;
+            using is_avalanching = void;
+            uint64_t operator()(const Key &key) const noexcept;
         };
         struct Equal {
             bool operator()(const Key &left, const Key &right) const;
         };
-        std::pmr::unordered_map<Key, std::shared_ptr<BlockPropertyNode>, Hash, Equal> nodes;
+        // 缓存只在初始化期间存在，数组扩容和销毁应立即释放内存；节点图仍由 CPack 内存池持有。
+        DenseMap<Key, std::shared_ptr<BlockPropertyNode>, Hash, Equal> nodes;
 
     public:
         explicit BlockPropertyNodeCache(const BlockPropertyDescriptions &descriptions);

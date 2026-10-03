@@ -28,8 +28,16 @@ namespace CHelper::Old2New {
         std::vector<BlockFixEntry> entries;
         readJsonFromFile(entries, path);
         BlockFixData blockFixData;
+        {
+            DenseMap<std::u16string_view, size_t> counts;
+            for (const auto &entry: entries) ++counts[entry.name];
+            blockFixData.reserve(counts.size());
+            for (const auto &[name, count]: counts) {
+                blockFixData.try_emplace(std::u16string(name)).first->second.reserve(count);
+            }
+        }
         for (auto &entry: entries) {
-            auto &dataValueToBlockState = blockFixData.try_emplace(std::move(entry.name)).first->second;
+            auto &dataValueToBlockState = blockFixData.at(entry.name);
             dataValueToBlockState.insert_or_assign(entry.data,
                                                    std::make_pair(std::move(entry.newBlockId),
                                                                   std::move(entry.blockState)));
@@ -309,6 +317,12 @@ namespace CHelper::serialization {
             //readJson 的 glaze 解析错误自带出错位置与 JSON 片段，无需 trail 条目；
             //apply 阶段的失败由各消息自带的 id/key 定位
             cpack->manifest = std::move(data.manifest);
+            const auto normalCount = std::ranges::count_if(data.id, [](const auto &entry) { return std::holds_alternative<NormalIdEntry>(entry); });
+            const auto namespaceCount = std::ranges::count_if(data.id, [](const auto &entry) { return std::holds_alternative<NamespaceIdEntry>(entry); });
+            cpack->normalIds.reserve(static_cast<size_t>(normalCount));
+            cpack->namespaceIds.reserve(static_cast<size_t>(namespaceCount));
+            cpack->grammarGraphs.reserve(data.grammar.size());
+            cpack->grammarNodes.reserve(data.grammar.size());
             for (const auto &entry: data.id) {
                 cpack->applyId(entry);
             }
@@ -378,6 +392,8 @@ namespace CHelper::serialization {
             cpack->jsonNodes = std::move(cpackData.jsonNodes);
             cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
             cpack->commands = std::move(cpackData.commands);
+            cpack->grammarGraphs.reserve(cpackData.grammar.size());
+            cpack->grammarNodes.reserve(cpackData.grammar.size());
             for (auto &entry: cpackData.grammar) {
                 cpack->applyGrammar(std::move(entry), trail);
             }

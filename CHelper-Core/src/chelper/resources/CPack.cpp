@@ -182,8 +182,7 @@ namespace CHelper {
     }
 
     const Node::NodeWithType *CPack::getGrammar(const std::string_view key) const {
-        const std::pmr::string searchKey(key.data(), key.size(), grammarNodes.get_allocator().resource());
-        const auto it = grammarNodes.find(searchKey);
+        const auto it = grammarNodes.find(key);
         return it == grammarNodes.end() ? nullptr : &it->second;
     }
 
@@ -208,8 +207,7 @@ namespace CHelper {
 
     std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>
     CPack::getNormalId(const std::string_view key) const {
-        const std::pmr::string searchKey(key.data(), key.size(), normalIds.get_allocator().resource());
-        auto it = normalIds.find(searchKey);
+        auto it = normalIds.find(key);
         if (it == normalIds.end()) [[unlikely]] {
 #if CHelperDebug
             SPDLOG_WARN(R"(fail to find normal ids by key: "{}")", FORMAT_ARG(key));
@@ -226,8 +224,7 @@ namespace CHelper {
         } else if (key == "item") [[unlikely]] {
             return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(itemIds);
         }
-        const std::pmr::string searchKey(key.data(), key.size(), namespaceIds.get_allocator().resource());
-        auto it = namespaceIds.find(searchKey);
+        auto it = namespaceIds.find(key);
         if (it == namespaceIds.end()) [[unlikely]] {
 #if CHelperDebug
             SPDLOG_WARN(R"(fail to find namespace ids by key: "{}")", FORMAT_ARG(key));
