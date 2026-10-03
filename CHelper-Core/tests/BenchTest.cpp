@@ -197,6 +197,43 @@ TEST(Bench, DecodeCPack) {
     }
 }
 
+// 单独测量方块 ID 缓存初始化；每轮先解码到新的资源池，避免把缓存命中当成初始化。
+TEST(Bench, InitializeBlockIds) {
+    Node::initializeStaticNodes();
+    for (const auto &path: {vanillaBin(), experimentBin()}) {
+        if (!std::filesystem::exists(path)) continue;
+        const auto data = readBinaryFile(path);
+        Stats stats{"initialize block ids (" + path.stem().string() + ")"};
+        for (int iteration = 0; iteration < 22; ++iteration) {
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope scope(memory);
+            CPackData restored;
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = memory;
+            const auto error = glz::read<glz::opts{.format = BinaryFormat}>(restored, data, ctx);
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, data);
+            ASSERT_NE(restored.blockIds, nullptr);
+            ASSERT_NE(restored.blockIds->blockStateValues, nullptr);
+            if (iteration >= 2) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            {
+                const auto &blocks = *restored.blockIds;
+                const BlockPropertyDescriptionIndex index(blocks.blockPropertyDescriptions);
+                BlockPropertyNodeCache nodes(blocks.blockPropertyDescriptions);
+                for (const auto &block: *blocks.blockStateValues) {
+                    block->buildHash();
+                    block->getIdWithNamespace()->buildHash();
+                    block->getNode(blocks.blockPropertyDescriptions, &index, &nodes);
+                }
+            }
+            const auto end = std::chrono::steady_clock::now();
+            if (iteration >= 2) stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+        }
+        stats.print();
+    }
+}
+
 /**
  * CPack 写出：目录 JSON、单文件 JSON 与二进制文件
  */

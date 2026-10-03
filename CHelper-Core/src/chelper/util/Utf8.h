@@ -43,7 +43,7 @@ namespace CHelper {
          *
          * utf8::utf8to16 配 back_inserter 是逐字符 push_back，目标串按几何增长反复重分配。
          * 资源包里含上万条字符串（方块状态值、ID、描述等），逐字符增长会产生上万次分配。
-         * ASCII 批量判定后直接宽化；非 ASCII 先计算 UTF-16 单元数再交给校验解码器，
+         * ASCII 批量判定后直接宽化；非 ASCII 先计算 UTF-16 单元数再校验解码，
          * 避免按 UTF-8 字节数为中文串申请约三倍容量，也保留短串的内联存储。
          */
         template<class String>
@@ -92,7 +92,32 @@ namespace CHelper {
             output.resize_and_overwrite(units, [&](char16_t *buffer, std::size_t) noexcept {
                 std::copy_n(input.begin(), asciiEnd, buffer);
                 try {
-                    return static_cast<std::size_t>(utf8::utf8to16(input.begin() + asciiEnd, input.end(), buffer + asciiEnd) - buffer);
+                    auto cursor = input.begin() + asciiEnd;
+                    auto *target = buffer + asciiEnd;
+                    while (cursor != input.end()) {
+                        const auto lead = static_cast<unsigned char>(*cursor);
+                        if (lead < 0x80) {
+                            *target++ = lead;
+                            ++cursor;
+                        } else if (lead >= 0xe1 && lead <= 0xef && lead != 0xed && input.end() - cursor >= 3 &&
+                                   (static_cast<unsigned char>(cursor[1]) & 0xc0) == 0x80 &&
+                                   (static_cast<unsigned char>(cursor[2]) & 0xc0) == 0x80) {
+                            // 常见中文直接解码；E0 的过长编码与 ED 的代理区仍由校验器处理。
+                            *target++ = static_cast<char16_t>(((lead & 0x0f) << 12) |
+                                                              ((static_cast<unsigned char>(cursor[1]) & 0x3f) << 6) |
+                                                              (static_cast<unsigned char>(cursor[2]) & 0x3f));
+                            cursor += 3;
+                        } else {
+                            const auto codepoint = utf8::next(cursor, input.end());
+                            if (codepoint <= 0xffff) {
+                                *target++ = static_cast<char16_t>(codepoint);
+                            } else {
+                                *target++ = static_cast<char16_t>(0xd800 + ((codepoint - 0x10000) >> 10));
+                                *target++ = static_cast<char16_t>(0xdc00 + ((codepoint - 0x10000) & 0x3ff));
+                            }
+                        }
+                    }
+                    return static_cast<std::size_t>(target - buffer);
                 } catch (...) {
                     error.emplace(std::current_exception());
                     return std::size_t{0};

@@ -39,6 +39,11 @@ namespace CHelper {
     static Node::NodeList nodeAllBlockState(
             nodeBlockStateLeftBracket, nodeBlockStateAllEntry,
             nodeBlockStateSeparator, nodeBlockStateRightBracket);
+    static Node::NodeOr nodeUnknownBlockStateValue({nodeBlockStateAllEntry}, false, true);
+    static Node::NodeList nodeUnknownBlockState(
+            nodeBlockStateLeftBracket, nodeUnknownBlockStateValue,
+            nodeBlockStateSeparator, nodeBlockStateRightBracket);
+    static const Node::NodeWithType unknownBlockStateNode = nodeUnknownBlockState;
 
     Property::Property(const Property &aProperty) noexcept {
         type = aProperty.type;
@@ -470,6 +475,7 @@ namespace CHelper {
         size_t count = descriptions.common.size();
         for (const auto &entry: descriptions.block) count += entry.properties.size();
         nodes.reserve(count);
+        states.reserve(count);
     }
 
     std::shared_ptr<BlockPropertyNode> BlockPropertyNodeCache::getNode(const BlockPropertyDescription &description,
@@ -486,20 +492,51 @@ namespace CHelper {
         return result;
     }
 
+    uint64_t BlockPropertyNodeCache::StateHash::operator()(const StateKey key) const noexcept {
+        uint64_t hash = key.size();
+        for (const auto &property: key) {
+            const auto pointer = reinterpret_cast<std::uintptr_t>(property.get());
+            hash = XXH3_64bits_withSeed(&pointer, sizeof(pointer), hash);
+        }
+        return hash;
+    }
+
+    bool BlockPropertyNodeCache::StateEqual::operator()(const StateKey left, const StateKey right) const noexcept {
+        return std::ranges::equal(left, right, {}, [](const auto &value) { return value.get(); }, [](const auto &value) { return value.get(); });
+    }
+
+    std::shared_ptr<BlockStateNode> BlockPropertyNodeCache::getStateNode(std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties) {
+        const StateKey key(properties);
+        const auto found = states.find(key);
+        if (found != states.end()) return found->second;
+        auto result = allocateSharedFromDefault<BlockStateNode>();
+        result->properties = std::move(properties);
+        result->children.nodes.reserve(3);
+        std::pmr::vector<Node::NodeWithType> entries;
+        entries.reserve(result->properties.size());
+        for (const auto &property: result->properties) entries.push_back(property->node);
+        auto *known = new Node::NodeOr(std::move(entries), false);
+        result->children.nodes.emplace_back(*known);
+        auto *all = new Node::NodeOr({*known, nodeBlockStateAllEntry}, false, true);
+        result->children.nodes.emplace_back(*all);
+        auto *list = new Node::NodeList(nodeBlockStateLeftBracket, *all, nodeBlockStateSeparator, nodeBlockStateRightBracket);
+        result->children.nodes.emplace_back(*list);
+        result->node = *list;
+        states.emplace(StateKey(result->properties), result);
+        return result;
+    }
+
     const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions,
                                                const BlockPropertyDescriptionIndex *index,
                                                BlockPropertyNodeCache *propertyNodes) {
         if (!node.has_value()) {
+            if (!properties.has_value()) {
+                node = unknownBlockStateNode;
+                return *node;
+            }
             std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2;
             //已知的方块状态
             if (properties.has_value()) [[likely]] {
-                if (propertyNodes != nullptr) {
-                    sharedPropertyNodes.reserve(properties->size());
-                    nodeChildren.nodes.reserve(3);
-                }
-                blockStateEntryChildNode2.reserve(2);
-                std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
-                blockStateEntryChildNode1.reserve(properties.value().size());
                 //所属条目只解析一次，避免每属性重复线性扫全部条目
                 std::vector<const std::pmr::vector<BlockPropertyDescription> *> entryProperties;
                 if (index == nullptr) {
@@ -529,17 +566,24 @@ namespace CHelper {
                             utf8::utf16to8(getIdWithNamespace()->name),
                             utf8::utf16to8(propertyName)));
                 };
+                if (propertyNodes != nullptr) {
+                    std::pmr::vector<std::shared_ptr<BlockPropertyNode>> entries;
+                    entries.reserve(properties->size());
+                    for (const auto &property: *properties) {
+                        entries.push_back(propertyNodes->getNode(findDescription(property.name), property));
+                    }
+                    sharedStateNode = propertyNodes->getStateNode(std::move(entries));
+                    node = sharedStateNode->node;
+                    return *node;
+                }
+                blockStateEntryChildNode2.reserve(2);
+                std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
+                blockStateEntryChildNode1.reserve(properties.value().size());
                 std::ranges::transform(
                         properties.value(),
                         std::back_inserter(blockStateEntryChildNode1),
                         [&](const auto &item) -> Node::NodeWithType {
                             const BlockPropertyDescription &blockPropertyDescription = findDescription(item.name);
-                            if (propertyNodes != nullptr) {
-                                auto shared = propertyNodes->getNode(blockPropertyDescription, item);
-                                const auto entry = shared->node;
-                                sharedPropertyNodes.push_back(std::move(shared));
-                                return entry;
-                            }
                             Node::NodeEntry *result = getBlockStateNode(
                                     nodeChildren.nodes, blockPropertyDescription,
                                     item.defaultValue, item.valid);

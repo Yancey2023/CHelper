@@ -22,6 +22,7 @@
 #include <chelper/resources/id/NamespaceId.h>
 #include <chelper/util/HashContainer.h>
 #include <pch.h>
+#include <span>
 
 namespace CHelper {
 
@@ -153,6 +154,12 @@ namespace CHelper {
         Node::NodeWithType node;
     };
 
+    struct BlockStateNode {
+        std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties;
+        Node::FreeableNodeWithTypes children;
+        Node::NodeWithType node;
+    };
+
     // 仅在初始化期间查找重复属性；源描述和 Property 必须保持稳定直到缓存销毁。
     // 节点图由每个使用它的 BlockId 共享持有，不依赖缓存或另一个方块的生命周期。
     class BlockPropertyNodeCache {
@@ -169,11 +176,22 @@ namespace CHelper {
         };
         // 缓存只在初始化期间存在，数组扩容和销毁应立即释放内存；节点图仍由 CPack 内存池持有。
         DenseMap<Key, std::shared_ptr<BlockPropertyNode>, Hash, Equal> nodes;
+        using StateKey = std::span<const std::shared_ptr<BlockPropertyNode>>;
+        struct StateHash {
+            using is_avalanching = void;
+            uint64_t operator()(StateKey key) const noexcept;
+        };
+        struct StateEqual {
+            bool operator()(StateKey left, StateKey right) const noexcept;
+        };
+        // 键引用共享图内的稳定数组；临时缓存销毁后由 BlockId 继续持有图。
+        DenseMap<StateKey, std::shared_ptr<BlockStateNode>, StateHash, StateEqual> states;
 
     public:
         explicit BlockPropertyNodeCache(const BlockPropertyDescriptions &descriptions);
         [[nodiscard]] std::shared_ptr<BlockPropertyNode> getNode(const BlockPropertyDescription &description,
                                                                  const Property &property);
+        [[nodiscard]] std::shared_ptr<BlockStateNode> getStateNode(std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties);
     };
 
     class BlockId : public NamespaceId {
@@ -181,7 +199,7 @@ namespace CHelper {
         std::optional<std::pmr::vector<Property>> properties;
 
     private:
-        std::pmr::vector<std::shared_ptr<BlockPropertyNode>> sharedPropertyNodes;
+        std::shared_ptr<BlockStateNode> sharedStateNode;
         Node::FreeableNodeWithTypes nodeChildren;
         std::optional<Node::NodeWithType> node;
 

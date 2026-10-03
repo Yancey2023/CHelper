@@ -955,7 +955,8 @@ TEST(BinaryUtilTest, Utf16ConversionPreservesUnicodeAndRejectsInvalidUtf8) {
         CHelper::U16Conv::convertToU16(std::string_view(padded).substr(1), text);
         EXPECT_EQ(text, expected);
     }
-    for (const std::string invalid: {"\x80", "\xc0\xaf", "\xe4\xb8", "\xed\xa0\x80", "\xf4\x90\x80\x80"}) {
+    for (const std::string invalid: {"\x80", "\xc0\xaf", "\xe4", "\xe4\xb8", "\xe4\x41\x80", "\xe4\xb8\x41",
+                                     "\xe0\x80\x80", "\xed\xa0\x80", "\xf4\x90\x80\x80"}) {
         for (const auto &prefix: {std::string{}, std::string(1024, 'a') + utf8::utf16to8(std::u16string_view(u"中🙂文"))}) {
             std::u16string text;
             EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(prefix + invalid, text));
@@ -1100,12 +1101,15 @@ TEST(BinaryUtilTest, SharedBlockPropertyNodesPreserveVariantsAndLifetime) {
         const auto *a = entryOf(*first, &cache);
         retained = entryOf(*second, &cache);
         EXPECT_EQ(a, retained);
+        EXPECT_EQ(first->getNode(descriptions).data, second->getNode(descriptions).data);
         const auto *b = entryOf(*differentDefault, &cache);
         EXPECT_NE(a, b);
+        EXPECT_NE(first->getNode(descriptions).data, differentDefault->getNode(descriptions).data);
         EXPECT_EQ(valueOf(*a, 0).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
         EXPECT_EQ(valueOf(*b, 1).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
         const auto *c = entryOf(*invalid, &cache);
         EXPECT_NE(a, c);
+        EXPECT_NE(first->getNode(descriptions).data, invalid->getNode(descriptions).data);
         EXPECT_EQ(valueOf(*c, 0).description, std::optional<std::pmr::u16string>{u"（无效）（默认值）fallback"});
         const auto *original = entryOf(*uncached, nullptr);
         for (size_t i = 0; i < 2; ++i) {
@@ -1118,6 +1122,73 @@ TEST(BinaryUtilTest, SharedBlockPropertyNodesPreserveVariantsAndLifetime) {
     first.reset();
     EXPECT_EQ(valueOf(*retained, 0).name, u"false");
     EXPECT_EQ(valueOf(*retained, 1).description, std::optional<std::pmr::u16string>{u"fallback"});
+    EXPECT_EQ(entryOf(*second, nullptr), retained);
+}
+
+TEST(BinaryUtilTest, SharedBlockStateGraphsPreservePropertyOrderAndOverrides) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    for (const auto name: {u"p", u"q"}) {
+        auto &definition = descriptions.common.emplace_back();
+        definition.propertyName = name;
+        definition.values.emplace_back().valueName.boolean = false;
+        definition.values.emplace_back().valueName.boolean = true;
+    }
+    auto &override = descriptions.block.emplace_back();
+    override.blocks = {u"special"};
+    override.properties.push_back(descriptions.common.front());
+    override.properties.front().description = u"override";
+    const auto makeBlock = [](const std::u16string_view name, bool reverse) {
+        auto block = std::make_unique<BlockId>();
+        block->name = name;
+        auto &properties = block->properties.emplace();
+        for (const auto key: reverse ? std::array{u"q", u"p"} : std::array{u"p", u"q"}) {
+            properties.emplace_back().name = key;
+        }
+        return block;
+    };
+    auto first = makeBlock(u"first", false);
+    auto second = makeBlock(u"second", false);
+    auto reversed = makeBlock(u"reversed", true);
+    auto special = makeBlock(u"special", false);
+    const auto firstKey = [](const Node::NodeWithType &node) -> std::u16string_view {
+        const auto &list = *static_cast<Node::NodeList *>(node.data);
+        const auto &all = *static_cast<Node::NodeOr *>(list.nodeElement.data);
+        const auto &known = *static_cast<Node::NodeOr *>(all.childNodes.front().data);
+        const auto &entry = *static_cast<Node::NodeEntry *>(known.childNodes.front().data);
+        return static_cast<Node::NodeText *>(entry.nodeKey.data)->data->name;
+    };
+    {
+        BlockPropertyDescriptionIndex index(descriptions);
+        BlockPropertyNodeCache cache(descriptions);
+        const auto &root = first->getNode(descriptions, &index, &cache);
+        EXPECT_EQ(root.data, second->getNode(descriptions, &index, &cache).data);
+        const auto &other = reversed->getNode(descriptions, &index, &cache);
+        EXPECT_NE(root.data, other.data);
+        EXPECT_EQ(firstKey(root), u"\"p\"");
+        EXPECT_EQ(firstKey(other), u"\"q\"");
+        EXPECT_NE(root.data, special->getNode(descriptions, &index, &cache).data);
+    }
+    first.reset();
+    EXPECT_EQ(firstKey(second->getNode(descriptions)), u"\"p\"");
+}
+
+TEST(BinaryUtilTest, BlocksWithoutPropertiesShareGenericGraph) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    Node::NodeWithType retained;
+    {
+        auto memory = std::make_shared<CPackMemoryResource>();
+        CPackMemoryScope scope(memory);
+        BlockId first;
+        retained = first.getNode(descriptions);
+        const auto &root = *static_cast<Node::NodeList *>(retained.data);
+        const auto &entries = *static_cast<Node::NodeOr *>(root.nodeElement.data);
+        ASSERT_EQ(entries.childNodes.size(), 1);
+        EXPECT_EQ(entries.childNodes.front().nodeTypeId, Node::NodeTypeId::ENTRY);
+    }
+    BlockId second;
+    EXPECT_EQ(second.getNode(descriptions).data, retained.data);
 }
 
 TEST(BinaryUtilTest, SharedBlockPropertyCacheComparesValuesByContent) {
