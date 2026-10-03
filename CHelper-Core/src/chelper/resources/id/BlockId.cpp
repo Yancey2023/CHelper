@@ -44,12 +44,12 @@ namespace CHelper {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
                 valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -73,12 +73,12 @@ namespace CHelper {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
                 valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -135,7 +135,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
+                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {
@@ -161,7 +161,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
+                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {

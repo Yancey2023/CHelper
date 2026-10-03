@@ -77,6 +77,71 @@ namespace CHelper::Test {
         EXPECT_EQ(other.deallocations, 0u);
     }
 
+    TEST(CPackMemoryTest, PropertyStringObjectAndBufferUseOriginResource) {
+        RecordingResource origin;
+        RecordingResource other;
+        PropertyString *text;
+        PropertyString *copy;
+        {
+            RouterScope scope(&origin);
+            text = new PropertyString(u"property string longer than inline storage", &origin);
+            copy = new PropertyString(*text, &origin);
+            EXPECT_EQ(*copy, *text);
+            EXPECT_EQ(origin.allocations, 4u);
+        }
+        {
+            RouterScope scope(&other);
+            delete text;
+            delete copy;
+        }
+        EXPECT_EQ(origin.deallocations, 4u);
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_EQ(other.allocations, 0u);
+        EXPECT_EQ(other.deallocations, 0u);
+    }
+
+    TEST(CPackMemoryTest, PropertyStringConstructorFailureReleasesObject) {
+        RecordingResource resource;
+        {
+            RouterScope scope(&resource);
+            EXPECT_THROW((void) new PropertyString(SIZE_MAX, u'x', &resource), std::length_error);
+        }
+        EXPECT_EQ(resource.allocations, 1u);
+        EXPECT_EQ(resource.deallocations, 1u);
+        EXPECT_TRUE(resource.live.empty());
+    }
+
+    TEST(CPackMemoryTest, DefaultItemNodeOutlivesLoadingPool) {
+        Node::NodeWithType retained;
+        {
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope scope(memory);
+            ItemId first;
+            ItemId second;
+            retained = first.getNode();
+            EXPECT_EQ(retained.data, second.getNode().data);
+        }
+        ItemId third;
+        EXPECT_EQ(retained.data, third.getNode().data);
+        const auto &integer = *static_cast<const Node::NodeInteger *>(retained.data);
+        EXPECT_EQ(integer.id, "ITEM_DATA");
+        EXPECT_EQ(integer.description, u"物品附加值");
+        EXPECT_EQ(integer.min, -1);
+        EXPECT_FALSE(integer.max.has_value());
+        ItemId limited;
+        limited.max = 5;
+        const auto &limitedNode = limited.getNode();
+        EXPECT_NE(retained.data, limitedNode.data);
+        EXPECT_EQ(static_cast<const Node::NodeInteger *>(limitedNode.data)->max, 5);
+        ItemId described;
+        described.descriptions.emplace();
+        EXPECT_NE(retained.data, described.getNode().data);
+        EXPECT_EQ(described.getNode().nodeTypeId, Node::NodeTypeId::OR);
+        ItemId invalid;
+        invalid.max = -1;
+        EXPECT_THROW((void) invalid.getNode(), std::runtime_error);
+    }
+
     TEST(CPackMemoryTest, HeapNodeCanBeDeletedWhilePoolIsActive) {
         RecordingResource resource;
         AlignedNode *node;

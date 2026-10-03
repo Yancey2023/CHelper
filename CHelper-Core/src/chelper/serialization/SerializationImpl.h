@@ -745,7 +745,7 @@ namespace CHelper {
                             glz::is_context auto &&ctx, auto &&b, auto &&ix) {
         switch (type) {
             case PropertyType::STRING:
-                glz::serialize<Fmt>::template op<Opts>(*v.string, ctx, b, ix);
+                glz::serialize<Fmt>::template op<Opts>(static_cast<const std::pmr::u16string &>(*v.string), ctx, b, ix);
                 break;
             case PropertyType::BOOLEAN:
                 glz::serialize<Fmt>::template op<Opts>(v.boolean, ctx, b, ix);
@@ -773,8 +773,8 @@ namespace CHelper {
             glz::skip_ws<Opts>(ctx, it, end);
             if (*it == '"') [[likely]] {
                 type = PropertyType::STRING;
-                v.string = new std::pmr::u16string();
-                glz::parse<glz::JSON>::op<Opts>(*v.string, ctx, it, end);
+                v.string = new CHelper::PropertyString();
+                glz::parse<glz::JSON>::op<Opts>(static_cast<std::pmr::u16string &>(*v.string), ctx, it, end);
             } else if (*it == 't' || *it == 'f') [[likely]] {
                 type = PropertyType::BOOLEAN;
                 glz::parse<glz::JSON>::op<Opts>(v.boolean, ctx, it, end);
@@ -787,7 +787,7 @@ namespace CHelper {
             const std::uint8_t tag = static_cast<std::uint8_t>(*it++);
             if ((tag >= 0xa0 && tag <= 0xbf) || tag == 0xd9 || tag == 0xda || tag == 0xdb) [[likely]] {
                 type = PropertyType::STRING;
-                v.string = new std::pmr::u16string();
+                v.string = new CHelper::PropertyString();
                 std::string utf8;
                 glz::from<glz::MSGPACK, std::string>::op<Opts>(utf8, tag, ctx, it, end);
                 ::CHelper::U16Conv::convertToU16(utf8, *v.string);
@@ -807,8 +807,8 @@ namespace CHelper {
                                  glz::is_context auto &&ctx, auto &&it, auto &&end) {
         switch (type) {
             case PropertyType::STRING:
-                v.string = new std::pmr::u16string();
-                glz::parse<CHelper::BinaryFormat>::template op<Opts>(*v.string, ctx, it, end);
+                v.string = new CHelper::PropertyString();
+                glz::parse<CHelper::BinaryFormat>::template op<Opts>(static_cast<std::pmr::u16string &>(*v.string), ctx, it, end);
                 break;
             case PropertyType::BOOLEAN:
                 glz::parse<CHelper::BinaryFormat>::template op<Opts>(v.boolean, ctx, it, end);

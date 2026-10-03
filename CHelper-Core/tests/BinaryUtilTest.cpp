@@ -472,11 +472,11 @@ TEST(BinaryUtilTest, Property) {
         CHelper::Property aProperty;
         aProperty.name = u"name3";
         aProperty.type = CHelper::PropertyType::STRING;
-        aProperty.defaultValue.string = new std::pmr::u16string(u"aaa");
+        aProperty.defaultValue.string = new CHelper::PropertyString(u"aaa");
         aProperty.valid = std::pmr::vector<CHelper::PropertyValue>(3);
-        aProperty.valid->at(0).string = new std::pmr::u16string(u"a1");
-        aProperty.valid->at(1).string = new std::pmr::u16string(u"a2");
-        aProperty.valid->at(2).string = new std::pmr::u16string(u"a3");
+        aProperty.valid->at(0).string = new CHelper::PropertyString(u"a1");
+        aProperty.valid->at(1).string = new CHelper::PropertyString(u"a2");
+        aProperty.valid->at(2).string = new CHelper::PropertyString(u"a3");
         return aProperty;
     };
     testHandwritten<CHelper::Property>({getInstance1, getInstance2, getInstance3});
@@ -969,6 +969,29 @@ TEST(BinaryUtilTest, Utf16ConversionPreservesUnicodeAndRejectsInvalidUtf8) {
     }
 }
 
+TEST(BinaryUtilTest, Utf16WordCountsCoverUnicodeAndByteOffsets) {
+    std::u16string expected;
+    for (std::uint32_t cp = 0; cp <= 0x10ffff; ++cp) {
+        if (cp >= 0xd800 && cp <= 0xdfff) continue;
+        if (cp <= 0xffff) {
+            expected.push_back(static_cast<char16_t>(cp));
+        } else {
+            expected.push_back(static_cast<char16_t>(0xd800 + ((cp - 0x10000) >> 10)));
+            expected.push_back(static_cast<char16_t>(0xdc00 + ((cp - 0x10000) & 0x3ff)));
+        }
+    }
+    const auto input = utf8::utf16to8(expected);
+    std::u16string restored;
+    CHelper::U16Conv::convertToU16(input, restored);
+    EXPECT_EQ(restored, expected);
+    for (size_t prefix = 0; prefix < 16; ++prefix) {
+        const auto text = std::u16string(prefix, u'a') + u"中🙂\u0080文\U0010ffffx中🙂";
+        const auto padded = "x" + utf8::utf16to8(text);
+        CHelper::U16Conv::convertToU16(std::string_view(padded).substr(1), restored);
+        EXPECT_EQ(restored, text);
+    }
+}
+
 TEST(BinaryUtilTest, NamespaceIdCacheOwnsQualifiedName) {
     for (const std::optional<std::u16string> prefix: {std::optional<std::u16string>{}, std::optional<std::u16string>{u"custom"}, std::optional<std::u16string>{u""}}) {
         CHelper::NamespaceId id;
@@ -1111,13 +1134,13 @@ TEST(BinaryUtilTest, SharedBlockPropertyCacheComparesValuesByContent) {
             auto &value = definition.values.emplace_back().valueName;
             auto &valid = property.valid->emplace_back();
             if (type == PropertyType::STRING) {
-                value.string = new std::pmr::u16string(i == 0 ? u"north" : u"south");
-                valid.string = new std::pmr::u16string(*value.string);
+                value.string = new CHelper::PropertyString(i == 0 ? u"north" : u"south");
+                valid.string = new CHelper::PropertyString(*value.string);
             } else {
                 value.integer = valid.integer = i;
             }
         }
-        if (type == PropertyType::STRING) property.defaultValue.string = new std::pmr::u16string(u"north");
+        if (type == PropertyType::STRING) property.defaultValue.string = new CHelper::PropertyString(u"north");
         else
             property.defaultValue.integer = 0;
         const Property copy(property);

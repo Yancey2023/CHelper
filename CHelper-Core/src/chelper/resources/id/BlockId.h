@@ -33,8 +33,22 @@ namespace CHelper {
         };
     }
 
+    // 属性字符串的对象本体与字符缓冲区一起归属 CPack 内存池。
+    // 对象分配头保留实际资源；字符缓冲区仍遵循 PMR 字符串的资源生命周期。
+    class PropertyString final : public std::pmr::u16string {
+    public:
+        using std::pmr::u16string::basic_string;
+        using std::pmr::u16string::operator=;
+
+        static void *operator new(size_t bytes) {
+            return allocateCPackObject(bytes, alignof(PropertyString));
+        }
+
+        static void operator delete(void *pointer) noexcept { deallocateCPackObject(pointer); }
+    };
+
     union PropertyValue {
-        std::pmr::u16string *string;
+        PropertyString *string;
         bool boolean = true;
         int32_t integer;
     };
