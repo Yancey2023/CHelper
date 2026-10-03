@@ -71,9 +71,20 @@ namespace CHelper {
                 const Node::NodeWithType &node,
                 std::pmr::vector<ASTNode> &&childNodes,
                 TokensView tokens,
-                const std::pmr::vector<std::shared_ptr<ErrorReason>> &errorReasons,
+                std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons,
                 ASTNodeId::ASTNodeId id,
                 size_t whichBest = -1);
+
+        // initializer_list 的元素是 const，{std::move(node)} 仍会深拷贝 AST。
+        // 显式构造子节点数组，保证调用方交出子树的所有权。
+        template<class... Nodes>
+        static std::pmr::vector<ASTNode> children(Nodes &&...nodes) {
+            static_assert((std::is_same_v<Nodes, ASTNode> && ...));
+            std::pmr::vector<ASTNode> result;
+            result.reserve(sizeof...(Nodes));
+            (result.emplace_back(std::forward<Nodes>(nodes)), ...);
+            return result;
+        }
 
         static ASTNode simpleNode(const Node::NodeWithType &node,
                                   const TokensView &tokens,

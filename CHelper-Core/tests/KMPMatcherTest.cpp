@@ -18,6 +18,7 @@
 
 #include <chelper/util/KMPMatcher.h>
 #include <gtest/gtest.h>
+#include <random>
 
 TEST(KMPMatcher, KMPMatcher) {
     CHelper::KMPMatcher kmpMatcher1(u"");
@@ -40,4 +41,20 @@ TEST(KMPMatcher, KMPMatcher) {
     EXPECT_EQ(kmpMatcher3.match(u"aaa"), 0);
     EXPECT_EQ(kmpMatcher3.match(u"ababa"), std::u16string::npos);
     EXPECT_EQ(kmpMatcher3.match(u"baa"), 1);
+}
+
+TEST(KMPMatcher, MatchesStringViewFindAcrossInlineAndHeapStorage) {
+    std::mt19937 random(20261004);
+    for (size_t length = 0; length <= 70; ++length) {
+        for (size_t iteration = 0; iteration < 24; ++iteration) {
+            std::u16string pattern(length, u'\0'), text(120, u'\0');
+            for (auto &ch: pattern) ch = static_cast<char16_t>(random() % 5);
+            for (auto &ch: text) ch = static_cast<char16_t>(random() % 5);
+            if (iteration % 2 == 0) text.replace(19, pattern.size(), pattern);
+            CHelper::KMPMatcher matcher(pattern);
+            EXPECT_EQ(matcher.match(text), std::u16string_view(text).find(pattern));
+            EXPECT_EQ(matcher.match(pattern), 0);
+            EXPECT_EQ(matcher.match(u""), pattern.empty() ? 0 : std::u16string::npos);
+        }
+    }
 }

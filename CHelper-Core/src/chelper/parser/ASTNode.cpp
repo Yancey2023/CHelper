@@ -25,14 +25,14 @@ namespace CHelper {
                      const Node::NodeWithType &node,
                      std::pmr::vector<ASTNode> &&childNodes,
                      TokensView tokens,
-                     const std::pmr::vector<std::shared_ptr<ErrorReason>> &errorReasons,
+                     std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons,
                      ASTNodeId::ASTNodeId id,
                      size_t whichBest)
         : mode(mode),
           node(node),
           childNodes(std::move(childNodes)),
           tokens(std::move(tokens)),
-          errorReasons(errorReasons),
+          errorReasons(std::move(errorReasons)),
           id(id),
           whichBest(whichBest) {}
 
@@ -44,7 +44,7 @@ namespace CHelper {
         if (errorReason != nullptr) [[likely]] {
             errorReasons.push_back(errorReason);
         }
-        return {ASTNodeMode::NONE, node, {}, tokens, errorReasons, id};
+        return {ASTNodeMode::NONE, node, {}, tokens, std::move(errorReasons), id};
     }
 
     ASTNode ASTNode::andNode(const Node::NodeWithType &node,
@@ -131,7 +131,7 @@ namespace CHelper {
         if (errorCount > 1 && errorReason != nullptr) [[unlikely]] {
             errorReasons = {ErrorReason::contentError(tokens1, errorReason)};
         }
-        return {ASTNodeMode::OR, node, std::move(childNodes), tokens1, errorReasons, id, whichBest};
+        return {ASTNodeMode::OR, node, std::move(childNodes), tokens1, std::move(errorReasons), id, whichBest};
     }
 
     ASTNode ASTNode::orNode(const Node::NodeWithType &node,

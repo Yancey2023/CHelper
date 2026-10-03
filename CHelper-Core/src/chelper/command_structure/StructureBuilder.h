@@ -22,26 +22,75 @@
 
 namespace CHelper::CommandStructure {
 
-    class StructureBuilder {
+    // 两种构建器共用追加规则：计长只累加字符数，写入直接使用预留的缓冲区。
+    template<bool measure>
+    class BasicStructureBuilder {
     private:
-        std::u16string structure;
+        char16_t *output = nullptr;
+        size_t length = 0;
+
+        void increaseSize(size_t count)
+            requires(measure)
+        {
+            if (count > std::numeric_limits<size_t>::max() - length) [[unlikely]] {
+                throw std::length_error("command structure is too long");
+            }
+            length += count;
+        }
 
     public:
-        StructureBuilder &appendUnknown(bool isMustHave);
+        BasicStructureBuilder()
+            requires(measure)
+        = default;
 
-        StructureBuilder &appendSymbol(char16_t ch);
+        // 调用方必须先用计长构建器遍历，提供至少同样长度的输出缓冲区。
+        explicit BasicStructureBuilder(char16_t *output)
+            requires(!measure)
+            : output(output) {}
 
-        StructureBuilder &appendString(const std::u16string_view &str);
+        [[nodiscard]] size_t size() const {
+            return length;
+        }
 
-        StructureBuilder &appendSpace();
+        BasicStructureBuilder &appendUnknown(bool isMustHave) {
+            return appendStringWithBracket(isMustHave, u"未知");
+        }
 
-        StructureBuilder &appendLeftBracket(bool isMustHave);
+        BasicStructureBuilder &appendSymbol(char16_t ch) {
+            if constexpr (measure) increaseSize(1);
+            else
+                output[length++] = ch;
+            return *this;
+        }
 
-        StructureBuilder &appendRightBracket(bool isMustHave);
+        BasicStructureBuilder &appendString(std::u16string_view str) {
+            if constexpr (measure) increaseSize(str.size());
+            else if (!str.empty()) {
+                std::memcpy(output + length, str.data(), str.size() * sizeof(char16_t));
+                length += str.size();
+            }
+            return *this;
+        }
 
-        StructureBuilder &appendStringWithBracket(bool isMustHave, const std::u16string_view &str);
+        BasicStructureBuilder &appendSpace() {
+            if (size() == 0) return *this;
+            return appendSymbol(u' ');
+        }
 
-        std::u16string build();
+        BasicStructureBuilder &appendLeftBracket(bool isMustHave) {
+            return appendSymbol(isMustHave ? u'<' : u'[');
+        }
+
+        BasicStructureBuilder &appendRightBracket(bool isMustHave) {
+            return appendSymbol(isMustHave ? u'>' : u']');
+        }
+
+        BasicStructureBuilder &appendStringWithBracket(bool isMustHave, std::u16string_view str) {
+            return appendSpace().appendLeftBracket(isMustHave).appendString(str).appendRightBracket(isMustHave);
+        }
     };
+
+    using StructureBuilder = BasicStructureBuilder<false>;
+    using StructureLengthBuilder = BasicStructureBuilder<true>;
 
 }// namespace CHelper::CommandStructure

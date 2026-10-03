@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <array>
 #include <chelper/node/NodeType.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <chelper/util/JsonUtil.h>
@@ -222,8 +223,10 @@ namespace CHelper::SyntaxHighlight {
     SyntaxResult getSyntaxResult(const ASTNode &astNode) {
         SyntaxResult syntaxResult(astNode.tokens.lexerResult->content);
         collectSyntaxResult(astNode, syntaxResult);
-        std::stack<char16_t> brackets;
-        astNode.tokens.forEach([&brackets, &syntaxResult](const Token &token) {
+        std::array<char16_t, 32> brackets;
+        std::vector<char16_t> overflow;
+        size_t depth = 0;
+        astNode.tokens.forEach([&](const Token &token) {
             if (token.type != TokenType::SYMBOL || token.content.empty()) [[likely]] {
                 return;
             }
@@ -231,7 +234,7 @@ namespace CHelper::SyntaxHighlight {
             switch (ch) {
                 case '[':
                 case '{': {
-                    switch (brackets.size() % 3) {
+                    switch (depth % 3) {
                         case 0:
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET1);
                             break;
@@ -244,14 +247,21 @@ namespace CHelper::SyntaxHighlight {
                         default:
                             CHELPER_UNREACHABLE();
                     }
-                    brackets.push(ch);
+                    if (depth < brackets.size()) {
+                        brackets[depth] = ch;
+                    } else {
+                        overflow.push_back(ch);
+                    }
+                    ++depth;
                 } break;
                 case ']':
                 case '}': {
-                    if (brackets.empty() || !((brackets.top() == '[' && ch == ']') || (brackets.top() == '{' && ch == '}'))) {
+                    if (depth == 0) break;
+                    const char16_t opening = depth <= brackets.size() ? brackets[depth - 1] : overflow.back();
+                    if (!((opening == '[' && ch == ']') || (opening == '{' && ch == '}'))) {
                         break;
                     }
-                    switch ((brackets.size() - 1) % 3) {
+                    switch ((depth - 1) % 3) {
                         case 0:
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET1);
                             break;
@@ -264,7 +274,8 @@ namespace CHelper::SyntaxHighlight {
                         default:
                             CHELPER_UNREACHABLE();
                     }
-                    brackets.pop();
+                    if (depth > brackets.size()) overflow.pop_back();
+                    --depth;
                 } break;
                 default:
                     break;

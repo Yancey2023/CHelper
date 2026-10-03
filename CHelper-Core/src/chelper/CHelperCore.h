@@ -63,7 +63,7 @@ namespace CHelper {
          * @param command 命令文本
          * @return 创建的CommandContext指针，用完后需要用deleteContext释放
          */
-        [[nodiscard]] CommandContext *createContext(std::u16string command) const;
+        [[nodiscard]] CommandContext *createContext(std::u16string_view command) const;
 
         /**
          * 释放createContext创建的命令上下文

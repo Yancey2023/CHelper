@@ -28,7 +28,9 @@ namespace CHelper {
 
     class CommandContextMemoryResource final : public std::pmr::memory_resource {
     private:
-        std::pmr::unsynchronized_pool_resource resource;
+        // AST 的各项分配一起存活到上下文销毁，无需逐块回收或维护池的空闲链表。
+        alignas(std::max_align_t) std::byte buffer[1024];
+        std::pmr::monotonic_buffer_resource resource;
 
         void *do_allocate(const size_t bytes, const size_t alignment) override {
             return resource.allocate(bytes, alignment);
@@ -44,7 +46,7 @@ namespace CHelper {
 
     public:
         CommandContextMemoryResource()
-            : resource({}, std::pmr::new_delete_resource()) {
+            : resource(buffer, sizeof(buffer), std::pmr::new_delete_resource()) {
             CPackMemoryRouter::install();
             std::pmr::memory_resource *previous = CPackMemoryRouter::getCurrent();
             CPackMemoryRouter::setCurrent(nullptr);
@@ -114,30 +116,31 @@ namespace CHelper {
         std::shared_ptr<const CPack> cpack;
         CommandContextMemoryResource memory;
         CommandContextMemoryScope memoryScope;
-        std::pmr::u16string command;
         ASTNode astNode;
+        const std::u16string_view command;
+        const size_t nodeCount;
 
     public:
         /**
          * 解析命令文本并生成AST
          * @param cpack   共享的资源包
-         * @param command 命令文本
+         * @param command 命令文本，构造时复制到词法结果中，不借用调用方的存储
          */
-        CommandContext(std::shared_ptr<const CPack> cpack, std::u16string command);
+        CommandContext(std::shared_ptr<const CPack> cpack, std::u16string_view command);
 
         ~CommandContext();
 
-        [[nodiscard]] const CPack &getCPack() const;
+        [[nodiscard]] const CPack &getCPack() const { return *cpack; }
 
         /**
          * 获取这个上下文对应的命令文本
          */
-        [[nodiscard]] std::u16string_view getCommand() const;
+        [[nodiscard]] std::u16string_view getCommand() const { return command; }
 
         /**
          * 获取解析好的AST
          */
-        [[nodiscard]] const ASTNode *getAstNode() const;
+        [[nodiscard]] const ASTNode *getAstNode() const { return &astNode; }
 
         /**
          * 获取命令结构
@@ -169,7 +172,7 @@ namespace CHelper {
         /**
          * 获取最佳解析路径中已经匹配的命令语义节点数量
          */
-        [[nodiscard]] size_t getNodeCount() const;
+        [[nodiscard]] size_t getNodeCount() const { return nodeCount; }
 
         /**
          * 把指定位置的第which个补全建议应用到命令文本

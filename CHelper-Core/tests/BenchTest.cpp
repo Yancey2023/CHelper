@@ -463,3 +463,111 @@ TEST(Bench, RequestPerCommand) {
         }
     }
 }
+
+// 构造与析构分别计时；每个查询在刚构造的上下文上执行一次，覆盖首次调用的成本。
+TEST(Bench, CommandContextOperations) {
+    CHelperCore core(serialization::createCPackByDirectory(vanillaDir()));
+    Stats create{"context construct"}, destroy{"context destroy"};
+    Stats suggestions{"context suggestions"}, hint{"context hint"}, structure{"context structure"};
+    Stats syntax{"context syntax"}, errors{"context errors"}, count{"context node count"};
+    Stats apply{"context apply suggestion"};
+    const auto measure = [](Stats &stats, auto &&body, bool measured) {
+        if (measured) startAllocCounting();
+        const auto start = std::chrono::steady_clock::now();
+        body();
+        const auto end = std::chrono::steady_clock::now();
+        if (measured) stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+    };
+    for (const auto &command: benchCommands()) {
+        for (size_t i = 0; i < 220; ++i) {
+            const bool measured = i >= 20;
+            std::unique_ptr<CommandContext> context;
+            measure(create, [&] { context.reset(core.createContext(command)); }, measured);
+            measure(suggestions, [&] { (void) context->getSuggestions(command.size()); }, measured);
+            measure(hint, [&] { (void) context->getParamHint(command.size()); }, measured);
+            measure(structure, [&] { (void) context->getStructure(); }, measured);
+            measure(syntax, [&] { (void) context->getSyntaxResult(); }, measured);
+            measure(errors, [&] { (void) context->getErrorReasons(); }, measured);
+            measure(count, [&] {
+                volatile size_t result = context->getNodeCount();
+                (void) result; }, measured);
+            measure(apply, [&] { (void) context->applySuggestion(command.size(), 0); }, measured);
+            measure(destroy, [&] { context.reset(); }, measured);
+        }
+    }
+    for (const auto *stats: {&create, &destroy, &suggestions, &hint, &structure, &syntax, &errors, &count, &apply}) {
+        stats->print();
+    }
+}
+
+// 优化前后使用同一输入和所有光标位置，对比结果指纹（包含建议顺序、描述、范围及应用结果）。
+TEST(Bench, CommandContextResults) {
+    CHelperCore core(serialization::createCPackByDirectory(vanillaDir()));
+    std::string result;
+    const auto add = [&](std::u16string_view value) {
+        result += std::to_string(value.size()) + ":" + utf8::utf16to8(value) + "|";
+    };
+    const auto number = [&](size_t value) { result += std::to_string(value) + "|"; };
+    for (const auto &command: benchCommands()) {
+        std::unique_ptr<CommandContext> context(core.createContext(command));
+        add(context->getCommand());
+        add(context->getStructure());
+        number(context->getNodeCount());
+        for (const auto &error: context->getErrorReasons()) {
+            number(error->level);
+            number(error->start);
+            number(error->end);
+            add(error->errorReason);
+        }
+        result += "errors|";
+        for (const auto type: context->getSyntaxResult().tokenTypes) number(type);
+        for (size_t cursor = 0; cursor <= command.size(); ++cursor) {
+            add(context->getParamHint(cursor));
+            const auto suggestions = context->getSuggestions(cursor);
+            number(suggestions.size());
+            for (const auto &suggestion: suggestions) {
+                number(suggestion.start);
+                number(suggestion.end);
+                number(suggestion.isAddSpace);
+                add(suggestion.content->name);
+                number(suggestion.content->description.has_value());
+                if (suggestion.content->description) add(*suggestion.content->description);
+            }
+            for (const auto which: {size_t(0), suggestions.empty() ? size_t(0) : suggestions.size() - 1, suggestions.size()}) {
+                const auto applied = context->applySuggestion(cursor, which);
+                number(applied.has_value());
+                if (applied) {
+                    add(applied->first);
+                    number(applied->second);
+                }
+            }
+        }
+    }
+    std::printf("CommandContext results: %zu bytes, xxh64=%016llx\n", result.size(),
+                static_cast<unsigned long long>(XXH64(result.data(), result.size(), 0)));
+}
+
+// 批量计时，避免单次结构查询太短而被计时器和日志精度掩盖。
+TEST(Bench, CommandStructure) {
+    CHelperCore core(serialization::createCPackByDirectory(vanillaDir()));
+    auto commands = benchCommands();
+    commands.push_back(u"say " + std::u16string(10000, u'x'));
+    Stats total{"command structure batch"};
+    constexpr size_t batch = 100;
+    for (size_t i = 0; i < commands.size(); ++i) {
+        std::unique_ptr<CommandContext> context(core.createContext(commands[i]));
+        Stats stats{"structure " + std::to_string(i)};
+        benchmark(stats, 200, [&] {
+            for (size_t j = 0; j < batch; ++j) (void) context->getStructure();
+        });
+        std::printf("structure[%zu] input=%zu output=%zu avg=%.2f ns new=%.3f\n", i,
+                    commands[i].size(), context->getStructure().size(),
+                    stats.totalMs * 1e6 / double(stats.count * batch),
+                    double(stats.allocCalls) / double(stats.count * batch));
+        total.totalMs += stats.totalMs;
+        total.count += stats.count;
+        total.allocCalls += stats.allocCalls;
+    }
+    std::printf("structure overall avg=%.2f ns new=%.3f\n", total.totalMs * 1e6 / double(total.count * batch),
+                double(total.allocCalls) / double(total.count * batch));
+}

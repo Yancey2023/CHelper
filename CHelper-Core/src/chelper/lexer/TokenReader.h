@@ -23,15 +23,20 @@
 #include <chelper/node/NodeWithType.h>
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/TokensView.h>
+#include <chelper/util/IdMatchCache.h>
 #include <pch.h>
 
 namespace CHelper {
 
     class TokenReader {
+    private:
+        std::pmr::vector<size_t> lineFeedIndexes;
+
     public:
         const std::shared_ptr<LexerResult> lexerResult;
         size_t index = 0;
         std::pmr::vector<size_t> indexStack;
+        IdMatchCache idMatches;
 
         explicit TokenReader(const std::shared_ptr<LexerResult> &lexerResult);
 

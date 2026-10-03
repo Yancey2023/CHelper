@@ -66,7 +66,14 @@ namespace CHelper {
     }// namespace
 
     TokenReader::TokenReader(const std::shared_ptr<LexerResult> &lexerResult)
-        : lexerResult(lexerResult) {}
+        : lexerResult(lexerResult) {
+        // 解析分支会反复回退并跳到行尾，预先记录换行，避免重复扫描长命令。
+        for (size_t i = 0; i < lexerResult->allTokens.size(); ++i) {
+            if (lexerResult->allTokens[i].type == TokenType::LF) {
+                lineFeedIndexes.push_back(i);
+            }
+        }
+    }
 
     bool TokenReader::ready() const {
         return index < lexerResult->allTokens.size();
@@ -109,8 +116,9 @@ namespace CHelper {
     }
 
     void TokenReader::skipToLF() {
-        while (ready() && peek()->type != TokenType::LF) {
-            skip();
+        if (ready()) {
+            const auto nextLineFeed = std::ranges::lower_bound(lineFeedIndexes, index);
+            index = nextLineFeed == lineFeedIndexes.end() ? lexerResult->allTokens.size() : *nextLineFeed;
         }
     }
 

@@ -49,6 +49,13 @@ namespace CHelper {
 
         void forEach(std::function<void(const Token &token)> function) const;
 
+        template<class Function>
+        void forEach(Function &&function) const {
+            for (size_t i = start; i < end; ++i) {
+                function(lexerResult->allTokens[i]);
+            }
+        }
+
         [[nodiscard]] std::u16string_view string() const;
     };
 

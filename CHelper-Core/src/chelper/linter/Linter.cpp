@@ -18,23 +18,28 @@
 
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/util/IdMatchCache.h>
 #include <chelper/util/JsonUtil.h>
 
 namespace CHelper::Linter {
 
+    using QueryState = IdMatchCache;
+
+    std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode, QueryState &state);
+
     template<class NodeType>
     struct Linter {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             return false;
         }
     };
 
     template<>
     struct Linter<Node::NodeJsonString> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.id == ASTNodeId::NODE_STRING_INNER) [[unlikely]] {
                 auto convertResult = JsonUtil::jsonString2String(astNode.tokens.string());
-                for (const auto &item: getErrorsExceptParseError(astNode.childNodes[0])) {
+                for (const auto &item: getErrorsExceptParseError(astNode.childNodes[0], state)) {
                     item->start = convertResult.convert(item->start) + astNode.tokens.startIndex;
                     item->end = convertResult.convert(item->end) + astNode.tokens.startIndex;
                     errorReasons.push_back(item);
@@ -46,7 +51,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeCommandName> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.isError()) [[unlikely]] {
                 return true;
             }
@@ -66,15 +71,15 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeNamespaceId> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.isError()) [[unlikely]] {
                 return true;
             }
             const auto &node = *reinterpret_cast<const Node::NodeNamespaceId *>(astNode.node.data);
             std::u16string_view str = astNode.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            if (std::ranges::all_of(*node.customContents, [&strHash](const auto &item) {
-                    return !item->fastMatch(strHash) && !item->getIdWithNamespace()->fastMatch(strHash);
+            if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
+                    return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
                 })) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"找不到ID -> {}", str)));
             }
@@ -84,15 +89,15 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeNormalId> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.isError()) [[unlikely]] {
                 return true;
             }
             const auto &node = *reinterpret_cast<const Node::NodeNormalId *>(astNode.node.data);
             std::u16string_view str = astNode.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            if (std::ranges::all_of(*node.customContents, [&strHash](const auto &item) {
-                    return !item->fastMatch(strHash);
+            if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
+                    return item->fastMatch(strHash);
                 })) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"找不到ID -> {}", str)));
             }
@@ -102,7 +107,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodePosition> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_POSITION_POSITIONS_WITH_ERROR) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::logicError(astNode.tokens, u"绝对坐标和相对坐标不能与局部坐标混用"));
                 return true;
@@ -114,7 +119,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeRelativeFloat> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_RELATIVE_FLOAT_WITH_ERROR) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::logicError(astNode.tokens, u"不能使用局部坐标"));
                 return true;
@@ -126,7 +131,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeEqualEntry> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.childNodes.size() == 3 && astNode.childNodes[2].node.data == Node::NodeAny::getNodeAny().data) {
                 errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的目标选择器参数 -> {}", astNode.childNodes[0].tokens.string())));
                 return true;
@@ -138,7 +143,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeJsonList> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_JSON_ALL_LIST) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的json参数 -> {}", astNode.tokens.string())));
                 return true;
@@ -150,7 +155,7 @@ namespace CHelper::Linter {
 
     template<>
     struct Linter<Node::NodeJsonEntry> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!reinterpret_cast<Node::NodeJsonEntry *>(astNode.node.data)->nodeEntry.has_value()) [[unlikely]] {
                 errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的json参数 -> {}", astNode.tokens.string())));
                 return true;
@@ -162,7 +167,7 @@ namespace CHelper::Linter {
 
     template<class T, bool isJson>
     struct Linter<Node::NodeTemplateNumber<T, isJson>> {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.isError()) [[unlikely]] {
                 return true;
             }
@@ -188,10 +193,10 @@ namespace CHelper::Linter {
         }
     };
 
-    void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons) {
+    void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
         if (!astNode.isAllSpaceError()) [[unlikely]] {
             bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
-                return Linter<NodeType>::lint(astNode, errorReasons);
+                return Linter<NodeType>::lint(astNode, errorReasons, state);
             });
             if (isDirty) [[unlikely]] {
                 return;
@@ -202,16 +207,22 @@ namespace CHelper::Linter {
                 break;
             case ASTNodeMode::AND:
                 for (const ASTNode &item: astNode.childNodes) {
-                    lint(item, errorReasons);
+                    lint(item, errorReasons, state);
                 }
                 break;
             case ASTNodeMode::OR:
-                lint(astNode.getBestNode(), errorReasons);
+                lint(astNode.getBestNode(), errorReasons, state);
                 break;
         }
     }
 
     std::vector<std::shared_ptr<ErrorReason>> sortByLevel(std::vector<std::shared_ptr<ErrorReason>> &&input) {
+        if ((input.empty() || input.front()->level <= ErrorReasonLevel::maxLevel) &&
+            std::ranges::is_sorted(input, [](const auto &left, const auto &right) {
+                return left->level > right->level;
+            })) {
+            return std::move(input);
+        }
         // 错误等级是固定的7个桶；按桶扫描保持同等级错误的原有顺序，时间复杂度为O(7n)=O(n)。
         std::vector<std::shared_ptr<ErrorReason>> output;
         output.reserve(input.size());
@@ -230,17 +241,23 @@ namespace CHelper::Linter {
         return output;
     }
 
-    std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode) {
+    std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode, QueryState &state) {
         std::vector<std::shared_ptr<ErrorReason>> input;
-        lint(astNode, input);
+        lint(astNode, input, state);
         return sortByLevel(std::move(input));
     }
 
+    std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode) {
+        QueryState state;
+        return getErrorsExceptParseError(astNode, state);
+    }
+
     std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode) {
+        QueryState state;
         std::vector<std::shared_ptr<ErrorReason>> result;
         result.reserve(astNode.errorReasons.size());
         result.insert(result.end(), astNode.errorReasons.begin(), astNode.errorReasons.end());
-        lint(astNode, result);
+        lint(astNode, result, state);
         return sortByLevel(std::move(result));
     }
 

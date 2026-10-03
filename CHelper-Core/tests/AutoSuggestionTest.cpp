@@ -160,7 +160,8 @@ namespace CHelper::Test {
 
     TEST(AutoSuggestionTest, CompactIdHashPreservesMatchingAndDeduplication) {
         const std::vector<std::u16string> names{
-                u"", u"stone", u"中文🙂", std::u16string(u"a\0b", 3), std::u16string(513, u'长')};
+                u"", u"stone", u"中文🙂", std::u16string(u"a\0b", 3),
+                std::u16string(119, u'长'), std::u16string(120, u'长'), std::u16string(121, u'长'), std::u16string(513, u'长')};
         const std::vector<std::optional<std::u16string>> descriptions{
                 std::nullopt, u"", u"说明🙂", std::u16string(u"x\0y", 3), std::u16string(769, u'述')};
         for (const auto &name: names) {

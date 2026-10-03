@@ -39,6 +39,22 @@ namespace CHelper::AutoSuggestion {
           content(content) {}
 
     [[nodiscard]] XXH64_hash_t Suggestion::hashCode() const {
+        // 常见 ID 和描述很短，合并到栈上后一次哈希，省去流式状态的初始化与多次更新。
+        // 字节顺序与下方流式路径完全相同，保持已有去重规则。
+        std::byte buffer[256];
+        const size_t descriptionSize = content->description ? content->description->size() : 0;
+        if (content->name.size() + descriptionSize <= (sizeof(buffer) - sizeof(start) - sizeof(end)) / sizeof(char16_t)) {
+            const size_t nameBytes = content->name.size() * sizeof(char16_t);
+            const size_t descriptionBytes = descriptionSize * sizeof(char16_t);
+            std::memcpy(buffer, content->name.data(), nameBytes);
+            if (descriptionBytes != 0) {
+                std::memcpy(buffer + nameBytes, content->description->data(), descriptionBytes);
+            }
+            const size_t size = nameBytes + descriptionBytes;
+            std::memcpy(buffer + size, &start, sizeof(start));
+            std::memcpy(buffer + size + sizeof(start), &end, sizeof(end));
+            return XXH3_64bits(buffer, size + sizeof(start) + sizeof(end));
+        }
         XXH3_state_t hashState;
         XXH3_64bits_reset(&hashState);
         content->updateHashState(hashState);

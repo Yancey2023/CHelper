@@ -16,8 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <barrier>
 #include <chelper/CHelperCore.h>
+#include <chelper/command_structure/CommandStructure.h>
+#include <chelper/lexer/Lexer.h>
+#include <chelper/node/NodeType.h>
 #include <chelper/serialization/Serialization.h>
+#include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <thread>
@@ -218,6 +223,97 @@ namespace CHelper::Test {
 
         ASSERT_FALSE(errorReasons.empty());
         EXPECT_FALSE(errorReasons.front()->errorReason.empty());
+    }
+
+    TEST(CommandContextTest, CopiesTemporaryInputAndResultsOutliveContext) {
+        const auto cpack = loadCPack();
+        std::vector<AutoSuggestion::Suggestion> suggestions;
+        std::optional<std::pair<std::u16string, size_t>> applied;
+        std::u16string structure, hint;
+        {
+            std::u16string input = u"gi";
+            CommandContext context(cpack, input);
+            input.assign(1024, u'x');
+            EXPECT_EQ(context.getCommand(), u"gi");
+            suggestions = context.getSuggestions(2);
+            structure = context.getStructure();
+            hint = context.getParamHint(2);
+            applied = context.applySuggestion(2, 0);
+        }
+        ASSERT_FALSE(suggestions.empty());
+        EXPECT_FALSE(suggestions.front().content->name.empty());
+        EXPECT_FALSE(structure.empty());
+        EXPECT_FALSE(hint.empty());
+        ASSERT_TRUE(applied);
+        EXPECT_EQ(applied->first, u"give ");
+        EXPECT_EQ(applied->second, 5);
+        CommandContext temporary(cpack, std::u16string(u"list"));
+        EXPECT_EQ(temporary.getCommand(), u"list");
+    }
+
+    TEST(CommandContextTest, ConcurrentReadsAndSuggestionApplicationOnSameContext) {
+        const auto cpack = loadCPack();
+        const std::u16string command = uR"(execute as @a run give @s sto)";
+        const CommandContext context(cpack, command);
+        const auto expected = collectAllResults(context, command.size() / 2, command.size());
+        const auto expectedApplied = context.applySuggestion(command.size(), 0);
+        std::barrier ready(4);
+        std::array<std::string, 4> failures;
+        std::vector<std::thread> threads;
+        for (size_t i = 0; i < failures.size(); ++i) {
+            threads.emplace_back([&, i] {
+                ready.arrive_and_wait();
+                try {
+                    for (size_t iteration = 0; iteration < 16; ++iteration) {
+                        if (collectAllResults(context, command.size() / 2, command.size()) != expected ||
+                            context.applySuggestion(command.size(), 0) != expectedApplied) {
+                            failures[i] = "concurrent result mismatch";
+                        }
+                    }
+                } catch (const std::exception &error) {
+                    failures[i] = error.what();
+                }
+            });
+        }
+        for (auto &thread: threads) thread.join();
+        for (const auto &failure: failures) EXPECT_TRUE(failure.empty()) << failure;
+    }
+
+    TEST(CommandContextTest, HighlightsDeepAndMismatchedBrackets) {
+        constexpr size_t depth = 40;
+        const std::u16string text = std::u16string(depth, u'[') + u"}" + std::u16string(depth, u']') + u"[]";
+        const auto lexer = Lexer::lex(text);
+        const auto ast = ASTNode::simpleNode(Node::NodeAny::getNodeAny(), TokensView(lexer, 0, lexer->allTokens.size()));
+        const auto syntax = SyntaxHighlight::getSyntaxResult(ast);
+        const std::array colors{SyntaxHighlight::SyntaxTokenType::BRACKET1,
+                                SyntaxHighlight::SyntaxTokenType::BRACKET2,
+                                SyntaxHighlight::SyntaxTokenType::BRACKET3};
+        for (size_t i = 0; i < depth; ++i) {
+            EXPECT_EQ(syntax.tokenTypes[i], colors[i % colors.size()]);
+            EXPECT_EQ(syntax.tokenTypes[depth + 1 + i], colors[(depth - 1 - i) % colors.size()]);
+        }
+        EXPECT_EQ(syntax.tokenTypes[text.size() - 2], colors[0]);
+        EXPECT_EQ(syntax.tokenTypes[text.size() - 1], colors[0]);
+    }
+
+    TEST(CommandContextTest, StructureCountsUnenteredParametersAndLongUnicodeBriefs) {
+        Node::initializeStaticNodes();
+        const auto lexer = Lexer::lex(u"");
+        const TokensView tokens(lexer, 0, 0);
+        const std::vector<std::u16string> briefs{
+                u"", u"参数", u"中文🙂", std::u16string(u"a\0b", 3), std::u16string(2048, u'参')};
+        for (const auto &brief: briefs) {
+            Node::NodeString first, second;
+            first.brief.emplace(brief);
+            second.brief.emplace(u"尾参数");
+            Node::NodeWrapped secondWrapped(second), firstWrapped(first);
+            secondWrapped.pushNextNode(Node::NodeLF::getInstance());
+            firstWrapped.pushNextNode(&secondWrapped);
+            const auto ast = ASTNode::simpleNode(firstWrapped, tokens, ErrorReason::requireSpace(tokens));
+            const auto result = CommandStructure::getStructure(ast);
+            EXPECT_EQ(result, u"<" + brief + u"> <尾参数>");
+            EXPECT_EQ(result.size(), brief.size() + 8);
+        }
     }
 
 }// namespace CHelper::Test
