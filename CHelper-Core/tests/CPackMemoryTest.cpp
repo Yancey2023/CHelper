@@ -5,6 +5,7 @@
  */
 
 #include <chelper/CommandContext.h>
+#include <chelper/lexer/Lexer.h>
 #include <chelper/node/CommandNode.h>
 #include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
@@ -63,6 +64,50 @@ namespace CHelper::Test {
             ThrowingNode() { throw std::runtime_error("constructor failed"); }
         };
     }// namespace
+
+    TEST(CPackMemoryTest, ASTArraysRememberTheirAllocationResourceAcrossScopesAndCopies) {
+        CPackMemoryRouter::install();
+        RecordingResource origin, other;
+        const auto lexer = Lexer::lex(u"abc def");
+        const auto node = Node::NodeAny::getNodeAny();
+        const auto error = ErrorReason::contentError(0, 3, u"测试错误");
+        std::optional<ASTNode> tree, copy, heapCopy, cleanTree;
+        {
+            RouterScope scope(&origin);
+            tree.emplace(ASTNode::andNode(node,
+                                          ASTNode::children(ASTNode::simpleNode(node, TokensView(lexer, 0, 1), error)),
+                                          TokensView(lexer, 0, lexer->allTokens.size())));
+            EXPECT_EQ(tree->childNodes.get_allocator().resource(), &origin);
+            EXPECT_EQ(tree->errorReasons.get_allocator().resource(), &origin);
+            cleanTree.emplace(ASTNode::andNode(node,
+                                               ASTNode::children(ASTNode::simpleNode(node, TokensView(lexer, 0, 1))),
+                                               TokensView(lexer, 0, lexer->allTokens.size())));
+            EXPECT_EQ(cleanTree->errorReasons.get_allocator().resource(), &origin);
+            EXPECT_EQ(cleanTree->childNodes[0].childNodes.get_allocator().resource(), &origin);
+        }
+        heapCopy.emplace(*tree);
+        EXPECT_EQ(heapCopy->childNodes.get_allocator().resource(), CPackMemoryRouter::getAllocationResource());
+        {
+            RouterScope scope(&other);
+            copy.emplace(*tree);
+            EXPECT_EQ(copy->childNodes.get_allocator().resource(), &other);
+            EXPECT_EQ(copy->errorReasons.get_allocator().resource(), &other);
+            EXPECT_EQ(copy->childNodes[0].errorReasons.get_allocator().resource(), &other);
+            heapCopy.reset();
+            tree.reset();
+            cleanTree.reset();
+            EXPECT_TRUE(origin.live.empty());
+            EXPECT_FALSE(other.live.empty());
+        }
+        {
+            RouterScope scope(&origin);
+            copy.reset();
+        }
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_TRUE(other.live.empty());
+        EXPECT_EQ(origin.allocations, origin.deallocations);
+        EXPECT_EQ(other.allocations, other.deallocations);
+    }
 
     TEST(CPackMemoryTest, NodeAllocationRemembersResourceAndAlignment) {
         RecordingResource origin;

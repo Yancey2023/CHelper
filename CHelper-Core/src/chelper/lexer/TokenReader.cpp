@@ -75,46 +75,6 @@ namespace CHelper {
         }
     }
 
-    bool TokenReader::ready() const {
-        return index < lexerResult->allTokens.size();
-    }
-
-    const Token *TokenReader::peek() const {
-        if (!ready()) [[unlikely]] {
-            return nullptr;
-        }
-        return &lexerResult->allTokens[index];
-    }
-
-    const Token *TokenReader::read() {
-        const Token *result = peek();
-        if (result != nullptr) [[likely]] {
-            skip();
-        }
-        return result;
-    }
-
-    const Token *TokenReader::next() {
-        skip();
-        return peek();
-    }
-
-    bool TokenReader::skip() {
-        if (!ready()) [[unlikely]] {
-            return false;
-        }
-        index++;
-        return true;
-    }
-
-    size_t TokenReader::skipSpace() {
-        size_t start = index;
-        while (ready() && peek()->type == TokenType::SPACE) {
-            skip();
-        }
-        return index - start;
-    }
-
     void TokenReader::skipToLF() {
         if (ready()) {
             const auto nextLineFeed = std::ranges::lower_bound(lineFeedIndexes, index);
@@ -122,56 +82,9 @@ namespace CHelper {
         }
     }
 
-    /**
-     * 将当前指针加入栈中
-     */
-    void TokenReader::push() {
-        indexStack.push_back(index);
-    }
-
-    /**
-     * 从栈中移除指针，不恢复指针
-     */
-    void TokenReader::pop() {
-#if CHelperDebug
-        if (indexStack.empty()) {
-            SPDLOG_ERROR("pop when indexStack is null");
-            return;
-        }
-#endif
-        indexStack.pop_back();
-    }
-
-    /**
-     * 从栈中移除并获取最后指针，不恢复指针
-     */
-    size_t TokenReader::getAndPopLastIndex() {
-        size_t size = indexStack.size();
-        if (size == 0) [[unlikely]] {
-            return 0;
-        }
-        size_t result = indexStack[size - 1];
-        pop();
-        return result;
-    }
-
-    /**
-     * 从栈中移除指针，恢复指针
-     */
-    void TokenReader::restore() {
-        index = getAndPopLastIndex();
-    }
-
-    /**
-     * 收集栈中最后一个指针位置到当前指针的token，从栈中移除指针，不恢复指针
-     */
-    TokensView CHelper::TokenReader::collect() {
-        return {lexerResult, getAndPopLastIndex(), index};
-    }
-
     ASTNode TokenReader::readSimpleASTNode(Node::NodeWithType node,
                                            TokenType::TokenType type,
-                                           const std::u16string &requireType,
+                                           std::u16string_view requireType,
                                            const ASTNodeId::ASTNodeId &astNodeId,
                                            std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &str,
                                                                                  const TokensView &tokens)) {
@@ -187,7 +100,7 @@ namespace CHelper {
         } else {
             errorReason = check == nullptr ? nullptr : check(token->content, tokens);
         }
-        return ASTNode::simpleNode(node, tokens, errorReason, astNodeId);
+        return ASTNode::simpleNode(node, std::move(tokens), errorReason, astNodeId);
     }
 
     ASTNode TokenReader::readStringASTNode(const Node::NodeWithType &node,

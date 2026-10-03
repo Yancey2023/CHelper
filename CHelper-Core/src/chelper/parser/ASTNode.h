@@ -52,6 +52,11 @@ namespace CHelper {
         };
     }// namespace ASTNodeId
 
+    // AST 数组保存实际分配资源，释放时无需经过线程路由；资源仍由上下文持有。
+    inline std::pmr::memory_resource *getASTMemoryResource() noexcept {
+        return CPackMemoryRouter::getAllocationResource();
+    }
+
     class ASTNode {
     public:
         ASTNodeMode::ASTNodeMode mode;
@@ -75,25 +80,30 @@ namespace CHelper {
                 ASTNodeId::ASTNodeId id,
                 size_t whichBest = -1);
 
+        ASTNode(const ASTNode &other);
+        ASTNode(ASTNode &&) noexcept = default;
+        ASTNode &operator=(const ASTNode &) = default;
+        ASTNode &operator=(ASTNode &&) = default;
+
         // initializer_list 的元素是 const，{std::move(node)} 仍会深拷贝 AST。
         // 显式构造子节点数组，保证调用方交出子树的所有权。
         template<class... Nodes>
         static std::pmr::vector<ASTNode> children(Nodes &&...nodes) {
             static_assert((std::is_same_v<Nodes, ASTNode> && ...));
-            std::pmr::vector<ASTNode> result;
+            std::pmr::vector<ASTNode> result(getASTMemoryResource());
             result.reserve(sizeof...(Nodes));
             (result.emplace_back(std::forward<Nodes>(nodes)), ...);
             return result;
         }
 
         static ASTNode simpleNode(const Node::NodeWithType &node,
-                                  const TokensView &tokens,
+                                  TokensView tokens,
                                   const std::shared_ptr<ErrorReason> &errorReason = nullptr,
                                   const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode andNode(const Node::NodeWithType &node,
                                std::pmr::vector<ASTNode> &&childNodes,
-                               const TokensView &tokens,
+                               TokensView tokens,
                                const std::shared_ptr<ErrorReason> &errorReason = nullptr,
                                const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
@@ -118,9 +128,20 @@ namespace CHelper {
             return !childNodes.empty();
         }
 
-        [[nodiscard]] bool isAllSpaceError() const;
+        [[nodiscard]] bool isAllSpaceError() const {
+            return isError() && std::ranges::all_of(errorReasons, [](const auto &item) {
+                       return item->level == ErrorReasonLevel::REQUIRE_SPACE;
+                   });
+        }
 
-        [[nodiscard]] const ASTNode &getBestNode() const;
+        [[nodiscard]] const ASTNode &getBestNode() const {
+#if CHelperDebug
+            if (mode != ASTNodeMode::OR) {
+                throw std::runtime_error("invalid mode");
+            }
+#endif
+            return childNodes[whichBest];
+        }
     };
 
 }// namespace CHelper

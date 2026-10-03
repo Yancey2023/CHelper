@@ -110,6 +110,7 @@ TEST(Bench, LongCommand) {
             std::filesystem::path(RESOURCE_DIR) / "resources" / "beta" / "vanilla"));
     std::printf("long input kind=%s count=%zu chars=%zu cursor=%zu hash=%016llx\n", kind.c_str(), count,
                 command.size(), cursor, static_cast<unsigned long long>(XXH3_64bits(command.data(), command.size() * sizeof(char16_t))));
+    std::printf("long layout ast=%zu tokens=%zu\n", sizeof(ASTNode), sizeof(TokensView));
     std::fflush(stdout);
     Stats total{"long total"}, create{"long construct"}, destroy{"long destroy"};
     Stats suggestions{"long suggestions"}, hint{"long hint"}, structure{"long structure"};

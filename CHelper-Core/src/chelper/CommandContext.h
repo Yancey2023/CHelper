@@ -26,23 +26,11 @@
 
 namespace CHelper {
 
-    class CommandContextMemoryResource final : public std::pmr::memory_resource {
+    class CommandContextMemoryResource {
     private:
         // AST 的各项分配一起存活到上下文销毁，无需逐块回收或维护池的空闲链表。
         alignas(std::max_align_t) std::byte buffer[1024];
         std::pmr::monotonic_buffer_resource resource;
-
-        void *do_allocate(const size_t bytes, const size_t alignment) override {
-            return resource.allocate(bytes, alignment);
-        }
-
-        void do_deallocate(void *pointer, const size_t bytes, const size_t alignment) noexcept override {
-            resource.deallocate(pointer, bytes, alignment);
-        }
-
-        [[nodiscard]] bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override {
-            return this == &other;
-        }
 
     public:
         CommandContextMemoryResource()
@@ -55,7 +43,7 @@ namespace CHelper {
         }
 
         [[nodiscard]] std::pmr::memory_resource *getResource() noexcept {
-            return this;
+            return &resource;
         }
     };
 

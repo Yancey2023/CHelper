@@ -75,7 +75,7 @@ namespace CHelper::Parser {
                 return ASTNode::andNode(node, ASTNode::children(std::move(currentASTNode)), tokenReader.collect());
             }
             //子节点
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             childASTNodes.reserve(node.nextNodes.size());
             for (const auto &item: node.nextNodes) {
                 tokenReader.push();
@@ -301,7 +301,7 @@ namespace CHelper::Parser {
                                const std::initializer_list<Node::NodeWithType> childNodes,
                                const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE) {
         tokenReader.push();
-        std::pmr::vector<ASTNode> childASTNodes;
+        std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
         for (const auto &item: childNodes) {
             tokenReader.push();
             tokenReader.push();
@@ -446,7 +446,7 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodePerCommand> {
         static ASTNode getASTNode(const Node::NodePerCommand &node, TokenReader &tokenReader) {
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             childASTNodes.reserve(node.startNodes.size());
             for (const auto &item: node.startNodes) {
                 tokenReader.push();
@@ -473,7 +473,7 @@ namespace CHelper::Parser {
     getRelativeFloatASTNode(const Node::NodeWithType &node,
                             TokenReader &tokenReader) {
         tokenReader.push();
-        std::pmr::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
         // 0 - 绝对坐标，1 - 相对坐标，2 - 局部坐标
         NodeRelativeFloatType::NodeRelativeFloatType type;
         tokenReader.push();
@@ -519,7 +519,7 @@ namespace CHelper::Parser {
         static ASTNode getASTNode(const Node::NodePosition &node, TokenReader &tokenReader) {
             tokenReader.push();
             // 0 - 绝对坐标，1 - 相对坐标，2 - 局部坐标
-            std::pmr::vector<ASTNode> threeChildNodes;
+            std::pmr::vector<ASTNode> threeChildNodes(getASTMemoryResource());
             threeChildNodes.reserve(3);
             NodeRelativeFloatType::NodeRelativeFloatType types[3];
             for (NodeRelativeFloatType::NodeRelativeFloatType &type: types) {
@@ -603,7 +603,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeRepeat> {
         static ASTNode getASTNode(const Node::NodeRepeat &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             while (true) {
                 //记录本次迭代的起始位置，防止element解析成功但没有消费任何token导致死循环
                 const size_t iterationStartIndex = tokenReader.index;
@@ -703,7 +703,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeAnd> {
         static ASTNode getASTNode(const Node::NodeAnd &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             bool isMustAfterSpace = false;
             for (size_t i = 0; i < node.childNodes.size(); ++i) {
                 const auto &item = node.childNodes[i];
@@ -751,7 +751,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeEntry> {
         static ASTNode getASTNode(const Node::NodeEntry &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             auto key = parse(node.nodeKey, tokenReader);
             if (key.isError()) [[unlikely]] {
                 childNodes.push_back(std::move(key));
@@ -773,7 +773,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeEqualEntry> {
         static ASTNode getASTNode(const Node::NodeEqualEntry &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             // key
             ASTNode astNodeKey = parseByChildNode(node, tokenReader, node.nodeKey);
             const bool keyIsError = astNodeKey.isError();
@@ -879,7 +879,7 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodeOr> {
         static ASTNode getASTNode(const Node::NodeOr &node, TokenReader &tokenReader) {
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             std::pmr::vector<size_t> indexes;
             if (!node.isUseFirst) [[likely]] {
                 childASTNodes.reserve(node.childNodes.size());
