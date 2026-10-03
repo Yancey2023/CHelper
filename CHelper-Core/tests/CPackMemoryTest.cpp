@@ -17,6 +17,14 @@ namespace CHelper::Test {
             size_t deallocations = 0;
             std::unordered_map<void *, std::pair<size_t, size_t>> live;
 
+            [[nodiscard]] bool owns(const void *pointer) const {
+                const auto address = reinterpret_cast<std::uintptr_t>(pointer);
+                return std::ranges::any_of(live, [address](const auto &entry) {
+                    const auto begin = reinterpret_cast<std::uintptr_t>(entry.first);
+                    return address >= begin && address - begin < entry.second.first;
+                });
+            }
+
         private:
             void *do_allocate(size_t bytes, size_t alignment) override {
                 auto *pointer = std::pmr::new_delete_resource()->allocate(bytes, alignment);
@@ -87,14 +95,18 @@ namespace CHelper::Test {
             text = new PropertyString(u"property string longer than inline storage", &origin);
             copy = new PropertyString(*text, &origin);
             EXPECT_EQ(*copy, *text);
-            EXPECT_EQ(origin.allocations, 4u);
+            // MSVC Debug 会额外分配迭代器代理；检查实际归属，不依赖标准库的分配次数。
+            EXPECT_TRUE(origin.owns(text));
+            EXPECT_TRUE(origin.owns(copy));
+            EXPECT_TRUE(origin.live.contains(text->data()));
+            EXPECT_TRUE(origin.live.contains(copy->data()));
         }
         {
             RouterScope scope(&other);
             delete text;
             delete copy;
         }
-        EXPECT_EQ(origin.deallocations, 4u);
+        EXPECT_EQ(origin.deallocations, origin.allocations);
         EXPECT_TRUE(origin.live.empty());
         EXPECT_EQ(other.allocations, 0u);
         EXPECT_EQ(other.deallocations, 0u);
