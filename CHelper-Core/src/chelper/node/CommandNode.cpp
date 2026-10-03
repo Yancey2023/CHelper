@@ -25,8 +25,8 @@
 
 namespace CHelper::Node {
 
-    NodeSerializable::NodeSerializable(const std::optional<std::string> &id,
-                                       const std::optional<std::u16string> &description,
+    NodeSerializable::NodeSerializable(const std::optional<std::string_view> id,
+                                       const std::optional<std::u16string_view> description,
                                        bool isMustAfterSpace)
         : id(copyPmrStringOptional(id)),
           description(copyPmrU16StringOptional(description)),
@@ -137,11 +137,11 @@ namespace CHelper::Node {
           ignoreLater(ignoreLater) {}
 
 
-    NodeText::NodeText(const std::optional<std::string> &id,
+    NodeText::NodeText(const std::optional<std::string_view> id,
                        const std::u16string_view description,
                        const std::shared_ptr<NormalId> &data,
                        const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getTextASTNode)
-        : NodeSerializable(id, std::optional<std::u16string>(std::in_place, description), false),
+        : NodeSerializable(id, description, false),
           data(data),
           getTextASTNode(getTextASTNode) {}
 

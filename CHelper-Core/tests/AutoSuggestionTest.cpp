@@ -158,4 +158,33 @@ namespace CHelper::Test {
         }
     }
 
+    TEST(AutoSuggestionTest, CompactIdHashPreservesMatchingAndDeduplication) {
+        const std::vector<std::u16string> names{
+                u"", u"stone", u"中文🙂", std::u16string(u"a\0b", 3), std::u16string(513, u'长')};
+        const std::vector<std::optional<std::u16string>> descriptions{
+                std::nullopt, u"", u"说明🙂", std::u16string(u"x\0y", 3), std::u16string(769, u'述')};
+        for (const auto &name: names) {
+            for (const auto &description: descriptions) {
+                const auto id = NormalId::make(name, description);
+                const auto nameHash = XXH3_64bits(name.data(), name.size() * sizeof(char16_t));
+                EXPECT_TRUE(id->fastMatch(nameHash));
+                id->buildHash();
+                EXPECT_TRUE(id->fastMatch(nameHash));
+                EXPECT_FALSE(id->fastMatch(nameHash ^ 1));
+                for (const size_t start: {size_t{0}, size_t{17}, SIZE_MAX}) {
+                    const size_t end = start == SIZE_MAX ? start : start + 23;
+                    const AutoSuggestion::Suggestion suggestion(start, end, false, id);
+                    std::string bytes(reinterpret_cast<const char *>(name.data()), name.size() * sizeof(char16_t));
+                    if (description.has_value()) {
+                        bytes.append(reinterpret_cast<const char *>(description->data()), description->size() * sizeof(char16_t));
+                    }
+                    bytes.append(reinterpret_cast<const char *>(&start), sizeof(start));
+                    bytes.append(reinterpret_cast<const char *>(&end), sizeof(end));
+                    const auto expected = XXH3_64bits(bytes.data(), bytes.size());
+                    EXPECT_EQ(suggestion.hashCode(), expected);
+                    EXPECT_EQ(suggestion.hashCode(), expected);
+                }
+            }
+        }
+    }
 }// namespace CHelper::Test

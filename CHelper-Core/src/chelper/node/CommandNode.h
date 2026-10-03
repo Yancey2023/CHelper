@@ -33,6 +33,30 @@ namespace CHelper {
     namespace Node {
 
         class NodeBase {
+        public:
+            static void *operator new(size_t bytes) {
+                return allocateCPackObject(bytes, __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+            }
+
+            static void *operator new(size_t bytes, std::align_val_t alignment) {
+                return allocateCPackObject(bytes, static_cast<size_t>(alignment));
+            }
+
+            static void *operator new(size_t bytes, const std::nothrow_t &) noexcept {
+                return allocateCPackObjectNothrow(bytes, __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+            }
+
+            static void *operator new(size_t bytes, std::align_val_t alignment, const std::nothrow_t &) noexcept {
+                return allocateCPackObjectNothrow(bytes, static_cast<size_t>(alignment));
+            }
+
+            static void *operator new(size_t, void *pointer) noexcept { return pointer; }
+
+            static void operator delete(void *pointer) noexcept { deallocateCPackObject(pointer); }
+            static void operator delete(void *pointer, std::align_val_t) noexcept { deallocateCPackObject(pointer); }
+            static void operator delete(void *pointer, const std::nothrow_t &) noexcept { deallocateCPackObject(pointer); }
+            static void operator delete(void *pointer, std::align_val_t, const std::nothrow_t &) noexcept { deallocateCPackObject(pointer); }
+            static void operator delete(void *, void *) noexcept {}
         };
 
         class NodeSerializable : public NodeBase {
@@ -44,8 +68,9 @@ namespace CHelper {
 
             NodeSerializable() = default;
 
-            NodeSerializable(const std::optional<std::string> &id,
-                             const std::optional<std::u16string> &description,
+            // 输入视图只在构造期间使用，内容立即复制到节点持有的 PMR 字符串。
+            NodeSerializable(std::optional<std::string_view> id,
+                             std::optional<std::u16string_view> description,
                              bool isMustAfterSpace);
 
             [[nodiscard]] bool getIsMustAfterSpace() const;
@@ -221,7 +246,7 @@ namespace CHelper {
             NodeText() = default;
 
             NodeText(
-                    const std::optional<std::string> &id,
+                    std::optional<std::string_view> id,
                     std::u16string_view description,
                     const std::shared_ptr<NormalId> &data,
                     const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getTextASTNode =

@@ -361,3 +361,43 @@ inline void chelperBenchFree(void *p, size_t size, const void *callSite) {
         std::free(p);
     }
 }
+
+// PMR 上游和超对齐对象会调用 aligned new/delete，必须纳入与普通分配相同的
+// 计数。头部仅用于统计工具，记录原始 malloc 地址和请求大小，支持未提供 size 的 delete。
+struct CHelperBenchAlignedAllocation {
+    void *allocation;
+    size_t size;
+};
+
+inline void *chelperBenchAlignedAlloc(size_t size, size_t alignment, const void *callSite) {
+    using Header = CHelperBenchAlignedAllocation;
+    alignment = std::max(alignment, alignof(Header));
+    const size_t payload = std::max<size_t>(size, 1);
+    if (alignment - 1 > SIZE_MAX - sizeof(Header) || payload > SIZE_MAX - sizeof(Header) - (alignment - 1)) {
+        throw std::bad_alloc();
+    }
+    size_t space = payload + alignment - 1;
+    auto *allocation = static_cast<std::byte *>(std::malloc(space + sizeof(Header)));
+    if (allocation == nullptr) throw std::bad_alloc();
+    void *pointer = allocation + sizeof(Header);
+    std::align(alignment, payload, pointer, space);
+    std::construct_at(reinterpret_cast<Header *>(static_cast<std::byte *>(pointer) - sizeof(Header)), Header{allocation, size});
+    if (CHelper::Test::Detail::gCounting.load(std::memory_order_relaxed)) {
+        CHelper::Test::Detail::gAllocCalls.fetch_add(1, std::memory_order_relaxed);
+        CHelper::Test::Detail::gNetBytes.fetch_add(static_cast<int64_t>(size), std::memory_order_relaxed);
+    }
+    CHelper::Test::HeapProfile::onAlloc(pointer, size, callSite);
+    return pointer;
+}
+
+inline void chelperBenchAlignedFree(void *pointer, const void *callSite) noexcept {
+    if (pointer == nullptr) return;
+    auto *header = reinterpret_cast<CHelperBenchAlignedAllocation *>(static_cast<std::byte *>(pointer) - sizeof(CHelperBenchAlignedAllocation));
+    const auto allocation = *header;
+    std::destroy_at(header);
+    CHelper::Test::HeapProfile::onFree(pointer, allocation.size, callSite);
+    if (CHelper::Test::Detail::gCounting.load(std::memory_order_relaxed)) {
+        CHelper::Test::Detail::gNetBytes.fetch_sub(static_cast<int64_t>(allocation.size), std::memory_order_relaxed);
+    }
+    std::free(allocation.allocation);
+}

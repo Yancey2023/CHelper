@@ -420,12 +420,6 @@ namespace CHelper {
             Meta::forEachType<AllNodeTypes>(std::forward<F>(f));
         }
 
-        //带短路的编译期遍历：f<T>() 返回 true 时停止，返回是否发生过命中
-        template<class F>
-        constexpr bool anyNodeType(F &&f) {
-            return Meta::anyType<AllNodeTypes>(std::forward<F>(f));
-        }
-
         const char *getNodeTypeName(NodeTypeId::NodeTypeId id);
 
         std::optional<NodeTypeId::NodeTypeId> getNodeTypeIdByName(const std::string_view &name);

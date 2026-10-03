@@ -32,7 +32,7 @@ namespace CHelper {
 
     private:
         Node::FreeableNodeWithTypes nodeChildren;
-        std::unique_ptr<Node::NodeWithType> node;
+        std::optional<Node::NodeWithType> node;
 
     public:
         ItemId() = default;

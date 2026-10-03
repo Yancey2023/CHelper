@@ -18,6 +18,7 @@
 
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/util/JsonUtil.h>
 
 namespace CHelper::Linter {
 

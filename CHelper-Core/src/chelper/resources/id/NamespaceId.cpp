@@ -22,11 +22,14 @@ namespace CHelper {
 
     std::shared_ptr<NormalId> &NamespaceId::getIdWithNamespace() {
         if (idWithNamespace == nullptr) [[unlikely]] {
-            idWithNamespace = NormalId::make(
-                    idNamespace.value_or(u"minecraft")
-                            .append(u":")
-                            .append(name),
-                    description);
+            auto result = allocateSharedFromDefault<NormalId>();
+            const std::u16string_view prefix = idNamespace.has_value() ? std::u16string_view(*idNamespace) : u"minecraft";
+            result->name.reserve(prefix.size() + 1 + name.size());
+            result->name.append(prefix);
+            result->name.push_back(u':');
+            result->name.append(name);
+            result->description = copyPmrU16StringOptional(description);
+            idWithNamespace = std::move(result);
         }
         return idWithNamespace;
     }

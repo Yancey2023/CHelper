@@ -18,8 +18,11 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
+#include <chelper/old2new/Old2New.h>
 #include <chelper/resources/CPack.h>
-#include <chelper/serialization/SerializationInternal.h>
+#include <chelper/serialization/BinaryFormat.h>
+#include <chelper/serialization/IO.h>
+#include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>
 
 namespace std {
@@ -469,11 +472,11 @@ TEST(BinaryUtilTest, Property) {
         CHelper::Property aProperty;
         aProperty.name = u"name3";
         aProperty.type = CHelper::PropertyType::STRING;
-        aProperty.defaultValue.string = new std::pmr::u16string(u"aaa");
+        aProperty.defaultValue.string = new CHelper::PropertyString(u"aaa");
         aProperty.valid = std::pmr::vector<CHelper::PropertyValue>(3);
-        aProperty.valid->at(0).string = new std::pmr::u16string(u"a1");
-        aProperty.valid->at(1).string = new std::pmr::u16string(u"a2");
-        aProperty.valid->at(2).string = new std::pmr::u16string(u"a3");
+        aProperty.valid->at(0).string = new CHelper::PropertyString(u"a1");
+        aProperty.valid->at(1).string = new CHelper::PropertyString(u"a2");
+        aProperty.valid->at(2).string = new CHelper::PropertyString(u"a3");
         return aProperty;
     };
     testHandwritten<CHelper::Property>({getInstance1, getInstance2, getInstance3});
@@ -776,5 +779,449 @@ TEST(BinaryUtilTest, NodePerCommandMsgpack) {
                 EXPECT_EQ(command2.startNodes[i], &command2.wrappedNodes[index]);
             }
         }
+    }
+}
+
+TEST(BinaryUtilTest, CommandGraphBinaryReferencesAndBounds) {
+    using namespace CHelper;
+    Node::initializeStaticNodes();
+    Node::NodePerCommand source;
+    source.name.emplace_back(u"graph");
+    source.description = u"graph test";
+    source.nodes.nodes.emplace_back(*new Node::NodeInteger("ARG", u"argument", std::nullopt, std::nullopt));
+    const auto makeBinary = [&](const std::vector<Node::WrappedNodeWire> &wrapped,
+                                const std::vector<std::uint32_t> &starts) {
+        std::string buffer(2 * glz::write_padding_bytes, '\0');
+        glz::context ctx;
+        size_t ix = 0;
+        const auto write = [&](const auto &value) {
+            glz::serialize<BinaryFormat>::op<glz::opts{}>(value, ctx, buffer, ix);
+        };
+        write(source.name);
+        write(source.description);
+        write(source.syntax);
+        write(source.nodes);
+        write(wrapped);
+        write(starts);
+        buffer.resize(ix);
+        return buffer;
+    };
+    const std::vector<Node::WrappedNodeWire> wrapped = {
+            {0, {1, UINT32_MAX}},
+            {0, {2}},
+            {0, {0, UINT32_MAX}}};
+    const auto binary = makeBinary(wrapped, {0, UINT32_MAX});
+    Node::NodePerCommand restored;
+    ASSERT_NO_THROW(readBinary(restored, binary));
+    ASSERT_EQ(restored.wrappedNodes.size(), 3);
+    EXPECT_EQ(restored.wrappedNodes[0].nextNodes[0], &restored.wrappedNodes[1]);
+    EXPECT_EQ(restored.wrappedNodes[1].nextNodes[0], &restored.wrappedNodes[2]);
+    EXPECT_EQ(restored.wrappedNodes[2].nextNodes[0], &restored.wrappedNodes[0]);
+    EXPECT_TRUE(restored.wrappedNodes[0].hasNextLF);
+    EXPECT_FALSE(restored.wrappedNodes[1].hasNextLF);
+    EXPECT_TRUE(restored.wrappedNodes[2].hasNextLF);
+    ASSERT_EQ(restored.startNodes.size(), 2);
+    EXPECT_EQ(restored.startNodes[0], &restored.wrappedNodes[0]);
+    EXPECT_EQ(restored.startNodes[1], Node::NodeLF::getInstance());
+    // 复用对象时也必须重建图，不能残留上一次读取的指针和 LF 缓存。
+    auto previousDefinitions = std::move(restored.nodes);
+    ASSERT_NO_THROW(readBinary(restored, makeBinary({{0, {}}}, {0})));
+    ASSERT_EQ(restored.wrappedNodes.size(), 1);
+    EXPECT_TRUE(restored.wrappedNodes[0].nextNodes.empty());
+    EXPECT_FALSE(restored.wrappedNodes[0].hasNextLF);
+    EXPECT_EQ(restored.startNodes[0], &restored.wrappedNodes[0]);
+
+    for (const auto &invalid: {makeBinary({{-1, {}}}, {0}), makeBinary({{1, {}}}, {0}),
+                               makeBinary({{0, {1}}}, {0}), makeBinary({{0, {}}}, {1})}) {
+        Node::NodePerCommand value;
+        EXPECT_THROW(readBinary(value, invalid), std::runtime_error);
+    }
+    // 覆盖每个长度/索引字段的截断，包括只剩部分 uint32 的情况。
+    for (size_t size = 0; size < binary.size(); ++size) {
+        SCOPED_TRACE(size);
+        Node::NodePerCommand value;
+        EXPECT_THROW(readBinary(value, std::string_view(binary.data(), size)), std::runtime_error);
+    }
+}
+
+TEST(BinaryUtilTest, FixedWidthVectorBinary) {
+    const std::string bytes("\x02\x00\x00\x00\x78\x56\x34\x12\xff\xff\xff\xff", 12);
+    std::vector<std::uint32_t> values;
+    ASSERT_NO_THROW(CHelper::readBinary(values, bytes));
+    EXPECT_EQ(values, (std::vector<std::uint32_t>{0x12345678, UINT32_MAX}));
+    for (size_t size = 0; size < bytes.size(); ++size) {
+        EXPECT_THROW(CHelper::readBinary(values, std::string_view(bytes.data(), size)), std::runtime_error);
+    }
+    std::vector<bool> bits{true, false, true};
+    std::string binary;
+    CHelper::writeBinary(binary, bits);
+    std::vector<bool> restored;
+    ASSERT_NO_THROW(CHelper::readBinary(restored, binary));
+    EXPECT_EQ(restored, bits);
+}
+
+TEST(BinaryUtilTest, MapBinaryCountBounds) {
+    // 损坏的 map 长度必须正常报读取错误，不能先申请数十 GB 的哈希桶。
+    std::unordered_map<std::string, std::uint32_t> map;
+    EXPECT_THROW(CHelper::readBinary(map, std::string_view("\xff\xff\xff\xff", 4)), std::runtime_error);
+    CHelper::DenseMap<std::string, std::uint32_t> dense;
+    EXPECT_THROW(CHelper::readBinary(dense, std::string_view("\xff\xff\xff\xff", 4)), std::runtime_error);
+}
+
+TEST(BinaryUtilTest, DenseMapsReadAndWriteLegacyNestedBinary) {
+    using Legacy = std::unordered_map<std::u16string,
+                                      std::unordered_map<uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
+    Legacy legacy;
+    for (uint32_t group = 0; group < 80; ++group) {
+        auto &inner = legacy[utf8::utf8to16("long_block_name_" + std::to_string(group))];
+        for (uint32_t value = 0; value < 40; ++value) inner[value] = {u"新方块🙂", std::nullopt};
+    }
+    legacy[u"empty"] = {};
+    std::string binary;
+    CHelper::writeBinary(binary, legacy);
+    const auto dense = CHelper::Old2New::blockFixDataFromBinary(binary);
+    ASSERT_EQ(dense.size(), legacy.size());
+    for (const auto &[key, inner]: legacy) {
+        ASSERT_TRUE(dense.contains(std::u16string_view(key)));
+        const auto &restored = dense.at(std::u16string_view(key));
+        ASSERT_EQ(restored.size(), inner.size());
+        for (const auto &[index, value]: inner) EXPECT_EQ(restored.at(index), value);
+    }
+    Legacy back;
+    CHelper::readBinary(back, CHelper::Old2New::blockFixDataToBinary(dense));
+    EXPECT_EQ(back, legacy);
+
+    // 损坏输入中重复的键仍应被拒绝，不可静默覆盖。
+    CHelper::writeBinary(binary, uint32_t{2});
+    const auto append = [&](const auto &value) {
+        std::string part;
+        CHelper::writeBinary(part, value);
+        binary += part;
+    };
+    for (int i = 0; i < 2; ++i) {
+        append(std::string("duplicate"));
+        append(uint32_t{1});
+    }
+    CHelper::DenseMap<std::string, uint32_t> duplicate;
+    EXPECT_THROW(CHelper::readBinary(duplicate, binary), std::runtime_error);
+}
+
+TEST(BinaryUtilTest, DenseStringLookupPreservesLengthAndEncoding) {
+    CHelper::PmrDenseMap<std::pmr::string, int> map;
+    const std::string key = std::string(80, 'x') + std::string("\0tail", 5);
+    map.emplace(std::pmr::string(key), 42);
+    EXPECT_EQ(map.at(std::string_view(key)), 42);
+    EXPECT_FALSE(map.contains(std::string_view(key.data(), 80)));
+    EXPECT_FALSE(map.contains(std::string_view{}));
+    CHelper::DenseMap<std::u16string, int> unicode;
+    unicode.emplace(std::u16string(u"中文🙂\0尾", 6), 7);
+    EXPECT_EQ(unicode.at(std::u16string_view(u"中文🙂\0尾", 6)), 7);
+    EXPECT_FALSE(unicode.contains(std::u16string_view(u"中文🙂")));
+}
+
+TEST(BinaryUtilTest, NodeConstructorOwnsStringViews) {
+    // 临时字符串在构造完成后立即释放，节点必须持有自己的副本。
+    CHelper::Node::NodeText node(std::string(64, 'x'), std::u16string(64, u'文'), CHelper::NormalId::make(u"value"));
+    ASSERT_TRUE(node.id.has_value());
+    ASSERT_TRUE(node.description.has_value());
+    EXPECT_EQ(*node.id, std::string_view(std::string(64, 'x')));
+    EXPECT_EQ(*node.description, std::u16string_view(std::u16string(64, u'文')));
+    CHelper::Node::NodeSerializable absent(std::nullopt, std::nullopt, false);
+    EXPECT_FALSE(absent.id.has_value());
+    EXPECT_FALSE(absent.description.has_value());
+    CHelper::Node::NodeSerializable empty(std::string_view{}, std::u16string_view{}, false);
+    ASSERT_TRUE(empty.id.has_value());
+    ASSERT_TRUE(empty.description.has_value());
+    EXPECT_TRUE(empty.id->empty());
+    EXPECT_TRUE(empty.description->empty());
+}
+
+TEST(BinaryUtilTest, Utf16ConversionPreservesUnicodeAndRejectsInvalidUtf8) {
+    const std::vector<std::u16string> cases{
+            u"", u"1234567", u"12345678", u"abcdefghijklmnopq", u"中文短描述",
+            u"12345678中文", u"mixed 中🙂文", u"🙂🙂🙂🙂", std::u16string(u"a\0中", 3),
+            std::u16string(1024, u'a') + u"中🙂文", std::u16string(1024, u'中'),
+            u"\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff\U00010000\U0010ffff"};
+    for (const auto &expected: cases) {
+        const auto input = utf8::utf16to8(expected);
+        std::u16string text = u"old content";
+        CHelper::U16Conv::convertToU16(input, text);
+        EXPECT_EQ(text, expected);
+        std::pmr::u16string pmrText;
+        CHelper::U16Conv::convertToU16(input, pmrText);
+        EXPECT_EQ(std::u16string_view(pmrText), std::u16string_view(expected));
+        // 起始地址偏移一字节，覆盖未对齐的 ASCII 批量检查。
+        const auto padded = "x" + input;
+        CHelper::U16Conv::convertToU16(std::string_view(padded).substr(1), text);
+        EXPECT_EQ(text, expected);
+    }
+    for (const std::string invalid: {"\x80", "\xc0\xaf", "\xe4", "\xe4\xb8", "\xe4\x41\x80", "\xe4\xb8\x41",
+                                     "\xe0\x80\x80", "\xed\xa0\x80", "\xf4\x90\x80\x80"}) {
+        for (const auto &prefix: {std::string{}, std::string(1024, 'a') + utf8::utf16to8(std::u16string_view(u"中🙂文"))}) {
+            std::u16string text;
+            EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(prefix + invalid, text));
+            std::pmr::u16string pmrText;
+            EXPECT_ANY_THROW(CHelper::U16Conv::convertToU16(prefix + invalid, pmrText));
+            CHelper::U16Conv::convertToU16("reused", text);
+            CHelper::U16Conv::convertToU16("reused", pmrText);
+            EXPECT_EQ(text, u"reused");
+            EXPECT_EQ(pmrText, u"reused");
+        }
+    }
+}
+
+TEST(BinaryUtilTest, Utf16WordCountsCoverUnicodeAndByteOffsets) {
+    std::u16string expected;
+    for (std::uint32_t cp = 0; cp <= 0x10ffff; ++cp) {
+        if (cp >= 0xd800 && cp <= 0xdfff) continue;
+        if (cp <= 0xffff) {
+            expected.push_back(static_cast<char16_t>(cp));
+        } else {
+            expected.push_back(static_cast<char16_t>(0xd800 + ((cp - 0x10000) >> 10)));
+            expected.push_back(static_cast<char16_t>(0xdc00 + ((cp - 0x10000) & 0x3ff)));
+        }
+    }
+    const auto input = utf8::utf16to8(expected);
+    std::u16string restored;
+    CHelper::U16Conv::convertToU16(input, restored);
+    EXPECT_EQ(restored, expected);
+    for (size_t prefix = 0; prefix < 16; ++prefix) {
+        const auto text = std::u16string(prefix, u'a') + u"中🙂\u0080文\U0010ffffx中🙂";
+        const auto padded = "x" + utf8::utf16to8(text);
+        CHelper::U16Conv::convertToU16(std::string_view(padded).substr(1), restored);
+        EXPECT_EQ(restored, text);
+    }
+}
+
+TEST(BinaryUtilTest, NamespaceIdCacheOwnsQualifiedName) {
+    for (const std::optional<std::u16string> prefix: {std::optional<std::u16string>{}, std::optional<std::u16string>{u"custom"}, std::optional<std::u16string>{u""}}) {
+        CHelper::NamespaceId id;
+        id.name = u"long_block_name";
+        if (prefix.has_value()) id.idNamespace.emplace(*prefix);
+        id.description = u"说明";
+        const auto qualified = id.getIdWithNamespace();
+        EXPECT_EQ(std::u16string_view(qualified->name), std::u16string_view(prefix.value_or(u"minecraft") + u":long_block_name"));
+        EXPECT_EQ(qualified->description, id.description);
+        EXPECT_EQ(id.getIdWithNamespace().get(), qualified.get());
+        EXPECT_EQ(id.name, u"long_block_name");
+        if (prefix.has_value()) EXPECT_EQ(std::u16string_view(*id.idNamespace), std::u16string_view(*prefix));
+    }
+}
+
+TEST(BinaryUtilTest, BlockStateDescriptionsKeepPrefixesAndQuotedKeys) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    auto &definition = descriptions.common.emplace_back();
+    definition.type = PropertyType::BOOLEAN;
+    definition.propertyName = u"long_property_name";
+    definition.description = u"fallback";
+    definition.values.emplace_back().valueName.boolean = false;
+    auto &trueValue = definition.values.emplace_back();
+    trueValue.valueName.boolean = true;
+    trueValue.description = u"specific";
+    BlockId block;
+    block.name = u"test";
+    auto &property = block.properties.emplace().emplace_back();
+    property.name = definition.propertyName;
+    property.defaultValue.boolean = false;
+    property.valid.emplace().emplace_back().boolean = true;
+    const auto &root = *static_cast<Node::NodeList *>(block.getNode(descriptions).data);
+    const auto &allEntries = *static_cast<Node::NodeOr *>(root.nodeElement.data);
+    const auto &knownEntries = *static_cast<Node::NodeOr *>(allEntries.childNodes[0].data);
+    const auto &entry = *static_cast<Node::NodeEntry *>(knownEntries.childNodes[0].data);
+    const auto &key = *static_cast<Node::NodeText *>(entry.nodeKey.data);
+    EXPECT_EQ(key.data->name, u"\"long_property_name\"");
+    const auto &values = *static_cast<Node::NodeOr *>(entry.nodeValue.data);
+    const auto &defaultValue = *static_cast<Node::NodeText *>(values.childNodes[0].data);
+    const auto &validValue = *static_cast<Node::NodeText *>(values.childNodes[1].data);
+    EXPECT_EQ(defaultValue.data->description, std::optional<std::pmr::u16string>{u"（无效）（默认值）fallback"});
+    EXPECT_EQ(validValue.data->description, std::optional<std::pmr::u16string>{u"specific"});
+}
+
+TEST(BinaryUtilTest, BlockPropertyIndexPreservesSourceOrder) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    for (const auto key: {u"p", u"q", u"common", u"p"}) descriptions.common.emplace_back().propertyName = key;
+    auto &first = descriptions.block.emplace_back();
+    first.blocks = {u"minecraft:test", u"minecraft:test"};
+    first.properties.emplace_back().propertyName = u"p";
+    auto &second = descriptions.block.emplace_back();
+    second.blocks = {u"test", u"minecraft:test"};
+    second.properties.emplace_back().propertyName = u"p";
+    second.properties.emplace_back().propertyName = u"q";
+    auto &third = descriptions.block.emplace_back();
+    third.blocks = {u"test"};
+    third.properties.emplace_back().propertyName = u"q";
+    const BlockPropertyDescriptionIndex index(descriptions);
+    for (const auto &[qualified, plain]: {std::pair{u"minecraft:test", u"test"}, std::pair{u"other:unknown", u"unknown"}, std::pair{u"test", u"test"}}) {
+        for (const auto key: {u"p", u"q", u"common"}) {
+            EXPECT_EQ(&index.getPropertyDescription(qualified, plain, key),
+                      &descriptions.getPropertyDescription(qualified, plain, key));
+        }
+        EXPECT_THROW((void) index.getPropertyDescription(qualified, plain, u"missing"), std::runtime_error);
+    }
+}
+
+TEST(BinaryUtilTest, SharedBlockPropertyNodesPreserveVariantsAndLifetime) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    auto &definition = descriptions.common.emplace_back();
+    definition.propertyName = u"shared_property";
+    definition.description = u"fallback";
+    definition.values.emplace_back().valueName.boolean = false;
+    definition.values.emplace_back().valueName.boolean = true;
+    const auto makeBlock = [&](bool defaultValue, bool emptyValid) {
+        auto block = std::make_unique<BlockId>();
+        block->name = u"test";
+        auto &property = block->properties.emplace().emplace_back();
+        property.name = definition.propertyName;
+        property.defaultValue.boolean = defaultValue;
+        if (emptyValid) property.valid.emplace();
+        return block;
+    };
+    auto first = makeBlock(false, false);
+    auto second = makeBlock(false, false);
+    auto differentDefault = makeBlock(true, false);
+    auto invalid = makeBlock(false, true);
+    auto uncached = makeBlock(false, false);
+    const auto overrideDefinition = definition;
+    const auto entryOf = [&](BlockId &block, BlockPropertyNodeCache *cache) {
+        const auto &root = *static_cast<Node::NodeList *>(block.getNode(descriptions, nullptr, cache).data);
+        const auto &all = *static_cast<Node::NodeOr *>(root.nodeElement.data);
+        const auto &known = *static_cast<Node::NodeOr *>(all.childNodes[0].data);
+        return static_cast<const Node::NodeEntry *>(known.childNodes[0].data);
+    };
+    const auto valueOf = [](const Node::NodeEntry &entry, size_t index) -> const NormalId & {
+        const auto &values = *static_cast<const Node::NodeOr *>(entry.nodeValue.data);
+        return *static_cast<const Node::NodeText *>(values.childNodes[index].data)->data;
+    };
+    const Node::NodeEntry *retained;
+    {
+        BlockPropertyNodeCache cache(descriptions);
+        const auto *a = entryOf(*first, &cache);
+        retained = entryOf(*second, &cache);
+        EXPECT_EQ(a, retained);
+        EXPECT_EQ(first->getNode(descriptions).data, second->getNode(descriptions).data);
+        const auto *b = entryOf(*differentDefault, &cache);
+        EXPECT_NE(a, b);
+        EXPECT_NE(first->getNode(descriptions).data, differentDefault->getNode(descriptions).data);
+        EXPECT_EQ(valueOf(*a, 0).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
+        EXPECT_EQ(valueOf(*b, 1).description, std::optional<std::pmr::u16string>{u"（默认值）fallback"});
+        const auto *c = entryOf(*invalid, &cache);
+        EXPECT_NE(a, c);
+        EXPECT_NE(first->getNode(descriptions).data, invalid->getNode(descriptions).data);
+        EXPECT_EQ(valueOf(*c, 0).description, std::optional<std::pmr::u16string>{u"（无效）（默认值）fallback"});
+        const auto *original = entryOf(*uncached, nullptr);
+        for (size_t i = 0; i < 2; ++i) {
+            EXPECT_EQ(valueOf(*a, i).name, valueOf(*original, i).name);
+            EXPECT_EQ(valueOf(*a, i).description, valueOf(*original, i).description);
+        }
+        // 内容相同的另一条描述仍保留独立身份，避免覆盖项互相污染。
+        EXPECT_NE(cache.getNode(overrideDefinition, first->properties->front())->node.data, a);
+    }
+    first.reset();
+    EXPECT_EQ(valueOf(*retained, 0).name, u"false");
+    EXPECT_EQ(valueOf(*retained, 1).description, std::optional<std::pmr::u16string>{u"fallback"});
+    EXPECT_EQ(entryOf(*second, nullptr), retained);
+}
+
+TEST(BinaryUtilTest, SharedBlockStateGraphsPreservePropertyOrderAndOverrides) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    for (const auto name: {u"p", u"q"}) {
+        auto &definition = descriptions.common.emplace_back();
+        definition.propertyName = name;
+        definition.values.emplace_back().valueName.boolean = false;
+        definition.values.emplace_back().valueName.boolean = true;
+    }
+    auto &override = descriptions.block.emplace_back();
+    override.blocks = {u"special"};
+    override.properties.push_back(descriptions.common.front());
+    override.properties.front().description = u"override";
+    const auto makeBlock = [](const std::u16string_view name, bool reverse) {
+        auto block = std::make_unique<BlockId>();
+        block->name = name;
+        auto &properties = block->properties.emplace();
+        for (const auto key: reverse ? std::array{u"q", u"p"} : std::array{u"p", u"q"}) {
+            properties.emplace_back().name = key;
+        }
+        return block;
+    };
+    auto first = makeBlock(u"first", false);
+    auto second = makeBlock(u"second", false);
+    auto reversed = makeBlock(u"reversed", true);
+    auto special = makeBlock(u"special", false);
+    const auto firstKey = [](const Node::NodeWithType &node) -> std::u16string_view {
+        const auto &list = *static_cast<Node::NodeList *>(node.data);
+        const auto &all = *static_cast<Node::NodeOr *>(list.nodeElement.data);
+        const auto &known = *static_cast<Node::NodeOr *>(all.childNodes.front().data);
+        const auto &entry = *static_cast<Node::NodeEntry *>(known.childNodes.front().data);
+        return static_cast<Node::NodeText *>(entry.nodeKey.data)->data->name;
+    };
+    {
+        BlockPropertyDescriptionIndex index(descriptions);
+        BlockPropertyNodeCache cache(descriptions);
+        const auto &root = first->getNode(descriptions, &index, &cache);
+        EXPECT_EQ(root.data, second->getNode(descriptions, &index, &cache).data);
+        const auto &other = reversed->getNode(descriptions, &index, &cache);
+        EXPECT_NE(root.data, other.data);
+        EXPECT_EQ(firstKey(root), u"\"p\"");
+        EXPECT_EQ(firstKey(other), u"\"q\"");
+        EXPECT_NE(root.data, special->getNode(descriptions, &index, &cache).data);
+    }
+    first.reset();
+    EXPECT_EQ(firstKey(second->getNode(descriptions)), u"\"p\"");
+}
+
+TEST(BinaryUtilTest, BlocksWithoutPropertiesShareGenericGraph) {
+    using namespace CHelper;
+    BlockPropertyDescriptions descriptions;
+    Node::NodeWithType retained;
+    {
+        auto memory = std::make_shared<CPackMemoryResource>();
+        CPackMemoryScope scope(memory);
+        BlockId first;
+        retained = first.getNode(descriptions);
+        const auto &root = *static_cast<Node::NodeList *>(retained.data);
+        const auto &entries = *static_cast<Node::NodeOr *>(root.nodeElement.data);
+        ASSERT_EQ(entries.childNodes.size(), 1);
+        EXPECT_EQ(entries.childNodes.front().nodeTypeId, Node::NodeTypeId::ENTRY);
+    }
+    BlockId second;
+    EXPECT_EQ(second.getNode(descriptions).data, retained.data);
+}
+
+TEST(BinaryUtilTest, SharedBlockPropertyCacheComparesValuesByContent) {
+    using namespace CHelper;
+    for (const auto type: {PropertyType::INTEGER, PropertyType::STRING}) {
+        BlockPropertyDescriptions descriptions;
+        auto &definition = descriptions.common.emplace_back();
+        definition.type = type;
+        definition.propertyName = u"property";
+        Property property;
+        property.type = type;
+        property.valid.emplace();
+        for (int i = 0; i < 2; ++i) {
+            auto &value = definition.values.emplace_back().valueName;
+            auto &valid = property.valid->emplace_back();
+            if (type == PropertyType::STRING) {
+                value.string = new CHelper::PropertyString(i == 0 ? u"north" : u"south");
+                valid.string = new CHelper::PropertyString(*value.string);
+            } else {
+                value.integer = valid.integer = i;
+            }
+        }
+        if (type == PropertyType::STRING) property.defaultValue.string = new CHelper::PropertyString(u"north");
+        else
+            property.defaultValue.integer = 0;
+        const Property copy(property);
+        Property different(property);
+        if (type == PropertyType::STRING) *different.defaultValue.string = u"south";
+        else
+            different.defaultValue.integer = 1;
+        BlockPropertyNodeCache cache(descriptions);
+        const auto first = cache.getNode(definition, property);
+        EXPECT_EQ(cache.getNode(definition, copy).get(), first.get());
+        EXPECT_NE(cache.getNode(definition, different).get(), first.get());
     }
 }

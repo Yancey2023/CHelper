@@ -19,6 +19,7 @@
 #pragma once
 
 #include <chelper/auto_suggestion/Suggestion.h>
+#include <chelper/util/HashContainer.h>
 
 namespace CHelper::AutoSuggestion {
 
@@ -30,7 +31,7 @@ namespace CHelper::AutoSuggestion {
         std::vector<Suggestion> idSuggestions;
 
     private:
-        std::unordered_set<XXH64_hash_t> seenSuggestionHashes;
+        DenseSet<XXH64_hash_t, XXHashDigest> seenSuggestionHashes;
 
         void addSuggestion(std::vector<Suggestion> &suggestions, Suggestion &&suggestion);
 

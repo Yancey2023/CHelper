@@ -39,17 +39,22 @@ namespace CHelper {
     static Node::NodeList nodeAllBlockState(
             nodeBlockStateLeftBracket, nodeBlockStateAllEntry,
             nodeBlockStateSeparator, nodeBlockStateRightBracket);
+    static Node::NodeOr nodeUnknownBlockStateValue({nodeBlockStateAllEntry}, false, true);
+    static Node::NodeList nodeUnknownBlockState(
+            nodeBlockStateLeftBracket, nodeUnknownBlockStateValue,
+            nodeBlockStateSeparator, nodeBlockStateRightBracket);
+    static const Node::NodeWithType unknownBlockStateNode = nodeUnknownBlockState;
 
     Property::Property(const Property &aProperty) noexcept {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
                 valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -73,12 +78,12 @@ namespace CHelper {
         type = aProperty.type;
         name = aProperty.name;
         if (type == PropertyType::STRING) {
-            defaultValue.string = new std::pmr::u16string(*aProperty.defaultValue.string);
+            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
             if (aProperty.valid.has_value()) {
                 size_t size = aProperty.valid.value().size();
                 valid = std::pmr::vector<PropertyValue>(size);
                 for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new std::pmr::u16string(*aProperty.valid.value()[i].string);
+                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
                 }
             } else {
                 valid = std::nullopt;
@@ -135,7 +140,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
+                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {
@@ -161,7 +166,7 @@ namespace CHelper {
             for (size_t i = 0; i < size; ++i) {
                 BlockPropertyValueDescription &t1 = values[i];
                 const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new std::pmr::u16string(*t2.valueName.string);
+                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
                 t1.description = t2.description;
             }
         } else {
@@ -196,19 +201,29 @@ namespace CHelper {
         values.clear();
     }
 
+    void BlockPropertyDescriptions::collectEntryProperties(
+            const std::u16string_view blockIdWithNamespace, const std::u16string_view blockId,
+            std::vector<const std::pmr::vector<BlockPropertyDescription> *> &entries) const {
+        for (const auto &item: block) {
+            if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
+                std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
+                entries.push_back(&item.properties);
+            }
+        }
+    }
+
     const BlockPropertyDescription &BlockPropertyDescriptions::getPropertyDescription(
             const std::u16string_view blockIdWithNamespace,
             const std::u16string_view blockId,
             const std::u16string_view propertyName) const {
-        for (const auto &item: block) {
-            if (std::ranges::find(item.blocks, blockId) != item.blocks.end() ||
-                std::ranges::find(item.blocks, blockIdWithNamespace) != item.blocks.end()) {
-                const auto &it = std::ranges::find_if(item.properties, [&propertyName](const BlockPropertyDescription &item1) -> bool {
-                    return item1.propertyName == propertyName;
-                });
-                if (it != item.properties.end()) [[likely]] {
-                    return *it;
-                }
+        std::vector<const std::pmr::vector<BlockPropertyDescription> *> entries;
+        collectEntryProperties(blockIdWithNamespace, blockId, entries);
+        for (const auto *properties: entries) {
+            const auto &it = std::ranges::find_if(*properties, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                return item1.propertyName == propertyName;
+            });
+            if (it != properties->end()) [[likely]] {
+                return *it;
             }
         }
         const auto &it = std::ranges::find_if(common, [&propertyName](const BlockPropertyDescription &item1) -> bool {
@@ -223,41 +238,99 @@ namespace CHelper {
                 utf8::utf16to8(propertyName)));
     }
 
+    BlockPropertyDescriptionIndex::BlockPropertyDescriptionIndex(const BlockPropertyDescriptions &descriptions) {
+        common.reserve(descriptions.common.size());
+        for (size_t i = 0; i < descriptions.common.size(); ++i) {
+            const auto &entry = descriptions.common[i];
+            common.push_back({entry.propertyName, i, &entry});
+        }
+        size_t blockCount = 0;
+        for (const auto &entry: descriptions.block) blockCount += entry.blocks.size();
+        block.reserve(blockCount);
+        for (size_t i = 0; i < descriptions.block.size(); ++i) {
+            const auto &entry = descriptions.block[i];
+            for (const auto &id: entry.blocks) block.push_back({id, i, &entry.properties});
+        }
+        const auto less = [](const auto &left, const auto &right) {
+            return left.key != right.key ? left.key < right.key : left.order < right.order;
+        };
+        std::sort(common.begin(), common.end(), less);
+        std::sort(block.begin(), block.end(), less);
+        block.erase(std::unique(block.begin(), block.end(), [](const BlockEntry &left, const BlockEntry &right) {
+                        return left.key == right.key && left.order == right.order;
+                    }),
+                    block.end());
+    }
+
+    const BlockPropertyDescription &BlockPropertyDescriptionIndex::getPropertyDescription(
+            const std::u16string_view blockIdWithNamespace, const std::u16string_view blockId,
+            const std::u16string_view propertyName) const {
+        const auto findBlock = [&](const std::u16string_view id) {
+            return std::lower_bound(block.begin(), block.end(), id,
+                                    [](const BlockEntry &entry, const std::u16string_view key) { return entry.key < key; });
+        };
+        auto plain = findBlock(blockId);
+        auto qualified = findBlock(blockIdWithNamespace);
+        const auto matches = [&](const auto &it, const std::u16string_view id) {
+            return it != block.end() && it->key == id;
+        };
+        // 两种 ID 可能命中不同条目，按源顺序合并，并去掉同时匹配两种 ID 的同一条目。
+        while (matches(plain, blockId) || matches(qualified, blockIdWithNamespace)) {
+            const BlockEntry *entry;
+            if (matches(plain, blockId) && (!matches(qualified, blockIdWithNamespace) || plain->order <= qualified->order)) {
+                entry = &*plain++;
+                if (matches(qualified, blockIdWithNamespace) && qualified->order == entry->order) ++qualified;
+            } else {
+                entry = &*qualified++;
+            }
+            const auto property = std::ranges::find_if(*entry->values,
+                                                       [&](const auto &value) { return value.propertyName == propertyName; });
+            if (property != entry->values->end()) return *property;
+        }
+        const auto property = std::lower_bound(common.begin(), common.end(), propertyName,
+                                               [](const CommonEntry &entry, const std::u16string_view key) { return entry.key < key; });
+        if (property != common.end() && property->key == propertyName) return *property->value;
+        throw std::runtime_error(fmt::format(
+                "fail to find block property value by block id {} and property name {}",
+                utf8::utf16to8(blockIdWithNamespace), utf8::utf16to8(propertyName)));
+    }
+
+    template<class String>
+    static std::shared_ptr<NormalId> makeQuotedId(const std::u16string_view name, const std::optional<String> &description) {
+        auto result = allocateSharedFromDefault<NormalId>();
+        result->name.reserve(name.size() + 2);
+        result->name.push_back(u'"');
+        result->name.append(name);
+        result->name.push_back(u'"');
+        result->description = copyPmrU16StringOptional(description);
+        return result;
+    }
+
     Node::NodeText *getBlockStateValueNode(
             const BlockPropertyValueDescription &blockPropertyValueDescription,
             const PropertyType::PropertyType &type,
             const std::optional<std::pmr::u16string> &defaultDescription,
             bool isDefaultValue,
             bool isInvalid) {
-        std::optional<std::pmr::u16string> description;
+        std::optional<std::u16string_view> description;
         if (blockPropertyValueDescription.description.has_value()) {
-            description = blockPropertyValueDescription.description.value();
+            description = std::u16string_view(blockPropertyValueDescription.description.value());
         } else if (defaultDescription.has_value()) {
-            description = defaultDescription.value();
+            description = std::u16string_view(defaultDescription.value());
         }
-        if (isDefaultValue) {
-            if (description.has_value()) {
-                std::pmr::u16string prefix = u"（默认值）";
-                prefix.append(description.value());
-                description = std::move(prefix);
-            } else {
-                description = u"（默认值）";
-            }
-        }
-        if (isInvalid) {
-            if (description.has_value()) {
-                std::pmr::u16string prefix = u"（无效）";
-                prefix.append(description.value());
-                description = std::move(prefix);
-            } else {
-                description = u"（无效）";
-            }
+        std::pmr::u16string annotatedDescription;
+        if (isDefaultValue || isInvalid) {
+            annotatedDescription.reserve(description.value_or(u"").size() + (isDefaultValue ? 5 : 0) + (isInvalid ? 4 : 0));
+            if (isInvalid) annotatedDescription.append(u"（无效）");
+            if (isDefaultValue) annotatedDescription.append(u"（默认值）");
+            if (description.has_value()) annotatedDescription.append(*description);
+            description = std::u16string_view(annotatedDescription);
         }
         switch (type) {
             case PropertyType::STRING:
                 return new Node::NodeText(
                         "BLOCK_STATE_ENTRY_VALUE_STRING", u"方块状态键值对的键（字符串）",
-                        NormalId::make(u'\"' + *blockPropertyValueDescription.valueName.string + u'\"', description));
+                        makeQuotedId(*blockPropertyValueDescription.valueName.string, description));
             case PropertyType::INTEGER:
                 return new Node::NodeText(
                         "BLOCK_STATE_ENTRY_VALUE_INTEGER", u"方块状态键值对的键（整数）",
@@ -339,7 +412,7 @@ namespace CHelper {
         //key = value
         auto nodeKey = new Node::NodeText(
                 "BLOCK_STATE_ENTRY_KEY", u"方块状态键值对的键",
-                NormalId::make(u'\"' + blockPropertyDescription.propertyName + u'\"', blockPropertyDescription.description));
+                makeQuotedId(blockPropertyDescription.propertyName, blockPropertyDescription.description));
         auto nodeValue = new Node::NodeOr(std::move(valueNodes), false);
         auto result = new Node::NodeEntry(*nodeKey, nodeBlockStateEntrySeparator, *nodeValue);
         nodeChildren.emplace_back(*nodeKey);
@@ -347,22 +420,170 @@ namespace CHelper {
         return result;
     }
 
-    const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions) {
+    static uint64_t hashPropertyValue(const PropertyValue &value, const PropertyType::PropertyType type,
+                                      const uint64_t seed = 0) noexcept {
+        switch (type) {
+            case PropertyType::STRING:
+                return XXH3_64bits_withSeed(value.string->data(), value.string->size() * sizeof(char16_t), seed);
+            case PropertyType::INTEGER:
+                return XXH3_64bits_withSeed(&value.integer, sizeof(value.integer), seed);
+            case PropertyType::BOOLEAN:
+                return XXH3_64bits_withSeed(&value.boolean, sizeof(value.boolean), seed);
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
+
+    static bool equalPropertyValue(const PropertyValue &left, const PropertyValue &right,
+                                   const PropertyType::PropertyType type) {
+        switch (type) {
+            case PropertyType::STRING:
+                return *left.string == *right.string;
+            case PropertyType::INTEGER:
+                return left.integer == right.integer;
+            case PropertyType::BOOLEAN:
+                return left.boolean == right.boolean;
+            default:
+                CHELPER_UNREACHABLE();
+        }
+    }
+
+    uint64_t BlockPropertyNodeCache::Hash::operator()(const Key &key) const noexcept {
+        const std::array<uint64_t, 4> fields{
+                reinterpret_cast<std::uintptr_t>(key.description),
+                hashPropertyValue(key.property->defaultValue, key.description->type),
+                key.property->valid.has_value(),
+                key.property->valid.has_value() ? key.property->valid->size() : 0};
+        auto hash = XXH3_64bits(fields.data(), sizeof(fields));
+        if (key.property->valid.has_value()) {
+            for (const auto &value: *key.property->valid) hash = hashPropertyValue(value, key.description->type, hash);
+        }
+        return hash;
+    }
+
+    bool BlockPropertyNodeCache::Equal::operator()(const Key &left, const Key &right) const {
+        if (left.description != right.description) return false;
+        const auto type = left.description->type;
+        if (!equalPropertyValue(left.property->defaultValue, right.property->defaultValue, type) ||
+            left.property->valid.has_value() != right.property->valid.has_value()) return false;
+        if (!left.property->valid.has_value()) return true;
+        return std::ranges::equal(*left.property->valid, *right.property->valid,
+                                  [&](const auto &a, const auto &b) { return equalPropertyValue(a, b, type); });
+    }
+
+    BlockPropertyNodeCache::BlockPropertyNodeCache(const BlockPropertyDescriptions &descriptions) {
+        size_t count = descriptions.common.size();
+        for (const auto &entry: descriptions.block) count += entry.properties.size();
+        nodes.reserve(count);
+        states.reserve(count);
+    }
+
+    std::shared_ptr<BlockPropertyNode> BlockPropertyNodeCache::getNode(const BlockPropertyDescription &description,
+                                                                       const Property &property) {
+        const Key key{&description, &property};
+        const auto found = nodes.find(key);
+        if (found != nodes.end()) return found->second;
+        auto result = allocateSharedFromDefault<BlockPropertyNode>();
+        result->children.nodes.reserve(description.values.size() + 3);
+        auto *entry = getBlockStateNode(result->children.nodes, description, property.defaultValue, property.valid);
+        result->children.nodes.emplace_back(*entry);
+        result->node = *entry;
+        nodes.emplace(key, result);
+        return result;
+    }
+
+    uint64_t BlockPropertyNodeCache::StateHash::operator()(const StateKey key) const noexcept {
+        uint64_t hash = key.size();
+        for (const auto &property: key) {
+            const auto pointer = reinterpret_cast<std::uintptr_t>(property.get());
+            hash = XXH3_64bits_withSeed(&pointer, sizeof(pointer), hash);
+        }
+        return hash;
+    }
+
+    bool BlockPropertyNodeCache::StateEqual::operator()(const StateKey left, const StateKey right) const noexcept {
+        return std::ranges::equal(left, right, {}, [](const auto &value) { return value.get(); }, [](const auto &value) { return value.get(); });
+    }
+
+    std::shared_ptr<BlockStateNode> BlockPropertyNodeCache::getStateNode(std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties) {
+        const StateKey key(properties);
+        const auto found = states.find(key);
+        if (found != states.end()) return found->second;
+        auto result = allocateSharedFromDefault<BlockStateNode>();
+        result->properties = std::move(properties);
+        result->children.nodes.reserve(3);
+        std::pmr::vector<Node::NodeWithType> entries;
+        entries.reserve(result->properties.size());
+        for (const auto &property: result->properties) entries.push_back(property->node);
+        auto *known = new Node::NodeOr(std::move(entries), false);
+        result->children.nodes.emplace_back(*known);
+        auto *all = new Node::NodeOr({*known, nodeBlockStateAllEntry}, false, true);
+        result->children.nodes.emplace_back(*all);
+        auto *list = new Node::NodeList(nodeBlockStateLeftBracket, *all, nodeBlockStateSeparator, nodeBlockStateRightBracket);
+        result->children.nodes.emplace_back(*list);
+        result->node = *list;
+        states.emplace(StateKey(result->properties), result);
+        return result;
+    }
+
+    const Node::NodeWithType &BlockId::getNode(const BlockPropertyDescriptions &blockPropertyDescriptions,
+                                               const BlockPropertyDescriptionIndex *index,
+                                               BlockPropertyNodeCache *propertyNodes) {
         if (!node.has_value()) {
+            if (!properties.has_value()) {
+                node = unknownBlockStateNode;
+                return *node;
+            }
             std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2;
             //已知的方块状态
             if (properties.has_value()) [[likely]] {
+                //所属条目只解析一次，避免每属性重复线性扫全部条目
+                std::vector<const std::pmr::vector<BlockPropertyDescription> *> entryProperties;
+                if (index == nullptr) {
+                    blockPropertyDescriptions.collectEntryProperties(getIdWithNamespace()->name, name, entryProperties);
+                }
+                const auto findDescription = [&](const std::u16string_view propertyName) -> const BlockPropertyDescription & {
+                    if (index != nullptr) {
+                        return index->getPropertyDescription(getIdWithNamespace()->name, name, propertyName);
+                    }
+                    for (const auto *entry: entryProperties) {
+                        const auto &it = std::ranges::find_if(*entry, [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                            return item1.propertyName == propertyName;
+                        });
+                        if (it != entry->end()) [[likely]] {
+                            return *it;
+                        }
+                    }
+                    const auto &it = std::ranges::find_if(blockPropertyDescriptions.common,
+                                                          [&propertyName](const BlockPropertyDescription &item1) -> bool {
+                                                              return item1.propertyName == propertyName;
+                                                          });
+                    if (it != blockPropertyDescriptions.common.end()) [[likely]] {
+                        return *it;
+                    }
+                    throw std::runtime_error(fmt::format(
+                            "fail to find block property value by block id {} and property name {}",
+                            utf8::utf16to8(getIdWithNamespace()->name),
+                            utf8::utf16to8(propertyName)));
+                };
+                if (propertyNodes != nullptr) {
+                    std::pmr::vector<std::shared_ptr<BlockPropertyNode>> entries;
+                    entries.reserve(properties->size());
+                    for (const auto &property: *properties) {
+                        entries.push_back(propertyNodes->getNode(findDescription(property.name), property));
+                    }
+                    sharedStateNode = propertyNodes->getStateNode(std::move(entries));
+                    node = sharedStateNode->node;
+                    return *node;
+                }
                 blockStateEntryChildNode2.reserve(2);
                 std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
                 blockStateEntryChildNode1.reserve(properties.value().size());
                 std::ranges::transform(
                         properties.value(),
                         std::back_inserter(blockStateEntryChildNode1),
-                        [this, &blockPropertyDescriptions](const auto &item) -> Node::NodeWithType {
-                            const BlockPropertyDescription &blockPropertyDescription = blockPropertyDescriptions.getPropertyDescription(
-                                    getIdWithNamespace()->name,
-                                    name,
-                                    item.name);
+                        [&](const auto &item) -> Node::NodeWithType {
+                            const BlockPropertyDescription &blockPropertyDescription = findDescription(item.name);
                             Node::NodeEntry *result = getBlockStateNode(
                                     nodeChildren.nodes, blockPropertyDescription,
                                     item.defaultValue, item.valid);

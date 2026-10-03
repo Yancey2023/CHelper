@@ -18,6 +18,8 @@
 
 #include <chelper/auto_suggestion/AutoSuggestion.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/util/JsonUtil.h>
+#include <chelper/util/KMPMatcher.h>
 
 namespace CHelper::AutoSuggestion {
 

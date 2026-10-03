@@ -193,12 +193,13 @@ namespace CHelper::Node {
     //nodeKeyContent/nodeKey是从equalDatas派生的数据，与C++侧构造职责一致，在初始化阶段构建
     template<>
     struct NodeInitialization<NodeEqualEntry> {
-        static void init(NodeEqualEntry &node, const CPack &cpack) {
+        static void init(NodeEqualEntry &node, const CPack &cpack, const bool initializeChildren = true) {
             if (node.equalDatas.empty()) [[unlikely]] {
                 throw std::runtime_error(
                         fmt::format(R"(equal entry "{}" must have at least one value)", node.id.value_or("UNKNOWN")));
             }
             node.nodeKeyContent = allocateSharedPmrVectorFromDefault<std::shared_ptr<NormalId>>();
+            node.nodeKeyContent->reserve(node.equalDatas.size());
             for (const auto &item: node.equalDatas) {
                 node.nodeKeyContent->push_back(NormalId::make(item.name, item.description));
             }
@@ -208,7 +209,9 @@ namespace CHelper::Node {
                     throw std::runtime_error(
                             fmt::format(R"(equal entry "{}" value node is not linked)", node.id.value_or("UNKNOWN")));
                 }
-                initNode(item.nodeValue, cpack);
+                if (initializeChildren) {
+                    initNode(item.nodeValue, cpack);
+                }
             }
         }
     };
@@ -271,26 +274,17 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonEntry> {
         static void init(NodeJsonEntry &node, const CPack &cpack) {
         }
-        static void init(NodeJsonEntry &node, const std::pmr::vector<NodeWithType> &dataList) {
+        template<class FindNode>
+        static void init(NodeJsonEntry &node, const FindNode &findNode) {
             if (node.value.empty()) [[unlikely]] {
                 //value为空会产生childNodes为空的OR节点，Parser访问orNode的childNodes[whichBest]时会越界
                 throw std::runtime_error(
                         fmt::format(R"(json entry "{}" must have at least one value node)", utf8::utf16to8(node.key)));
             }
             std::pmr::vector<NodeWithType> valueNodes;
+            valueNodes.reserve(node.value.size());
             for (const auto &item: node.value) {
-                bool notFind = true;
-                for (const auto &item2: dataList) {
-                    if (reinterpret_cast<const NodeSerializable *>(item2.data)->id == item) [[unlikely]] {
-                        valueNodes.emplace_back(item2);
-                        notFind = false;
-                        break;
-                    }
-                }
-                if (notFind) {
-                    throw std::runtime_error(
-                            fmt::format(R"(unknown node id -> {} (in node "{}"))", item, node.id.value_or("UNKNOWN")));
-                }
+                valueNodes.emplace_back(findNode(item, node));
             }
             node.nodeKey = NodeText("JSON_OBJECT_ENTRY_KEY", u"JSON对象键",
                                     NormalId::make(fmt::format(u"\"{}\"", node.key), node.description));
@@ -303,15 +297,9 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeJsonList> {
         static void init(NodeJsonList &node, const CPack &cpack) {
         }
-        static void init(NodeJsonList &node, const std::pmr::vector<NodeWithType> &dataList) {
-            for (const auto &item: dataList) {
-                if (reinterpret_cast<const NodeSerializable *>(item.data)->id == node.data) [[unlikely]] {
-                    node.nodeList = NodeList(Node::NodeJsonList::nodeLeft, item, Node::NodeJsonList::nodeSeparator, Node::NodeJsonList::nodeRight);
-                    return;
-                }
-            }
-            throw std::runtime_error(
-                    fmt::format(R"(unknown node id -> {} (in node "{}"))", node.data, node.id.value_or("UNKNOWN")));
+        template<class FindNode>
+        static void init(NodeJsonList &node, const FindNode &findNode) {
+            node.nodeList = NodeList(Node::NodeJsonList::nodeLeft, findNode(node.data, node), Node::NodeJsonList::nodeSeparator, Node::NodeJsonList::nodeRight);
         }
     };
 
@@ -336,17 +324,44 @@ namespace CHelper::Node {
                 }
             }
 
-            const auto findNode = [&](const std::string_view id) -> NodeWithType {
-                for (const auto &item: node.nodes.nodes) {
-                    if (item.data == nullptr) {
-                        continue;
-                    }
-                    const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
-                    if (serializable->id.has_value() && serializable->id.value() == id) {
-                        return item;
-                    }
+            //按 id 建排序索引（携带原始下标作并列决胜键，重复 id 时与线性首匹配语义一致），
+            //图绑定与 start 查找走二分，避免每引用线性扫全表
+            struct IdIndexEntry {
+                std::string_view id;
+                const NodeWithType *node;
+                std::size_t order;
+            };
+            std::vector<IdIndexEntry> idIndex;
+            idIndex.reserve(node.nodes.nodes.size());
+            for (std::size_t index = 0; index < node.nodes.nodes.size(); ++index) {
+                const auto &item = node.nodes.nodes[index];
+                if (item.data == nullptr) {
+                    continue;
                 }
-                throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
+                const auto *serializable = reinterpret_cast<const NodeSerializable *>(item.data);
+                if (serializable->id.has_value()) {
+                    idIndex.push_back({std::string_view(serializable->id.value()), &item, index});
+                }
+            }
+            std::sort(idIndex.begin(), idIndex.end(), [](const IdIndexEntry &left, const IdIndexEntry &right) {
+                if (left.id != right.id) {
+                    return left.id < right.id;
+                }
+                return left.order < right.order;
+            });
+            const auto findNodeEntry = [&](const std::string_view id) -> const IdIndexEntry * {
+                const auto entry = std::lower_bound(idIndex.begin(), idIndex.end(), id,
+                                                    [](const IdIndexEntry &left, const std::string_view key) {
+                                                        return left.id < key;
+                                                    });
+                return entry == idIndex.end() || entry->id != id ? nullptr : &*entry;
+            };
+            const auto findNode = [&](const std::string_view id) -> NodeWithType {
+                const auto *entry = findNodeEntry(id);
+                if (entry == nullptr) [[unlikely]] {
+                    throw std::runtime_error(fmt::format("failed to find node id -> {}", id));
+                }
+                return *entry->node;
             };
             const auto linkNode = [&](NodeWithType &target, const std::pmr::string &id) {
                 if (id.empty()) {
@@ -406,30 +421,44 @@ namespace CHelper::Node {
                 }
             }
             for (const auto &item: node.nodes.nodes) {
-                if (item.nodeTypeId == NodeTypeId::AND || item.nodeTypeId == NodeTypeId::OR ||
-                    item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL ||
-                    item.nodeTypeId == NodeTypeId::EQUAL_ENTRY) {
-                    initNode(item, cpack);
+                // 定义表已经逐项初始化了叶节点，组合节点也全部完成了绑定。
+                // 再沿每个组合节点递归会重复初始化共享子图、重新分配其缓存。
+                if (item.nodeTypeId == NodeTypeId::EQUAL_ENTRY) {
+                    auto &value = *reinterpret_cast<NodeEqualEntry *>(item.data);
+                    applyTypeDefault(value);
+                    NodeInitialization<NodeEqualEntry>::init(value, cpack, false);
+                } else if (item.nodeTypeId == NodeTypeId::AND || item.nodeTypeId == NodeTypeId::OR ||
+                           item.nodeTypeId == NodeTypeId::LIST || item.nodeTypeId == NodeTypeId::OPTIONAL) {
+                    dispatchNodeType(item.nodeTypeId, [&]<class NodeType>() {
+                        applyTypeDefault(*reinterpret_cast<NodeType *>(item.data));
+                    });
                 }
             }
             if (node.startNodeId != "LF") [[likely]] {
-                for (auto &item: node.nodes.nodes) {
-                    if (reinterpret_cast<const NodeSerializable *>(item.data)->id == node.startNodeId) [[unlikely]] {
-                        node.start = item;
-                        break;
-                    }
+                //缺失时保持原有报错路径（start.data == nullptr 的后置检查），不在此处抛错
+                const auto *entry = findNodeEntry(node.startNodeId);
+                if (entry != nullptr) [[likely]] {
+                    node.start = *entry->node;
                 }
             }
             if (node.start.data == nullptr) [[unlikely]] {
                 //start node无法解析时不能继续，否则Parser会使用data为nullptr的节点导致未定义行为
                 throw std::runtime_error(fmt::format("unknown start node id: {}", node.startNodeId));
             }
+            const auto findJsonNode = [&](const std::string_view id, const NodeSerializable &owner) -> NodeWithType {
+                const auto *entry = findNodeEntry(id);
+                if (entry == nullptr) [[unlikely]] {
+                    throw std::runtime_error(
+                            fmt::format(R"(unknown node id -> {} (in node "{}"))", id, owner.id.value_or("UNKNOWN")));
+                }
+                return *entry->node;
+            };
             for (auto &item: node.nodes.nodes) {
                 if (item.nodeTypeId == NodeTypeId::JSON_LIST) [[unlikely]] {
-                    NodeInitialization<NodeJsonList>::init(*reinterpret_cast<NodeJsonList *>(item.data), node.nodes.nodes);
+                    NodeInitialization<NodeJsonList>::init(*reinterpret_cast<NodeJsonList *>(item.data), findJsonNode);
                 } else if (item.nodeTypeId == NodeTypeId::JSON_OBJECT) [[unlikely]] {
                     for (auto &item2: reinterpret_cast<NodeJsonObject *>(item.data)->data) {
-                        NodeInitialization<NodeJsonEntry>::init(item2, node.nodes.nodes);
+                        NodeInitialization<NodeJsonEntry>::init(item2, findJsonNode);
                     }
                 }
             }

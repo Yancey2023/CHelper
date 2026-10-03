@@ -24,6 +24,12 @@ namespace CHelper::Node {
 
     void initializeStaticNodes() {
         static const bool initialized = [] {
+            // 即使首个 CPack 在其他内存作用域中加载，静态节点也必须由全局堆持有。
+            struct GlobalMemoryScope {
+                std::pmr::memory_resource *previous = CPackMemoryRouter::getCurrent();
+                GlobalMemoryScope() { CPackMemoryRouter::setCurrent(nullptr); }
+                ~GlobalMemoryScope() { CPackMemoryRouter::setCurrent(previous); }
+            } scope;
             (void) NodeLF::getInstance();
             (void) NodeAny::getNodeAny();
             (void) NodeJsonElement::getNodeJsonElement();

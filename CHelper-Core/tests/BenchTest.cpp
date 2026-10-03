@@ -18,7 +18,9 @@
 
 #include "BenchHelper.h"
 
+#include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>
+#include <xxhash.h>
 
 #ifdef _MSC_VER
 #define CHELPER_BENCH_RETURN_ADDRESS() _ReturnAddress()
@@ -68,6 +70,37 @@ void operator delete[](void *p, const std::nothrow_t &) noexcept {
     chelperBenchFree(p, p ? chelperBenchBlockSize(p) : 0, CHELPER_BENCH_RETURN_ADDRESS());
 }
 
+void *operator new(size_t size, std::align_val_t alignment) {
+    return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+}
+
+void *operator new[](size_t size, std::align_val_t alignment) {
+    return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+}
+
+void *operator new(size_t size, std::align_val_t alignment, const std::nothrow_t &) noexcept {
+    try {
+        return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+void *operator new[](size_t size, std::align_val_t alignment, const std::nothrow_t &) noexcept {
+    try {
+        return chelperBenchAlignedAlloc(size, static_cast<size_t>(alignment), CHELPER_BENCH_RETURN_ADDRESS());
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+void operator delete(void *p, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete(void *p, size_t, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, size_t, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete(void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+void operator delete[](void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+
 using namespace CHelper;
 using namespace CHelper::Test;
 
@@ -96,29 +129,108 @@ namespace {
  */
 TEST(Bench, LoadCPack) {
     const size_t repeat = 20;
+    // 计时窗口只包含加载本体：时间戳在 createCPack 返回处取，cpack 的析构发生在窗口之外
+    const auto timedLoad = [&]<class Create>(Stats &stats, const Create &create) {
+        const size_t warmups = std::max<size_t>(repeat / 10, 1);
+        for (size_t i = 0; i < warmups; ++i) {
+            const auto cpack = create();
+            ASSERT_NE(cpack, nullptr);
+        }
+        for (size_t i = 0; i < repeat; ++i) {
+            startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto cpack = create();
+            const auto end = std::chrono::steady_clock::now();
+            stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            ASSERT_NE(cpack, nullptr);
+        }
+        stats.print();
+    };
 
     {
         Stats stats{"load cpack by directory (vanilla)"};
-        benchmark(stats, repeat, [] {
-            auto cpack = serialization::createCPackByDirectory(vanillaDir());
+        timedLoad(stats, [] {
+            return serialization::createCPackByDirectory(vanillaDir());
         });
-        stats.print();
     }
     {
-        std::vector<Stats> stats;
         for (const auto &path: {vanillaBin(), experimentBin()}) {
             if (!std::filesystem::exists(path)) {
                 continue;
             }
             const auto data = readBinaryFile(path);
-            std::string name = "load cpack by binary (" + path.stem().string() + ")";
-            stats.emplace_back(Stats{name});
-            auto &stat = stats.back();
-            benchmark(stat, repeat, [&data] {
-                auto cpack = serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
+            Stats stats{"load cpack by binary (" + path.stem().string() + ")"};
+            timedLoad(stats, [&data] {
+                return serialization::createCPackByBinary(std::string_view(data.data(), data.size()));
             });
-            stat.print();
         }
+    }
+}
+
+// 单独测量二进制解码，排除 afterApply 中的缓存构建与节点初始化。
+TEST(Bench, DecodeCPack) {
+    Node::initializeStaticNodes();
+    std::printf("sizeof(NormalId)=%zu bytes\n", sizeof(NormalId));
+    for (const auto &path: {vanillaBin(), experimentBin()}) {
+        if (!std::filesystem::exists(path)) continue;
+        const auto data = readBinaryFile(path);
+        Stats stats{"decode cpack binary (" + path.stem().string() + ")"};
+        const auto read = [&](bool measure) {
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope scope(memory);
+            CPackData restored;
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = memory;
+            if (measure) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto error = glz::read<glz::opts{.format = BinaryFormat}>(restored, data, ctx);
+            const auto end = std::chrono::steady_clock::now();
+            if (measure) stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, data);
+            ASSERT_NE(restored.commands, nullptr);
+            ASSERT_FALSE(restored.commands->empty());
+        };
+        for (int i = 0; i < 2; ++i) read(false);
+        for (int i = 0; i < 20; ++i) read(true);
+        stats.print();
+    }
+}
+
+// 单独测量方块 ID 缓存初始化；每轮先解码到新的资源池，避免把缓存命中当成初始化。
+TEST(Bench, InitializeBlockIds) {
+    Node::initializeStaticNodes();
+    for (const auto &path: {vanillaBin(), experimentBin()}) {
+        if (!std::filesystem::exists(path)) continue;
+        const auto data = readBinaryFile(path);
+        Stats stats{"initialize block ids (" + path.stem().string() + ")"};
+        for (int iteration = 0; iteration < 22; ++iteration) {
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope scope(memory);
+            CPackData restored;
+            NodeReadContext ctx;
+            ctx.createStage = Node::NodeCreateStage::JSON_NODE;
+            ctx.cpackMemory = memory;
+            const auto error = glz::read<glz::opts{.format = BinaryFormat}>(restored, data, ctx);
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, data);
+            ASSERT_NE(restored.blockIds, nullptr);
+            ASSERT_NE(restored.blockIds->blockStateValues, nullptr);
+            if (iteration >= 2) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            {
+                const auto &blocks = *restored.blockIds;
+                const BlockPropertyDescriptionIndex index(blocks.blockPropertyDescriptions);
+                BlockPropertyNodeCache nodes(blocks.blockPropertyDescriptions);
+                for (const auto &block: *blocks.blockStateValues) {
+                    block->buildHash();
+                    block->getIdWithNamespace()->buildHash();
+                    block->getNode(blocks.blockPropertyDescriptions, &index, &nodes);
+                }
+            }
+            const auto end = std::chrono::steady_clock::now();
+            if (iteration >= 2) stats.add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+        }
+        stats.print();
     }
 }
 
@@ -159,6 +271,56 @@ TEST(Bench, WriteCPack) {
         });
         stats.print();
     }
+}
+
+TEST(Bench, SerializationMemory) {
+    const auto cpack = serialization::createCPackByDirectory(vanillaDir());
+    ASSERT_NE(cpack, nullptr);
+    ASSERT_NE(cpack->commands, nullptr);
+    ASSERT_FALSE(cpack->commands->empty());
+    const auto &commands = *cpack->commands;
+    const auto run = [&]<std::uint32_t Format>(const char *name) {
+        constexpr auto opts = glz::opts{.format = Format, .error_on_unknown_keys = false};
+        std::string buffer;
+        ASSERT_FALSE(bool(glz::write<opts>(commands, buffer)));
+        std::printf("%s input: %zu bytes, xxh64=%016llx\n", name, buffer.size(),
+                    static_cast<unsigned long long>(XXH64(buffer.data(), buffer.size(), 0)));
+        using Commands = std::remove_cvref_t<decltype(commands)>;
+        const auto read = [&](Stats *stats) {
+            // 每轮显式拥有读取池，避免借用源 CPack 的加载作用域，也把各轮分配隔离。
+            const auto memory = std::make_shared<CPackMemoryResource>();
+            const CPackMemoryScope memoryScope(memory);
+            Commands restored;
+            NodeReadContext ctx;
+            ctx.cpackMemory = memory;
+            if (stats) startAllocCounting();
+            const auto start = std::chrono::steady_clock::now();
+            const auto error = glz::read<opts>(restored, buffer, ctx);
+            const auto end = std::chrono::steady_clock::now();
+            if (stats) {
+                stats->add(std::chrono::duration<double, std::milli>(end - start).count(), stopAllocCounting());
+            }
+            ASSERT_FALSE(bool(error)) << glz::format_error(error, buffer);
+            ASSERT_EQ(restored.size(), commands.size());
+            for (std::size_t i = 0; i < commands.size(); ++i) {
+                ASSERT_EQ(restored[i].name, commands[i].name);
+                ASSERT_EQ(restored[i].nodes.nodes.size(), commands[i].nodes.nodes.size());
+            }
+        };
+        for (int i = 0; i < 5; ++i) read(nullptr);
+        Stats reads{std::string("read commands memory ") + name};
+        for (int i = 0; i < 100; ++i) read(&reads);
+        reads.print();
+        Stats writes{std::string("write commands memory ") + name};
+        benchmark(writes, 100, [&] {
+            const auto error = glz::write<opts>(commands, buffer);
+            if (bool(error)) throw std::runtime_error("benchmark serialization failed");
+        });
+        writes.print();
+    };
+    run.template operator()<glz::JSON>("JSON");
+    run.template operator()<glz::MSGPACK>("MSGPACK");
+    run.template operator()<CHelper::BinaryFormat>("BinaryFormat");
 }
 
 /**

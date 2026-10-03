@@ -20,11 +20,12 @@
 
 #include <chelper/lexer/Lexer.h>
 #include <chelper/lexer/TokenReader.h>
+#include <chelper/util/HashContainer.h>
 #include <pch.h>
 
 namespace CHelper::Old2New {
 
-    using BlockFixData = std::unordered_map<std::u16string, std::unordered_map<uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
+    using BlockFixData = DenseMap<std::u16string, DenseMap<uint32_t, std::pair<std::optional<std::u16string>, std::optional<std::u16string>>>>;
 
     // blockFixData.json 的条目结构（JSON 与 MessagePack 共用）
     struct BlockFixEntry {

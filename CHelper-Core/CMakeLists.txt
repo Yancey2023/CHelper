@@ -39,6 +39,8 @@ endif()
 if(MSVC)
     add_compile_options("/utf-8")
     add_compile_options("/Zc:__cplusplus")
+    # 序列化等重度模板的编译单元会超出 COFF 节段上限
+    add_compile_options("/bigobj")
 endif()
 
 include(FetchContent)
@@ -151,6 +153,11 @@ chelper_fetch_thirdparty(xxHash
     SOURCE_SUBDIR build/cmake
     EXCLUDE_FROM_ALL
 )
+chelper_fetch_thirdparty(unordered_dense
+    GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
+    GIT_TAG v5.2.0
+    SYSTEM
+)
 chelper_fetch_thirdparty(glaze
     GIT_REPOSITORY https://github.com/stephenberry/glaze.git
     GIT_TAG v9.0.0
@@ -191,7 +198,7 @@ target_include_directories(CHelperCore PUBLIC
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
+target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash unordered_dense::unordered_dense glaze::glaze)
 set_property(TARGET CHelperCore PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET CHelperCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 if(MSVC)
@@ -207,7 +214,7 @@ target_include_directories(CHelperNoFilesystemCore PUBLIC
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash glaze::glaze)
+target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash unordered_dense::unordered_dense glaze::glaze)
 target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
 set_property(TARGET CHelperNoFilesystemCore PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET CHelperNoFilesystemCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)

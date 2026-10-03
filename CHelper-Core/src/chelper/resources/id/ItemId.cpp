@@ -21,18 +21,26 @@
 
 namespace CHelper {
 
+    // 不带上限和描述的物品使用相同的只读整数节点，由全局堆持有，独立于资源包生命周期。
+    static Node::NodeInteger nodeDefaultItemData("ITEM_DATA", u"物品附加值", -1, std::nullopt);
+
     const Node::NodeWithType &ItemId::getNode() {
-        if (node == nullptr) [[unlikely]] {
+        if (!node.has_value()) [[unlikely]] {
             if (max.has_value() && max.value() < 0) [[unlikely]] {
                 throw std::runtime_error("item id max data value should be a positive number");
             }
+            if (!max.has_value() && !descriptions.has_value()) {
+                node.emplace(nodeDefaultItemData);
+                return *node;
+            }
+            nodeChildren.nodes.reserve(descriptions.has_value() ? descriptions->size() + 2 : 1);
             auto nodeAllData = new Node::NodeInteger("ITEM_DATA", u"物品附加值", -1, max);
             nodeChildren.nodes.emplace_back(*nodeAllData);
             if (!descriptions.has_value()) [[unlikely]] {
-                node = std::make_unique<Node::NodeWithType>(*nodeAllData);
+                node.emplace(*nodeAllData);
             } else {
                 std::pmr::vector<Node::NodeWithType> nodeDataChildren;
-                nodeDataChildren.reserve(descriptions.value().size());
+                nodeDataChildren.reserve(descriptions.value().size() + 1);
                 size_t i = 0;
                 for (const auto &item: descriptions.value()) {
                     auto nodeChild = new Node::NodeText(
@@ -47,7 +55,7 @@ namespace CHelper {
                 nodeDataChildren.emplace_back(*nodeAllData);
                 auto nodeOr = new Node::NodeOr(std::move(nodeDataChildren), false);
                 nodeChildren.nodes.emplace_back(*nodeOr);
-                node = std::make_unique<Node::NodeWithType>(*nodeOr);
+                node.emplace(*nodeOr);
             }
         }
         return *node;

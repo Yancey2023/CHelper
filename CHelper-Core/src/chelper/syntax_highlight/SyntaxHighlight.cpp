@@ -18,6 +18,7 @@
 
 #include <chelper/node/NodeType.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <chelper/util/JsonUtil.h>
 
 namespace CHelper::SyntaxHighlight {
 

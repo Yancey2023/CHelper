@@ -20,6 +20,7 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/CPack.h>
+#include <chelper/util/JsonUtil.h>
 
 namespace CHelper::Parser {
 

@@ -25,6 +25,7 @@
 #include <chelper/resources/id/BlockId.h>
 #include <chelper/resources/id/ItemId.h>
 #include <chelper/util/CPackMemory.h>
+#include <chelper/util/HashContainer.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -73,8 +74,8 @@ namespace CHelper {
     // 二进制（MessagePack）格式
     struct CPackData {
         Manifest manifest;
-        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
-        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::shared_ptr<BlockIds> blockIds;
         std::pmr::vector<GrammarEntry> grammar;
@@ -123,20 +124,19 @@ namespace CHelper {
 
     public:
         ~CPack() {
-            CPackMemoryRouter::install();
-            CPackMemoryRouter::setCurrent(cpackMemory->getResource());
+            destructionMemoryScope.prepareForDestruction();
         }
 
         Manifest manifest;
-        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
-        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
         std::shared_ptr<BlockIds> blockIds;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::pmr::vector<Node::NodeJsonElement> jsonNodes;
         std::pmr::vector<Node::RepeatData> repeatNodeData;
-        std::pmr::unordered_map<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
-        std::pmr::unordered_map<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs;
-        std::pmr::unordered_map<std::pmr::string, Node::NodeWithType> grammarNodes;
+        PmrDenseMap<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs;
+        PmrDenseMap<std::pmr::string, Node::NodeWithType> grammarNodes;
         std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
         Node::NodeCommand mainNode;
 

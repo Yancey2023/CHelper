@@ -132,7 +132,7 @@ namespace glz {
         template<auto Opts, class V, is_context Ctx, class It, class End>
         static void op(V &&value, Ctx &&ctx, It &&it, End &&end) noexcept {
             using Raw = raw_type_t<T>;
-            if (it + sizeof(Raw) > end) [[unlikely]] {
+            if (static_cast<size_t>(end - it) < sizeof(Raw)) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
             }
@@ -184,7 +184,10 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
-            if (it + size > end) [[unlikely]] {
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
+            if (static_cast<size_t>(end - it) < size) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
             }
@@ -197,6 +200,27 @@ namespace glz {
                 value.assign(utf8);
             } else {
                 CHelper::U16Conv::convertToU16(utf8, value);
+            }
+        }
+    };
+
+    // char16_t（单字符）与 JSON/MSGPACK 一致按长度为 1 的字符串承载，三种格式语义统一
+    template<>
+    struct to<CHelper::BinaryFormat, char16_t> {
+        template<auto Opts>
+        static void op(auto &&value, is_context auto &&ctx, auto &&b, auto &&ix) noexcept {
+            serialize<CHelper::BinaryFormat>::template op<Opts>(std::u16string(1, value), ctx, b, ix);
+        }
+    };
+
+    template<>
+    struct from<CHelper::BinaryFormat, char16_t> {
+        template<auto Opts>
+        static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
+            std::u16string text;
+            from<CHelper::BinaryFormat, std::u16string>::template op<Opts>(text, ctx, it, end);
+            if (!text.empty()) {
+                value = text.front();
             }
         }
     };
@@ -329,7 +353,28 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
             value.clear();
+            using Element = typename T::value_type;
+            // 固定宽度数值数组与线路布局一致，一次边界检查后直接拷贝。
+            // bool 是位代理，char16_t 在线路上是 UTF-8 字符串，都不能走此路径。
+            if constexpr (std::endian::native == std::endian::little &&
+                          (std::is_arithmetic_v<Element> || std::is_enum_v<Element>) &&
+                          !std::is_same_v<Element, bool> && !std::is_same_v<Element, char16_t>) {
+                if (size > static_cast<size_t>(end - it) / sizeof(Element)) [[unlikely]] {
+                    ctx.error = error_code::unexpected_end;
+                    return;
+                }
+                value.resize(size);
+                if (size != 0) {
+                    const size_t bytes = static_cast<size_t>(size) * sizeof(Element);
+                    std::memcpy(value.data(), &(*it), bytes);
+                    it += bytes;
+                }
+                return;
+            }
             if (size > 0) {
                 value.reserve(size);
                 for (std::uint32_t i = 0; i < size; ++i) {
@@ -374,7 +419,14 @@ namespace glz {
         static void op(auto &&value, is_context auto &&ctx, auto &&it, auto &&end) {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
             value.clear();
+            if constexpr (requires { value.reserve(size); }) {
+                // 损坏的计数字段不能让预分配远超输入大小；不足的容量仍可按需增长。
+                value.reserve(std::min<size_t>(size, static_cast<size_t>(end - it)));
+            }
             for (std::uint32_t i = 0; i < size; ++i) {
                 using Key = typename T::key_type;
                 using Mapped = typename T::mapped_type;
@@ -453,117 +505,3 @@ namespace glz {
         }
     };
 }// namespace glz
-
-
-// ================= 通用 I/O 辅助函数（所有文件通过 pch.h 可用） =================
-namespace CHelper {
-
-#ifndef CHELPER_NO_FILESYSTEM
-    // 读取整个文件（资源 JSON 加载用）
-    inline std::string readFileToString(const std::filesystem::path &path) {
-        std::ifstream is(path, std::ios::binary);
-        if (!is.is_open()) [[unlikely]] {
-            throw std::runtime_error("fail to open file: " + path.string());
-        }
-        is.seekg(0, std::ios::end);
-        const auto fileSize = is.tellg();
-        if (fileSize == std::streampos(-1)) [[unlikely]] {
-            throw std::runtime_error("fail to get file size: " + path.string());
-        }
-        std::string content(static_cast<size_t>(fileSize), '\0');
-        is.seekg(0, std::ios::beg);
-        if (!is) [[unlikely]] {
-            throw std::runtime_error("fail to seek file: " + path.string());
-        }
-        if (!content.empty() && !is.read(content.data(), static_cast<std::streamsize>(content.size()))) [[unlikely]] {
-            throw std::runtime_error("fail to read file: " + path.string());
-        }
-        return content;
-    }
-#endif
-
-    // JSON 读取（失败时抛出带定位信息的异常）
-    // ctx 允许调用方携带自定义反序列化上下文（如 CPack 加载阶段），不传则使用默认上下文
-    template<class T, class Ctx>
-        requires glz::is_context<Ctx>
-    void readJson(T &value, const std::string_view buffer, Ctx &ctx) {
-        const auto ec = glz::read<glz::opts{}>(value, buffer, ctx);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse json: " + glz::format_error(ec, buffer));
-        }
-    }
-
-    template<class T>
-    void readJson(T &value, const std::string_view buffer) {
-        glz::context ctx{};
-        readJson(value, buffer, ctx);
-    }
-
-#ifndef CHELPER_NO_FILESYSTEM
-    template<class T, class Ctx>
-        requires glz::is_context<Ctx>
-    void readJsonFromFile(T &value, const std::filesystem::path &path, Ctx &ctx) {
-        std::string buffer = readFileToString(path);
-        readJson(value, buffer, ctx);
-    }
-
-    template<class T>
-    void readJsonFromFile(T &value, const std::filesystem::path &path) {
-        glz::context ctx{};
-        readJsonFromFile(value, path, ctx);
-    }
-#endif
-
-    // JSON 写出（紧凑格式）
-    template<class T>
-    [[nodiscard]] std::string writeJson(const T &value) {
-        std::string buffer;
-        const auto ec = glz::write_json(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write json");
-        }
-        return buffer;
-    }
-
-    // MessagePack 读写
-    template<class T>
-    void writeMsgpack(std::string &buffer, const T &value) {
-        const auto ec = glz::write_msgpack(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write msgpack");
-        }
-    }
-
-    template<class T>
-    void readMsgpack(T &value, const std::string_view buffer) {
-        const auto ec = glz::read_msgpack(value, buffer);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse msgpack: " + glz::format_error(ec, buffer));
-        }
-    }
-
-    // 自定义二进制格式（.cpack / old2new.dat）
-    template<class T>
-    void writeBinary(std::string &buffer, const T &value) {
-        glz::context ctx{};
-        const auto ec = glz::write<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to write binary");
-        }
-    }
-
-    template<class T, class Ctx>
-        requires glz::is_context<Ctx>
-    void readBinary(T &value, const std::string_view buffer, Ctx &ctx) {
-        const auto ec = glz::read<glz::opts{.format = CHelper::BinaryFormat}>(value, buffer, ctx);
-        if (bool(ec)) [[unlikely]] {
-            throw std::runtime_error("fail to parse binary: " + glz::format_error(ec, buffer));
-        }
-    }
-
-    template<class T>
-    void readBinary(T &value, const std::string_view buffer) {
-        glz::context ctx{};
-        readBinary(value, buffer, ctx);
-    }
-}// namespace CHelper
