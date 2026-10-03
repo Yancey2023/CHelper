@@ -225,6 +225,27 @@ namespace CHelper::Test {
         EXPECT_FALSE(errorReasons.front()->errorReason.empty());
     }
 
+    TEST(CommandContextTest, ErrorQueryMaterializesIndependentResultsWithoutChangingAST) {
+        const auto cpack = loadCPack();
+        CommandContext context(cpack, u"unknown_command 中文");
+        const auto &parsed = context.getAstNode()->errorReasons;
+        ASSERT_FALSE(parsed.empty());
+        ASSERT_EQ(parsed.front()->getCode(), ErrorReasonCode::UnknownCommand);
+        EXPECT_TRUE(parsed.front()->errorReason.empty());
+        const auto message = parsed.front()->getMessage();
+        auto first = context.getErrorReasons();
+        ASSERT_FALSE(first.empty());
+        EXPECT_EQ(std::u16string_view(first.front()->errorReason), message);
+        EXPECT_EQ(first.front()->getCode(), parsed.front()->getCode());
+        EXPECT_TRUE(parsed.front()->errorReason.empty());
+        first.front()->errorReason = u"修改展示结果";
+        first.front()->start = 99;
+        const auto second = context.getErrorReasons();
+        ASSERT_FALSE(second.empty());
+        EXPECT_EQ(std::u16string_view(second.front()->errorReason), message);
+        EXPECT_EQ(second.front()->start, parsed.front()->start);
+    }
+
     TEST(CommandContextTest, CopiesTemporaryInputAndResultsOutliveContext) {
         const auto cpack = loadCPack();
         std::vector<AutoSuggestion::Suggestion> suggestions;

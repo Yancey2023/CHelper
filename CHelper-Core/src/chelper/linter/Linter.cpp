@@ -64,7 +64,7 @@ namespace CHelper::Linter {
                     }
                 }
             }
-            errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"找不到命令名 -> {}", str)));
+            errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownCommandName, {str}));
             return true;
         }
     };
@@ -81,7 +81,7 @@ namespace CHelper::Linter {
             if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
                     return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
                 })) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"找不到ID -> {}", str)));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownId, {str}));
             }
             return true;
         }
@@ -99,7 +99,7 @@ namespace CHelper::Linter {
             if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
                     return item->fastMatch(strHash);
                 })) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"找不到ID -> {}", str)));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownId, {str}));
             }
             return true;
         }
@@ -109,7 +109,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodePosition> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_POSITION_POSITIONS_WITH_ERROR) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::logicError(astNode.tokens, u"绝对坐标和相对坐标不能与局部坐标混用"));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens, ErrorReasonCode::MixedCoordinates));
                 return true;
             } else {
                 return false;
@@ -121,7 +121,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeRelativeFloat> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_RELATIVE_FLOAT_WITH_ERROR) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::logicError(astNode.tokens, u"不能使用局部坐标"));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens, ErrorReasonCode::LocalCoordinateDisallowed));
                 return true;
             } else {
                 return false;
@@ -133,7 +133,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeEqualEntry> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.childNodes.size() == 3 && astNode.childNodes[2].node.data == Node::NodeAny::getNodeAny().data) {
-                errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的目标选择器参数 -> {}", astNode.childNodes[0].tokens.string())));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownSelectorArgument, {astNode.childNodes[0].tokens.string()}));
                 return true;
             } else {
                 return false;
@@ -145,7 +145,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeJsonList> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_JSON_ALL_LIST) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的json参数 -> {}", astNode.tokens.string())));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownJsonArgument, {astNode.tokens.string()}));
                 return true;
             } else {
                 return false;
@@ -157,7 +157,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeJsonEntry> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!reinterpret_cast<Node::NodeJsonEntry *>(astNode.node.data)->nodeEntry.has_value()) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::idError(astNode.tokens, fmt::format(u"未知的json参数 -> {}", astNode.tokens.string())));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownJsonArgument, {astNode.tokens.string()}));
                 return true;
             } else {
                 return false;
@@ -181,13 +181,7 @@ namespace CHelper::Linter {
                   value == -std::numeric_limits<T>::infinity())) ||
                 value < node.min.value_or(std::numeric_limits<T>::lowest()) ||
                 value > node.max.value_or(std::numeric_limits<T>::max())) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::idError(
-                        astNode.tokens,
-                        fmt::format(
-                                u"数值不在范围[{}, {}]内 -> {}",
-                                node.min.value_or(std::numeric_limits<T>::lowest()),
-                                node.max.value_or(std::numeric_limits<T>::max()),
-                                astNode.tokens.string())));
+                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::NumberOutOfRange, {node.min.value_or(std::numeric_limits<T>::lowest()), node.max.value_or(std::numeric_limits<T>::max()), astNode.tokens.string()}));
             }
             return true;
         }
@@ -248,17 +242,23 @@ namespace CHelper::Linter {
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode) {
+        ErrorReasonMemoryScope errorMemory;
         QueryState state;
-        return getErrorsExceptParseError(astNode, state);
+        auto result = getErrorsExceptParseError(astNode, state);
+        for (auto &item: result) item = item->materializedCopy();
+        return result;
     }
 
     std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode) {
+        ErrorReasonMemoryScope errorMemory;
         QueryState state;
         std::vector<std::shared_ptr<ErrorReason>> result;
         result.reserve(astNode.errorReasons.size());
         result.insert(result.end(), astNode.errorReasons.begin(), astNode.errorReasons.end());
         lint(astNode, result, state);
-        return sortByLevel(std::move(result));
+        result = sortByLevel(std::move(result));
+        for (auto &item: result) item = item->materializedCopy();
+        return result;
     }
 
 }// namespace CHelper::Linter

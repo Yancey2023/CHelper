@@ -83,7 +83,7 @@ namespace CHelper::JsonUtil {
     ConvertResult jsonString2String(const std::u16string_view &input) {
         ConvertResult result;
         if (input.empty() || input[0] != '\"') [[unlikely]] {
-            result.errorReason = ErrorReason::incomplete(0, 0, u"json字符串必须在双引号内");
+            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 0, 0, ErrorReasonCode::JsonQuotesRequired);
             return result;
         }
         size_t index = 0;
@@ -112,10 +112,8 @@ namespace CHelper::JsonUtil {
             //转义字符
             ++index;
             if (index >= input.size()) [[unlikely]] {
-                result.errorReason = ErrorReason::incomplete(
-                        index - 1,
-                        index,
-                        u"转义字符缺失后半部分");
+                result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE,
+                                                             index - 1, index, ErrorReasonCode::IncompleteEscape);
             } else {
                 ch = input[index];
                 switch (ch) {
@@ -142,10 +140,8 @@ namespace CHelper::JsonUtil {
                     case u'u':
                         index += 4;
                         if (index >= input.size()) [[unlikely]] {
-                            result.errorReason = ErrorReason::contentError(
-                                    index - 5,
-                                    input.size(),
-                                    fmt::format(u"字符串转义缺失后半部分 -> \\u{}", escapeSequence));
+                            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
+                                                                         index - 5, input.size(), ErrorReasonCode::IncompleteUnicodeEscape, {escapeSequence});
                             break;
                         }
                         escapeSequence = input.substr(index - 3, 4);
@@ -159,10 +155,8 @@ namespace CHelper::JsonUtil {
                                                     if (isHexDigit) [[likely]] {
                                                         return false;
                                                     } else {
-                                                        result.errorReason = ErrorReason::incomplete(
-                                                                index - 5,
-                                                                index + 1,
-                                                                fmt::format(u"字符串转义出现非法字符{} -> \\u{}", item, escapeSequence));
+                                                        result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE,
+                                                                                                     index - 5, index + 1, ErrorReasonCode::InvalidUnicodeEscapeCharacter, {item, escapeSequence});
                                                         return true;
                                                     }
                                                 })) [[unlikely]] {
@@ -170,9 +164,8 @@ namespace CHelper::JsonUtil {
                         }
                         unicodeValue = std::stoi(utf8::utf16to8(escapeSequence), nullptr, 16);
                         if (unicodeValue < 0 || unicodeValue > 0x10FFFF) [[unlikely]] {
-                            result.errorReason = ErrorReason::contentError(
-                                    index - 5, index + 1,
-                                    fmt::format(u"字符串转义的Unicode值无效 -> \\u{}", escapeSequence));
+                            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
+                                                                         index - 5, index + 1, ErrorReasonCode::InvalidUnicodeEscapeValue, {escapeSequence});
                             break;
                         }
                         escapeSequence.clear();
@@ -186,9 +179,8 @@ namespace CHelper::JsonUtil {
                         }
                         break;
                     default:
-                        result.errorReason = ErrorReason::contentError(
-                                index, index + 1,
-                                fmt::format(u"未知的转义字符 -> \\{:c}", ch));
+                        result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
+                                                                     index, index + 1, ErrorReasonCode::UnknownEscape, {ch});
                         break;
                 }
             }

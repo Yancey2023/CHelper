@@ -517,7 +517,7 @@ TEST(Bench, CommandContextResults) {
             number(error->level);
             number(error->start);
             number(error->end);
-            add(error->errorReason);
+            add(error->getMessage());
         }
         result += "errors|";
         for (const auto type: context->getSyntaxResult().tokenTypes) number(type);

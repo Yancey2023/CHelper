@@ -139,10 +139,10 @@ namespace CHelper::Parser {
             std::u16string_view str = result.tokens.string();
             if (str.empty()) [[likely]] {
                 TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::contentError(tokens, u"null参数为空"));
+                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::EmptyNull));
             } else if (str != u"null") [[likely]] {
                 TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::contentError(tokens, fmt::format(u"内容不是null -> {}", str)));
+                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNull, {str}));
             }
             return result;
         }
@@ -180,13 +180,13 @@ namespace CHelper::Parser {
             TokensView tokens = result.tokens;
             std::u16string_view str = tokens.string();
             if (str.empty()) [[unlikely]] {
-                return ASTNode::simpleNode(node, tokens, ErrorReason::incomplete(tokens, u"字符串参数内容为空"));
+                return ASTNode::simpleNode(node, tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::EmptyString));
             } else if (str[0] != '"') [[unlikely]] {
-                return ASTNode::simpleNode(node, tokens, ErrorReason::contentError(tokens, fmt::format(u"字符串参数内容应该在双引号内 -> {}", str)));
+                return ASTNode::simpleNode(node, tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::QuotedStringRequired, {str}));
             }
             std::shared_ptr<ErrorReason> errorReason;
             if (str.size() <= 1 || str[str.size() - 1] != '"') [[likely]] {
-                errorReason = ErrorReason::contentError(tokens, fmt::format(u"字符串参数内容应该在双引号内 -> {}", str));
+                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::QuotedStringRequired, {str});
             }
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
                 return ASTNode::simpleNode(node, tokens, errorReason);
@@ -219,7 +219,7 @@ namespace CHelper::Parser {
             ASTNode blockStateLeftBracket = parse(CHelper::Node::NodeBlock::nodeBlockStateLeftBracket, tokenReader);
             tokenReader.restore();
             if (blockStateLeftBracket.isError()) [[likely]] {
-                return ASTNode::andNode(node, {(std::move(blockId))}, tokenReader.collect(),
+                return ASTNode::andNode(node, ASTNode::children(std::move(blockId)), tokenReader.collect(),
                                         nullptr, ASTNodeId::NODE_BLOCK_BLOCK_AND_BLOCK_STATE);
             }
             std::u16string_view str = blockId.tokens.string();
@@ -235,7 +235,7 @@ namespace CHelper::Parser {
                                           ? BlockId::getNodeAllBlockState()
                                           : std::static_pointer_cast<BlockId>(currentBlock)->getNode(node.blockIds->blockPropertyDescriptions);
             auto astNodeBlockState = parseByChildNode(node, tokenReader, nodeBlockState, ASTNodeId::NODE_BLOCK_BLOCK_STATE);
-            return ASTNode::andNode(node, {(std::move(blockId)), (std::move(astNodeBlockState))}, tokenReader.collect(),
+            return ASTNode::andNode(node, ASTNode::children(std::move(blockId), std::move(astNodeBlockState)), tokenReader.collect(),
                                     nullptr, ASTNodeId::NODE_BLOCK_BLOCK_AND_BLOCK_STATE);
         }
     };
@@ -252,7 +252,7 @@ namespace CHelper::Parser {
             ASTNode commandName = tokenReader.readStringASTNode(node, ASTNodeId::NODE_COMMAND_COMMAND_NAME);
             if (commandName.tokens.size() == 0) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::contentError(tokens, u"命令名字为空"), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::EmptyCommandName), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             std::u16string_view str = commandName.tokens.string();
             const Node::NodePerCommand *currentCommand = nullptr;
@@ -273,7 +273,7 @@ namespace CHelper::Parser {
             }
             if (currentCommand == nullptr) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::contentError(tokens, fmt::format(u"命令名字不匹配，找不到名为{}的命令", str)), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::UnknownCommand, {str}), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             ASTNode usage = parse(*currentCommand, tokenReader);
             return ASTNode::andNode(node, ASTNode::children(std::move(commandName), std::move(usage)),
@@ -376,7 +376,7 @@ namespace CHelper::Parser {
             TokensView tokens = tokenReader.collect();
             std::shared_ptr<ErrorReason> errorReason;
             if (tokens.hasValue()) [[unlikely]] {
-                errorReason = ErrorReason::excess(tokens, u"命令后面有多余部分 -> " + std::u16string(tokens.string()));
+                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::EXCESS, tokens, ErrorReasonCode::Excess, {tokens.string()});
             }
             return ASTNode::simpleNode(node, tokens, errorReason);
         }
@@ -392,7 +392,7 @@ namespace CHelper::Parser {
             debugCheckTokenIndex(node, index, tokenReader);
             if (result.tokens.isEmpty()) [[unlikely]] {
                 TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::incomplete(tokens, u"命令不完整"));
+                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::Incomplete));
             }
             if (!node.ignoreError.value_or(false)) [[unlikely]] {
                 TokensView tokens = result.tokens;
@@ -401,7 +401,7 @@ namespace CHelper::Parser {
                 if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
                         return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
                     })) [[unlikely]] {
-                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::incomplete(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::UnknownMeaning, {str}));
                 }
             }
             return result;
@@ -427,7 +427,7 @@ namespace CHelper::Parser {
             tokenReader.pop();
             if (result.tokens.isEmpty()) [[unlikely]] {
                 TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::incomplete(tokens, u"命令不完整"));
+                return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::Incomplete));
             }
             if (!node.ignoreError.value_or(true)) [[unlikely]] {
                 TokensView tokens = result.tokens;
@@ -436,7 +436,7 @@ namespace CHelper::Parser {
                 if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
                         return item->fastMatch(strHash);
                     })) [[unlikely]] {
-                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::incomplete(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::UnknownMeaning, {str}));
                 }
             }
             return result;
@@ -504,7 +504,7 @@ namespace CHelper::Parser {
         } else if (childNodes.empty()) [[unlikely]] {
             tokenReader.pop();
             TokensView tokens = number.tokens;
-            errorReason = ErrorReason::typeError(tokens, fmt::format(u"类型不匹配，{}不是有效的坐标参数", tokens.string()));
+            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::InvalidCoordinate, {tokens.string()});
         } else {
             tokenReader.restore();
         }
@@ -552,12 +552,12 @@ namespace CHelper::Parser {
 
     std::shared_ptr<ErrorReason> checkNumber(const TokensView &tokens, std::u16string_view str) {
         if (str.empty()) [[unlikely]] {
-            return ErrorReason::contentError(tokens, u"范围的数值为空");
+            return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::EmptyRange);
         }
         for (size_t i = 0; i < str.length(); ++i) {
             size_t ch = str[i];
             if ((ch < '0' || ch > '9') && (i != 0 || (ch != '-' && ch != '+'))) [[unlikely]] {
-                return ErrorReason::contentError(tokens, u"范围的数值格式不正确，检测非法字符");
+                return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidRange);
             }
         }
         return nullptr;
@@ -633,7 +633,7 @@ namespace CHelper::Parser {
                 tokenReader.skipToLF();
                 TokensView tokens = tokenReader.collect();
                 if (!node.allowMissingString && tokens.isEmpty()) [[unlikely]] {
-                    return ASTNode::simpleNode(node, tokens, ErrorReason::incomplete(tokens, u"字符串参数内容为空"));
+                    return ASTNode::simpleNode(node, tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::EmptyString));
                 } else {
                     return ASTNode::simpleNode(node, tokens);
                 }
@@ -647,11 +647,11 @@ namespace CHelper::Parser {
             }
             tokenReader.pop();
             if (!node.allowMissingString && result.tokens.isEmpty()) [[unlikely]] {
-                return ASTNode::simpleNode(node, result.tokens, ErrorReason::incomplete(result.tokens, u"字符串参数内容为空"));
+                return ASTNode::simpleNode(node, result.tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, result.tokens, ErrorReasonCode::EmptyString));
             }
             if (!node.canContainSpace) [[unlikely]] {
                 if (result.tokens.string().find(' ') != std::u16string::npos) [[unlikely]] {
-                    return ASTNode::simpleNode(node, result.tokens, ErrorReason::contentError(result.tokens, u"字符串参数内容不可以包含空格"));
+                    return ASTNode::simpleNode(node, result.tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::StringContainsSpace));
                 }
                 return result;
             }
@@ -666,7 +666,7 @@ namespace CHelper::Parser {
                 return ASTNode::simpleNode(node, result.tokens, convertResult.errorReason);
             }
             if (!convertResult.isComplete) [[unlikely]] {
-                return ASTNode::simpleNode(node, result.tokens, ErrorReason::contentError(result.tokens, fmt::format(u"字符串参数内容双引号不封闭 -> {}", str)));
+                return ASTNode::simpleNode(node, result.tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::UnclosedString, {str}));
             }
             return result;
         }
@@ -690,9 +690,9 @@ namespace CHelper::Parser {
             if (str != node.data->name) [[unlikely]] {
                 TokensView tokens = result.tokens;
                 if (str.empty()) [[unlikely]] {
-                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::contentError(tokens, u"命令不完整"));
+                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::Incomplete));
                 } else {
-                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::contentError(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::UnknownMeaning, {str}));
                 }
             }
             return result;
@@ -731,7 +731,7 @@ namespace CHelper::Parser {
                         tokenReader.skip();
                         TokensView tokens = tokenReader.collect();
                         return ASTNode::andNode(node, std::move(childASTNodes), tokenReader.collect(),
-                                                ErrorReason::contentError(tokens, u"意外的空格"));
+                                                ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::UnexpectedSpace));
                     }
                     isMustAfterSpace = false;
                 }
@@ -916,16 +916,16 @@ namespace CHelper::Parser {
             std::shared_ptr<ErrorReason> errorReason;
             if (symbolNode.isError()) [[unlikely]] {
                 if (symbolNode.tokens.isEmpty()) [[likely]] {
-                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::incomplete(symbolNode.tokens, fmt::format(u"命令不完整，需要符号{:c}", node.symbol)));
+                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, symbolNode.tokens, ErrorReasonCode::RequireSymbol, {node.symbol}));
                 } else {
-                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::typeError(symbolNode.tokens, fmt::format(u"类型不匹配，需要符号{:c}，但当前内容为{}", node.symbol, symbolNode.tokens.string())));
+                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, symbolNode.tokens, ErrorReasonCode::SymbolTypeMismatch, {node.symbol, symbolNode.tokens.string()}));
                 }
             }
             std::u16string_view str = symbolNode.tokens.string();
             if (str.length() == 1 && str[0] == node.symbol) [[likely]] {
                 return symbolNode;
             }
-            return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::contentError(symbolNode.tokens, fmt::format(u"内容不匹配，正确的符号为{:c}，但当前内容为{}", node.symbol, str)));
+            return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, symbolNode.tokens, ErrorReasonCode::SymbolContentMismatch, {node.symbol, str}));
         }
     };
 
@@ -945,11 +945,11 @@ namespace CHelper::Parser {
                 }
             }
             if (isUseOptionalNode) {
-                return ASTNode::andNode(node, {(std::move(astNode))}, tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(astNode)), tokenReader.collect());
             } else {
                 tokenReader.restore();
                 TokensView tokens(tokenReader.lexerResult, tokenReader.index, tokenReader.index);
-                return ASTNode::orNode(node, {ASTNode::simpleNode(node, tokens), (std::move(astNode))}, tokens);
+                return ASTNode::orNode(node, ASTNode::children(ASTNode::simpleNode(node, tokens), std::move(astNode)), tokens);
             }
         }
     };
@@ -964,7 +964,7 @@ namespace CHelper::Parser {
             }
             TokensView tokens = astNode.tokens;
             return ASTNode::andNode(node, ASTNode::children(std::move(astNode)), tokens,
-                                    ErrorReason::contentError(tokens, fmt::format(u"内容不匹配，应该为布尔值，但当前内容为{}", str)));
+                                    ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidBoolean, {str}));
         }
     };
 
@@ -993,6 +993,7 @@ namespace CHelper::Parser {
     }
 
     ASTNode parse(const std::u16string_view content, const Node::NodeWithType &mainNode) {
+        ErrorReasonMemoryScope errorMemory;
         TokenReader tokenReader(Lexer::lex(content));
         size_t index = tokenReader.indexStack.size();
         auto result = parse(mainNode, tokenReader);

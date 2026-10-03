@@ -181,9 +181,9 @@ namespace CHelper {
         TokensView tokens = collect();
         std::shared_ptr<ErrorReason> errorReason;
         if (token == nullptr) [[unlikely]] {
-            errorReason = ErrorReason::incomplete(tokens, fmt::format(u"命令不完整，需要的参数类型为{}", requireType));
+            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::RequireType, {requireType});
         } else if (token->type != type) [[unlikely]] {
-            errorReason = ErrorReason::typeError(tokens, fmt::format(u"类型不匹配，正确的参数类型为{}，但当前参数类型为{}", requireType, TokenType::getName(token->type)));
+            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::TypeMismatch, {requireType, TokenType::getName(token->type)});
         } else {
             errorReason = check == nullptr ? nullptr : check(token->content, tokens);
         }
@@ -201,12 +201,12 @@ namespace CHelper {
                 node, TokenType::NUMBER, u"整数类型", astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (str.find(u'.') != std::u16string_view::npos) [[unlikely]] {
-                        return ErrorReason::contentError(
-                                tokens, u"类型不匹配，正确的参数类型为整数，但当前参数类型为小数");
+                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
+                                                       tokens, ErrorReasonCode::IntegerRequired);
                     }
                     //lexer会吞掉连续的0-9 . + -，这里必须校验完整的数字格式，防止1-2、1--2这类内容被当成合法数字
                     if (!isIntegerFormat(str)) [[unlikely]] {
-                        return ErrorReason::contentError(tokens, fmt::format(u"数字格式错误 -> {}", str));
+                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNumber, {str});
                     }
                     return nullptr;
                 });
@@ -218,7 +218,7 @@ namespace CHelper {
                 node, TokenType::NUMBER, u"数字类型", astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (!isFloatFormat(str)) [[unlikely]] {
-                        return ErrorReason::contentError(tokens, fmt::format(u"数字格式错误 -> {}", str));
+                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNumber, {str});
                     }
                     return nullptr;
                 });

@@ -58,7 +58,7 @@ namespace {
             scalar(value->level);
             scalar(value->start);
             scalar(value->end);
-            string(value->errorReason);
+            string(value->getMessage());
         };
         const auto ast = [&](const auto &self, const ASTNode &node) -> void {
             scalar(node.mode);
