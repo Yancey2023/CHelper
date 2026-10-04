@@ -8,45 +8,71 @@
 
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/util/CPackMemory.h>
+#include <cstdint>
 
 namespace CHelper {
 
-    // AST 的错误列表通常为空或只有一项。单项直接存放在节点内，多项才使用 PMR 数组。
-    // 资源随列表保存，复制到另一个解析作用域时重新分配，释放不依赖当前线程路由。
+    // 空/单项列表不分配，多项的数量和容量放在数组头中，与元素共同分配。
+    // 资源指针的两个对齐位保存状态，避免每个 AST 再持有一个 size_t 计数。
     class ErrorReasonList {
     public:
         using value_type = std::shared_ptr<ErrorReason>;
         using allocator_type = std::pmr::polymorphic_allocator<value_type>;
 
     private:
-        struct Array {
-            value_type *data;
-            size_t capacity;
+        enum Mode : uintptr_t { Empty = 0,
+                                Single = 1,
+                                Multiple = 2 };
+        static constexpr uintptr_t modeMask = 3;
+        static_assert(alignof(std::pmr::memory_resource) > modeMask);
+
+        struct alignas(value_type) Array {
+            size_t count, capacity;
+            value_type *data() noexcept { return reinterpret_cast<value_type *>(this + 1); }
+            const value_type *data() const noexcept { return reinterpret_cast<const value_type *>(this + 1); }
         };
         union Storage {
             value_type single;
-            Array array;
-            Storage() : single() {}
+            Array *array;
+            // Empty 时没有活动成员；Single/Multiple 的生命周期由状态转换显式管理。
+            Storage() {}
             ~Storage() {}
         } storage;
-        size_t count = 0;
-        std::pmr::memory_resource *resource;
+        uintptr_t resourceAndMode;
 
+        [[nodiscard]] Mode mode() const noexcept { return static_cast<Mode>(resourceAndMode & modeMask); }
+        void setMode(Mode value) noexcept { resourceAndMode = (resourceAndMode & ~modeMask) | value; }
+        [[nodiscard]] std::pmr::memory_resource *resource() const noexcept {
+            return reinterpret_cast<std::pmr::memory_resource *>(resourceAndMode & ~modeMask);
+        }
+        static constexpr size_t maximumCapacity = (SIZE_MAX - sizeof(Array)) / sizeof(value_type);
+        [[nodiscard]] Array *allocateArray(size_t capacity) {
+            if (capacity > maximumCapacity) throw std::length_error("too many error reasons");
+            auto *memory = resource()->allocate(sizeof(Array) + capacity * sizeof(value_type), alignof(Array));
+            return std::construct_at(static_cast<Array *>(memory), Array{0, capacity});
+        }
+        void releaseArray(Array *array) noexcept {
+            const auto bytes = sizeof(Array) + array->capacity * sizeof(value_type);
+            std::destroy_n(array->data(), array->count);
+            std::destroy_at(array);
+            resource()->deallocate(array, bytes, alignof(Array));
+        }
         void take(ErrorReasonList &other) noexcept {
-            if (other.count > 1) {
-                std::destroy_at(&storage.single);
+            const auto otherMode = other.mode();
+            if (otherMode == Multiple) {
                 std::construct_at(&storage.array, other.storage.array);
                 std::destroy_at(&other.storage.array);
-                std::construct_at(&other.storage.single);
-            } else {
-                storage.single = std::move(other.storage.single);
+            } else if (otherMode == Single) {
+                std::construct_at(&storage.single, std::move(other.storage.single));
+                std::destroy_at(&other.storage.single);
             }
-            count = std::exchange(other.count, 0);
+            setMode(otherMode);
+            other.setMode(Empty);
         }
 
     public:
         explicit ErrorReasonList(std::pmr::memory_resource *resource = CPackMemoryRouter::getAllocationResource()) noexcept
-            : resource(resource) {}
+            : resourceAndMode(reinterpret_cast<uintptr_t>(resource)) {}
 
         ErrorReasonList(std::initializer_list<value_type> values,
                         std::pmr::memory_resource *resource = CPackMemoryRouter::getAllocationResource())
@@ -57,35 +83,31 @@ namespace CHelper {
         ErrorReasonList(const ErrorReasonList &other,
                         std::pmr::memory_resource *resource = CPackMemoryRouter::getAllocationResource())
             : ErrorReasonList(resource) {
-            if (other.count <= 1) {
-                storage.single = other.storage.single;
-            } else {
-                auto *data = get_allocator().allocate(other.count);
-                std::uninitialized_copy(other.begin(), other.end(), data);
-                std::destroy_at(&storage.single);
-                std::construct_at(&storage.array, Array{data, other.count});
+            if (other.mode() == Multiple) {
+                auto *array = allocateArray(other.size());
+                std::uninitialized_copy(other.begin(), other.end(), array->data());
+                array->count = other.size();
+                std::construct_at(&storage.array, array);
+            } else if (other.mode() == Single) {
+                std::construct_at(&storage.single, other.storage.single);
             }
-            count = other.count;
+            setMode(other.mode());
         }
 
         ErrorReasonList(ErrorReasonList &&other) noexcept
-            : ErrorReasonList(other.resource) {
+            : ErrorReasonList(other.resource()) {
             take(other);
         }
 
         ~ErrorReasonList() {
-            // 析构无需恢复空列表状态，避免为每个 AST 写回空指针、计数和联合成员。
-            if (count > 1) {
-                std::destroy_n(storage.array.data, count);
-                get_allocator().deallocate(storage.array.data, storage.array.capacity);
-            } else {
+            if (mode() == Multiple) releaseArray(storage.array);
+            else if (mode() == Single)
                 std::destroy_at(&storage.single);
-            }
         }
 
         ErrorReasonList &operator=(const ErrorReasonList &other) {
             if (this != &other) {
-                ErrorReasonList copy(other, resource);
+                ErrorReasonList copy(other, resource());
                 clear();
                 take(copy);
             }
@@ -94,7 +116,7 @@ namespace CHelper {
 
         ErrorReasonList &operator=(ErrorReasonList &&other) {
             if (this != &other) {
-                if (resource == other.resource) {
+                if (resource() == other.resource()) {
                     clear();
                     take(other);
                 } else {
@@ -106,60 +128,69 @@ namespace CHelper {
         }
 
         ErrorReasonList &operator=(std::initializer_list<value_type> values) {
-            ErrorReasonList copy(values, resource);
+            ErrorReasonList copy(values, resource());
             clear();
             take(copy);
             return *this;
         }
 
-        [[nodiscard]] allocator_type get_allocator() const noexcept { return allocator_type(resource); }
-        [[nodiscard]] size_t size() const noexcept { return count; }
-        [[nodiscard]] bool empty() const noexcept { return count == 0; }
-        [[nodiscard]] value_type *begin() noexcept { return count > 1 ? storage.array.data : &storage.single; }
-        [[nodiscard]] const value_type *begin() const noexcept { return count > 1 ? storage.array.data : &storage.single; }
-        [[nodiscard]] value_type *end() noexcept { return begin() + count; }
-        [[nodiscard]] const value_type *end() const noexcept { return begin() + count; }
+        [[nodiscard]] allocator_type get_allocator() const noexcept { return allocator_type(resource()); }
+        [[nodiscard]] size_t size() const noexcept { return mode() == Multiple ? storage.array->count : static_cast<size_t>(mode()); }
+        [[nodiscard]] bool empty() const noexcept { return mode() == Empty; }
+        [[nodiscard]] value_type *begin() noexcept { return mode() == Multiple ? storage.array->data() : &storage.single; }
+        [[nodiscard]] const value_type *begin() const noexcept { return mode() == Multiple ? storage.array->data() : &storage.single; }
+        [[nodiscard]] value_type *end() noexcept { return begin() + size(); }
+        [[nodiscard]] const value_type *end() const noexcept { return begin() + size(); }
         [[nodiscard]] value_type &operator[](size_t index) noexcept { return begin()[index]; }
         [[nodiscard]] const value_type &operator[](size_t index) const noexcept { return begin()[index]; }
         [[nodiscard]] value_type &front() noexcept { return *begin(); }
         [[nodiscard]] const value_type &front() const noexcept { return *begin(); }
 
         void clear() noexcept {
-            if (count > 1) {
-                std::destroy_n(storage.array.data, count);
-                get_allocator().deallocate(storage.array.data, storage.array.capacity);
+            if (mode() == Multiple) {
+                releaseArray(storage.array);
                 std::destroy_at(&storage.array);
-                std::construct_at(&storage.single);
-            } else {
-                storage.single.reset();
+            } else if (mode() == Single) {
+                std::destroy_at(&storage.single);
             }
-            count = 0;
+            setMode(Empty);
         }
 
-        // 按值接收先取得所有权，既支持自身元素追加，也避免临时诊断的引用计数往返。
+        // 按值接收保证自身元素追加及扩容时的所有权安全，包括空 shared_ptr。
         void push_back(value_type value) {
-            if (count == 0) {
-                storage.single = std::move(value);
-            } else if (count == 1) {
-                auto *data = get_allocator().allocate(2);
-                std::construct_at(data + 1, std::move(value));
-                std::construct_at(data, std::move(storage.single));
-                std::destroy_at(&storage.single);
-                std::construct_at(&storage.array, Array{data, 2});
-            } else if (count == storage.array.capacity) {
-                const auto maximum = std::allocator_traits<allocator_type>::max_size(get_allocator());
-                if (count == maximum) throw std::length_error("too many error reasons");
-                const auto capacity = count > maximum / 2 ? maximum : count * 2;
-                auto *data = get_allocator().allocate(capacity);
-                std::construct_at(data + count, std::move(value));
-                for (size_t i = 0; i < count; ++i) std::construct_at(data + i, std::move(storage.array.data[i]));
-                std::destroy_n(storage.array.data, count);
-                get_allocator().deallocate(storage.array.data, storage.array.capacity);
-                storage.array = {data, capacity};
-            } else {
-                std::construct_at(storage.array.data + count, std::move(value));
+            switch (mode()) {
+                case Empty:
+                    std::construct_at(&storage.single, std::move(value));
+                    setMode(Single);
+                    return;
+                case Single: {
+                    auto *array = allocateArray(2);
+                    std::construct_at(array->data() + 1, std::move(value));
+                    std::construct_at(array->data(), std::move(storage.single));
+                    array->count = 2;
+                    std::destroy_at(&storage.single);
+                    std::construct_at(&storage.array, array);
+                    setMode(Multiple);
+                    return;
+                }
+                case Multiple: {
+                    auto *array = storage.array;
+                    if (array->count == array->capacity) {
+                        if (array->count == maximumCapacity) throw std::length_error("too many error reasons");
+                        const auto capacity = array->count > maximumCapacity / 2 ? maximumCapacity : array->count * 2;
+                        auto *next = allocateArray(capacity);
+                        std::construct_at(next->data() + array->count, std::move(value));
+                        std::uninitialized_move_n(array->data(), array->count, next->data());
+                        next->count = array->count + 1;
+                        releaseArray(array);
+                        storage.array = next;
+                    } else {
+                        std::construct_at(array->data() + array->count, std::move(value));
+                        ++array->count;
+                    }
+                    return;
+                }
             }
-            ++count;
         }
     };
 

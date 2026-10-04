@@ -121,6 +121,79 @@ namespace CHelper::Test {
         EXPECT_EQ(other.allocations, other.deallocations);
     }
 
+    TEST(CPackMemoryTest, ErrorListTransitionsKeepNullEntriesAndOriginalResources) {
+        RecordingResource origin, other;
+        const auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned");
+        for (size_t count = 0; count < 9; ++count) {
+            ErrorReasonList source(&origin);
+            for (size_t i = 0; i < count; ++i) source.push_back(i % 2 ? value : nullptr);
+            ASSERT_EQ(source.size(), count);
+            EXPECT_EQ(source.empty(), count == 0);
+            const auto originalAllocations = origin.allocations;
+            ErrorReasonList moved(std::move(source));
+            EXPECT_EQ(origin.allocations, originalAllocations);
+            EXPECT_TRUE(source.empty());
+            EXPECT_EQ(source.get_allocator().resource(), &origin);
+            source.push_back(nullptr);
+            EXPECT_FALSE(source.empty());
+            EXPECT_EQ(source.size(), 1u);
+            EXPECT_EQ(source.front(), nullptr);
+            source.clear();
+            ErrorReasonList target(&other);
+            target.push_back(value);
+            target = std::move(moved);
+            EXPECT_TRUE(moved.empty());
+            EXPECT_EQ(moved.get_allocator().resource(), &origin);
+            EXPECT_EQ(target.get_allocator().resource(), &other);
+            ASSERT_EQ(target.size(), count);
+            for (size_t i = 0; i < count; ++i) EXPECT_EQ(target[i], i % 2 ? value : nullptr);
+            target = target;
+            target = std::move(target);
+            EXPECT_EQ(target.size(), count);
+            target.clear();
+            target.push_back(nullptr);
+            EXPECT_EQ(target.size(), 1u);
+            EXPECT_EQ(target.get_allocator().resource(), &other);
+        }
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_TRUE(other.live.empty());
+        EXPECT_EQ(origin.allocations, origin.deallocations);
+        EXPECT_EQ(other.allocations, other.deallocations);
+    }
+
+    TEST(CPackMemoryTest, ErrorListArrayGrowthFailurePreservesStorageAndOwners) {
+        class LimitedResource final : public std::pmr::memory_resource {
+        public:
+            bool fail = false;
+
+        private:
+            void *do_allocate(size_t bytes, size_t alignment) override {
+                if (fail) throw std::bad_alloc();
+                return std::pmr::new_delete_resource()->allocate(bytes, alignment);
+            }
+            void do_deallocate(void *pointer, size_t bytes, size_t alignment) override {
+                std::pmr::new_delete_resource()->deallocate(pointer, bytes, alignment);
+            }
+            bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
+        } resource;
+        const auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned");
+        ErrorReasonList list({nullptr, value}, &resource);
+        const auto data = list.begin();
+        const auto references = value.use_count();
+        resource.fail = true;
+        EXPECT_THROW(list.push_back(list[1]), std::bad_alloc);
+        ASSERT_EQ(list.size(), 2u);
+        EXPECT_EQ(list.begin(), data);
+        EXPECT_EQ(list[0], nullptr);
+        EXPECT_EQ(list[1], value);
+        EXPECT_EQ(value.use_count(), references);
+        EXPECT_EQ(list.get_allocator().resource(), &resource);
+        resource.fail = false;
+        list.push_back(list[1]);
+        ASSERT_EQ(list.size(), 3u);
+        EXPECT_EQ(list[2], value);
+    }
+
     TEST(CPackMemoryTest, ErrorListDestructionReleasesLastOwnersAndUsesItsOriginalResource) {
         for (const size_t count: {0u, 1u, 2u, 5u}) {
             RecordingResource origin, other;
