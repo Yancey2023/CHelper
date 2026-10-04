@@ -11,6 +11,9 @@ import type { EditorValue } from '@/types'
 const structure = ref('CHelper正在加载中，请稍候')
 const paramHint = ref('作者：Yancey')
 const errorReason = ref('')
+// 内核加载失败的提示信息，为空表示没有加载失败；重试按钮加载最近失败的分支
+const loadError = ref('')
+let failedBranch: Branch | undefined
 const suggestions = ref<Suggestion[]>([])
 // 补全提示对应的光标位置，加载更多和点击补全提示时使用
 const suggestionIndex = ref(0)
@@ -31,7 +34,36 @@ let context: CommandContext | undefined
 let resizeObserver: ResizeObserver | undefined
 
 async function init(): Promise<void> {
-  setCore(await getCore(DEFAULT_BRANCH))
+  try {
+    setCore(await getCore(DEFAULT_BRANCH))
+  } catch (error) {
+    // 网络失败、资源包解析失败等都会走到这里，必须给出提示，不能让页面一直停在加载中
+    structure.value = 'CHelper加载失败'
+    reportLoadFailure(DEFAULT_BRANCH, error)
+  }
+}
+
+function reportLoadFailure(branch: Branch, error: unknown): void {
+  console.error(`fail to load cpack (${branch})`, error)
+  failedBranch = branch
+  loadError.value = error instanceof Error ? error.message : String(error)
+}
+
+async function retryLoad(): Promise<void> {
+  const branch = failedBranch ?? DEFAULT_BRANCH
+  loadError.value = ''
+  // 只有当前没有可用内核时才改动顶部状态文字，避免覆盖切换分支失败后仍然可用的界面
+  if (core === undefined) {
+    structure.value = 'CHelper正在加载中，请稍候'
+  }
+  try {
+    setCore(await getCore(branch))
+  } catch (error) {
+    if (core === undefined) {
+      structure.value = 'CHelper加载失败'
+    }
+    reportLoadFailure(branch, error)
+  }
 }
 
 function setCore(newCore: CHelperCore): void {
@@ -167,7 +199,12 @@ function closeBranchSelector(): void {
 }
 
 async function onBranchSelect(branch: string): Promise<void> {
-  setCore(await getCore(branch as Branch))
+  try {
+    setCore(await getCore(branch as Branch))
+  } catch (error) {
+    // 切换分支失败时旧内核仍然可用，只显示提示，不改动顶部状态文字
+    reportLoadFailure(branch as Branch, error)
+  }
 }
 
 onMounted(() => {
@@ -194,6 +231,11 @@ void init()
         <div class="text-structure">{{ structure }}</div>
         <div class="text-param-hint">{{ paramHint }}</div>
         <div class="text-error-reason" v-if="errorReason">{{ errorReason }}</div>
+        <div class="text-error-reason" v-if="loadError">
+          <div>CHelper 内核加载失败：{{ loadError }}</div>
+          <div>请检查网络后重试，或在页面右下角切换分支。</div>
+          <button class="button retry-button" @click="retryLoad">重试</button>
+        </div>
         <div class="line"></div>
       </div>
     </header>
@@ -322,6 +364,10 @@ main {
 
 .button:hover {
   background-color: #0070ff;
+}
+
+.retry-button {
+  margin: 5px;
 }
 
 * {

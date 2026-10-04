@@ -41,6 +41,11 @@ export async function getCore(branch: Branch): Promise<CHelperCore> {
   let cpack = cpackCache[branch]
   if (cpack === undefined) {
     const response = await fetch(getRealFileName(branch))
+    // 服务器返回 404/500 等错误页面时必须直接失败，
+    // 否则错误页内容会被当成资源包解析，甚至被缓存导致重试永远失败
+    if (!response.ok) {
+      throw new Error(`fail to download cpack (${branch}): ${response.status} ${response.url}`)
+    }
     const buffer = await response.arrayBuffer()
     cpack = new Uint8Array(buffer)
     cpackCache[branch] = cpack
