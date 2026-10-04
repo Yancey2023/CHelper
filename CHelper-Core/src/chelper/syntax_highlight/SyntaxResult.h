@@ -20,6 +20,7 @@
 
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
+#include <span>
 
 namespace CHelper::SyntaxHighlight {
 
@@ -43,12 +44,13 @@ namespace CHelper::SyntaxHighlight {
         };
     }// namespace SyntaxTokenType
 
-    class SyntaxResult {
+    class SyntaxResultView {
     public:
         std::u16string_view str;
-        std::vector<SyntaxTokenType::SyntaxTokenType> tokenTypes;
+        std::span<SyntaxTokenType::SyntaxTokenType> tokenTypes;
 
-        explicit SyntaxResult(const std::u16string_view &str);
+        SyntaxResultView(std::u16string_view str, std::span<SyntaxTokenType::SyntaxTokenType> tokenTypes)
+            : str(str), tokenTypes(tokenTypes) {}
 
         void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
 #if CHelperDebug
@@ -86,6 +88,28 @@ namespace CHelper::SyntaxHighlight {
 
         void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
             update(tokensView.startIndex, tokensView.endIndex, syntaxTokenType);
+        }
+    };
+
+    class SyntaxResult {
+    public:
+        std::u16string_view str;
+        std::vector<SyntaxTokenType::SyntaxTokenType> tokenTypes;
+
+        explicit SyntaxResult(const std::u16string_view &str);
+
+        [[nodiscard]] SyntaxResultView view() noexcept { return {str, tokenTypes}; }
+
+        void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(index, syntaxTokenType);
+        }
+
+        void update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(start, end, syntaxTokenType);
+        }
+
+        void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(tokensView, syntaxTokenType);
         }
     };
 

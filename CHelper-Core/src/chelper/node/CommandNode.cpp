@@ -198,8 +198,10 @@ namespace CHelper::Node {
             NormalId::make(u"=!", u"不等于"),
             [](const NodeWithType &node, TokenReader &tokenReader) -> ASTNode {
                 tokenReader.push();
-                auto childNodes = {tokenReader.readSymbolASTNode(node), tokenReader.readSymbolASTNode(node)};
-                return ASTNode::andNode(node, childNodes, tokenReader.collect());
+                // 分别读取以保留从左到右的消费顺序，再移动到数组，避免 initializer_list 的深拷贝。
+                auto equal = tokenReader.readSymbolASTNode(node);
+                auto notEqual = tokenReader.readSymbolASTNode(node);
+                return ASTNode::andNode(node, ASTNode::children(std::move(equal), std::move(notEqual)), tokenReader.collect());
             });
     NodeOr NodeEqualEntry::nodeEqualOrNotEqual({nodeEqual, nodeNotEqual}, false);
 

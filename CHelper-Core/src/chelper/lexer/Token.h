@@ -33,6 +33,7 @@ namespace CHelper {
         };
 
         std::u16string getName(TokenType tokenType);
+        std::u16string_view getNameView(TokenType tokenType);
 
     }// namespace TokenType
 

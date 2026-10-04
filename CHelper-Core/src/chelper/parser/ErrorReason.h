@@ -53,12 +53,12 @@ namespace CHelper {
         class ErrorReasonMemoryResource;
     }
 
-    // 分块资源由每个错误的 shared_ptr 控制块共同持有，查询结果可独立存活。
+    // 作用域和每个错误的 shared_ptr 分配共同持有分块资源，查询结果可独立存活。
     class ErrorReasonMemoryScope {
         friend class ErrorReason;
 
         ErrorReasonMemoryScope *previous;
-        std::shared_ptr<Detail::ErrorReasonMemoryResource> memory;
+        Detail::ErrorReasonMemoryResource *memory = nullptr;
 
     public:
         ErrorReasonMemoryScope();
@@ -110,7 +110,16 @@ namespace CHelper {
         UnknownEscape,
     };
 
-    using ErrorReasonArgument = std::variant<std::u16string_view, char16_t, int32_t, int64_t, uint64_t, float, double>;
+    // 类型名称按标识保存，展示时才转换为文本，避免为每个备选分支复制固定名称。
+    enum class ErrorReasonExpectedType : uint8_t {
+        String,
+        Integer,
+        Float,
+        Symbol,
+    };
+
+    using ErrorReasonArgument = std::variant<std::u16string_view, char16_t, int32_t, int64_t, uint64_t, float, double,
+                                             ErrorReasonExpectedType, TokenType::TokenType>;
 
     class ErrorReason {
         ErrorReasonCode code = ErrorReasonCode::CustomText;

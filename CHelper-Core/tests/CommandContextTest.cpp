@@ -23,6 +23,7 @@
 #include <chelper/node/NodeType.h>
 #include <chelper/serialization/Serialization.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <chelper/util/JsonUtil.h>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <thread>
@@ -298,6 +299,32 @@ namespace CHelper::Test {
         }
         for (auto &thread: threads) thread.join();
         for (const auto &failure: failures) EXPECT_TRUE(failure.empty()) << failure;
+    }
+
+    TEST(CommandContextTest, HighlightsPlainAndEscapedInnerStringsInTheirOriginalCoordinates) {
+        const Node::NodeNamespaceId innerType;
+        const Node::NodeJsonString outerType;
+        const auto innerLexer = Lexer::lex(u"[x]");
+        const std::array inputs{uR"("[x]")", uR"("\u005Bx]")", uR"("[x])"};
+        for (const auto *input: inputs) {
+            const auto outerLexer = Lexer::lex(input);
+            auto inner = ASTNode::simpleNode(innerType, TokensView(innerLexer, 0, innerLexer->allTokens.size()));
+            auto outer = ASTNode::andNode(outerType, ASTNode::children(std::move(inner)),
+                                          TokensView(outerLexer, 0, outerLexer->allTokens.size()), nullptr,
+                                          ASTNodeId::NODE_STRING_INNER);
+            const auto syntax = SyntaxHighlight::getSyntaxResult(outer);
+            const auto mapped = JsonUtil::jsonString2String(input);
+            ASSERT_EQ(mapped.result, u"[x]");
+            EXPECT_EQ(syntax.tokenTypes[0], SyntaxHighlight::SyntaxTokenType::STRING);
+            if (mapped.isComplete) EXPECT_EQ(syntax.tokenTypes.back(), SyntaxHighlight::SyntaxTokenType::STRING);
+            const std::array colors{SyntaxHighlight::SyntaxTokenType::BRACKET1, SyntaxHighlight::SyntaxTokenType::ID,
+                                    SyntaxHighlight::SyntaxTokenType::BRACKET1};
+            for (size_t index = 0; index < colors.size(); ++index) {
+                for (size_t position = mapped.convert(index); position < mapped.convert(index + 1); ++position) {
+                    EXPECT_EQ(syntax.tokenTypes[position], colors[index]);
+                }
+            }
+        }
     }
 
     TEST(CommandContextTest, HighlightsDeepAndMismatchedBrackets) {

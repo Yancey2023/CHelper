@@ -22,7 +22,7 @@ namespace CHelper {
 
     namespace TokenType {
 
-        std::u16string getName(TokenType tokenType) {
+        std::u16string_view getNameView(TokenType tokenType) {
             switch (tokenType) {
                 case STRING:
                     return u"字符串类型";
@@ -37,6 +37,10 @@ namespace CHelper {
                 default:
                     return u"未知类型";
             }
+        }
+
+        std::u16string getName(TokenType tokenType) {
+            return std::u16string(getNameView(tokenType));
         }
 
     }// namespace TokenType

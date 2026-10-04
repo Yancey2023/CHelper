@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <atomic>
 #include <chelper/parser/ErrorReason.h>
 #include <fmt/args.h>
 #include <limits>
@@ -25,6 +26,9 @@ namespace CHelper {
     namespace Detail {
 
         class ErrorReasonMemoryResource {
+            // 作用域持有一个引用，每次 allocate_shared 分配持有一个引用。
+            // 分配器的临时复制不持有引用，弱引用存活时控制块仍保留分配引用。
+            std::atomic<size_t> references{1};
             // 每个块独立共享所有权，保留一个错误不会保留整条长命令的所有错误。
             alignas(std::max_align_t) std::byte buffer[64 * 1024];
             std::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer), std::pmr::new_delete_resource()};
@@ -33,6 +37,14 @@ namespace CHelper {
         public:
             // buffer 由分配后构造的对象写入，不需要在每个块创建时清零。
             ErrorReasonMemoryResource() {}
+
+            void retain() noexcept {
+                references.fetch_add(1, std::memory_order_relaxed);
+            }
+
+            void release() noexcept {
+                if (references.fetch_sub(1, std::memory_order_acq_rel) == 1) delete this;
+            }
 
             void *allocate(size_t bytes, size_t alignment) {
                 // 仅所属线程的解析/查询作用域分配对象；跨线程释放不调用此资源。
@@ -50,10 +62,10 @@ namespace CHelper {
         class ErrorReasonAllocator {
         public:
             using value_type = T;
-            std::shared_ptr<ErrorReasonMemoryResource> memory;
+            ErrorReasonMemoryResource *memory;
 
-            explicit ErrorReasonAllocator(std::shared_ptr<ErrorReasonMemoryResource> memory) noexcept
-                : memory(std::move(memory)) {}
+            explicit ErrorReasonAllocator(ErrorReasonMemoryResource *memory) noexcept
+                : memory(memory) {}
 
             template<class U>
             ErrorReasonAllocator(const ErrorReasonAllocator<U> &other) noexcept
@@ -63,10 +75,14 @@ namespace CHelper {
                 if (count > std::numeric_limits<size_t>::max() / sizeof(T)) {
                     throw std::bad_array_new_length();
                 }
-                return static_cast<T *>(memory->allocate(count * sizeof(T), alignof(T)));
+                auto *result = static_cast<T *>(memory->allocate(count * sizeof(T), alignof(T)));
+                memory->retain();
+                return result;
             }
 
-            void deallocate(T *, size_t) noexcept {}
+            void deallocate(T *, size_t) noexcept {
+                memory->release();
+            }
 
             template<class U>
             bool operator==(const ErrorReasonAllocator<U> &other) const noexcept {
@@ -87,6 +103,7 @@ namespace CHelper {
 
     ErrorReasonMemoryScope::~ErrorReasonMemoryScope() {
         currentMemoryScope = previous;
+        if (memory != nullptr) memory->release();
     }
 
     std::shared_ptr<ErrorReason> ErrorReason::make(ErrorReasonLevel::ErrorReasonLevel level,
@@ -96,7 +113,9 @@ namespace CHelper {
         }
         auto &memory = currentMemoryScope->memory;
         if (!memory || memory->isFull()) {
-            memory = std::make_shared<Detail::ErrorReasonMemoryResource>();
+            auto *next = new Detail::ErrorReasonMemoryResource;
+            if (memory != nullptr) memory->release();
+            memory = next;
         }
         return std::allocate_shared<ErrorReason>(Detail::ErrorReasonAllocator<ErrorReason>(memory),
                                                  level, start, end, text);
@@ -229,6 +248,24 @@ namespace CHelper {
             throw std::invalid_argument("Unknown error reason code");
         }
 
+        std::u16string_view typeName(TokenType::TokenType type) {
+            return TokenType::getNameView(type);
+        }
+
+        std::u16string_view typeName(ErrorReasonExpectedType type) {
+            switch (type) {
+                case ErrorReasonExpectedType::String:
+                    return TokenType::getNameView(TokenType::STRING);
+                case ErrorReasonExpectedType::Integer:
+                    return u"整数类型";
+                case ErrorReasonExpectedType::Float:
+                    return TokenType::getNameView(TokenType::NUMBER);
+                case ErrorReasonExpectedType::Symbol:
+                    return TokenType::getNameView(TokenType::SYMBOL);
+            }
+            throw std::invalid_argument("Unknown expected error type");
+        }
+
         struct MessageParts {
             std::array<std::u16string_view, 7> parts;
             size_t size = 0;
@@ -238,7 +275,7 @@ namespace CHelper {
             }
         };
 
-        // 解析诊断只有字符串和字符参数。逐段比较其最终表示，不生成中间文本；
+        // 解析诊断的字符串、字符和类型标识按最终表示逐段比较，不生成中间文本；
         // 同时支持自定义文本与结构化消息相等、参数内含模板分隔文本等情况。
         std::optional<MessageParts> messageParts(std::u16string_view pattern,
                                                  std::span<const ErrorReasonArgument> arguments) {
@@ -261,6 +298,10 @@ namespace CHelper {
                 } else if (const auto *character = std::get_if<char16_t>(&argument);
                            character && (placeholder == u"{}" || placeholder == u"{:c}")) {
                     result.append({character, 1});
+                } else if (const auto *type = std::get_if<ErrorReasonExpectedType>(&argument); type && placeholder == u"{}") {
+                    result.append(typeName(*type));
+                } else if (const auto *type = std::get_if<TokenType::TokenType>(&argument); type && placeholder == u"{}") {
+                    result.append(TokenType::getNameView(*type));
                 } else {
                     return std::nullopt;
                 }
@@ -306,7 +347,7 @@ namespace CHelper {
         auto result = make(level, start, end, u"");
         result->code = code;
         result->messageReady = false;
-        result->copyArguments(input, currentMemoryScope == nullptr ? nullptr : currentMemoryScope->memory.get());
+        result->copyArguments(input, currentMemoryScope == nullptr ? nullptr : currentMemoryScope->memory);
         return result;
     }
 
@@ -360,6 +401,10 @@ namespace CHelper {
                 // basic_string_view 由诊断自身持有；fmt 无需为参数再次复制文本。
                 if constexpr (std::is_same_v<std::decay_t<decltype(value)>, std::u16string_view>) {
                     store.push_back(fmt::basic_string_view<char16_t>(value.data(), value.size()));
+                } else if constexpr (std::is_same_v<std::decay_t<decltype(value)>, ErrorReasonExpectedType> ||
+                                     std::is_same_v<std::decay_t<decltype(value)>, TokenType::TokenType>) {
+                    const auto text = typeName(value);
+                    store.push_back(fmt::basic_string_view<char16_t>(text.data(), text.size()));
                 } else {
                     store.push_back(value);
                 }

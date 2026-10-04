@@ -7,6 +7,93 @@
 
 namespace CHelper::Test {
 
+    TEST(ErrorReasonTest, TypeArgumentsPreserveMessagesEqualityAndIndependentLifetimes) {
+        struct Expected {
+            ErrorReasonExpectedType type;
+            std::u16string_view name;
+        };
+        const Expected expected[] = {
+                {ErrorReasonExpectedType::String, u"字符串类型"},
+                {ErrorReasonExpectedType::Integer, u"整数类型"},
+                {ErrorReasonExpectedType::Float, u"数字类型"},
+                {ErrorReasonExpectedType::Symbol, u"符号类型"},
+        };
+        std::vector<std::shared_ptr<ErrorReason>> retained;
+        {
+            ErrorReasonMemoryScope scope;
+            for (const auto &item: expected) {
+                const auto required = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 2,
+                                                              ErrorReasonCode::RequireType, {item.type});
+                const auto textRequired = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 2,
+                                                                  ErrorReasonCode::RequireType, {item.name});
+                EXPECT_TRUE(required->errorReason.empty());
+                EXPECT_EQ(required->getMessage(), textRequired->getMessage());
+                EXPECT_EQ(*required, *textRequired);
+                retained.push_back(required);
+                for (const auto actual: {TokenType::STRING, TokenType::NUMBER, TokenType::SYMBOL, TokenType::SPACE,
+                                         TokenType::LF, static_cast<TokenType::TokenType>(255)}) {
+                    const auto error = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 2, 4,
+                                                               ErrorReasonCode::TypeMismatch, {item.type, actual});
+                    const auto name = TokenType::getName(actual);
+                    const auto legacy = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 2, 4,
+                                                                ErrorReasonCode::TypeMismatch, {item.name, std::u16string_view(name)});
+                    EXPECT_EQ(TokenType::getNameView(actual), name);
+                    EXPECT_EQ(error->getMessage(), legacy->getMessage());
+                    EXPECT_EQ(*error, *legacy);
+                    EXPECT_EQ(*legacy, *error);
+                    EXPECT_TRUE(error->errorReason.empty());
+                    retained.push_back(error);
+                }
+            }
+        }
+        for (const auto &error: retained) {
+            const auto copy = error->materializedCopy();
+            EXPECT_EQ(copy->getCode(), error->getCode());
+            EXPECT_EQ(copy->getMessage(), error->getMessage());
+            EXPECT_EQ(*copy, *error);
+        }
+    }
+
+    TEST(ErrorReasonTest, LastWeakReferencesCanReleaseSharedBlocksConcurrently) {
+        constexpr size_t threadCount = 4, errorsPerThread = 1024;
+        std::array<std::vector<std::weak_ptr<ErrorReason>>, threadCount> weak;
+        std::vector<std::shared_ptr<ErrorReason>> errors;
+        errors.reserve(threadCount * errorsPerThread);
+        for (auto &items: weak) items.reserve(errorsPerThread);
+        startAllocCounting();
+        {
+            ErrorReasonMemoryScope scope;
+            for (size_t i = 0; i < threadCount * errorsPerThread; ++i) {
+                auto error = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, i, i + 1,
+                                                     ErrorReasonCode::UnknownMeaning, {std::u16string_view(u"参数")});
+                weak[i % threadCount].push_back(error);
+                errors.push_back(std::move(error));
+            }
+        }
+        errors.clear();
+        const auto retained = stopAllocCounting();
+        ASSERT_GT(retained.netBytes, 0);
+        for (const auto &items: weak) {
+            for (const auto &item: items) ASSERT_TRUE(item.expired());
+        }
+        std::barrier start(static_cast<ptrdiff_t>(threadCount + 1));
+        std::barrier finish(static_cast<ptrdiff_t>(threadCount + 1));
+        std::array<std::thread, threadCount> threads;
+        for (size_t i = 0; i < threadCount; ++i) {
+            threads[i] = std::thread([&, i] {
+                start.arrive_and_wait();
+                weak[i].clear();
+                finish.arrive_and_wait();
+            });
+        }
+        startAllocCounting();
+        start.arrive_and_wait();
+        finish.arrive_and_wait();
+        const auto released = stopAllocCounting();
+        for (auto &thread: threads) thread.join();
+        EXPECT_LE(retained.netBytes + released.netBytes, 0);
+    }
+
     TEST(ErrorReasonTest, SharedBlocksOutliveScopeAndReleaseWithWeakPointers) {
         std::vector<std::shared_ptr<ErrorReason>> errors;
         std::weak_ptr<ErrorReason> weak;

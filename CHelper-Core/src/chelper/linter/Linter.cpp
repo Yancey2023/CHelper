@@ -28,17 +28,13 @@ namespace CHelper::Linter {
     std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode, QueryState &state);
 
     template<class NodeType>
-    struct Linter {
-        static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
-            return false;
-        }
-    };
+    struct Linter {};
 
     template<>
     struct Linter<Node::NodeJsonString> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.id == ASTNodeId::NODE_STRING_INNER) [[unlikely]] {
-                auto convertResult = JsonUtil::jsonString2String(astNode.tokens.string());
+                auto convertResult = JsonUtil::DecodedStringView(astNode.tokens.string());
                 for (const auto &item: getErrorsExceptParseError(astNode.childNodes[0], state)) {
                     item->start = convertResult.convert(item->start) + astNode.tokens.startIndex;
                     item->end = convertResult.convert(item->end) + astNode.tokens.startIndex;
@@ -188,13 +184,16 @@ namespace CHelper::Linter {
     };
 
     void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
-        if (!astNode.isAllSpaceError()) [[unlikely]] {
-            bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
-                return Linter<NodeType>::lint(astNode, errorReasons, state);
-            });
-            if (isDirty) [[unlikely]] {
-                return;
+        bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
+            if constexpr (requires { Linter<NodeType>::lint(astNode, errorReasons, state); }) {
+                // 容器、分支和符号等节点没有语义检查，不读取其结构诊断列表。
+                return !astNode.isAllSpaceError() && Linter<NodeType>::lint(astNode, errorReasons, state);
+            } else {
+                return false;
             }
+        });
+        if (isDirty) [[unlikely]] {
+            return;
         }
         switch (astNode.mode) {
             case ASTNodeMode::NONE:

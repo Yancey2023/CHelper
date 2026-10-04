@@ -19,7 +19,7 @@
 #pragma once
 
 #include <chelper/node/NodeWithType.h>
-#include <chelper/parser/ErrorReason.h>
+#include <chelper/parser/ErrorReasonList.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -60,15 +60,15 @@ namespace CHelper {
     class ASTNode {
     public:
         ASTNodeMode::ASTNodeMode mode;
+        //AST节点ID；与 mode 相邻，避免两个字节字段分别产生对齐填充。
+        ASTNodeId::ASTNodeId id;
         //一个Node可能会生成多个ASTNode，这些ASTNode使用id进行区分
         Node::NodeWithType node;
         //子节点为AND类型和OR类型特有
         std::pmr::vector<ASTNode> childNodes;
         TokensView tokens;
         //不要直接用这个，这里不包括ID错误，只有结构错误，应该用getErrorReason()
-        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
-        //AST节点ID
-        ASTNodeId::ASTNodeId id;
+        ErrorReasonList errorReasons;
         //哪个节点最好，OR类型特有，获取颜色和生成命令格式文本的时候使用
         size_t whichBest;
 
@@ -76,9 +76,16 @@ namespace CHelper {
                 const Node::NodeWithType &node,
                 std::pmr::vector<ASTNode> &&childNodes,
                 TokensView tokens,
-                std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons,
+                ErrorReasonList errorReasons,
                 ASTNodeId::ASTNodeId id,
-                size_t whichBest = -1);
+                size_t whichBest = -1)
+            : mode(mode),
+              id(id),
+              node(node),
+              childNodes(std::move(childNodes)),
+              tokens(std::move(tokens)),
+              errorReasons(std::move(errorReasons)),
+              whichBest(whichBest) {}
 
         ASTNode(const ASTNode &other);
         ASTNode(ASTNode &&) noexcept = default;

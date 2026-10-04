@@ -22,6 +22,46 @@
 
 namespace CHelper::Test {
 
+    TEST(JsonUtilTest, DecodedViewsMatchOwningDecoderForAllPrefixesAndMoves) {
+        const std::vector<std::u16string> cases{
+                u"", u"abc", u"\"", uR"("abc")", uR"("世界")", uR"(""trailing\q)",
+                uR"("a\nb")", uR"("a\"b")", uR"("a\\b")", uR"("a\qb")", uR"("\u0041")",
+                uR"("\u00G1")", uR"("\uD83D\uDE00")", std::u16string(u"\"a\0b\"", 5)};
+        for (size_t caseIndex = 0; caseIndex < cases.size(); ++caseIndex) {
+            const auto &input = cases[caseIndex];
+            for (size_t length = 0; length <= input.size(); ++length) {
+                SCOPED_TRACE(fmt::format("case={}, length={}", caseIndex, length));
+                const auto prefix = std::u16string_view(input).substr(0, length);
+                const auto expected = JsonUtil::jsonString2String(prefix);
+                JsonUtil::DecodedStringView view(prefix);
+                EXPECT_EQ(view.string(), expected.result);
+                EXPECT_EQ(view.isComplete, expected.isComplete);
+                ASSERT_EQ(view.errorReason != nullptr, expected.errorReason != nullptr);
+                if (view.errorReason) {
+                    EXPECT_EQ(view.errorReason->level, expected.errorReason->level);
+                    EXPECT_EQ(view.errorReason->getCode(), expected.errorReason->getCode());
+                    EXPECT_EQ(*view.errorReason, *expected.errorReason);
+                }
+                for (size_t index = 0; index < expected.indexConvertList.size(); ++index) {
+                    EXPECT_EQ(view.convert(index), expected.convert(index));
+                }
+                auto copied = view;
+                auto moved = std::move(view);
+                EXPECT_EQ(copied.string(), expected.result);
+                EXPECT_EQ(moved.string(), expected.result);
+                for (size_t index = 0; index < expected.indexConvertList.size(); ++index) {
+                    EXPECT_EQ(moved.convert(index), expected.convert(index));
+                }
+            }
+        }
+        const std::u16string input = uR"("plain text")";
+        const JsonUtil::DecodedStringView borrowed(input);
+        EXPECT_EQ(borrowed.string().data(), input.data() + 1);
+#if CHelperDebug
+        EXPECT_THROW((void) borrowed.convert(input.size()), std::runtime_error);
+#endif
+    }
+
     //JSON层面的转义写法用原始字符串表示，例如uR"("a\nb")"是字面包含反斜杠和字母n的JSON字符串，
     //解码后应该包含真实换行符
 

@@ -21,6 +21,20 @@
 
 namespace CHelper::JsonUtil {
 
+    DecodedStringView::DecodedStringView(std::u16string_view input) {
+        if (!input.empty() && input.front() == u'"') {
+            const size_t end = input.find_first_of(u"\\\"", 1);
+            if (end == std::u16string_view::npos || input[end] == u'"') {
+                isComplete = end != std::u16string_view::npos;
+                plain = input.substr(1, isComplete ? end - 1 : input.size() - 1);
+                return;
+            }
+        }
+        converted.emplace(jsonString2String(input));
+        errorReason = converted->errorReason;
+        isComplete = converted->isComplete;
+    }
+
     size_t ConvertResult::convert(size_t index) const {
 #if CHelperDebug
         //indexConvertList的大小是解码后字符串长度+1(最后一个映射到结束引号/字符串末尾)，

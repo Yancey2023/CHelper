@@ -5,6 +5,23 @@
 
 namespace CHelper::Test {
 
+    TEST(LinterTest, SpaceErrorsSkipTheParentCheckButStillVisitItsSemanticChildren) {
+        const auto lexer = Lexer::lex(u"missing");
+        Node::NodeNormalId id;
+        id.customContents = std::make_shared<std::pmr::vector<std::shared_ptr<NormalId>>>();
+        for (const Node::NodeWithType parent: {Node::NodeWithType(id), Node::NodeAny::getNodeAny()}) {
+            const auto ast = ASTNode::andNode(parent,
+                                              ASTNode::children(ASTNode::simpleNode(id, TokensView(lexer, 0, 1))),
+                                              TokensView(lexer, 0, 1), ErrorReason::requireSpace(0, 0));
+            const auto errors = Linter::getErrorsExceptParseError(ast);
+            ASSERT_EQ(errors.size(), 1u);
+            EXPECT_EQ(errors[0]->getCode(), ErrorReasonCode::UnknownId);
+            EXPECT_EQ(errors[0]->start, 0u);
+            EXPECT_EQ(errors[0]->end, 7u);
+            EXPECT_EQ(errors[0]->getMessage(), u"找不到ID -> missing");
+        }
+    }
+
     TEST(LinterTest, RepeatedIdsKeepDistinctErrorsAndCollections) {
         const auto lexer = Lexer::lex(u"stone stone missing missing");
         Node::NodeNormalId first, second;

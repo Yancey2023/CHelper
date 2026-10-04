@@ -60,7 +60,12 @@ namespace {
             scalar(value->end);
             string(value->getMessage());
         };
+        size_t nodes = 0, singleErrors = 0, multipleErrors = 0, errorReferences = 0;
         const auto ast = [&](const auto &self, const ASTNode &node) -> void {
+            ++nodes;
+            singleErrors += node.errorReasons.size() == 1;
+            multipleErrors += node.errorReasons.size() > 1;
+            errorReferences += node.errorReasons.size();
             scalar(node.mode);
             scalar(node.node.nodeTypeId);
             scalar(node.id);
@@ -73,6 +78,8 @@ namespace {
             for (const auto &child: node.childNodes) self(self, child);
         };
         ast(ast, *context.getAstNode());
+        std::printf("long tree nodes=%zu single_errors=%zu multiple_errors=%zu error_refs=%zu\n",
+                    nodes, singleErrors, multipleErrors, errorReferences);
         string(context.getCommand());
         string(context.getStructure());
         string(context.getParamHint(cursor));

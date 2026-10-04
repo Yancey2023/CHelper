@@ -80,6 +80,14 @@ namespace CHelper {
             return index - start;
         }
 
+        // 读取一个非空格 token 的视图，不改变用于语法分支回溯的 indexStack。
+        [[nodiscard]] TokensView readTokenView() {
+            skipSpace();
+            const size_t start = index;
+            skip();
+            return {lexerResult, start, index};
+        }
+
         void skipToLF();
 
         // 将当前指针加入栈中。

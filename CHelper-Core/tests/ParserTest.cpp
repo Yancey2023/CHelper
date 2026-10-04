@@ -17,6 +17,7 @@
  */
 
 #include "CpackTestHelper.h"
+#include <chelper/node/CommandNode.h>
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/id/NormalId.h>
@@ -24,6 +25,202 @@
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
+
+    TEST(ParserTest, EntryStopsAtTheFirstErrorAndPreservesEachChildSpan) {
+        Node::NodeJsonString text;
+        Node::NodeSingleSymbol separator(u':', u"冒号");
+        Node::NodeEntry entry(text, separator, text);
+        struct Case {
+            std::u16string_view input;
+            size_t children;
+            bool error;
+            size_t end;
+        };
+        const Case cases[] = {
+                {u"123:ignored", 1, true, 3},
+                {u"\"key\"=ignored", 2, true, 6},
+                {u"\"key\"", 2, true, 5},
+                {u"\"key\":123", 3, true, 9},
+                {u"\"key\":", 3, true, 6},
+                {u"\"key\":\"value\" trailing", 3, false, 13},
+        };
+        for (const auto &item: cases) {
+            SCOPED_TRACE(utf8::utf16to8(item.input));
+            const auto ast = Parser::parse(item.input, entry);
+            EXPECT_EQ(ast.isError(), item.error);
+            EXPECT_EQ(ast.tokens.endIndex, item.end);
+            ASSERT_EQ(ast.childNodes.size(), item.children);
+            EXPECT_EQ(ast.childNodes.front().tokens.startIndex, 0u);
+            EXPECT_EQ(ast.childNodes.back().tokens.endIndex, item.end);
+            for (size_t i = 1; i < item.children; ++i) {
+                EXPECT_EQ(ast.childNodes[i - 1].tokens.endIndex, ast.childNodes[i].tokens.startIndex);
+            }
+        }
+    }
+
+    TEST(ParserTest, OrBranchEndpointsRestoreTheSelectedCursorForSmallAndLargeChoices) {
+        Node::NodeSingleSymbol other(u'[', u"其他分支"), selected(u']', u"选中分支"), next(u'}', u"后续符号");
+        for (const size_t count: {1u, 2u, 4u, 5u, 8u}) {
+            for (const bool useFirst: {false, true}) {
+                for (const bool selectFirst: {false, true}) {
+                    std::pmr::vector<Node::NodeWithType> choices(count, other);
+                    const size_t best = selectFirst ? 0 : count - 1;
+                    choices[best] = selected;
+                    Node::NodeOr branch(std::move(choices), false, useFirst);
+                    Node::NodeAnd sequence({branch, next});
+                    const auto ast = Parser::parse(u"]} trailing", sequence);
+                    EXPECT_FALSE(ast.isError());
+                    EXPECT_EQ(ast.tokens.string(), u"]}");
+                    ASSERT_EQ(ast.childNodes.size(), 2u);
+                    EXPECT_EQ(ast.childNodes[0].whichBest, best);
+                    EXPECT_EQ(ast.childNodes[1].tokens.string(), u"}");
+                    EXPECT_EQ(ast.childNodes[1].tokens.startIndex, 1u);
+                }
+            }
+        }
+    }
+
+    TEST(ParserTest, ListTerminationChecksRightBranchEvenWhenAnotherBranchSucceeds) {
+        Node::NodeSingleSymbol left(u'[', u"左括号"), comma(u',', u"分隔符"), right(u']', u"右括号");
+        Node::NodeJsonString string;
+        Node::NodeList list(left, string, comma, right);
+        for (const std::u16string_view input: {u"[] trailing", u"[\"a\"] trailing", u"[\"a\",\"b\"] trailing", u"[ \"a\" , \"b\" ] trailing"}) {
+            const auto ast = Parser::parse(input, list);
+            EXPECT_FALSE(ast.isError()) << utf8::utf16to8(input);
+            EXPECT_EQ(ast.tokens.endIndex, input.find(u']') + 1);
+            const auto &closing = ast.childNodes.back();
+            ASSERT_EQ(closing.childNodes.size(), 2u);
+            EXPECT_FALSE(closing.childNodes[1].isError());
+        }
+        for (const std::u16string_view input: {u"[", u"[\"a\"", u"[\"a\",", u"[\"a\",bad]"}) {
+            const auto ast = Parser::parse(input, list);
+            EXPECT_TRUE(ast.isError()) << utf8::utf16to8(input);
+            for (const auto &error: ast.errorReasons) {
+                EXPECT_LE(error->start, error->end);
+                EXPECT_LE(error->end, input.size());
+            }
+        }
+        Node::NodeList ambiguousElement(left, right, comma, right);
+        const auto empty = Parser::parse(u"[] trailing", ambiguousElement);
+        EXPECT_FALSE(empty.isError());
+        EXPECT_EQ(empty.tokens.string(), u"[]");
+        ASSERT_EQ(empty.childNodes.size(), 2u);
+        EXPECT_EQ(empty.childNodes.back().whichBest, 0u);
+        Node::NodeList ambiguousSeparator(left, string, right, right);
+        const auto single = Parser::parse(u"[\"a\"] trailing", ambiguousSeparator);
+        EXPECT_FALSE(single.isError());
+        EXPECT_EQ(single.tokens.string(), u"[\"a\"]");
+        ASSERT_EQ(single.childNodes.size(), 3u);
+        EXPECT_EQ(single.childNodes.back().whichBest, 0u);
+    }
+
+    TEST(ParserTest, NotEqualSymbolsKeepTheirConsumptionOrderAndIndependentChildSpans) {
+        const auto ast = Parser::parse(u"=! trailing", Node::NodeEqualEntry::nodeNotEqual);
+        EXPECT_FALSE(ast.isError());
+        EXPECT_EQ(ast.tokens.string(), u"=!");
+        ASSERT_EQ(ast.childNodes.size(), 2u);
+        EXPECT_EQ(ast.childNodes[0].tokens.string(), u"=");
+        EXPECT_EQ(ast.childNodes[0].tokens.startIndex, 0u);
+        EXPECT_EQ(ast.childNodes[0].tokens.endIndex, 1u);
+        EXPECT_EQ(ast.childNodes[1].tokens.string(), u"!");
+        EXPECT_EQ(ast.childNodes[1].tokens.startIndex, 1u);
+        EXPECT_EQ(ast.childNodes[1].tokens.endIndex, 2u);
+        const auto incomplete = Parser::parse(u"=", Node::NodeEqualEntry::nodeNotEqual);
+        EXPECT_TRUE(incomplete.isError());
+        ASSERT_EQ(incomplete.childNodes.size(), 1u);
+        const auto &symbols = incomplete.childNodes[0].childNodes;
+        ASSERT_EQ(symbols.size(), 2u);
+        EXPECT_EQ(symbols[0].tokens.string(), u"=");
+        EXPECT_TRUE(symbols[1].tokens.isEmpty());
+        EXPECT_EQ(symbols[1].tokens.startIndex, 1u);
+        EXPECT_EQ(symbols[1].tokens.endIndex, 1u);
+    }
+
+    TEST(ParserTest, RangeValidationPreservesNumericTokensAndOpenBounds) {
+        Node::NodeRange range("RANGE", u"范围");
+        for (const std::u16string_view input: {u"0", u"3..5", u"-3..-1", u"..5", u"3.."}) {
+            const auto ast = Parser::parse(input, range);
+            EXPECT_FALSE(ast.isError()) << utf8::utf16to8(input);
+            EXPECT_EQ(ast.tokens.string(), input);
+            EXPECT_TRUE(ast.childNodes.empty());
+        }
+        for (const std::u16string_view input: {u"", u"..", u"bad", u"1+2", u"1.5", u"\"1..5\""}) {
+            const auto ast = Parser::parse(input, range);
+            EXPECT_TRUE(ast.isError()) << utf8::utf16to8(input);
+            EXPECT_EQ(ast.tokens.string(), input);
+            ASSERT_EQ(ast.errorReasons.size(), 1u);
+            EXPECT_EQ(ast.errorReasons.front()->level, ErrorReasonLevel::CONTENT_ERROR);
+        }
+    }
+
+    TEST(ParserTest, JsonStringValidationPreservesMissingQuotesAndNonStringTokens) {
+        Node::NodeJsonString node;
+        for (const std::u16string_view input: {u"123", u"]", u"word", u"\"open"}) {
+            const auto ast = Parser::parse(input, node);
+            ASSERT_EQ(ast.errorReasons.size(), 1u);
+            EXPECT_EQ(ast.errorReasons.front()->getCode(), ErrorReasonCode::QuotedStringRequired);
+            EXPECT_EQ(ast.errorReasons.front()->level, ErrorReasonLevel::CONTENT_ERROR);
+            EXPECT_EQ(ast.tokens.string(), input);
+            EXPECT_TRUE(ast.childNodes.empty());
+        }
+        for (const std::u16string_view input: {u"", u"   "}) {
+            const auto ast = Parser::parse(input, node);
+            ASSERT_EQ(ast.errorReasons.size(), 1u);
+            EXPECT_EQ(ast.errorReasons.front()->getCode(), ErrorReasonCode::EmptyString);
+            EXPECT_EQ(ast.errorReasons.front()->level, ErrorReasonLevel::INCOMPLETE);
+            EXPECT_EQ(ast.tokens.startIndex, input.size());
+            EXPECT_EQ(ast.tokens.endIndex, input.size());
+        }
+        for (const std::u16string_view input: {u"\"\"", u"\"ok\""}) {
+            const auto ast = Parser::parse(input, node);
+            EXPECT_FALSE(ast.isError());
+            EXPECT_EQ(ast.tokens.string(), input);
+        }
+    }
+
+    TEST(ParserTest, SymbolDiagnosticsPreserveSpansMessagesAndTokenConsumption) {
+        Node::NodeSingleSymbol symbol(u']', u"右括号");
+        struct Case {
+            std::u16string_view input;
+            size_t start, end;
+            std::optional<ErrorReasonCode> code;
+            ErrorReasonLevel::ErrorReasonLevel level;
+            std::u16string_view message;
+        };
+        const Case cases[] = {
+                {u"", 0, 0, ErrorReasonCode::RequireSymbol, ErrorReasonLevel::INCOMPLETE, u"命令不完整，需要符号]"},
+                {u"   ", 3, 3, ErrorReasonCode::RequireSymbol, ErrorReasonLevel::INCOMPLETE, u"命令不完整，需要符号]"},
+                {u"word", 0, 4, ErrorReasonCode::SymbolTypeMismatch, ErrorReasonLevel::TYPE_ERROR, u"类型不匹配，需要符号]，但当前内容为word"},
+                {u"123", 0, 3, ErrorReasonCode::SymbolTypeMismatch, ErrorReasonLevel::TYPE_ERROR, u"类型不匹配，需要符号]，但当前内容为123"},
+                {u"\n", 0, 1, ErrorReasonCode::SymbolTypeMismatch, ErrorReasonLevel::TYPE_ERROR, u"类型不匹配，需要符号]，但当前内容为\n"},
+                {u"中文", 0, 2, ErrorReasonCode::SymbolTypeMismatch, ErrorReasonLevel::TYPE_ERROR, u"类型不匹配，需要符号]，但当前内容为中文"},
+                {u"[", 0, 1, ErrorReasonCode::SymbolContentMismatch, ErrorReasonLevel::CONTENT_ERROR, u"内容不匹配，正确的符号为]，但当前内容为["},
+                {u"]", 0, 1, std::nullopt, ErrorReasonLevel::CONTENT_ERROR, u""},
+                {u"  ] trailing", 2, 3, std::nullopt, ErrorReasonLevel::CONTENT_ERROR, u""},
+        };
+        for (const auto &item: cases) {
+            SCOPED_TRACE(utf8::utf16to8(item.input));
+            const auto ast = Parser::parse(item.input, symbol);
+            EXPECT_EQ(ast.tokens.size(), item.start == item.end ? 0u : 1u);
+            EXPECT_EQ(ast.mode, ASTNodeMode::NONE);
+            EXPECT_EQ(ast.id, ASTNodeId::NONE);
+            EXPECT_TRUE(ast.childNodes.empty());
+            EXPECT_EQ(ast.tokens.startIndex, item.start);
+            EXPECT_EQ(ast.tokens.endIndex, item.end);
+            EXPECT_EQ(ast.tokens.string(), item.input.substr(item.start, item.end - item.start));
+            EXPECT_EQ(ast.isError(), item.code.has_value());
+            if (item.code) {
+                ASSERT_EQ(ast.errorReasons.size(), 1u);
+                const auto &error = ast.errorReasons.front();
+                EXPECT_EQ(error->getCode(), *item.code);
+                EXPECT_EQ(error->level, item.level);
+                EXPECT_EQ(error->start, item.start);
+                EXPECT_EQ(error->end, item.end);
+                EXPECT_EQ(error->getMessage(), item.message);
+                EXPECT_TRUE(error->errorReason.empty());
+            }
+        }
+    }
 
     //带内层语法的JSON字符串节点：字符串内容必须是"ok"。
     //JSON_STRING直接作为start node，这样内层解析错误不会被JSON_OBJECT的allEntry回退机制吞掉

@@ -82,36 +82,43 @@ namespace CHelper {
         }
     }
 
+    namespace {
+        ASTNode readSimpleASTNode(TokenReader &reader, Node::NodeWithType node,
+                                  TokenType::TokenType type, ErrorReasonArgument requireType,
+                                  ASTNodeId::ASTNodeId astNodeId,
+                                  std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &, const TokensView &) = nullptr) {
+            TokensView tokens = reader.readTokenView();
+            const Token *token = tokens.isEmpty() ? nullptr : &tokens[0];
+            std::shared_ptr<ErrorReason> errorReason;
+            if (token == nullptr) [[unlikely]] {
+                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::RequireType, {requireType});
+            } else if (token->type != type) [[unlikely]] {
+                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::TypeMismatch, {requireType, token->type});
+            } else {
+                errorReason = check == nullptr ? nullptr : check(token->content, tokens);
+            }
+            return ASTNode::simpleNode(node, std::move(tokens), errorReason, astNodeId);
+        }
+    }// namespace
+
     ASTNode TokenReader::readSimpleASTNode(Node::NodeWithType node,
                                            TokenType::TokenType type,
                                            std::u16string_view requireType,
                                            const ASTNodeId::ASTNodeId &astNodeId,
                                            std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &str,
                                                                                  const TokensView &tokens)) {
-        skipSpace();
-        push();
-        const Token *token = read();
-        TokensView tokens = collect();
-        std::shared_ptr<ErrorReason> errorReason;
-        if (token == nullptr) [[unlikely]] {
-            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::RequireType, {requireType});
-        } else if (token->type != type) [[unlikely]] {
-            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::TypeMismatch, {requireType, TokenType::getName(token->type)});
-        } else {
-            errorReason = check == nullptr ? nullptr : check(token->content, tokens);
-        }
-        return ASTNode::simpleNode(node, std::move(tokens), errorReason, astNodeId);
+        return CHelper::readSimpleASTNode(*this, node, type, requireType, astNodeId, check);
     }
 
     ASTNode TokenReader::readStringASTNode(const Node::NodeWithType &node,
                                            const ASTNodeId::ASTNodeId &astNodeId) {
-        return readSimpleASTNode(node, TokenType::STRING, u"字符串类型", astNodeId);
+        return CHelper::readSimpleASTNode(*this, node, TokenType::STRING, ErrorReasonExpectedType::String, astNodeId);
     }
 
     ASTNode TokenReader::readIntegerASTNode(const Node::NodeWithType &node,
                                             const ASTNodeId::ASTNodeId &astNodeId) {
-        return readSimpleASTNode(
-                node, TokenType::NUMBER, u"整数类型", astNodeId,
+        return CHelper::readSimpleASTNode(
+                *this, node, TokenType::NUMBER, ErrorReasonExpectedType::Integer, astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (str.find(u'.') != std::u16string_view::npos) [[unlikely]] {
                         return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
@@ -127,8 +134,8 @@ namespace CHelper {
 
     ASTNode TokenReader::readFloatASTNode(const Node::NodeWithType &node,
                                           const ASTNodeId::ASTNodeId &astNodeId) {
-        return readSimpleASTNode(
-                node, TokenType::NUMBER, u"数字类型", astNodeId,
+        return CHelper::readSimpleASTNode(
+                *this, node, TokenType::NUMBER, ErrorReasonExpectedType::Float, astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (!isFloatFormat(str)) [[unlikely]] {
                         return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNumber, {str});
@@ -139,7 +146,7 @@ namespace CHelper {
 
     ASTNode TokenReader::readSymbolASTNode(const Node::NodeWithType &node,
                                            const ASTNodeId::ASTNodeId &astNodeId) {
-        return readSimpleASTNode(node, TokenType::SYMBOL, u"符号类型", astNodeId);
+        return CHelper::readSimpleASTNode(*this, node, TokenType::SYMBOL, ErrorReasonExpectedType::Symbol, astNodeId);
     }
 
     ASTNode TokenReader::readUntilSpace(const Node::NodeWithType &node,
