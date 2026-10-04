@@ -136,6 +136,30 @@ namespace CHelper::Test {
         EXPECT_EQ(symbols[1].tokens.endIndex, 1u);
     }
 
+    TEST(ParserTest, ListsPreserveQuotedDelimitersNestedListsAndCustomSeparators) {
+        Node::NodeSingleSymbol left(u'[', u"左括号"), comma(u',', u"分隔符"), right(u']', u"右括号"), pipe(u'|', u"分隔符");
+        Node::NodeJsonString string;
+        Node::NodeList inner(left, string, comma, right);
+        Node::NodeList outer(left, inner, comma, right);
+        const auto nested = Parser::parse(uR"([["a,]","b"],["c"]] trailing)", outer);
+        EXPECT_FALSE(nested.isError());
+        EXPECT_EQ(nested.tokens.string(), uR"([["a,]","b"],["c"]])");
+        ASSERT_EQ(nested.childNodes.size(), 5u);
+        EXPECT_EQ(nested.childNodes[1].getBestNode().childNodes.size(), 5u);
+        EXPECT_EQ(nested.childNodes[3].childNodes.size(), 3u);
+
+        Node::NodeList custom(left, string, pipe, right);
+        const auto alternate = Parser::parse(uR"(["a,b"|"c"] trailing)", custom);
+        EXPECT_FALSE(alternate.isError());
+        EXPECT_EQ(alternate.tokens.string(), uR"(["a,b"|"c"])");
+        EXPECT_EQ(alternate.childNodes.size(), 5u);
+        const auto incomplete = Parser::parse(uR"([["a"],["b"})", outer);
+        EXPECT_TRUE(incomplete.isError());
+        // 第二个元素失败后立即停止，未生成外层右括号节点。
+        ASSERT_EQ(incomplete.childNodes.size(), 4u);
+        EXPECT_EQ(incomplete.childNodes.back().tokens.string(), uR"(["b"})");
+    }
+
     TEST(ParserTest, RangeValidationPreservesNumericTokensAndOpenBounds) {
         Node::NodeRange range("RANGE", u"范围");
         for (const std::u16string_view input: {u"0", u"3..5", u"-3..-1", u"..5", u"3.."}) {

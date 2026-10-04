@@ -211,23 +211,28 @@ namespace CHelper::SyntaxHighlight {
     };
 
     void collectSyntaxResult(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
-        bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
-            return SyntaxToken<NodeType>::collectSyntax(astNode, syntaxResult);
-        });
-        if (isDirty) [[unlikely]] {
-            return;
-        }
-        switch (astNode.mode) {
-            case ASTNodeMode::NONE:
+        const ASTNode *next = &astNode;
+        while (true) {
+            const auto &current = *next;
+            bool isDirty = Node::dispatchNodeType(current.node.nodeTypeId, [&]<class NodeType>() {
+                return SyntaxToken<NodeType>::collectSyntax(current, syntaxResult);
+            });
+            if (isDirty) [[unlikely]]
                 return;
-            case ASTNodeMode::AND:
-                for (const ASTNode &item: astNode.childNodes) {
-                    collectSyntaxResult(item, syntaxResult);
-                }
-                break;
-            case ASTNodeMode::OR:
-                collectSyntaxResult(astNode.childNodes[astNode.whichBest], syntaxResult);
-                break;
+            switch (current.mode) {
+                case ASTNodeMode::AND:
+                    if (current.childNodes.size() == 1) {
+                        next = &current.childNodes.front();
+                        continue;
+                    }
+                    for (const auto &item: current.childNodes) collectSyntaxResult(item, syntaxResult);
+                    return;
+                case ASTNodeMode::OR:
+                    next = &current.childNodes[current.whichBest];
+                    continue;
+                default:
+                    return;
+            }
         }
     }
 

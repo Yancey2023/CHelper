@@ -2,9 +2,26 @@
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/parser/ErrorReasonFactory.h>
+#include <chelper/util/IdMatchCache.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
+
+    TEST(LinterTest, IdCacheReusesHitsAndMissesAcrossCollections) {
+        auto first = std::make_shared<std::pmr::vector<int>>(std::initializer_list<int>{1});
+        auto second = std::make_shared<std::pmr::vector<int>>(std::initializer_list<int>{2});
+        IdMatchCache cache;
+        size_t checked = 0;
+        const auto matches = [&](int value) { ++checked; return value == 1; };
+        EXPECT_TRUE(cache.contains(first, 17, matches));
+        EXPECT_TRUE(cache.contains(first, 17, matches));
+        EXPECT_FALSE(cache.contains(second, 17, matches));
+        EXPECT_FALSE(cache.contains(second, 17, matches));
+        EXPECT_TRUE(cache.contains(first, 17, matches));
+        EXPECT_EQ(checked, 2u);
+        EXPECT_TRUE(cache.contains(first, 18, matches));
+        EXPECT_EQ(checked, 3u);
+    }
 
     TEST(LinterTest, SpaceErrorsSkipTheParentCheckButStillVisitItsSemanticChildren) {
         const auto lexer = Lexer::lex(u"missing");

@@ -185,28 +185,34 @@ namespace CHelper::Linter {
     };
 
     void lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
-        bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
-            if constexpr (requires { Linter<NodeType>::lint(astNode, errorReasons, state); }) {
-                // 容器、分支和符号等节点没有语义检查，不读取其结构诊断列表。
-                return !astNode.isAllSpaceError() && Linter<NodeType>::lint(astNode, errorReasons, state);
-            } else {
-                return false;
-            }
-        });
-        if (isDirty) [[unlikely]] {
-            return;
-        }
-        switch (astNode.mode) {
-            case ASTNodeMode::NONE:
-                break;
-            case ASTNodeMode::AND:
-                for (const ASTNode &item: astNode.childNodes) {
-                    lint(item, errorReasons, state);
+        const ASTNode *next = &astNode;
+        while (true) {
+            const auto &current = *next;
+            bool isDirty = Node::dispatchNodeType(current.node.nodeTypeId, [&]<class NodeType>() {
+                if constexpr (requires { Linter<NodeType>::lint(current, errorReasons, state); }) {
+                    // 容器、分支和符号等节点没有语义检查，不读取其结构诊断列表。
+                    return !current.isAllSpaceError() && Linter<NodeType>::lint(current, errorReasons, state);
+                } else {
+                    return false;
                 }
-                break;
-            case ASTNodeMode::OR:
-                lint(astNode.getBestNode(), errorReasons, state);
-                break;
+            });
+            if (isDirty) [[unlikely]]
+                return;
+            // 单子节点和 OR 最佳分支继续在本层检查；多子节点仍按原顺序递归。
+            switch (current.mode) {
+                case ASTNodeMode::AND:
+                    if (current.childNodes.size() == 1) {
+                        next = &current.childNodes.front();
+                        continue;
+                    }
+                    for (const auto &item: current.childNodes) lint(item, errorReasons, state);
+                    return;
+                case ASTNodeMode::OR:
+                    next = &current.getBestNode();
+                    continue;
+                default:
+                    return;
+            }
         }
     }
 

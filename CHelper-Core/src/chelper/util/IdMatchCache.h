@@ -32,17 +32,26 @@ namespace CHelper {
         };
 
         DenseMap<Key, bool, Hash> matches;
+        Key lastKey{};
+        bool lastResult = false;
+        bool hasLast = false;
 
     public:
         template<class Contents, class Match>
         bool contains(const Contents &contents, XXH64_hash_t nameHash, Match &&match) {
             const Key key{contents.get(), nameHash};
+            if (hasLast && key == lastKey) return lastResult;
             const auto found = matches.find(key);
             if (found != matches.end()) {
-                return found->second;
+                lastKey = key;
+                hasLast = true;
+                return lastResult = found->second;
             }
             const bool result = std::ranges::any_of(*contents, std::forward<Match>(match));
             matches.emplace(key, result);
+            lastKey = key;
+            hasLast = true;
+            lastResult = result;
             return result;
         }
     };

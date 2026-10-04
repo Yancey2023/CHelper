@@ -144,6 +144,26 @@ namespace CHelper::Test {
         EXPECT_FALSE(context.applySuggestion(command.length(), suggestions.size()).has_value());
     }
 
+    TEST(CommandContextTest, AppliesSuggestionAfterALongConditionChainWithoutMutatingContext) {
+        const auto cpack = loadCPack();
+        std::u16string command = u"execute ";
+        for (size_t i = 0; i < 1024; ++i) command.append(u"if block ~~~ stone ");
+        command.append(u"run g");
+        const CommandContext context(cpack, command);
+        const auto suggestions = context.getSuggestions(command.size());
+        const auto found = std::ranges::find_if(suggestions, [](const auto &suggestion) { return suggestion.content->name == u"give"; });
+        ASSERT_NE(found, suggestions.end());
+        const auto which = static_cast<size_t>(found - suggestions.begin());
+        const auto applied = context.applySuggestion(command.size(), which);
+        ASSERT_TRUE(applied.has_value());
+        const auto expected = command.substr(0, command.size() - 1) + u"give ";
+        EXPECT_EQ(applied->first, expected);
+        EXPECT_EQ(applied->second, expected.size());
+        EXPECT_EQ(context.getCommand(), command);
+        EXPECT_EQ(context.applySuggestion(command.size(), which), applied);
+        EXPECT_FALSE(context.applySuggestion(command.size(), suggestions.size()).has_value());
+    }
+
     TEST(CommandContextTest, ParallelContextsOnSharedCPack) {
         std::shared_ptr<const CPack> cpack = loadCPack();
 

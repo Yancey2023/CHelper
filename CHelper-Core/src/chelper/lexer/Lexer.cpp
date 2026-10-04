@@ -20,14 +20,15 @@
 
 namespace CHelper::Lexer {
 
+    template<class Tokens>
     class Lexer {
     private:
         const std::u16string_view content;
         size_t index = 0;
-        std::pmr::vector<Token> &tokens;
+        Tokens &tokens;
 
     public:
-        Lexer(const std::u16string_view content, std::pmr::vector<Token> &tokens)
+        Lexer(const std::u16string_view content, Tokens &tokens)
             : content(content), tokens(tokens) {}
 
     private:
@@ -204,9 +205,24 @@ namespace CHelper::Lexer {
         }
     };
 
+    struct TokenCounter {
+        size_t count = 0;
+        void emplace_back(TokenType::TokenType, size_t, std::u16string_view) noexcept { ++count; }
+    };
+
     std::shared_ptr<LexerResult> lex(const std::u16string_view content) {
-        auto result = allocateSharedFromDefault<LexerResult>(
-                std::pmr::u16string(content.data(), content.size()), std::pmr::vector<Token>{});
+        std::pmr::u16string copiedContent(content.data(), content.size());
+        // 使用同一词法规则先精确计数，避免 arena 保留逐次扩容的旧 token 数组。
+        TokenCounter counter;
+        Lexer countLexer(copiedContent, counter);
+        countLexer.run();
+        // 大数组由词法结果独立持有，避免提高 AST arena 的增长步长。
+        // 小数组沿用当前资源，避免引号内的每个短 ID 都产生一次堆分配。
+        auto *tokenResource = counter.count > 4096 / sizeof(Token)
+                                      ? std::pmr::new_delete_resource()
+                                      : CPackMemoryRouter::getAllocationResource();
+        auto result = allocateSharedFromDefault<LexerResult>(std::move(copiedContent), std::pmr::vector<Token>(tokenResource));
+        result->allTokens.reserve(counter.count);
         Lexer lexer(result->content, result->allTokens);
         lexer.run();
         return result;

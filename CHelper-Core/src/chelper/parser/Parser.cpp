@@ -813,6 +813,40 @@ namespace CHelper::Parser {
 
     template<>
     struct Parser<Node::NodeList> {
+        static std::optional<size_t> countChildren(const Node::NodeList &node, const TokenReader &reader) {
+            if (node.nodeLeft.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL ||
+                node.nodeRight.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL ||
+                node.nodeSeparator.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL) return std::nullopt;
+            const auto left = static_cast<const Node::NodeSingleSymbol *>(node.nodeLeft.data)->symbol;
+            const auto right = static_cast<const Node::NodeSingleSymbol *>(node.nodeRight.data)->symbol;
+            const auto separator = static_cast<const Node::NodeSingleSymbol *>(node.nodeSeparator.data)->symbol;
+            if (!((left == u'[' && right == u']') || (left == u'{' && right == u'}')) || separator != u',') return std::nullopt;
+
+            // 首项已成功，剩余每个顶层逗号对应分隔符和元素两项，最后是右括号。
+            // 引号内的逗号和括号是 STRING token，不参与计数。异常括号或深层嵌套
+            // 保留原来的增长路径；不按输入字符数预估容量，也不改变解析游标。
+            std::array<char16_t, 32> openings;
+            size_t depth = 0, separators = 0;
+            const auto &tokens = reader.lexerResult->allTokens;
+            for (size_t i = reader.index; i < tokens.size(); ++i) {
+                const auto &token = tokens[i];
+                if (token.type == TokenType::LF) return std::nullopt;
+                if (token.type != TokenType::SYMBOL) continue;
+                const auto ch = token.content[0];
+                if (depth == 0 && ch == right) return separators * 2 + 3;
+                if (ch == u'[' || ch == u'{') {
+                    if (depth == openings.size()) return std::nullopt;
+                    openings[depth++] = ch;
+                } else if (ch == u']' || ch == u'}') {
+                    if (depth == 0 || (openings[depth - 1] == u'[' ? ch != u']' : ch != u'}')) return std::nullopt;
+                    --depth;
+                } else if (depth == 0 && ch == separator) {
+                    ++separators;
+                }
+            }
+            return std::nullopt;
+        }
+
         static ASTNode getASTNode(const Node::NodeList &node, TokenReader &tokenReader) {
             //标记整个[...]，在最后进行收集
             tokenReader.push();
@@ -820,7 +854,7 @@ namespace CHelper::Parser {
             if (left.isError()) [[unlikely]] {
                 return ASTNode::andNode(node, ASTNode::children(std::move(left)), tokenReader.collect());
             }
-            std::pmr::vector<ASTNode> childNodes = ASTNode::children(std::move(left));
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             {
 #if CHelperDebug
                 size_t startIndex = tokenReader.index;
@@ -831,10 +865,12 @@ namespace CHelper::Parser {
                 // 复用右括号分支，避免每个元素重复解析并构造随即丢弃的诊断。
                 // 即使内容分支也成功，右括号成功仍应终止列表。
                 bool flag = !elementOrRight.childNodes[1].isError() || elementOrRight.isError();
-                childNodes.push_back(std::move(elementOrRight));
                 if (flag) [[unlikely]] {
-                    return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+                    return ASTNode::andNode(node, ASTNode::children(std::move(left), std::move(elementOrRight)), tokenReader.collect());
                 }
+                childNodes.reserve(countChildren(node, tokenReader).value_or(2));
+                childNodes.push_back(std::move(left));
+                childNodes.push_back(std::move(elementOrRight));
 #if CHelperDebug
                 if (startIndex == tokenReader.index) [[unlikely]] {
                     SPDLOG_WARN("NodeList has some error");

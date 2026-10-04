@@ -4,6 +4,38 @@
 
 namespace CHelper::Test {
 
+    TEST(TokenReaderTest, LexerPreservesEscapedStringsNumberSpansAndIncompleteQuotes) {
+        const auto lexer = Lexer::lex(u"1-2 . +a -1.5 \"a,]\\\"b\" 名\\,字\n");
+        const std::pair<TokenType::TokenType, std::u16string_view> expected[] = {
+                {TokenType::NUMBER, u"1-2"},
+                {TokenType::SPACE, u" "},
+                {TokenType::NUMBER, u"."},
+                {TokenType::SPACE, u" "},
+                {TokenType::SYMBOL, u"+"},
+                {TokenType::STRING, u"a"},
+                {TokenType::SPACE, u" "},
+                {TokenType::NUMBER, u"-1.5"},
+                {TokenType::SPACE, u" "},
+                {TokenType::STRING, uR"("a,]\"b")"},
+                {TokenType::SPACE, u" "},
+                {TokenType::STRING, uR"(名\,字)"},
+                {TokenType::LF, u"\n"}};
+        ASSERT_EQ(lexer->allTokens.size(), std::size(expected));
+        size_t position = 0;
+        for (size_t i = 0; i < std::size(expected); ++i) {
+            EXPECT_EQ(lexer->allTokens[i].type, expected[i].first);
+            EXPECT_EQ(lexer->allTokens[i].content, expected[i].second);
+            EXPECT_EQ(lexer->allTokens[i].pos, position);
+            position += expected[i].second.size();
+        }
+        EXPECT_EQ(position, lexer->content.size());
+        const auto incomplete = Lexer::lex(u"\"unfinished\\");
+        ASSERT_EQ(incomplete->allTokens.size(), 1u);
+        EXPECT_EQ(incomplete->allTokens[0].content, incomplete->content);
+        EXPECT_EQ(incomplete->allTokens[0].type, TokenType::STRING);
+        EXPECT_TRUE(Lexer::lex(u"")->allTokens.empty());
+    }
+
     TEST(TokenReaderTest, SingleTokenViewsPreserveRewindsAndDoNotSkipLineFeeds) {
         const auto lexer = Lexer::lex(u"  abc \n]  ");
         TokenReader reader(lexer);
