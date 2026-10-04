@@ -21,6 +21,7 @@
 #include <chelper/command_structure/CommandStructure.h>
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/serialization/Serialization.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <chelper/util/JsonUtil.h>
@@ -357,7 +358,7 @@ namespace CHelper::Test {
             Node::NodeWrapped secondWrapped(second), firstWrapped(first);
             secondWrapped.pushNextNode(Node::NodeLF::getInstance());
             firstWrapped.pushNextNode(&secondWrapped);
-            const auto ast = ASTNode::simpleNode(firstWrapped, tokens, ErrorReason::requireSpace(tokens));
+            const auto ast = ASTNode::simpleNode(firstWrapped, tokens, ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, tokens));
             const auto result = CommandStructure::getStructure(ast);
             EXPECT_EQ(result, u"<" + brief + u"> <尾参数>");
             EXPECT_EQ(result.size(), brief.size() + 8);

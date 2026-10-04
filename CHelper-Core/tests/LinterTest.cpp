@@ -1,6 +1,7 @@
 #include <chelper/lexer/Lexer.h>
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
@@ -12,7 +13,7 @@ namespace CHelper::Test {
         for (const Node::NodeWithType parent: {Node::NodeWithType(id), Node::NodeAny::getNodeAny()}) {
             const auto ast = ASTNode::andNode(parent,
                                               ASTNode::children(ASTNode::simpleNode(id, TokensView(lexer, 0, 1))),
-                                              TokensView(lexer, 0, 1), ErrorReason::requireSpace(0, 0));
+                                              TokensView(lexer, 0, 1), ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {0, 0}));
             const auto errors = Linter::getErrorsExceptParseError(ast);
             ASSERT_EQ(errors.size(), 1u);
             EXPECT_EQ(errors[0]->getCode(), ErrorReasonCode::UnknownId);

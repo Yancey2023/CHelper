@@ -20,8 +20,6 @@
 
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
-#include <span>
-#include <variant>
 
 namespace CHelper {
 
@@ -51,11 +49,14 @@ namespace CHelper {
 
     namespace Detail {
         class ErrorReasonMemoryResource;
-    }
+        class ErrorReasonFactoryAccess;
+        template<class T>
+        class ErrorReasonAllocator;
+    }// namespace Detail
 
     // 作用域和每个错误的 shared_ptr 分配共同持有分块资源，查询结果可独立存活。
     class ErrorReasonMemoryScope {
-        friend class ErrorReason;
+        friend class Detail::ErrorReasonFactoryAccess;
 
         ErrorReasonMemoryScope *previous;
         Detail::ErrorReasonMemoryResource *memory = nullptr;
@@ -108,6 +109,12 @@ namespace CHelper {
         InvalidUnicodeEscapeCharacter,
         InvalidUnicodeEscapeValue,
         UnknownEscape,
+        NumberOutOfRangeInt32,
+        NumberOutOfRangeInt64,
+        NumberOutOfRangeUInt64,
+        NumberOutOfRangeFloat,
+        RequireTypeName,
+        TypeMismatchName,
     };
 
     // 类型名称按标识保存，展示时才转换为文本，避免为每个备选分支复制固定名称。
@@ -118,156 +125,36 @@ namespace CHelper {
         Symbol,
     };
 
-    using ErrorReasonArgument = std::variant<std::u16string_view, char16_t, int32_t, int64_t, uint64_t, float, double,
-                                             ErrorReasonExpectedType, TokenType::TokenType>;
-
     class ErrorReason {
-        ErrorReasonCode code = ErrorReasonCode::CustomText;
-        bool messageReady = true;
-        std::span<const ErrorReasonArgument> arguments;
-        // 无解析/查询作用域时，参数由单独的缓冲区持有；作用域内由对象共享块持有。
-        std::unique_ptr<std::byte[]> argumentStorage;
+        friend class Detail::ErrorReasonFactoryAccess;
+        template<class T>
+        friend class Detail::ErrorReasonAllocator;
 
-        static std::shared_ptr<ErrorReason> makeDiagnostic(ErrorReasonLevel::ErrorReasonLevel level,
-                                                           size_t start, size_t end, ErrorReasonCode code,
-                                                           std::span<const ErrorReasonArgument> arguments);
-        void copyArguments(std::span<const ErrorReasonArgument> input, Detail::ErrorReasonMemoryResource *memory = nullptr);
+        ErrorReasonCode code;
+        bool messageReady;
+        const void *parameters = nullptr;
+        // 小参数与 shared_ptr 共用分块；长参数及无作用域的参数独立持有。
+        std::unique_ptr<std::byte[]> parameterStorage;
+
+        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level, size_t start, size_t end, ErrorReasonCode code);
+        template<class T>
+        const T &parametersAs() const noexcept {
+            return *static_cast<const T *>(parameters);
+        }
 
     public:
+        ErrorReason(const ErrorReason &) = delete;
+        ErrorReason &operator=(const ErrorReason &) = delete;
+
         ErrorReasonLevel::ErrorReasonLevel level;
         size_t start, end;
-        // Linter 对外返回的结果包含展示文本；解析树中的结构化诊断请使用 getMessage()。
+        // Linter 的展示文本独立持有；解析树中的诊断请使用 getMessage()。
         std::pmr::u16string errorReason;
 
         ErrorReasonCode getCode() const noexcept { return code; }
-        std::span<const ErrorReasonArgument> getArguments() const noexcept { return arguments; }
         std::u16string getMessage() const;
         std::shared_ptr<ErrorReason> materializedCopy() const;
-
-        static std::shared_ptr<ErrorReason> diagnostic(ErrorReasonLevel::ErrorReasonLevel level,
-                                                       size_t start, size_t end, ErrorReasonCode code,
-                                                       std::initializer_list<ErrorReasonArgument> arguments = {});
-
-        static std::shared_ptr<ErrorReason> diagnostic(ErrorReasonLevel::ErrorReasonLevel level,
-                                                       const TokensView &tokens, ErrorReasonCode code,
-                                                       std::initializer_list<ErrorReasonArgument> arguments = {}) {
-            return diagnostic(level, tokens.startIndex, tokens.endIndex, code, arguments);
-        }
-
-        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
-                    size_t start,
-                    size_t end,
-                    std::u16string_view errorReason);
-
-        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
-                    const TokensView &tokens,
-                    std::u16string_view errorReason);
-
-        ErrorReason(const ErrorReason &other);
-        ErrorReason &operator=(const ErrorReason &other);
-
-        static std::shared_ptr<ErrorReason> make(ErrorReasonLevel::ErrorReasonLevel level,
-                                                 size_t start, size_t end, std::u16string_view text);
-
-        static std::shared_ptr<ErrorReason> make(ErrorReasonLevel::ErrorReasonLevel level,
-                                                 const TokensView &tokens, std::u16string_view text) {
-            return make(level, tokens.startIndex, tokens.endIndex, text);
-        }
-
-        template<class... Args>
-        static std::shared_ptr<ErrorReason> formatted(ErrorReasonLevel::ErrorReasonLevel level,
-                                                      size_t start, size_t end, const char16_t *pattern, const Args &...args) {
-            // 常见错误文本直接在栈上格式化，避免先分配临时字符串再复制到共享块。
-            fmt::basic_memory_buffer<char16_t, 128> text;
-            fmt::format_to(std::back_inserter(text), pattern, args...);
-            return make(level, start, end, std::u16string_view(text.data(), text.size()));
-        }
-
-        template<class... Args>
-        static std::shared_ptr<ErrorReason> formatted(ErrorReasonLevel::ErrorReasonLevel level,
-                                                      const TokensView &tokens, const char16_t *pattern, const Args &...args) {
-            return formatted(level, tokens.startIndex, tokens.endIndex, pattern, args...);
-        }
-
-        //命令后面有多余部分
-        [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(size_t start,
-                                                                    size_t end,
-                                                                    std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::EXCESS, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(const TokensView &tokens,
-                                                                    std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::EXCESS, tokens, errorReason);
-        }
-
-        //缺少空格
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        requireSpace(const TokensView &tokens) {
-            return diagnostic(ErrorReasonLevel::REQUIRE_SPACE, tokens, ErrorReasonCode::RequireSpace);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        requireSpace(size_t start, size_t end) {
-            return diagnostic(ErrorReasonLevel::REQUIRE_SPACE, start, end, ErrorReasonCode::RequireSpace);
-        }
-
-        //命令不完整
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        incomplete(size_t start, size_t end, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::INCOMPLETE, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        incomplete(const TokensView &tokens, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::INCOMPLETE, tokens, errorReason);
-        }
-
-        //类型不匹配
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        typeError(size_t start, size_t end, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::TYPE_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        typeError(const TokensView &tokens, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::TYPE_ERROR, tokens, errorReason);
-        }
-
-        //内容不匹配
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        contentError(size_t start, size_t end, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::CONTENT_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        contentError(const TokensView &tokens, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::CONTENT_ERROR, tokens, errorReason);
-        }
-
-        //逻辑错误
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        logicError(size_t start, size_t end, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::LOGIC_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        logicError(const TokensView &tokens, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::LOGIC_ERROR, tokens, errorReason);
-        }
-
-        //ID错误
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        idError(size_t start, size_t end, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::ID_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        idError(const TokensView &tokens, std::u16string_view errorReason) {
-            return make(ErrorReasonLevel::ID_ERROR, tokens, errorReason);
-        }
-
-        bool operator==(const CHelper::ErrorReason &reason) const;
+        bool operator==(const ErrorReason &reason) const;
     };
 
 }// namespace CHelper

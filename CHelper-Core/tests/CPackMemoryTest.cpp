@@ -7,6 +7,7 @@
 #include <chelper/CommandContext.h>
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/CommandNode.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
@@ -67,8 +68,8 @@ namespace CHelper::Test {
 
     TEST(CPackMemoryTest, ErrorListsKeepSingleEntriesInlineAndReleaseArraysThroughTheirOwner) {
         RecordingResource origin, other;
-        const auto first = ErrorReason::contentError(0, 1, u"first");
-        const auto second = ErrorReason::contentError(1, 2, u"second");
+        const auto first = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"first");
+        const auto second = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {1, 2}, u"second");
         ErrorReasonList list(&origin);
         EXPECT_EQ(list.begin(), list.end());
         list.push_back(first);
@@ -127,7 +128,7 @@ namespace CHelper::Test {
             std::optional<ErrorReasonList> list;
             list.emplace(&origin);
             for (size_t i = 0; i < count; ++i) {
-                const auto error = ErrorReason::contentError(i, i + 1, u"owned error");
+                const auto error = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {i, i + 1}, u"owned error");
                 weak.push_back(error);
                 list->push_back(error);
             }
@@ -149,7 +150,7 @@ namespace CHelper::Test {
             void do_deallocate(void *, size_t, size_t) override {}
             bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
         } resource;
-        auto value = ErrorReason::contentError(0, 1, u"owned diagnostic");
+        auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned diagnostic");
         std::weak_ptr<ErrorReason> weak = value;
         ErrorReasonList list(&resource);
         list.push_back(value);
@@ -173,7 +174,7 @@ namespace CHelper::Test {
         RecordingResource origin, other;
         const auto lexer = Lexer::lex(u"abc def");
         const auto node = Node::NodeAny::getNodeAny();
-        const auto error = ErrorReason::contentError(0, 3, u"测试错误");
+        const auto error = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 3}, u"测试错误");
         std::optional<ASTNode> tree, copy, heapCopy, cleanTree;
         {
             RouterScope scope(&origin);

@@ -2,10 +2,15 @@
 #include <array>
 #include <barrier>
 #include <chelper/parser/ErrorReason.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <gtest/gtest.h>
 #include <thread>
 
 namespace CHelper::Test {
+
+    static_assert(!std::is_constructible_v<ErrorReason, ErrorReasonLevel::ErrorReasonLevel, size_t, size_t, ErrorReasonCode>);
+    static_assert(!std::is_copy_constructible_v<ErrorReason>);
+    static_assert(!std::is_copy_assignable_v<ErrorReason>);
 
     TEST(ErrorReasonTest, TypeArgumentsPreserveMessagesEqualityAndIndependentLifetimes) {
         struct Expected {
@@ -22,21 +27,17 @@ namespace CHelper::Test {
         {
             ErrorReasonMemoryScope scope;
             for (const auto &item: expected) {
-                const auto required = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 2,
-                                                              ErrorReasonCode::RequireType, {item.type});
-                const auto textRequired = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 2,
-                                                                  ErrorReasonCode::RequireType, {item.name});
+                const auto required = ErrorReasons::requireType(ErrorReasonLevel::INCOMPLETE, {2, 2}, item.type);
+                const auto textRequired = ErrorReasons::requireType(ErrorReasonLevel::INCOMPLETE, {2, 2}, item.name);
                 EXPECT_TRUE(required->errorReason.empty());
                 EXPECT_EQ(required->getMessage(), textRequired->getMessage());
                 EXPECT_EQ(*required, *textRequired);
                 retained.push_back(required);
                 for (const auto actual: {TokenType::STRING, TokenType::NUMBER, TokenType::SYMBOL, TokenType::SPACE,
                                          TokenType::LF, static_cast<TokenType::TokenType>(255)}) {
-                    const auto error = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 2, 4,
-                                                               ErrorReasonCode::TypeMismatch, {item.type, actual});
+                    const auto error = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, {2, 4}, item.type, actual);
                     const auto name = TokenType::getName(actual);
-                    const auto legacy = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 2, 4,
-                                                                ErrorReasonCode::TypeMismatch, {item.name, std::u16string_view(name)});
+                    const auto legacy = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, {2, 4}, item.name, std::u16string_view(name));
                     EXPECT_EQ(TokenType::getNameView(actual), name);
                     EXPECT_EQ(error->getMessage(), legacy->getMessage());
                     EXPECT_EQ(*error, *legacy);
@@ -64,8 +65,7 @@ namespace CHelper::Test {
         {
             ErrorReasonMemoryScope scope;
             for (size_t i = 0; i < threadCount * errorsPerThread; ++i) {
-                auto error = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, i, i + 1,
-                                                     ErrorReasonCode::UnknownMeaning, {std::u16string_view(u"参数")});
+                auto error = ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, {i, i + 1}, std::u16string_view(u"参数"));
                 weak[i % threadCount].push_back(error);
                 errors.push_back(std::move(error));
             }
@@ -100,7 +100,7 @@ namespace CHelper::Test {
         {
             ErrorReasonMemoryScope scope;
             for (size_t i = 0; i < 2000; ++i) {
-                errors.push_back(ErrorReason::incomplete(i, i + 1, u"缺少参数，保留每个错误的位置与文本"));
+                errors.push_back(ErrorReasons::customText(ErrorReasonLevel::INCOMPLETE, {i, i + 1}, u"缺少参数，保留每个错误的位置与文本"));
             }
             weak = errors.front();
             EXPECT_EQ(errors.front()->errorReason.get_allocator().resource(), std::pmr::new_delete_resource());
@@ -124,12 +124,12 @@ namespace CHelper::Test {
         std::shared_ptr<ErrorReason> outer, inner, after;
         {
             ErrorReasonMemoryScope scope;
-            outer = ErrorReason::requireSpace(0, 0);
+            outer = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {0, 0});
             {
                 ErrorReasonMemoryScope nested;
-                inner = ErrorReason::requireSpace(1, 1);
+                inner = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {1, 1});
             }
-            after = ErrorReason::requireSpace(2, 2);
+            after = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {2, 2});
         }
         inner = inner->materializedCopy();
         auto moved = std::move(inner->errorReason);
@@ -138,7 +138,7 @@ namespace CHelper::Test {
         after.reset();
         EXPECT_EQ(moved, u"命令不完整，缺少空格");
         moved.append(100000, u'参');
-        const auto fallback = ErrorReason::requireSpace(3, 3);
+        const auto fallback = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {3, 3});
         EXPECT_EQ(fallback->errorReason.get_allocator().resource(), std::pmr::new_delete_resource());
     }
 
@@ -147,7 +147,7 @@ namespace CHelper::Test {
         std::array<std::shared_ptr<ErrorReason>, count> errors;
         {
             ErrorReasonMemoryScope scope;
-            for (auto &error: errors) error = ErrorReason::requireSpace(0, 0);
+            for (auto &error: errors) error = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {0, 0});
         }
         for (const auto &error: errors) {
             ASSERT_EQ(error->errorReason.get_allocator().resource(), errors.front()->errorReason.get_allocator().resource());
@@ -171,8 +171,7 @@ namespace CHelper::Test {
     TEST(ErrorReasonTest, FormatsUnicodeAndLongMessagesWithoutChangingText) {
         ErrorReasonMemoryScope scope;
         for (const auto &value: {std::u16string(u"中文🙂"), std::u16string(4096, u'参')}) {
-            const auto error = ErrorReason::formatted(ErrorReasonLevel::CONTENT_ERROR, 3, 9,
-                                                      u"错误 [{:c}] [{:.2f}] -> {}", u']', 1.25, value);
+            const auto error = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {3, 9}, fmt::format(u"错误 [{:c}] [{:.2f}] -> {}", u']', 1.25, value));
             const auto expected = fmt::format(u"错误 [{:c}] [{:.2f}] -> {}", u']', 1.25, value);
             EXPECT_EQ(std::u16string_view(error->errorReason), std::u16string_view(expected));
             EXPECT_EQ(error->level, ErrorReasonLevel::CONTENT_ERROR);
@@ -186,7 +185,7 @@ namespace CHelper::Test {
         startAllocCounting();
         {
             ErrorReasonMemoryScope scope;
-            const auto error = ErrorReason::requireSpace(0, 0);
+            const auto error = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {0, 0});
             weak = error;
         }
         const auto retained = stopAllocCounting();
@@ -204,14 +203,11 @@ namespace CHelper::Test {
         {
             ErrorReasonMemoryScope scope;
             std::u16string input(4096, u'参');
-            error = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, 3, 9,
-                                            ErrorReasonCode::UnknownMeaning, {std::u16string_view(input)});
+            error = ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, {3, 9}, std::u16string_view(input));
             EXPECT_TRUE(error->errorReason.empty());
             input.assign(4096, u'变');
         }
         EXPECT_EQ(error->getCode(), ErrorReasonCode::UnknownMeaning);
-        ASSERT_EQ(error->getArguments().size(), 1);
-        EXPECT_EQ(std::get<std::u16string_view>(error->getArguments()[0]), std::u16string(4096, u'参'));
         EXPECT_EQ(error->getMessage(), u"找不到含义 -> " + std::u16string(4096, u'参'));
         auto output = error->materializedCopy();
         error.reset();
@@ -224,9 +220,7 @@ namespace CHelper::Test {
 
     TEST(ErrorReasonTest, DeferredNumbersPreserveOriginalFormattingTypes) {
         const auto check = []<class T>(T min, T max) {
-            const auto error = ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, 0, 1,
-                                                       ErrorReasonCode::NumberOutOfRange,
-                                                       {min, max, std::u16string_view(u"bad")});
+            const auto error = ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, {0, 1}, min, max, std::u16string_view(u"bad"));
             EXPECT_TRUE(error->errorReason.empty());
             EXPECT_EQ(error->getMessage(), fmt::format(u"数值不在范围[{}, {}]内 -> {}", min, max, u"bad"));
         };
@@ -234,34 +228,45 @@ namespace CHelper::Test {
         check(0.1, std::numeric_limits<double>::max());
         check(std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
         check(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max());
+        check(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
     }
 
     TEST(ErrorReasonTest, DeferredEqualityPreservesTextBasedDeduplication) {
-        auto structured = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 4,
-                                                  ErrorReasonCode::UnknownMeaning, {std::u16string_view(u"abc")});
-        auto sameText = ErrorReason::contentError(2, 4, u"找不到含义 -> abc");
+        auto structured = ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, {2, 4}, std::u16string_view(u"abc"));
+        auto sameText = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {2, 4}, u"找不到含义 -> abc");
         EXPECT_EQ(*structured, *sameText);
-        auto differentLevel = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, 2, 4,
-                                                      ErrorReasonCode::UnknownMeaning, {std::u16string_view(u"abc")});
+        auto differentLevel = ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, {2, 4}, std::u16string_view(u"abc"));
         EXPECT_EQ(*structured, *differentLevel);
         differentLevel->end = 5;
         EXPECT_NE(*structured, *differentLevel);
-        auto differentArgs = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 2, 4,
-                                                     ErrorReasonCode::UnknownMeaning, {std::u16string_view(u"def")});
+        auto differentArgs = ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, {2, 4}, std::u16string_view(u"def"));
         EXPECT_NE(*structured, *differentArgs);
-        const auto left = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 0, 1, ErrorReasonCode::TypeMismatch,
-                                                  {std::u16string_view(u"a，但当前参数类型为b"), std::u16string_view(u"c")});
-        const auto right = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 0, 1, ErrorReasonCode::TypeMismatch,
-                                                   {std::u16string_view(u"a"), std::u16string_view(u"b，但当前参数类型为c")});
+        const auto left = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, {0, 1}, std::u16string_view(u"a，但当前参数类型为b"), std::u16string_view(u"c"));
+        const auto right = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, {0, 1}, std::u16string_view(u"a"), std::u16string_view(u"b，但当前参数类型为c"));
         EXPECT_EQ(*left, *right);
+    }
+
+    TEST(ErrorReasonTest, NumericEqualityUsesFormattedFloatingPointValues) {
+        const auto check = []<class T>(T value) {
+            const auto error = ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, {0, 1}, value, T{1}, u"bad");
+            const auto sameText = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, error->getMessage());
+            const auto copy = ErrorReasons::copy(*error);
+            EXPECT_EQ(*error, *copy);
+            EXPECT_EQ(*error, *sameText);
+        };
+        check(std::numeric_limits<float>::quiet_NaN());
+        check(std::numeric_limits<double>::infinity());
+        const auto positive = ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, {0, 1}, 0.0, 1.0, u"bad");
+        const auto negative = ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, {0, 1}, -0.0, 1.0, u"bad");
+        EXPECT_NE(positive->getMessage(), negative->getMessage());
+        EXPECT_NE(*positive, *negative);
     }
 
     TEST(ErrorReasonTest, DeferredRenderingIsReadOnlyAcrossThreads) {
         std::shared_ptr<ErrorReason> error;
         {
             ErrorReasonMemoryScope scope;
-            error = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 1, 2, ErrorReasonCode::SymbolTypeMismatch,
-                                            {u']', std::u16string_view(u"中文🙂")});
+            error = ErrorReasons::symbolTypeMismatch(ErrorReasonLevel::TYPE_ERROR, {1, 2}, u']', std::u16string_view(u"中文🙂"));
         }
         std::array<std::thread, 4> threads;
         for (auto &thread: threads) {
@@ -276,31 +281,27 @@ namespace CHelper::Test {
     }
 
     TEST(ErrorReasonTest, CopiesOfDeferredDiagnosticsKeepIndependentArguments) {
-        ErrorReason copied(ErrorReasonLevel::INCOMPLETE, 0, 0, u"");
+        std::shared_ptr<ErrorReason> copied;
         {
             ErrorReasonMemoryScope scope;
-            const auto error = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, 3, 9,
-                                                       ErrorReasonCode::SymbolTypeMismatch, {u']', std::u16string_view(u"中文🙂")});
-            ErrorReason constructed(*error);
-            copied = constructed;
+            const auto error = ErrorReasons::symbolTypeMismatch(ErrorReasonLevel::TYPE_ERROR, {3, 9}, u']', std::u16string_view(u"中文🙂"));
+            const auto constructed = ErrorReasons::copy(*error);
+            copied = ErrorReasons::copy(*constructed);
         }
-        EXPECT_TRUE(copied.errorReason.empty());
-        EXPECT_EQ(copied.getMessage(), u"类型不匹配，需要符号]，但当前内容为中文🙂");
-        auto output = copied.materializedCopy();
+        EXPECT_TRUE(copied->errorReason.empty());
+        EXPECT_EQ(copied->getMessage(), u"类型不匹配，需要符号]，但当前内容为中文🙂");
+        auto output = copied->materializedCopy();
         output->errorReason.clear();
         EXPECT_TRUE(output->getMessage().empty());
     }
 
     TEST(ErrorReasonTest, DeferredEscapeMessagesPreserveCharactersAndBackslashes) {
         const std::u16string sequence = u"0中AB";
-        const auto incomplete = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, 0, 1,
-                                                        ErrorReasonCode::IncompleteUnicodeEscape, {std::u16string_view(sequence)});
+        const auto incomplete = ErrorReasons::incompleteUnicodeEscape(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, std::u16string_view(sequence));
         EXPECT_EQ(incomplete->getMessage(), fmt::format(u"字符串转义缺失后半部分 -> \\u{}", sequence));
-        const auto invalid = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 0, 1,
-                                                     ErrorReasonCode::InvalidUnicodeEscapeCharacter, {u'中', std::u16string_view(sequence)});
+        const auto invalid = ErrorReasons::invalidUnicodeEscapeCharacter(ErrorReasonLevel::INCOMPLETE, {0, 1}, u'中', std::u16string_view(sequence));
         EXPECT_EQ(invalid->getMessage(), fmt::format(u"字符串转义出现非法字符{} -> \\u{}", u'中', sequence));
-        const auto unknown = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, 0, 1,
-                                                     ErrorReasonCode::UnknownEscape, {u'中'});
+        const auto unknown = ErrorReasons::unknownEscape(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u'中');
         EXPECT_EQ(unknown->getMessage(), fmt::format(u"未知的转义字符 -> \\{:c}", u'中'));
     }
 

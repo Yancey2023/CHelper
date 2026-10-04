@@ -17,6 +17,7 @@
  */
 
 #include <chelper/lexer/TokenReader.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 
 namespace CHelper {
 
@@ -83,17 +84,22 @@ namespace CHelper {
     }
 
     namespace {
+        template<class RequiredType>
         ASTNode readSimpleASTNode(TokenReader &reader, Node::NodeWithType node,
-                                  TokenType::TokenType type, ErrorReasonArgument requireType,
+                                  TokenType::TokenType type, RequiredType requireType,
                                   ASTNodeId::ASTNodeId astNodeId,
                                   std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &, const TokensView &) = nullptr) {
             TokensView tokens = reader.readTokenView();
             const Token *token = tokens.isEmpty() ? nullptr : &tokens[0];
             std::shared_ptr<ErrorReason> errorReason;
             if (token == nullptr) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::RequireType, {requireType});
+                errorReason = ErrorReasons::requireType(ErrorReasonLevel::INCOMPLETE, tokens, requireType);
             } else if (token->type != type) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::TypeMismatch, {requireType, token->type});
+                if constexpr (std::is_same_v<RequiredType, ErrorReasonExpectedType>) {
+                    errorReason = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, requireType, token->type);
+                } else {
+                    errorReason = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, requireType, TokenType::getNameView(token->type));
+                }
             } else {
                 errorReason = check == nullptr ? nullptr : check(token->content, tokens);
             }
@@ -121,12 +127,11 @@ namespace CHelper {
                 *this, node, TokenType::NUMBER, ErrorReasonExpectedType::Integer, astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (str.find(u'.') != std::u16string_view::npos) [[unlikely]] {
-                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
-                                                       tokens, ErrorReasonCode::IntegerRequired);
+                        return ErrorReasons::integerRequired(ErrorReasonLevel::CONTENT_ERROR, tokens);
                     }
                     //lexer会吞掉连续的0-9 . + -，这里必须校验完整的数字格式，防止1-2、1--2这类内容被当成合法数字
                     if (!isIntegerFormat(str)) [[unlikely]] {
-                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNumber, {str});
+                        return ErrorReasons::invalidNumber(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
                     }
                     return nullptr;
                 });
@@ -138,7 +143,7 @@ namespace CHelper {
                 *this, node, TokenType::NUMBER, ErrorReasonExpectedType::Float, astNodeId,
                 [](const std::u16string_view &str, const TokensView &tokens) -> std::shared_ptr<ErrorReason> {
                     if (!isFloatFormat(str)) [[unlikely]] {
-                        return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidNumber, {str});
+                        return ErrorReasons::invalidNumber(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
                     }
                     return nullptr;
                 });

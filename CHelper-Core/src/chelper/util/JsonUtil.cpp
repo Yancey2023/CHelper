@@ -17,6 +17,7 @@
  */
 
 #include <chelper/parser/ErrorReason.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/util/JsonUtil.h>
 
 namespace CHelper::JsonUtil {
@@ -97,7 +98,7 @@ namespace CHelper::JsonUtil {
     ConvertResult jsonString2String(const std::u16string_view &input) {
         ConvertResult result;
         if (input.empty() || input[0] != '\"') [[unlikely]] {
-            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, 0, 0, ErrorReasonCode::JsonQuotesRequired);
+            result.errorReason = ErrorReasons::jsonQuotesRequired(ErrorReasonLevel::INCOMPLETE, {0, 0});
             return result;
         }
         size_t index = 0;
@@ -126,8 +127,7 @@ namespace CHelper::JsonUtil {
             //转义字符
             ++index;
             if (index >= input.size()) [[unlikely]] {
-                result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE,
-                                                             index - 1, index, ErrorReasonCode::IncompleteEscape);
+                result.errorReason = ErrorReasons::incompleteEscape(ErrorReasonLevel::INCOMPLETE, {index - 1, index});
             } else {
                 ch = input[index];
                 switch (ch) {
@@ -154,8 +154,7 @@ namespace CHelper::JsonUtil {
                     case u'u':
                         index += 4;
                         if (index >= input.size()) [[unlikely]] {
-                            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
-                                                                         index - 5, input.size(), ErrorReasonCode::IncompleteUnicodeEscape, {escapeSequence});
+                            result.errorReason = ErrorReasons::incompleteUnicodeEscape(ErrorReasonLevel::CONTENT_ERROR, {index - 5, input.size()}, escapeSequence);
                             break;
                         }
                         escapeSequence = input.substr(index - 3, 4);
@@ -169,8 +168,7 @@ namespace CHelper::JsonUtil {
                                                     if (isHexDigit) [[likely]] {
                                                         return false;
                                                     } else {
-                                                        result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE,
-                                                                                                     index - 5, index + 1, ErrorReasonCode::InvalidUnicodeEscapeCharacter, {item, escapeSequence});
+                                                        result.errorReason = ErrorReasons::invalidUnicodeEscapeCharacter(ErrorReasonLevel::INCOMPLETE, {index - 5, index + 1}, item, escapeSequence);
                                                         return true;
                                                     }
                                                 })) [[unlikely]] {
@@ -178,8 +176,7 @@ namespace CHelper::JsonUtil {
                         }
                         unicodeValue = std::stoi(utf8::utf16to8(escapeSequence), nullptr, 16);
                         if (unicodeValue < 0 || unicodeValue > 0x10FFFF) [[unlikely]] {
-                            result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
-                                                                         index - 5, index + 1, ErrorReasonCode::InvalidUnicodeEscapeValue, {escapeSequence});
+                            result.errorReason = ErrorReasons::invalidUnicodeEscapeValue(ErrorReasonLevel::CONTENT_ERROR, {index - 5, index + 1}, escapeSequence);
                             break;
                         }
                         escapeSequence.clear();
@@ -193,8 +190,7 @@ namespace CHelper::JsonUtil {
                         }
                         break;
                     default:
-                        result.errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR,
-                                                                     index, index + 1, ErrorReasonCode::UnknownEscape, {ch});
+                        result.errorReason = ErrorReasons::unknownEscape(ErrorReasonLevel::CONTENT_ERROR, {index, index + 1}, ch);
                         break;
                 }
             }

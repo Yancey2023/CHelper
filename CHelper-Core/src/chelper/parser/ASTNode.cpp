@@ -18,6 +18,7 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/parser/ASTNode.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 
 namespace CHelper {
 
@@ -127,7 +128,7 @@ namespace CHelper {
         }
         TokensView tokens1 = tokens == nullptr ? childNodes[whichBest].tokens : *tokens;
         if (errorCount > 1 && errorReason != nullptr) [[unlikely]] {
-            errorReasons = {ErrorReason::contentError(tokens1, errorReason)};
+            errorReasons = {ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, tokens1, errorReason)};
         }
         return {ASTNodeMode::OR, node, std::move(childNodes), std::move(tokens1), std::move(errorReasons), id, whichBest};
     }

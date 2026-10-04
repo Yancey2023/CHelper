@@ -18,6 +18,7 @@
 
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/util/JsonUtil.h>
@@ -76,7 +77,7 @@ namespace CHelper::Parser {
                 tokenReader.push();
                 if ((isMustAfterSpace0 || isMustAfterSpace) && node.innerNode.nodeTypeId != Node::NodeTypeId::LF && tokenReader.skipSpace() == 0) [[unlikely]] {
                     TokensView tokens = tokenReader.collect();
-                    auto errorReason = ErrorReason::requireSpace(tokens);
+                    auto errorReason = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, tokens);
                     return ASTNode::simpleNode(node, std::move(tokens), errorReason);
                 }
                 tokenReader.pop();
@@ -153,9 +154,9 @@ namespace CHelper::Parser {
             tokenReader.pop();
             std::u16string_view str = result.tokens.string();
             if (str.empty()) [[likely]] {
-                return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::EmptyNull));
+                return wrapWithError(node, std::move(result), ErrorReasons::emptyNull(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
             } else if (str != u"null") [[likely]] {
-                return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::InvalidNull, {str}));
+                return wrapWithError(node, std::move(result), ErrorReasons::invalidNull(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
             }
             return result;
         }
@@ -191,15 +192,15 @@ namespace CHelper::Parser {
             TokensView tokens = tokenReader.readTokenView();
             std::u16string_view str = tokens.string();
             if (str.empty()) [[unlikely]] {
-                auto errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::EmptyString);
+                auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
                 return ASTNode::simpleNode(node, std::move(tokens), errorReason);
             } else if (str[0] != '"') [[unlikely]] {
-                auto errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::QuotedStringRequired, {str});
+                auto errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
                 return ASTNode::simpleNode(node, std::move(tokens), errorReason);
             }
             std::shared_ptr<ErrorReason> errorReason;
             if (str.size() <= 1 || str[str.size() - 1] != '"') [[likely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::QuotedStringRequired, {str});
+                errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
             }
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
                 return ASTNode::simpleNode(node, std::move(tokens), errorReason);
@@ -266,7 +267,7 @@ namespace CHelper::Parser {
             ASTNode commandName = tokenReader.readStringASTNode(node, ASTNodeId::NODE_COMMAND_COMMAND_NAME);
             if (commandName.tokens.size() == 0) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::EmptyCommandName), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReasons::emptyCommandName(ErrorReasonLevel::CONTENT_ERROR, tokens), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             std::u16string_view str = commandName.tokens.string();
             const Node::NodePerCommand *currentCommand = nullptr;
@@ -287,7 +288,7 @@ namespace CHelper::Parser {
             }
             if (currentCommand == nullptr) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::UnknownCommand, {str}), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReasons::unknownCommand(ErrorReasonLevel::CONTENT_ERROR, tokens, str), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             ASTNode usage = parse(*currentCommand, tokenReader);
             return ASTNode::andNode(node, ASTNode::children(std::move(commandName), std::move(usage)),
@@ -390,7 +391,7 @@ namespace CHelper::Parser {
             TokensView tokens = tokenReader.collect();
             std::shared_ptr<ErrorReason> errorReason;
             if (tokens.hasValue()) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::EXCESS, tokens, ErrorReasonCode::Excess, {tokens.string()});
+                errorReason = ErrorReasons::excess(ErrorReasonLevel::EXCESS, tokens, tokens.string());
             }
             return ASTNode::simpleNode(node, std::move(tokens), errorReason);
         }
@@ -405,7 +406,7 @@ namespace CHelper::Parser {
             auto result = tokenReader.readStringASTNode(node);
             debugCheckTokenIndex(node, index, tokenReader);
             if (result.tokens.isEmpty()) [[unlikely]] {
-                return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, result.tokens, ErrorReasonCode::Incomplete));
+                return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.ignoreError.value_or(false)) [[unlikely]] {
                 const TokensView &tokens = result.tokens;
@@ -414,7 +415,7 @@ namespace CHelper::Parser {
                 if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
                         return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
                     })) [[unlikely]] {
-                    return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::UnknownMeaning, {str}));
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
             return result;
@@ -439,7 +440,7 @@ namespace CHelper::Parser {
             }
             tokenReader.pop();
             if (result.tokens.isEmpty()) [[unlikely]] {
-                return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, result.tokens, ErrorReasonCode::Incomplete));
+                return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.ignoreError.value_or(true)) [[unlikely]] {
                 const TokensView &tokens = result.tokens;
@@ -448,7 +449,7 @@ namespace CHelper::Parser {
                 if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
                         return item->fastMatch(strHash);
                     })) [[unlikely]] {
-                    return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::UnknownMeaning, {str}));
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
             return result;
@@ -518,7 +519,7 @@ namespace CHelper::Parser {
         } else if (childNodes.empty()) [[unlikely]] {
             tokenReader.pop();
             const TokensView &tokens = number.tokens;
-            errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::InvalidCoordinate, {tokens.string()});
+            errorReason = ErrorReasons::invalidCoordinate(ErrorReasonLevel::TYPE_ERROR, tokens, tokens.string());
         } else {
             tokenReader.restore();
         }
@@ -567,12 +568,12 @@ namespace CHelper::Parser {
 
     std::shared_ptr<ErrorReason> checkNumber(const TokensView &tokens, std::u16string_view str) {
         if (str.empty()) [[unlikely]] {
-            return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::EmptyRange);
+            return ErrorReasons::emptyRange(ErrorReasonLevel::CONTENT_ERROR, tokens);
         }
         for (size_t i = 0; i < str.length(); ++i) {
             size_t ch = str[i];
             if ((ch < '0' || ch > '9') && (i != 0 || (ch != '-' && ch != '+'))) [[unlikely]] {
-                return ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::InvalidRange);
+                return ErrorReasons::invalidRange(ErrorReasonLevel::CONTENT_ERROR, tokens);
             }
         }
         return nullptr;
@@ -648,7 +649,7 @@ namespace CHelper::Parser {
                 tokenReader.skipToLF();
                 TokensView tokens = tokenReader.collect();
                 if (!node.allowMissingString && tokens.isEmpty()) [[unlikely]] {
-                    auto errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::EmptyString);
+                    auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
                     return ASTNode::simpleNode(node, std::move(tokens), errorReason);
                 } else {
                     return ASTNode::simpleNode(node, std::move(tokens));
@@ -663,11 +664,11 @@ namespace CHelper::Parser {
             }
             tokenReader.pop();
             if (!node.allowMissingString && result.tokens.isEmpty()) [[unlikely]] {
-                return replaceWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, result.tokens, ErrorReasonCode::EmptyString));
+                return replaceWithError(node, std::move(result), ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.canContainSpace) [[unlikely]] {
                 if (result.tokens.string().find(' ') != std::u16string::npos) [[unlikely]] {
-                    return replaceWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::StringContainsSpace));
+                    return replaceWithError(node, std::move(result), ErrorReasons::stringContainsSpace(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
                 }
                 return result;
             }
@@ -682,7 +683,7 @@ namespace CHelper::Parser {
                 return replaceWithError(node, std::move(result), convertResult.errorReason);
             }
             if (!convertResult.isComplete) [[unlikely]] {
-                return replaceWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::UnclosedString, {str}));
+                return replaceWithError(node, std::move(result), ErrorReasons::unclosedString(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
             }
             return result;
         }
@@ -705,9 +706,9 @@ namespace CHelper::Parser {
             std::u16string_view str = result.tokens.string();
             if (str != node.data->name) [[unlikely]] {
                 if (str.empty()) [[unlikely]] {
-                    return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::Incomplete));
+                    return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
                 } else {
-                    return wrapWithError(node, std::move(result), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, result.tokens, ErrorReasonCode::UnknownMeaning, {str}));
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
                 }
             }
             return result;
@@ -746,7 +747,7 @@ namespace CHelper::Parser {
                         tokenReader.skip();
                         TokensView tokens = tokenReader.collect();
                         return ASTNode::andNode(node, std::move(childASTNodes), tokenReader.collect(),
-                                                ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::UnexpectedSpace));
+                                                ErrorReasons::unexpectedSpace(ErrorReasonLevel::CONTENT_ERROR, tokens));
                     }
                     isMustAfterSpace = false;
                 }
@@ -922,11 +923,11 @@ namespace CHelper::Parser {
             const Token *token = tokens.isEmpty() ? nullptr : &tokens[0];
             std::shared_ptr<ErrorReason> errorReason;
             if (token == nullptr) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::INCOMPLETE, tokens, ErrorReasonCode::RequireSymbol, {node.symbol});
+                errorReason = ErrorReasons::requireSymbol(ErrorReasonLevel::INCOMPLETE, tokens, node.symbol);
             } else if (token->type != TokenType::SYMBOL) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::TYPE_ERROR, tokens, ErrorReasonCode::SymbolTypeMismatch, {node.symbol, token->content});
+                errorReason = ErrorReasons::symbolTypeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, node.symbol, token->content);
             } else if (token->content.size() != 1 || token->content[0] != node.symbol) [[unlikely]] {
-                errorReason = ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, tokens, ErrorReasonCode::SymbolContentMismatch, {node.symbol, token->content});
+                errorReason = ErrorReasons::symbolContentMismatch(ErrorReasonLevel::CONTENT_ERROR, tokens, node.symbol, token->content);
             }
             return ASTNode::simpleNode(node, std::move(tokens), errorReason);
         }
@@ -965,7 +966,7 @@ namespace CHelper::Parser {
             if (str == u"true" || str == u"false") [[likely]] {
                 return astNode;
             }
-            return wrapWithError(node, std::move(astNode), ErrorReason::diagnostic(ErrorReasonLevel::CONTENT_ERROR, astNode.tokens, ErrorReasonCode::InvalidBoolean, {str}));
+            return wrapWithError(node, std::move(astNode), ErrorReasons::invalidBoolean(ErrorReasonLevel::CONTENT_ERROR, astNode.tokens, str));
         }
     };
 

@@ -18,6 +18,7 @@
 
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/util/IdMatchCache.h>
 #include <chelper/util/JsonUtil.h>
 
@@ -60,7 +61,7 @@ namespace CHelper::Linter {
                     }
                 }
             }
-            errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownCommandName, {str}));
+            errorReasons.push_back(ErrorReasons::unknownCommandName(ErrorReasonLevel::ID_ERROR, astNode.tokens, str));
             return true;
         }
     };
@@ -77,7 +78,7 @@ namespace CHelper::Linter {
             if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
                     return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
                 })) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownId, {str}));
+                errorReasons.push_back(ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, astNode.tokens, str));
             }
             return true;
         }
@@ -95,7 +96,7 @@ namespace CHelper::Linter {
             if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
                     return item->fastMatch(strHash);
                 })) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownId, {str}));
+                errorReasons.push_back(ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, astNode.tokens, str));
             }
             return true;
         }
@@ -105,7 +106,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodePosition> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_POSITION_POSITIONS_WITH_ERROR) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens, ErrorReasonCode::MixedCoordinates));
+                errorReasons.push_back(ErrorReasons::mixedCoordinates(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens));
                 return true;
             } else {
                 return false;
@@ -117,7 +118,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeRelativeFloat> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_RELATIVE_FLOAT_WITH_ERROR) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens, ErrorReasonCode::LocalCoordinateDisallowed));
+                errorReasons.push_back(ErrorReasons::localCoordinateDisallowed(ErrorReasonLevel::LOGIC_ERROR, astNode.tokens));
                 return true;
             } else {
                 return false;
@@ -129,7 +130,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeEqualEntry> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (astNode.childNodes.size() == 3 && astNode.childNodes[2].node.data == Node::NodeAny::getNodeAny().data) {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownSelectorArgument, {astNode.childNodes[0].tokens.string()}));
+                errorReasons.push_back(ErrorReasons::unknownSelectorArgument(ErrorReasonLevel::ID_ERROR, astNode.tokens, astNode.childNodes[0].tokens.string()));
                 return true;
             } else {
                 return false;
@@ -141,7 +142,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeJsonList> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!astNode.isError() && astNode.id == ASTNodeId::NODE_JSON_ALL_LIST) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownJsonArgument, {astNode.tokens.string()}));
+                errorReasons.push_back(ErrorReasons::unknownJsonArgument(ErrorReasonLevel::ID_ERROR, astNode.tokens, astNode.tokens.string()));
                 return true;
             } else {
                 return false;
@@ -153,7 +154,7 @@ namespace CHelper::Linter {
     struct Linter<Node::NodeJsonEntry> {
         static bool lint(const ASTNode &astNode, std::vector<std::shared_ptr<ErrorReason>> &errorReasons, QueryState &state) {
             if (!reinterpret_cast<Node::NodeJsonEntry *>(astNode.node.data)->nodeEntry.has_value()) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::UnknownJsonArgument, {astNode.tokens.string()}));
+                errorReasons.push_back(ErrorReasons::unknownJsonArgument(ErrorReasonLevel::ID_ERROR, astNode.tokens, astNode.tokens.string()));
                 return true;
             } else {
                 return false;
@@ -177,7 +178,7 @@ namespace CHelper::Linter {
                   value == -std::numeric_limits<T>::infinity())) ||
                 value < node.min.value_or(std::numeric_limits<T>::lowest()) ||
                 value > node.max.value_or(std::numeric_limits<T>::max())) [[unlikely]] {
-                errorReasons.push_back(ErrorReason::diagnostic(ErrorReasonLevel::ID_ERROR, astNode.tokens, ErrorReasonCode::NumberOutOfRange, {node.min.value_or(std::numeric_limits<T>::lowest()), node.max.value_or(std::numeric_limits<T>::max()), astNode.tokens.string()}));
+                errorReasons.push_back(ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, astNode.tokens, node.min.value_or(std::numeric_limits<T>::lowest()), node.max.value_or(std::numeric_limits<T>::max()), astNode.tokens.string()));
             }
             return true;
         }
