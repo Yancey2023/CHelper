@@ -17,14 +17,97 @@
  */
 
 #include "CpackTestHelper.h"
+#include <chelper/linter/Linter.h>
 #include <chelper/node/CommandNode.h>
 #include <chelper/parser/ASTNode.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/id/NormalId.h>
 #include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
 namespace CHelper::Test {
+
+    TEST(ParserTest, RepeatedInnerStringsKeepEscapedErrorCoordinatesAndIndependentOwnership) {
+        std::vector<std::shared_ptr<ErrorReason>> errors;
+        std::vector<std::pair<size_t, size_t>> spans;
+        {
+            Node::NodeJsonString string;
+            auto *inner = new Node::NodeNormalId(std::nullopt, std::nullopt, "test", true);
+            inner->customContents = std::make_shared<std::pmr::vector<std::shared_ptr<NormalId>>>();
+            string.data.emplace().nodes.push_back(*inner);
+            string.nodeData = Node::NodeOr({*inner}, false);
+            Node::NodeSingleSymbol left(u'[', u"left"), comma(u',', u"comma"), right(u']', u"right");
+            Node::NodeList list(left, string, comma, right);
+            const std::u16string input = uR"(["missing","\u006Dissing","other","missing"])";
+            size_t cursor = 0;
+            for (const auto marker: {uR"("missing")", uR"("\u006Dissing")", uR"("other")", uR"("missing")"}) {
+                const std::u16string_view text(marker);
+                const size_t start = input.find(text, cursor);
+                ASSERT_NE(start, std::u16string::npos);
+                spans.emplace_back(start + 1, start + text.size() - 1);
+                cursor = start + text.size();
+            }
+            const auto ast = Parser::parse(input, list);
+            ASSERT_FALSE(ast.isError());
+            errors = Linter::getErrorReasons(ast);
+        }
+        ASSERT_EQ(errors.size(), spans.size());
+        for (size_t i = 0; i < errors.size(); ++i) {
+            EXPECT_EQ(errors[i]->start, spans[i].first);
+            EXPECT_EQ(errors[i]->end, spans[i].second);
+            EXPECT_EQ(errors[i]->getCode(), ErrorReasonCode::UnknownId);
+            EXPECT_EQ(errors[i]->getMessage(), ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, {0, 0}, i == 2 ? u"other" : u"missing")->getMessage());
+            for (size_t j = i + 1; j < errors.size(); ++j) EXPECT_NE(errors[i].get(), errors[j].get());
+        }
+    }
+
+    TEST(ParserTest, InnerStringsAreParsedSeparatelyForDifferentGrammars) {
+        Node::NodeJsonString accepted, rejected;
+        const auto prepare = [](Node::NodeJsonString &node, std::u16string_view expected) {
+            auto *inner = new Node::NodeText(std::nullopt, u"inner", NormalId::make(expected));
+            node.data.emplace().nodes.push_back(*inner);
+            node.nodeData = Node::NodeOr({*inner}, false);
+        };
+        prepare(accepted, u"ok");
+        prepare(rejected, u"other");
+        Node::NodeOr root({accepted, rejected}, false);
+        const auto ast = Parser::parse(uR"("ok")", root);
+        ASSERT_FALSE(ast.isError());
+        ASSERT_EQ(ast.childNodes.size(), 2u);
+        EXPECT_EQ(ast.whichBest, 0u);
+        EXPECT_FALSE(ast.childNodes[0].isError());
+        ASSERT_TRUE(ast.childNodes[1].isError());
+        EXPECT_EQ(ast.childNodes[1].errorReasons.front()->start, 1u);
+        EXPECT_EQ(ast.childNodes[1].errorReasons.front()->end, 3u);
+        EXPECT_EQ(ast.childNodes[1].errorReasons.front()->getCode(), ErrorReasonCode::UnknownMeaning);
+    }
+
+    TEST(ParserTest, NestedParsesKeepLexerStorageInTheirOwnAllocationResources) {
+        Node::NodeString inner;
+        Node::NodeText outer(std::nullopt, u"outer", NormalId::make(u"outer"),
+                             [&](const Node::NodeWithType &node, TokenReader &reader) {
+                                 const auto original = Parser::parse(u"cached", inner);
+                                 {
+                                     const auto firstMemory = std::make_shared<CPackMemoryResource>();
+                                     CPackMemoryScope firstScope(firstMemory);
+                                     const auto first = Parser::parse(u"cached", inner);
+                                     EXPECT_EQ(first.tokens.lexerResult->allTokens.get_allocator().resource(), firstMemory->getResource());
+                                     EXPECT_NE(first.tokens.lexerResult.get(), original.tokens.lexerResult.get());
+                                     {
+                                         const auto secondMemory = std::make_shared<CPackMemoryResource>();
+                                         CPackMemoryScope secondScope(secondMemory);
+                                         const auto second = Parser::parse(u"cached", inner);
+                                         EXPECT_EQ(second.tokens.lexerResult->allTokens.get_allocator().resource(), secondMemory->getResource());
+                                         EXPECT_NE(second.tokens.lexerResult.get(), first.tokens.lexerResult.get());
+                                         EXPECT_EQ(second.tokens.string(), u"cached");
+                                     }
+                                 }
+                                 return reader.readStringASTNode(node);
+                             });
+        EXPECT_FALSE(Parser::parse(u"outer", outer).isError());
+        EXPECT_FALSE(Parser::parse(u"outer", outer).isError());
+    }
 
     TEST(ParserTest, EntryStopsAtTheFirstErrorAndPreservesEachChildSpan) {
         Node::NodeJsonString text;

@@ -136,13 +136,13 @@ namespace CHelper {
             count = 0;
         }
 
-        void push_back(const value_type &value) {
+        // 按值接收先取得所有权，既支持自身元素追加，也避免临时诊断的引用计数往返。
+        void push_back(value_type value) {
             if (count == 0) {
-                storage.single = value;
+                storage.single = std::move(value);
             } else if (count == 1) {
                 auto *data = get_allocator().allocate(2);
-                // 先复制追加项，允许 value 引用本列表内的元素。
-                std::construct_at(data + 1, value);
+                std::construct_at(data + 1, std::move(value));
                 std::construct_at(data, std::move(storage.single));
                 std::destroy_at(&storage.single);
                 std::construct_at(&storage.array, Array{data, 2});
@@ -151,13 +151,13 @@ namespace CHelper {
                 if (count == maximum) throw std::length_error("too many error reasons");
                 const auto capacity = count > maximum / 2 ? maximum : count * 2;
                 auto *data = get_allocator().allocate(capacity);
-                std::construct_at(data + count, value);
+                std::construct_at(data + count, std::move(value));
                 for (size_t i = 0; i < count; ++i) std::construct_at(data + i, std::move(storage.array.data[i]));
                 std::destroy_n(storage.array.data, count);
                 get_allocator().deallocate(storage.array.data, storage.array.capacity);
                 storage.array = {data, capacity};
             } else {
-                std::construct_at(storage.array.data + count, value);
+                std::construct_at(storage.array.data + count, std::move(value));
             }
             ++count;
         }

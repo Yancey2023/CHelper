@@ -28,11 +28,15 @@ namespace {
                 command += u"tag=benchmark";
             }
             command += u"] add done";
-        } else if (kind == "components") {
+        } else if (kind == "components" || kind == "components_alternating" || kind == "components_unique") {
             command = uR"(give @s stone 1 0 {"minecraft:can_destroy":{"blocks":[)";
             for (size_t i = 0; i < count; ++i) {
                 if (i) command += u",";
-                command += uR"("minecraft:stone")";
+                if (kind == "components_unique") command += fmt::format(u"\"minecraft:benchmark_{}\"", i);
+                else if (kind == "components_alternating" && i % 2)
+                    command += uR"("minecraft:dirt")";
+                else
+                    command += uR"("minecraft:stone")";
             }
             command += u"]}}";
         } else {
@@ -104,7 +108,8 @@ namespace {
     }
 }// namespace
 
-// LONG_KIND=flat/json/selector/components/nested，LONG_COUNT 控制重复段数。
+// LONG_KIND=flat/json/selector/components/components_alternating/components_unique/nested。
+// LONG_COUNT 控制重复段数；LONG_APPLY=1 额外计时补全应用并校验结果。
 // 长命令独立运行，避免把短命令混合均值当作重型输入的性能收益。
 TEST(Bench, LongCommand) {
     const char *kindOption = std::getenv("LONG_KIND");
@@ -113,6 +118,7 @@ TEST(Bench, LongCommand) {
     const size_t repeat = longBenchOption("LONG_REPEAT", 5);
     const auto command = longBenchCommand(kind, count);
     const size_t cursor = longBenchOption("LONG_CURSOR", command.size());
+    const bool includeApply = longBenchOption("LONG_APPLY", 0) != 0;
     CHelperCore core(serialization::createCPackByDirectory(
             std::filesystem::path(RESOURCE_DIR) / "resources" / "beta" / "vanilla"));
     std::printf("long input kind=%s count=%zu chars=%zu cursor=%zu hash=%016llx\n", kind.c_str(), count,
@@ -122,6 +128,7 @@ TEST(Bench, LongCommand) {
     Stats total{"long total"}, create{"long construct"}, destroy{"long destroy"};
     Stats suggestions{"long suggestions"}, hint{"long hint"}, structure{"long structure"};
     Stats syntax{"long syntax"}, errors{"long errors"};
+    Stats apply{"long apply"};
     for (size_t iteration = 0; iteration < repeat + 1; ++iteration) {
         const bool measured = iteration != 0;
         AllocSnapshot allocations;
@@ -145,14 +152,27 @@ TEST(Bench, LongCommand) {
         measure(structure, [&] { (void) context->getStructure(); });
         measure(syntax, [&] { (void) context->getSyntaxResult(); });
         measure(errors, [&] { (void) context->getErrorReasons(); });
+        if (includeApply) measure(apply, [&] { (void) context->applySuggestion(cursor, 0); });
         measure(destroy, [&] { context.reset(); });
         const auto end = std::chrono::steady_clock::now();
         if (measured) total.add(std::chrono::duration<double, std::milli>(end - start).count(), allocations);
     }
     for (const auto *stats: {&total, &create, &suggestions, &hint, &structure, &syntax, &errors, &destroy}) stats->print();
+    if (includeApply) apply.print();
     std::fflush(stdout);
     if (longBenchOption("LONG_VERIFY", 1)) {
         const std::unique_ptr<CommandContext> context(core.createContext(command));
         std::printf("long results hash=%016llx\n", static_cast<unsigned long long>(longBenchResults(*context, cursor)));
+        if (includeApply) {
+            const auto applied = context->applySuggestion(cursor, 0);
+            ASSERT_TRUE(applied.has_value());
+            const auto repeated = context->applySuggestion(cursor, 0);
+            EXPECT_EQ(applied, repeated);
+            EXPECT_EQ(context->getCommand(), command);
+            const std::u16string_view text(applied->first);
+            std::printf("long apply hash=%016llx cursor=%zu chars=%zu\n",
+                        static_cast<unsigned long long>(XXH3_64bits(text.data(), text.size() * sizeof(char16_t))),
+                        applied->second, text.size());
+        }
     }
 }

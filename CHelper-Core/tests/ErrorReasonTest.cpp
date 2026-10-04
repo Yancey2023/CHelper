@@ -12,6 +12,28 @@ namespace CHelper::Test {
     static_assert(!std::is_copy_constructible_v<ErrorReason>);
     static_assert(!std::is_copy_assignable_v<ErrorReason>);
 
+    TEST(ErrorReasonTest, SmallParametersRemainOwnedAcrossBlockBoundaries) {
+        std::vector<std::shared_ptr<ErrorReason>> retained;
+        {
+            ErrorReasonMemoryScope scope;
+            for (size_t i = 0; i < 512; ++i) {
+                const std::u16string text(517 + i % 4 * 500, u'参');
+                retained.push_back(ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, {i, i + 1}, text));
+                // 交错无参数和不同对齐/长度的参数，覆盖块末尾参数的溢出路径。
+                retained.push_back(ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {i, i}));
+                retained.push_back(ErrorReasons::numberOutOfRange(ErrorReasonLevel::ID_ERROR, {i, i + 1}, 0.1, 2.5, u"bad"));
+            }
+        }
+        for (size_t i = 0; i < 512; ++i) {
+            const std::u16string text(517 + i % 4 * 500, u'参');
+            EXPECT_EQ(retained[i * 3]->getMessage(), u"找不到含义 -> " + text);
+            EXPECT_EQ(retained[i * 3]->start, i);
+            EXPECT_EQ(retained[i * 3]->end, i + 1);
+            EXPECT_EQ(retained[i * 3 + 1]->getMessage(), u"命令不完整，缺少空格");
+            EXPECT_EQ(retained[i * 3 + 2]->getMessage(), fmt::format(u"数值不在范围[{}, {}]内 -> {}", 0.1, 2.5, u"bad"));
+        }
+    }
+
     TEST(ErrorReasonTest, TypeArgumentsPreserveMessagesEqualityAndIndependentLifetimes) {
         struct Expected {
             ErrorReasonExpectedType type;

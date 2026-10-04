@@ -33,11 +33,11 @@ namespace CHelper {
 
     ASTNode ASTNode::simpleNode(const Node::NodeWithType &node,
                                 TokensView tokens,
-                                const std::shared_ptr<ErrorReason> &errorReason,
+                                std::shared_ptr<ErrorReason> errorReason,
                                 const ASTNodeId::ASTNodeId &id) {
         ErrorReasonList errorReasons(getASTMemoryResource());
         if (errorReason != nullptr) [[likely]] {
-            errorReasons.push_back(errorReason);
+            errorReasons.push_back(std::move(errorReason));
         }
         return {ASTNodeMode::NONE, node, std::pmr::vector<ASTNode>(getASTMemoryResource()),
                 std::move(tokens), std::move(errorReasons), id};
@@ -46,11 +46,13 @@ namespace CHelper {
     ASTNode ASTNode::andNode(const Node::NodeWithType &node,
                              std::pmr::vector<ASTNode> &&childNodes,
                              TokensView tokens,
-                             const std::shared_ptr<ErrorReason> &errorReason,
+                             std::shared_ptr<ErrorReason> errorReason,
                              const ASTNodeId::ASTNodeId &id) {
         if (errorReason != nullptr) [[unlikely]] {
+            ErrorReasonList errorReasons(getASTMemoryResource());
+            errorReasons.push_back(std::move(errorReason));
             return {ASTNodeMode::AND, node, std::move(childNodes), std::move(tokens),
-                    ErrorReasonList({errorReason}, getASTMemoryResource()), id};
+                    std::move(errorReasons), id};
         }
         for (const auto &item: childNodes) {
             if (item.isError()) [[unlikely]] {
@@ -74,6 +76,12 @@ namespace CHelper {
             throw std::runtime_error("OR node must have at least one child node");
         }
 #endif
+        // 单分支无需选优；最多一个诊断时也无需进行列表去重。
+        if (childNodes.size() == 1 && childNodes.front().errorReasons.size() <= 1) {
+            ErrorReasonList errorReasons(childNodes.front().errorReasons, getASTMemoryResource());
+            TokensView selectedTokens = tokens == nullptr ? childNodes.front().tokens : *tokens;
+            return {ASTNodeMode::OR, node, std::move(childNodes), std::move(selectedTokens), std::move(errorReasons), id, 0};
+        }
         // 收集错误的节点数，如果有节点没有错就设为0
         size_t errorCount = 0;
         for (const auto &item: childNodes) {

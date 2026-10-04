@@ -47,6 +47,7 @@ namespace CHelper::Test {
                     uR"(execute if block ~~~ anvil["aaa"=90.5] run g)",
                     uR"(tellraw @a {"rawtext":[{"text":"aaa"}]})",
                     uR"(give @s 石头)",
+                    uR"(give @s stone 1 0 {"minecraft:can_destroy":{"blocks":["minecraft:stone","minecraft:dirt","minecraft:stone","minecraft:\u0073tone"]}})",
             };
             return commands;
         }

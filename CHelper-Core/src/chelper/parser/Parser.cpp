@@ -26,6 +26,47 @@
 namespace CHelper::Parser {
 
     namespace {
+        // 内层字符串经常是重复的短 ID。只共享已完成的词法结果，每次仍单独解析 AST 和诊断。
+        // 缓存限定在一次顶层解析内，不保留输入视图，也不跨上下文或线程共享可变状态。
+        struct InnerLexerCache {
+            std::pmr::memory_resource *resource;
+            std::array<std::shared_ptr<LexerResult>, 4> recent;
+            size_t next = 0;
+
+            explicit InnerLexerCache(std::pmr::memory_resource *resource) : resource(resource) {}
+        };
+
+        thread_local InnerLexerCache *currentInnerLexerCache = nullptr;
+
+        class InnerLexerScope {
+            std::optional<InnerLexerCache> local;
+            InnerLexerCache *previous = currentInnerLexerCache;
+
+        public:
+            InnerLexerScope() {
+                auto *resource = CPackMemoryRouter::getAllocationResource();
+                // 自定义节点可在解析中切换分配作用域；这些结果不能借用父作用域的存储。
+                if (previous == nullptr || previous->resource != resource) currentInnerLexerCache = &local.emplace(resource);
+            }
+
+            ~InnerLexerScope() { currentInnerLexerCache = previous; }
+
+            InnerLexerScope(const InnerLexerScope &) = delete;
+            InnerLexerScope &operator=(const InnerLexerScope &) = delete;
+
+            std::shared_ptr<LexerResult> lex(std::u16string_view content) {
+                // 顶层输入不缓存；最多四项且各有长度上限，不随命令长度增加。
+                if (local.has_value() || content.size() > 256) return Lexer::lex(content);
+                for (const auto &recent: previous->recent) {
+                    if (recent != nullptr && std::u16string_view(recent->content) == content) return recent;
+                }
+                auto result = Lexer::lex(content);
+                previous->recent[previous->next] = result;
+                previous->next = (previous->next + 1) % previous->recent.size();
+                return result;
+            }
+        };
+
         //Debug 下校验解析过程没有丢失或重复消费 token；Release 编译为空
         void debugCheckTokenIndex([[maybe_unused]] const Node::NodeWithType &node,
                                   [[maybe_unused]] size_t index,
@@ -44,14 +85,14 @@ namespace CHelper::Parser {
     namespace {
         // 调用前收集诊断参数，进入函数后才移动子树，避免参数求值顺序影响 token 视图。
         ASTNode wrapWithError(const Node::NodeWithType &node, ASTNode &&child,
-                              const std::shared_ptr<ErrorReason> &errorReason) {
+                              std::shared_ptr<ErrorReason> errorReason) {
             TokensView tokens = child.tokens;
-            return ASTNode::andNode(node, ASTNode::children(std::move(child)), std::move(tokens), errorReason);
+            return ASTNode::andNode(node, ASTNode::children(std::move(child)), std::move(tokens), std::move(errorReason));
         }
 
         ASTNode replaceWithError(const Node::NodeWithType &node, ASTNode &&result,
-                                 const std::shared_ptr<ErrorReason> &errorReason) {
-            return ASTNode::simpleNode(node, std::move(result.tokens), errorReason);
+                                 std::shared_ptr<ErrorReason> errorReason) {
+            return ASTNode::simpleNode(node, std::move(result.tokens), std::move(errorReason));
         }
     }// namespace
 
@@ -78,7 +119,7 @@ namespace CHelper::Parser {
                 if ((isMustAfterSpace0 || isMustAfterSpace) && node.innerNode.nodeTypeId != Node::NodeTypeId::LF && tokenReader.skipSpace() == 0) [[unlikely]] {
                     TokensView tokens = tokenReader.collect();
                     auto errorReason = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, tokens);
-                    return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+                    return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
                 }
                 tokenReader.pop();
             }
@@ -193,17 +234,17 @@ namespace CHelper::Parser {
             std::u16string_view str = tokens.string();
             if (str.empty()) [[unlikely]] {
                 auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
-                return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             } else if (str[0] != '"') [[unlikely]] {
                 auto errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
-                return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             }
             std::shared_ptr<ErrorReason> errorReason;
             if (str.size() <= 1 || str[str.size() - 1] != '"') [[likely]] {
                 errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
             }
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
-                return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             }
             std::pair<ASTNode, JsonUtil::DecodedStringView> innerResult = getInnerASTNode(node, tokens, str, node.nodeData);
             ASTNode innerNode = std::move(innerResult.first);
@@ -393,7 +434,7 @@ namespace CHelper::Parser {
             if (tokens.hasValue()) [[unlikely]] {
                 errorReason = ErrorReasons::excess(ErrorReasonLevel::EXCESS, tokens, tokens.string());
             }
-            return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -412,9 +453,7 @@ namespace CHelper::Parser {
                 const TokensView &tokens = result.tokens;
                 std::u16string_view str = tokens.string();
                 XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-                if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
-                        return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
-                    })) [[unlikely]] {
+                if (!tokenReader.idMatches.containsId(node.customContents, strHash)) [[unlikely]] {
                     return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
@@ -446,9 +485,7 @@ namespace CHelper::Parser {
                 const TokensView &tokens = result.tokens;
                 std::u16string_view str = tokens.string();
                 XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-                if (!tokenReader.idMatches.contains(node.customContents, strHash, [strHash](const auto &item) {
-                        return item->fastMatch(strHash);
-                    })) [[unlikely]] {
+                if (!tokenReader.idMatches.containsId(node.customContents, strHash)) [[unlikely]] {
                     return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
@@ -524,7 +561,7 @@ namespace CHelper::Parser {
             tokenReader.restore();
         }
         childNodes.push_back(std::move(number));
-        ASTNode result = ASTNode::andNode(node, std::move(childNodes), tokenReader.collect(), errorReason);
+        ASTNode result = ASTNode::andNode(node, std::move(childNodes), tokenReader.collect(), std::move(errorReason));
         // 为了获取补全提示，再嵌套一层or节点
         return {type, ASTNode::orNode(node, ASTNode::children(std::move(result), std::move(preSymbol)), nullptr)};
     }
@@ -596,7 +633,7 @@ namespace CHelper::Parser {
                     errorReason = checkNumber(tokens, std::u16string_view(str).substr(index + 2));
                 }
             }
-            return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -650,7 +687,7 @@ namespace CHelper::Parser {
                 TokensView tokens = tokenReader.collect();
                 if (!node.allowMissingString && tokens.isEmpty()) [[unlikely]] {
                     auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
-                    return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+                    return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
                 } else {
                     return ASTNode::simpleNode(node, std::move(tokens));
                 }
@@ -680,7 +717,7 @@ namespace CHelper::Parser {
             if (convertResult.errorReason != nullptr) [[unlikely]] {
                 convertResult.errorReason->start += result.tokens.startIndex;
                 convertResult.errorReason->end += result.tokens.startIndex;
-                return replaceWithError(node, std::move(result), convertResult.errorReason);
+                return replaceWithError(node, std::move(result), std::move(convertResult.errorReason));
             }
             if (!convertResult.isComplete) [[unlikely]] {
                 return replaceWithError(node, std::move(result), ErrorReasons::unclosedString(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
@@ -965,7 +1002,7 @@ namespace CHelper::Parser {
             } else if (token->content.size() != 1 || token->content[0] != node.symbol) [[unlikely]] {
                 errorReason = ErrorReasons::symbolContentMismatch(ErrorReasonLevel::CONTENT_ERROR, tokens, node.symbol, token->content);
             }
-            return ASTNode::simpleNode(node, std::move(tokens), errorReason);
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -1032,7 +1069,8 @@ namespace CHelper::Parser {
 
     ASTNode parse(const std::u16string_view content, const Node::NodeWithType &mainNode) {
         ErrorReasonMemoryScope errorMemory;
-        TokenReader tokenReader(Lexer::lex(content));
+        InnerLexerScope lexerScope;
+        TokenReader tokenReader(lexerScope.lex(content));
         size_t index = tokenReader.indexStack.size();
         auto result = parse(mainNode, tokenReader);
         debugCheckTokenIndex(mainNode, index, tokenReader);

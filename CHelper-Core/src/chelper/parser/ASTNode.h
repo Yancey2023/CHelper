@@ -105,13 +105,13 @@ namespace CHelper {
 
         static ASTNode simpleNode(const Node::NodeWithType &node,
                                   TokensView tokens,
-                                  const std::shared_ptr<ErrorReason> &errorReason = nullptr,
+                                  std::shared_ptr<ErrorReason> errorReason = nullptr,
                                   const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode andNode(const Node::NodeWithType &node,
                                std::pmr::vector<ASTNode> &&childNodes,
                                TokensView tokens,
-                               const std::shared_ptr<ErrorReason> &errorReason = nullptr,
+                               std::shared_ptr<ErrorReason> errorReason = nullptr,
                                const ASTNodeId::ASTNodeId &id = ASTNodeId::NONE);
 
         static ASTNode orNode(const Node::NodeWithType &node,

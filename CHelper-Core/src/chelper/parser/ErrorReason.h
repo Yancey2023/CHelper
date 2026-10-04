@@ -132,6 +132,12 @@ namespace CHelper {
 
         ErrorReasonCode code;
         bool messageReady;
+
+    public:
+        // 字节大小的状态相邻，避免 level 单独产生一个指针对齐的填充区。
+        ErrorReasonLevel::ErrorReasonLevel level;
+
+    private:
         const void *parameters = nullptr;
         // 小参数与 shared_ptr 共用分块；长参数及无作用域的参数独立持有。
         std::unique_ptr<std::byte[]> parameterStorage;
@@ -146,7 +152,6 @@ namespace CHelper {
         ErrorReason(const ErrorReason &) = delete;
         ErrorReason &operator=(const ErrorReason &) = delete;
 
-        ErrorReasonLevel::ErrorReasonLevel level;
         size_t start, end;
         // Linter 的展示文本独立持有；解析树中的诊断请使用 getMessage()。
         std::pmr::u16string errorReason;

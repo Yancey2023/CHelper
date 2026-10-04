@@ -75,9 +75,7 @@ namespace CHelper::Linter {
             const auto &node = *reinterpret_cast<const Node::NodeNamespaceId *>(astNode.node.data);
             std::u16string_view str = astNode.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
-                    return item->fastMatch(strHash) || item->getIdWithNamespace()->fastMatch(strHash);
-                })) [[unlikely]] {
+            if (!state.containsId(node.customContents, strHash)) [[unlikely]] {
                 errorReasons.push_back(ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, astNode.tokens, str));
             }
             return true;
@@ -93,9 +91,7 @@ namespace CHelper::Linter {
             const auto &node = *reinterpret_cast<const Node::NodeNormalId *>(astNode.node.data);
             std::u16string_view str = astNode.tokens.string();
             XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-            if (!state.contains(node.customContents, strHash, [strHash](const auto &item) {
-                    return item->fastMatch(strHash);
-                })) [[unlikely]] {
+            if (!state.containsId(node.customContents, strHash)) [[unlikely]] {
                 errorReasons.push_back(ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, astNode.tokens, str));
             }
             return true;

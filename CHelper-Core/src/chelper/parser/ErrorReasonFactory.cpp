@@ -30,7 +30,7 @@ namespace CHelper {
             std::atomic<size_t> references{1};
             // 每个块独立共享所有权，保留一个错误不会保留整条长命令的所有错误。
             alignas(std::max_align_t) std::byte buffer[64 * 1024];
-            std::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer), std::pmr::new_delete_resource()};
+            std::pmr::monotonic_buffer_resource overflow{std::pmr::new_delete_resource()};
             size_t used = 0;
 
         public:
@@ -47,9 +47,15 @@ namespace CHelper {
 
             void *allocate(size_t bytes, size_t alignment) {
                 // 仅所属线程的解析/查询作用域分配对象；跨线程释放不调用此资源。
-                void *result = resource.allocate(bytes, alignment);
-                used += bytes + alignment - 1;
-                return result;
+                const size_t padding = (alignment - used % alignment) % alignment;
+                if (alignment <= alignof(std::max_align_t) && padding <= sizeof(buffer) - used && bytes <= sizeof(buffer) - used - padding) [[likely]] {
+                    auto *result = buffer + used + padding;
+                    used += padding + bytes;
+                    return result;
+                }
+                // 一个诊断的参数可能跨过块末尾，仍由原块持有，直到最后的弱引用释放。
+                used = sizeof(buffer);
+                return overflow.allocate(bytes, alignment);
             }
 
             bool isFull() const noexcept {
