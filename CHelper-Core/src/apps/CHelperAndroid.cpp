@@ -69,7 +69,7 @@ jobject errorReason2jobject(JNIEnv *env, jclass errorReasonClass, const CHelper:
     return javaErrorReason;
 }
 
-jobjectArray errorReasons2jobjectArray(JNIEnv *env, const std::vector<std::shared_ptr<CHelper::ErrorReason>> &errorReasons) {
+jobjectArray errorReasons2jobjectArray(JNIEnv *env, const std::vector<std::shared_ptr<const CHelper::ErrorReason>> &errorReasons) {
     jclass errorReasonClass = env->FindClass("yancey/chelper/core/ErrorReason");
     jobjectArray result = env->NewObjectArray(static_cast<jsize>(errorReasons.size()), errorReasonClass, nullptr);
     for (size_t i = 0; i < errorReasons.size(); ++i) {
