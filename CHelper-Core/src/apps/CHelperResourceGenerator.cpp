@@ -230,7 +230,7 @@ namespace CHelper::Test {
                         fmt::print("{}. {} {}\n{}{}{}\n",
                                    i,
                                    fmt::styled(utf8::utf16to8(command.substr(errorReason->start, errorReason->end - errorReason->start)), fg(fmt::color::red)),
-                                   fmt::styled(utf8::utf16to8(errorReason->errorReason), fg(fmt::color::cornflower_blue)),
+                                   fmt::styled(utf8::utf16to8(errorReason->getMessage()), fg(fmt::color::cornflower_blue)),
                                    utf8::utf16to8(command.substr(0, errorReason->start)),
                                    fmt::styled(errorReason->start == errorReason->end ? "~" : utf8::utf16to8(command.substr(errorReason->start, errorReason->end - errorReason->start)), fg(fmt::color::red)),
                                    utf8::utf16to8(command.substr((errorReason->end))));

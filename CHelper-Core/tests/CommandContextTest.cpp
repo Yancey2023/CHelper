@@ -64,7 +64,7 @@ namespace CHelper::Test {
             result += utf8::utf16to8(context.getCommand());
             result += "|";
             for (const auto &errorReason: context.getErrorReasons()) {
-                result += std::to_string(errorReason->start) + "," + std::to_string(errorReason->end) + "," + utf8::utf16to8(errorReason->errorReason) + ";";
+                result += std::to_string(errorReason->start) + "," + std::to_string(errorReason->end) + "," + utf8::utf16to8(errorReason->getMessage()) + ";";
             }
             result += "|";
             for (const auto &suggestion: context.getSuggestions(suggestionIndex)) {
@@ -237,7 +237,7 @@ namespace CHelper::Test {
 
     TEST(CommandContextTest, ErrorReasonsOutliveContext) {
         std::shared_ptr<const CPack> cpack = loadCPack();
-        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        std::vector<std::shared_ptr<const ErrorReason>> errorReasons;
         {
             CommandContext context(cpack, uR"(give @s)");
             errorReasons = context.getErrorReasons();
@@ -245,28 +245,27 @@ namespace CHelper::Test {
         }
 
         ASSERT_FALSE(errorReasons.empty());
-        EXPECT_FALSE(errorReasons.front()->errorReason.empty());
+        EXPECT_FALSE(errorReasons.front()->getMessage().empty());
     }
 
-    TEST(CommandContextTest, ErrorQueryMaterializesIndependentResultsWithoutChangingAST) {
+    TEST(CommandContextTest, ErrorQuerySharesReadOnlyDiagnosticsWithoutChangingAST) {
         const auto cpack = loadCPack();
         CommandContext context(cpack, u"unknown_command 中文");
         const auto &parsed = context.getAstNode()->errorReasons;
         ASSERT_FALSE(parsed.empty());
         ASSERT_EQ(parsed.front()->getCode(), ErrorReasonCode::UnknownCommand);
-        EXPECT_TRUE(parsed.front()->errorReason.empty());
         const auto message = parsed.front()->getMessage();
-        auto first = context.getErrorReasons();
+        const auto first = context.getErrorReasons();
+        static_assert(std::is_const_v<decltype(first)::value_type::element_type>);
         ASSERT_FALSE(first.empty());
-        EXPECT_EQ(std::u16string_view(first.front()->errorReason), message);
-        EXPECT_EQ(first.front()->getCode(), parsed.front()->getCode());
-        EXPECT_TRUE(parsed.front()->errorReason.empty());
-        first.front()->errorReason = u"修改展示结果";
-        first.front()->start = 99;
+        EXPECT_EQ(first.front().get(), parsed.front().get());
+        auto display = first.front()->getMessage();
+        display = u"修改展示结果";
         const auto second = context.getErrorReasons();
         ASSERT_FALSE(second.empty());
-        EXPECT_EQ(std::u16string_view(second.front()->errorReason), message);
+        EXPECT_EQ(second.front()->getMessage(), message);
         EXPECT_EQ(second.front()->start, parsed.front()->start);
+        EXPECT_EQ(parsed.front()->getMessage(), message);
     }
 
     TEST(CommandContextTest, CopiesTemporaryInputAndResultsOutliveContext) {

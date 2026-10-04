@@ -123,10 +123,6 @@ namespace CHelper {
                     return Detail::ErrorParameters::Parameters<ErrorReasonCode::NumberOutOfRangeUInt64>::prefix;
                 case ErrorReasonCode::NumberOutOfRangeFloat:
                     return Detail::ErrorParameters::Parameters<ErrorReasonCode::NumberOutOfRangeFloat>::prefix;
-                case ErrorReasonCode::RequireTypeName:
-                    return Detail::ErrorParameters::Parameters<ErrorReasonCode::RequireTypeName>::prefix;
-                case ErrorReasonCode::TypeMismatchName:
-                    return Detail::ErrorParameters::Parameters<ErrorReasonCode::TypeMismatchName>::prefix;
                 case ErrorReasonCode::CustomText:
                     return {};
             }
@@ -135,7 +131,6 @@ namespace CHelper {
     }// namespace
 
     std::u16string ErrorReason::getMessage() const {
-        if (messageReady || !errorReason.empty()) return {errorReason.data(), errorReason.size()};
         using namespace Detail::ErrorParameters;
         switch (code) {
             case ErrorReasonCode::RequireSpace: {
@@ -288,127 +283,109 @@ namespace CHelper {
                 const auto &data = parametersAs<For<ErrorReasonCode::NumberOutOfRangeFloat>>();
                 return fmt::format(Parameters<ErrorReasonCode::NumberOutOfRangeFloat>::pattern, data.min, data.max, data.text);
             }
-            case ErrorReasonCode::RequireTypeName: {
-                const auto &data = parametersAs<For<ErrorReasonCode::RequireTypeName>>();
-                return fmt::format(Parameters<ErrorReasonCode::RequireTypeName>::pattern, data.text);
-            }
-            case ErrorReasonCode::TypeMismatchName: {
-                const auto &data = parametersAs<For<ErrorReasonCode::TypeMismatchName>>();
-                return fmt::format(Parameters<ErrorReasonCode::TypeMismatchName>::pattern, data.expected, data.actual);
-            }
             case ErrorReasonCode::CustomText:
-                return {errorReason.data(), errorReason.size()};
+                return fmt::format(Parameters<ErrorReasonCode::CustomText>::pattern, parametersAs<For<ErrorReasonCode::CustomText>>().text);
         }
         throw std::invalid_argument("Unknown error reason code");
     }
 
     bool ErrorReason::operator==(const ErrorReason &reason) const {
         if (start != reason.start || end != reason.end) return false;
-        const bool ready = messageReady || !errorReason.empty();
-        const bool otherReady = reason.messageReady || !reason.errorReason.empty();
-        if (ready && otherReady) return errorReason == reason.errorReason;
-        if (!ready && !otherReady) {
-            using namespace Detail::ErrorParameters;
-            if (code == reason.code) {
-                switch (code) {
-                    case ErrorReasonCode::RequireSpace:
-                        return true;
-                    case ErrorReasonCode::RequireType:
-                        return parametersAs<For<ErrorReasonCode::RequireType>>() == reason.parametersAs<For<ErrorReasonCode::RequireType>>();
-                    case ErrorReasonCode::TypeMismatch:
-                        return parametersAs<For<ErrorReasonCode::TypeMismatch>>() == reason.parametersAs<For<ErrorReasonCode::TypeMismatch>>();
-                    case ErrorReasonCode::IntegerRequired:
-                        return true;
-                    case ErrorReasonCode::InvalidNumber:
-                        return parametersAs<For<ErrorReasonCode::InvalidNumber>>() == reason.parametersAs<For<ErrorReasonCode::InvalidNumber>>();
-                    case ErrorReasonCode::EmptyNull:
-                        return true;
-                    case ErrorReasonCode::InvalidNull:
-                        return parametersAs<For<ErrorReasonCode::InvalidNull>>() == reason.parametersAs<For<ErrorReasonCode::InvalidNull>>();
-                    case ErrorReasonCode::EmptyString:
-                        return true;
-                    case ErrorReasonCode::QuotedStringRequired:
-                        return parametersAs<For<ErrorReasonCode::QuotedStringRequired>>() == reason.parametersAs<For<ErrorReasonCode::QuotedStringRequired>>();
-                    case ErrorReasonCode::EmptyCommandName:
-                        return true;
-                    case ErrorReasonCode::UnknownCommand:
-                        return parametersAs<For<ErrorReasonCode::UnknownCommand>>() == reason.parametersAs<For<ErrorReasonCode::UnknownCommand>>();
-                    case ErrorReasonCode::Excess:
-                        return parametersAs<For<ErrorReasonCode::Excess>>() == reason.parametersAs<For<ErrorReasonCode::Excess>>();
-                    case ErrorReasonCode::Incomplete:
-                        return true;
-                    case ErrorReasonCode::UnknownMeaning:
-                        return parametersAs<For<ErrorReasonCode::UnknownMeaning>>() == reason.parametersAs<For<ErrorReasonCode::UnknownMeaning>>();
-                    case ErrorReasonCode::InvalidCoordinate:
-                        return parametersAs<For<ErrorReasonCode::InvalidCoordinate>>() == reason.parametersAs<For<ErrorReasonCode::InvalidCoordinate>>();
-                    case ErrorReasonCode::EmptyRange:
-                        return true;
-                    case ErrorReasonCode::InvalidRange:
-                        return true;
-                    case ErrorReasonCode::StringContainsSpace:
-                        return true;
-                    case ErrorReasonCode::UnclosedString:
-                        return parametersAs<For<ErrorReasonCode::UnclosedString>>() == reason.parametersAs<For<ErrorReasonCode::UnclosedString>>();
-                    case ErrorReasonCode::UnexpectedSpace:
-                        return true;
-                    case ErrorReasonCode::RequireSymbol:
-                        return parametersAs<For<ErrorReasonCode::RequireSymbol>>() == reason.parametersAs<For<ErrorReasonCode::RequireSymbol>>();
-                    case ErrorReasonCode::SymbolTypeMismatch:
-                        return parametersAs<For<ErrorReasonCode::SymbolTypeMismatch>>() == reason.parametersAs<For<ErrorReasonCode::SymbolTypeMismatch>>();
-                    case ErrorReasonCode::SymbolContentMismatch:
-                        return parametersAs<For<ErrorReasonCode::SymbolContentMismatch>>() == reason.parametersAs<For<ErrorReasonCode::SymbolContentMismatch>>();
-                    case ErrorReasonCode::InvalidBoolean:
-                        return parametersAs<For<ErrorReasonCode::InvalidBoolean>>() == reason.parametersAs<For<ErrorReasonCode::InvalidBoolean>>();
-                    case ErrorReasonCode::UnknownCommandName:
-                        return parametersAs<For<ErrorReasonCode::UnknownCommandName>>() == reason.parametersAs<For<ErrorReasonCode::UnknownCommandName>>();
-                    case ErrorReasonCode::UnknownId:
-                        return parametersAs<For<ErrorReasonCode::UnknownId>>() == reason.parametersAs<For<ErrorReasonCode::UnknownId>>();
-                    case ErrorReasonCode::MixedCoordinates:
-                        return true;
-                    case ErrorReasonCode::LocalCoordinateDisallowed:
-                        return true;
-                    case ErrorReasonCode::UnknownSelectorArgument:
-                        return parametersAs<For<ErrorReasonCode::UnknownSelectorArgument>>() == reason.parametersAs<For<ErrorReasonCode::UnknownSelectorArgument>>();
-                    case ErrorReasonCode::UnknownJsonArgument:
-                        return parametersAs<For<ErrorReasonCode::UnknownJsonArgument>>() == reason.parametersAs<For<ErrorReasonCode::UnknownJsonArgument>>();
-                    case ErrorReasonCode::NumberOutOfRange:
-                        break;
-                    case ErrorReasonCode::JsonQuotesRequired:
-                        return true;
-                    case ErrorReasonCode::IncompleteEscape:
-                        return true;
-                    case ErrorReasonCode::IncompleteUnicodeEscape:
-                        return parametersAs<For<ErrorReasonCode::IncompleteUnicodeEscape>>() == reason.parametersAs<For<ErrorReasonCode::IncompleteUnicodeEscape>>();
-                    case ErrorReasonCode::InvalidUnicodeEscapeCharacter:
-                        return parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeCharacter>>() == reason.parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeCharacter>>();
-                    case ErrorReasonCode::InvalidUnicodeEscapeValue:
-                        return parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeValue>>() == reason.parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeValue>>();
-                    case ErrorReasonCode::UnknownEscape:
-                        return parametersAs<For<ErrorReasonCode::UnknownEscape>>() == reason.parametersAs<For<ErrorReasonCode::UnknownEscape>>();
-                    case ErrorReasonCode::NumberOutOfRangeInt32:
-                        if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt32>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt32>>()) return true;
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeInt64:
-                        if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt64>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt64>>()) return true;
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeUInt64:
-                        if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeUInt64>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeUInt64>>()) return true;
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeFloat:
-                        break;
-                    case ErrorReasonCode::RequireTypeName:
-                        return parametersAs<For<ErrorReasonCode::RequireTypeName>>() == reason.parametersAs<For<ErrorReasonCode::RequireTypeName>>();
-                    case ErrorReasonCode::TypeMismatchName:
-                        if (parametersAs<For<ErrorReasonCode::TypeMismatchName>>() == reason.parametersAs<For<ErrorReasonCode::TypeMismatchName>>()) return true;
-                        break;
-                    case ErrorReasonCode::CustomText:
-                        break;
-                }
+        using namespace Detail::ErrorParameters;
+        if (code == reason.code) {
+            switch (code) {
+                case ErrorReasonCode::RequireSpace:
+                    return true;
+                case ErrorReasonCode::RequireType:
+                    return parametersAs<For<ErrorReasonCode::RequireType>>() == reason.parametersAs<For<ErrorReasonCode::RequireType>>();
+                case ErrorReasonCode::TypeMismatch:
+                    return parametersAs<For<ErrorReasonCode::TypeMismatch>>() == reason.parametersAs<For<ErrorReasonCode::TypeMismatch>>();
+                case ErrorReasonCode::IntegerRequired:
+                    return true;
+                case ErrorReasonCode::InvalidNumber:
+                    return parametersAs<For<ErrorReasonCode::InvalidNumber>>() == reason.parametersAs<For<ErrorReasonCode::InvalidNumber>>();
+                case ErrorReasonCode::EmptyNull:
+                    return true;
+                case ErrorReasonCode::InvalidNull:
+                    return parametersAs<For<ErrorReasonCode::InvalidNull>>() == reason.parametersAs<For<ErrorReasonCode::InvalidNull>>();
+                case ErrorReasonCode::EmptyString:
+                    return true;
+                case ErrorReasonCode::QuotedStringRequired:
+                    return parametersAs<For<ErrorReasonCode::QuotedStringRequired>>() == reason.parametersAs<For<ErrorReasonCode::QuotedStringRequired>>();
+                case ErrorReasonCode::EmptyCommandName:
+                    return true;
+                case ErrorReasonCode::UnknownCommand:
+                    return parametersAs<For<ErrorReasonCode::UnknownCommand>>() == reason.parametersAs<For<ErrorReasonCode::UnknownCommand>>();
+                case ErrorReasonCode::Excess:
+                    return parametersAs<For<ErrorReasonCode::Excess>>() == reason.parametersAs<For<ErrorReasonCode::Excess>>();
+                case ErrorReasonCode::Incomplete:
+                    return true;
+                case ErrorReasonCode::UnknownMeaning:
+                    return parametersAs<For<ErrorReasonCode::UnknownMeaning>>() == reason.parametersAs<For<ErrorReasonCode::UnknownMeaning>>();
+                case ErrorReasonCode::InvalidCoordinate:
+                    return parametersAs<For<ErrorReasonCode::InvalidCoordinate>>() == reason.parametersAs<For<ErrorReasonCode::InvalidCoordinate>>();
+                case ErrorReasonCode::EmptyRange:
+                    return true;
+                case ErrorReasonCode::InvalidRange:
+                    return true;
+                case ErrorReasonCode::StringContainsSpace:
+                    return true;
+                case ErrorReasonCode::UnclosedString:
+                    return parametersAs<For<ErrorReasonCode::UnclosedString>>() == reason.parametersAs<For<ErrorReasonCode::UnclosedString>>();
+                case ErrorReasonCode::UnexpectedSpace:
+                    return true;
+                case ErrorReasonCode::RequireSymbol:
+                    return parametersAs<For<ErrorReasonCode::RequireSymbol>>() == reason.parametersAs<For<ErrorReasonCode::RequireSymbol>>();
+                case ErrorReasonCode::SymbolTypeMismatch:
+                    return parametersAs<For<ErrorReasonCode::SymbolTypeMismatch>>() == reason.parametersAs<For<ErrorReasonCode::SymbolTypeMismatch>>();
+                case ErrorReasonCode::SymbolContentMismatch:
+                    return parametersAs<For<ErrorReasonCode::SymbolContentMismatch>>() == reason.parametersAs<For<ErrorReasonCode::SymbolContentMismatch>>();
+                case ErrorReasonCode::InvalidBoolean:
+                    return parametersAs<For<ErrorReasonCode::InvalidBoolean>>() == reason.parametersAs<For<ErrorReasonCode::InvalidBoolean>>();
+                case ErrorReasonCode::UnknownCommandName:
+                    return parametersAs<For<ErrorReasonCode::UnknownCommandName>>() == reason.parametersAs<For<ErrorReasonCode::UnknownCommandName>>();
+                case ErrorReasonCode::UnknownId:
+                    return parametersAs<For<ErrorReasonCode::UnknownId>>() == reason.parametersAs<For<ErrorReasonCode::UnknownId>>();
+                case ErrorReasonCode::MixedCoordinates:
+                    return true;
+                case ErrorReasonCode::LocalCoordinateDisallowed:
+                    return true;
+                case ErrorReasonCode::UnknownSelectorArgument:
+                    return parametersAs<For<ErrorReasonCode::UnknownSelectorArgument>>() == reason.parametersAs<For<ErrorReasonCode::UnknownSelectorArgument>>();
+                case ErrorReasonCode::UnknownJsonArgument:
+                    return parametersAs<For<ErrorReasonCode::UnknownJsonArgument>>() == reason.parametersAs<For<ErrorReasonCode::UnknownJsonArgument>>();
+                case ErrorReasonCode::NumberOutOfRange:
+                    break;
+                case ErrorReasonCode::JsonQuotesRequired:
+                    return true;
+                case ErrorReasonCode::IncompleteEscape:
+                    return true;
+                case ErrorReasonCode::IncompleteUnicodeEscape:
+                    return parametersAs<For<ErrorReasonCode::IncompleteUnicodeEscape>>() == reason.parametersAs<For<ErrorReasonCode::IncompleteUnicodeEscape>>();
+                case ErrorReasonCode::InvalidUnicodeEscapeCharacter:
+                    return parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeCharacter>>() == reason.parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeCharacter>>();
+                case ErrorReasonCode::InvalidUnicodeEscapeValue:
+                    return parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeValue>>() == reason.parametersAs<For<ErrorReasonCode::InvalidUnicodeEscapeValue>>();
+                case ErrorReasonCode::UnknownEscape:
+                    return parametersAs<For<ErrorReasonCode::UnknownEscape>>() == reason.parametersAs<For<ErrorReasonCode::UnknownEscape>>();
+                case ErrorReasonCode::NumberOutOfRangeInt32:
+                    if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt32>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt32>>()) return true;
+                    break;
+                case ErrorReasonCode::NumberOutOfRangeInt64:
+                    if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt64>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeInt64>>()) return true;
+                    break;
+                case ErrorReasonCode::NumberOutOfRangeUInt64:
+                    if (parametersAs<For<ErrorReasonCode::NumberOutOfRangeUInt64>>() == reason.parametersAs<For<ErrorReasonCode::NumberOutOfRangeUInt64>>()) return true;
+                    break;
+                case ErrorReasonCode::NumberOutOfRangeFloat:
+                    break;
+                case ErrorReasonCode::CustomText:
+                    return parametersAs<For<ErrorReasonCode::CustomText>>() == reason.parametersAs<For<ErrorReasonCode::CustomText>>();
             }
-            const auto left = messagePrefix(code), right = messagePrefix(reason.code);
-            if (!left.starts_with(right) && !right.starts_with(left)) return false;
         }
-        // 自定义文本、数值及可歧义的两段文本，按 fmt 的最终结果保持去重语义。
+        const auto left = messagePrefix(code), right = messagePrefix(reason.code);
+        if (!left.starts_with(right) && !right.starts_with(left)) return false;
+        // 不同诊断类型或数值可能产生相同文本，按 fmt 的最终结果保持展示去重语义。
         return getMessage() == reason.getMessage();
     }
 }// namespace CHelper

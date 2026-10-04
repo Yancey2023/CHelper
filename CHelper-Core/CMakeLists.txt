@@ -247,6 +247,8 @@ endif()
 if(NOT ANDROID AND NOT EMSCRIPTEN)
     file(GLOB_RECURSE TEST_FILE tests/*.cpp)
     add_executable(CHelperTest ${TEST_FILE})
+    # 原生测试复用网页接口实现，验证 UTF-16 输出协议。
+    target_sources(CHelperTest PRIVATE src/apps/CHelperWeb.cpp)
     target_link_libraries(CHelperTest PRIVATE CHelper::Core GTest::gtest_main)
     if(MSVC)
         set_property(TARGET CHelperTest PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

@@ -127,12 +127,6 @@ namespace CHelper {
             return {lexerResult, getAndPopLastIndex(), index};
         }
 
-        ASTNode readSimpleASTNode(Node::NodeWithType node,
-                                  TokenType::TokenType type,
-                                  std::u16string_view requireType,
-                                  const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE,
-                                  std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &str,
-                                                                        const TokensView &tokens) = nullptr);
 
         ASTNode readStringASTNode(const Node::NodeWithType &node,
                                   const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE);

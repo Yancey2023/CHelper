@@ -59,7 +59,7 @@ jobject errorReason2jobject(JNIEnv *env, jclass errorReasonClass, const CHelper:
     jobject javaErrorReason = env->AllocObject(errorReasonClass);
     env->SetObjectField(javaErrorReason,
                         env->GetFieldID(errorReasonClass, "errorReason", "Ljava/lang/String;"),
-                        u16string2jstring(env, errorReason.errorReason));
+                        u16string2jstring(env, errorReason.getMessage()));
     env->SetIntField(javaErrorReason,
                      env->GetFieldID(errorReasonClass, "start", "I"),
                      static_cast<jint>(errorReason.start));

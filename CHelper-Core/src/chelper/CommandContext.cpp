@@ -130,7 +130,7 @@ namespace CHelper {
         return SyntaxHighlight::getSyntaxResult(astNode);
     }
 
-    std::vector<std::shared_ptr<ErrorReason>> CommandContext::getErrorReasons() const {
+    std::vector<std::shared_ptr<const ErrorReason>> CommandContext::getErrorReasons() const {
         return Linter::getErrorReasons(astNode);
     }
 

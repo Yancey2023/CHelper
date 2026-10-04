@@ -29,7 +29,6 @@ namespace CHelper::ErrorReasons {
 
     // 每个入口只接收该诊断所需的固定参数；不对外开放 code/通用参数表。
     std::shared_ptr<ErrorReason> customText(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view text);
-    std::shared_ptr<ErrorReason> copy(const ErrorReason &source);
     std::shared_ptr<ErrorReason> requireSpace(ErrorReasonLevel::ErrorReasonLevel level, Range range);
     std::shared_ptr<ErrorReason> requireType(ErrorReasonLevel::ErrorReasonLevel level, Range range, ErrorReasonExpectedType expected);
     std::shared_ptr<ErrorReason> typeMismatch(ErrorReasonLevel::ErrorReasonLevel level, Range range, ErrorReasonExpectedType expected, TokenType::TokenType actual);
@@ -71,6 +70,4 @@ namespace CHelper::ErrorReasons {
     std::shared_ptr<ErrorReason> numberOutOfRange(ErrorReasonLevel::ErrorReasonLevel level, Range range, int64_t min, int64_t max, std::u16string_view text);
     std::shared_ptr<ErrorReason> numberOutOfRange(ErrorReasonLevel::ErrorReasonLevel level, Range range, uint64_t min, uint64_t max, std::u16string_view text);
     std::shared_ptr<ErrorReason> numberOutOfRange(ErrorReasonLevel::ErrorReasonLevel level, Range range, float min, float max, std::u16string_view text);
-    std::shared_ptr<ErrorReason> requireType(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view text);
-    std::shared_ptr<ErrorReason> typeMismatch(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view expected, std::u16string_view actual);
 }// namespace CHelper::ErrorReasons

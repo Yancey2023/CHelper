@@ -97,12 +97,12 @@ void CHelperApp::onSelectionChanged() {
         if (errorReasons.empty()) [[unlikely]] {
             ui->errorReasonLabel->setText(nullptr);
         } else if (errorReasons.size() == 1) [[unlikely]] {
-            ui->errorReasonLabel->setText(toQString(errorReasons[0]->errorReason));
+            ui->errorReasonLabel->setText(toQString(errorReasons[0]->getMessage()));
         } else {
             std::u16string result = u"可能的错误原因：";
             for (size_t i = 0; i < errorReasons.size(); ++i) {
                 const auto &errorReason = errorReasons[i];
-                result.append(fmt::format(u"\n{}. {}", i, errorReason->errorReason));
+                result.append(fmt::format(u"\n{}. {}", i, errorReason->getMessage()));
             }
             ui->errorReasonLabel->setText(QString::fromStdU16String(result));
         }

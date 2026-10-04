@@ -23,8 +23,8 @@
 
 namespace CHelper::Linter {
 
-    std::vector<std::shared_ptr<ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode);
+    std::vector<std::shared_ptr<const ErrorReason>> getErrorsExceptParseError(const ASTNode &astNode);
 
-    std::vector<std::shared_ptr<ErrorReason>> getErrorReasons(const ASTNode &astNode);
+    std::vector<std::shared_ptr<const ErrorReason>> getErrorReasons(const ASTNode &astNode);
 
 }// namespace CHelper::Linter

@@ -153,9 +153,9 @@ namespace CHelper {
         [[nodiscard]] SyntaxHighlight::SyntaxResult getSyntaxResult() const;
 
         /**
-         * 获取命令的错误原因
+         * 获取只读错误原因；参数独立持有，结果可在上下文销毁后格式化
          */
-        [[nodiscard]] std::vector<std::shared_ptr<ErrorReason>> getErrorReasons() const;
+        [[nodiscard]] std::vector<std::shared_ptr<const ErrorReason>> getErrorReasons() const;
 
         /**
          * 获取最佳解析路径中已经匹配的命令语义节点数量

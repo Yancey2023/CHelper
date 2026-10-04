@@ -84,9 +84,8 @@ namespace CHelper {
     }
 
     namespace {
-        template<class RequiredType>
         ASTNode readSimpleASTNode(TokenReader &reader, Node::NodeWithType node,
-                                  TokenType::TokenType type, RequiredType requireType,
+                                  TokenType::TokenType type, ErrorReasonExpectedType requireType,
                                   ASTNodeId::ASTNodeId astNodeId,
                                   std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &, const TokensView &) = nullptr) {
             TokensView tokens = reader.readTokenView();
@@ -95,26 +94,13 @@ namespace CHelper {
             if (token == nullptr) [[unlikely]] {
                 errorReason = ErrorReasons::requireType(ErrorReasonLevel::INCOMPLETE, tokens, requireType);
             } else if (token->type != type) [[unlikely]] {
-                if constexpr (std::is_same_v<RequiredType, ErrorReasonExpectedType>) {
-                    errorReason = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, requireType, token->type);
-                } else {
-                    errorReason = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, requireType, TokenType::getNameView(token->type));
-                }
+                errorReason = ErrorReasons::typeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, requireType, token->type);
             } else {
                 errorReason = check == nullptr ? nullptr : check(token->content, tokens);
             }
             return ASTNode::simpleNode(node, std::move(tokens), errorReason, astNodeId);
         }
     }// namespace
-
-    ASTNode TokenReader::readSimpleASTNode(Node::NodeWithType node,
-                                           TokenType::TokenType type,
-                                           std::u16string_view requireType,
-                                           const ASTNodeId::ASTNodeId &astNodeId,
-                                           std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &str,
-                                                                                 const TokensView &tokens)) {
-        return CHelper::readSimpleASTNode(*this, node, type, requireType, astNodeId, check);
-    }
 
     ASTNode TokenReader::readStringASTNode(const Node::NodeWithType &node,
                                            const ASTNodeId::ASTNodeId &astNodeId) {

@@ -77,6 +77,41 @@ namespace CHelper::Test {
         }
     }
 
+    TEST(LinterTest, NestedStringErrorsPreserveMappingStableOrderAndAstOwnership) {
+        const auto outerLexer = Lexer::lex(uR"("\u0022\u006Dissing\u0022")");
+        const auto middleLexer = Lexer::lex(uR"("missing")");
+        const auto innerLexer = Lexer::lex(u"missing");
+        Node::NodeNormalId id;
+        id.customContents = std::make_shared<std::pmr::vector<std::shared_ptr<NormalId>>>();
+        Node::NodeJsonString string;
+        const auto makeNested = [&] {
+            auto leaf = ASTNode::simpleNode(id, TokensView(innerLexer, 0, innerLexer->allTokens.size()));
+            auto middle = ASTNode::andNode(string, ASTNode::children(std::move(leaf)),
+                                           TokensView(middleLexer, 0, middleLexer->allTokens.size()), nullptr,
+                                           ASTNodeId::NODE_STRING_INNER);
+            return ASTNode::andNode(string, ASTNode::children(std::move(middle)),
+                                    TokensView(outerLexer, 0, outerLexer->allTokens.size()), nullptr,
+                                    ASTNodeId::NODE_STRING_INNER);
+        };
+        const auto parseError = ErrorReasons::incomplete(ErrorReasonLevel::INCOMPLETE, {0, 0});
+        const auto ast = ASTNode::andNode(Node::NodeAny::getNodeAny(), ASTNode::children(makeNested(), makeNested()),
+                                          TokensView(outerLexer, 0, outerLexer->allTokens.size()), parseError);
+        for (size_t i = 0; i < 2; ++i) {
+            auto errors = Linter::getErrorReasons(ast);
+            ASSERT_EQ(errors.size(), 3u);
+            EXPECT_EQ(errors[0]->getCode(), ErrorReasonCode::UnknownId);
+            EXPECT_EQ(errors[1]->getCode(), ErrorReasonCode::UnknownId);
+            EXPECT_EQ(errors[0]->start, 7u);
+            EXPECT_EQ(errors[0]->end, 19u);
+            EXPECT_EQ(errors[1]->start, errors[0]->start);
+            EXPECT_EQ(errors[1]->end, errors[0]->end);
+            EXPECT_NE(errors[0].get(), errors[1].get());
+            EXPECT_EQ(errors[2].get(), parseError.get());
+            EXPECT_EQ(errors[2]->getCode(), ErrorReasonCode::Incomplete);
+            EXPECT_EQ(parseError->getMessage(), u"命令不完整");
+        }
+    }
+
     TEST(LinterTest, RepeatedIdsKeepDistinctErrorsAndCollections) {
         const auto lexer = Lexer::lex(u"stone stone missing missing");
         Node::NodeNormalId first, second;
@@ -101,7 +136,7 @@ namespace CHelper::Test {
             EXPECT_EQ(errors[2]->start, 20);
             EXPECT_EQ(errors[2]->end, 27);
             EXPECT_NE(errors[1], errors[2]);
-            EXPECT_EQ(errors[1]->errorReason, errors[2]->errorReason);
+            EXPECT_EQ(errors[1]->getMessage(), errors[2]->getMessage());
         }
         first.customContents->push_back(NormalId::make(u"missing"));
         const auto errors = Linter::getErrorReasons(ast);

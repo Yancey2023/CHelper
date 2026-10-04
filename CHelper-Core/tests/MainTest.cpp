@@ -113,7 +113,7 @@ namespace CHelper::Test {
                         SPDLOG_INFO("{}. {} {}",
                                     i,
                                     fmt::styled(utf8::utf16to8(command.substr(errorReason->start, errorReason->end - errorReason->start)), fg(fmt::color::red)),
-                                    fmt::styled(utf8::utf16to8(errorReason->errorReason), fg(fmt::color::cornflower_blue)));
+                                    fmt::styled(utf8::utf16to8(errorReason->getMessage()), fg(fmt::color::cornflower_blue)));
                         SPDLOG_INFO("{}{}{}",
                                     utf8::utf16to8(command.substr(0, errorReason->start)),
                                     fmt::styled(errorReason->start == errorReason->end ? "~" : utf8::utf16to8(command.substr(errorReason->start, errorReason->end - errorReason->start)), fg(fmt::color::red)),

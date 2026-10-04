@@ -28,6 +28,8 @@ namespace CHelper {
             // 作用域持有一个引用，每次 allocate_shared 分配持有一个引用。
             // 分配器的临时复制不持有引用，弱引用存活时控制块仍保留分配引用。
             std::atomic<size_t> references{1};
+            // 只有分配作用域线程使用剩余份额；跨线程释放仍逐项原子减引用。
+            size_t unusedReferences = 0;
             // 每个块独立共享所有权，保留一个错误不会保留整条长命令的所有错误。
             alignas(std::max_align_t) std::byte buffer[64 * 1024];
             std::pmr::monotonic_buffer_resource overflow{std::pmr::new_delete_resource()};
@@ -38,11 +40,22 @@ namespace CHelper {
             ErrorReasonMemoryResource() {}
 
             void retain() noexcept {
-                references.fetch_add(1, std::memory_order_relaxed);
+                if (unusedReferences == 0) {
+                    constexpr size_t batch = 64;
+                    references.fetch_add(batch, std::memory_order_relaxed);
+                    unusedReferences = batch;
+                }
+                --unusedReferences;
             }
 
             void release() noexcept {
                 if (references.fetch_sub(1, std::memory_order_acq_rel) == 1) delete this;
+            }
+
+            void releaseOwner() noexcept {
+                // 移除作用域引用和未使用的份额，留下所有活动强/弱控制块的引用。
+                const size_t count = unusedReferences + 1;
+                if (references.fetch_sub(count, std::memory_order_acq_rel) == count) delete this;
             }
 
             void *allocate(size_t bytes, size_t alignment) {
@@ -113,17 +126,15 @@ namespace CHelper {
     ErrorReasonMemoryScope::ErrorReasonMemoryScope() : previous(currentMemoryScope) { currentMemoryScope = this; }
     ErrorReasonMemoryScope::~ErrorReasonMemoryScope() {
         currentMemoryScope = previous;
-        if (memory != nullptr) memory->release();
+        if (memory != nullptr) memory->releaseOwner();
     }
 
     ErrorReason::ErrorReason(ErrorReasonLevel::ErrorReasonLevel level, size_t start, size_t end, ErrorReasonCode code)
-        : code(code), messageReady(code == ErrorReasonCode::CustomText), level(level), start(start), end(end),
-          errorReason(std::pmr::new_delete_resource()) {}
+        : code(code), level(level), start(start), end(end) {}
 
     namespace Detail {
         namespace {
             using namespace ErrorParameters;
-            auto textFields(TypeNames &data) { return std::array{&data.expected, &data.actual}; }
             template<class P>
             auto textFields(P &data) {
                 if constexpr (requires { data.text; }) return std::array{&data.text};
@@ -141,7 +152,7 @@ namespace CHelper {
                     auto &current = currentMemoryScope->memory;
                     if (current == nullptr || current->isFull()) {
                         auto *next = new ErrorReasonMemoryResource;
-                        if (current != nullptr) current->release();
+                        if (current != nullptr) current->releaseOwner();
                         current = next;
                     }
                     memory = current;
@@ -179,172 +190,13 @@ namespace CHelper {
                 }
                 return result;
             }
-
-            static std::shared_ptr<ErrorReason> customText(ErrorReasonLevel::ErrorReasonLevel level, ErrorReasons::Range range, std::u16string_view text) {
-                auto result = allocate(level, range, ErrorReasonCode::CustomText);
-                result->errorReason.assign(text);
-                return result;
-            }
-
-            static std::shared_ptr<ErrorReason> copy(const ErrorReason &source) {
-                const ErrorReasons::Range range{source.start, source.end};
-                std::shared_ptr<ErrorReason> result;
-                switch (source.code) {
-                    case ErrorReasonCode::CustomText:
-                        return customText(source.level, range, source.errorReason);
-                    case ErrorReasonCode::RequireSpace:
-                        result = make<ErrorReasonCode::RequireSpace>(source.level, range);
-                        break;
-                    case ErrorReasonCode::RequireType:
-                        result = make<ErrorReasonCode::RequireType>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::RequireType>>());
-                        break;
-                    case ErrorReasonCode::TypeMismatch:
-                        result = make<ErrorReasonCode::TypeMismatch>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::TypeMismatch>>());
-                        break;
-                    case ErrorReasonCode::IntegerRequired:
-                        result = make<ErrorReasonCode::IntegerRequired>(source.level, range);
-                        break;
-                    case ErrorReasonCode::InvalidNumber:
-                        result = make<ErrorReasonCode::InvalidNumber>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidNumber>>());
-                        break;
-                    case ErrorReasonCode::EmptyNull:
-                        result = make<ErrorReasonCode::EmptyNull>(source.level, range);
-                        break;
-                    case ErrorReasonCode::InvalidNull:
-                        result = make<ErrorReasonCode::InvalidNull>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidNull>>());
-                        break;
-                    case ErrorReasonCode::EmptyString:
-                        result = make<ErrorReasonCode::EmptyString>(source.level, range);
-                        break;
-                    case ErrorReasonCode::QuotedStringRequired:
-                        result = make<ErrorReasonCode::QuotedStringRequired>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::QuotedStringRequired>>());
-                        break;
-                    case ErrorReasonCode::EmptyCommandName:
-                        result = make<ErrorReasonCode::EmptyCommandName>(source.level, range);
-                        break;
-                    case ErrorReasonCode::UnknownCommand:
-                        result = make<ErrorReasonCode::UnknownCommand>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownCommand>>());
-                        break;
-                    case ErrorReasonCode::Excess:
-                        result = make<ErrorReasonCode::Excess>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::Excess>>());
-                        break;
-                    case ErrorReasonCode::Incomplete:
-                        result = make<ErrorReasonCode::Incomplete>(source.level, range);
-                        break;
-                    case ErrorReasonCode::UnknownMeaning:
-                        result = make<ErrorReasonCode::UnknownMeaning>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownMeaning>>());
-                        break;
-                    case ErrorReasonCode::InvalidCoordinate:
-                        result = make<ErrorReasonCode::InvalidCoordinate>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidCoordinate>>());
-                        break;
-                    case ErrorReasonCode::EmptyRange:
-                        result = make<ErrorReasonCode::EmptyRange>(source.level, range);
-                        break;
-                    case ErrorReasonCode::InvalidRange:
-                        result = make<ErrorReasonCode::InvalidRange>(source.level, range);
-                        break;
-                    case ErrorReasonCode::StringContainsSpace:
-                        result = make<ErrorReasonCode::StringContainsSpace>(source.level, range);
-                        break;
-                    case ErrorReasonCode::UnclosedString:
-                        result = make<ErrorReasonCode::UnclosedString>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnclosedString>>());
-                        break;
-                    case ErrorReasonCode::UnexpectedSpace:
-                        result = make<ErrorReasonCode::UnexpectedSpace>(source.level, range);
-                        break;
-                    case ErrorReasonCode::RequireSymbol:
-                        result = make<ErrorReasonCode::RequireSymbol>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::RequireSymbol>>());
-                        break;
-                    case ErrorReasonCode::SymbolTypeMismatch:
-                        result = make<ErrorReasonCode::SymbolTypeMismatch>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::SymbolTypeMismatch>>());
-                        break;
-                    case ErrorReasonCode::SymbolContentMismatch:
-                        result = make<ErrorReasonCode::SymbolContentMismatch>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::SymbolContentMismatch>>());
-                        break;
-                    case ErrorReasonCode::InvalidBoolean:
-                        result = make<ErrorReasonCode::InvalidBoolean>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidBoolean>>());
-                        break;
-                    case ErrorReasonCode::UnknownCommandName:
-                        result = make<ErrorReasonCode::UnknownCommandName>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownCommandName>>());
-                        break;
-                    case ErrorReasonCode::UnknownId:
-                        result = make<ErrorReasonCode::UnknownId>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownId>>());
-                        break;
-                    case ErrorReasonCode::MixedCoordinates:
-                        result = make<ErrorReasonCode::MixedCoordinates>(source.level, range);
-                        break;
-                    case ErrorReasonCode::LocalCoordinateDisallowed:
-                        result = make<ErrorReasonCode::LocalCoordinateDisallowed>(source.level, range);
-                        break;
-                    case ErrorReasonCode::UnknownSelectorArgument:
-                        result = make<ErrorReasonCode::UnknownSelectorArgument>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownSelectorArgument>>());
-                        break;
-                    case ErrorReasonCode::UnknownJsonArgument:
-                        result = make<ErrorReasonCode::UnknownJsonArgument>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownJsonArgument>>());
-                        break;
-                    case ErrorReasonCode::NumberOutOfRange:
-                        result = make<ErrorReasonCode::NumberOutOfRange>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::NumberOutOfRange>>());
-                        break;
-                    case ErrorReasonCode::JsonQuotesRequired:
-                        result = make<ErrorReasonCode::JsonQuotesRequired>(source.level, range);
-                        break;
-                    case ErrorReasonCode::IncompleteEscape:
-                        result = make<ErrorReasonCode::IncompleteEscape>(source.level, range);
-                        break;
-                    case ErrorReasonCode::IncompleteUnicodeEscape:
-                        result = make<ErrorReasonCode::IncompleteUnicodeEscape>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::IncompleteUnicodeEscape>>());
-                        break;
-                    case ErrorReasonCode::InvalidUnicodeEscapeCharacter:
-                        result = make<ErrorReasonCode::InvalidUnicodeEscapeCharacter>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidUnicodeEscapeCharacter>>());
-                        break;
-                    case ErrorReasonCode::InvalidUnicodeEscapeValue:
-                        result = make<ErrorReasonCode::InvalidUnicodeEscapeValue>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::InvalidUnicodeEscapeValue>>());
-                        break;
-                    case ErrorReasonCode::UnknownEscape:
-                        result = make<ErrorReasonCode::UnknownEscape>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::UnknownEscape>>());
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeInt32:
-                        result = make<ErrorReasonCode::NumberOutOfRangeInt32>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::NumberOutOfRangeInt32>>());
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeInt64:
-                        result = make<ErrorReasonCode::NumberOutOfRangeInt64>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::NumberOutOfRangeInt64>>());
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeUInt64:
-                        result = make<ErrorReasonCode::NumberOutOfRangeUInt64>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::NumberOutOfRangeUInt64>>());
-                        break;
-                    case ErrorReasonCode::NumberOutOfRangeFloat:
-                        result = make<ErrorReasonCode::NumberOutOfRangeFloat>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::NumberOutOfRangeFloat>>());
-                        break;
-                    case ErrorReasonCode::RequireTypeName:
-                        result = make<ErrorReasonCode::RequireTypeName>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::RequireTypeName>>());
-                        break;
-                    case ErrorReasonCode::TypeMismatchName:
-                        result = make<ErrorReasonCode::TypeMismatchName>(source.level, range, source.parametersAs<ErrorParameters::For<ErrorReasonCode::TypeMismatchName>>());
-                        break;
-                }
-                result->messageReady = source.messageReady;
-                result->errorReason = source.errorReason;
-                return result;
-            }
-
-            static void materialize(ErrorReason &result, const ErrorReason &source) {
-                result.errorReason = source.getMessage();
-                result.messageReady = true;
-            }
         };
     }// namespace Detail
 
-    std::shared_ptr<ErrorReason> ErrorReason::materializedCopy() const {
-        auto result = ErrorReasons::copy(*this);
-        Detail::ErrorReasonFactoryAccess::materialize(*result, *this);
-        return result;
-    }
-
     namespace ErrorReasons {
         std::shared_ptr<ErrorReason> customText(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view text) {
-            return Detail::ErrorReasonFactoryAccess::customText(level, range, text);
+            return Detail::ErrorReasonFactoryAccess::make<ErrorReasonCode::CustomText>(level, range, {text});
         }
-        std::shared_ptr<ErrorReason> copy(const ErrorReason &source) { return Detail::ErrorReasonFactoryAccess::copy(source); }
         std::shared_ptr<ErrorReason> requireSpace(ErrorReasonLevel::ErrorReasonLevel level, Range range) {
             return Detail::ErrorReasonFactoryAccess::make<ErrorReasonCode::RequireSpace>(level, range);
         }
@@ -467,12 +319,6 @@ namespace CHelper {
         }
         std::shared_ptr<ErrorReason> numberOutOfRange(ErrorReasonLevel::ErrorReasonLevel level, Range range, float min, float max, std::u16string_view text) {
             return Detail::ErrorReasonFactoryAccess::make<ErrorReasonCode::NumberOutOfRangeFloat>(level, range, {min, max, text});
-        }
-        std::shared_ptr<ErrorReason> requireType(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view text) {
-            return Detail::ErrorReasonFactoryAccess::make<ErrorReasonCode::RequireTypeName>(level, range, {text});
-        }
-        std::shared_ptr<ErrorReason> typeMismatch(ErrorReasonLevel::ErrorReasonLevel level, Range range, std::u16string_view expected, std::u16string_view actual) {
-            return Detail::ErrorReasonFactoryAccess::make<ErrorReasonCode::TypeMismatchName>(level, range, {expected, actual});
         }
     }// namespace ErrorReasons
 }// namespace CHelper

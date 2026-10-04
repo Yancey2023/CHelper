@@ -113,8 +113,6 @@ namespace CHelper {
         NumberOutOfRangeInt64,
         NumberOutOfRangeUInt64,
         NumberOutOfRangeFloat,
-        RequireTypeName,
-        TypeMismatchName,
     };
 
     // 类型名称按标识保存，展示时才转换为文本，避免为每个备选分支复制固定名称。
@@ -131,7 +129,6 @@ namespace CHelper {
         friend class Detail::ErrorReasonAllocator;
 
         ErrorReasonCode code;
-        bool messageReady;
 
     public:
         // 字节大小的状态相邻，避免 level 单独产生一个指针对齐的填充区。
@@ -153,12 +150,8 @@ namespace CHelper {
         ErrorReason &operator=(const ErrorReason &) = delete;
 
         size_t start, end;
-        // Linter 的展示文本独立持有；解析树中的诊断请使用 getMessage()。
-        std::pmr::u16string errorReason;
-
         ErrorReasonCode getCode() const noexcept { return code; }
         std::u16string getMessage() const;
-        std::shared_ptr<ErrorReason> materializedCopy() const;
         bool operator==(const ErrorReason &reason) const;
     };
 

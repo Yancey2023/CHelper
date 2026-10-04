@@ -49,10 +49,6 @@ namespace CHelper::Detail::ErrorParameters {
             return expected == other.expected && TokenType::getNameView(actual) == TokenType::getNameView(other.actual);
         }
     };
-    struct TypeNames {
-        std::u16string_view expected, actual;
-        bool operator==(const TypeNames &) const = default;
-    };
     template<class T>
     struct NumberRange {
         T min, max;
@@ -62,6 +58,11 @@ namespace CHelper::Detail::ErrorParameters {
 
     template<ErrorReasonCode>
     struct Parameters;
+    template<>
+    struct Parameters<ErrorReasonCode::CustomText> {
+        using Type = Text;
+        static constexpr std::u16string_view pattern = u"{}";
+    };
     template<>
     struct Parameters<ErrorReasonCode::RequireSpace> {
         using Type = Empty;
@@ -306,18 +307,6 @@ namespace CHelper::Detail::ErrorParameters {
     struct Parameters<ErrorReasonCode::NumberOutOfRangeFloat> {
         using Type = NumberRange<float>;
         static constexpr std::u16string_view pattern = u"数值不在范围[{}, {}]内 -> {}";
-        static constexpr auto prefix = pattern.substr(0, pattern.find(u'{'));
-    };
-    template<>
-    struct Parameters<ErrorReasonCode::RequireTypeName> {
-        using Type = Text;
-        static constexpr std::u16string_view pattern = u"命令不完整，需要的参数类型为{}";
-        static constexpr auto prefix = pattern.substr(0, pattern.find(u'{'));
-    };
-    template<>
-    struct Parameters<ErrorReasonCode::TypeMismatchName> {
-        using Type = TypeNames;
-        static constexpr std::u16string_view pattern = u"类型不匹配，正确的参数类型为{}，但当前参数类型为{}";
         static constexpr auto prefix = pattern.substr(0, pattern.find(u'{'));
     };
     template<ErrorReasonCode Code>

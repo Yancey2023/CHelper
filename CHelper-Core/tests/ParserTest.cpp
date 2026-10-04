@@ -29,7 +29,7 @@
 namespace CHelper::Test {
 
     TEST(ParserTest, RepeatedInnerStringsKeepEscapedErrorCoordinatesAndIndependentOwnership) {
-        std::vector<std::shared_ptr<ErrorReason>> errors;
+        std::vector<std::shared_ptr<const ErrorReason>> errors;
         std::vector<std::pair<size_t, size_t>> spans;
         {
             Node::NodeJsonString string;
@@ -324,7 +324,6 @@ namespace CHelper::Test {
                 EXPECT_EQ(error->start, item.start);
                 EXPECT_EQ(error->end, item.end);
                 EXPECT_EQ(error->getMessage(), item.message);
-                EXPECT_TRUE(error->errorReason.empty());
             }
         }
     }
@@ -364,7 +363,7 @@ namespace CHelper::Test {
         return std::shared_ptr<const CPack>(std::move(cpack));
     }
 
-    static std::vector<std::shared_ptr<ErrorReason>> parseAndGetErrors(
+    static std::vector<std::shared_ptr<const ErrorReason>> parseAndGetErrors(
             const std::shared_ptr<const CPack> &cpack, const std::u16string &command) {
         return CommandContext(cpack, command).getErrorReasons();
     }
@@ -396,7 +395,7 @@ namespace CHelper::Test {
                 EXPECT_LE(errorReason->start, item.command.size());
                 EXPECT_LE(errorReason->end, item.command.size()) << "error span out of command range";
                 if (errorReason->start == item.start && errorReason->end == item.end) {
-                    EXPECT_NE(errorReason->errorReason.find(u"找不到含义"), std::u16string::npos);
+                    EXPECT_NE(errorReason->getMessage().find(u"找不到含义"), std::u16string::npos);
                     found = true;
                 }
             }
@@ -419,13 +418,13 @@ namespace CHelper::Test {
         std::unique_ptr<CPack> vanillaCpack = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / "beta" / "vanilla");
         const auto cpack = std::shared_ptr<const CPack>(std::move(vanillaCpack));
         ASSERT_NE(cpack, nullptr);
-        const auto hasErrorWithText = [](const std::vector<std::shared_ptr<ErrorReason>> &errors,
+        const auto hasErrorWithText = [](const std::vector<std::shared_ptr<const ErrorReason>> &errors,
                                          size_t start,
                                          size_t end,
                                          const std::u16string &text) {
             for (const auto &item: errors) {
                 if (item->start == start && item->end == end &&
-                    item->errorReason.find(text) != std::u16string::npos) {
+                    item->getMessage().find(text) != std::u16string::npos) {
                     return true;
                 }
             }

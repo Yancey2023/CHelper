@@ -7,6 +7,26 @@ using namespace CHelper::Test;
 
 namespace {
 
+    // 展示阶段也计入错误查询，包含所有输出文本的格式化。
+    template<class Errors>
+    size_t longBenchMessageSize(const Errors &errors, bool retainMessages) {
+        size_t characters = 0;
+        if (retainMessages) {
+            // 网页输出先计算长度再写入，临时消息需要共同存活到输出结束。
+            std::vector<std::u16string> messages;
+            messages.reserve(errors.size());
+            for (const auto &error: errors) {
+                messages.push_back(error->getMessage());
+                characters += messages.back().size();
+            }
+            return characters;
+        }
+        for (const auto &error: errors) {
+            characters += error->getMessage().size();
+        }
+        return characters;
+    }
+
     size_t longBenchOption(const char *name, size_t fallback) {
         const char *value = std::getenv(name);
         return value ? std::stoull(value) : fallback;
@@ -119,6 +139,9 @@ TEST(Bench, LongCommand) {
     const auto command = longBenchCommand(kind, count);
     const size_t cursor = longBenchOption("LONG_CURSOR", command.size());
     const bool includeApply = longBenchOption("LONG_APPLY", 0) != 0;
+    const bool formatOutput = longBenchOption("LONG_FORMAT_OUTPUT", 1) != 0;
+    const bool retainMessages = longBenchOption("LONG_RETAIN_MESSAGES", 0) != 0;
+    size_t messageCharacters = 0;
     CHelperCore core(serialization::createCPackByDirectory(
             std::filesystem::path(RESOURCE_DIR) / "resources" / "beta" / "vanilla"));
     std::printf("long input kind=%s count=%zu chars=%zu cursor=%zu hash=%016llx\n", kind.c_str(), count,
@@ -151,7 +174,10 @@ TEST(Bench, LongCommand) {
         measure(hint, [&] { (void) context->getParamHint(cursor); });
         measure(structure, [&] { (void) context->getStructure(); });
         measure(syntax, [&] { (void) context->getSyntaxResult(); });
-        measure(errors, [&] { (void) context->getErrorReasons(); });
+        measure(errors, [&] {
+            const auto reasons = context->getErrorReasons();
+            if (formatOutput) messageCharacters += longBenchMessageSize(reasons, retainMessages);
+        });
         if (includeApply) measure(apply, [&] { (void) context->applySuggestion(cursor, 0); });
         measure(destroy, [&] { context.reset(); });
         const auto end = std::chrono::steady_clock::now();
@@ -159,6 +185,7 @@ TEST(Bench, LongCommand) {
     }
     for (const auto *stats: {&total, &create, &suggestions, &hint, &structure, &syntax, &errors, &destroy}) stats->print();
     if (includeApply) apply.print();
+    std::printf("long output format=%d characters=%zu\n", formatOutput, messageCharacters);
     std::fflush(stdout);
     if (longBenchOption("LONG_VERIFY", 1)) {
         const std::unique_ptr<CommandContext> context(core.createContext(command));
