@@ -16,22 +16,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <array>
 #include <chelper/node/NodeType.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <chelper/util/JsonUtil.h>
 
 namespace CHelper::SyntaxHighlight {
 
+    void fillSyntaxResult(const ASTNode &astNode, SyntaxResultView &syntaxResult);
+
     template<class NodeType>
     struct SyntaxToken {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             return false;
         }
     };
 
     template<>
     struct SyntaxToken<Node::NodeJsonNull> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::NULL_TOKEN);
             return true;
         }
@@ -39,20 +42,29 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeJsonString> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             if (astNode.id != ASTNodeId::NODE_STRING_INNER) {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::STRING);
                 return false;
             }
             syntaxResult.update(astNode.tokens.startIndex, SyntaxTokenType::STRING);
             std::u16string_view str = astNode.tokens.string();
-            auto convertResult = JsonUtil::jsonString2String(str);
+            auto convertResult = JsonUtil::DecodedStringView(str);
             if (convertResult.isComplete) {
                 syntaxResult.update(astNode.tokens.endIndex - 1, SyntaxTokenType::STRING);
             }
+            if (convertResult.hasDirectMapping()) {
+                // 未转义内容的坐标仅差一个引号，直接写入最终结果的对应区间。
+                // 保持原来的内层 UNKNOWN 初始化和独立括号深度。
+                auto target = syntaxResult.tokenTypes.subspan(astNode.tokens.startIndex + 1, convertResult.string().size());
+                std::ranges::fill(target, SyntaxTokenType::UNKNOWN);
+                SyntaxResultView childResult(astNode.childNodes[0].tokens.lexerResult->content, target);
+                fillSyntaxResult(astNode.childNodes[0], childResult);
+                return true;
+            }
             SyntaxResult syntaxResult1 = getSyntaxResult(astNode.childNodes[0]);
             size_t start = convertResult.convert(0);
-            for (size_t i = 0; i < convertResult.result.size(); ++i) {
+            for (size_t i = 0; i < convertResult.string().size(); ++i) {
                 size_t end = convertResult.convert(i + 1);
                 syntaxResult.update(astNode.tokens.startIndex + start, astNode.tokens.startIndex + end, syntaxResult1.tokenTypes[i]);
                 start = end;
@@ -63,7 +75,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeCommand> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             if (astNode.id == ASTNodeId::NODE_COMMAND_COMMAND_NAME) [[likely]] {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::COMMAND);
                 return true;
@@ -74,7 +86,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeCommandName> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::ID);
             return true;
         }
@@ -82,7 +94,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeIntegerWithUnit> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::INTEGER);
             return true;
         }
@@ -90,7 +102,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeNamespaceId> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::ID);
             return true;
         }
@@ -98,7 +110,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeNormalId> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             const auto &node = *reinterpret_cast<const Node::NodeNormalId *>(astNode.node.data);
             if (node.key.has_value()) {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::ID);
@@ -113,7 +125,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodePosition> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             if (astNode.id == ASTNodeId::NODE_RELATIVE_FLOAT_NUMBER) {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::FLOAT);
                 return true;
@@ -125,7 +137,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeRange> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             std::u16string_view str = astNode.tokens.string();
             for (size_t i = 0; i < str.length(); ++i) {
                 size_t ch = str[i];
@@ -139,7 +151,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeRelativeFloat> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             if (astNode.id == ASTNodeId::NODE_RELATIVE_FLOAT_NUMBER) {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::FLOAT);
                 return true;
@@ -151,7 +163,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeString> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::STRING);
             return true;
         }
@@ -159,7 +171,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeText> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             const auto &node = *reinterpret_cast<const Node::NodeText *>(astNode.node.data);
             if (node.id != "TARGET_SELECTOR_ARGUMENT_EQUAL" && node.id != "TARGET_SELECTOR_ARGUMENT_NOT_EQUAL") {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::LITERAL);
@@ -172,7 +184,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<>
     struct SyntaxToken<Node::NodeSingleSymbol> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::SYMBOL);
             return true;
         }
@@ -180,7 +192,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<bool isJson>
     struct SyntaxToken<Node::NodeTemplateBoolean<isJson>> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             syntaxResult.update(astNode.tokens, SyntaxTokenType::BOOLEAN);
             return true;
         }
@@ -188,7 +200,7 @@ namespace CHelper::SyntaxHighlight {
 
     template<class T, bool isJson>
     struct SyntaxToken<Node::NodeTemplateNumber<T, isJson>> {
-        static bool collectSyntax(const ASTNode &astNode, SyntaxResult &syntaxResult) {
+        static bool collectSyntax(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
             if constexpr (std::numeric_limits<T>::is_integer) {
                 syntaxResult.update(astNode.tokens, SyntaxTokenType::INTEGER);
             } else {
@@ -198,32 +210,38 @@ namespace CHelper::SyntaxHighlight {
         }
     };
 
-    void collectSyntaxResult(const ASTNode &astNode, SyntaxResult &syntaxResult) {
-        bool isDirty = Node::dispatchNodeType(astNode.node.nodeTypeId, [&]<class NodeType>() {
-            return SyntaxToken<NodeType>::collectSyntax(astNode, syntaxResult);
-        });
-        if (isDirty) [[unlikely]] {
-            return;
-        }
-        switch (astNode.mode) {
-            case ASTNodeMode::NONE:
+    void collectSyntaxResult(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
+        const ASTNode *next = &astNode;
+        while (true) {
+            const auto &current = *next;
+            bool isDirty = Node::dispatchNodeType(current.node.nodeTypeId, [&]<class NodeType>() {
+                return SyntaxToken<NodeType>::collectSyntax(current, syntaxResult);
+            });
+            if (isDirty) [[unlikely]]
                 return;
-            case ASTNodeMode::AND:
-                for (const ASTNode &item: astNode.childNodes) {
-                    collectSyntaxResult(item, syntaxResult);
-                }
-                break;
-            case ASTNodeMode::OR:
-                collectSyntaxResult(astNode.childNodes[astNode.whichBest], syntaxResult);
-                break;
+            switch (current.mode) {
+                case ASTNodeMode::AND:
+                    if (current.childNodes.size() == 1) {
+                        next = &current.childNodes.front();
+                        continue;
+                    }
+                    for (const auto &item: current.childNodes) collectSyntaxResult(item, syntaxResult);
+                    return;
+                case ASTNodeMode::OR:
+                    next = &current.childNodes[current.whichBest];
+                    continue;
+                default:
+                    return;
+            }
         }
     }
 
-    SyntaxResult getSyntaxResult(const ASTNode &astNode) {
-        SyntaxResult syntaxResult(astNode.tokens.lexerResult->content);
+    void fillSyntaxResult(const ASTNode &astNode, SyntaxResultView &syntaxResult) {
         collectSyntaxResult(astNode, syntaxResult);
-        std::stack<char16_t> brackets;
-        astNode.tokens.forEach([&brackets, &syntaxResult](const Token &token) {
+        std::array<char16_t, 32> brackets;
+        std::vector<char16_t> overflow;
+        size_t depth = 0;
+        astNode.tokens.forEach([&](const Token &token) {
             if (token.type != TokenType::SYMBOL || token.content.empty()) [[likely]] {
                 return;
             }
@@ -231,7 +249,7 @@ namespace CHelper::SyntaxHighlight {
             switch (ch) {
                 case '[':
                 case '{': {
-                    switch (brackets.size() % 3) {
+                    switch (depth % 3) {
                         case 0:
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET1);
                             break;
@@ -244,14 +262,21 @@ namespace CHelper::SyntaxHighlight {
                         default:
                             CHELPER_UNREACHABLE();
                     }
-                    brackets.push(ch);
+                    if (depth < brackets.size()) {
+                        brackets[depth] = ch;
+                    } else {
+                        overflow.push_back(ch);
+                    }
+                    ++depth;
                 } break;
                 case ']':
                 case '}': {
-                    if (brackets.empty() || !((brackets.top() == '[' && ch == ']') || (brackets.top() == '{' && ch == '}'))) {
+                    if (depth == 0) break;
+                    const char16_t opening = depth <= brackets.size() ? brackets[depth - 1] : overflow.back();
+                    if (!((opening == '[' && ch == ']') || (opening == '{' && ch == '}'))) {
                         break;
                     }
-                    switch ((brackets.size() - 1) % 3) {
+                    switch ((depth - 1) % 3) {
                         case 0:
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET1);
                             break;
@@ -264,13 +289,20 @@ namespace CHelper::SyntaxHighlight {
                         default:
                             CHELPER_UNREACHABLE();
                     }
-                    brackets.pop();
+                    if (depth > brackets.size()) overflow.pop_back();
+                    --depth;
                 } break;
                 default:
                     break;
             }
         });
-        return syntaxResult;
+    }
+
+    SyntaxResult getSyntaxResult(const ASTNode &astNode) {
+        SyntaxResult result(astNode.tokens.lexerResult->content);
+        auto view = result.view();
+        fillSyntaxResult(astNode, view);
+        return result;
     }
 
 }// namespace CHelper::SyntaxHighlight

@@ -31,25 +31,38 @@ namespace CHelper {
         size_t start, end;
         size_t startIndex, endIndex;
 
-    private:
-        std::u16string_view cacheString;
-
-    public:
         TokensView(const std::shared_ptr<LexerResult> &lexerResult, size_t start, size_t end);
 
-        [[nodiscard]] bool isEmpty() const;
+        [[nodiscard]] bool isEmpty() const {
+            return start >= end;
+        }
 
-        [[nodiscard]] bool hasValue() const;
+        [[nodiscard]] bool hasValue() const {
+            return start < end;
+        }
 
-        const Token &operator[](size_t which) const;
+        const Token &operator[](size_t which) const {
+            return lexerResult->allTokens[start + which];
+        }
 
-        [[nodiscard]] size_t size() const;
+        [[nodiscard]] size_t size() const {
+            return end - start;
+        }
 
         [[nodiscard]] bool isAllSpace() const;
 
         void forEach(std::function<void(const Token &token)> function) const;
 
-        [[nodiscard]] std::u16string_view string() const;
+        template<class Function>
+        void forEach(Function &&function) const {
+            for (size_t i = start; i < end; ++i) {
+                function(lexerResult->allTokens[i]);
+            }
+        }
+
+        [[nodiscard]] std::u16string_view string() const {
+            return {lexerResult->content.data() + startIndex, endIndex - startIndex};
+        }
     };
 
 }// namespace CHelper

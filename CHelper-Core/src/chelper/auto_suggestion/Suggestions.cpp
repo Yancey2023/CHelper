@@ -76,8 +76,13 @@ namespace CHelper::AutoSuggestion {
     }
 
     std::vector<Suggestion> Suggestions::collect() {
+        const size_t size = spaceSuggestions.size() + symbolSuggestions.size() + literalSuggestions.size() + idSuggestions.size();
+        // 只有一个分组时直接交出其缓冲区，避免再分配和逐条移动 shared_ptr。
+        for (auto *group: {&spaceSuggestions, &symbolSuggestions, &literalSuggestions, &idSuggestions}) {
+            if (group->size() == size) return std::move(*group);
+        }
         std::vector<Suggestion> result;
-        result.reserve(spaceSuggestions.size() + symbolSuggestions.size() + literalSuggestions.size() + idSuggestions.size());
+        result.reserve(size);
         result.insert(result.end(), std::make_move_iterator(spaceSuggestions.begin()), std::make_move_iterator(spaceSuggestions.end()));
         result.insert(result.end(), std::make_move_iterator(symbolSuggestions.begin()), std::make_move_iterator(symbolSuggestions.end()));
         result.insert(result.end(), std::make_move_iterator(literalSuggestions.begin()), std::make_move_iterator(literalSuggestions.end()));

@@ -32,13 +32,13 @@ namespace CHelper {
             if (astNode.isError()) {
                 return false;
             }
-            bool result = false;
-            astNode.tokens.forEach([&result](const Token &token) {
+            for (size_t i = 0; i < astNode.tokens.size(); ++i) {
+                const Token &token = astNode.tokens[i];
                 if (token.type != TokenType::SPACE && token.type != TokenType::LF) {
-                    result = true;
+                    return true;
                 }
-            });
-            return result;
+            }
+            return false;
         }
 
         size_t countChildNodes(const ASTNode &astNode) {
@@ -100,29 +100,18 @@ namespace CHelper {
         return countChildNodes(astNode);
     }
 
-    CommandContext::CommandContext(std::shared_ptr<const CPack> cpack, std::u16string command)
+    CommandContext::CommandContext(std::shared_ptr<const CPack> cpack, std::u16string_view command)
         : cpack(std::move(cpack)),
           memory(),
           memoryScope(memory.getResource()),
-          command(command.data(), command.size()),
-          astNode(Parser::parse(this->command, *this->cpack)) {
+          astNode(Parser::parse(command, *this->cpack)),
+          command(astNode.tokens.lexerResult->content),
+          nodeCount(countSemanticNodes(astNode)) {
         memoryScope.release();
     }
 
     CommandContext::~CommandContext() {
         memoryScope.prepareForDestruction();
-    }
-
-    const CPack &CommandContext::getCPack() const {
-        return *cpack;
-    }
-
-    std::u16string_view CommandContext::getCommand() const {
-        return command;
-    }
-
-    const ASTNode *CommandContext::getAstNode() const {
-        return &astNode;
     }
 
     std::u16string CommandContext::getStructure() const {
@@ -141,12 +130,8 @@ namespace CHelper {
         return SyntaxHighlight::getSyntaxResult(astNode);
     }
 
-    std::vector<std::shared_ptr<ErrorReason>> CommandContext::getErrorReasons() const {
+    std::vector<std::shared_ptr<const ErrorReason>> CommandContext::getErrorReasons() const {
         return Linter::getErrorReasons(astNode);
-    }
-
-    size_t CommandContext::getNodeCount() const {
-        return countSemanticNodes(astNode);
     }
 
     std::optional<std::pair<std::u16string, size_t>>
@@ -160,16 +145,20 @@ namespace CHelper {
         if (suggestion.content->name == u" " && (suggestion.start == 0 || before[suggestion.start - 1] == u' ')) {
             return {{std::u16string(before), suggestion.start}};
         }
-        std::pair<std::u16string, size_t> result = {
-                std::u16string().append(before.substr(0, suggestion.start)).append(suggestion.content->name).append(before.substr(suggestion.end)),
-                suggestion.start + suggestion.content->name.length()};
-        if (suggestion.end != before.length()) [[unlikely]] {
+        std::pair<std::u16string, size_t> result;
+        result.first.reserve(before.size() - (suggestion.end - suggestion.start) + suggestion.content->name.size() + 1);
+        result.first.append(before.substr(0, suggestion.start)).append(suggestion.content->name).append(before.substr(suggestion.end));
+        result.second = suggestion.start + suggestion.content->name.length();
+        if (suggestion.end != before.length() || !suggestion.isAddSpace) {
             return result;
         }
         // 和CHelperCore::onSuggestionClick一致：在命令末尾补全后重新解析，
         // 决定是否需要额外补一个空格，但不修改当前上下文的状态
+        // 临时解析也按整体生命周期分配；只将独立拥有的文本结果返回给调用方。
+        CommandContextMemoryResource scratch;
+        CommandContextMemoryScope scope(scratch.getResource());
         ASTNode newAstNode = Parser::parse(result.first, *cpack);
-        if (suggestion.isAddSpace && newAstNode.isAllSpaceError()) [[likely]] {
+        if (newAstNode.isAllSpaceError()) [[likely]] {
             result.first.append(u" ");
             result.second++;
         }

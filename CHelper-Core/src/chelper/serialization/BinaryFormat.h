@@ -373,9 +373,7 @@ namespace glz {
                     std::memcpy(value.data(), &(*it), bytes);
                     it += bytes;
                 }
-                return;
-            }
-            if (size > 0) {
+            } else if (size > 0) {
                 value.reserve(size);
                 for (std::uint32_t i = 0; i < size; ++i) {
                     if constexpr (is_vector_bool_v<T>) {

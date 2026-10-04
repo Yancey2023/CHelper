@@ -16,8 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <barrier>
 #include <chelper/CHelperCore.h>
+#include <chelper/command_structure/CommandStructure.h>
+#include <chelper/lexer/Lexer.h>
+#include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/serialization/Serialization.h>
+#include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <chelper/util/JsonUtil.h>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <thread>
@@ -40,6 +47,7 @@ namespace CHelper::Test {
                     uR"(execute if block ~~~ anvil["aaa"=90.5] run g)",
                     uR"(tellraw @a {"rawtext":[{"text":"aaa"}]})",
                     uR"(give @s 石头)",
+                    uR"(give @s stone 1 0 {"minecraft:can_destroy":{"blocks":["minecraft:stone","minecraft:dirt","minecraft:stone","minecraft:\u0073tone"]}})",
             };
             return commands;
         }
@@ -56,7 +64,7 @@ namespace CHelper::Test {
             result += utf8::utf16to8(context.getCommand());
             result += "|";
             for (const auto &errorReason: context.getErrorReasons()) {
-                result += std::to_string(errorReason->start) + "," + std::to_string(errorReason->end) + "," + utf8::utf16to8(errorReason->errorReason) + ";";
+                result += std::to_string(errorReason->start) + "," + std::to_string(errorReason->end) + "," + utf8::utf16to8(errorReason->getMessage()) + ";";
             }
             result += "|";
             for (const auto &suggestion: context.getSuggestions(suggestionIndex)) {
@@ -137,6 +145,26 @@ namespace CHelper::Test {
         EXPECT_FALSE(context.applySuggestion(command.length(), suggestions.size()).has_value());
     }
 
+    TEST(CommandContextTest, AppliesSuggestionAfterALongConditionChainWithoutMutatingContext) {
+        const auto cpack = loadCPack();
+        std::u16string command = u"execute ";
+        for (size_t i = 0; i < 1024; ++i) command.append(u"if block ~~~ stone ");
+        command.append(u"run g");
+        const CommandContext context(cpack, command);
+        const auto suggestions = context.getSuggestions(command.size());
+        const auto found = std::ranges::find_if(suggestions, [](const auto &suggestion) { return suggestion.content->name == u"give"; });
+        ASSERT_NE(found, suggestions.end());
+        const auto which = static_cast<size_t>(found - suggestions.begin());
+        const auto applied = context.applySuggestion(command.size(), which);
+        ASSERT_TRUE(applied.has_value());
+        const auto expected = command.substr(0, command.size() - 1) + u"give ";
+        EXPECT_EQ(applied->first, expected);
+        EXPECT_EQ(applied->second, expected.size());
+        EXPECT_EQ(context.getCommand(), command);
+        EXPECT_EQ(context.applySuggestion(command.size(), which), applied);
+        EXPECT_FALSE(context.applySuggestion(command.size(), suggestions.size()).has_value());
+    }
+
     TEST(CommandContextTest, ParallelContextsOnSharedCPack) {
         std::shared_ptr<const CPack> cpack = loadCPack();
 
@@ -209,7 +237,7 @@ namespace CHelper::Test {
 
     TEST(CommandContextTest, ErrorReasonsOutliveContext) {
         std::shared_ptr<const CPack> cpack = loadCPack();
-        std::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        std::vector<std::shared_ptr<const ErrorReason>> errorReasons;
         {
             CommandContext context(cpack, uR"(give @s)");
             errorReasons = context.getErrorReasons();
@@ -217,7 +245,146 @@ namespace CHelper::Test {
         }
 
         ASSERT_FALSE(errorReasons.empty());
-        EXPECT_FALSE(errorReasons.front()->errorReason.empty());
+        EXPECT_FALSE(errorReasons.front()->getMessage().empty());
+    }
+
+    TEST(CommandContextTest, ErrorQuerySharesReadOnlyDiagnosticsWithoutChangingAST) {
+        const auto cpack = loadCPack();
+        CommandContext context(cpack, u"unknown_command 中文");
+        const auto &parsed = context.getAstNode()->errorReasons;
+        ASSERT_FALSE(parsed.empty());
+        ASSERT_EQ(parsed.front()->getCode(), ErrorReasonCode::UnknownCommand);
+        const auto message = parsed.front()->getMessage();
+        const auto first = context.getErrorReasons();
+        static_assert(std::is_const_v<decltype(first)::value_type::element_type>);
+        ASSERT_FALSE(first.empty());
+        EXPECT_EQ(first.front().get(), parsed.front().get());
+        auto display = first.front()->getMessage();
+        display = u"修改展示结果";
+        const auto second = context.getErrorReasons();
+        ASSERT_FALSE(second.empty());
+        EXPECT_EQ(second.front()->getMessage(), message);
+        EXPECT_EQ(second.front()->start, parsed.front()->start);
+        EXPECT_EQ(parsed.front()->getMessage(), message);
+    }
+
+    TEST(CommandContextTest, CopiesTemporaryInputAndResultsOutliveContext) {
+        const auto cpack = loadCPack();
+        std::vector<AutoSuggestion::Suggestion> suggestions;
+        std::optional<std::pair<std::u16string, size_t>> applied;
+        std::u16string structure, hint;
+        {
+            std::u16string input = u"gi";
+            CommandContext context(cpack, input);
+            input.assign(1024, u'x');
+            EXPECT_EQ(context.getCommand(), u"gi");
+            suggestions = context.getSuggestions(2);
+            structure = context.getStructure();
+            hint = context.getParamHint(2);
+            applied = context.applySuggestion(2, 0);
+        }
+        ASSERT_FALSE(suggestions.empty());
+        EXPECT_FALSE(suggestions.front().content->name.empty());
+        EXPECT_FALSE(structure.empty());
+        EXPECT_FALSE(hint.empty());
+        ASSERT_TRUE(applied);
+        EXPECT_EQ(applied->first, u"give ");
+        EXPECT_EQ(applied->second, 5);
+        CommandContext temporary(cpack, std::u16string(u"list"));
+        EXPECT_EQ(temporary.getCommand(), u"list");
+    }
+
+    TEST(CommandContextTest, ConcurrentReadsAndSuggestionApplicationOnSameContext) {
+        const auto cpack = loadCPack();
+        const std::u16string command = uR"(execute as @a run give @s sto)";
+        const CommandContext context(cpack, command);
+        const auto expected = collectAllResults(context, command.size() / 2, command.size());
+        const auto expectedApplied = context.applySuggestion(command.size(), 0);
+        std::barrier ready(4);
+        std::array<std::string, 4> failures;
+        std::vector<std::thread> threads;
+        for (size_t i = 0; i < failures.size(); ++i) {
+            threads.emplace_back([&, i] {
+                ready.arrive_and_wait();
+                try {
+                    for (size_t iteration = 0; iteration < 16; ++iteration) {
+                        if (collectAllResults(context, command.size() / 2, command.size()) != expected ||
+                            context.applySuggestion(command.size(), 0) != expectedApplied) {
+                            failures[i] = "concurrent result mismatch";
+                        }
+                    }
+                } catch (const std::exception &error) {
+                    failures[i] = error.what();
+                }
+            });
+        }
+        for (auto &thread: threads) thread.join();
+        for (const auto &failure: failures) EXPECT_TRUE(failure.empty()) << failure;
+    }
+
+    TEST(CommandContextTest, HighlightsPlainAndEscapedInnerStringsInTheirOriginalCoordinates) {
+        const Node::NodeNamespaceId innerType;
+        const Node::NodeJsonString outerType;
+        const auto innerLexer = Lexer::lex(u"[x]");
+        const std::array inputs{uR"("[x]")", uR"("\u005Bx]")", uR"("[x])"};
+        for (const auto *input: inputs) {
+            const auto outerLexer = Lexer::lex(input);
+            auto inner = ASTNode::simpleNode(innerType, TokensView(innerLexer, 0, innerLexer->allTokens.size()));
+            auto outer = ASTNode::andNode(outerType, ASTNode::children(std::move(inner)),
+                                          TokensView(outerLexer, 0, outerLexer->allTokens.size()), nullptr,
+                                          ASTNodeId::NODE_STRING_INNER);
+            const auto syntax = SyntaxHighlight::getSyntaxResult(outer);
+            const auto mapped = JsonUtil::jsonString2String(input);
+            ASSERT_EQ(mapped.result, u"[x]");
+            EXPECT_EQ(syntax.tokenTypes[0], SyntaxHighlight::SyntaxTokenType::STRING);
+            if (mapped.isComplete) {
+                EXPECT_EQ(syntax.tokenTypes.back(), SyntaxHighlight::SyntaxTokenType::STRING);
+            }
+            const std::array colors{SyntaxHighlight::SyntaxTokenType::BRACKET1, SyntaxHighlight::SyntaxTokenType::ID,
+                                    SyntaxHighlight::SyntaxTokenType::BRACKET1};
+            for (size_t index = 0; index < colors.size(); ++index) {
+                for (size_t position = mapped.convert(index); position < mapped.convert(index + 1); ++position) {
+                    EXPECT_EQ(syntax.tokenTypes[position], colors[index]);
+                }
+            }
+        }
+    }
+
+    TEST(CommandContextTest, HighlightsDeepAndMismatchedBrackets) {
+        constexpr size_t depth = 40;
+        const std::u16string text = std::u16string(depth, u'[') + u"}" + std::u16string(depth, u']') + u"[]";
+        const auto lexer = Lexer::lex(text);
+        const auto ast = ASTNode::simpleNode(Node::NodeAny::getNodeAny(), TokensView(lexer, 0, lexer->allTokens.size()));
+        const auto syntax = SyntaxHighlight::getSyntaxResult(ast);
+        const std::array colors{SyntaxHighlight::SyntaxTokenType::BRACKET1,
+                                SyntaxHighlight::SyntaxTokenType::BRACKET2,
+                                SyntaxHighlight::SyntaxTokenType::BRACKET3};
+        for (size_t i = 0; i < depth; ++i) {
+            EXPECT_EQ(syntax.tokenTypes[i], colors[i % colors.size()]);
+            EXPECT_EQ(syntax.tokenTypes[depth + 1 + i], colors[(depth - 1 - i) % colors.size()]);
+        }
+        EXPECT_EQ(syntax.tokenTypes[text.size() - 2], colors[0]);
+        EXPECT_EQ(syntax.tokenTypes[text.size() - 1], colors[0]);
+    }
+
+    TEST(CommandContextTest, StructureCountsUnenteredParametersAndLongUnicodeBriefs) {
+        Node::initializeStaticNodes();
+        const auto lexer = Lexer::lex(u"");
+        const TokensView tokens(lexer, 0, 0);
+        const std::vector<std::u16string> briefs{
+                u"", u"参数", u"中文🙂", std::u16string(u"a\0b", 3), std::u16string(2048, u'参')};
+        for (const auto &brief: briefs) {
+            Node::NodeString first, second;
+            first.brief.emplace(brief);
+            second.brief.emplace(u"尾参数");
+            Node::NodeWrapped secondWrapped(second), firstWrapped(first);
+            secondWrapped.pushNextNode(Node::NodeLF::getInstance());
+            firstWrapped.pushNextNode(&secondWrapped);
+            const auto ast = ASTNode::simpleNode(firstWrapped, tokens, ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, tokens));
+            const auto result = CommandStructure::getStructure(ast);
+            EXPECT_EQ(result, u"<" + brief + u"> <尾参数>");
+            EXPECT_EQ(result.size(), brief.size() + 8);
+        }
     }
 
 }// namespace CHelper::Test

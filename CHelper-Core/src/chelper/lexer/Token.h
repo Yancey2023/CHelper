@@ -33,6 +33,7 @@ namespace CHelper {
         };
 
         std::u16string getName(TokenType tokenType);
+        std::u16string_view getNameView(TokenType tokenType);
 
     }// namespace TokenType
 
@@ -44,9 +45,13 @@ namespace CHelper {
 
         Token(TokenType::TokenType type, const size_t &pos, const std::u16string_view &content);
 
-        [[nodiscard]] size_t getStartIndex() const;
+        [[nodiscard]] size_t getStartIndex() const {
+            return pos;
+        }
 
-        [[nodiscard]] size_t getEndIndex() const;
+        [[nodiscard]] size_t getEndIndex() const {
+            return pos + content.size();
+        }
     };
 
 }// namespace CHelper

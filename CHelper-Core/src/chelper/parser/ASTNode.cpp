@@ -18,49 +18,50 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/parser/ASTNode.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 
 namespace CHelper {
 
-    ASTNode::ASTNode(ASTNodeMode::ASTNodeMode mode,
-                     const Node::NodeWithType &node,
-                     std::pmr::vector<ASTNode> &&childNodes,
-                     TokensView tokens,
-                     const std::pmr::vector<std::shared_ptr<ErrorReason>> &errorReasons,
-                     ASTNodeId::ASTNodeId id,
-                     size_t whichBest)
-        : mode(mode),
-          node(node),
-          childNodes(std::move(childNodes)),
-          tokens(std::move(tokens)),
-          errorReasons(errorReasons),
-          id(id),
-          whichBest(whichBest) {}
+    ASTNode::ASTNode(const ASTNode &other)
+        : mode(other.mode),
+          id(other.id),
+          node(other.node),
+          childNodes(other.childNodes, getASTMemoryResource()),
+          tokens(other.tokens),
+          errorReasons(other.errorReasons, getASTMemoryResource()),
+          whichBest(other.whichBest) {}
 
     ASTNode ASTNode::simpleNode(const Node::NodeWithType &node,
-                                const TokensView &tokens,
-                                const std::shared_ptr<ErrorReason> &errorReason,
+                                TokensView tokens,
+                                std::shared_ptr<ErrorReason> errorReason,
                                 const ASTNodeId::ASTNodeId &id) {
-        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        ErrorReasonList errorReasons(getASTMemoryResource());
         if (errorReason != nullptr) [[likely]] {
-            errorReasons.push_back(errorReason);
+            errorReasons.push_back(std::move(errorReason));
         }
-        return {ASTNodeMode::NONE, node, {}, tokens, errorReasons, id};
+        return {ASTNodeMode::NONE, node, std::pmr::vector<ASTNode>(getASTMemoryResource()),
+                std::move(tokens), std::move(errorReasons), id};
     }
 
     ASTNode ASTNode::andNode(const Node::NodeWithType &node,
                              std::pmr::vector<ASTNode> &&childNodes,
-                             const TokensView &tokens,
-                             const std::shared_ptr<ErrorReason> &errorReason,
+                             TokensView tokens,
+                             std::shared_ptr<ErrorReason> errorReason,
                              const ASTNodeId::ASTNodeId &id) {
         if (errorReason != nullptr) [[unlikely]] {
-            return {ASTNodeMode::AND, node, std::move(childNodes), tokens, {errorReason}, id};
+            ErrorReasonList errorReasons(getASTMemoryResource());
+            errorReasons.push_back(std::move(errorReason));
+            return {ASTNodeMode::AND, node, std::move(childNodes), std::move(tokens),
+                    std::move(errorReasons), id};
         }
         for (const auto &item: childNodes) {
             if (item.isError()) [[unlikely]] {
-                return {ASTNodeMode::AND, node, std::move(childNodes), tokens, item.errorReasons, id};
+                return {ASTNodeMode::AND, node, std::move(childNodes), std::move(tokens),
+                        ErrorReasonList(item.errorReasons, getASTMemoryResource()), id};
             }
         }
-        return {ASTNodeMode::AND, node, std::move(childNodes), tokens, {}, id};
+        return {ASTNodeMode::AND, node, std::move(childNodes), std::move(tokens),
+                ErrorReasonList(getASTMemoryResource()), id};
     }
 
     ASTNode ASTNode::orNode(const Node::NodeWithType &node,
@@ -75,6 +76,12 @@ namespace CHelper {
             throw std::runtime_error("OR node must have at least one child node");
         }
 #endif
+        // 单分支无需选优；最多一个诊断时也无需进行列表去重。
+        if (childNodes.size() == 1 && childNodes.front().errorReasons.size() <= 1) {
+            ErrorReasonList errorReasons(childNodes.front().errorReasons, getASTMemoryResource());
+            TokensView selectedTokens = tokens == nullptr ? childNodes.front().tokens : *tokens;
+            return {ASTNodeMode::OR, node, std::move(childNodes), std::move(selectedTokens), std::move(errorReasons), id, 0};
+        }
         // 收集错误的节点数，如果有节点没有错就设为0
         size_t errorCount = 0;
         for (const auto &item: childNodes) {
@@ -85,12 +92,11 @@ namespace CHelper {
                 break;
             }
         }
-        std::pmr::vector<std::shared_ptr<ErrorReason>> errorReasons;
+        ErrorReasonList errorReasons(getASTMemoryResource());
         size_t whichBest = 0;
         if (errorCount == 0) [[unlikely]] {
             // 从没有错误的内容中找出最好的节点
             size_t end = 0;
-            errorReasons.clear();
             for (size_t i = 0; i < childNodes.size(); ++i) {
                 const ASTNode &item = childNodes[i];
                 if (!item.isError() && end < item.tokens.end) {
@@ -129,9 +135,9 @@ namespace CHelper {
         }
         TokensView tokens1 = tokens == nullptr ? childNodes[whichBest].tokens : *tokens;
         if (errorCount > 1 && errorReason != nullptr) [[unlikely]] {
-            errorReasons = {ErrorReason::contentError(tokens1, errorReason)};
+            errorReasons = {ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, tokens1, errorReason)};
         }
-        return {ASTNodeMode::OR, node, std::move(childNodes), tokens1, errorReasons, id, whichBest};
+        return {ASTNodeMode::OR, node, std::move(childNodes), std::move(tokens1), std::move(errorReasons), id, whichBest};
     }
 
     ASTNode ASTNode::orNode(const Node::NodeWithType &node,
@@ -140,21 +146,6 @@ namespace CHelper {
                             const char16_t *errorReason,
                             const ASTNodeId::ASTNodeId &id) {
         return orNode(node, std::move(childNodes), &tokens, errorReason, id);
-    }
-
-    bool ASTNode::isAllSpaceError() const {
-        return isError() && std::ranges::all_of(errorReasons, [](const auto &item) {
-                   return item->level == ErrorReasonLevel::REQUIRE_SPACE;
-               });
-    }
-
-    [[nodiscard]] const ASTNode &ASTNode::getBestNode() const {
-#if CHelperDebug
-        if (mode != ASTNodeMode::OR) {
-            throw std::runtime_error("invalid mode");
-        }
-#endif
-        return childNodes[whichBest];
     }
 
 }// namespace CHelper

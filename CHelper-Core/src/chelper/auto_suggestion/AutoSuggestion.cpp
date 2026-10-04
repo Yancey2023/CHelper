@@ -349,7 +349,7 @@ namespace CHelper::AutoSuggestion {
             if (str[0] != '"') [[likely]] {
                 return true;
             }
-            auto convertResult = JsonUtil::jsonString2String(str);
+            auto convertResult = JsonUtil::DecodedStringView(str);
             if (!convertResult.isComplete) [[likely]] {
                 suggestions.addSymbolSuggestion({index, index, false, doubleQuoteMask});
             }
@@ -433,10 +433,10 @@ namespace CHelper::AutoSuggestion {
                 suggestions.addSymbolSuggestion({index, index, false, doubleQuoteMask});
                 return true;
             }
-            auto convertResult = JsonUtil::jsonString2String(astNode.tokens.string());
-            auto convertResult1 = JsonUtil::jsonString2String(astNode.tokens.string().substr(0, index - astNode.tokens.startIndex));
+            auto convertResult = JsonUtil::DecodedStringView(astNode.tokens.string());
+            auto convertResult1 = JsonUtil::DecodedStringView(astNode.tokens.string().substr(0, index - astNode.tokens.startIndex));
             if (convertResult1.errorReason == nullptr && astNode.id == ASTNodeId::NODE_STRING_INNER) [[unlikely]] {
-                Suggestions childSuggestions = getSuggestions(astNode.childNodes[0], convertResult1.result.size());
+                Suggestions childSuggestions = getSuggestions(astNode.childNodes[0], convertResult1.string().size());
                 suggestions.combine(childSuggestions, [&convertResult, &astNode](Suggestion &suggestion) {
                     std::u16string convertStr = JsonUtil::string2jsonString(suggestion.content->name);
                     suggestion.start = convertResult.convert(suggestion.start) + astNode.tokens.startIndex;

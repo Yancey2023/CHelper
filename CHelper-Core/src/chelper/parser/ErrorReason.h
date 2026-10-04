@@ -47,100 +47,112 @@ namespace CHelper {
 
     }// namespace ErrorReasonLevel
 
-    class ErrorReason {
+    namespace Detail {
+        class ErrorReasonMemoryResource;
+        class ErrorReasonFactoryAccess;
+        template<class T>
+        class ErrorReasonAllocator;
+    }// namespace Detail
+
+    // 作用域和每个错误的 shared_ptr 分配共同持有分块资源，查询结果可独立存活。
+    class ErrorReasonMemoryScope {
+        friend class Detail::ErrorReasonFactoryAccess;
+
+        ErrorReasonMemoryScope *previous;
+        Detail::ErrorReasonMemoryResource *memory = nullptr;
+
     public:
+        ErrorReasonMemoryScope();
+        ~ErrorReasonMemoryScope();
+
+        ErrorReasonMemoryScope(const ErrorReasonMemoryScope &) = delete;
+        ErrorReasonMemoryScope &operator=(const ErrorReasonMemoryScope &) = delete;
+    };
+
+    // 诊断标识与参数独立于展示语言；自定义资源包文本保持原样。
+    enum class ErrorReasonCode : uint8_t {
+        CustomText,
+        RequireSpace,
+        RequireType,
+        TypeMismatch,
+        IntegerRequired,
+        InvalidNumber,
+        EmptyNull,
+        InvalidNull,
+        EmptyString,
+        QuotedStringRequired,
+        EmptyCommandName,
+        UnknownCommand,
+        Excess,
+        Incomplete,
+        UnknownMeaning,
+        InvalidCoordinate,
+        EmptyRange,
+        InvalidRange,
+        StringContainsSpace,
+        UnclosedString,
+        UnexpectedSpace,
+        RequireSymbol,
+        SymbolTypeMismatch,
+        SymbolContentMismatch,
+        InvalidBoolean,
+        UnknownCommandName,
+        UnknownId,
+        MixedCoordinates,
+        LocalCoordinateDisallowed,
+        UnknownSelectorArgument,
+        UnknownJsonArgument,
+        NumberOutOfRange,
+        JsonQuotesRequired,
+        IncompleteEscape,
+        IncompleteUnicodeEscape,
+        InvalidUnicodeEscapeCharacter,
+        InvalidUnicodeEscapeValue,
+        UnknownEscape,
+        NumberOutOfRangeInt32,
+        NumberOutOfRangeInt64,
+        NumberOutOfRangeUInt64,
+        NumberOutOfRangeFloat,
+    };
+
+    // 类型名称按标识保存，展示时才转换为文本，避免为每个备选分支复制固定名称。
+    enum class ErrorReasonExpectedType : uint8_t {
+        String,
+        Integer,
+        Float,
+        Symbol,
+    };
+
+    class ErrorReason {
+        friend class Detail::ErrorReasonFactoryAccess;
+        template<class T>
+        friend class Detail::ErrorReasonAllocator;
+
+        ErrorReasonCode code;
+
+    public:
+        // 字节大小的状态相邻，避免 level 单独产生一个指针对齐的填充区。
         ErrorReasonLevel::ErrorReasonLevel level;
+
+    private:
+        const void *parameters = nullptr;
+        // 小参数与 shared_ptr 共用分块；长参数及无作用域的参数独立持有。
+        std::unique_ptr<std::byte[]> parameterStorage;
+
+        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level, size_t start, size_t end, ErrorReasonCode code);
+        template<class T>
+        const T &parametersAs() const noexcept {
+            return *static_cast<const T *>(parameters);
+        }
+
+    public:
+        ErrorReason(const ErrorReason &) = delete;
+        ErrorReason &operator=(const ErrorReason &) = delete;
+
         size_t start, end;
-        std::pmr::u16string errorReason;
-
-        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
-                    size_t start,
-                    size_t end,
-                    std::u16string_view errorReason);
-
-        ErrorReason(ErrorReasonLevel::ErrorReasonLevel level,
-                    const TokensView &tokens,
-                    std::u16string_view errorReason);
-
-        //命令后面有多余部分
-        [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(size_t start,
-                                                                    size_t end,
-                                                                    const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::EXCESS, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason> excess(const TokensView &tokens,
-                                                                    const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::EXCESS, tokens, errorReason);
-        }
-
-        //缺少空格
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        requireSpace(const TokensView &tokens) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, tokens, u"命令不完整，缺少空格");
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        requireSpace(size_t start, size_t end) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::REQUIRE_SPACE, start, end, u"命令不完整，缺少空格");
-        }
-
-        //命令不完整
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        incomplete(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::INCOMPLETE, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        incomplete(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::INCOMPLETE, tokens, errorReason);
-        }
-
-        //类型不匹配
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        typeError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        typeError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::TYPE_ERROR, tokens, errorReason);
-        }
-
-        //内容不匹配
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        contentError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        contentError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::CONTENT_ERROR, tokens, errorReason);
-        }
-
-        //逻辑错误
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        logicError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        logicError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::LOGIC_ERROR, tokens, errorReason);
-        }
-
-        //ID错误
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        idError(size_t start, size_t end, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::ID_ERROR, start, end, errorReason);
-        }
-
-        [[maybe_unused]] static std::shared_ptr<ErrorReason>
-        idError(const TokensView &tokens, const std::u16string &errorReason) {
-            return std::make_shared<ErrorReason>(ErrorReasonLevel::ID_ERROR, tokens, errorReason);
-        }
-
-        bool operator==(const CHelper::ErrorReason &reason) const;
+        ErrorReasonCode getCode() const noexcept { return code; }
+        std::u16string getMessage() const;
+        bool operator==(const ErrorReason &reason) const;
     };
 
 }// namespace CHelper

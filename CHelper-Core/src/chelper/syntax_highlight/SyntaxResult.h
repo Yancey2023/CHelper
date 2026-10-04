@@ -20,6 +20,7 @@
 
 #include <chelper/parser/TokensView.h>
 #include <pch.h>
+#include <span>
 
 namespace CHelper::SyntaxHighlight {
 
@@ -43,6 +44,53 @@ namespace CHelper::SyntaxHighlight {
         };
     }// namespace SyntaxTokenType
 
+    class SyntaxResultView {
+    public:
+        std::u16string_view str;
+        std::span<SyntaxTokenType::SyntaxTokenType> tokenTypes;
+
+        SyntaxResultView(std::u16string_view str, std::span<SyntaxTokenType::SyntaxTokenType> tokenTypes)
+            : str(str), tokenTypes(tokenTypes) {}
+
+        void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+#if CHelperDebug
+            if (tokenTypes[index] != SyntaxTokenType::UNKNOWN && str[index] != '[' && str[index] != ']' && str[index] != '{' && str[index] != '}') {
+                SPDLOG_ERROR("replace syntax");
+            }
+            if (index > str.length()) {
+                SPDLOG_ERROR("index out of range");
+                return;
+            }
+#endif
+            tokenTypes[index] = syntaxTokenType;
+        }
+
+        void update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+#if CHelperDebug
+            for (size_t i = start; i < end; i++) {
+                if (tokenTypes[i] != SyntaxTokenType::UNKNOWN && str[i] != '[' && str[i] != ']' && str[i] != '{' && str[i] != '}') {
+                    SPDLOG_ERROR("replace syntax");
+                }
+            }
+            if (start > str.length() || end > str.length()) {
+                SPDLOG_ERROR("index out of range");
+                return;
+            }
+            if (start > end) {
+                SPDLOG_ERROR("start should less than end");
+                return;
+            }
+#endif
+            std::fill(tokenTypes.begin() + static_cast<std::u16string::difference_type>(start),
+                      tokenTypes.begin() + static_cast<std::u16string::difference_type>(end),
+                      syntaxTokenType);
+        }
+
+        void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            update(tokensView.startIndex, tokensView.endIndex, syntaxTokenType);
+        }
+    };
+
     class SyntaxResult {
     public:
         std::u16string_view str;
@@ -50,11 +98,19 @@ namespace CHelper::SyntaxHighlight {
 
         explicit SyntaxResult(const std::u16string_view &str);
 
-        void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType);
+        [[nodiscard]] SyntaxResultView view() noexcept { return {str, tokenTypes}; }
 
-        void update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType);
+        void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(index, syntaxTokenType);
+        }
 
-        void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType);
+        void update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(start, end, syntaxTokenType);
+        }
+
+        void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
+            view().update(tokensView, syntaxTokenType);
+        }
     };
 
 }// namespace CHelper::SyntaxHighlight

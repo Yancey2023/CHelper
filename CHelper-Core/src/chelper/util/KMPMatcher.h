@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <string_view>
 
@@ -24,7 +25,8 @@ namespace CHelper {
     class KMPMatcher {
     private:
         std::u16string_view pattern;
-        size_t *failure;
+        std::array<size_t, 32> inlineFailure;
+        size_t *failure = nullptr;
 
     public:
         /**

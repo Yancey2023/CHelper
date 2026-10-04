@@ -17,9 +17,24 @@
  */
 
 #include <chelper/parser/ErrorReason.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/util/JsonUtil.h>
 
 namespace CHelper::JsonUtil {
+
+    DecodedStringView::DecodedStringView(std::u16string_view input) {
+        if (!input.empty() && input.front() == u'"') {
+            const size_t end = input.find_first_of(u"\\\"", 1);
+            if (end == std::u16string_view::npos || input[end] == u'"') {
+                isComplete = end != std::u16string_view::npos;
+                plain = input.substr(1, isComplete ? end - 1 : input.size() - 1);
+                return;
+            }
+        }
+        converted.emplace(jsonString2String(input));
+        errorReason = converted->errorReason;
+        isComplete = converted->isComplete;
+    }
 
     size_t ConvertResult::convert(size_t index) const {
 #if CHelperDebug
@@ -83,7 +98,7 @@ namespace CHelper::JsonUtil {
     ConvertResult jsonString2String(const std::u16string_view &input) {
         ConvertResult result;
         if (input.empty() || input[0] != '\"') [[unlikely]] {
-            result.errorReason = ErrorReason::incomplete(0, 0, u"json字符串必须在双引号内");
+            result.errorReason = ErrorReasons::jsonQuotesRequired(ErrorReasonLevel::INCOMPLETE, {0, 0});
             return result;
         }
         size_t index = 0;
@@ -112,10 +127,7 @@ namespace CHelper::JsonUtil {
             //转义字符
             ++index;
             if (index >= input.size()) [[unlikely]] {
-                result.errorReason = ErrorReason::incomplete(
-                        index - 1,
-                        index,
-                        u"转义字符缺失后半部分");
+                result.errorReason = ErrorReasons::incompleteEscape(ErrorReasonLevel::INCOMPLETE, {index - 1, index});
             } else {
                 ch = input[index];
                 switch (ch) {
@@ -142,10 +154,7 @@ namespace CHelper::JsonUtil {
                     case u'u':
                         index += 4;
                         if (index >= input.size()) [[unlikely]] {
-                            result.errorReason = ErrorReason::contentError(
-                                    index - 5,
-                                    input.size(),
-                                    fmt::format(u"字符串转义缺失后半部分 -> \\u{}", escapeSequence));
+                            result.errorReason = ErrorReasons::incompleteUnicodeEscape(ErrorReasonLevel::CONTENT_ERROR, {index - 5, input.size()}, escapeSequence);
                             break;
                         }
                         escapeSequence = input.substr(index - 3, 4);
@@ -159,10 +168,7 @@ namespace CHelper::JsonUtil {
                                                     if (isHexDigit) [[likely]] {
                                                         return false;
                                                     } else {
-                                                        result.errorReason = ErrorReason::incomplete(
-                                                                index - 5,
-                                                                index + 1,
-                                                                fmt::format(u"字符串转义出现非法字符{} -> \\u{}", item, escapeSequence));
+                                                        result.errorReason = ErrorReasons::invalidUnicodeEscapeCharacter(ErrorReasonLevel::INCOMPLETE, {index - 5, index + 1}, item, escapeSequence);
                                                         return true;
                                                     }
                                                 })) [[unlikely]] {
@@ -170,9 +176,7 @@ namespace CHelper::JsonUtil {
                         }
                         unicodeValue = std::stoi(utf8::utf16to8(escapeSequence), nullptr, 16);
                         if (unicodeValue < 0 || unicodeValue > 0x10FFFF) [[unlikely]] {
-                            result.errorReason = ErrorReason::contentError(
-                                    index - 5, index + 1,
-                                    fmt::format(u"字符串转义的Unicode值无效 -> \\u{}", escapeSequence));
+                            result.errorReason = ErrorReasons::invalidUnicodeEscapeValue(ErrorReasonLevel::CONTENT_ERROR, {index - 5, index + 1}, escapeSequence);
                             break;
                         }
                         escapeSequence.clear();
@@ -186,9 +190,7 @@ namespace CHelper::JsonUtil {
                         }
                         break;
                     default:
-                        result.errorReason = ErrorReason::contentError(
-                                index, index + 1,
-                                fmt::format(u"未知的转义字符 -> \\{:c}", ch));
+                        result.errorReason = ErrorReasons::unknownEscape(ErrorReasonLevel::CONTENT_ERROR, {index, index + 1}, ch);
                         break;
                 }
             }

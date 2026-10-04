@@ -18,6 +18,7 @@
 
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/NodeType.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/util/JsonUtil.h>
@@ -25,6 +26,47 @@
 namespace CHelper::Parser {
 
     namespace {
+        // 内层字符串经常是重复的短 ID。只共享已完成的词法结果，每次仍单独解析 AST 和诊断。
+        // 缓存限定在一次顶层解析内，不保留输入视图，也不跨上下文或线程共享可变状态。
+        struct InnerLexerCache {
+            std::pmr::memory_resource *resource;
+            std::array<std::shared_ptr<LexerResult>, 4> recent;
+            size_t next = 0;
+
+            explicit InnerLexerCache(std::pmr::memory_resource *resource) : resource(resource) {}
+        };
+
+        thread_local InnerLexerCache *currentInnerLexerCache = nullptr;
+
+        class InnerLexerScope {
+            std::optional<InnerLexerCache> local;
+            InnerLexerCache *previous = currentInnerLexerCache;
+
+        public:
+            InnerLexerScope() {
+                auto *resource = CPackMemoryRouter::getAllocationResource();
+                // 自定义节点可在解析中切换分配作用域；这些结果不能借用父作用域的存储。
+                if (previous == nullptr || previous->resource != resource) currentInnerLexerCache = &local.emplace(resource);
+            }
+
+            ~InnerLexerScope() { currentInnerLexerCache = previous; }
+
+            InnerLexerScope(const InnerLexerScope &) = delete;
+            InnerLexerScope &operator=(const InnerLexerScope &) = delete;
+
+            std::shared_ptr<LexerResult> lex(std::u16string_view content) {
+                // 顶层输入不缓存；最多四项且各有长度上限，不随命令长度增加。
+                if (local.has_value() || content.size() > 256) return Lexer::lex(content);
+                for (const auto &recent: previous->recent) {
+                    if (recent != nullptr && std::u16string_view(recent->content) == content) return recent;
+                }
+                auto result = Lexer::lex(content);
+                previous->recent[previous->next] = result;
+                previous->next = (previous->next + 1) % previous->recent.size();
+                return result;
+            }
+        };
+
         //Debug 下校验解析过程没有丢失或重复消费 token；Release 编译为空
         void debugCheckTokenIndex([[maybe_unused]] const Node::NodeWithType &node,
                                   [[maybe_unused]] size_t index,
@@ -40,13 +82,27 @@ namespace CHelper::Parser {
 
     ASTNode parse(const Node::NodeWithType &node, TokenReader &tokenReader);
 
+    namespace {
+        // 调用前收集诊断参数，进入函数后才移动子树，避免参数求值顺序影响 token 视图。
+        ASTNode wrapWithError(const Node::NodeWithType &node, ASTNode &&child,
+                              std::shared_ptr<ErrorReason> errorReason) {
+            TokensView tokens = child.tokens;
+            return ASTNode::andNode(node, ASTNode::children(std::move(child)), std::move(tokens), std::move(errorReason));
+        }
+
+        ASTNode replaceWithError(const Node::NodeWithType &node, ASTNode &&result,
+                                 std::shared_ptr<ErrorReason> errorReason) {
+            return ASTNode::simpleNode(node, std::move(result.tokens), std::move(errorReason));
+        }
+    }// namespace
+
     ASTNode parseByChildNode(const Node::NodeWithType &node,
                              TokenReader &tokenReader,
                              const Node::NodeWithType &childNode,
                              const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE) {
         ASTNode childAstNode = parse(childNode, tokenReader);
         TokensView tokens = childAstNode.tokens;
-        return ASTNode::andNode(node, {std::move(childAstNode)}, tokens, nullptr, astNodeId);
+        return ASTNode::andNode(node, ASTNode::children(std::move(childAstNode)), std::move(tokens), nullptr, astNodeId);
     }
 
     template<class NodeType>
@@ -62,7 +118,8 @@ namespace CHelper::Parser {
                 tokenReader.push();
                 if ((isMustAfterSpace0 || isMustAfterSpace) && node.innerNode.nodeTypeId != Node::NodeTypeId::LF && tokenReader.skipSpace() == 0) [[unlikely]] {
                     TokensView tokens = tokenReader.collect();
-                    return ASTNode::simpleNode(node, tokens, ErrorReason::requireSpace(tokens));
+                    auto errorReason = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, tokens);
+                    return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
                 }
                 tokenReader.pop();
             }
@@ -72,10 +129,10 @@ namespace CHelper::Parser {
             ASTNode currentASTNode = parse(node.innerNode, tokenReader);
             debugCheckTokenIndex(node.innerNode, index, tokenReader);
             if (currentASTNode.isError() || node.nextNodes.empty()) [[unlikely]] {
-                return ASTNode::andNode(node, {std::move(currentASTNode)}, tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(currentASTNode)), tokenReader.collect());
             }
             //子节点
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             childASTNodes.reserve(node.nextNodes.size());
             for (const auto &item: node.nextNodes) {
                 tokenReader.push();
@@ -85,7 +142,7 @@ namespace CHelper::Parser {
             tokenReader.push();
             tokenReader.skipToLF();
             ASTNode nextASTNode = ASTNode::orNode(node, std::move(childASTNodes), tokenReader.collect());
-            return ASTNode::andNode(node, {std::move(currentASTNode), std::move(nextASTNode)}, tokenReader.collect());
+            return ASTNode::andNode(node, ASTNode::children(std::move(currentASTNode), std::move(nextASTNode)), tokenReader.collect());
         }
 
         static ASTNode getASTNode(const Node::NodeWrapped &node, TokenReader &tokenReader) {
@@ -116,7 +173,7 @@ namespace CHelper::Parser {
             tokenReader.push();
             ASTNode result1 = parse(node.nodeList.value(), tokenReader);
             if (!result1.isError()) [[likely]] {
-                return ASTNode::andNode(node, {std::move(result1)}, tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(result1)), tokenReader.collect());
             }
             size_t index1 = tokenReader.index;
             tokenReader.restore();
@@ -126,7 +183,7 @@ namespace CHelper::Parser {
             tokenReader.restore();
             tokenReader.push();
             tokenReader.index = result1.isError() ? index2 : index1;
-            return ASTNode::orNode(node, {std::move(result1), std::move(result2)}, tokenReader.collect());
+            return ASTNode::orNode(node, ASTNode::children(std::move(result1), std::move(result2)), tokenReader.collect());
         }
     };
 
@@ -138,11 +195,9 @@ namespace CHelper::Parser {
             tokenReader.pop();
             std::u16string_view str = result.tokens.string();
             if (str.empty()) [[likely]] {
-                TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::contentError(tokens, u"null参数为空"));
+                return wrapWithError(node, std::move(result), ErrorReasons::emptyNull(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
             } else if (str != u"null") [[likely]] {
-                TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::contentError(tokens, fmt::format(u"内容不是null -> {}", str)));
+                return wrapWithError(node, std::move(result), ErrorReasons::invalidNull(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
             }
             return result;
         }
@@ -155,51 +210,52 @@ namespace CHelper::Parser {
         }
     };
 
-    std::pair<ASTNode, JsonUtil::ConvertResult>
+    std::pair<ASTNode, JsonUtil::DecodedStringView>
     getInnerASTNode(const Node::NodeWithType &node,
                     const TokensView &tokens,
                     const std::u16string_view &content,
                     const Node::NodeWithType &mainNode) {
-        auto convertResult = JsonUtil::jsonString2String(content);
+        auto convertResult = JsonUtil::DecodedStringView(content);
         if (convertResult.errorReason != nullptr) [[unlikely]] {
             //jsonString2String返回的错误位置是相对content的坐标，转换成命令里的绝对坐标
             convertResult.errorReason->start += tokens.startIndex;
             convertResult.errorReason->end += tokens.startIndex;
             return {ASTNode::simpleNode(node, tokens, convertResult.errorReason), std::move(convertResult)};
         }
-        ASTNode result = parse(convertResult.result, mainNode);
+        ASTNode result = parse(convertResult.string(), mainNode);
         return {std::move(result), std::move(convertResult)};
     }
 
     template<>
     struct Parser<Node::NodeJsonString> {
         static ASTNode getASTNode(const Node::NodeJsonString &node, TokenReader &tokenReader) {
-            tokenReader.push();
-            ASTNode result = tokenReader.readStringASTNode(node);
-            tokenReader.pop();
-            TokensView tokens = result.tokens;
+            // 最终错误只由 JSON 字符串规则决定，不需要临时的通用字符串 AST。
+            TokensView tokens = tokenReader.readTokenView();
             std::u16string_view str = tokens.string();
             if (str.empty()) [[unlikely]] {
-                return ASTNode::simpleNode(node, tokens, ErrorReason::incomplete(tokens, u"字符串参数内容为空"));
+                auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             } else if (str[0] != '"') [[unlikely]] {
-                return ASTNode::simpleNode(node, tokens, ErrorReason::contentError(tokens, fmt::format(u"字符串参数内容应该在双引号内 -> {}", str)));
+                auto errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             }
             std::shared_ptr<ErrorReason> errorReason;
             if (str.size() <= 1 || str[str.size() - 1] != '"') [[likely]] {
-                errorReason = ErrorReason::contentError(tokens, fmt::format(u"字符串参数内容应该在双引号内 -> {}", str));
+                errorReason = ErrorReasons::quotedStringRequired(ErrorReasonLevel::CONTENT_ERROR, tokens, str);
             }
             if (!node.data.has_value() || node.data->nodes.empty()) [[likely]] {
-                return ASTNode::simpleNode(node, tokens, errorReason);
+                return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
             }
-            std::pair<ASTNode, JsonUtil::ConvertResult> innerResult = getInnerASTNode(node, tokens, str, node.nodeData);
+            std::pair<ASTNode, JsonUtil::DecodedStringView> innerResult = getInnerASTNode(node, tokens, str, node.nodeData);
             ASTNode innerNode = std::move(innerResult.first);
             //内层AST的位置是解码后字符串的坐标，原始JSON字符串里的转义序列(\n \" \\ \uXXXX等)
             //会让内外坐标不再相差固定偏移，必须用indexConvertList换算回原始命令的坐标
-            ASTNode newResult = ASTNode::andNode(node, {std::move(innerNode)}, tokens, errorReason, ASTNodeId::NODE_STRING_INNER);
+            const size_t startIndex = tokens.startIndex;
+            ASTNode newResult = ASTNode::andNode(node, ASTNode::children(std::move(innerNode)), std::move(tokens), errorReason, ASTNodeId::NODE_STRING_INNER);
             if (errorReason == nullptr && innerResult.second.errorReason == nullptr) {
                 for (auto &item: newResult.errorReasons) {
-                    item->start = innerResult.second.convert(item->start) + tokens.startIndex;
-                    item->end = innerResult.second.convert(item->end) + tokens.startIndex;
+                    item->start = innerResult.second.convert(item->start) + startIndex;
+                    item->end = innerResult.second.convert(item->end) + startIndex;
                 }
             }
             return newResult;
@@ -219,7 +275,7 @@ namespace CHelper::Parser {
             ASTNode blockStateLeftBracket = parse(CHelper::Node::NodeBlock::nodeBlockStateLeftBracket, tokenReader);
             tokenReader.restore();
             if (blockStateLeftBracket.isError()) [[likely]] {
-                return ASTNode::andNode(node, {(std::move(blockId))}, tokenReader.collect(),
+                return ASTNode::andNode(node, ASTNode::children(std::move(blockId)), tokenReader.collect(),
                                         nullptr, ASTNodeId::NODE_BLOCK_BLOCK_AND_BLOCK_STATE);
             }
             std::u16string_view str = blockId.tokens.string();
@@ -235,7 +291,7 @@ namespace CHelper::Parser {
                                           ? BlockId::getNodeAllBlockState()
                                           : std::static_pointer_cast<BlockId>(currentBlock)->getNode(node.blockIds->blockPropertyDescriptions);
             auto astNodeBlockState = parseByChildNode(node, tokenReader, nodeBlockState, ASTNodeId::NODE_BLOCK_BLOCK_STATE);
-            return ASTNode::andNode(node, {(std::move(blockId)), (std::move(astNodeBlockState))}, tokenReader.collect(),
+            return ASTNode::andNode(node, ASTNode::children(std::move(blockId), std::move(astNodeBlockState)), tokenReader.collect(),
                                     nullptr, ASTNodeId::NODE_BLOCK_BLOCK_AND_BLOCK_STATE);
         }
     };
@@ -252,7 +308,7 @@ namespace CHelper::Parser {
             ASTNode commandName = tokenReader.readStringASTNode(node, ASTNodeId::NODE_COMMAND_COMMAND_NAME);
             if (commandName.tokens.size() == 0) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, {std::move(commandName)}, tokens, ErrorReason::contentError(tokens, u"命令名字为空"), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReasons::emptyCommandName(ErrorReasonLevel::CONTENT_ERROR, tokens), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             std::u16string_view str = commandName.tokens.string();
             const Node::NodePerCommand *currentCommand = nullptr;
@@ -273,10 +329,10 @@ namespace CHelper::Parser {
             }
             if (currentCommand == nullptr) [[unlikely]] {
                 TokensView tokens = tokenReader.collect();
-                return ASTNode::andNode(node, {std::move(commandName)}, tokens, ErrorReason::contentError(tokens, fmt::format(u"命令名字不匹配，找不到名为{}的命令", str)), ASTNodeId::NODE_COMMAND_COMMAND);
+                return ASTNode::andNode(node, ASTNode::children(std::move(commandName)), tokens, ErrorReasons::unknownCommand(ErrorReasonLevel::CONTENT_ERROR, tokens, str), ASTNodeId::NODE_COMMAND_COMMAND);
             }
             ASTNode usage = parse(*currentCommand, tokenReader);
-            return ASTNode::andNode(node, {std::move(commandName), std::move(usage)},
+            return ASTNode::andNode(node, ASTNode::children(std::move(commandName), std::move(usage)),
                                     tokenReader.collect(), nullptr, ASTNodeId::NODE_COMMAND_COMMAND);
         }
     };
@@ -301,7 +357,7 @@ namespace CHelper::Parser {
                                const std::initializer_list<Node::NodeWithType> childNodes,
                                const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE) {
         tokenReader.push();
-        std::pmr::vector<ASTNode> childASTNodes;
+        std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
         for (const auto &item: childNodes) {
             tokenReader.push();
             tokenReader.push();
@@ -337,7 +393,7 @@ namespace CHelper::Parser {
                     break;
                 }
             }
-            std::pmr::vector<ASTNode> childNodes = {std::move(itemId)};
+            std::pmr::vector<ASTNode> childNodes = ASTNode::children(std::move(itemId));
             Node::NodeWithType nodeData = currentItem == nullptr ? CHelper::Node::NodeItem::nodeAllData : std::static_pointer_cast<ItemId>(currentItem)->getNode();
             switch (node.nodeItemType) {
                 case Node::NodeItemType::ITEM_GIVE:
@@ -376,9 +432,9 @@ namespace CHelper::Parser {
             TokensView tokens = tokenReader.collect();
             std::shared_ptr<ErrorReason> errorReason;
             if (tokens.hasValue()) [[unlikely]] {
-                errorReason = ErrorReason::excess(tokens, u"命令后面有多余部分 -> " + std::u16string(tokens.string()));
+                errorReason = ErrorReasons::excess(ErrorReasonLevel::EXCESS, tokens, tokens.string());
             }
-            return ASTNode::simpleNode(node, tokens, errorReason);
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -391,17 +447,14 @@ namespace CHelper::Parser {
             auto result = tokenReader.readStringASTNode(node);
             debugCheckTokenIndex(node, index, tokenReader);
             if (result.tokens.isEmpty()) [[unlikely]] {
-                TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, u"命令不完整"));
+                return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.ignoreError.value_or(false)) [[unlikely]] {
-                TokensView tokens = result.tokens;
+                const TokensView &tokens = result.tokens;
                 std::u16string_view str = tokens.string();
                 XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-                if (std::ranges::all_of(*node.customContents, [&strHash](const auto &item) {
-                        return !item->fastMatch(strHash) && !item->getIdWithNamespace()->fastMatch(strHash);
-                    })) [[unlikely]] {
-                    return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                if (!tokenReader.idMatches.containsId(node.customContents, strHash)) [[unlikely]] {
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
             return result;
@@ -426,17 +479,14 @@ namespace CHelper::Parser {
             }
             tokenReader.pop();
             if (result.tokens.isEmpty()) [[unlikely]] {
-                TokensView tokens = result.tokens;
-                return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, u"命令不完整"));
+                return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.ignoreError.value_or(true)) [[unlikely]] {
-                TokensView tokens = result.tokens;
+                const TokensView &tokens = result.tokens;
                 std::u16string_view str = tokens.string();
                 XXH64_hash_t strHash = XXH3_64bits(str.data(), str.size() * sizeof(decltype(str)::value_type));
-                if (std::ranges::all_of(*node.customContents, [&strHash](const auto &item) {
-                        return !item->fastMatch(strHash);
-                    })) [[unlikely]] {
-                    return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::incomplete(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                if (!tokenReader.idMatches.containsId(node.customContents, strHash)) [[unlikely]] {
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::INCOMPLETE, tokens, str));
                 }
             }
             return result;
@@ -446,7 +496,7 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodePerCommand> {
         static ASTNode getASTNode(const Node::NodePerCommand &node, TokenReader &tokenReader) {
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             childASTNodes.reserve(node.startNodes.size());
             for (const auto &item: node.startNodes) {
                 tokenReader.push();
@@ -473,7 +523,7 @@ namespace CHelper::Parser {
     getRelativeFloatASTNode(const Node::NodeWithType &node,
                             TokenReader &tokenReader) {
         tokenReader.push();
-        std::pmr::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
         // 0 - 绝对坐标，1 - 相对坐标，2 - 局部坐标
         NodeRelativeFloatType::NodeRelativeFloatType type;
         tokenReader.push();
@@ -493,6 +543,8 @@ namespace CHelper::Parser {
                 childNodes.push_back(std::move(preSymbol));
                 return {type, ASTNode::andNode(node, std::move(childNodes), tokenReader.collect())};
             }
+            // 有前缀且没有在空格处结束时，最终必定保留前缀和数值两个子节点。
+            childNodes.reserve(2);
             childNodes.push_back(preSymbol);
         }
         //数值部分
@@ -503,15 +555,15 @@ namespace CHelper::Parser {
             tokenReader.pop();
         } else if (childNodes.empty()) [[unlikely]] {
             tokenReader.pop();
-            TokensView tokens = number.tokens;
-            errorReason = ErrorReason::typeError(tokens, fmt::format(u"类型不匹配，{}不是有效的坐标参数", tokens.string()));
+            const TokensView &tokens = number.tokens;
+            errorReason = ErrorReasons::invalidCoordinate(ErrorReasonLevel::TYPE_ERROR, tokens, tokens.string());
         } else {
             tokenReader.restore();
         }
         childNodes.push_back(std::move(number));
-        ASTNode result = ASTNode::andNode(node, std::move(childNodes), tokenReader.collect(), errorReason);
+        ASTNode result = ASTNode::andNode(node, std::move(childNodes), tokenReader.collect(), std::move(errorReason));
         // 为了获取补全提示，再嵌套一层or节点
-        return {type, ASTNode::orNode(node, {std::move(result), std::move(preSymbol)}, nullptr)};
+        return {type, ASTNode::orNode(node, ASTNode::children(std::move(result), std::move(preSymbol)), nullptr)};
     }
 
     template<>
@@ -519,7 +571,7 @@ namespace CHelper::Parser {
         static ASTNode getASTNode(const Node::NodePosition &node, TokenReader &tokenReader) {
             tokenReader.push();
             // 0 - 绝对坐标，1 - 相对坐标，2 - 局部坐标
-            std::pmr::vector<ASTNode> threeChildNodes;
+            std::pmr::vector<ASTNode> threeChildNodes(getASTMemoryResource());
             threeChildNodes.reserve(3);
             NodeRelativeFloatType::NodeRelativeFloatType types[3];
             for (NodeRelativeFloatType::NodeRelativeFloatType &type: types) {
@@ -527,14 +579,14 @@ namespace CHelper::Parser {
                 if (threeChildNodes.empty() && childNode.second.isError() && !childNode.second.tokens.isEmpty()) {
                     tokenReader.pop();
                     TokensView tokens = childNode.second.tokens;
-                    return ASTNode::andNode(node, {std::move(childNode.second)}, tokens, nullptr, ASTNodeId::NODE_POSITION_POSITIONS);
+                    return ASTNode::andNode(node, ASTNode::children(std::move(childNode.second)), std::move(tokens), nullptr, ASTNodeId::NODE_POSITION_POSITIONS);
                 }
                 type = childNode.first;
                 threeChildNodes.push_back(std::move(childNode.second));
             }
             //判断有没有错误
             TokensView tokens = tokenReader.collect();
-            ASTNode result = ASTNode::andNode(node, std::move(threeChildNodes), tokens, nullptr, ASTNodeId::NODE_POSITION_POSITIONS);
+            ASTNode result = ASTNode::andNode(node, std::move(threeChildNodes), std::move(tokens), nullptr, ASTNodeId::NODE_POSITION_POSITIONS);
             if (!result.isError()) [[unlikely]] {
                 uint8_t count = 0;
                 for (NodeRelativeFloatType::NodeRelativeFloatType item: types) {
@@ -543,7 +595,8 @@ namespace CHelper::Parser {
                     }
                 }
                 if (count == 1 || count == 2) {
-                    return ASTNode::andNode(node, {std::move(result)}, tokens, nullptr, ASTNodeId::NODE_POSITION_POSITIONS_WITH_ERROR);
+                    TokensView outerTokens = result.tokens;
+                    return ASTNode::andNode(node, ASTNode::children(std::move(result)), std::move(outerTokens), nullptr, ASTNodeId::NODE_POSITION_POSITIONS_WITH_ERROR);
                 }
             }
             return result;
@@ -552,12 +605,12 @@ namespace CHelper::Parser {
 
     std::shared_ptr<ErrorReason> checkNumber(const TokensView &tokens, std::u16string_view str) {
         if (str.empty()) [[unlikely]] {
-            return ErrorReason::contentError(tokens, u"范围的数值为空");
+            return ErrorReasons::emptyRange(ErrorReasonLevel::CONTENT_ERROR, tokens);
         }
         for (size_t i = 0; i < str.length(); ++i) {
             size_t ch = str[i];
             if ((ch < '0' || ch > '9') && (i != 0 || (ch != '-' && ch != '+'))) [[unlikely]] {
-                return ErrorReason::contentError(tokens, u"范围的数值格式不正确，检测非法字符");
+                return ErrorReasons::invalidRange(ErrorReasonLevel::CONTENT_ERROR, tokens);
             }
         }
         return nullptr;
@@ -566,21 +619,21 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodeRange> {
         static ASTNode getASTNode(const Node::NodeRange &node, TokenReader &tokenReader) {
-            ASTNode result = tokenReader.readStringASTNode(node);
-            std::u16string_view str = result.tokens.string();
+            TokensView tokens = tokenReader.readTokenView();
+            std::u16string_view str = tokens.string();
             std::shared_ptr<ErrorReason> errorReason;
             size_t index = str.find(u"..");
             if (index == std::u16string::npos) [[likely]] {
-                errorReason = checkNumber(result.tokens, str);
+                errorReason = checkNumber(tokens, str);
             } else if (index == 0) [[unlikely]] {
-                errorReason = checkNumber(result.tokens, std::u16string_view(str).substr(2));
+                errorReason = checkNumber(tokens, std::u16string_view(str).substr(2));
             } else {
-                errorReason = checkNumber(result.tokens, std::u16string_view(str).substr(0, index));
+                errorReason = checkNumber(tokens, std::u16string_view(str).substr(0, index));
                 if (errorReason == nullptr && index + 2 < str.length()) [[unlikely]] {
-                    errorReason = checkNumber(result.tokens, std::u16string_view(str).substr(index + 2));
+                    errorReason = checkNumber(tokens, std::u16string_view(str).substr(index + 2));
                 }
             }
-            return ASTNode::simpleNode(node, result.tokens, errorReason);
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -593,7 +646,7 @@ namespace CHelper::Parser {
             }
             if (!node.canUseCaretNotation && result.first == NodeRelativeFloatType::LOCAL_COORDINATE) [[unlikely]] {
                 TokensView tokens = result.second.tokens;
-                return ASTNode::andNode(node, {std::move(result.second)}, tokens, nullptr, ASTNodeId::NODE_RELATIVE_FLOAT_WITH_ERROR);
+                return ASTNode::andNode(node, ASTNode::children(std::move(result.second)), std::move(tokens), nullptr, ASTNodeId::NODE_RELATIVE_FLOAT_WITH_ERROR);
             }
             return std::move(result.second);
         }
@@ -603,7 +656,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeRepeat> {
         static ASTNode getASTNode(const Node::NodeRepeat &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             while (true) {
                 //记录本次迭代的起始位置，防止element解析成功但没有消费任何token导致死循环
                 const size_t iterationStartIndex = tokenReader.index;
@@ -633,9 +686,10 @@ namespace CHelper::Parser {
                 tokenReader.skipToLF();
                 TokensView tokens = tokenReader.collect();
                 if (!node.allowMissingString && tokens.isEmpty()) [[unlikely]] {
-                    return ASTNode::simpleNode(node, tokens, ErrorReason::incomplete(tokens, u"字符串参数内容为空"));
+                    auto errorReason = ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, tokens);
+                    return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
                 } else {
-                    return ASTNode::simpleNode(node, tokens);
+                    return ASTNode::simpleNode(node, std::move(tokens));
                 }
             }
             tokenReader.push();
@@ -647,11 +701,11 @@ namespace CHelper::Parser {
             }
             tokenReader.pop();
             if (!node.allowMissingString && result.tokens.isEmpty()) [[unlikely]] {
-                return ASTNode::simpleNode(node, result.tokens, ErrorReason::incomplete(result.tokens, u"字符串参数内容为空"));
+                return replaceWithError(node, std::move(result), ErrorReasons::emptyString(ErrorReasonLevel::INCOMPLETE, result.tokens));
             }
             if (!node.canContainSpace) [[unlikely]] {
                 if (result.tokens.string().find(' ') != std::u16string::npos) [[unlikely]] {
-                    return ASTNode::simpleNode(node, result.tokens, ErrorReason::contentError(result.tokens, u"字符串参数内容不可以包含空格"));
+                    return replaceWithError(node, std::move(result), ErrorReasons::stringContainsSpace(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
                 }
                 return result;
             }
@@ -659,14 +713,14 @@ namespace CHelper::Parser {
             if (str.empty() || str[0] != '"') [[likely]] {
                 return result;
             }
-            auto convertResult = JsonUtil::jsonString2String(str);
+            auto convertResult = JsonUtil::DecodedStringView(str);
             if (convertResult.errorReason != nullptr) [[unlikely]] {
                 convertResult.errorReason->start += result.tokens.startIndex;
                 convertResult.errorReason->end += result.tokens.startIndex;
-                return ASTNode::simpleNode(node, result.tokens, convertResult.errorReason);
+                return replaceWithError(node, std::move(result), std::move(convertResult.errorReason));
             }
             if (!convertResult.isComplete) [[unlikely]] {
-                return ASTNode::simpleNode(node, result.tokens, ErrorReason::contentError(result.tokens, fmt::format(u"字符串参数内容双引号不封闭 -> {}", str)));
+                return replaceWithError(node, std::move(result), ErrorReasons::unclosedString(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
             }
             return result;
         }
@@ -688,11 +742,10 @@ namespace CHelper::Parser {
             debugCheckTokenIndex(node, index, tokenReader);
             std::u16string_view str = result.tokens.string();
             if (str != node.data->name) [[unlikely]] {
-                TokensView tokens = result.tokens;
                 if (str.empty()) [[unlikely]] {
-                    return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::contentError(tokens, u"命令不完整"));
+                    return wrapWithError(node, std::move(result), ErrorReasons::incomplete(ErrorReasonLevel::CONTENT_ERROR, result.tokens));
                 } else {
-                    return ASTNode::andNode(node, {std::move(result)}, tokens, ErrorReason::contentError(tokens, fmt::format(u"找不到含义 -> {}", str)));
+                    return wrapWithError(node, std::move(result), ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, result.tokens, str));
                 }
             }
             return result;
@@ -703,7 +756,7 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeAnd> {
         static ASTNode getASTNode(const Node::NodeAnd &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childASTNodes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
             bool isMustAfterSpace = false;
             for (size_t i = 0; i < node.childNodes.size(); ++i) {
                 const auto &item = node.childNodes[i];
@@ -731,7 +784,7 @@ namespace CHelper::Parser {
                         tokenReader.skip();
                         TokensView tokens = tokenReader.collect();
                         return ASTNode::andNode(node, std::move(childASTNodes), tokenReader.collect(),
-                                                ErrorReason::contentError(tokens, u"意外的空格"));
+                                                ErrorReasons::unexpectedSpace(ErrorReasonLevel::CONTENT_ERROR, tokens));
                     }
                     isMustAfterSpace = false;
                 }
@@ -751,21 +804,17 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeEntry> {
         static ASTNode getASTNode(const Node::NodeEntry &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
             auto key = parse(node.nodeKey, tokenReader);
             if (key.isError()) [[unlikely]] {
-                childNodes.push_back(std::move(key));
-                return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(key)), tokenReader.collect());
             }
-            childNodes.push_back(std::move(key));
             auto separator = parse(node.nodeSeparator, tokenReader);
             if (separator.isError()) [[unlikely]] {
-                childNodes.push_back(std::move(separator));
-                return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(key), std::move(separator)), tokenReader.collect());
             }
-            childNodes.push_back(std::move(separator));
-            childNodes.push_back(parse(node.nodeValue, tokenReader));
-            return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+            auto value = parse(node.nodeValue, tokenReader);
+            // 完成解析后才确定一/二/三个子节点，数组仅按实际数量分配一次。
+            return ASTNode::andNode(node, ASTNode::children(std::move(key), std::move(separator), std::move(value)), tokenReader.collect());
         }
     };
 
@@ -773,14 +822,13 @@ namespace CHelper::Parser {
     struct Parser<Node::NodeEqualEntry> {
         static ASTNode getASTNode(const Node::NodeEqualEntry &node, TokenReader &tokenReader) {
             tokenReader.push();
-            std::pmr::vector<ASTNode> childNodes;
             // key
             ASTNode astNodeKey = parseByChildNode(node, tokenReader, node.nodeKey);
-            childNodes.push_back(astNodeKey);
-            if (astNodeKey.isError()) [[unlikely]] {
-                return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
-            }
+            const bool keyIsError = astNodeKey.isError();
             std::u16string_view key = astNodeKey.tokens.string();
+            if (keyIsError) [[unlikely]] {
+                return ASTNode::andNode(node, ASTNode::children(std::move(astNodeKey)), tokenReader.collect());
+            }
             auto it = std::ranges::find_if(node.equalDatas, [&key](const auto &t) {
                 return t.name == key;
             });
@@ -790,46 +838,76 @@ namespace CHelper::Parser {
                     it == node.equalDatas.end() || it->canUseNotEqual
                             ? Node::NodeWithType(Node::NodeEqualEntry::nodeEqualOrNotEqual)
                             : Node::NodeWithType(Node::NodeEqualEntry::nodeEqual));
-            childNodes.push_back(astNodeSeparator);
-            if (astNodeSeparator.isError()) [[unlikely]] {
-                return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+            const bool separatorIsError = astNodeSeparator.isError();
+            if (separatorIsError) [[unlikely]] {
+                return ASTNode::andNode(node, ASTNode::children(std::move(astNodeKey), std::move(astNodeSeparator)), tokenReader.collect());
             }
             //value
-            if (it == node.equalDatas.end()) [[unlikely]] {
-                childNodes.push_back(parse(Node::NodeAny::getNodeAny(), tokenReader));
-            } else {
-                childNodes.push_back(parse(it->nodeValue, tokenReader));
-            }
-            return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+            auto value = parse(it == node.equalDatas.end() ? Node::NodeAny::getNodeAny() : it->nodeValue, tokenReader);
+            return ASTNode::andNode(node, ASTNode::children(std::move(astNodeKey), std::move(astNodeSeparator), std::move(value)), tokenReader.collect());
         }
     };
 
     template<>
     struct Parser<Node::NodeList> {
+        static std::optional<size_t> countChildren(const Node::NodeList &node, const TokenReader &reader) {
+            if (node.nodeLeft.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL ||
+                node.nodeRight.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL ||
+                node.nodeSeparator.nodeTypeId != Node::NodeTypeId::SINGLE_SYMBOL) return std::nullopt;
+            const auto left = static_cast<const Node::NodeSingleSymbol *>(node.nodeLeft.data)->symbol;
+            const auto right = static_cast<const Node::NodeSingleSymbol *>(node.nodeRight.data)->symbol;
+            const auto separator = static_cast<const Node::NodeSingleSymbol *>(node.nodeSeparator.data)->symbol;
+            if (!((left == u'[' && right == u']') || (left == u'{' && right == u'}')) || separator != u',') return std::nullopt;
+
+            // 首项已成功，剩余每个顶层逗号对应分隔符和元素两项，最后是右括号。
+            // 引号内的逗号和括号是 STRING token，不参与计数。异常括号或深层嵌套
+            // 保留原来的增长路径；不按输入字符数预估容量，也不改变解析游标。
+            std::array<char16_t, 32> openings;
+            size_t depth = 0, separators = 0;
+            const auto &tokens = reader.lexerResult->allTokens;
+            for (size_t i = reader.index; i < tokens.size(); ++i) {
+                const auto &token = tokens[i];
+                if (token.type == TokenType::LF) return std::nullopt;
+                if (token.type != TokenType::SYMBOL) continue;
+                const auto ch = token.content[0];
+                if (depth == 0 && ch == right) return separators * 2 + 3;
+                if (ch == u'[' || ch == u'{') {
+                    if (depth == openings.size()) return std::nullopt;
+                    openings[depth++] = ch;
+                } else if (ch == u']' || ch == u'}') {
+                    if (depth == 0 || (openings[depth - 1] == u'[' ? ch != u']' : ch != u'}')) return std::nullopt;
+                    --depth;
+                } else if (depth == 0 && ch == separator) {
+                    ++separators;
+                }
+            }
+            return std::nullopt;
+        }
+
         static ASTNode getASTNode(const Node::NodeList &node, TokenReader &tokenReader) {
             //标记整个[...]，在最后进行收集
             tokenReader.push();
             ASTNode left = parse(node.nodeLeft, tokenReader);
             if (left.isError()) [[unlikely]] {
-                return ASTNode::andNode(node, {std::move(left)}, tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(left)), tokenReader.collect());
             }
-            std::pmr::vector<ASTNode> childNodes = {std::move(left)};
+            std::pmr::vector<ASTNode> childNodes(getASTMemoryResource());
             {
 #if CHelperDebug
                 size_t startIndex = tokenReader.index;
 #endif
                 //检测[]中间有没有内容
-                tokenReader.push();
-                size_t nodeRightIndex = tokenReader.indexStack.size();
-                auto rightBracket1 = parse(node.nodeRight, tokenReader);
-                debugCheckTokenIndex(node.nodeRight, nodeRightIndex, tokenReader);
-                tokenReader.restore();
                 auto elementOrRight = parse(node.nodeElementOrRight, tokenReader);
-                bool flag = !rightBracket1.isError() || elementOrRight.isError();
-                childNodes.push_back(std::move(elementOrRight));
+                // 两个内置 OR 始终保留 [内容/分隔符, 右括号] 两个分支。
+                // 复用右括号分支，避免每个元素重复解析并构造随即丢弃的诊断。
+                // 即使内容分支也成功，右括号成功仍应终止列表。
+                bool flag = !elementOrRight.childNodes[1].isError() || elementOrRight.isError();
                 if (flag) [[unlikely]] {
-                    return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
+                    return ASTNode::andNode(node, ASTNode::children(std::move(left), std::move(elementOrRight)), tokenReader.collect());
                 }
+                childNodes.reserve(countChildren(node, tokenReader).value_or(2));
+                childNodes.push_back(std::move(left));
+                childNodes.push_back(std::move(elementOrRight));
 #if CHelperDebug
                 if (startIndex == tokenReader.index) [[unlikely]] {
                     SPDLOG_WARN("NodeList has some error");
@@ -842,15 +920,10 @@ namespace CHelper::Parser {
                 size_t startIndex = tokenReader.index;
 #endif
                 //检测是分隔符还是右括号
-                tokenReader.push();
-                size_t nodeRightIndex = tokenReader.indexStack.size();
-                auto rightBracket = parse(node.nodeRight, tokenReader);
-                debugCheckTokenIndex(node.nodeRight, nodeRightIndex, tokenReader);
-                tokenReader.restore();
                 size_t nodeSeparatorOrRightIndex = tokenReader.indexStack.size();
                 auto separatorOrRight = parse(node.nodeSeparatorOrRight, tokenReader);
                 debugCheckTokenIndex(node.nodeSeparatorOrRight, nodeSeparatorOrRightIndex, tokenReader);
-                bool flag = !rightBracket.isError() || separatorOrRight.isError();
+                bool flag = !separatorOrRight.childNodes[1].isError() || separatorOrRight.isError();
                 childNodes.push_back(std::move(separatorOrRight));
                 if (flag) [[unlikely]] {
                     return ASTNode::andNode(node, std::move(childNodes), tokenReader.collect());
@@ -877,18 +950,26 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodeOr> {
         static ASTNode getASTNode(const Node::NodeOr &node, TokenReader &tokenReader) {
-            std::pmr::vector<ASTNode> childASTNodes;
-            std::pmr::vector<size_t> indexes;
+            std::pmr::vector<ASTNode> childASTNodes(getASTMemoryResource());
+            // 常见 OR 只有几个分支，终点暂存在栈上；大分支集仍按实际节点数分配。
+            // isAttachToEnd 不使用各分支终点，不需要收集它们。
+            std::array<size_t, 4> localIndexes;
+            std::pmr::vector<size_t> indexes(getASTMemoryResource());
+            const bool useLocalIndexes = node.childNodes.size() <= localIndexes.size();
             if (!node.isUseFirst) [[likely]] {
                 childASTNodes.reserve(node.childNodes.size());
-                indexes.reserve(node.childNodes.size());
+                if (!node.isAttachToEnd && !useLocalIndexes) indexes.reserve(node.childNodes.size());
             }
             for (const auto &item: node.childNodes) {
                 tokenReader.push();
                 ASTNode childNode = parse(item, tokenReader);
                 bool isNodeError = childNode.isError();
                 childASTNodes.push_back(std::move(childNode));
-                indexes.push_back(tokenReader.index);
+                if (!node.isAttachToEnd) {
+                    if (useLocalIndexes) localIndexes[childASTNodes.size() - 1] = tokenReader.index;
+                    else
+                        indexes.push_back(tokenReader.index);
+                }
                 tokenReader.restore();
                 if (node.isUseFirst && !isNodeError) [[unlikely]] {
                     break;
@@ -901,7 +982,7 @@ namespace CHelper::Parser {
                 return ASTNode::orNode(node, std::move(childASTNodes), tokens, node.defaultErrorReason, node.nodeId);
             } else {
                 ASTNode result = ASTNode::orNode(node, std::move(childASTNodes), nullptr, node.defaultErrorReason, node.nodeId);
-                tokenReader.index = indexes[result.whichBest];
+                tokenReader.index = useLocalIndexes ? localIndexes[result.whichBest] : indexes[result.whichBest];
                 return result;
             }
         }
@@ -910,20 +991,18 @@ namespace CHelper::Parser {
     template<>
     struct Parser<Node::NodeSingleSymbol> {
         static ASTNode getASTNode(const Node::NodeSingleSymbol &node, TokenReader &tokenReader) {
-            ASTNode symbolNode = tokenReader.readSymbolASTNode(node);
+            // 直接生成符号诊断，避免先构造通用类型错误的 AST，再用符号错误替换。
+            TokensView tokens = tokenReader.readTokenView();
+            const Token *token = tokens.isEmpty() ? nullptr : &tokens[0];
             std::shared_ptr<ErrorReason> errorReason;
-            if (symbolNode.isError()) [[unlikely]] {
-                if (symbolNode.tokens.isEmpty()) [[likely]] {
-                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::incomplete(symbolNode.tokens, fmt::format(u"命令不完整，需要符号{:c}", node.symbol)));
-                } else {
-                    return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::typeError(symbolNode.tokens, fmt::format(u"类型不匹配，需要符号{:c}，但当前内容为{}", node.symbol, symbolNode.tokens.string())));
-                }
+            if (token == nullptr) [[unlikely]] {
+                errorReason = ErrorReasons::requireSymbol(ErrorReasonLevel::INCOMPLETE, tokens, node.symbol);
+            } else if (token->type != TokenType::SYMBOL) [[unlikely]] {
+                errorReason = ErrorReasons::symbolTypeMismatch(ErrorReasonLevel::TYPE_ERROR, tokens, node.symbol, token->content);
+            } else if (token->content.size() != 1 || token->content[0] != node.symbol) [[unlikely]] {
+                errorReason = ErrorReasons::symbolContentMismatch(ErrorReasonLevel::CONTENT_ERROR, tokens, node.symbol, token->content);
             }
-            std::u16string_view str = symbolNode.tokens.string();
-            if (str.length() == 1 && str[0] == node.symbol) [[likely]] {
-                return symbolNode;
-            }
-            return ASTNode::simpleNode(node, symbolNode.tokens, ErrorReason::contentError(symbolNode.tokens, fmt::format(u"内容不匹配，正确的符号为{:c}，但当前内容为{}", node.symbol, str)));
+            return ASTNode::simpleNode(node, std::move(tokens), std::move(errorReason));
         }
     };
 
@@ -943,11 +1022,11 @@ namespace CHelper::Parser {
                 }
             }
             if (isUseOptionalNode) {
-                return ASTNode::andNode(node, {(std::move(astNode))}, tokenReader.collect());
+                return ASTNode::andNode(node, ASTNode::children(std::move(astNode)), tokenReader.collect());
             } else {
                 tokenReader.restore();
                 TokensView tokens(tokenReader.lexerResult, tokenReader.index, tokenReader.index);
-                return ASTNode::orNode(node, {ASTNode::simpleNode(node, tokens), (std::move(astNode))}, tokens);
+                return ASTNode::orNode(node, ASTNode::children(ASTNode::simpleNode(node, tokens), std::move(astNode)), tokens);
             }
         }
     };
@@ -960,9 +1039,7 @@ namespace CHelper::Parser {
             if (str == u"true" || str == u"false") [[likely]] {
                 return astNode;
             }
-            TokensView tokens = astNode.tokens;
-            return ASTNode::andNode(node, {std::move(astNode)}, tokens,
-                                    ErrorReason::contentError(tokens, fmt::format(u"内容不匹配，应该为布尔值，但当前内容为{}", str)));
+            return wrapWithError(node, std::move(astNode), ErrorReasons::invalidBoolean(ErrorReasonLevel::CONTENT_ERROR, astNode.tokens, str));
         }
     };
 
@@ -991,7 +1068,9 @@ namespace CHelper::Parser {
     }
 
     ASTNode parse(const std::u16string_view content, const Node::NodeWithType &mainNode) {
-        TokenReader tokenReader(Lexer::lex(content));
+        ErrorReasonMemoryScope errorMemory;
+        InnerLexerScope lexerScope;
+        TokenReader tokenReader(lexerScope.lex(content));
         size_t index = tokenReader.indexStack.size();
         auto result = parse(mainNode, tokenReader);
         debugCheckTokenIndex(mainNode, index, tokenReader);

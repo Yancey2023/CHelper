@@ -22,7 +22,7 @@ namespace CHelper {
 
     namespace TokenType {
 
-        std::u16string getName(TokenType tokenType) {
+        std::u16string_view getNameView(TokenType tokenType) {
             switch (tokenType) {
                 case STRING:
                     return u"字符串类型";
@@ -39,6 +39,10 @@ namespace CHelper {
             }
         }
 
+        std::u16string getName(TokenType tokenType) {
+            return std::u16string(getNameView(tokenType));
+        }
+
     }// namespace TokenType
 
     Token::Token(TokenType::TokenType type,
@@ -47,13 +51,5 @@ namespace CHelper {
         : type(type),
           pos(pos),
           content(content) {}
-
-    size_t Token::getStartIndex() const {
-        return pos;
-    }
-
-    size_t Token::getEndIndex() const {
-        return pos + content.size();
-    }
 
 }// namespace CHelper

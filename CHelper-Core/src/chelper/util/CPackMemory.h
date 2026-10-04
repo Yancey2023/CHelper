@@ -95,6 +95,13 @@ namespace CHelper {
             return current;
         }
 
+        // 将所有权固定到分配时的资源；没有活动作用域时也绕过线程路由器。
+        [[nodiscard]] static std::pmr::memory_resource *getAllocationResource() noexcept {
+            if (current != nullptr) return current;
+            auto *resource = std::pmr::get_default_resource();
+            return resource == &instance() ? upstream.load(std::memory_order_acquire) : resource;
+        }
+
         [[nodiscard]] static size_t enter(std::pmr::memory_resource *memory) noexcept {
             setCurrent(memory);
             return ++scopeDepth;

@@ -5,6 +5,10 @@ project(CHelper LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+if(MSVC)
+    # Qt 的预编译库使用动态 CRT；核心、应用和依赖统一使用相同运行库。
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
 
 include(CheckCXXSourceCompiles)
 check_cxx_source_compiles(
@@ -170,13 +174,6 @@ chelper_fetch_thirdparty(googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG v1.18.0
 )
-if(MSVC)
-    set_property(TARGET xxhash PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET fmt PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET gtest PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_property(TARGET gtest_main PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
 
 # Param Deliver
 if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
@@ -201,9 +198,6 @@ target_include_directories(CHelperCore PUBLIC
 target_link_libraries(CHelperCore PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash unordered_dense::unordered_dense glaze::glaze)
 set_property(TARGET CHelperCore PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET CHelperCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-if(MSVC)
-    set_property(TARGET CHelperCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
 add_library(CHelper::Core ALIAS CHelperCore)
 
 # CHelper Core (no filesystem)
@@ -218,9 +212,6 @@ target_link_libraries(CHelperNoFilesystemCore PUBLIC fmt::fmt spdlog::spdlog utf
 target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
 set_property(TARGET CHelperNoFilesystemCore PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET CHelperNoFilesystemCore PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-if(MSVC)
-    set_property(TARGET CHelperNoFilesystemCore PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
 add_library(CHelper::NoFilesystemCore ALIAS CHelperNoFilesystemCore)
 
 # CHelper Android
@@ -238,19 +229,15 @@ endif()
 if(NOT ANDROID AND NOT EMSCRIPTEN)
     add_executable(CHelperResourceGenerator src/apps/CHelperResourceGenerator.cpp)
     target_link_libraries(CHelperResourceGenerator PRIVATE CHelper::Core)
-    if(MSVC)
-        set_property(TARGET CHelperResourceGenerator PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
 endif()
 
 # CHelper Test
 if(NOT ANDROID AND NOT EMSCRIPTEN)
     file(GLOB_RECURSE TEST_FILE tests/*.cpp)
     add_executable(CHelperTest ${TEST_FILE})
+    # 原生测试复用网页接口实现，验证 UTF-16 输出协议。
+    target_sources(CHelperTest PRIVATE src/apps/CHelperWeb.cpp)
     target_link_libraries(CHelperTest PRIVATE CHelper::Core GTest::gtest_main)
-    if(MSVC)
-        set_property(TARGET CHelperTest PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
 endif()
 
 # Web Application
@@ -279,8 +266,5 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
         # Qt's emit macro conflicts with identifiers in Glaze headers.
         target_compile_definitions(CHelperQt PRIVATE QT_NO_KEYWORDS)
         target_link_libraries(CHelperQt PRIVATE CHelper::Core Qt6::Core Qt6::Gui Qt6::Widgets)
-        if(MSVC)
-            set_property(TARGET CHelperQt PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-        endif()
     endif()
 endif()

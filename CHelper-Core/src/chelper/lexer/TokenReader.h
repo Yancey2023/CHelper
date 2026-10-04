@@ -23,48 +23,110 @@
 #include <chelper/node/NodeWithType.h>
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/TokensView.h>
+#include <chelper/util/IdMatchCache.h>
 #include <pch.h>
 
 namespace CHelper {
 
     class TokenReader {
+    private:
+        std::pmr::vector<size_t> lineFeedIndexes;
+
     public:
         const std::shared_ptr<LexerResult> lexerResult;
         size_t index = 0;
         std::pmr::vector<size_t> indexStack;
+        IdMatchCache idMatches;
 
         explicit TokenReader(const std::shared_ptr<LexerResult> &lexerResult);
 
-        [[nodiscard]] bool ready() const;
+        [[nodiscard]] bool ready() const {
+            return index < lexerResult->allTokens.size();
+        }
 
-        [[nodiscard]] const Token *peek() const;
+        [[nodiscard]] const Token *peek() const {
+            if (!ready()) [[unlikely]] {
+                return nullptr;
+            }
+            return &lexerResult->allTokens[index];
+        }
 
-        [[nodiscard]] const Token *read();
+        [[nodiscard]] const Token *read() {
+            const Token *result = peek();
+            if (result != nullptr) [[likely]] {
+                skip();
+            }
+            return result;
+        }
 
-        [[nodiscard]] const Token *next();
+        [[nodiscard]] const Token *next() {
+            skip();
+            return peek();
+        }
 
-        bool skip();
+        bool skip() {
+            if (!ready()) [[unlikely]] {
+                return false;
+            }
+            index++;
+            return true;
+        }
 
-        size_t skipSpace();
+        size_t skipSpace() {
+            size_t start = index;
+            while (ready() && peek()->type == TokenType::SPACE) {
+                skip();
+            }
+            return index - start;
+        }
+
+        // 读取一个非空格 token 的视图，不改变用于语法分支回溯的 indexStack。
+        [[nodiscard]] TokensView readTokenView() {
+            skipSpace();
+            const size_t start = index;
+            skip();
+            return {lexerResult, start, index};
+        }
 
         void skipToLF();
 
-        void push();
+        // 将当前指针加入栈中。
+        void push() {
+            indexStack.push_back(index);
+        }
 
-        void pop();
+        // 从栈中移除指针，不恢复指针。
+        void pop() {
+#if CHelperDebug
+            if (indexStack.empty()) {
+                SPDLOG_ERROR("pop when indexStack is null");
+                return;
+            }
+#endif
+            indexStack.pop_back();
+        }
 
-        [[nodiscard]] size_t getAndPopLastIndex();
+        // 从栈中移除并获取最后指针，不恢复指针。
+        [[nodiscard]] size_t getAndPopLastIndex() {
+            size_t size = indexStack.size();
+            if (size == 0) [[unlikely]] {
+                return 0;
+            }
+            size_t result = indexStack[size - 1];
+            pop();
+            return result;
+        }
 
-        void restore();
+        // 从栈中移除指针，恢复指针。
+        void restore() {
+            index = getAndPopLastIndex();
+        }
 
-        [[nodiscard]] TokensView collect();
+        // 收集栈中最后指针到当前指针的 token，并移除栈中指针。
+        [[nodiscard]] TokensView collect() {
+            return {lexerResult, getAndPopLastIndex(), index};
+        }
 
-        ASTNode readSimpleASTNode(Node::NodeWithType node,
-                                  TokenType::TokenType type,
-                                  const std::u16string &requireType,
-                                  const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE,
-                                  std::shared_ptr<ErrorReason> (*check)(const std::u16string_view &str,
-                                                                        const TokensView &tokens) = nullptr);
 
         ASTNode readStringASTNode(const Node::NodeWithType &node,
                                   const ASTNodeId::ASTNodeId &astNodeId = ASTNodeId::NONE);

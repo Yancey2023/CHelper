@@ -41,6 +41,11 @@ namespace CHelper {
 
         [[nodiscard]] bool fastMatch(XXH64_hash_t strHash);
 
+        [[nodiscard]] XXH64_hash_t getNameHash() const {
+            if (nameHash.has_value()) return *nameHash;
+            return XXH3_64bits(name.data(), name.size() * sizeof(char16_t));
+        }
+
         // 追加名称和描述，调用方负责初始化并持有流式状态。
         void updateHashState(XXH3_state_t &state) const;
 

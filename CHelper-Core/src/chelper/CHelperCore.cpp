@@ -123,8 +123,8 @@ namespace CHelper {
         return *cpack;
     }
 
-    CommandContext *CHelperCore::createContext(std::u16string command) const {
-        return new CommandContext(cpack, std::move(command));
+    CommandContext *CHelperCore::createContext(std::u16string_view command) const {
+        return new CommandContext(cpack, command);
     }
 
     void CHelperCore::deleteContext(CommandContext *context) {

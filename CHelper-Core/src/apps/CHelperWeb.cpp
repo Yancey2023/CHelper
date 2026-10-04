@@ -94,18 +94,21 @@ namespace {
     }
 
     // 布局: [u32 数量]([u32 start][u32 end][u32 长度][u16 字符串][补齐到4])*
-    const uint8_t *writeErrorReasons(const std::vector<std::shared_ptr<CHelper::ErrorReason>> &errorReasons) {
+    const uint8_t *writeErrorReasons(const std::vector<std::shared_ptr<const CHelper::ErrorReason>> &errorReasons) {
+        std::vector<std::u16string> messages;
+        messages.reserve(errorReasons.size());
         size_t contentSize = sizeof(std::uint32_t);
         for (const auto &item: errorReasons) {
-            // 每条记录: start(4) + end(4) + 字符串长度(4) + 数据(len*2)，之后补齐到 4
-            contentSize = align4(contentSize + 12 + item->errorReason.size() * sizeof(char16_t));
+            // 格式化一次，计算长度和实际写入共用文本，协议保持不变。
+            messages.push_back(item->getMessage());
+            contentSize = align4(contentSize + 12 + messages.back().size() * sizeof(char16_t));
         }
         size_t offset = prepareBuffer(contentSize);
         offset = writeU32(offset, static_cast<std::uint32_t>(errorReasons.size()));
-        for (const auto &item: errorReasons) {
-            offset = writeU32(offset, static_cast<std::uint32_t>(item->start));
-            offset = writeU32(offset, static_cast<std::uint32_t>(item->end));
-            offset = writeUtf16(offset, item->errorReason);
+        for (size_t i = 0; i < errorReasons.size(); ++i) {
+            offset = writeU32(offset, static_cast<std::uint32_t>(errorReasons[i]->start));
+            offset = writeU32(offset, static_cast<std::uint32_t>(errorReasons[i]->end));
+            offset = writeUtf16(offset, messages[i]);
             offset = align4(offset);
         }
         return buffer.data();

@@ -25,8 +25,8 @@
 #include <QStringListModel>
 
 namespace {
-    // 内核的ErrorReason和NormalId使用pmr字符串，QString无法直接从pmr字符串构造
-    QString toQString(const std::pmr::u16string &string) {
+    // 通过字符串视图同时接收普通字符串和pmr字符串，避免额外复制
+    QString toQString(std::u16string_view string) {
         return QString::fromUtf16(string.data(), static_cast<qsizetype>(string.size()));
     }
 }// namespace
@@ -93,16 +93,16 @@ void CHelperApp::onSelectionChanged() {
     } else {
         ui->structureLabel->setText(QString::fromStdU16String(context->getStructure()));
         ui->descriptionLabel->setText(QString::fromStdU16String(context->getParamHint(cursorPosition)));
-        std::vector<std::shared_ptr<CHelper::ErrorReason>> errorReasons = context->getErrorReasons();
+        const auto errorReasons = context->getErrorReasons();
         if (errorReasons.empty()) [[unlikely]] {
             ui->errorReasonLabel->setText(nullptr);
         } else if (errorReasons.size() == 1) [[unlikely]] {
-            ui->errorReasonLabel->setText(toQString(errorReasons[0]->errorReason));
+            ui->errorReasonLabel->setText(toQString(errorReasons[0]->getMessage()));
         } else {
             std::u16string result = u"可能的错误原因：";
             for (size_t i = 0; i < errorReasons.size(); ++i) {
                 const auto &errorReason = errorReasons[i];
-                result.append(fmt::format(u"\n{}. {}", i, errorReason->errorReason));
+                result.append(fmt::format(u"\n{}. {}", i, errorReason->getMessage()));
             }
             ui->errorReasonLabel->setText(QString::fromStdU16String(result));
         }

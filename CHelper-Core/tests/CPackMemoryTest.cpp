@@ -5,7 +5,9 @@
  */
 
 #include <chelper/CommandContext.h>
+#include <chelper/lexer/Lexer.h>
 #include <chelper/node/CommandNode.h>
+#include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/serialization/Serialization.h>
 #include <gtest/gtest.h>
 
@@ -57,12 +59,237 @@ namespace CHelper::Test {
 
         struct alignas(128) AlignedNode : Node::NodeBase {
             int value = 42;
+            // 显式占满对齐单元，继续测试过度对齐分配而不依赖隐式尾部填充。
+            std::array<std::byte, 128 - sizeof(value)> padding{};
         };
+        static_assert(sizeof(AlignedNode) == 128);
 
         struct ThrowingNode : Node::NodeBase {
             ThrowingNode() { throw std::runtime_error("constructor failed"); }
         };
     }// namespace
+
+    TEST(CPackMemoryTest, ErrorListsKeepSingleEntriesInlineAndReleaseArraysThroughTheirOwner) {
+        RecordingResource origin, other;
+        const auto first = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"first");
+        const auto second = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {1, 2}, u"second");
+        ErrorReasonList list(&origin);
+        EXPECT_EQ(list.begin(), list.end());
+        list.push_back(first);
+        EXPECT_EQ(origin.allocations, 0u);
+        EXPECT_EQ(list.front(), first);
+        list.push_back(list.front());
+        ASSERT_EQ(list.size(), 2u);
+        EXPECT_EQ(list[1], first);
+        list.push_back(second);
+        list.push_back(list[0]);
+        list.push_back(list[1]);
+        ASSERT_EQ(list.size(), 5u);
+        EXPECT_EQ(list[2], second);
+        EXPECT_EQ(list[4], first);
+        EXPECT_EQ(origin.live.size(), 1u);
+        {
+            RouterScope scope(&other);
+            ErrorReasonList copy(list);
+            EXPECT_EQ(copy.get_allocator().resource(), &other);
+            EXPECT_TRUE(std::ranges::equal(copy, list));
+            const auto allocationCount = other.allocations;
+            ErrorReasonList moved(std::move(copy));
+            EXPECT_TRUE(copy.empty());
+            EXPECT_TRUE(std::ranges::equal(moved, list));
+            EXPECT_EQ(other.allocations, allocationCount);
+            ErrorReasonList assigned(&origin);
+            assigned = std::move(moved);
+            EXPECT_TRUE(moved.empty());
+            EXPECT_EQ(assigned.get_allocator().resource(), &origin);
+            EXPECT_TRUE(std::ranges::equal(assigned, list));
+            list.clear();
+            EXPECT_FALSE(origin.live.empty());
+        }
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_TRUE(other.live.empty());
+        ErrorReasonList source({first, second}, &origin);
+        const auto allocations = origin.allocations;
+        list = std::move(source);
+        EXPECT_TRUE(source.empty());
+        EXPECT_EQ(list.size(), 2u);
+        EXPECT_EQ(list[0], first);
+        EXPECT_EQ(list[1], second);
+        EXPECT_EQ(origin.allocations, allocations);
+        list = {second};
+        EXPECT_EQ(list.front(), second);
+        list.clear();
+        EXPECT_TRUE(list.empty());
+        EXPECT_EQ(origin.allocations, origin.deallocations);
+        EXPECT_EQ(other.allocations, other.deallocations);
+    }
+
+    TEST(CPackMemoryTest, ErrorListTransitionsKeepNullEntriesAndOriginalResources) {
+        RecordingResource origin, other;
+        const auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned");
+        for (size_t count = 0; count < 9; ++count) {
+            ErrorReasonList source(&origin);
+            for (size_t i = 0; i < count; ++i) source.push_back(i % 2 ? value : nullptr);
+            ASSERT_EQ(source.size(), count);
+            EXPECT_EQ(source.empty(), count == 0);
+            const auto originalAllocations = origin.allocations;
+            ErrorReasonList moved(std::move(source));
+            EXPECT_EQ(origin.allocations, originalAllocations);
+            EXPECT_TRUE(source.empty());
+            EXPECT_EQ(source.get_allocator().resource(), &origin);
+            source.push_back(nullptr);
+            EXPECT_FALSE(source.empty());
+            EXPECT_EQ(source.size(), 1u);
+            EXPECT_EQ(source.front(), nullptr);
+            source.clear();
+            ErrorReasonList target(&other);
+            target.push_back(value);
+            target = std::move(moved);
+            EXPECT_TRUE(moved.empty());
+            EXPECT_EQ(moved.get_allocator().resource(), &origin);
+            EXPECT_EQ(target.get_allocator().resource(), &other);
+            ASSERT_EQ(target.size(), count);
+            for (size_t i = 0; i < count; ++i) EXPECT_EQ(target[i], i % 2 ? value : nullptr);
+            // 通过别名保留自赋值和自移动覆盖，模拟调用方传入同一对象。
+            auto *self = &target;
+            target = *self;
+            target = std::move(*self);
+            EXPECT_EQ(target.size(), count);
+            target.clear();
+            target.push_back(nullptr);
+            EXPECT_EQ(target.size(), 1u);
+            EXPECT_EQ(target.get_allocator().resource(), &other);
+        }
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_TRUE(other.live.empty());
+        EXPECT_EQ(origin.allocations, origin.deallocations);
+        EXPECT_EQ(other.allocations, other.deallocations);
+    }
+
+    TEST(CPackMemoryTest, ErrorListArrayGrowthFailurePreservesStorageAndOwners) {
+        class LimitedResource final : public std::pmr::memory_resource {
+        public:
+            bool fail = false;
+
+        private:
+            void *do_allocate(size_t bytes, size_t alignment) override {
+                if (fail) throw std::bad_alloc();
+                return std::pmr::new_delete_resource()->allocate(bytes, alignment);
+            }
+            void do_deallocate(void *pointer, size_t bytes, size_t alignment) override {
+                std::pmr::new_delete_resource()->deallocate(pointer, bytes, alignment);
+            }
+            bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
+        } resource;
+        const auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned");
+        ErrorReasonList list({nullptr, value}, &resource);
+        const auto data = list.begin();
+        const auto references = value.use_count();
+        resource.fail = true;
+        EXPECT_THROW(list.push_back(list[1]), std::bad_alloc);
+        ASSERT_EQ(list.size(), 2u);
+        EXPECT_EQ(list.begin(), data);
+        EXPECT_EQ(list[0], nullptr);
+        EXPECT_EQ(list[1], value);
+        EXPECT_EQ(value.use_count(), references);
+        EXPECT_EQ(list.get_allocator().resource(), &resource);
+        resource.fail = false;
+        list.push_back(list[1]);
+        ASSERT_EQ(list.size(), 3u);
+        EXPECT_EQ(list[2], value);
+    }
+
+    TEST(CPackMemoryTest, ErrorListDestructionReleasesLastOwnersAndUsesItsOriginalResource) {
+        for (const size_t count: {0u, 1u, 2u, 5u}) {
+            RecordingResource origin, other;
+            std::vector<std::weak_ptr<ErrorReason>> weak;
+            std::optional<ErrorReasonList> list;
+            list.emplace(&origin);
+            for (size_t i = 0; i < count; ++i) {
+                const auto error = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {i, i + 1}, u"owned error");
+                weak.push_back(error);
+                list->push_back(error);
+            }
+            for (const auto &error: weak) EXPECT_FALSE(error.expired());
+            {
+                RouterScope scope(&other);
+                list.reset();
+            }
+            for (const auto &error: weak) EXPECT_TRUE(error.expired());
+            EXPECT_TRUE(origin.live.empty());
+            EXPECT_EQ(origin.allocations, origin.deallocations);
+            EXPECT_EQ(other.allocations, 0u);
+        }
+    }
+
+    TEST(CPackMemoryTest, ErrorListsRetainValuesWhenArrayAllocationFails) {
+        class FailingResource final : public std::pmr::memory_resource {
+            void *do_allocate(size_t, size_t) override { throw std::bad_alloc(); }
+            void do_deallocate(void *, size_t, size_t) override {}
+            bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
+        } resource;
+        auto value = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 1}, u"owned diagnostic");
+        std::weak_ptr<ErrorReason> weak = value;
+        ErrorReasonList list(&resource);
+        list.push_back(value);
+        value.reset();
+        EXPECT_FALSE(weak.expired());
+        EXPECT_THROW(list.push_back(list.front()), std::bad_alloc);
+        ASSERT_EQ(list.size(), 1u);
+        EXPECT_EQ(list.front()->getMessage(), u"owned diagnostic");
+        ErrorReasonList multi({list.front(), list.front()});
+        EXPECT_THROW(list = multi, std::bad_alloc);
+        ASSERT_EQ(list.size(), 1u);
+        EXPECT_THROW(list = std::move(multi), std::bad_alloc);
+        EXPECT_EQ(multi.size(), 2u);
+        multi.clear();
+        list.clear();
+        EXPECT_TRUE(weak.expired());
+    }
+
+    TEST(CPackMemoryTest, ASTArraysRememberTheirAllocationResourceAcrossScopesAndCopies) {
+        CPackMemoryRouter::install();
+        RecordingResource origin, other;
+        const auto lexer = Lexer::lex(u"abc def");
+        const auto node = Node::NodeAny::getNodeAny();
+        const auto error = ErrorReasons::customText(ErrorReasonLevel::CONTENT_ERROR, {0, 3}, u"测试错误");
+        std::optional<ASTNode> tree, copy, heapCopy, cleanTree;
+        {
+            RouterScope scope(&origin);
+            tree.emplace(ASTNode::andNode(node,
+                                          ASTNode::children(ASTNode::simpleNode(node, TokensView(lexer, 0, 1), error)),
+                                          TokensView(lexer, 0, lexer->allTokens.size())));
+            EXPECT_EQ(tree->childNodes.get_allocator().resource(), &origin);
+            EXPECT_EQ(tree->errorReasons.get_allocator().resource(), &origin);
+            cleanTree.emplace(ASTNode::andNode(node,
+                                               ASTNode::children(ASTNode::simpleNode(node, TokensView(lexer, 0, 1))),
+                                               TokensView(lexer, 0, lexer->allTokens.size())));
+            EXPECT_EQ(cleanTree->errorReasons.get_allocator().resource(), &origin);
+            EXPECT_EQ(cleanTree->childNodes[0].childNodes.get_allocator().resource(), &origin);
+        }
+        heapCopy.emplace(*tree);
+        EXPECT_EQ(heapCopy->childNodes.get_allocator().resource(), CPackMemoryRouter::getAllocationResource());
+        {
+            RouterScope scope(&other);
+            copy.emplace(*tree);
+            EXPECT_EQ(copy->childNodes.get_allocator().resource(), &other);
+            EXPECT_EQ(copy->errorReasons.get_allocator().resource(), &other);
+            EXPECT_EQ(copy->childNodes[0].errorReasons.get_allocator().resource(), &other);
+            heapCopy.reset();
+            tree.reset();
+            cleanTree.reset();
+            EXPECT_TRUE(origin.live.empty());
+            EXPECT_FALSE(other.live.empty());
+        }
+        {
+            RouterScope scope(&origin);
+            copy.reset();
+        }
+        EXPECT_TRUE(origin.live.empty());
+        EXPECT_TRUE(other.live.empty());
+        EXPECT_EQ(origin.allocations, origin.deallocations);
+        EXPECT_EQ(other.allocations, other.deallocations);
+    }
 
     TEST(CPackMemoryTest, NodeAllocationRemembersResourceAndAlignment) {
         RecordingResource origin;

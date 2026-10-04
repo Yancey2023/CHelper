@@ -37,7 +37,15 @@ namespace CHelper {
         LexerResult &operator=(const LexerResult &) = delete;
         LexerResult &operator=(LexerResult &&) = delete;
 
-        [[nodiscard]] size_t getIndex(size_t tokenIndex) const;
+        [[nodiscard]] size_t getIndex(size_t tokenIndex) const {
+            if (tokenIndex == 0) [[unlikely]] {
+                return 0;
+            } else if (tokenIndex == allTokens.size()) [[unlikely]] {
+                return allTokens[tokenIndex - 1].getEndIndex();
+            } else {
+                return allTokens[tokenIndex].getStartIndex();
+            }
+        }
     };
 
 }// namespace CHelper
