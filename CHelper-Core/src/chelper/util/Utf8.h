@@ -54,7 +54,7 @@ namespace CHelper {
             }
             std::size_t asciiEnd = 0;
             // memcpy 支持未对齐输入，不要求资源包中的字符串起始地址对齐。
-            while (input.size() - asciiEnd >= sizeof(std::uint64_t)) {
+            while (input.size() >= sizeof(std::uint64_t) && asciiEnd <= input.size() - sizeof(std::uint64_t)) {
                 std::uint64_t bytes;
                 std::memcpy(&bytes, input.data() + asciiEnd, sizeof(bytes));
                 if ((bytes & UINT64_C(0x8080808080808080)) != 0) break;
@@ -62,8 +62,8 @@ namespace CHelper {
             }
             while (asciiEnd < input.size() && static_cast<unsigned char>(input[asciiEnd]) < 0x80) ++asciiEnd;
             if (asciiEnd == input.size()) {
-                output.resize_and_overwrite(input.size(), [&](char16_t *buffer, std::size_t) noexcept {
-                    std::copy(input.begin(), input.end(), buffer);
+                output.resize_and_overwrite(input.size(), [&](char16_t *destination, std::size_t) noexcept {
+                    std::copy(input.begin(), input.end(), destination);
                     return input.size();
                 });
                 return;
@@ -73,7 +73,7 @@ namespace CHelper {
             // 每八字节同时统计续字节（10xxxxxx）和四字节序列头（1111xxxx）。
             // 仅用来确定容量，UTF-8 合法性仍交由下方的校验解码器处理。
             constexpr auto highBits = UINT64_C(0x8080808080808080);
-            while (input.size() - index >= sizeof(std::uint64_t)) {
+            while (input.size() >= sizeof(std::uint64_t) && index <= input.size() - sizeof(std::uint64_t)) {
                 std::uint64_t bytes;
                 std::memcpy(&bytes, input.data() + index, sizeof(bytes));
                 const auto continuation = bytes & ~(bytes << 1) & highBits;
@@ -89,11 +89,11 @@ namespace CHelper {
             // 解码会覆盖整个缓冲区，不必先 resize 清零。回调不能抛出，捕获后
             // 在 resize_and_overwrite 恢复字符串不变量后重抛，目标串仍可安全复用。
             std::optional<std::exception_ptr> error;
-            output.resize_and_overwrite(units, [&](char16_t *buffer, std::size_t) noexcept {
-                std::copy_n(input.begin(), asciiEnd, buffer);
+            output.resize_and_overwrite(units, [&](char16_t *destination, std::size_t) noexcept {
+                std::copy_n(input.begin(), asciiEnd, destination);
                 try {
                     auto cursor = input.begin() + asciiEnd;
-                    auto *target = buffer + asciiEnd;
+                    auto *target = destination + asciiEnd;
                     while (cursor != input.end()) {
                         const auto lead = static_cast<unsigned char>(*cursor);
                         if (lead < 0x80) {
@@ -117,7 +117,7 @@ namespace CHelper {
                             }
                         }
                     }
-                    return static_cast<std::size_t>(target - buffer);
+                    return static_cast<std::size_t>(target - destination);
                 } catch (...) {
                     error.emplace(std::current_exception());
                     return std::size_t{0};

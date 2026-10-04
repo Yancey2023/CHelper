@@ -97,7 +97,6 @@ namespace CHelper {
         if (errorCount == 0) [[unlikely]] {
             // 从没有错误的内容中找出最好的节点
             size_t end = 0;
-            errorReasons.clear();
             for (size_t i = 0; i < childNodes.size(); ++i) {
                 const ASTNode &item = childNodes[i];
                 if (!item.isError() && end < item.tokens.end) {

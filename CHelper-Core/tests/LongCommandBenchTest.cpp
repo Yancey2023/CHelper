@@ -27,9 +27,22 @@ namespace {
         return characters;
     }
 
-    size_t longBenchOption(const char *name, size_t fallback) {
+    std::optional<std::string> longBenchEnvironment(const char *name) {
+#ifdef _MSC_VER
+        char *value = nullptr;
+        size_t length = 0;
+        const auto error = _dupenv_s(&value, &length, name);
+        std::unique_ptr<char, decltype(&std::free)> owned(value, &std::free);
+        if (error != 0) throw std::runtime_error("failed to read benchmark environment");
+#else
         const char *value = std::getenv(name);
-        return value ? std::stoull(value) : fallback;
+#endif
+        return value ? std::optional<std::string>(value) : std::nullopt;
+    }
+
+    size_t longBenchOption(const char *name, size_t fallback) {
+        const auto value = longBenchEnvironment(name);
+        return value ? std::stoull(*value) : fallback;
     }
 
     std::u16string longBenchCommand(std::string_view kind, size_t count) {
@@ -132,8 +145,7 @@ namespace {
 // LONG_COUNT 控制重复段数；LONG_APPLY=1 额外计时补全应用并校验结果。
 // 长命令独立运行，避免把短命令混合均值当作重型输入的性能收益。
 TEST(Bench, LongCommand) {
-    const char *kindOption = std::getenv("LONG_KIND");
-    const std::string kind = kindOption ? kindOption : "flat";
+    const std::string kind = longBenchEnvironment("LONG_KIND").value_or("flat");
     const size_t count = longBenchOption("LONG_COUNT", 2048);
     const size_t repeat = longBenchOption("LONG_REPEAT", 5);
     const auto command = longBenchCommand(kind, count);

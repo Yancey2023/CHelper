@@ -994,7 +994,7 @@ TEST(BinaryUtilTest, Utf16WordCountsCoverUnicodeAndByteOffsets) {
 }
 
 TEST(BinaryUtilTest, NamespaceIdCacheOwnsQualifiedName) {
-    for (const std::optional<std::u16string> prefix: {std::optional<std::u16string>{}, std::optional<std::u16string>{u"custom"}, std::optional<std::u16string>{u""}}) {
+    for (const std::optional<std::u16string> &prefix: {std::optional<std::u16string>{}, std::optional<std::u16string>{u"custom"}, std::optional<std::u16string>{u""}}) {
         CHelper::NamespaceId id;
         id.name = u"long_block_name";
         if (prefix.has_value()) id.idNamespace.emplace(*prefix);
@@ -1004,7 +1004,9 @@ TEST(BinaryUtilTest, NamespaceIdCacheOwnsQualifiedName) {
         EXPECT_EQ(qualified->description, id.description);
         EXPECT_EQ(id.getIdWithNamespace().get(), qualified.get());
         EXPECT_EQ(id.name, u"long_block_name");
-        if (prefix.has_value()) EXPECT_EQ(std::u16string_view(*id.idNamespace), std::u16string_view(*prefix));
+        if (prefix.has_value()) {
+            EXPECT_EQ(std::u16string_view(*id.idNamespace), std::u16string_view(*prefix));
+        }
     }
 }
 

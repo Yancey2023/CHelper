@@ -61,8 +61,9 @@ namespace CHelper {
                     if (item->fastMatch(nameHash)) return true;
                     if constexpr (requires { item->getIdWithNamespace(); }) {
                         return item->getIdWithNamespace()->fastMatch(nameHash);
+                    } else {
+                        return false;
                     }
-                    return false;
                 });
                 matches.emplace(key, result);
             } else {

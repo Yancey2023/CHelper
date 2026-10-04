@@ -337,7 +337,9 @@ namespace CHelper::Test {
             const auto mapped = JsonUtil::jsonString2String(input);
             ASSERT_EQ(mapped.result, u"[x]");
             EXPECT_EQ(syntax.tokenTypes[0], SyntaxHighlight::SyntaxTokenType::STRING);
-            if (mapped.isComplete) EXPECT_EQ(syntax.tokenTypes.back(), SyntaxHighlight::SyntaxTokenType::STRING);
+            if (mapped.isComplete) {
+                EXPECT_EQ(syntax.tokenTypes.back(), SyntaxHighlight::SyntaxTokenType::STRING);
+            }
             const std::array colors{SyntaxHighlight::SyntaxTokenType::BRACKET1, SyntaxHighlight::SyntaxTokenType::ID,
                                     SyntaxHighlight::SyntaxTokenType::BRACKET1};
             for (size_t index = 0; index < colors.size(); ++index) {

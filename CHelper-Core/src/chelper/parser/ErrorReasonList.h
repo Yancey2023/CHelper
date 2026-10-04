@@ -72,7 +72,7 @@ namespace CHelper {
 
     public:
         explicit ErrorReasonList(std::pmr::memory_resource *resource = CPackMemoryRouter::getAllocationResource()) noexcept
-            : resourceAndMode(reinterpret_cast<uintptr_t>(resource)) {}
+            : resourceAndMode(reinterpret_cast<uintptr_t>(resource) & ~modeMask) {}
 
         ErrorReasonList(std::initializer_list<value_type> values,
                         std::pmr::memory_resource *resource = CPackMemoryRouter::getAllocationResource())

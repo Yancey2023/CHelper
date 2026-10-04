@@ -59,7 +59,10 @@ namespace CHelper::Test {
 
         struct alignas(128) AlignedNode : Node::NodeBase {
             int value = 42;
+            // 显式占满对齐单元，继续测试过度对齐分配而不依赖隐式尾部填充。
+            std::array<std::byte, 128 - sizeof(value)> padding{};
         };
+        static_assert(sizeof(AlignedNode) == 128);
 
         struct ThrowingNode : Node::NodeBase {
             ThrowingNode() { throw std::runtime_error("constructor failed"); }
@@ -147,8 +150,10 @@ namespace CHelper::Test {
             EXPECT_EQ(target.get_allocator().resource(), &other);
             ASSERT_EQ(target.size(), count);
             for (size_t i = 0; i < count; ++i) EXPECT_EQ(target[i], i % 2 ? value : nullptr);
-            target = target;
-            target = std::move(target);
+            // 通过别名保留自赋值和自移动覆盖，模拟调用方传入同一对象。
+            auto *self = &target;
+            target = *self;
+            target = std::move(*self);
             EXPECT_EQ(target.size(), count);
             target.clear();
             target.push_back(nullptr);

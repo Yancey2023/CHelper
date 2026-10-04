@@ -175,7 +175,7 @@ namespace CHelper::Test {
 #if CHelperDebug
         {
             const auto result = JsonUtil::jsonString2String(uR"("ab")");
-            EXPECT_ANY_THROW(result.convert(100));
+            EXPECT_ANY_THROW(static_cast<void>(result.convert(100)));
         }
 #endif
     }
