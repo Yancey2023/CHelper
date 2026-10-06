@@ -40,15 +40,18 @@ cargo run -- check-commands --mcpews E:/project/CHelper/caidlist/version/release
 ## 产物
 
 ```
-output/chelper/{release,beta,netease}/{vanilla,experiment}/id/*.json
+output/chelper/{release,beta,netease}/{vanilla,experiment}/
+├─ manifest.json
+└─ id/*.json
 ```
 
-release / beta 每分支 29 个文件：caidlist 原有 26 个（`block.json`、`item.json`、
+release / beta 每分支生成一个 `manifest.json` 和 29 个 ID 文件：caidlist 原有 26 个
+（`block.json`、`item.json`、
 `entity.json`、`gameRuleInteger/Boolean.json`……），外加本工具新增的
 `gameMode.json`（手工数据）与 `particleEmitter.json`（wiki 抓取）。
 
 netease 数据取自 1.21.50.07 时代（`config.toml` 的 `[netease] commit` 指定），
-受版本特性门控影响为 26 个文件（1.21.50 时代尚无 controlScheme、feature、
+受版本特性门控影响为 26 个 ID 文件（1.21.50 时代尚无 controlScheme、feature、
 featureRule 三类）。
 
 ## 环境要求

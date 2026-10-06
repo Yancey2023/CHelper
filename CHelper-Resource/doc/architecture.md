@@ -83,7 +83,7 @@ CHelper-Resource/
    - 派生 `music`（sound 的 `music.` / `record.` 子集）与 `lootTableWrapped`（键 JSON 引号化）；
    - item 的结果按 `enums.items` 顺序与 block 合并；entity/location/biome 按原始键序重建；
    - netease：叠加 `netease_extra/<branch>/<类别>.json` 中缺失的 ID（只多不少）；
-   - 写出 29 个文件（4 空格缩进、CRLF、无末尾换行）。
+   - 写出 `manifest.json` 与 29 个 ID 文件（4 空格缩进、CRLF、无末尾换行）。
 
 ## 版本特性开关
 

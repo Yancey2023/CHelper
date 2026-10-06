@@ -1,7 +1,8 @@
 //! CHelper 资源包生成器核心库。
 //!
 //! 数据源为 [caidlist](https://github.com/XeroAlpha/caidlist) 仓库（GitHub tarball 拉取并缓存），
-//! 输出 `output/chelper/{release,beta,netease}/{vanilla,experiment}/id/*.json`，
+//! 输出
+//! `output/chelper/{release,beta,netease}/{vanilla,experiment}/manifest.json` 和 `id/*.json`，
 //! 格式与 caidlist `new_chelper` 分支的 `src/generators/chelper.js` 保持一致。
 
 pub mod cache;
@@ -9,6 +10,7 @@ pub mod chelper;
 pub mod command_sync;
 pub mod config;
 pub mod jfmt;
+pub mod manifest;
 pub mod pipeline;
 pub mod sources;
 pub mod support;

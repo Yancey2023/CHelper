@@ -1,8 +1,11 @@
 # chelper 输出格式契约
 
-产物目录：`output/chelper/{release,beta,netease}/{vanilla,experiment}/id/`。
-每个分支 29 个文件。格式与 caidlist `new_chelper` 分支
-`src/generators/chelper.js` 的输出**逐字节兼容**。
+产物目录：`output/chelper/{release,beta,netease}/{vanilla,experiment}/`，其中包含
+`manifest.json` 和 `id/*.json`。每个分支有 29 个 ID 文件；ID 文件格式与 caidlist
+`new_chelper` 分支 `src/generators/chelper.js` 的输出**逐字节兼容**。
+
+`manifest.json` 的 `version` 使用本次生成的包版本，并记录版本类型、分支、资源包 ID
+和 CHelper 内置包标记。
 
 未翻译 ID 清单单独写在 `output/untranslated/{版本}/{分支}/{类别}.json`，每个文件是
 ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译清空后会删除旧文件，
@@ -20,7 +23,7 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 - 键顺序 = 构造顺序（JSON 对象键保序）；
 - 值为 `undefined` / 空时**整个字段省略**（如 `description`、`properties`、`valid`）；
 - 整数值的浮点数按 JS 规则输出为整数（`1.0` → `1`）；
-- 无任何版本号 / uuid / 生成时间元信息。
+- ID 文件不包含版本号 / uuid / 生成时间元信息；版本信息由资源包根目录的 manifest 提供。
 
 ## 四种条目类型
 

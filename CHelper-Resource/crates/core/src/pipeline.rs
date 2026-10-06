@@ -12,7 +12,7 @@ use crate::sources::wiki::{
 };
 use crate::support;
 use crate::translate::{st_priority, CategoryLevels, DataDrivenContext, ResultMaps, Translator};
-use crate::{jfmt::to_string_pretty4, write_crlf};
+use crate::{jfmt::to_string_pretty4, manifest::write_manifest, write_crlf};
 use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -178,6 +178,14 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
             };
             let files = write_resource_pack(input, &output_dir)
                 .with_context(|| format!("[{edition}/{branch}] 写出资源包失败"))?;
+            write_manifest(
+                output_dir.parent().unwrap(),
+                edition,
+                branch,
+                &package_version,
+            )
+            .with_context(|| format!("[{edition}/{branch}] 写出 manifest.json 失败"))?;
+            let files = files + 1;
             let entries: usize = result_maps.values().map(|m| m.len()).sum();
             tracing::info!(
                 "[{edition}/{branch}] 写出 {files} 个文件（{entries} 条目，{} 条警告）",
