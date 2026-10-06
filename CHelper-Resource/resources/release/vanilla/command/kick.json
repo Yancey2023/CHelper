@@ -1,24 +1,25 @@
 {
-  "name": [
-    "kick"
-  ],
-  "description": "将一位玩家踢出服务器",
-  "syntax": [
-    "/kick <name: target> <reason: message>"
-  ],
-  "node": {
-    "<name: target>": {
-      "type": "STRING",
-      "brief": "要踢除的玩家",
-      "description": "要踢出的玩家, 必须是玩家名",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "<reason: message>": {
-      "type": "STRING",
-      "description": "踢出原因",
-      "canContainSpace": true,
-      "ignoreLater": true
+    "name": [
+        "kick"
+    ],
+    "description": "将玩家踢出服务器。",
+    "syntax": [
+        "/kick <name: target> <reason: message>"
+    ],
+    "node": {
+        "<name: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "要踢出的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "<reason: message>": {
+            "type": "STRING",
+            "description": "显示给被踢出玩家的原因消息。",
+            "canContainSpace": true,
+            "ignoreLater": true
+        }
     }
-  }
 }

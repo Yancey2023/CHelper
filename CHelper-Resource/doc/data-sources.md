@@ -12,8 +12,9 @@
 | 方块属性描述 | `Module:Block_property_descriptions_BE` | LSON 解析 |
 | gamerule 描述（第 2 级） | wiki 页面《游戏规则》`?action=raw` | wikitext 解析（移植 `update_translation.py`） |
 | particle 描述（第 2 级） | wiki 页面《基岩版粒子》`?action=raw` | 同上 |
-| Java 版语言文件（JE） | `piston-meta.mojang.com` 版本清单 → 最新快照（跳过愚人节版本）→ `client.jar` 内 `en_us.json` + 资源索引定位 `zh_cn.json` | client.jar 按 sha1 校验缓存 |
+| Java 版语言文件（JE） | `piston-meta.mojang.com` 版本清单 → 最新快照（跳过愚人节版本）→ 资源索引定位 `zh_cn.json` | 语言资源按 sha1 校验缓存 |
 | 基岩版语言文件（BE） | `Mojang/bedrock-samples` 的 `resource_pack/texts/zh_CN.lang` | release→`main`、beta→`preview`；netease 先按 `v<包版本>` 尝试标签，失败回退 `main` |
+| 命令人工审阅来源 | 中文 Wiki 的 `命令/<命令>` 和命令总览原始页面 | 保存到 `output/command_wiki`，不自动推导节点说明 |
 
 > 注意：`resource_pack` 是单数——bedrock-samples 仓库顶层目录名即如此。
 
@@ -42,11 +43,17 @@ cache/http/meta/<sha256(url)>.json  # { fetched_at, extra }
   tarball、Mojang 语言资源为长期（内容不可变或按 sha 校验）。
 - 下载失败时自动回退旧缓存并警告（对齐 caidlist wiki.js 的行为）；
   无旧缓存时才报错终止。
-- `client.jar` 额外做 sha1 校验，不匹配则重新下载。
+- Mojang 语言资源额外做 sha1 校验，不匹配则重新下载。
+- 命令页面缓存使用 1 小时 TTL；下载失败时保留已导出的原文快照，
+  `source.json` 标记为 `retained` 并记录错误，不将旧快照标为本次成功抓取。
 
 ## 配置项（config.toml）
 
 ```toml
+http_ttl_hours = 24
+ref_ttl_minutes = 60
+command_wiki_dir = "output/command_wiki"
+
 [master]            # 主数据源：repo + ref（或直接 commit）
 repo = "XeroAlpha/caidlist"
 ref = "master"
@@ -61,12 +68,10 @@ beta_ref = "preview"
 netease_ref = ""    # 留空 = release_ref + 按版本号尝试标签
 try_version_tag = true
 
-http_ttl_hours = 24
-ref_ttl_minutes = 60
 ```
 
 路径类配置（`cache_dir`、`output_dir`、`untranslated_dir`、`translations_dir`、
-`ai_translations_dir`、`data_dir`、`netease_extra_dir`）默认固定在项目根下，可覆盖；
+`ai_translations_dir`、`data_dir`、`netease_extra_dir`、`command_wiki_dir`）默认固定在项目根下，可覆盖；
 相对路径相对项目根解析。
 
 ## netease 多出内容（netease_extra）

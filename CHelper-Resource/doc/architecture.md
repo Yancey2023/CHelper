@@ -4,9 +4,8 @@
 
 ```
 CHelper-Resource/
-├─ Cargo.toml              # workspace：crates/core + crates/cli
+├─ Cargo.toml              # workspace：crates/core + crates/cli，dev profile 限制 debuginfo
 ├─ config.toml             # 运行配置（全部字段可选，见下文）
-├─ Cargo.toml              # workspace 配置 + dev profile 限制 debuginfo（见下）
 ├─ data/                   # 手工数据（不写死在代码里的内容）
 │  ├─ game_mode.json       #   gameMode.json 的 content 数组
 │  └─ potion_descriptions.json  # 三种药水的 47 条中文描述
@@ -35,13 +34,15 @@ CHelper-Resource/
 | `sources::caidlist` | 快照数据访问：package/autocompletion 枚举合并、JSONC 读取 | `sources/applicationPackage.js` + `sources/autocompletion.js` 的缓存读取部分 |
 | `sources::wiki` | wiki 抓取：Scribunto 控制台（标准译名表 / gamerule 类型 / 方块属性描述）、wikitext 解析（游戏规则 / 基岩版粒子） | `sources/wiki.js` + `update_translation.py` |
 | `sources::lson` | Lua 表字面量解析器 | `util/lson.js`（chevrotain → 手写递归下降） |
-| `sources::java_lang` | Java 版语言文件：piston 清单 → client.jar + 资源索引 | `sources/javaEdition.js` |
+| `sources::java_lang` | Java 版 zh_cn 语言文件：piston 清单 → 资源索引 | `sources/javaEdition.js` |
 | `sources::bedrock_lang` | 基岩版语言文件：bedrock-samples `resource_pack/texts/zh_CN.lang` | `sources/applicationPackage.js`（APK 内语言文件） |
 | `support` | 版本特性开关（决定类别是否存在） | `sources/support.js`（chelper 相关子集） |
 | `translate` | 四级翻译优先级、引用 DSL、`{{...}}` 拼接模板、级联标准译名表 | `util/templateMatch.js` |
 | `pipeline` | 编排：快照 → 共享资源 → 逐类别匹配 → netease 叠加 → 资源包与未翻译 ID 清单 | `generate.js generateBranchedOutputFiles` |
-| `chelper` | chelper 资源包写出（26+2 个文件） | `generators/chelper.js` |
+| `chelper` | ID 资源文件写出与方块属性值域补全 | `generators/chelper.js` |
 | `jfmt` | 与 `JSON.stringify(v, null, 4)` 兼容的格式化器 | `JSON.stringify` |
+| `command_wiki` | 逐命令保存 Wiki 原始 wikitext 和来源元数据，供 agent 阅读 | 原始页面 `action=raw` |
+| `command_patch` | 自动应用 execute 固定 patch，导出已复核资源与中国版扩展目录 | 本项目维护 |
 
 ## 依赖版本策略
 
@@ -50,7 +51,6 @@ CHelper-Resource/
 | 依赖 | 版本 | 备注 |
 | --- | --- | --- |
 | reqwest | 0.13.5 | 0.13 起 `form` 不再是默认特性（需显式开启）；默认 TLS 改为 rustls（aws-lc-sys），Windows debug 构建的 PDB 会超过 link.exe 4GB 上限，因此 workspace 的 `[profile.dev]` 设了 `debug = "line-tables-only"` |
-| zip | 8.6.0 | 4 → 8 跨了三个大版本，`ZipArchive::by_name` 等 API 兼容 |
 | sha1 / sha2 | 0.11.0 | digest 0.11，`new()/update()/finalize()` API 不变 |
 | toml | 1.1.6 | 0.9 → 1.0，`from_str` 不变 |
 | serde_json5 | 0.2.1 | `from_str` 不变 |
@@ -64,13 +64,15 @@ CHelper-Resource/
 
 - `generate [editions…] [--refresh]`：生成；`editions` 为 `release`、`beta`、`netease` 的子集，缺省全部。
 - `clean-cache`：清空缓存目录。
+- `cache-command-wiki [--refresh]`：单独下载所有命令的 Wiki 原文。
+- `check-commands`：同步主命令语法与 execute patch，其余节点由 agent 人工 review。
 
 ## 生成一张 chelper 资源包的流程
 
 1. `RepoSource::checkout`：解析 ref → commit sha（缓存 `ref_ttl_minutes`）→ 下载 tarball（按 sha 缓存）→ 解压 `version/`、`translation/`。
 2. 抓取共享外部资源（一次运行只抓一次，全部走 HTTP 缓存）：
    标准译名表（Scribunto）、gamerule 类型表、方块属性描述、游戏规则 wikitext、
-   基岩版粒子 wikitext、Java 版 zh_cn/en_us 语言文件。
+   基岩版粒子 wikitext、Java 版 zh_cn 语言文件，以及每个命令的 Wiki 原文。
 3. 对每个版本（edition）：
    - 读取 `version/<dir>/autocompletion/<branch>.json` 的 `packageVersion` 作为包版本
      与特性开关用的 `coreVersion`；
@@ -83,7 +85,8 @@ CHelper-Resource/
    - 派生 `music`（sound 的 `music.` / `record.` 子集）与 `lootTableWrapped`（键 JSON 引号化）；
    - item 的结果按 `enums.items` 顺序与 block 合并；entity/location/biome 按原始键序重建；
    - netease：叠加 `netease_extra/<branch>/<类别>.json` 中缺失的 ID（只多不少）；
-   - 写出 `manifest.json` 与 29 个 ID 文件（4 空格缩进、CRLF、无末尾换行）。
+   - 写出 `manifest.json` 与 ID 文件（4 空格缩进、CRLF、无末尾换行）；
+   - 导出已复核的命令等定义，execute 应用固定 patch，网易分支补齐既有扩展目录。
 
 ## 版本特性开关
 

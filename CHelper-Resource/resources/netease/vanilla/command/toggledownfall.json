@@ -1,10 +1,10 @@
 {
-  "name": [
-    "toggledownfall"
-  ],
-  "description": "切换天气",
-  "syntax": [
-    "/toggledownfall"
-  ],
-  "node": {}
+    "name": [
+        "toggledownfall"
+    ],
+    "description": "切换天气；晴天时转为降雨，降雨或雷暴时转为晴天。",
+    "syntax": [
+        "/toggledownfall"
+    ],
+    "node": {}
 }

@@ -66,10 +66,25 @@ impl CategoryLevels {
 
     /// ID 是否在任一级别中有条目（无论值是否为空）。
     pub fn contains(&self, id: &str) -> bool {
-        self.human.as_ref().map(|m| m.contains_key(id)).unwrap_or(false)
-            || self.wiki.as_ref().map(|m| m.contains_key(id)).unwrap_or(false)
-            || self.caidlist.as_ref().map(|m| m.contains_key(id)).unwrap_or(false)
-            || self.ai.as_ref().map(|m| m.contains_key(id)).unwrap_or(false)
+        self.human
+            .as_ref()
+            .map(|m| m.contains_key(id))
+            .unwrap_or(false)
+            || self
+                .wiki
+                .as_ref()
+                .map(|m| m.contains_key(id))
+                .unwrap_or(false)
+            || self
+                .caidlist
+                .as_ref()
+                .map(|m| m.contains_key(id))
+                .unwrap_or(false)
+            || self
+                .ai
+                .as_ref()
+                .map(|m| m.contains_key(id))
+                .unwrap_or(false)
     }
 }
 
@@ -132,7 +147,9 @@ pub fn cascade_map(st: &Value, priority: &[&str]) -> CascadeMap {
     }
     let mut lowercase_first = HashMap::new();
     for (k, v) in &entries {
-        lowercase_first.entry(k.to_lowercase()).or_insert_with(|| v.clone());
+        lowercase_first
+            .entry(k.to_lowercase())
+            .or_insert_with(|| v.clone());
     }
     CascadeMap {
         entries,
@@ -236,8 +253,15 @@ impl<'a> Translator<'a> {
         let mut result = IndexMap::new();
         let mut cache = HashMap::new();
         for original_value in original_array {
-            let (_, translation) =
-                self.translate_cached(name, original_value, levels, st, priority, false, &mut cache);
+            let (_, translation) = self.translate_cached(
+                name,
+                original_value,
+                levels,
+                st,
+                priority,
+                false,
+                &mut cache,
+            );
             result.insert(original_value.clone(), translation);
         }
         self.results.insert(name.to_string(), result);
@@ -258,9 +282,19 @@ impl<'a> Translator<'a> {
             return hit.clone();
         }
         // 环形引用哨兵
-        cache.insert(original_value.to_string(), (State::NotFound, CIRCULAR.to_string()));
-        let result =
-            self.translate_uncached(category, original_value, levels, st, priority, inside_template, cache);
+        cache.insert(
+            original_value.to_string(),
+            (State::NotFound, CIRCULAR.to_string()),
+        );
+        let result = self.translate_uncached(
+            category,
+            original_value,
+            levels,
+            st,
+            priority,
+            inside_template,
+            cache,
+        );
         cache.insert(original_value.to_string(), result.clone());
         result
     }
@@ -393,14 +427,25 @@ impl<'a> Translator<'a> {
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string()),
                     s if s.eq_ignore_ascii_case("this") => {
-                        let (state, translation) =
-                            self.translate_cached(category, key, levels, st, priority, false, cache);
+                        let (state, translation) = self
+                            .translate_cached(category, key, levels, st, priority, false, cache);
                         (state == State::Provided).then_some(translation)
                     }
                     s if s.eq_ignore_ascii_case("missing") => {
-                        let (state, translation) =
-                            self.resolve_raw(category, original_value, key, levels, st, priority, cache);
-                        let literal = if state == State::Provided { translation } else { String::new() };
+                        let (state, translation) = self.resolve_raw(
+                            category,
+                            original_value,
+                            key,
+                            levels,
+                            st,
+                            priority,
+                            cache,
+                        );
+                        let literal = if state == State::Provided {
+                            translation
+                        } else {
+                            String::new()
+                        };
                         let found = self
                             .cascade_for(st, priority)
                             .get_ignore_case(&literal)
@@ -479,7 +524,10 @@ impl<'a> Translator<'a> {
         priority: &'static [&'static str],
         cache: &mut HashMap<String, (State, String)>,
     ) -> (State, String) {
-        let parts: Vec<String> = original_value.split('|').map(|s| s.trim().to_string()).collect();
+        let parts: Vec<String> = original_value
+            .split('|')
+            .map(|s| s.trim().to_string())
+            .collect();
         let (first, mut refs) = (parts[0].clone(), parts[1..].to_vec());
         let func = first.to_lowercase();
         let known = matches!(func.as_str(), "format" | "pick" | "if_exists");
@@ -512,7 +560,9 @@ impl<'a> Translator<'a> {
         ) -> (State, String) {
             match arg {
                 Arg::Raw(s) => (State::Provided, s.clone()),
-                Arg::Ref(r) => this.translate_cached(category, r, levels, st, priority, true, cache),
+                Arg::Ref(r) => {
+                    this.translate_cached(category, r, levels, st, priority, true, cache)
+                }
             }
         }
         if !known || func == "format" {
@@ -674,7 +724,13 @@ mod tests {
             ..Default::default()
         };
         let mut t = Translator::new(&je, &be, None);
-        let arr = vec!["foo".into(), "bar".into(), "baz".into(), "empty".into(), "circ".into()];
+        let arr = vec![
+            "foo".into(),
+            "bar".into(),
+            "baz".into(),
+            "empty".into(),
+            "circ".into(),
+        ];
         t.match_translations("block", &arr, &levels, &st, st_priority::BLOCK);
         let m = &t.results["block"];
         assert_eq!(m["foo"], "怪异的噪声");
@@ -716,13 +772,17 @@ mod tests {
             ..Default::default()
         };
         let mut t = Translator::new(&je, &be, None);
-        let arr: Vec<String> = ["a", "b", "c", "d", "e"].iter().map(|s| s.to_string()).collect();
+        let arr: Vec<String> = ["a", "b", "c", "d", "e"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         t.match_translations("x", &arr, &levels, &st, st_priority::FULL);
         let m = &t.results["x"];
         assert_eq!(m["a"], "人工A");
         // b: human="" → 跳过 → caidlist="清单B" 命中，AI 不会被用到
         assert_eq!(m["b"], "清单B");
-        assert_eq!(m["c"], "AI C");
+        // Unreviewed AI fallback carries its source label; reviewed and caidlist values above do not.
+        assert_eq!(m["c"], "AI C（AI翻译，仅供参考）");
         assert_eq!(m["d"], "清单D");
         assert_eq!(m["e"], "");
     }

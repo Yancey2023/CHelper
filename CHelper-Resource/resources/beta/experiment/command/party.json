@@ -1,0 +1,17 @@
+{
+    "name": [
+        "party"
+    ],
+    "description": "在组队中发送队内消息。",
+    "syntax": [
+        "/party <message: message>"
+    ],
+    "node": {
+        "<message: message>": {
+            "type": "STRING",
+            "description": "要发送给队伍成员的消息。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        }
+    }
+}

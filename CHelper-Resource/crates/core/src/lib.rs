@@ -2,12 +2,15 @@
 //!
 //! 数据源为 [caidlist](https://github.com/XeroAlpha/caidlist) 仓库（GitHub tarball 拉取并缓存），
 //! 输出
-//! `output/chelper/{release,beta,netease}/{vanilla,experiment}/manifest.json` 和 `id/*.json`，
+//! `output/chelper/{release,beta,netease}/{vanilla,experiment}/` 下的清单、ID 和已复核命令资源，
+//! 以及 `output/command_wiki/` 下供 review 使用的 Wiki 原始页面。
 //! 格式与 caidlist `new_chelper` 分支的 `src/generators/chelper.js` 保持一致。
 
 pub mod cache;
 pub mod chelper;
+pub mod command_patch;
 pub mod command_sync;
+pub mod command_wiki;
 pub mod config;
 pub mod jfmt;
 pub mod manifest;

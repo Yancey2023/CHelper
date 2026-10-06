@@ -21,7 +21,7 @@
 #include <chelper/CHelperCore.h>
 #include <pch.h>
 
-int main();
+int main(int argc, char **argv);
 
 
 [[maybe_unused]] void testDir();
@@ -30,9 +30,11 @@ int main();
 
 [[maybe_unused]] bool outputFile(
         bool function(const std::filesystem::path &input, const std::filesystem::path &output, const std::string &fileType),
-        const std::string &fileType);
+        const std::string &fileType,
+        const std::filesystem::path &resourcesRoot,
+        const std::filesystem::path &outputRoot);
 
-[[maybe_unused]] bool outputOld2New();
+[[maybe_unused]] bool outputOld2New(const std::filesystem::path &resourcesRoot, const std::filesystem::path &outputRoot);
 
 namespace CHelper::Test {
 

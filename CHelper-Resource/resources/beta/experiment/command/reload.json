@@ -1,19 +1,23 @@
 {
-  "name": ["reload"],
-  "description": "重新加载行为包中的函数和脚本",
-  "syntax": ["/reload [all: reload_all]"],
-  "node": {
-    "[all: reload_all]": {
-      "type": "NORMAL_ID",
-      "brief": "all: reload_all",
-      "description": "对整个编辑器进行完整的热重载",
-      "contents": [
-        {
-          "name": "all",
-          "description": "对整个编辑器进行完整的热重载"
+    "name": [
+        "reload"
+    ],
+    "description": "重新加载行为包中的函数和脚本。",
+    "syntax": [
+        "/reload [all: reload_all]"
+    ],
+    "node": {
+        "[all: reload_all]": {
+            "type": "NORMAL_ID",
+            "brief": "重载所有包",
+            "description": "重载所有行为包和资源包，并让玩家重新加入世界。",
+            "contents": [
+                {
+                    "name": "all",
+                    "description": "重载所有行为包和资源包，并让玩家重新加入世界。"
+                }
+            ],
+            "ignoreError": true
         }
-      ],
-      "ignoreError": true
     }
-  }
 }

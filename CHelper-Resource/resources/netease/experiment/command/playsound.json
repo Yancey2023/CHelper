@@ -1,46 +1,46 @@
 {
-  "name": [
-    "playsound"
-  ],
-  "description": "播放一段声音",
-  "syntax": [
-    "/playsound <sound: string> [player: target] [position: x y z] [volume: float] [pitch: float] [minimumVolume: float]"
-  ],
-  "node": {
-    "<sound: string>": {
-      "type": "NORMAL_ID",
-      "brief": "声音",
-      "description": "要播放的声音",
-      "ignoreError": true,
-      "key": "sound"
-    },
-    "[player: target]": {
-      "type": "TARGET_SELECTOR",
-      "description": "目标",
-      "isOnlyOne": false,
-      "isMustPlayer": true,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "[position: x y z]": {
-      "type": "POSITION",
-      "brief": "方位",
-      "description": "声音发出的方位"
-    },
-    "[volume: float]": {
-      "type": "FLOAT",
-      "brief": "范围",
-      "description": "声音能被听见的距离"
-    },
-    "[pitch: float]": {
-      "type": "FLOAT",
-      "brief": "音调",
-      "description": "声音的音调"
-    },
-    "[minimumVolume: float]": {
-      "type": "FLOAT",
-      "brief": "范围外音量",
-      "description": "在声音可闻范围外的目标能听到的音量"
+    "name": [
+        "playsound"
+    ],
+    "description": "在指定位置向玩家播放声音事件。",
+    "syntax": [
+        "/playsound <sound: string> [player: target] [position: x y z] [volume: float] [pitch: float] [minimumVolume: float]"
+    ],
+    "node": {
+        "<sound: string>": {
+            "type": "NORMAL_ID",
+            "brief": "声音",
+            "description": "要播放的声音事件。",
+            "ignoreError": true,
+            "key": "sound"
+        },
+        "[player: target]": {
+            "type": "TARGET_SELECTOR",
+            "description": "接收声音的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "[position: x y z]": {
+            "type": "POSITION",
+            "brief": "方位",
+            "description": "声音发出的坐标。"
+        },
+        "[volume: float]": {
+            "type": "FLOAT",
+            "brief": "范围",
+            "description": "控制声音响度与可听范围。"
+        },
+        "[pitch: float]": {
+            "type": "FLOAT",
+            "brief": "音调",
+            "description": "声音的音高和播放速度。"
+        },
+        "[minimumVolume: float]": {
+            "type": "FLOAT",
+            "brief": "范围外音量",
+            "description": "正常可闻范围外的声音音量。"
+        }
     }
-  }
 }

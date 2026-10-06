@@ -1,82 +1,89 @@
 {
-  "name": [
-    "teleport",
-    "tp"
-  ],
-  "description": "传送实体到指定地点，并修改其旋转角度",
-  "syntax": [
-    "/teleport <destination: target>",
-    "/teleport <destination: x y z> [checkForBlocks: Boolean]",
-    "/teleport <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean]",
-    "/teleport <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean]",
-    "/teleport <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean]",
-    "/teleport <victim: target> <destination: target> [checkForBlocks: Boolean]",
-    "/teleport <victim: target> <destination: x y z> [checkForBlocks: Boolean]",
-    "/teleport <victim: target> <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean]",
-    "/teleport <victim: target> <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean]",
-    "/teleport <victim: target> <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean]"
-  ],
-  "node": {
-    "<destination: x y z>": {
-      "type": "POSITION",
-      "brief": "目的地坐标",
-      "description": "要被传送到的坐标"
-    },
-    "<destination: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "要被传送到的实体",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "[yRot: value]": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "ry",
-      "description": "实体传送后的水平旋转角度(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
-      "canUseCaretNotation": false
-    },
-    "[checkForBlocks: Boolean]": {
-      "type": "BOOLEAN",
-      "brief": "是否检测目的地方块遮挡情况",
-      "description": "是否检测目的地方块遮挡情况",
-      "descriptionTrue": "只当目的地没有实体无法存在其中的方块遮挡时，传送才会生效",
-      "descriptionFalse": "不进行检查，直接进行传送"
-    },
-    "[xRot: value]": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "rx",
-      "description": "实体传送后的垂直旋转角度(竖直上方为-90.0，至竖直下方90.0)",
-      "canUseCaretNotation": false
-    },
-    "facing": {
-      "type": "TEXT",
-      "description": "使被传送的实体面向某个坐标或另一个实体",
-      "data": {
-        "name": "facing",
-        "description": "使被传送的实体面向某个坐标或另一个实体"
-      }
-    },
-    "<lookAtEntity: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "该实体朝向的实体",
-      "isMustPlayer": false,
-      "isOnlyOne": true,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "<lookAtPosition: x y z>": {
-      "type": "POSITION",
-      "brief": "朝向的坐标",
-      "description": "实体传送后朝向的坐标"
-    },
-    "<victim: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "要被传送的实体",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": false
+    "name": [
+        "teleport",
+        "tp"
+    ],
+    "description": "将实体传送到指定地点或实体的位置，并可设置其朝向。",
+    "syntax": [
+        "/teleport <destination: target>",
+        "/teleport <destination: x y z> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <victim: target> <destination: target> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <victim: target> <destination: x y z> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <victim: target> <destination: x y z> [yRot: value] [xRot: value] [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <victim: target> <destination: x y z> facing <lookAtEntity: target> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]",
+        "/teleport <victim: target> <destination: x y z> facing <lookAtPosition: x y z> [checkForBlocks: Boolean] [forceProvidedPositionOnDimensionChange: Boolean]"
+    ],
+    "node": {
+        "<destination: x y z>": {
+            "type": "POSITION",
+            "brief": "目的地坐标",
+            "description": "指定实体的传送目的坐标。"
+        },
+        "<destination: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定作为传送目的地的实体。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "[yRot: value]": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "ry",
+            "description": "设置实体传送后的水平朝向。",
+            "canUseCaretNotation": false
+        },
+        "[checkForBlocks: Boolean]": {
+            "type": "BOOLEAN",
+            "brief": "方块阻挡检查",
+            "description": "控制传送前是否检查目的地是否被方块阻挡。",
+            "descriptionTrue": "目的地没有阻挡实体的方块时才进行传送。",
+            "descriptionFalse": "不检查目的地是否被方块阻挡，直接传送。"
+        },
+        "[xRot: value]": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "rx",
+            "description": "设置实体传送后的垂直朝向。",
+            "canUseCaretNotation": false
+        },
+        "facing": {
+            "type": "TEXT",
+            "description": "指定被传送实体传送后朝向的位置或实体。",
+            "data": {
+                "name": "facing",
+                "description": "设置被传送实体传送后的朝向。"
+            }
+        },
+        "<lookAtEntity: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定被传送实体要朝向的实体。",
+            "isMustPlayer": false,
+            "isOnlyOne": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "<lookAtPosition: x y z>": {
+            "type": "POSITION",
+            "brief": "朝向的坐标",
+            "description": "指定被传送实体要朝向的坐标。"
+        },
+        "<victim: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "选择要传送的实体。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "[forceProvidedPositionOnDimensionChange: Boolean]": {
+            "type": "BOOLEAN",
+            "brief": "跨维度坐标处理",
+            "description": "控制跨维度传送时是否强制使用命令提供的位置。",
+            "descriptionTrue": "跨维度时仍使用命令提供的坐标，即使超出目标维度的常规范围。",
+            "descriptionFalse": "跨维度时按目标维度的规则处理传送坐标。"
+        }
     }
-  }
 }

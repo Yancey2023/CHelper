@@ -83,6 +83,8 @@ pub struct Config {
     pub cache_dir: PathBuf,
     /// 输出目录（相对项目根）。
     pub output_dir: PathBuf,
+    /// 各命令的 Wiki 原始页面和来源元数据（相对项目根）。
+    pub command_wiki_dir: PathBuf,
     /// 未翻译 ID 清单目录（相对项目根）。
     pub untranslated_dir: PathBuf,
     /// 已复核翻译目录（第 1 优先级；可含经人工复核的 AI 起草译文）。
@@ -112,6 +114,7 @@ impl Default for Config {
             project_root: PathBuf::from("."),
             cache_dir: PathBuf::from("cache"),
             output_dir: PathBuf::from("output/chelper"),
+            command_wiki_dir: PathBuf::from("output/command_wiki"),
             untranslated_dir: PathBuf::from("output/untranslated"),
             translations_dir: PathBuf::from("translations"),
             ai_translations_dir: PathBuf::from("ai_translations"),
@@ -127,7 +130,8 @@ impl Default for Config {
                 commit: Some("5c780d1d048779067e5dc60b8a3345ad578baf9e".into()),
             },
             bedrock_lang: BedrockLangConfig::default(),
-            java_manifest_url: "https://piston-meta.mojang.com/mc/game/version_manifest.json".into(),
+            java_manifest_url: "https://piston-meta.mojang.com/mc/game/version_manifest.json"
+                .into(),
         }
     }
 }
@@ -173,6 +177,7 @@ impl Config {
         }
         cfg.cache_dir = join_root(&cfg.project_root, &cfg.cache_dir);
         cfg.output_dir = join_root(&cfg.project_root, &cfg.output_dir);
+        cfg.command_wiki_dir = join_root(&cfg.project_root, &cfg.command_wiki_dir);
         cfg.untranslated_dir = join_root(&cfg.project_root, &cfg.untranslated_dir);
         cfg.translations_dir = join_root(&cfg.project_root, &cfg.translations_dir);
         cfg.ai_translations_dir = join_root(&cfg.project_root, &cfg.ai_translations_dir);

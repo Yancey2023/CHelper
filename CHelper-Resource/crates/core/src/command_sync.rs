@@ -1,6 +1,6 @@
 //! 对比资源包命令语法与 caidlist 的 mcpews 命令列表。
 
-use crate::{jfmt::to_string_pretty4, parse_jsonc, write_crlf};
+use crate::{command_patch::patched_command, jfmt::to_string_pretty4, parse_jsonc, write_crlf};
 use anyhow::{bail, Context, Result};
 use indexmap::{IndexMap, IndexSet};
 use serde::Serialize;
@@ -28,7 +28,8 @@ pub struct CommandDiff {
 }
 
 /// 将 `resources/<edition>/<branch>/command/*.json` 与 `result.commandList` 对比。
-/// `apply` 只更新已有命令文件的 `syntax` 数组；报告会提示人工复核节点树和描述。
+/// `apply` 更新单一主命令的语法，并应用已复核的 Core 格式 patch。
+/// 其他节点和说明只能由逐命令 review 维护。
 pub fn check_commands(
     resources_root: &Path,
     mcpews_path: &Path,
@@ -86,7 +87,7 @@ pub fn check_commands(
         let Some(object) = resource.as_object_mut() else {
             bail!("命令资源根节点必须是对象: {}", path.display());
         };
-        // 一个资源文件可能包含 `?`/`help`、`tp`/`teleport` 等别名，合并这些名称的语法。
+        // name 已包含别名；syntax 只保存一份主命令语法。
         let mut names = IndexSet::new();
         names.insert(stem.to_ascii_lowercase());
         if let Some(aliases) = object.get("name").and_then(Value::as_array) {
@@ -97,16 +98,34 @@ pub fn check_commands(
                     .map(str::to_ascii_lowercase),
             );
         }
-        let current: IndexSet<String> = names
-            .iter()
-            .filter_map(|name| source.get(name))
-            .flat_map(|syntaxes| syntaxes.iter().cloned())
-            .collect();
-        if current.is_empty() {
+        let source_syntax = source
+            .get(stem)
+            .or_else(|| names.iter().find_map(|name| source.get(name)));
+        if source_syntax.is_none() {
             obsolete_resource_files.push(stem.to_string());
             continue;
         }
         represented.extend(names.into_iter().filter(|name| source.contains_key(name)));
+        let patch = patched_command(stem);
+        let current: IndexSet<String> = if let Some(patch) = &patch {
+            patch["syntax"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect()
+        } else {
+            source_syntax
+                .unwrap()
+                .iter()
+                .map(|syntax| {
+                    // When only an alias is exported upstream, preserve its arguments under the main name.
+                    let source_name = command_name(syntax).unwrap();
+                    syntax.replacen(&format!("/{source_name}"), &format!("/{stem}"), 1)
+                })
+                .collect()
+        };
         let old = object
             .get("syntax")
             .and_then(Value::as_array)
@@ -116,16 +135,23 @@ pub fn check_commands(
             .filter_map(Value::as_str)
             .map(str::to_string)
             .collect();
-        if old_set == current {
+        let patch_changed = patch
+            .as_ref()
+            .is_some_and(|patch| patch.as_object() != Some(&*object));
+        if old_set == current && !patch_changed {
             continue;
         }
         let missing_syntax = current.difference(&old_set).cloned().collect();
         let obsolete_syntax = old_set.difference(&current).cloned().collect();
         if apply {
-            object.insert(
-                "syntax".into(),
-                Value::Array(current.iter().cloned().map(Value::String).collect()),
-            );
+            if let Some(patch) = patch {
+                *object = patch.as_object().unwrap().clone();
+            } else {
+                object.insert(
+                    "syntax".into(),
+                    Value::Array(current.iter().cloned().map(Value::String).collect()),
+                );
+            }
             write_crlf(&path, &to_string_pretty4(&resource))
                 .with_context(|| format!("写入更新后的命令资源失败: {}", path.display()))?;
         }
@@ -134,7 +160,7 @@ pub fn check_commands(
             file: path.display().to_string(),
             missing_syntax,
             obsolete_syntax,
-            node_description_review: true,
+            node_description_review: stem != "execute",
         });
     }
 
@@ -150,7 +176,7 @@ pub fn check_commands(
         changed,
         missing_resource_files,
         obsolete_resource_files,
-        description_reminder: "请逐项检查 changed 命令文件的 node 树及根级 description：新增或删除语法可能要求同步增删节点，并更新相关节点说明。此工具只替换 syntax，不会自动推导节点结构与描述。".into(),
+        description_reminder: "请由 reviewer 逐命令依据 Wiki 核对参数语义，复用或重命名既有节点。节点和枚举 ID 需要清晰的作用说明，布尔两态分别解释；description 不包含类型限制、默认值或枚举引导句，也避免使用指向 Wiki 后续内容的“以下”，应按实际用途完整改写。syntax 只包含主命令；execute 自动应用已复核的 REPEAT patch。其他命令不会自动推导节点或说明，Wiki 原文位于 output/command_wiki。".into(),
     })
 }
 

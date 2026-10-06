@@ -2,6 +2,10 @@
 
 use crate::cache::{HttpCache, RepoSource};
 use crate::chelper::{write_resource_pack, ChelperInput};
+use crate::command_patch::{
+    write_netease_extension_ids, write_old2new_resources, write_reviewed_resources,
+};
+use crate::command_wiki::{archive_command_pages, CommandWikiReport};
 use crate::config::Config;
 use crate::sources::bedrock_lang::fetch_bedrock_lang;
 use crate::sources::caidlist::{remove_minecraft_namespace, Enums, RepoSnapshot};
@@ -40,6 +44,7 @@ pub struct GenerateReport {
     pub editions: Vec<EditionReport>,
     pub warnings: usize,
     pub untranslated_ids: usize,
+    pub command_wiki: Option<CommandWikiReport>,
 }
 
 /// 支持的版本：release / beta 用 master 的对应数据目录；netease 用 netease 源的 version/release。
@@ -52,9 +57,26 @@ fn version_dir_for(edition: &str) -> &'static str {
 }
 
 pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Result<GenerateReport> {
+    for edition in editions {
+        if !matches!(edition.as_str(), "release" | "beta" | "netease") {
+            bail!("未知版本: {edition}（支持 release / beta / netease）");
+        }
+    }
     let http = Arc::new(HttpCache::new(&cfg.cache_dir)?);
     let mut report = GenerateReport::default();
     let mut untranslated_warnings = Vec::new();
+
+    tracing::info!("缓存各命令 Wiki 原文，供逐命令 review 使用…");
+    let wiki = archive_command_pages(
+        Arc::clone(&http),
+        &cfg.project_root.join("resources"),
+        editions,
+        &cfg.command_wiki_dir,
+        refresh,
+    )
+    .await?;
+    report.warnings += wiki.unavailable;
+    report.command_wiki = Some(wiki);
 
     // —— 数据源快照 ——
     let master_source = RepoSource::new(
@@ -88,9 +110,6 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
         .context("缺少 data/potion_descriptions.json（药水描述数据）")?;
 
     for edition in editions {
-        if !matches!(edition.as_str(), "release" | "beta" | "netease") {
-            bail!("未知版本: {edition}（支持 release / beta / netease）");
-        }
         let (snapshot, version_dir) = if edition == "netease" {
             let source = RepoSource::new(
                 "netease",
@@ -133,11 +152,12 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
 
         // block.json 的属性数据固定取 beta/gametest 数据（与 chelper.js 一致）；
         // netease 数据源自带 beta 数据时优先使用。
-        let gametest: Value = if edition == "netease" && snapshot.exists("version/beta/gametest/all.json") {
-            snapshot.read_jsonc("version/beta/gametest/all.json")?
-        } else {
-            master_snapshot.read_jsonc("version/beta/gametest/all.json")?
-        };
+        let gametest: Value =
+            if edition == "netease" && snapshot.exists("version/beta/gametest/all.json") {
+                snapshot.read_jsonc("version/beta/gametest/all.json")?
+            } else {
+                master_snapshot.read_jsonc("version/beta/gametest/all.json")?
+            };
 
         let mut branch_reports = Vec::new();
         for branch in ["vanilla", "experiment"] {
@@ -178,6 +198,20 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
             };
             let files = write_resource_pack(input, &output_dir)
                 .with_context(|| format!("[{edition}/{branch}] 写出资源包失败"))?;
+            let files = files
+                + if edition == "netease"
+                    && !support::place_command_feature_sub_command(&core_version, branch)
+                {
+                    write_netease_extension_ids(
+                        &cfg.project_root
+                            .join("resources/netease")
+                            .join(branch)
+                            .join("id"),
+                        &output_dir,
+                    )?
+                } else {
+                    0
+                };
             write_manifest(
                 output_dir.parent().unwrap(),
                 edition,
@@ -185,7 +219,15 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
                 &package_version,
             )
             .with_context(|| format!("[{edition}/{branch}] 写出 manifest.json 失败"))?;
-            let files = files + 1;
+            let files = files
+                + 1
+                + write_reviewed_resources(
+                    &cfg.project_root
+                        .join("resources")
+                        .join(edition)
+                        .join(branch),
+                    output_dir.parent().unwrap(),
+                )?;
             let entries: usize = result_maps.values().map(|m| m.len()).sum();
             tracing::info!(
                 "[{edition}/{branch}] 写出 {files} 个文件（{entries} 条目，{} 条警告）",
@@ -209,6 +251,7 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
     for warning in untranslated_warnings {
         tracing::warn!("{warning}");
     }
+    write_old2new_resources(&cfg.project_root.join("resources"), &cfg.output_dir)?;
     Ok(report)
 }
 
@@ -242,7 +285,11 @@ fn write_untranslated_ids(
         missing_total += missing.len();
         let path = dir.join(&file_name);
         let content = serde_json::Value::Array(
-            missing.iter().cloned().map(serde_json::Value::String).collect(),
+            missing
+                .iter()
+                .cloned()
+                .map(serde_json::Value::String)
+                .collect(),
         );
         write_crlf(&path, &to_string_pretty4(&content))
             .with_context(|| format!("写入未翻译 ID 清单失败: {}", path.display()))?;
@@ -310,7 +357,14 @@ fn match_branches(
 
     // block
     let levels = build_levels(cfg, snapshot, "block", None)?;
-    run(&mut translator, st, "block", enums.array("blocks"), &levels, st_priority::BLOCK);
+    run(
+        &mut translator,
+        st,
+        "block",
+        enums.array("blocks"),
+        &levels,
+        st_priority::BLOCK,
+    );
     // item：不在 blocks 中的物品，或在任一翻译来源中有条目的
     let levels = build_levels(cfg, snapshot, "item", None)?;
     let blocks = enums.array("blocks");
@@ -319,20 +373,61 @@ fn match_branches(
         .into_iter()
         .filter(|item| !blocks.contains(item) || levels.contains(item))
         .collect();
-    run(&mut translator, st, "item", item_array, &levels, st_priority::ITEM);
+    run(
+        &mut translator,
+        st,
+        "item",
+        item_array,
+        &levels,
+        st_priority::ITEM,
+    );
     postprocess_item_merge(&mut translator, enums);
     // entity
     let levels = build_levels(cfg, snapshot, "entity", None)?;
     let entity_array = remove_minecraft_namespace(&enums.array("entities"));
-    run(&mut translator, st, "entity", entity_array, &levels, st_priority::ENTITY);
-    postprocess_namespace_merge(&mut translator, "entity", "entities", enums, MergeMode::Prefix);
+    run(
+        &mut translator,
+        st,
+        "entity",
+        entity_array,
+        &levels,
+        st_priority::ENTITY,
+    );
+    postprocess_namespace_merge(
+        &mut translator,
+        "entity",
+        "entities",
+        enums,
+        MergeMode::Prefix,
+    );
     // effect / enchant / fog
     let levels = build_levels(cfg, snapshot, "effect", None)?;
-    run(&mut translator, st, "effect", enums.array("effects"), &levels, st_priority::EFFECT);
+    run(
+        &mut translator,
+        st,
+        "effect",
+        enums.array("effects"),
+        &levels,
+        st_priority::EFFECT,
+    );
     let levels = build_levels(cfg, snapshot, "enchant", None)?;
-    run(&mut translator, st, "enchant", enums.array("enchantments"), &levels, st_priority::ENCHANT);
+    run(
+        &mut translator,
+        st,
+        "enchant",
+        enums.array("enchantments"),
+        &levels,
+        st_priority::ENCHANT,
+    );
     let levels = build_levels(cfg, snapshot, "fog", None)?;
-    run(&mut translator, st, "fog", enums.array("fogs"), &levels, st_priority::BIOME);
+    run(
+        &mut translator,
+        st,
+        "fog",
+        enums.array("fogs"),
+        &levels,
+        st_priority::BIOME,
+    );
     // location（原始数组去 minecraft: 前缀，结果表恢复原始键序）
     let levels = build_levels(cfg, snapshot, "location", None)?;
     let locations: Vec<String> = enums
@@ -340,8 +435,21 @@ fn match_branches(
         .iter()
         .map(|e| e.strip_prefix("minecraft:").unwrap_or(e).to_string())
         .collect();
-    run(&mut translator, st, "location", locations, &levels, st_priority::ENV);
-    postprocess_namespace_merge(&mut translator, "location", "locations", enums, MergeMode::Strip);
+    run(
+        &mut translator,
+        st,
+        "location",
+        locations,
+        &levels,
+        st_priority::ENV,
+    );
+    postprocess_namespace_merge(
+        &mut translator,
+        "location",
+        "locations",
+        enums,
+        MergeMode::Strip,
+    );
     // biome（版本门控）
     if support::new_locate_command(core_version) {
         let levels = build_levels(cfg, snapshot, "biome", None)?;
@@ -350,7 +458,14 @@ fn match_branches(
             .iter()
             .map(|e| e.strip_prefix("minecraft:").unwrap_or(e).to_string())
             .collect();
-        run(&mut translator, st, "biome", biomes, &levels, st_priority::BIOME);
+        run(
+            &mut translator,
+            st,
+            "biome",
+            biomes,
+            &levels,
+            st_priority::BIOME,
+        );
         postprocess_namespace_merge(&mut translator, "biome", "biomes", enums, MergeMode::Strip);
     }
     // 实体相关（package 数据派生）
@@ -392,17 +507,45 @@ fn match_branches(
     );
     // sound（音效翻译依赖 translation/sound.json 中的 JE 引用）
     let levels = build_levels(cfg, snapshot, "sound", None)?;
-    run(&mut translator, st, "sound", enums.array("sounds"), &levels, st_priority::FULL);
+    run(
+        &mut translator,
+        st,
+        "sound",
+        enums.array("sounds"),
+        &levels,
+        st_priority::FULL,
+    );
     // gamerule（第 2 级 = wiki 游戏规则描述）
     let levels = build_levels(cfg, snapshot, "gamerule", Some(gamerule_wiki))?;
-    run(&mut translator, st, "gamerule", enums.array("gamerules"), &levels, st_priority::FULL);
+    run(
+        &mut translator,
+        st,
+        "gamerule",
+        enums.array("gamerules"),
+        &levels,
+        st_priority::FULL,
+    );
     // entitySlot
     let levels = build_levels(cfg, snapshot, "entity_slot", None)?;
-    run(&mut translator, st, "entitySlot", enums.array("entitySlots"), &levels, st_priority::FULL);
+    run(
+        &mut translator,
+        st,
+        "entitySlot",
+        enums.array("entitySlots"),
+        &levels,
+        st_priority::FULL,
+    );
     // lootTable + lootTableWrapped
     if support::loot_table(core_version) {
         let levels = build_levels(cfg, snapshot, "loot_table", None)?;
-        run(&mut translator, st, "lootTable", enums.array("lootTables"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "lootTable",
+            enums.array("lootTables"),
+            &levels,
+            st_priority::FULL,
+        );
         let wrapped: IndexMap<String, String> = translator
             .results
             .get("lootTable")
@@ -418,15 +561,28 @@ fn match_branches(
                 wrapped
             })
             .unwrap_or_default();
-        translator.results.insert("lootTableWrapped".into(), wrapped);
+        translator
+            .results
+            .insert("lootTableWrapped".into(), wrapped);
     } else {
-        translator.results.insert("lootTable".into(), IndexMap::new());
-        translator.results.insert("lootTableWrapped".into(), IndexMap::new());
+        translator
+            .results
+            .insert("lootTable".into(), IndexMap::new());
+        translator
+            .results
+            .insert("lootTableWrapped".into(), IndexMap::new());
     }
     // damageCause
     if support::damage_command(core_version) {
         let levels = build_levels(cfg, snapshot, "damage_cause", None)?;
-        run(&mut translator, st, "damageCause", enums.array("damageCauses"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "damageCause",
+            enums.array("damageCauses"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // inputPermission
     if support::inputpermission_command(core_version) {
@@ -448,31 +604,80 @@ fn match_branches(
             .into_iter()
             .filter(|e| !e.starts_with("example:"))
             .collect();
-        run(&mut translator, st, "cameraPreset", presets, &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "cameraPreset",
+            presets,
+            &levels,
+            st_priority::FULL,
+        );
         let levels = build_levels(cfg, snapshot, "camera_easing", None)?;
-        run(&mut translator, st, "cameraEasing", enums.array("cameraEasings"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "cameraEasing",
+            enums.array("cameraEasings"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // recipe（dataDriven 引用解析）
     if support::recipe_new_command(core_version, branch) {
         let levels = build_levels(cfg, snapshot, "recipe", None)?;
-        run(&mut translator, st, "recipe", enums.array("recipes"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "recipe",
+            enums.array("recipes"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // hudElement
     if support::hud_command(core_version, branch) {
         let levels = build_levels(cfg, snapshot, "hud_element", None)?;
-        run(&mut translator, st, "hudElement", enums.array("hudElements"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "hudElement",
+            enums.array("hudElements"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // feature / featureRule
     if support::place_command_feature_sub_command(core_version, branch) {
         let levels = build_levels(cfg, snapshot, "feature", None)?;
-        run(&mut translator, st, "feature", enums.array("features"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "feature",
+            enums.array("features"),
+            &levels,
+            st_priority::FULL,
+        );
         let levels = build_levels(cfg, snapshot, "feature_rule", None)?;
-        run(&mut translator, st, "featureRule", enums.array("featureRules"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "featureRule",
+            enums.array("featureRules"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // controlScheme
     if support::control_scheme_command(core_version, branch) {
         let levels = build_levels(cfg, snapshot, "control_schemes", None)?;
-        run(&mut translator, st, "controlScheme", enums.array("controlSchemes"), &levels, st_priority::FULL);
+        run(
+            &mut translator,
+            st,
+            "controlScheme",
+            enums.array("controlSchemes"),
+            &levels,
+            st_priority::FULL,
+        );
     }
     // music：sound 的 music./record. 子集
     let music: IndexMap<String, String> = translator
@@ -525,7 +730,10 @@ fn postprocess_namespace_merge(
                 MergeMode::Strip => key.strip_prefix("minecraft:").unwrap_or(&key).to_string(),
                 MergeMode::Prefix => format!("minecraft:{key}"),
             };
-            merged.insert(key.clone(), result.get(&fallback_key).cloned().unwrap_or_default());
+            merged.insert(
+                key.clone(),
+                result.get(&fallback_key).cloned().unwrap_or_default(),
+            );
         }
     }
     translator.results.insert(category.to_string(), merged);
@@ -572,7 +780,9 @@ fn apply_netease_extras(cfg: &Config, branch: &str, translator: &mut Translator<
             continue;
         };
         if !translator.results.contains_key(category) {
-            tracing::warn!("[netease/{branch}] netease_extra 类别 {category} 不在生成结果中，已跳过");
+            tracing::warn!(
+                "[netease/{branch}] netease_extra 类别 {category} 不在生成结果中，已跳过"
+            );
             continue;
         }
         let value = load_jsonc_file(&path)?;
@@ -605,8 +815,13 @@ fn build_levels(
     Ok(CategoryLevels {
         human: optional_object(&cfg.translations_dir.join(format!("{category_file}.json")))?,
         wiki: wiki.cloned(),
-        caidlist: optional_object(&Path::new(snapshot.root()).join(format!("translation/{category_file}.json")))?,
-        ai: optional_object(&cfg.ai_translations_dir.join(format!("{category_file}.json")))?,
+        caidlist: optional_object(
+            &Path::new(snapshot.root()).join(format!("translation/{category_file}.json")),
+        )?,
+        ai: optional_object(
+            &cfg.ai_translations_dir
+                .join(format!("{category_file}.json")),
+        )?,
     })
 }
 
@@ -622,6 +837,7 @@ fn optional_object(path: &Path) -> Result<Option<serde_json::Map<String, Value>>
 }
 
 fn load_jsonc_file(path: &Path) -> Result<Value> {
-    let text = std::fs::read_to_string(path).with_context(|| format!("读取失败: {}", path.display()))?;
+    let text =
+        std::fs::read_to_string(path).with_context(|| format!("读取失败: {}", path.display()))?;
     crate::parse_jsonc(&text).with_context(|| format!("解析失败: {}", path.display()))
 }

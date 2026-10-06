@@ -1,7 +1,7 @@
 //! CHelper 资源包生成器 CLI。
 
 use anyhow::{Context, Result};
-use chelper_core::{command_sync, config::Config, pipeline};
+use chelper_core::{cache::HttpCache, command_sync, command_wiki, config::Config, pipeline};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -35,6 +35,11 @@ enum Command {
     },
     /// 清空缓存目录
     CleanCache,
+    /// 缓存所有命令的 Wiki 原始页面，供子 agent 逐命令复核
+    CacheCommandWiki {
+        #[arg(long)]
+        refresh: bool,
+    },
     /// 对比资源包命令语法与 caidlist mcpews.json
     CheckCommands {
         /// 资源包根目录（包含 <edition>/<branch>/command）
@@ -89,6 +94,17 @@ async fn main() -> Result<()> {
                     .with_context(|| format!("清理缓存失败: {}", dir.display()))?;
             }
             println!("已清理 {}", dir.display());
+        }
+        Command::CacheCommandWiki { refresh } => {
+            let report = command_wiki::archive_command_pages(
+                std::sync::Arc::new(HttpCache::new(&cfg.cache_dir)?),
+                &project_root.join("resources"),
+                &["release".into(), "beta".into(), "netease".into()],
+                &cfg.command_wiki_dir,
+                refresh,
+            )
+            .await?;
+            println!("{}", serde_json::to_string_pretty(&report)?);
         }
         Command::CheckCommands {
             resources,

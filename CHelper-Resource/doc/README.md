@@ -17,6 +17,9 @@ cargo run --release -- generate release beta
 # 强制刷新缓存（重新解析分支指向并重新下载）
 cargo run --release -- generate --refresh
 
+# 单独缓存全部命令 Wiki 原文，供子 agent 逐命令审阅
+cargo run --release -- cache-command-wiki
+
 # 清空缓存
 cargo run --release -- clean-cache
 
@@ -27,11 +30,14 @@ cargo run -- check-commands --mcpews E:/project/CHelper/caidlist/version/release
 cargo run -- check-commands --mcpews E:/project/CHelper/caidlist/version/release/autocompletion/vanilla/mcpews.json --apply
 ```
 
-命令检查默认读取 `../CHelper/CHelper-Resource/resources/release/vanilla/command`；
+命令检查默认读取项目目录下的 `resources/release/vanilla/command`；
 可用 `--resources` 指定其他资源目录，用 `--edition`、`--branch` 选择版本和分支。
 检查结果会列出新增/过期语法、缺失或过期的命令文件。`--apply` 只更新已有命令文件
-的 `syntax` 数组；报告会提醒逐项核对根级 `description` 和 `node` 树，因为节点结构及
-说明文字需要按新语法人工维护。
+的主命令 `syntax` 数组，别名保留在 `name` 中。`execute` 会应用
+`data/command_patches/execute.json`，保留原有 REPEAT 入口和节点说明。
+报告会提醒 reviewer 逐命令核对根级 `description`、`node` 树和参数语义：复用或重命名
+已有等价节点，并依据 Wiki 编写清晰的作用说明；节点与枚举 ID 的说明不能留空，
+也不能填入类型限制、默认值或枚举引导句。工具不会自动推导语义或编写描述。
 
 生成结束时，若某类别同时存在已翻译和未翻译 ID，程序会输出汇总警告。未翻译 ID
 列表写入 `output/untranslated/<版本>/<分支>/<类别>.json`；每个文件是 ID 数组，
@@ -42,17 +48,37 @@ cargo run -- check-commands --mcpews E:/project/CHelper/caidlist/version/release
 ```
 output/chelper/{release,beta,netease}/{vanilla,experiment}/
 ├─ manifest.json
-└─ id/*.json
+├─ id/*.json
+├─ command/*.json
+├─ grammer/*.json
+├─ json/*.json
+└─ repeat/*.json
 ```
 
-release / beta 每分支生成一个 `manifest.json` 和 29 个 ID 文件：caidlist 原有 26 个
-（`block.json`、`item.json`、
-`entity.json`、`gameRuleInteger/Boolean.json`……），外加本工具新增的
-`gameMode.json`（手工数据）与 `particleEmitter.json`（wiki 抓取）。
+生成时，`command`、`grammer`、`json` 和 `repeat` 从本项目 `resources` 中的已复核定义
+导出；`execute` 自动应用固定 patch。ID 和版本清单来自本次数据生成。
+CHelper-Core 可直接打包这份完整产物：
+
+```powershell
+CHelperResourceGenerator.exe CHelper-Resource/output/chelper CHelper-Resource/generated
+```
+
+`output/command_wiki/<命令>/page.wiki` 保存原始页面 wikitext，`source.json` 保存来源链接、
+重定向链和抓取状态。`index.json` 列出所有命令，`overview` 缓存命令总览。
+可用 `command_wiki_dir` 配置此目录。缺失页面或下载失败会明确记录，保留已有快照但
+不会伪造页面文本；缓存器只下载来源，逐命令的语义与原文审阅由 reviewer 完成。
+
+release / beta 每分支生成一个 `manifest.json` 和 29 个 ID 文件，包括
+`block.json`、`item.json`、`entity.json`、`gameRuleInteger/Boolean.json` 等，
+以及本工具新增的 `gameMode.json`（手工数据）与 `particleEmitter.json`（wiki 抓取）。
 
 netease 数据取自 1.21.50.07 时代（`config.toml` 的 `[netease] commit` 指定），
-受版本特性门控影响为 26 个 ID 文件（1.21.50 时代尚无 controlScheme、feature、
-featureRule 三类）。
+常规生成受国际版特性门控影响为 26 个 ID 文件，另外从已复核的中国版资源保留
+`feature.json` 和 `featureRule.json` 两个扩展目录。国际版旧快照不包含中国版既有
+`place` 扩展，保留这些目录可确保其命令依赖完整；不会伪造新 ID。`controlScheme`
+仍按旧版本门控处理。
+
+`output/chelper/old2new` 同时导出旧方块转换数据，供 Core 生成 `old2new.dat`。
 
 ## 环境要求
 
@@ -68,6 +94,7 @@ featureRule 三类）。
 | [data-sources.md](data-sources.md) | 数据源、tarball 缓存、HTTP 缓存机制 |
 | [translation-priority.md](translation-priority.md) | 翻译来源、复核状态与引用 DSL |
 | [output-format.md](output-format.md) | chelper 输出格式契约 |
+| [command-review.md](command-review.md) | Wiki 原文、子 agent 逐命令审阅、节点复用和打包流程 |
 
 ## 与旧流程（caidlist JS）的关系
 

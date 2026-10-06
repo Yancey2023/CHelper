@@ -1,8 +1,9 @@
 # chelper 输出格式契约
 
 产物目录：`output/chelper/{release,beta,netease}/{vanilla,experiment}/`，其中包含
-`manifest.json` 和 `id/*.json`。每个分支有 29 个 ID 文件；ID 文件格式与 caidlist
-`new_chelper` 分支 `src/generators/chelper.js` 的输出**逐字节兼容**。
+`manifest.json`、`id/*.json` 以及已复核的 `command`、`grammer`、`json`、`repeat`
+定义。ID 文件使用 caidlist `new_chelper` 分支 `src/generators/chelper.js` 的格式；
+方块新增属性的值域补全、中国版扩展目录和本项目新增类别会产生内容差异。
 
 `manifest.json` 的 `version` 使用本次生成的包版本，并记录版本类型、分支、资源包 ID
 和 CHelper 内置包标记。
@@ -13,6 +14,10 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 
 最终采用 `ai_translations/` 中未复核译文的条目，会在资源包 `description` 后追加
 `（AI翻译，仅供参考）`；已复核、wiki 和 caidlist 来源的译文不添加该标记。
+
+游戏规则的 Boolean 和 Integer 目录分别只收录对应类型；`playerwaypoints` 的枚举值
+由人工复核的 `command/gamerule.json` 分支提供。新出现的其他类型仍输出带规则名称的
+警告，供后续人工复核。
 
 ## 全局格式规则
 
@@ -92,6 +97,8 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
   - 首元素为字符串的数组（弃用标记）→ 取**末元素**为 `description`，values 无描述；
   - `[[键, 描述], …]` 对数组 → 按 `valueName` 匹配（键可为字符串或字符串数组）；
   - wiki 文本先经 `parseWikiText` 清洗（`<br>`→空格、去 `<b>`/`<code>`/`[[ ]]`/`{{…}}`）；
+- Wiki 尚未覆盖的方块属性，从该方块的 Script API `validValues` 补全值域，
+  不添加 `description`，确保新实验方块也满足 Core 的资源格式要求；
 - `block[n].properties` 恒为数组（可能为空）——复刻 JS 对普通对象取 `.size` 恒为
   `undefined` 的行为。
 

@@ -19,14 +19,20 @@
 #include "CHelperResourceGenerator.h"
 #include <chelper/parser/Parser.h>
 
-int main() {
+int main(int argc, char **argv) {
     // testDir();
     // testBin();
     // return 0;
+    if (argc > 3) {
+        SPDLOG_ERROR("Usage: CHelperResourceGenerator [resources-root] [output-root]");
+        return 1;
+    }
+    const std::filesystem::path resourcesRoot = argc >= 2 ? std::filesystem::path(argv[1]) : std::filesystem::path(RESOURCE_DIR) / "resources";
+    const std::filesystem::path outputRoot = argc >= 3 ? std::filesystem::path(argv[2]) : std::filesystem::path(RESOURCE_DIR) / "generated";
     bool isSuccess = true;
-    isSuccess = outputFile(CHelper::Test::writeSingleJson, "json") && isSuccess;
-    isSuccess = outputFile(CHelper::Test::writeBinary, "cpack") && isSuccess;
-    isSuccess = outputOld2New() && isSuccess;
+    isSuccess = outputFile(CHelper::Test::writeSingleJson, "json", resourcesRoot, outputRoot) && isSuccess;
+    isSuccess = outputFile(CHelper::Test::writeBinary, "cpack", resourcesRoot, outputRoot) && isSuccess;
+    isSuccess = outputOld2New(resourcesRoot, outputRoot) && isSuccess;
     return isSuccess ? 0 : -1;
 }
 
@@ -52,35 +58,39 @@ int main() {
 
 [[maybe_unused]] bool outputFile(
         bool function(const std::filesystem::path &input, const std::filesystem::path &output, const std::string &fileType),
-        const std::string &fileType) {
-    std::filesystem::path projectDir(RESOURCE_DIR);
+        const std::string &fileType,
+        const std::filesystem::path &resourcesRoot,
+        const std::filesystem::path &outputRoot) {
     bool isSuccess = true;
-    for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "release")) {
+    for (const auto &branchDir: std::filesystem::directory_iterator(resourcesRoot / "release")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("release"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, outputRoot / fileType, fileType) && isSuccess;
     }
-    for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "beta")) {
+    for (const auto &branchDir: std::filesystem::directory_iterator(resourcesRoot / "beta")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("beta"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, outputRoot / fileType, fileType) && isSuccess;
     }
-    for (const auto &branchDir: std::filesystem::directory_iterator(projectDir / "resources" / "netease")) {
+    for (const auto &branchDir: std::filesystem::directory_iterator(resourcesRoot / "netease")) {
         SPDLOG_INFO("----- start output {}: {}-{} -----", FORMAT_ARG(fileType), FORMAT_ARG("netease"), FORMAT_ARG(branchDir.path().filename().string()));
-        isSuccess = function(branchDir, projectDir / "generated" / fileType, fileType) && isSuccess;
+        isSuccess = function(branchDir, outputRoot / fileType, fileType) && isSuccess;
     }
     return isSuccess;
 }
 
-bool outputOld2New() {
+bool outputOld2New(const std::filesystem::path &resourcesRoot, const std::filesystem::path &outputRoot) {
     // old2new
-    std::filesystem::path resourceDir(RESOURCE_DIR);
-    std::filesystem::path input = resourceDir / "resources" / "old2new" / "blockFixData.json";
-    std::filesystem::path output = resourceDir / "generated" / "old2new" / "old2new.dat";
+    std::filesystem::path input = resourcesRoot / "old2new" / "blockFixData.json";
+    std::filesystem::path output = outputRoot / "old2new" / "old2new.dat";
     CHelper::Old2New::BlockFixData blockFixData = CHelper::Old2New::blockFixDataFromJson(input);
     std::filesystem::create_directories(output.parent_path());
     const std::string buffer = CHelper::Old2New::blockFixDataToBinary(blockFixData);
     std::ofstream ostream(output, std::ios::binary);
     ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
     ostream.close();
+    if (!ostream) {
+        SPDLOG_ERROR("Failed to write old2new resource: {}", FORMAT_ARG(output.string()));
+        return false;
+    }
     return true;
 }
 

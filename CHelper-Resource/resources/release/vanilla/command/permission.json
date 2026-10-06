@@ -1,0 +1,47 @@
+{
+    "name": [
+        "ops",
+        "permission"
+    ],
+    "description": "设置玩家的权限等级。",
+    "syntax": [
+        "/permission set <player: target> [permission: PermissionLevel]"
+    ],
+    "node": {
+        "set": {
+            "type": "TEXT",
+            "description": "在客户端上设置玩家的权限等级。",
+            "data": {
+                "name": "set",
+                "description": "在客户端上设置玩家的权限等级。"
+            }
+        },
+        "<player: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "要设置权限等级的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false
+        },
+        "[permission: PermissionLevel]": {
+            "type": "NORMAL_ID",
+            "description": "要应用到玩家的权限身份。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "visitor",
+                    "description": "可访问世界但不能进行常规建造的身份。"
+                },
+                {
+                    "name": "member",
+                    "description": "可在世界中进行常规互动的身份。"
+                },
+                {
+                    "name": "operator",
+                    "description": "可使用命令并管理世界的身份。"
+                }
+            ]
+        }
+    }
+}

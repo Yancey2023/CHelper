@@ -1,6 +1,6 @@
 //! HTTP 下载缓存：URL 哈希为键，带 TTL，下载失败时回退旧缓存。
 
-use super::{read_meta, write_meta, CacheMeta, now_unix};
+use super::{now_unix, read_meta, write_meta, CacheMeta};
 use anyhow::{anyhow, Context, Result};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
@@ -28,7 +28,9 @@ impl HttpCache {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::USER_AGENT,
-            "chelper-resource/0.1 (CHelper resource pack generator)".parse().unwrap(),
+            "chelper-resource/0.1 (CHelper resource pack generator)"
+                .parse()
+                .unwrap(),
         );
         let client = reqwest::Client::builder()
             .default_headers(headers)
@@ -43,13 +45,23 @@ impl HttpCache {
 
     fn paths(&self, url: &str) -> (PathBuf, PathBuf) {
         let key = url_key(url);
-        (self.data_dir.join(&key), self.meta_dir.join(format!("{key}.json")))
+        (
+            self.data_dir.join(&key),
+            self.meta_dir.join(format!("{key}.json")),
+        )
     }
 
     /// 获取 URL 内容（字节）。缓存未过期直接返回；否则重新下载；下载失败时回退旧缓存。
     pub async fn get(&self, url: &str, ttl: Duration) -> Result<Vec<u8>> {
+        self.get_cached(url, ttl, true).await
+    }
+
+    async fn get_cached(&self, url: &str, ttl: Duration, allow_stale: bool) -> Result<Vec<u8>> {
         let (data_path, meta_path) = self.paths(url);
-        let stale = data_path.exists().then(|| std::fs::read(&data_path).ok()).flatten();
+        let stale = data_path
+            .exists()
+            .then(|| std::fs::read(&data_path).ok())
+            .flatten();
         if let Some(data) = &stale {
             if let Some(meta) = read_meta(&meta_path) {
                 if super::meta_is_fresh(&meta, ttl) {
@@ -62,11 +74,17 @@ impl HttpCache {
             Ok(bytes) => {
                 std::fs::write(&data_path, &bytes)
                     .with_context(|| format!("写入缓存失败: {}", data_path.display()))?;
-                write_meta(&meta_path, &CacheMeta { fetched_at: now_unix(), extra: serde_json::Value::Null })?;
+                write_meta(
+                    &meta_path,
+                    &CacheMeta {
+                        fetched_at: now_unix(),
+                        extra: serde_json::Value::Null,
+                    },
+                )?;
                 Ok(bytes)
             }
             Err(err) => {
-                if let Some(data) = stale {
+                if let Some(data) = stale.filter(|_| allow_stale) {
                     warn!(url, %err, "下载失败，回退旧缓存");
                     return Ok(data);
                 }
@@ -77,6 +95,12 @@ impl HttpCache {
 
     pub async fn get_text(&self, url: &str, ttl: Duration) -> Result<String> {
         let bytes = self.get(url, ttl).await?;
+        String::from_utf8(bytes).with_context(|| format!("响应不是 UTF-8: {url}"))
+    }
+
+    /// 下载失败时返回错误，供需要明确标记旧快照的导出器使用。
+    pub async fn get_text_without_stale(&self, url: &str, ttl: Duration) -> Result<String> {
+        let bytes = self.get_cached(url, ttl, false).await?;
         String::from_utf8(bytes).with_context(|| format!("响应不是 UTF-8: {url}"))
     }
 
@@ -119,7 +143,9 @@ impl HttpCache {
         if !status.is_success() {
             return Err(anyhow!("HTTP {status}: {url}"));
         }
-        resp.text().await.with_context(|| format!("读取响应失败: {url}"))
+        resp.text()
+            .await
+            .with_context(|| format!("读取响应失败: {url}"))
     }
 
     async fn download(&self, url: &str) -> Result<Vec<u8>> {

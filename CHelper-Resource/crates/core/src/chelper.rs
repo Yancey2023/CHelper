@@ -6,7 +6,7 @@
 use crate::jfmt::to_string_pretty4;
 use crate::translate::ResultMaps;
 use crate::write_crlf;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use regex::Regex;
 use serde_json::{json, Map, Value};
@@ -105,11 +105,7 @@ fn describe_property(descriptions: &Value) -> (Option<String>, Option<Vec<(Vec<S
     match descriptions {
         Value::String(s) => (Some(parse_wiki_text(s)), None),
         Value::Array(items) => {
-            if items
-                .first()
-                .map(|v| v.is_string())
-                .unwrap_or(false)
-            {
+            if items.first().map(|v| v.is_string()).unwrap_or(false) {
                 // [标记?, 描述] —— 取末项
                 let last = items.last().cloned().unwrap_or(Value::Null);
                 match last {
@@ -204,7 +200,10 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
             "type": "normal",
             "content": content_array(value),
         });
-        write_crlf(&output_dir.join(format!("{key}.json")), &to_string_pretty4(&doc))?;
+        write_crlf(
+            &output_dir.join(format!("{key}.json")),
+            &to_string_pretty4(&doc),
+        )?;
         file_count += 1;
     }
 
@@ -224,7 +223,13 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
                     match rule_type.as_str() {
                         "int" => game_rule_integer.push(Value::Object(obj)),
                         "bool" => game_rule_boolean.push(Value::Object(obj)),
-                        other => tracing::warn!("Unknown gamerule type: {other}"),
+                        "enum" if name == "playerwaypoints" => {
+                            // This rule has an explicitly reviewed enum branch in command/gamerule.json.
+                            // It must not be offered among the Boolean or integer rules.
+                        }
+                        other => {
+                            tracing::warn!(rule = name, rule_type = other, "Unknown gamerule type")
+                        }
                     }
                     found = true;
                     break;
@@ -235,9 +240,15 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
             }
         }
     }
-    for (id, content) in [("gameRuleInteger", game_rule_integer), ("gameRuleBoolean", game_rule_boolean)] {
+    for (id, content) in [
+        ("gameRuleInteger", game_rule_integer),
+        ("gameRuleBoolean", game_rule_boolean),
+    ] {
         let doc = json!({"id": id, "type": "normal", "content": content});
-        write_crlf(&output_dir.join(format!("{id}.json")), &to_string_pretty4(&doc))?;
+        write_crlf(
+            &output_dir.join(format!("{id}.json")),
+            &to_string_pretty4(&doc),
+        )?;
         file_count += 1;
     }
 
@@ -362,6 +373,50 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
             block_contents.push(Value::Object(obj));
         }
     }
+    // Wiki annotations can lag behind newly added experimental blocks. Core also needs the
+    // actual value domain for every property. Fill uncovered properties from Script API data
+    // without inventing descriptions or borrowing another block's contextual annotation.
+    for block in &block_state_values {
+        let name = block["name"].as_str().context("方块缺少名称")?;
+        let qualified = format!("minecraft:{name}");
+        let Some(properties) = gametest
+            .pointer(&format!("/blocks/{qualified}/properties"))
+            .and_then(Value::as_array)
+        else {
+            continue;
+        };
+        let mut missing = Vec::new();
+        for property in properties {
+            let property_name = property["name"].as_str().context("方块属性缺少名称")?;
+            let annotated = common_contents
+                .iter()
+                .any(|entry| entry["propertyName"] == property_name)
+                || block_contents.iter().any(|entry| {
+                    entry["blocks"].as_array().is_some_and(|blocks| {
+                        blocks
+                            .iter()
+                            .any(|block| block == name || block == &qualified)
+                    }) && entry["properties"].as_array().is_some_and(|properties| {
+                        properties
+                            .iter()
+                            .any(|entry| entry["propertyName"] == property_name)
+                    })
+                });
+            if annotated {
+                continue;
+            }
+            let values = property["validValues"].as_array().with_context(|| {
+                format!("方块 {qualified} 的属性 {property_name} 缺少数据源值域")
+            })?;
+            missing.push(json!({
+                "propertyName": property_name,
+                "values": values.iter().map(|value| json!({"valueName": value})).collect::<Vec<_>>(),
+            }));
+        }
+        if !missing.is_empty() {
+            block_contents.push(json!({"blocks": [name], "properties": missing}));
+        }
+    }
     let block_doc = json!({
         "id": "block",
         "type": "block",
@@ -373,7 +428,10 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
             }
         }
     });
-    write_crlf(&output_dir.join("block.json"), &to_string_pretty4(&block_doc))?;
+    write_crlf(
+        &output_dir.join("block.json"),
+        &to_string_pretty4(&block_doc),
+    )?;
     file_count += 1;
 
     // item：药水附加描述
@@ -420,7 +478,10 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
         })
         .collect();
     let doc = json!({"id": "particleEmitter", "type": "normal", "content": particle_content});
-    write_crlf(&output_dir.join("particleEmitter.json"), &to_string_pretty4(&doc))?;
+    write_crlf(
+        &output_dir.join("particleEmitter.json"),
+        &to_string_pretty4(&doc),
+    )?;
     file_count += 1;
 
     Ok(file_count)
