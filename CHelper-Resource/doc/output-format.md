@@ -112,12 +112,3 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 
 类别排除：`ability`、`command`、`blockState`、`lootTool`、`summonableEntity`
 以及未改名前的 `lootTable` 不输出（对齐 chelper.js 的过滤与改名表）。
-
-## 验证
-
-`chhelper verify` 对 release/beta 的 vanilla/experiment 与参考输出逐文件对比：
-
-1. 字节级一致 → `identical`；
-2. 否则检查生成端格式（UTF-8 / CRLF / 4 空格缩进 / 末尾无换行 / 合法 JSON），
-   再做**保序** JSON 结构对比（键序不同视为差异）→ `content_diff`；
-3. 格式不一致会使命令以非零退出码结束。

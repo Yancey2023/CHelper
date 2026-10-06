@@ -14,9 +14,6 @@ cargo run --release -- generate
 # 只生成指定版本
 cargo run --release -- generate release beta
 
-# 与 caidlist 的参考输出对比（格式 + 内容）
-cargo run --release -- verify --reference E:/project/CHelper/caidlist/output/chelper
-
 # 强制刷新缓存（重新解析分支指向并重新下载）
 cargo run --release -- generate --refresh
 
@@ -68,7 +65,6 @@ featureRule 三类）。
 | [data-sources.md](data-sources.md) | 数据源、tarball 缓存、HTTP 缓存机制 |
 | [translation-priority.md](translation-priority.md) | 翻译来源、复核状态与引用 DSL |
 | [output-format.md](output-format.md) | chelper 输出格式契约 |
-| [verification.md](verification.md) | 与 caidlist 参考输出的对比验证报告 |
 
 ## 与旧流程（caidlist JS）的关系
 

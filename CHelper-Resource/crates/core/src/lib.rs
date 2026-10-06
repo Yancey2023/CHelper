@@ -13,7 +13,6 @@ pub mod pipeline;
 pub mod sources;
 pub mod support;
 pub mod translate;
-pub mod verify;
 
 use anyhow::Result;
 

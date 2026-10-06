@@ -1,12 +1,16 @@
 //! CHelper 资源包生成器 CLI。
 
 use anyhow::{Context, Result};
-use chelper_core::{command_sync, config::Config, pipeline, verify};
+use chelper_core::{command_sync, config::Config, pipeline};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "chelper", version, about = "CHelper 资源包（output/chelper）生成器")]
+#[command(
+    name = "chelper",
+    version,
+    about = "CHelper 资源包（output/chelper）生成器"
+)]
 struct Cli {
     /// 项目根目录（默认当前目录）
     #[arg(long, global = true)]
@@ -28,15 +32,6 @@ enum Command {
         /// 强制刷新缓存（重新解析引用并下载）
         #[arg(long)]
         refresh: bool,
-    },
-    /// 与 caidlist 生成的参考输出对比（默认对比 release/beta 的 vanilla/experiment）
-    Verify {
-        /// 参考输出目录（caidlist 仓库的 output/chelper）
-        #[arg(long)]
-        reference: Option<PathBuf>,
-        /// 仅对比指定版本
-        #[arg(value_delimiter = ',')]
-        editions: Vec<String>,
     },
     /// 清空缓存目录
     CleanCache,
@@ -86,48 +81,6 @@ async fn main() -> Result<()> {
             };
             let report = pipeline::generate(&cfg, &editions, refresh).await?;
             println!("{}", serde_json::to_string_pretty(&report)?);
-        }
-        Command::Verify { reference, editions } => {
-            let editions = if editions.is_empty() {
-                vec!["release".to_string(), "beta".to_string()]
-            } else {
-                editions
-            };
-            let reference = match reference {
-                Some(p) => p,
-                None => verify::default_reference_roots()
-                    .into_iter()
-                    .find(|p| p.exists())
-                    .context("未找到参考输出目录，请用 --reference 指定 caidlist 的 output/chelper")?,
-            };
-            let mut all_ok = true;
-            for edition in &editions {
-                for branch in ["vanilla", "experiment"] {
-                    let report = verify::verify_branch(&cfg.output_dir, &reference, edition, branch)?;
-                    for f in &report.files {
-                        match f.status.as_str() {
-                            "identical" => println!("[{edition}/{branch}] {}: 完全一致", f.file),
-                            "content_diff" => println!(
-                                "[{edition}/{branch}] {}: 格式一致，内容差异 {} 处\n    {}",
-                                f.file,
-                                f.content_diffs,
-                                f.samples.join("\n    ")
-                            ),
-                            other => {
-                                all_ok = false;
-                                println!("[{edition}/{branch}] {}: {other}", f.file);
-                            }
-                        }
-                    }
-                    println!(
-                        "[{edition}/{branch}] 汇总：完全一致 {}，格式一致内容有差异 {}，缺失 {}",
-                        report.identical, report.format_only, report.missing
-                    );
-                }
-            }
-            if !all_ok {
-                std::process::exit(1);
-            }
         }
         Command::CleanCache => {
             let dir = &cfg.cache_dir;

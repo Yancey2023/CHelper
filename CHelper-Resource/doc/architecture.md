@@ -42,7 +42,6 @@ CHelper-Resource/
 | `pipeline` | 编排：快照 → 共享资源 → 逐类别匹配 → netease 叠加 → 资源包与未翻译 ID 清单 | `generate.js generateBranchedOutputFiles` |
 | `chelper` | chelper 资源包写出（26+2 个文件） | `generators/chelper.js` |
 | `jfmt` | 与 `JSON.stringify(v, null, 4)` 兼容的格式化器 | `JSON.stringify` |
-| `verify` | 与参考输出对比（字节 / 格式 / 保序 JSON 结构） | （新增） |
 
 ## 依赖版本策略
 
@@ -64,7 +63,6 @@ CHelper-Resource/
 子命令：
 
 - `generate [editions…] [--refresh]`：生成；`editions` 为 `release`、`beta`、`netease` 的子集，缺省全部。
-- `verify [--reference <dir>] [editions…]`：与参考输出对比；仅格式不一致会导致非零退出码。
 - `clean-cache`：清空缓存目录。
 
 ## 生成一张 chelper 资源包的流程
