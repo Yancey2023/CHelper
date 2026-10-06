@@ -1,0 +1,25 @@
+# CHelper 资源包生成器配置（全部字段可省略，省略时使用与这里相同的默认值）
+
+# caidlist 主数据源（release / beta 的 ID 与游戏版本 + translation 目录）
+[master]
+repo = "XeroAlpha/caidlist"
+ref = "master"
+
+# netease 数据源：直接指定 commit（其 version/release 作为 netease 的 ID 数据）。
+[netease]
+repo = "XeroAlpha/caidlist"
+commit = "5c780d1d048779067e5dc60b8a3345ad578baf9e"
+
+[bedrock_lang]
+# release 版基岩语言文件使用的 bedrock-samples 引用
+release_ref = "main"
+# beta 版使用的引用
+beta_ref = "preview"
+# netease 版使用的引用（留空 = 使用 release_ref，并尝试按包版本号匹配标签）
+netease_ref = ""
+try_version_tag = true
+
+# HTTP 缓存过期时间（小时）
+http_ttl_hours = 24
+# 引用解析（git ls-remote）缓存时间（分钟）；指定 commit 时跳过解析
+ref_ttl_minutes = 60

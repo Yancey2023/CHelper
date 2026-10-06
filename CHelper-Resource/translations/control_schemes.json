@@ -1,0 +1,8 @@
+{
+    // 翻译来自：https://zh.minecraft.wiki/w/%E5%91%BD%E4%BB%A4/controlscheme
+    "camera_relative": "相对相机进行移动，视角保持水平并跟随移动方向",
+    "camera_relative_strafe": "相对相机进行移动，视角保持水平并跟随朝向",
+    "locked_player_relative_strafe": "相对玩家进行移动，视角跟随朝向",
+    "player_relative": "相对玩家进行移动，视角保持水平并跟随移动方向",
+    "player_relative_strafe": "相对玩家进行移动，视角保持水平并跟随朝向",
+}

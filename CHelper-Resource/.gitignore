@@ -1,5 +1,4 @@
-# MacOS
-.DS_STORE
-
-# generated
 /generated
+/target
+/cache
+/output

@@ -1,0 +1,149 @@
+[release/vanilla] animation.json: 完全一致
+[release/vanilla] animationController.json: 完全一致
+[release/vanilla] biome.json: 完全一致
+[release/vanilla] block.json: 格式一致，内容差异 40 处
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+[release/vanilla] cameraEasing.json: 完全一致
+[release/vanilla] cameraPreset.json: 完全一致
+[release/vanilla] controlScheme.json: 完全一致
+[release/vanilla] damageCause.json: 完全一致
+[release/vanilla] effect.json: 完全一致
+[release/vanilla] enchantType.json: 完全一致
+[release/vanilla] entity.json: 完全一致
+[release/vanilla] entityEvent.json: 完全一致
+[release/vanilla] entityFamily.json: 完全一致
+[release/vanilla] entitySlot.json: 完全一致
+[release/vanilla] feature.json: 完全一致
+[release/vanilla] featureRule.json: 完全一致
+[release/vanilla] fog.json: 完全一致
+[release/vanilla] gameRuleBoolean.json: 格式一致，内容差异 1 处
+    $.content[17].description: "生物是否能够进行破坏性行为，包括苦力怕、僵尸、末…" != "生物是否能够进行破坏性行为，包括苦力怕、硫方怪、…"
+[release/vanilla] gameRuleInteger.json: 格式一致，内容差异 1 处
+    $.content[1].description: "决定了连锁型命令方块能连锁执行的总数量。" != "决定了连锁型命令方块和函数能连锁执行的总数量。"
+[release/vanilla] hudElement.json: 完全一致
+[release/vanilla] item.json: 完全一致
+[release/vanilla] lootTable.json: 完全一致
+[release/vanilla] music.json: 完全一致
+[release/vanilla] recipe.json: 完全一致
+[release/vanilla] sound.json: 完全一致
+[release/vanilla] structure.json: 完全一致
+[release/vanilla] 汇总：完全一致 23，格式一致内容有差异 3，缺失 0
+[release/experiment] animation.json: 完全一致
+[release/experiment] animationController.json: 完全一致
+[release/experiment] biome.json: 完全一致
+[release/experiment] block.json: 格式一致，内容差异 40 处
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+[release/experiment] cameraEasing.json: 完全一致
+[release/experiment] cameraPreset.json: 完全一致
+[release/experiment] controlScheme.json: 完全一致
+[release/experiment] damageCause.json: 完全一致
+[release/experiment] effect.json: 完全一致
+[release/experiment] enchantType.json: 完全一致
+[release/experiment] entity.json: 完全一致
+[release/experiment] entityEvent.json: 完全一致
+[release/experiment] entityFamily.json: 完全一致
+[release/experiment] entitySlot.json: 完全一致
+[release/experiment] feature.json: 完全一致
+[release/experiment] featureRule.json: 完全一致
+[release/experiment] fog.json: 完全一致
+[release/experiment] gameRuleBoolean.json: 格式一致，内容差异 1 处
+    $.content[17].description: "生物是否能够进行破坏性行为，包括苦力怕、僵尸、末…" != "生物是否能够进行破坏性行为，包括苦力怕、硫方怪、…"
+[release/experiment] gameRuleInteger.json: 格式一致，内容差异 1 处
+    $.content[1].description: "决定了连锁型命令方块能连锁执行的总数量。" != "决定了连锁型命令方块和函数能连锁执行的总数量。"
+[release/experiment] hudElement.json: 完全一致
+[release/experiment] item.json: 完全一致
+[release/experiment] lootTable.json: 完全一致
+[release/experiment] music.json: 完全一致
+[release/experiment] recipe.json: 完全一致
+[release/experiment] sound.json: 完全一致
+[release/experiment] structure.json: 完全一致
+[release/experiment] 汇总：完全一致 23，格式一致内容有差异 3，缺失 0
+[beta/vanilla] animation.json: 完全一致
+[beta/vanilla] animationController.json: 完全一致
+[beta/vanilla] biome.json: 完全一致
+[beta/vanilla] block.json: 格式一致，内容差异 40 处
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+[beta/vanilla] cameraEasing.json: 完全一致
+[beta/vanilla] cameraPreset.json: 完全一致
+[beta/vanilla] controlScheme.json: 完全一致
+[beta/vanilla] damageCause.json: 完全一致
+[beta/vanilla] effect.json: 完全一致
+[beta/vanilla] enchantType.json: 完全一致
+[beta/vanilla] entity.json: 完全一致
+[beta/vanilla] entityEvent.json: 完全一致
+[beta/vanilla] entityFamily.json: 完全一致
+[beta/vanilla] entitySlot.json: 完全一致
+[beta/vanilla] feature.json: 完全一致
+[beta/vanilla] featureRule.json: 完全一致
+[beta/vanilla] fog.json: 完全一致
+[beta/vanilla] gameRuleBoolean.json: 格式一致，内容差异 1 处
+    $.content[17].description: "生物是否能够进行破坏性行为，包括苦力怕、僵尸、末…" != "生物是否能够进行破坏性行为，包括苦力怕、硫方怪、…"
+[beta/vanilla] gameRuleInteger.json: 格式一致，内容差异 1 处
+    $.content[1].description: "决定了连锁型命令方块能连锁执行的总数量。" != "决定了连锁型命令方块和函数能连锁执行的总数量。"
+[beta/vanilla] hudElement.json: 完全一致
+[beta/vanilla] item.json: 完全一致
+[beta/vanilla] lootTable.json: 完全一致
+[beta/vanilla] music.json: 完全一致
+[beta/vanilla] recipe.json: 完全一致
+[beta/vanilla] sound.json: 完全一致
+[beta/vanilla] structure.json: 完全一致
+[beta/vanilla] 汇总：完全一致 23，格式一致内容有差异 3，缺失 0
+[beta/experiment] animation.json: 完全一致
+[beta/experiment] animationController.json: 完全一致
+[beta/experiment] biome.json: 完全一致
+[beta/experiment] block.json: 格式一致，内容差异 41 处
+    $.content.blockStateValues[502]: 键序或键集不同（参考 2 个 vs 生成 3 个）
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[0].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[1].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[2].properties[0].values[1]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+    $.content.blockPropertyDescriptions.block[3].properties[0].values[0]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+[beta/experiment] cameraEasing.json: 完全一致
+[beta/experiment] cameraPreset.json: 完全一致
+[beta/experiment] controlScheme.json: 完全一致
+[beta/experiment] damageCause.json: 完全一致
+[beta/experiment] effect.json: 完全一致
+[beta/experiment] enchantType.json: 完全一致
+[beta/experiment] entity.json: 完全一致
+[beta/experiment] entityEvent.json: 完全一致
+[beta/experiment] entityFamily.json: 完全一致
+[beta/experiment] entitySlot.json: 完全一致
+[beta/experiment] feature.json: 完全一致
+[beta/experiment] featureRule.json: 完全一致
+[beta/experiment] fog.json: 完全一致
+[beta/experiment] gameRuleBoolean.json: 格式一致，内容差异 1 处
+    $.content[17].description: "生物是否能够进行破坏性行为，包括苦力怕、僵尸、末…" != "生物是否能够进行破坏性行为，包括苦力怕、硫方怪、…"
+[beta/experiment] gameRuleInteger.json: 格式一致，内容差异 1 处
+    $.content[1].description: "决定了连锁型命令方块能连锁执行的总数量。" != "决定了连锁型命令方块和函数能连锁执行的总数量。"
+[beta/experiment] hudElement.json: 完全一致
+[beta/experiment] item.json: 格式一致，内容差异 1 处
+    $.content[675]: 键序或键集不同（参考 1 个 vs 生成 2 个）
+[beta/experiment] lootTable.json: 完全一致
+[beta/experiment] music.json: 完全一致
+[beta/experiment] recipe.json: 完全一致
+[beta/experiment] sound.json: 完全一致
+[beta/experiment] structure.json: 完全一致
+[beta/experiment] 汇总：完全一致 22，格式一致内容有差异 4，缺失 0
