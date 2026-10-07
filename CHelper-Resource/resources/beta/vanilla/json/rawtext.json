@@ -5,7 +5,7 @@
         {
             "type": "JSON_STRING",
             "id": "TEXT",
-            "description": "在文本中直接出现的原始文本的字符串。\\n用于换行（回车）。如果文本中有translate，则text的内容会被translate覆盖。"
+            "description": "指定直接显示的文本。"
         },
         {
             "type": "JSON_STRING",
@@ -56,7 +56,7 @@
         {
             "type": "JSON_INTEGER",
             "id": "SCORE_VALUE",
-            "description": "可选。如果存在此值，则无论分数是多少，都将使用此值。"
+            "description": "指定固定分数值。"
         },
         {
             "type": "JSON_OBJECT",
@@ -79,7 +79,7 @@
                 },
                 {
                     "key": "value",
-                    "description": "可选。如果存在此值，则无论分数是多少，都将使用此值。",
+                    "description": "指定固定分数值。",
                     "value": [
                         "SCORE_VALUE"
                     ]
@@ -89,11 +89,11 @@
         {
             "type": "JSON_OBJECT",
             "id": "RAWTEXT_ELEMENT",
-            "description": "被放置物品的物品组件",
+            "description": "组成rawtext文本元素。",
             "data": [
                 {
                     "key": "text",
-                    "description": "在文本中直接出现的原始文本的字符串。\\n用于换行（回车）。如果文本中有translate，则text的内容会被translate覆盖。",
+                    "description": "指定直接显示的文本。",
                     "value": [
                         "TEXT"
                     ]
@@ -132,13 +132,13 @@
         {
             "type": "JSON_LIST",
             "id": "RAWTEXT",
-            "description": "被放置物品的物品组件",
+            "description": "rawtext文本元素列表。",
             "data": "RAWTEXT_ELEMENT"
         },
         {
             "type": "JSON_OBJECT",
             "id": "PARENT",
-            "description": "被放置物品的物品组件",
+            "description": "rawtext文本数据对象。",
             "data": [
                 {
                     "key": "rawtext",

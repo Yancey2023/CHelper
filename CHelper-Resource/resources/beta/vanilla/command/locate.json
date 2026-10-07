@@ -2,48 +2,72 @@
     "name": [
         "locate"
     ],
-    "description": "查找最近的结构或生物群系，并显示坐标和距离。",
+    "description": "定位最近的结构、生物群系，支持时也可定位兴趣点。",
     "syntax": [
         "/locate biome <biome: Biome>",
+        "/locate poi <poi_type: poi type>",
+        "/locate poi <tags: poi tag>",
         "/locate structure <structure: string> [useNewChunksOnly: Boolean]"
     ],
     "node": {
         "biome": {
             "type": "TEXT",
-            "description": "按生物群系查找位置。",
+            "description": "指定要定位的生物群系ID。",
             "data": {
                 "name": "biome",
-                "description": "按生物群系查找位置。"
+                "description": "指定要定位的生物群系ID。"
             }
         },
         "<biome: Biome>": {
             "type": "NORMAL_ID",
-            "brief": "生物群系",
-            "description": "指定要定位的生物群系的命名空间ID或生物群系标签。",
+            "brief": "生物群系ID",
+            "description": "指定要定位的生物群系ID。",
             "ignoreError": true,
             "key": "biome"
         },
         "structure": {
             "type": "TEXT",
-            "description": "按结构查找位置。",
+            "description": "指定要定位的结构ID。",
             "data": {
                 "name": "structure",
-                "description": "按结构查找位置。"
+                "description": "指定要定位的结构ID。"
             }
         },
         "<structure: string>": {
             "type": "NORMAL_ID",
-            "brief": "结构",
-            "description": "指定要定位的结构的命名空间ID或结构标签。",
+            "brief": "结构ID",
+            "description": "指定要定位的结构ID。",
             "ignoreError": true,
             "key": "structure"
         },
         "[useNewChunksOnly: Boolean]": {
             "type": "BOOLEAN",
-            "brief": "查找范围",
-            "description": "控制是否只在尚未生成的区块中查找结构。",
-            "descriptionTrue": "只搜索尚未生成的区块。",
-            "descriptionFalse": "也搜索已经生成的区块。"
+            "brief": "未生成区块限制",
+            "description": "控制是否仅定位在尚未生成的区块中的结构。",
+            "descriptionTrue": "仅定位在尚未生成的区块中的结构。",
+            "descriptionFalse": "不将搜索范围限制在尚未生成的区块。"
+        },
+        "poi": {
+            "type": "TEXT",
+            "description": "定位最近的指定兴趣点，或符合指定标签的兴趣点。",
+            "data": {
+                "name": "poi",
+                "description": "定位最近的指定兴趣点，或符合指定标签的兴趣点。"
+            }
+        },
+        "<poi_type: poi type>": {
+            "type": "STRING",
+            "description": "指定要定位的兴趣点类型。",
+            "canContainSpace": false,
+            "ignoreLater": false,
+            "brief": "兴趣点类型ID"
+        },
+        "<tags: poi tag>": {
+            "type": "STRING",
+            "description": "指定要定位的兴趣点标签。",
+            "canContainSpace": false,
+            "ignoreLater": false,
+            "brief": "兴趣点标签"
         }
     }
 }

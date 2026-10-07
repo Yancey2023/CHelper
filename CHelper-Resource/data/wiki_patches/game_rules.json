@@ -1,0 +1,162 @@
+{
+    "version": 1,
+    "reason": "人工补充：中文 Wiki《配方书》基岩版历史说明 recipesUnlock 用于开关配方解锁机制，且《设置》说明关闭后配方书显示所有配方；这与 doLimitedCrafting 限制未解锁配方的使用不同。《设置》还明确 TNT 规则覆盖 TNT 与 TNT 矿车激活/爆炸及发射器发射 TNT。中文 Wiki《游戏规则/spawnRadius》将基岩版行为表述为以方块为单位的半径范围，《命令/gamerule》示例也以25格设置。共享规则表无分版后缀，补充这些用途与单位，不移植版本专属上限。依据：https://zh.minecraft.wiki/w/配方书 ，https://zh.minecraft.wiki/w/设置 ，https://zh.minecraft.wiki/w/游戏规则/spawnRadius ，https://zh.minecraft.wiki/w/命令/gamerule 。 将showCoordinates的显示位置表述改为中文Wiki直接支持的屏幕显示，不指定屏幕上的具体UI区域；并将randomTickSpeed的单位从“区段”订正为基岩版随机刻实际按“区块”抽样。依据：https://zh.minecraft.wiki/w/设置 中“显示坐标”条目；https://zh.minecraft.wiki/w/Tutorial:导航；https://zh.minecraft.wiki/w/刻 的“随机刻”基岩版段明确每个区块按非空子区块数量和随机刻速率抽样。",
+    "replacements": [
+        {
+            "old": "|recipesUnlock=配方是否需要解锁。",
+            "new": "|recipesUnlock=是否启用配方解锁机制。",
+            "expected_matches": 1,
+            "reason": "人工补充：明确该规则开关配方解锁机制，避免与 doLimitedCrafting 限制使用未解锁配方的作用混淆。中文 Wiki《配方书》基岩版历史称可通过 recipesUnlock 开关此机制，《设置》说明关闭后配方书显示所有配方。依据：https://zh.minecraft.wiki/w/配方书 ，https://zh.minecraft.wiki/w/设置 。"
+        },
+        {
+            "old": "|spawnRadius=首次进入服务器的玩家和没有重生点的死亡玩家在重生时与[[世界出生点]]坐标的距离。",
+            "new": "|spawnRadius=首次进入服务器的玩家和没有重生点的死亡玩家在重生时与[[世界出生点]]坐标的距离（以方块计）。",
+            "expected_matches": 1,
+            "reason": "人工补充：明确重生半径距离使用方块计量。中文 Wiki《游戏规则/spawnRadius》基岩版行为写为在此方块的半径范围内重生，《命令/gamerule》示例将该规则设为25格。未加入可能随版本不同的数值上限。依据：https://zh.minecraft.wiki/w/游戏规则/spawnRadius ，https://zh.minecraft.wiki/w/命令/gamerule 。"
+        },
+        {
+            "old": "|tntExplodes=[[TNT]]是否会爆炸。",
+            "new": "|tntExplodes=[[TNT]]和[[TNT矿车]]是否可以被激活或爆炸，以及[[发射器]]是否可以发射[[TNT]]。",
+            "expected_matches": 1,
+            "reason": "人工补充：中文 Wiki《设置》的基岩版规则说明列出 TNT、TNT 矿车的激活或爆炸，以及发射器发射 TNT 三项作用；原短句只概括 TNT 爆炸，未呈现完整用途。依据：https://zh.minecraft.wiki/w/设置 。"
+        },
+        {
+            "old": "|drowningDamage=玩家是否承受窒息伤害。",
+            "new": "|drowningDamage=玩家是否承受溺水伤害。",
+            "expected_matches": 1,
+            "reason": "人工纠错：中文 Wiki《呼吸》直接说明基岩版 drowningDamage 控制玩家是否承受溺水伤害，《生命值》把溺水与窒息列为不同伤害来源。保留与 suffocationDamage 的区分，不能因表中原文相同就混为一类。依据：https://zh.minecraft.wiki/w/呼吸 ，https://zh.minecraft.wiki/w/生命值 。"
+        },
+        {
+            "old": "|maxCommandChainLength=决定了连锁型命令方块和[[Java版函数|函数]]能连锁执行的总数量。",
+            "new": "|maxCommandChainLength-je=决定了连锁型命令方块和[[Java版函数|函数]]能连锁执行的总数量。\n|maxCommandChainLength-be=决定了连锁型命令方块能连锁执行的总数量。",
+            "expected_matches": 1,
+            "reason": "人工版别限定：原行的函数链接明确指向 Java版函数，去链接后不应自动变成基岩版能力。按原表已有 -je/-be 约定保留 Java 说明；基岩版采用中文《基岩版存档格式》及《教程:命令方块》直接支持的连锁型命令方块数量限制。此简述不额外断言基岩版函数一定不受该规则约束，也不凭 functioncommandlimit 的存在推断规则互斥。依据：https://zh.minecraft.wiki/w/基岩版存档格式 ，https://zh.minecraft.wiki/w/Tutorial:命令方块 。"
+        },
+        {
+            "old": "|doMobSpawning=[[生物]]是否[[生成#周期生成|自然生成]]。不影响[[刷怪笼]]及{{cmd|summon}}生成生物。",
+            "new": "|doMobSpawning=控制[[生物]]自然生成及[[试炼刷怪笼]]能否激活；不影响普通[[刷怪笼]]及{{cmd|summon}}生成生物。",
+            "expected_matches": 1,
+            "reason": "人工补充作用边界，old 精确采用中文《游戏规则》?action=raw 源文（保留[[生物]]、[[生成#周期生成|自然生成]]、[[刷怪笼]]和{{cmd|summon}}标记）。中文《基岩版存档格式》将doMobSpawning解释为是否生成生物且明确刷怪笼生成不受影响；和试炼刷怪笼是不同方块类型。中文《试炼刷怪笼》说明规则doMobSpawning为false时它保持“等待玩家”而非“未激活”，《不祥试炼刷怪笼》明确该规则ID是基岩版对应ID。旧版与当前六个实际包均有试炼刷怪笼方块条目：release/beta/netease vanilla及experiment的block.json中均可见trial_spawner。因此新文案把原例外限定为普通刷怪笼，补入试炼刷怪笼能否激活这一用途；没有把true说成必定激活（玩家/难度等条件仍适用），也未改变summon不受此规则影响的原说明。试炼刷怪笼于基岩版1.20.60实验版本加入、1.21.0正式可用，覆盖本组NetEase 1.21.50.07及Release/Beta资源。依据：https://zh.minecraft.wiki/w/游戏规则?action=raw ，https://zh.minecraft.wiki/w/基岩版存档格式 ，https://zh.minecraft.wiki/w/试炼刷怪笼 ，https://zh.minecraft.wiki/w/不祥试炼刷怪笼 。"
+        },
+        {
+            "old": "|showCoordinates=是否在聊天框区域持续实时显示玩家坐标。",
+            "new": "|showCoordinates=是否在屏幕上持续显示玩家当前的坐标。",
+            "expected_matches": 1,
+            "reason": "原文把坐标显示位置写为聊天框区域，中文Wiki仅说明屏幕始终显示当前坐标；修正位置并保留持续显示和当前玩家坐标用途。"
+        },
+        {
+            "old": "|randomTickSpeed=每游戏刻每区段中随机的[[方块刻]]发生的频率（例如植物生长，树叶腐烂等）。为0时禁用随机刻，较高的数字将增大随机刻频率。",
+            "new": "|randomTickSpeed=每游戏刻每区块中随机的[[方块刻]]发生的频率（例如植物生长，树叶腐烂等）。为0时禁用随机刻，较高的数字将增大随机刻频率。",
+            "expected_matches": 1,
+            "reason": "这行描述的是基岩版专有规则randomTickSpeed。中文《刻》页“随机刻”基岩版段明确随机刻在每个区块内进行，并按非空子区块数量和随机刻速率计算抽样数；Java版才是在每个子区块内抽样。将“区段”改为“区块”，避免把Java版的每子区块作用单位误写到基岩版；保留原文关于用途、0禁用及数值增大使频率上升的说明。"
+        },
+        {
+            "old": "|playersSleepingPercentage=设置跳过夜晚所需的入睡玩家所占百分比。设置为0时，1个玩家入睡即可跳过夜晚。设置为大于100的值会使玩家无法通过入睡跳过夜晚。",
+            "new": "|playersSleepingPercentage=设置跳过夜晚所需的入睡玩家所占百分比。设置为0时，1个玩家入睡即可跳过夜晚。",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除playersSleepingPercentage description中的大于100值边界行为；百分比用途和显式值0的跳夜效果保留。该替换只清运行时说明，不删原页历史或该patch中其余证据reason。"
+        },
+        {
+            "old": "|doDaylightCycle=是否进行[[昼夜更替]]和[[月亮#月相|月相]]变化。",
+            "new": "|doDaylightCycle=是否进行[[昼夜更替]]。",
+            "expected_matches": 1,
+            "reason": "按本轮用途精简要求保留昼夜更替用途，删除月相变化旁注；旧句按原始中文Wiki行保留链接标记。"
+        },
+        {
+            "old": "|doImmediateRespawn=玩家死亡时是否不显示死亡界面直接重生。",
+            "new": "|doImmediateRespawn=玩家死亡后是否立即重生。",
+            "expected_matches": 1,
+            "reason": "保留立即重生用途，删除界面显示旁注。"
+        },
+        {
+            "old": "|doMobSpawning=控制[[生物]]自然生成及[[试炼刷怪笼]]能否激活；不影响普通[[刷怪笼]]及{{cmd|summon}}生成生物。",
+            "new": "|doMobSpawning=控制[[生物]]自然生成。",
+            "expected_matches": 1,
+            "reason": "保留自然生成用途，删除刷怪笼和summon例外旁注。"
+        },
+        {
+            "old": "|keepInventory=玩家死亡后是否保留物品栏物品、经验（死亡时物品不掉落、经验不清空）。",
+            "new": "|keepInventory=玩家死亡后是否保留物品和经验。",
+            "expected_matches": 1,
+            "reason": "保留物品与经验保留用途，删除括号内解释。"
+        },
+        {
+            "old": "|mobGriefing-je=生物是否能够进行破坏性行为，包括[[苦力怕]]、[[硫方怪]]、[[僵尸]]、[[末影人]]、[[恶魂]]、[[凋灵]]、[[末影龙]]、[[兔子]]、[[绵羊]]、[[村民]]和[[雪傀儡]]是否能放置、修改或破坏方块，生物是否能捡拾物品，以及[[唤魔者]]是否能将蓝色的绵羊变为红色。这个规则也会影响生物（如[[僵尸猪灵]]和[[溺尸]]）寻找[[海龟蛋]]的能力。这还将会阻止[[村民]]的[[繁殖]]。这一游戏规则不会影响[[TNT]]和[[末地水晶]]。",
+            "new": "|mobGriefing-je=控制生物是否能放置、修改或破坏方块及捡拾物品。",
+            "expected_matches": 1,
+            "reason": "原始Wiki按-je和-be分别列出mobGriefing，未提供无后缀行。按本轮用途精简要求保留生物放置、修改、破坏方块及捡拾物品的核心用途，删除生物清单和次要作用。"
+        },
+        {
+            "old": "|mobGriefing-be=生物是否能够进行破坏性行为，包括[[苦力怕]]、[[硫方怪]]、[[僵尸]]、[[末影人]]、[[恶魂]]、[[凋灵]]、[[末影龙]]、[[兔子]]、[[绵羊]]、[[村民]]和[[雪傀儡]]是否能放置、修改或破坏方块，生物是否能捡拾物品。这个规则也会影响生物（如[[僵尸猪灵]]和[[溺尸]]）寻找[[海龟蛋]]的能力。这还将会阻止[[村民]]的[[繁殖]]。这一游戏规则不会影响[[TNT]]。",
+            "new": "|mobGriefing-be=控制生物是否能放置、修改或破坏方块及捡拾物品。",
+            "expected_matches": 1,
+            "reason": "原始Wiki为基岩版单独列出mobGriefing-be。按本轮用途精简要求保留生物放置、修改、破坏方块及捡拾物品的核心用途，删除生物示例和次要作用。"
+        },
+        {
+            "old": "|naturalRegeneration=玩家是否能在饥饿值足够时自然恢复生命值（不影响外部治疗效果，如[[金苹果]]、[[生命恢复]]状态效果等）。",
+            "new": "|naturalRegeneration=玩家饥饿值足够时是否自然恢复生命值。",
+            "expected_matches": 1,
+            "reason": "保留自然生命恢复条件，删除治疗例子和外部效果旁注；旧句按原始中文Wiki链接标记匹配。"
+        },
+        {
+            "old": "|projectilesCanBreakBlocks=[[弹射物]]能否破坏[[紫颂花]]、[[滴水石锥]]以及[[饰纹陶罐]]。",
+            "new": "|projectilesCanBreakBlocks=弹射物是否能破坏方块。",
+            "expected_matches": 1,
+            "reason": "保留弹射物破坏方块用途，删除方块清单；旧句按原始中文Wiki链接标记匹配。"
+        },
+        {
+            "old": "|sendCommandFeedback=玩家执行命令的返回信息是否在聊天框中显示。同时影响命令方块是否保存命令输出文本。",
+            "new": "|sendCommandFeedback=玩家执行命令的返回信息是否显示在聊天框。",
+            "expected_matches": 1,
+            "reason": "保留玩家命令反馈用途，删除命令方块保存输出的次要作用。"
+        },
+        {
+            "old": "|showDaysPlayed=是否在屏幕左上角显示游玩天数。",
+            "new": "|showDaysPlayed=是否显示游玩天数。",
+            "expected_matches": 1,
+            "reason": "保留游玩天数显示用途，删除界面位置旁注。"
+        },
+        {
+            "old": "|showDeathMessages-je=是否在聊天框中显示玩家的死亡消息。同样影响是否在宠物死亡时通知它的主人。",
+            "new": "|showDeathMessages-je=是否在聊天框中显示玩家死亡消息。",
+            "expected_matches": 1,
+            "reason": "按本轮用途精简要求保留Java版玩家死亡消息显示用途，删除宠物通知旁注。"
+        },
+        {
+            "old": "|showDeathMessages-be=是否在聊天框中显示玩家的死亡消息。同样影响是否在宠物死亡时广播给世界中的每一个玩家。",
+            "new": "|showDeathMessages-be=是否在聊天框中显示玩家死亡消息。",
+            "expected_matches": 1,
+            "reason": "按本轮用途精简要求保留基岩版玩家死亡消息显示用途，删除宠物广播旁注。"
+        },
+        {
+            "old": "|playersSleepingPercentage=设置跳过夜晚所需的入睡玩家所占百分比。设置为0时，1个玩家入睡即可跳过夜晚。",
+            "new": "|playersSleepingPercentage=指定跳过夜晚所需的入睡玩家百分比。",
+            "expected_matches": 1,
+            "reason": "保留百分比用途，删除0值特殊行为。"
+        },
+        {
+            "old": "|randomTickSpeed=每游戏刻每区块中随机的[[方块刻]]发生的频率（例如植物生长，树叶腐烂等）。为0时禁用随机刻，较高的数字将增大随机刻频率。",
+            "new": "|randomTickSpeed=指定每游戏刻每区块触发随机方块刻的频率。",
+            "expected_matches": 1,
+            "reason": "保留随机刻频率用途及时间和区块单位，删除例子和0值行为。"
+        },
+        {
+            "old": "|spawnRadius=首次进入服务器的玩家和没有重生点的死亡玩家在重生时与[[世界出生点]]坐标的距离（以方块计）。",
+            "new": "|spawnRadius=指定玩家在世界出生点附近重生的半径，单位为方块。",
+            "expected_matches": 1,
+            "reason": "保留世界出生点附近重生半径及单位，删除玩家状态枚举。"
+        },
+        {
+            "old": "|tntExplodes=[[TNT]]和[[TNT矿车]]是否可以被激活或爆炸，以及[[发射器]]是否可以发射[[TNT]]。",
+            "new": "|tntExplodes=控制TNT和TNT矿车的激活与爆炸，以及发射器发射TNT。",
+            "expected_matches": 1,
+            "reason": "保留TNT激活、爆炸及发射器发射用途，精简句式。"
+        },
+        {
+            "old": "|functionCommandLimit=通过{{cmd|function}}命令执行命令的最大数量。",
+            "new": "|functionCommandLimit={{cmd|function}}命令可执行的命令数量上限。",
+            "expected_matches": 1,
+            "reason": "精简functionCommandLimit用途句，保留命令执行数量含义及原始Wiki命令链接。"
+        }
+    ]
+}

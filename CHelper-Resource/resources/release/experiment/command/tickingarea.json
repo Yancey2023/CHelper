@@ -2,7 +2,7 @@
     "name": [
         "tickingarea"
     ],
-    "description": "添加、删除和列出常加载区域，并管理其预加载状态。",
+    "description": "添加、删除或列出常加载区域。",
     "syntax": [
         "/tickingarea add <from: x y z> <to: x y z> [name: string] [preload: Boolean]",
         "/tickingarea add circle <center: x y z> <radius: int> [name: string] [preload: Boolean]",
@@ -16,89 +16,90 @@
     "node": {
         "add": {
             "type": "TEXT",
-            "description": "添加常加载区域。",
+            "description": "添加矩形常加载区域。",
             "data": {
                 "name": "add",
-                "description": "添加常加载区域。"
+                "description": "添加矩形常加载区域。"
             }
         },
         "<from: x y z>": {
             "type": "POSITION",
-            "brief": "坐标1",
-            "description": "指定矩形常加载区域的一个对角坐标。"
+            "brief": "矩形区域端点",
+            "description": "指定用于定义矩形常加载区域的一个端点坐标。"
         },
         "<to: x y z>": {
             "type": "POSITION",
-            "brief": "坐标2",
-            "description": "指定矩形常加载区域的一个对角坐标。"
+            "brief": "矩形区域端点",
+            "description": "指定用于定义矩形常加载区域的另一个端点坐标。"
         },
         "[name: string]|<name: string>": {
             "type": "STRING",
-            "brief": "常加载区域名称",
-            "description": "指定常加载区域的名称，可用于列表显示及后续按名称操作。",
+            "brief": "常加载区域的可选名称",
+            "description": "指定常加载区域名称。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "[preload: Boolean]": {
             "type": "BOOLEAN",
-            "brief": "是否预加载",
-            "description": "设置或查询常加载区域的预加载状态。",
-            "descriptionTrue": "预加载所选常加载区域。",
-            "descriptionFalse": "不预加载所选常加载区域。"
+            "brief": "常加载区域是否预加载",
+            "description": "指定常加载区域是否预加载。",
+            "descriptionTrue": "预加载。",
+            "descriptionFalse": "不预加载。"
         },
         "circle": {
             "type": "TEXT",
-            "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域。",
+            "description": "添加圆形常加载区域。",
             "data": {
                 "name": "circle",
-                "description": "添加与圆形区域有重叠部分的所有区块组成的常加载区域。"
+                "description": "添加圆形常加载区域。"
             }
         },
         "<center: x y z>": {
             "type": "POSITION",
-            "brief": "中心坐标",
-            "description": "指定圆形常加载区域圆心的坐标。"
+            "brief": "圆形区域圆心",
+            "description": "指定用于定义圆形常加载区域的圆心的坐标。"
         },
         "<radius: int>": {
             "type": "INTEGER",
-            "brief": "半径",
-            "description": "指定从圆心到圆周的区块数作为圆形常加载区域的半径。"
+            "brief": "圆形区域半径",
+            "description": "以区块数指定圆形区域半径。"
         },
         "list": {
             "type": "TEXT",
-            "description": "列出当前维度中的常加载区域。",
+            "description": "列出当前维度或所有维度的常加载区域。",
             "data": {
                 "name": "list",
-                "description": "列出当前维度中的常加载区域。"
+                "description": "列出当前维度或所有维度的常加载区域。"
             }
         },
         "[all-dimensions: AllDimensions]": {
             "type": "TEXT",
-            "description": "列出所有维度中已定义的常加载区域。",
+            "description": "指定是否列出所有维度中的常加载区域。",
             "data": {
                 "name": "all-dimensions",
-                "description": "列出所有维度中已定义的常加载区域。"
-            }
+                "description": "指定是否列出所有维度中的常加载区域。"
+            },
+            "brief": "所有维度"
         },
         "preload": {
             "type": "TEXT",
-            "description": "设置或查询常加载区域的预加载状态。",
+            "description": "指定常加载区域是否预加载。",
             "data": {
                 "name": "preload",
-                "description": "设置或查询常加载区域的预加载状态。"
+                "description": "指定常加载区域是否预加载。"
             }
         },
         "<position: x y z>": {
             "type": "POSITION",
-            "brief": "坐标",
-            "description": "指定包含在常加载区域中的坐标，以选择该区域。"
+            "brief": "区域坐标",
+            "description": "指定常加载区域内要选择的坐标。"
         },
         "remove": {
             "type": "TEXT",
-            "description": "删除常加载区域。",
+            "description": "删除指定名称或位置的常加载区域。",
             "data": {
                 "name": "remove",
-                "description": "删除常加载区域。"
+                "description": "删除指定名称或位置的常加载区域。"
             }
         },
         "remove_all": {

@@ -1,0 +1,76 @@
+{
+    "version": 1,
+    "reason": "修正命令简介对旋转效果的无条件断言：部分坐标语法保留旋转，只有实体目的地、显式旋转或 facing 用法会设置旋转；同时规范两个 Boolean 参数的状态说明并给朝向锚点添加短 brief。",
+    "replacements": [
+        {
+            "old": "传送实体（玩家、生物等）到指定的地点，并修改其旋转角度。",
+            "new": "传送实体（玩家、生物等）到指定的地点；部分语法还会设置其旋转角度。",
+            "expected_matches": 1,
+            "reason": "中文 Wiki 的基岩版语法说明坐标目标的基础用法“不会修改其旋转角度”，而实体目的地、显式旋转与 facing 语法会设置朝向；Java 版也区分不修改旋转与 facing/rotation 用法。故简介不能断言所有传送都会修改旋转，仅概括提供设置旋转的语法。"
+        },
+        {
+            "old": ": 如果为<code>true</code>，只当目的地不会被方块碰撞箱阻挡时，传送才会生效。如果为<code>false</code>或未指定，则不进行该检查，直接进行传送。",
+            "new": ": 指定传送目的地是否进行方块碰撞箱检查。\n: brief: 碰撞阻挡检查\n: 必须为以下其中之一：\n:* <code>true</code> — 只当目的地不会被方块碰撞箱阻挡时，传送才会生效。\n:* <code>false</code> — 不进行该检查，直接进行传送。",
+            "reason": "删除未指定checkForBlocks时的行为说明；true与false的明确输入效果分别列出。"
+        },
+        {
+            "old": ": 如果为<code>true</code>，将会在维度变更时强制传送至指定坐标。如果为<code>false</code>或未指定，则不强制使用指定坐标，直接进行传送。",
+            "new": ": 指定维度变更时是否强制使用提供的坐标。\n: brief: 跨维坐标强制\n: 必须为以下其中之一：\n:* <code>true</code> — 在维度变更时强制传送至指定坐标。\n:* <code>false</code> — 不强制使用指定坐标，直接进行传送。",
+            "reason": "删除未指定forceProvidedPositionOnDimensionChange时的行为说明；true与false的明确输入效果分别列出。"
+        },
+        {
+            "old": ": 指定实体传送后应朝向实体的眼睛还是足部。如果未指定，默认为眼睛。{{IN|bedrock}}总是朝向眼睛。",
+            "new": ": 指定实体传送后应朝向实体的眼睛还是足部。{{IN|bedrock}}总是朝向眼睛。\n: brief: 实体朝向锚点",
+            "expected_matches": 1,
+            "reason": "删除朝向锚点未指定时的默认说明，保留实体朝向用途。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{argument|be=1|yRot: value|RelativeFloat}}、{{argument|be=1|xRot: value|RelativeFloat}}\n: 指定实体传送后的旋转角度。\n: {{arg desc|je=rotation|be=RelativeFloat}}",
+            "new": "{{el|be|short=1}}：{{argument|be=1|yRot: value|RelativeFloat}}\n: 指定实体传送后的绕Y轴旋转角度。brief: 绕Y轴旋转角度\n: {{arg desc|be=RelativeFloat}}\n\n{{el|be|short=1}}：{{argument|be=1|xRot: value|RelativeFloat}}\n: 指定实体传送后的绕X轴旋转角度。brief: 绕X轴旋转角度\n: {{arg desc|be=RelativeFloat}}",
+            "expected_matches": 1,
+            "reason": "人工补充：基岩版语法给出两个独立可选节点yRot: value和xRot: value，参数标识分别指向Y轴与X轴；将原共享旋转描述拆开，使每个RELATIVE_FLOAT只说明自身轴向。未补充Wiki未给出的单位或角度范围。"
+        },
+        {
+            "old": ": 指定要被传送的实体。如果未指定，默认为命令执行者。",
+            "new": ": 指定要被传送的实体。",
+            "expected_matches": 1,
+            "reason": "删除未指定victim时默认命令执行者的说明，保留传送目标用途。"
+        },
+        {
+            "old": "不像大多数只能影响已经生成的区块的命令，{{cmd|teleport|link=none}}可以将实体传送到尚未生成的区块中，传送前游戏会生成目标位置所在区块。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简命令简介，删除区块生成细节，保留传送实体的核心用途。"
+        },
+        {
+            "old": "若一个骑乘着[[矿车]]、[[船]]或其他[[生物]]的生物被{{cmd|teleport|link=none}}传送，则骑乘者会从其载具上脱离，并被单独传送至目标位置，而原有的载具会留在原地，不受影响。反之，若一个正被生物骑乘的矿车、船或生物被{{cmd|teleport|link=none}}传送，骑乘在载具上的生物会跟随载具一同被传送至目标，并保持骑乘状态。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简命令简介，删除乘骑实体的特殊传送效果，保留命令核心用途。"
+        },
+        {
+            "old": "<code>true</code> — 只当目的地不会被方块碰撞箱阻挡时，传送才会生效。",
+            "new": "<code>true</code> — 检查目的地的方块阻挡。",
+            "expected_matches": 1,
+            "reason": "精简checkForBlocks的true状态说明，保留进行阻挡检查的动作。"
+        },
+        {
+            "old": "<code>false</code> — 不进行该检查，直接进行传送。",
+            "new": "<code>false</code> — 不检查方块阻挡。",
+            "expected_matches": 1,
+            "reason": "精简checkForBlocks的false状态说明，保留不进行阻挡检查的动作。"
+        },
+        {
+            "old": "<code>true</code> — 在维度变更时强制传送至指定坐标。",
+            "new": "<code>true</code> — 强制使用提供的坐标。",
+            "expected_matches": 1,
+            "reason": "精简forceProvidedPositionOnDimensionChange的true状态说明，保留强制采用给定坐标的动作。"
+        },
+        {
+            "old": "<code>false</code> — 不强制使用指定坐标，直接进行传送。",
+            "new": "<code>false</code> — 不强制使用提供的坐标。",
+            "expected_matches": 1,
+            "reason": "精简forceProvidedPositionOnDimensionChange的false状态说明，保留不强制采用给定坐标的动作。"
+        }
+    ]
+}

@@ -55,8 +55,10 @@ output/chelper/{release,beta,netease}/{vanilla,experiment}/
 └─ repeat/*.json
 ```
 
-生成时，`command`、`grammer`、`json` 和 `repeat` 从本项目 `resources` 中的已复核定义
-导出；`execute` 自动应用固定 patch。ID 和版本清单来自本次数据生成。
+生成时读取已复核命令结构，`command` 中的说明和 brief 根据原始Wiki及少量原文
+patch自动提取。`grammer`、`json`、`repeat` 的规范数据源为
+`data/resource_definitions`，生成器直接读取并刷新对应`resources`快照，不能靠修改快照维护。
+`execute`命令入口仍应用既有固定patch。ID和版本清单来自本次数据生成。
 CHelper-Core 可直接打包这份完整产物：
 
 ```powershell
@@ -95,6 +97,13 @@ netease 数据取自 1.21.50.07 时代（`config.toml` 的 `[netease] commit` �
 | [translation-priority.md](translation-priority.md) | 翻译来源、复核状态与引用 DSL |
 | [output-format.md](output-format.md) | chelper 输出格式契约 |
 | [command-review.md](command-review.md) | Wiki 原文、子 agent 逐命令审阅、节点复用和打包流程 |
+| [wiki-extraction.md](wiki-extraction.md) | 原文 patch、参数和枚举提取、brief 覆盖与来源追踪 |
+| [command-audit-2026-10-29.md](command-audit-2026-10-29.md) | 实际资源包全部命令逐字段审阅、交叉复核和打包验证 |
+| [omission-cleanup-2026-10-29.md](omission-cleanup-2026-10-29.md) | 省略参数说明清理及原文补丁、提取和打包验证 |
+| [constraints-cleanup-2026-10-29.md](constraints-cleanup-2026-10-29.md) | 限制范围说明清理、逐条审阅及打包验证 |
+| [defaults-cleanup-2026-10-29.md](defaults-cleanup-2026-10-29.md) | 默认值注释清理、独立复核及打包验证 |
+| [purpose-cleanup-2026-10-29.md](purpose-cleanup-2026-10-29.md) | 全部介绍用途精简、静态源修正及完整验证 |
+| [terminology-review-2026-10-30.md](terminology-review-2026-10-30.md) | Wiki术语优先的全量复核、实际语义错配修正及打包验证 |
 
 ## 与旧流程（caidlist JS）的关系
 

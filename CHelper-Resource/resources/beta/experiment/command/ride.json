@@ -2,7 +2,7 @@
     "name": [
         "ride"
     ],
-    "description": "控制实体之间的骑乘关系，并可召唤乘客或坐骑。",
+    "description": "控制实体之间的骑乘关系。",
     "syntax": [
         "/ride <riders: target> start_riding <ride: target> [teleportRules: TeleportRules] [howToFill: FillType]",
         "/ride <riders: target> stop_riding",
@@ -13,137 +13,142 @@
     "node": {
         "<riders: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "需要骑乘或作为乘客处理的实体。",
+            "description": "指定乘客。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "乘客"
         },
         "start_riding": {
             "type": "TEXT",
-            "description": "让指定乘客骑乘指定坐骑。",
+            "description": "让指定的乘客骑乘指定的坐骑。",
             "data": {
                 "name": "start_riding",
-                "description": "让指定乘客骑乘指定坐骑。"
+                "description": "让指定的乘客骑乘指定的坐骑。"
             }
         },
         "<ride: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "供乘客骑乘的实体。",
+            "description": "指定坐骑。",
             "isOnlyOne": true,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "坐骑"
         },
         "[teleportRules: TeleportRules]": {
             "type": "NORMAL_ID",
-            "brief": "传送规则",
-            "description": "选择骑乘开始时传送坐骑还是乘客。",
+            "brief": "传送方向",
+            "description": "指定开始骑乘时传送坐骑还是乘客。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "teleport_ride",
-                    "description": "将坐骑传送到乘客处。"
+                    "description": "传送坐骑至乘客"
                 },
                 {
                     "name": "teleport_rider",
-                    "description": "将乘客传送到坐骑处。"
+                    "description": "传送乘客至坐骑"
                 }
             ]
         },
         "[howToFill: FillType]": {
             "type": "NORMAL_ID",
-            "description": "控制如何为多个乘客分配坐骑。",
+            "description": "指定乘客与坐骑的匹配方式。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "if_group_fits",
-                    "description": "所有乘客都能骑乘时才建立骑乘关系。"
+                    "description": "：所有乘客能同时骑乘时才执行。"
                 },
                 {
                     "name": "until_full",
-                    "description": "依次让乘客骑乘，直到坐骑满载。"
+                    "description": "：逐个安排乘客骑乘，直至坐骑满载。"
                 }
-            ]
+            ],
+            "brief": "乘客分配方式"
         },
         "stop_riding": {
             "type": "TEXT",
-            "description": "让指定乘客停止骑乘。",
+            "description": "让指定的乘客停止骑乘。",
             "data": {
                 "name": "stop_riding",
-                "description": "让指定乘客停止骑乘。"
+                "description": "让指定的乘客停止骑乘。"
             }
         },
         "summon_ride": {
             "type": "TEXT",
-            "description": "召唤坐骑并让指定乘客骑乘。",
+            "description": "为指定乘客召唤坐骑。",
             "data": {
                 "name": "summon_ride",
-                "description": "召唤坐骑并让指定乘客骑乘。"
+                "description": "为指定乘客召唤坐骑。"
             }
         },
         "<entityType: EntityType>": {
             "type": "NAMESPACE_ID",
-            "description": "被召唤实体的类型。",
+            "description": "指定召唤的实体。",
             "ignoreError": true,
-            "key": "entity"
+            "key": "entity",
+            "brief": "召唤的实体"
         },
         "[rideRules: RideRules]": {
             "type": "NORMAL_ID",
-            "brief": "召唤模式",
-            "description": "控制如何为乘客召唤坐骑。",
+            "brief": "乘坐处理规则",
+            "description": "指定召唤坐骑时如何处理现有骑乘关系。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "skip_riders",
-                    "description": "只为没有坐骑的乘客召唤实体。"
+                    "description": "：仅为未骑乘的乘客召唤实体。"
                 },
                 {
                     "name": "no_ride_change",
-                    "description": "只为未骑乘且未被骑乘的乘客召唤实体。"
+                    "description": "：仅为未骑乘且无乘客的实体召唤。"
                 },
                 {
                     "name": "reassign_rides",
-                    "description": "为所有乘客召唤实体，并调整现有骑乘关系。"
+                    "description": "：停止现有骑乘关系，再为乘客召唤实体。"
                 }
             ]
         },
         "[spawnEvent: string]": {
             "type": "NORMAL_ID",
-            "brief": "事件",
-            "description": "实体生成时执行的事件。",
+            "brief": "实体生成时执行的事件",
+            "description": "指定实体生成时执行的事件。",
             "ignoreError": true,
             "key": "entityEvent"
         },
         "[nameTag: string]": {
             "type": "STRING",
-            "brief": "实体名",
-            "description": "生成实体的名称。",
+            "brief": "实体生成时的名字",
+            "description": "指定实体生成时的名字。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "<rides: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "要处理其乘客的坐骑。",
+            "description": "指定坐骑。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "坐骑"
         },
         "evict_riders": {
             "type": "TEXT",
-            "description": "使指定坐骑逐出其乘客。",
+            "description": "让指定的坐骑逐出它的乘客。",
             "data": {
                 "name": "evict_riders",
-                "description": "使指定坐骑逐出其乘客。"
+                "description": "让指定的坐骑逐出它的乘客。"
             }
         },
         "summon_rider": {
             "type": "TEXT",
-            "description": "在符合骑乘条件的坐骑旁召唤乘客。",
+            "description": "为指定坐骑召唤实体乘客。",
             "data": {
                 "name": "summon_rider",
-                "description": "在符合骑乘条件的坐骑旁召唤乘客。"
+                "description": "为指定坐骑召唤实体乘客。"
             }
         }
     }

@@ -9,11 +9,12 @@
     "node": {
         "[target: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "要杀死或清除的实体。",
+            "description": "指定要杀死/清除的目标实体。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要杀死/清除的目标实体"
         }
     }
 }

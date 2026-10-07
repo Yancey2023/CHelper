@@ -4,20 +4,22 @@
     ],
     "description": "将玩家踢出服务器。",
     "syntax": [
-        "/kick <name: target> <reason: message>"
+        "/kick <name: target> [reason: message]"
     ],
     "node": {
         "<name: target>": {
             "type": "STRING",
-            "description": "要踢出的玩家名或XUID。",
+            "description": "指定要踢出的玩家。",
             "canContainSpace": true,
-            "ignoreLater": false
+            "ignoreLater": false,
+            "brief": "要踢出的玩家"
         },
-        "<reason: message>": {
+        "[reason: message]": {
             "type": "STRING",
-            "description": "显示给被踢出玩家的原因消息。",
+            "description": "指定将显示给被踢出玩家的消息。",
             "canContainSpace": true,
-            "ignoreLater": true
+            "ignoreLater": true,
+            "brief": "将显示给被踢出玩家的消息"
         }
     }
 }

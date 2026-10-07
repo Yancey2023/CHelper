@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "reason": "按用户授权清理命令描述中的省略参数情形。",
+    "replacements": [
+        {
+            "old": "{{argument|pos|vec3|position: x y z|CommandPositionFloat}}\n: 指定要显示粒子的位置。如果未指定，默认为命令的执行位置。",
+            "new": "{{argument|pos|vec3|position: x y z|CommandPositionFloat}}\n: 指定要显示粒子的位置。默认位置为命令的执行位置。",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定位置时的条件说明，保留参数用途及默认位置。"
+        },
+        {
+            "old": ": 若未指定，{{cd|<delta>}}默认为<code>0 0 0</code>，{{cd|<speed>}}默认为<code>0</code>。",
+            "new": ": {{cd|<delta>}}的默认值为<code>0 0 0</code>，{{cd|<speed>}}的默认值为<code>0</code>。",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定delta或speed时的条件说明，保留两个独立默认值。"
+        },
+        {
+            "old": "指定要显示粒子的位置。默认位置为命令的执行位置。",
+            "new": "指定要显示粒子的位置。",
+            "expected_matches": 1,
+            "reason": "删除description中的默认位置说明，保留粒子位置用途；brief和位置类型不变。"
+        },
+        {
+            "old": "{{IN|bedrock}}不少原版粒子效果需要接收特定的上下文或变量才可正常显示，而{{cmd|particle|link=none}}命令无法向其传递上下文或变量，因此某些粒子效果在游戏中无法通过{{cmd|particle|link=none}}命令正常生成。而在ScriptAPI中则可以在调用时提供上下文。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "精简命令简介，保留显示粒子的核心用途，删除关于原版粒子限制和ScriptAPI的旁注。"
+        }
+    ]
+}

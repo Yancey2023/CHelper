@@ -25,7 +25,7 @@ pub struct ChelperInput<'a> {
     pub gametest: &'a Value,
     /// 药水描述（47 条，data/potion_descriptions.json）。
     pub potion_descriptions: &'a Value,
-    /// 手工维护的游戏模式内容（data/game_mode.json 的 content 数组）。
+    /// Wiki 提取的游戏模式内容（沿用 data/game_mode.json 的 content 数组结构）。
     pub game_mode: &'a Value,
     /// wiki 粒子描述（`minecraft:xxx` → 描述）。
     pub particle_emitter: &'a IndexMap<String, String>,
@@ -183,6 +183,15 @@ fn property_entry(property_name: &str, descriptions: &Value, gametest: &Value) -
     }
     entry.insert("values".into(), Value::Array(arr));
     Some(Value::Object(entry))
+}
+
+/// Keep documentation proposals and runtime export in the same normal-ID format.
+pub fn game_mode_document(game_mode: &Value) -> Value {
+    let content = game_mode
+        .get("content")
+        .cloned()
+        .unwrap_or_else(|| game_mode.clone());
+    json!({"id": "gameMode", "type": "normal", "content": content})
 }
 
 /// 写出整个 chelper 资源包，返回写出的文件数。
@@ -454,13 +463,8 @@ pub fn write_resource_pack(input: ChelperInput<'_>, output_dir: &Path) -> Result
     write_crlf(&output_dir.join("item.json"), &to_string_pretty4(&doc))?;
     file_count += 1;
 
-    // gameMode：项目手工数据（data/game_mode.json 的 content 数组）
-    let game_mode_content = input
-        .game_mode
-        .get("content")
-        .cloned()
-        .unwrap_or_else(|| input.game_mode.clone());
-    let doc = json!({"id": "gameMode", "type": "normal", "content": game_mode_content});
+    // gameMode：保留维护目录结构，说明由 Wiki 选项提取。
+    let doc = game_mode_document(input.game_mode);
     write_crlf(&output_dir.join("gameMode.json"), &to_string_pretty4(&doc))?;
     file_count += 1;
 

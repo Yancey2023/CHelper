@@ -2,28 +2,28 @@
     "name": [
         "listd"
     ],
-    "description": "返回当前在线玩家及其信息。",
+    "description": "同设备返回当前在线玩家信息，异设备时效果与list相同。",
     "syntax": [
         "/listd [details: ListDetails]"
     ],
     "node": {
         "[details: ListDetails]": {
             "type": "NORMAL_ID",
-            "brief": "内容",
-            "description": "选择要附加到玩家信息中的数据。",
+            "brief": "附加信息",
+            "description": "ids：附加randomId。 uuids：附加UUID。 stats：附加网络统计信息。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "ids",
-                    "description": "附加玩家的ID信息。"
+                    "description": "附加randomId。"
                 },
                 {
                     "name": "stats",
-                    "description": "附加玩家的网络统计信息。"
+                    "description": "附加网络统计信息。"
                 },
                 {
                     "name": "uuids",
-                    "description": "附加玩家的UUID。"
+                    "description": "附加UUID。"
                 }
             ]
         }

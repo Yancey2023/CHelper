@@ -2,7 +2,7 @@
     "name": [
         "weather"
     ],
-    "description": "更改或查询游戏天气",
+    "description": "更改游戏中的天气。",
     "syntax": [
         "/weather <clear|rain|thunder> [duration: int]",
         "/weather query"
@@ -10,36 +10,37 @@
     "node": {
         "<clear|rain|thunder>": {
             "type": "NORMAL_ID",
-            "description": "天气",
+            "description": "指定要设置的天气",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "clear",
-                    "description": "将天气设为晴天"
+                    "description": "将天气设为晴天。"
                 },
                 {
                     "name": "rain",
-                    "description": "将天气设为雨天（寒冷的生物群系会下雪）"
+                    "description": "将天气设为雨天。"
                 },
                 {
                     "name": "thunder",
-                    "description": "将天气设为雷暴雨（寒冷的生物群系会下雷暴雪）"
+                    "description": "将天气设为雷暴雨。"
                 }
-            ]
+            ],
+            "brief": "天气类型"
         },
         "[duration: int]": {
             "type": "INTEGER",
-            "brief": "持续时间",
-            "description": "天气持续的游戏刻数",
+            "brief": "天气的持续时间",
+            "description": "指定天气的持续时间。 指定的时间以游戏刻为单位。",
             "min": 0,
             "max": 1000000
         },
         "query": {
             "type": "TEXT",
-            "description": "查询当前天气",
+            "description": "也可用于显示当前天气。",
             "data": {
                 "name": "query",
-                "description": "查询当前天气"
+                "description": "也可用于显示当前天气。"
             }
         }
     }

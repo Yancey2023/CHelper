@@ -2,7 +2,7 @@
     "name": [
         "controlscheme"
     ],
-    "description": "修改相机预设的控制方案。此命令需与camera命令一同使用。",
+    "description": "修改玩家的相机控制方案。",
     "syntax": [
         "/controlscheme <players: target> clear",
         "/controlscheme <players: target> set <control scheme: controlscheme>"
@@ -14,7 +14,8 @@
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要被修改控制方案的玩家"
         },
         "clear": {
             "type": "TEXT",

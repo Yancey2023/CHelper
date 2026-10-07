@@ -9,11 +9,12 @@
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "要被授予管理员身份的玩家。",
+            "description": "指定要被授予管理员权限的玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要被授予管理员权限的玩家"
         }
     }
 }

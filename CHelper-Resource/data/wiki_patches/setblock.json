@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "reason": "将方块名称与方块状态两个基岩版参数头及用途说明合并为同一自然参数段，让复合 BLOCK 节点按真实 Wiki 参数名自动匹配；人工补充 brief 以覆盖方块名和方块状态。",
+    "replacements": [
+        {
+            "old": "{{argument|block|block_state|tileName: Block|Block}}\n: 指定更改后的新方块。\n: {{arg desc|je=block_state|be=Block}}\n\n{{el|be|short=1}}：{{argument|be=1|blockStates: block states|BlockStateCommandParam}}\n: 指定新方块的[[方块状态]]。\n: {{arg desc|be=BlockStateCommandParam}}",
+            "new": "{{el|be|short=1}}：{{argument|be=1|block|block_state|tileName: Block|Block}}{{argument|be=1|blockStates: block states|BlockStateCommandParam}}\n: 指定更改后的新方块。\n: 指定新方块的[[方块状态]]。\n: brief: 新方块及其状态\n: {{arg desc|be=Block}}\n: {{arg desc|be=BlockStateCommandParam}}",
+            "expected_matches": 1,
+            "reason": "原 Wiki 相邻参数块分别说明 tileName 与 blockStates。将两个真实的基岩版 argument 标题并列在同一标题行，使提取器把同版参数名合并到同一自然参数段；description 保留两句原文。人工补充brief“新方块及其状态”以同时概括该复合节点覆盖的方块名与方块状态，修正原brief只提到状态造成的遗漏；不改变命令语法或参数能力。"
+        },
+        {
+            "old": ": 如果未指定，默认为<code>replace</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除处理方式未指定时默认replace的说明，枚举用途与destroy、keep、replace等明确输入值的效果保留。"
+        },
+        {
+            "old": "原方块以[[掉落物]]的形式掉落（液体方块及如藤蔓等仅可由剪刀采集的方块除外），并播放方块被破坏的音效。",
+            "new": "破坏原方块并生成掉落物。",
+            "expected_matches": 1,
+            "reason": "人工精简destroy用途，保留破坏方块和掉落物的核心行为，删除方块例外与音效细节。"
+        },
+        {
+            "old": "仅当原方块是[[空气]]类方块时才进行更改。",
+            "new": "仅在原方块为空气时更改。",
+            "expected_matches": 1,
+            "reason": "人工精简keep用途，保留仅更改空气位置的条件。"
+        },
+        {
+            "old": "原方块不掉落物品，且不播放方块被破坏的音效。",
+            "new": "替换原方块。",
+            "expected_matches": 1,
+            "reason": "人工精简replace用途，保留替换方块的核心行为，删除掉落物和音效旁注。"
+        },
+        {
+            "old": "在放置方块时不触发自身及紧挨着的方块的方块更新和形状更新。",
+            "new": "放置方块时不触发相关方块更新。",
+            "expected_matches": 1,
+            "reason": "人工精简strict用途，保留阻止放置后更新的核心效果，删除更新类型和相邻范围的细节。"
+        }
+    ]
+}

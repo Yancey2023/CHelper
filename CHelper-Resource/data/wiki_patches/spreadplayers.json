@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "reason": "为 maxHeight、maxRange 和 respectTeams 参数提供简短 brief，避免把整段用途说明误作标签；用途说明仍保留 Wiki 原句。",
+    "replacements": [
+        {
+            "old": ": 若指定，限制传送位置的最大高度。\n: {{in|je}}{{arg desc|je=integer}}\n: {{in|be}}{{arg desc|be=RelativeFloat}}",
+            "new": ": 若指定，限制传送位置的最大高度。\n: brief: 最高传送高度\n: {{in|je}}{{arg desc|je=integer}}\n: {{in|be}}{{arg desc|be=RelativeFloat}}",
+            "reason": "brief 是对原句“限制传送位置的最大高度”的简短参数标签，未修改用途说明或语法。"
+        },
+        {
+            "old": "指定目标区域边界与区域中心在X和Z轴上的距离（因此区域是正方形而不是圆形）。",
+            "new": "指定目标区域边界与区域中心在X和Z轴上的距离（因此区域是正方形而不是圆形）。brief: 区域范围",
+            "expected_matches": 1,
+            "reason": "brief 简称正方形区域边界到中心的距离，不改变距离单位或区域形状说明。"
+        },
+        {
+            "old": "同队成员在传送后会不会出现在一起。如果为<code>true</code>，同队的实体会被传送到同一个位置。",
+            "new": "同队成员在传送后会不会出现在一起。如果为<code>true</code>，同队的实体会被传送到同一个位置。brief: 队伍聚集",
+            "expected_matches": 1,
+            "reason": "brief 简称 respectTeams 的用途；Wiki 原句保留Boolean为true时同队实体传送到同一位置的行为。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{argument|center|vec2}}<br>\n{{el|be|short=1}}：{{argument|be=1|x: value|RelativeFloat}}和{{argument|be=1|z: value|RelativeFloat}}\n: 指定传送目的地区域的中心。\n: {{arg desc|je=vec2|be=RelativeFloat}}",
+            "new": "{{el|je|short=1}}：{{argument|center|vec2}}\n: 指定传送目的地区域的中心。\n: {{arg desc|je=vec2}}\n\n{{el|be|short=1}}：{{argument|be=1|x: value|RelativeFloat}}\n: 指定传送目的地区域中心的X坐标。brief: 中心X坐标\n: {{arg desc|be=RelativeFloat}}\n\n{{el|be|short=1}}：{{argument|be=1|z: value|RelativeFloat}}\n: 指定传送目的地区域中心的Z坐标。brief: 中心Z坐标\n: {{arg desc|be=RelativeFloat}}",
+            "expected_matches": 1,
+            "reason": "人工补充：基岩版语法将中心位置拆为独立的x: value与z: value两个RELATIVE_FLOAT参数；Wiki原句说明二者共同表示区域中心。分别按参数轴向标明中心X坐标和Z坐标，不将二维中心整组描述复制到每个单值参数。"
+        },
+        {
+            "old": "{{arg desc|je=float|be=float|min=0.0}}{{in|be}}应该大于等于0.0。",
+            "new": "{{arg desc|je=float|be=float|min=0.0}}",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除spreadDistance description中的数值下界；最小间距用途及参数min元数据保留。"
+        },
+        {
+            "old": "{{arg desc|je=float|min=1.0|be=float}}{{in|be}}应至少比<code>spreadDistance: float</code>大1.0。",
+            "new": "{{arg desc|je=float|min=1.0|be=float}}",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除maxRange description中的数值关系限制；区域距离用途及参数min元数据保留。"
+        },
+        {
+            "old": "指定目标区域边界与区域中心在X和Z轴上的距离（因此区域是正方形而不是圆形）。",
+            "new": "指定正方形区域边界与中心的距离。",
+            "expected_matches": 1,
+            "reason": "按本轮用途精简要求概括正方形区域范围，删除几何形状对比旁注。"
+        }
+    ]
+}

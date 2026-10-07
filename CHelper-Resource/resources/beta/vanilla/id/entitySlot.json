@@ -4,10 +4,11 @@
     "content": [
         {
             "name": "slot.armor",
-            "description": "马铠/地毯"
+            "description": "马铠槽"
         },
         {
-            "name": "slot.armor.body"
+            "name": "slot.armor.body",
+            "description": "身体装备栏位"
         },
         {
             "name": "slot.armor.chest",
@@ -23,18 +24,15 @@
         },
         {
             "name": "slot.armor.legs",
-            "description": "腿甲"
+            "description": "护腿"
         },
         {
             "name": "slot.chest",
-            "description": "箱子"
+            "description": "箱子栏位"
         },
         {
             "name": "slot.enderchest",
-            "description": "末影箱"
-        },
-        {
-            "name": "slot.equippable"
+            "description": "玩家末影箱物品栏"
         },
         {
             "name": "slot.hotbar",
@@ -46,15 +44,15 @@
         },
         {
             "name": "slot.saddle",
-            "description": "鞍"
+            "description": "马鞍槽位"
         },
         {
             "name": "slot.weapon.mainhand",
-            "description": "主手持有"
+            "description": "惯用手栏位"
         },
         {
             "name": "slot.weapon.offhand",
-            "description": "副手持有"
+            "description": "副手"
         }
     ]
 }

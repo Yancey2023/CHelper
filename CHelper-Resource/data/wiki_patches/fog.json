@@ -1,0 +1,78 @@
+{
+    "version": 1,
+    "reason": "将mode参数从行内code标记规范成可提取枚举区块，并把Wiki已说明的pop/remove行为分别对应到选项。",
+    "replacements": [
+        {
+            "old": "<code><mode: delete></code>\n: 必须为<code>pop</code>或<code>remove</code>。\n: 指定是只移除第一个还是移除所有名称为<code><userProvidedId: string></code>的迷雾。",
+            "new": "{{argument|be=1|mode: delete|enum}}\n: 指定是只移除第一个还是移除所有名称为<code><userProvidedId: string></code>的迷雾。brief: 删除模式\n: 必须为以下其中之一：\n:* <code>pop</code> — 只移除第一个名称为<code><userProvidedId: string></code>的迷雾。\n:* <code>remove</code> — 移除所有名称为<code><userProvidedId: string></code>的迷雾。",
+            "expected_matches": 1,
+            "reason": "mode语义原句同时说明只移除第一个/移除所有；固定用户名称的过滤条件保留在两项说明里。"
+        },
+        {
+            "old": ": <code>fog <victim: target> push <fogId: string> <userProvidedId: string></code>",
+            "new": ": <code>fog <victim: target> push <fogId: string> <userProvidedId: string></code>\n:: 将指定迷雾加入目标玩家的迷雾效果栈。",
+            "expected_matches": 1,
+            "reason": "人工补充说明：按push动作名称及fog命令语境概括用途；不是中文 Minecraft Wiki 原文。"
+        },
+        {
+            "old": ":* 沙漠丘陵：<code>minecraft:fog_desert_hills</code>",
+            "new": ":* 沙漠丘陵：<code>minecraft:fog_desert_hills</code>\n:* 内置空气与水下距离雾：<code>minecraft:fog_dry</code> — 配置空气、水下、天气和熔岩雾。",
+            "expected_matches": 1,
+            "reason": "人工补充，限于结构化数据明确的用途：Mojang bedrock-samples 1.21.90 fogs/dry_fog_setting.json 为 fog_dry 定义 distance.air、water、weather、lava；中文《生物群系》页说明迷雾与水下迷雾属于生物群系环境设置：https://zh.minecraft.wiki/w/生物群系 。原始JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/dry_fog_setting.json 。"
+        },
+        {
+            "old": ":* 下界荒地：<code>minecraft:fog_hell</code>",
+            "new": ":* 下界荒地：<code>minecraft:fog_hell</code>\n:* 内置空气体积雾：<code>minecraft:fog_humid</code> — 配置空气体积雾和距离雾。",
+            "expected_matches": 1,
+            "reason": "人工补充，限于结构化数据明确的用途：Mojang bedrock-samples 1.21.90 fogs/humid_fog_setting.json 定义 volumetric.air，并定义 distance.water、weather、lava；jungle_edge_mutated.client_biome.json 将 fog_humid 用作丛林边缘变种的雾设置。中文页面用于名称核对：https://zh.minecraft.wiki/w/丛林边缘变种 。原始JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/humid_fog_setting.json 。"
+        },
+        {
+            "old": ":* 温水海洋：<code>minecraft:fog_lukewarm_ocean</code>",
+            "new": ":* 温水海洋：<code>minecraft:fog_lukewarm_ocean</code>\n:* 繁茂洞穴：<code>minecraft:fog_lush_caves</code> — 配置空气体积雾和距离雾。",
+            "expected_matches": 1,
+            "reason": "人工补充，限于结构化数据明确的用途：Mojang bedrock-samples 1.21.90 lush_caves.client_biome.json 将 fog_lush_caves 用于繁茂洞穴；fogs/lush_caves_fog_setting.json 定义 volumetric.air 与水下距离雾。中文页面用于核对群系名称与环境：https://zh.minecraft.wiki/w/繁茂洞穴 。原始JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/lush_caves_fog_setting.json 。"
+        },
+        {
+            "old": ":* 黑森林：<code>minecraft:fog_roofed_forest</code>",
+            "new": ":* 黑森林：<code>minecraft:fog_roofed_forest</code>\n:* 黑森林丘陵：<code>minecraft:fog_roofed_forest_mutated</code> — 配置空气体积雾和距离雾。",
+            "expected_matches": 1,
+            "reason": "人工补充，限于结构化数据明确的用途：Mojang bedrock-samples 1.21.90 roofed_forest_mutated.client_biome.json 将该标识用于黑森林丘陵，fogs/roofed_forest_mutated_fog_setting.json 定义 volumetric.air 与水下距离雾。中文页面用于核对生物群系名称：https://zh.minecraft.wiki/w/黑森林丘陵 。原始JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/roofed_forest_mutated_fog_setting.json 。"
+        },
+        {
+            "old": ":* 热带高原：<code>minecraft:fog_savanna_plateau</code>",
+            "new": ":* 热带高原：<code>minecraft:fog_savanna_plateau</code>\n:* 内置半湿润空气体积雾：<code>minecraft:fog_semi_humid</code> — 配置空气体积雾和距离雾。",
+            "expected_matches": 1,
+            "reason": "人工补充，限于结构化数据明确的用途：Mojang bedrock-samples 1.21.90 fogs/semi_humid_fog_setting.json 定义 volumetric.air 与 distance.water、weather、lava；未据ID名推断具体生物群系。中文《生物群系》页用于核对迷雾环境概念：https://zh.minecraft.wiki/w/生物群系 。原始JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/semi_humid_fog_setting.json 。"
+        },
+        {
+            "old": ":* 绯红森林：<code>minecraft:fog_crimson_forest</code>",
+            "new": ":* 绯红森林：<code>minecraft:fog_crimson_forest</code>\n:* 斑驳森林：<code>minecraft:fog_dappled_forest</code> — 用于斑驳森林的水下雾设置。",
+            "expected_matches": 1,
+            "reason": "人工补充用途，限于可核实的结构化数据：Mojang bedrock-samples 1.26.50 的 biomes/dappled_forest.client_biome.json 将 minecraft:dappled_forest 的 fog_identifier 设为 minecraft:fog_dappled_forest；fogs/dappled_forest_fog_setting.json 定义 distance.water 的迷雾参数。因此只描述其用于斑驳森林生物群系的水下迷雾设置。中文名称依据中文 Minecraft Wiki《生物群系》页：https://zh.minecraft.wiki/w/生物群系。JSON：https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/biomes/dappled_forest.client_biome.json 和 https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/fogs/dappled_forest_fog_setting.json。"
+        },
+        {
+            "old": ":* 冰刺之地：<code>minecraft:fog_ice_plains_spikes</code>",
+            "new": ":* 冰刺之地：<code>minecraft:fog_ice_plains_spikes</code>\n:* <code>minecraft:fog_ice_caves</code> — 指定要推入的迷雾。",
+            "expected_matches": 1,
+            "reason": "人工精简该值说明，保留它作为push操作迷雾输入的用途；不推断其效果或生物群系映射。"
+        },
+        {
+            "old": ": 指定修改玩家迷雾效果的目标。必须为一个玩家名或[[目标选择器]]。",
+            "new": ": 指定修改玩家迷雾效果的目标。",
+            "expected_matches": 1,
+            "reason": "移除目标参数合法形式限制，保留目标用途。"
+        },
+        {
+            "old": ": 指定迷雾设置的名称。包含空格的值必须用英文双引号括起来。该名称可用于移除特定迷雾设置。",
+            "new": ": 指定迷雾设置的名称。该名称可用于移除特定迷雾设置。",
+            "expected_matches": 1,
+            "reason": "移除空格时的引号格式限制，保留名称用途和删除关联迷雾的作用。"
+        },
+        {
+            "old": ": 指定迷雾设置的名称。该名称可用于移除特定迷雾设置。",
+            "new": ": 指定迷雾设置的名称。",
+            "expected_matches": 1,
+            "reason": "按交叉核验删除userProvidedId的次要移除说明，只保留指定迷雾设置名称的用途。"
+        }
+    ]
+}

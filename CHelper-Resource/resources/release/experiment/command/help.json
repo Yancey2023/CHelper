@@ -11,13 +11,13 @@
     "node": {
         "<page: int>": {
             "type": "INTEGER",
-            "brief": "页码",
-            "description": "显示指定页的可用命令列表。"
+            "brief": "要展示的命令列表的页码",
+            "description": "指定要展示的命令列表的页码。"
         },
         "[command: CommandName]": {
             "type": "COMMAND_NAME",
-            "brief": "命令名",
-            "description": "查询指定命令的帮助信息。"
+            "brief": "命令名称",
+            "description": "指定要提供帮助的命令名称。"
         }
     }
 }

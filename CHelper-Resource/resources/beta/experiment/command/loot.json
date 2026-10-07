@@ -29,32 +29,33 @@
     "node": {
         "give": {
             "type": "TEXT",
-            "description": "将生成的物品给予指定玩家。",
+            "description": "给予玩家物品。",
             "data": {
                 "name": "give",
-                "description": "将生成的物品给予指定玩家。"
+                "description": "给予玩家物品。"
             }
         },
         "<players: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "接收生成物品的玩家。",
+            "description": "指定要给予物品的一个或多个玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "接收物品的玩家"
         },
         "kill": {
             "type": "TEXT",
-            "description": "模拟击杀实体并生成其战利品。",
+            "description": "模拟使用指定工具杀死指定实体。",
             "data": {
                 "name": "kill",
-                "description": "模拟击杀实体并生成其战利品。"
+                "description": "模拟使用指定工具杀死指定实体。"
             }
         },
         "<entity: target>": {
             "type": "TARGET_SELECTOR",
-            "brief": "要模拟杀死的实体",
-            "description": "被模拟击杀并生成战利品的实体。",
+            "brief": "目标实体",
+            "description": "kill时指定被模拟杀死的实体。 replace entity时指定要修改物品栏的实体。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
@@ -62,106 +63,107 @@
         },
         "[<tool>|mainhand|offhand: string]": {
             "type": "STRING",
-            "description": "模拟使用的工具或手持物品。",
+            "description": "指定用于该操作的工具。",
             "canContainSpace": false,
-            "ignoreLater": false
+            "ignoreLater": false,
+            "brief": "工具"
         },
         "loot": {
             "type": "TEXT",
-            "description": "使用指定战利品表生成物品。",
+            "description": "使用指定战利品表作为战利品来源。",
             "data": {
                 "name": "loot",
-                "description": "使用指定战利品表生成物品。"
+                "description": "使用指定战利品表作为战利品来源。"
             }
         },
         "<loot_table: string>": {
             "type": "NORMAL_ID",
-            "brief": "战利品表",
-            "description": "用于生成物品的战利品表。",
+            "brief": "所使用的战利品表",
+            "description": "指定所使用的战利品表。",
             "ignoreError": true,
             "key": "lootTable"
         },
         "mine": {
             "type": "TEXT",
-            "description": "模拟使用工具挖掘指定位置的方块。",
+            "description": "模拟使用指定工具挖掘指定位置的方块。",
             "data": {
                 "name": "mine",
-                "description": "模拟使用工具挖掘指定位置的方块。"
+                "description": "模拟使用指定工具挖掘指定位置的方块。"
             }
         },
         "<TargetBlockPosition: x y z>": {
             "type": "POSITION",
-            "brief": "位置",
-            "description": "要模拟挖掘的方块坐标。"
+            "brief": "方块坐标",
+            "description": "指定方块坐标。"
         },
         "insert": {
             "type": "TEXT",
-            "description": "将生成的物品放入指定位置的容器方块。",
+            "description": "将物品发放到容器方块中。",
             "data": {
                 "name": "insert",
-                "description": "将生成的物品放入指定位置的容器方块。"
+                "description": "将物品发放到容器方块中。"
             }
         },
         "<position: x y z>": {
             "type": "POSITION",
-            "brief": "位置",
-            "description": "容器方块或物品的目标位置。"
+            "brief": "容器或物品实体生成位置",
+            "description": "insert时指定容器坐标； spawn时指定物品生成坐标。"
         },
         "replace": {
             "type": "TEXT",
-            "description": "替换指定方块或实体物品栏中的物品。",
+            "description": "从指定槽位起按序替换物品栏槽位。",
             "data": {
                 "name": "replace",
-                "description": "替换指定方块或实体物品栏中的物品。"
+                "description": "从指定槽位起按序替换物品栏槽位。"
             }
         },
         "block": {
             "type": "TEXT",
-            "description": "替换容器方块中的物品。",
+            "description": "从指定槽位起按序替换物品栏槽位。",
             "data": {
                 "name": "block",
-                "description": "替换容器方块中的物品。"
+                "description": "从指定槽位起按序替换物品栏槽位。"
             }
         },
         "slot.container": {
             "type": "TEXT",
-            "description": "要替换物品的容器槽位。",
+            "description": "指定方块容器物品栏。",
             "data": {
                 "name": "slot.container",
-                "description": "要替换物品的容器槽位。"
+                "description": "指定方块容器物品栏。"
             }
         },
         "<slotId: int>": {
             "type": "INTEGER",
-            "brief": "槽位",
-            "description": "要替换物品的槽位编号。"
+            "brief": "物品栏槽位编号",
+            "description": "指定物品栏槽位编号。"
         },
         "<count: int>": {
             "type": "INTEGER",
             "brief": "连续槽位数",
-            "description": "要连续替换的槽位数量。"
+            "description": "指定要清空并放入物品的连续槽位数。"
         },
         "entity": {
             "type": "TEXT",
-            "description": "替换指定实体物品栏中的物品。",
+            "description": "kill时指定被模拟杀死的实体。 replace entity时指定要修改物品栏的实体。",
             "data": {
                 "name": "entity",
-                "description": "替换指定实体物品栏中的物品。"
+                "description": "kill时指定被模拟杀死的实体。 replace entity时指定要修改物品栏的实体。"
             }
         },
         "<slotType: EntityEquipmentSlot>": {
             "type": "NORMAL_ID",
-            "brief": "物品栏",
-            "description": "要替换物品的实体物品栏。",
+            "brief": "实体物品栏槽位类型",
+            "description": "指定实体物品栏槽位类型。",
             "ignoreError": true,
             "key": "entitySlot"
         },
         "spawn": {
             "type": "TEXT",
-            "description": "在指定位置生成物品实体。",
+            "description": "生成物品实体。",
             "data": {
                 "name": "spawn",
-                "description": "在指定位置生成物品实体。"
+                "description": "生成物品实体。"
             }
         }
     }

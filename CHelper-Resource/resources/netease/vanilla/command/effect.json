@@ -10,42 +10,45 @@
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "状态效果作用的目标实体",
+            "description": "指定目标。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "目标"
         },
         "<effect: Effect>": {
             "type": "NORMAL_ID",
-            "brief": "效果",
-            "description": "要给予的状态效果",
+            "brief": "给予或者需要移除的效果",
+            "description": "指定给予或者需要移除的效果。",
             "ignoreError": true,
             "key": "effect"
         },
         "[seconds: int]": {
             "type": "INTEGER",
-            "brief": "时长",
-            "description": "效果持续时间"
+            "min": 0,
+            "brief": "效果时长",
+            "description": "以秒为单位指定效果时长。"
         },
         "[amplifier: int]": {
             "type": "INTEGER",
-            "brief": "等级",
-            "description": "效果等级倍率"
+            "min": 0,
+            "brief": "效果的放大倍率",
+            "description": "指定效果的放大倍率。"
         },
         "[hideParticles: Boolean]": {
             "type": "BOOLEAN",
-            "brief": "是否隐藏药水粒子",
-            "description": "隐藏状态效果的粒子和界面指示图标",
-            "descriptionTrue": "隐藏状态效果的粒子和界面指示图标",
-            "descriptionFalse": "显示状态效果的粒子和界面指示图标"
+            "brief": "粒子显示状态",
+            "description": "指定是否隐藏状态效果的粒子。",
+            "descriptionTrue": "隐藏状态效果的粒子。",
+            "descriptionFalse": "显示状态效果的粒子。"
         },
         "clear": {
             "type": "TEXT",
-            "description": "移除所有状态效果",
+            "description": "清除目标身上的状态效果。",
             "data": {
                 "name": "clear",
-                "description": "移除所有状态效果"
+                "description": "清除目标身上的状态效果。"
             }
         }
     }

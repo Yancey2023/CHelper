@@ -1,0 +1,99 @@
+{
+    "version": 1,
+    "reason": "整理 useNewChunksOnly 的正反含义、根据中文历史限定 biome 命名空间要求的生效版本，并为 locate poi 语法补充可提取的自然用途句。 为长枚举参数增加简短用途brief，避免超出12字符上限。",
+    "replacements": [
+        {
+            "old": ": 仅定位在尚未生成的区块中的结构，默认为<code>false</code>。",
+            "new": ": 控制是否仅定位在尚未生成的区块中的结构。\n: brief: 未生成区块限制\n:* <code>true</code> — 仅定位在尚未生成的区块中的结构。\n:* <code>false</code> — 不将搜索范围限制在尚未生成的区块。",
+            "reason": "按省略说明清理要求移除false状态后的省略行为叙述；父描述及两个Boolean状态各自保留参数用途和显式输入效果。"
+        },
+        {
+            "old": ": 指定要定位的生物群系的命名空间ID或{{only|for=生物群系标签|JE}}。参见[[生物群系/ID]]及{{slink|Java版标签/生物群系}}以查看所有可用的生物群系ID和生物群系标签。",
+            "new": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。",
+            "reason": "原 Wiki 只将生物群系标签及对应标签列表限定为 Java；将原有连接词和标签说明整体标记为 Java 专属，避免基岩版从同一参数段继承 Java 能力。"
+        },
+        {
+            "old": ": 指定要定位的结构的命名空间ID或{{only|for=结构标签|JE}}。参见{{slink|生成结构|可被定位的结构}}及{{slink|Java版标签/结构}}以查看所有可用的结构ID和结构标签。",
+            "new": ": 指定要定位的结构的命名空间ID{{only|JE|for=或结构标签}}。参见{{slink|生成结构|可被定位的结构}}{{only|JE|for=及{{slink|Java版标签/结构}}}}以查看所有可用的结构ID{{only|JE|for=和结构标签}}。",
+            "reason": "原 Wiki 只将结构标签及对应标签列表限定为 Java；将原有连接词和标签说明整体标记为 Java 专属，避免基岩版从同一参数段继承 Java 能力。"
+        },
+        {
+            "old": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。\n: {{in|be}}参数必须包含命名空间，如{{cd|minecraft:}}。",
+            "new": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。\n: {{in|be}}基岩版1.21.100起，该参数必须包含命名空间，如{{cd|minecraft:}}。",
+            "reason": "人工归纳：中文《命令/locate》基岩版历史明确记载，1.21.100（1.21.100.20）起 biome:Biome 参数必须包含命名空间；仅按该历史限定规则起始版本，不将国际版新规则无条件套用于其他维护分支或网易 fork，网易资源保持其原有字段内容。"
+        },
+        {
+            "old": ":<code>locate poi <poi_type: poi type></code>{{in exp|exg=poi}}\n:<code>locate poi <tags: poi tag></code>{{in exp|exg=poi}}",
+            "new": ":<code>locate poi <poi_type: poi type></code>{{in exp|exg=poi}}\n:<code>locate poi <tags: poi tag></code>{{in exp|exg=poi}}\n:: 定位最近的指定兴趣点，或符合指定标签的兴趣点。",
+            "reason": "人工补充动作描述：中文《命令/locate》参数段说明poi_type和tags分别是用于定位兴趣点的类型与标签；同页历史记载26.50.26加入locate poi。将用途句放在两条poi语法之后，作为统一的语法说明来源，不在句子中附加实验门槛。"
+        },
+        {
+            "old": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。",
+            "new": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。\n: brief: 生物群系ID",
+            "reason": "人工补充brief：该参数还生成基岩版资源，基岩版只接受生物群系ID；正文仍明确保留Java版标签能力，避免短标签把JE输入误示为BE可用。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{argument|poi|resource_or_tag}}<br>\n{{el|be|short=1}}：{{argument|be=1|poi_type: poi type|enum}}和{{argument|be=1|tags: poi tag|enum}}\n: 指定要定位的兴趣点的命名空间ID或兴趣点标签。参见{{slink|兴趣点|兴趣点类型}}及{{slink|Java版标签/兴趣点类型}}以查看所有可用的兴趣点ID和兴趣点标签。\n: {{in|be}}参数必须包含命名空间，如{{cd|minecraft:}}。",
+            "new": "{{el|je|short=1}}：{{argument|poi|resource_or_tag}}\n: 指定要定位的兴趣点类型ID或兴趣点标签。参见{{slink|兴趣点|兴趣点类型}}及{{slink|Java版标签/兴趣点类型}}以查看Java版可用的兴趣点ID和兴趣点标签。\n: brief: 兴趣点ID或标签\n\n{{el|be|short=1}}：{{argument|be=1|poi_type: poi type|enum}}\n: 指定要定位的兴趣点类型ID。参见{{slink|兴趣点|兴趣点类型}}以查看可用的兴趣点类型ID。\n: 参数必须包含命名空间，如{{cd|minecraft:}}。\n: brief: 兴趣点类型ID\n\n{{el|be|short=1}}：{{argument|be=1|tags: poi tag|enum}}\n: 指定要定位的兴趣点标签。参见{{slink|兴趣点|兴趣点类型}}以查看可用的兴趣点标签。\n: 参数必须包含命名空间，如{{cd|minecraft:}}。\n: brief: 兴趣点标签",
+            "reason": "原Wiki将Java poi和两个基岩版参数合写，容易把Java可选的ID/标签输入误示为每个BE参数都可用。按原有参数名拆成自然说明：poi_type是兴趣点类型ID，tags是兴趣点标签；分别保留命名空间要求，并单独标明Java仍接受ID或标签。"
+        },
+        {
+            "old": ": 指定要定位的结构的命名空间ID{{only|JE|for=或结构标签}}。参见{{slink|生成结构|可被定位的结构}}{{only|JE|for=及{{slink|Java版标签/结构}}}}以查看所有可用的结构ID{{only|JE|for=和结构标签}}。",
+            "new": ": 指定要定位的结构的命名空间ID{{only|JE|for=或结构标签}}。参见{{slink|生成结构|可被定位的结构}}{{only|JE|for=及{{slink|Java版标签/结构}}}}以查看所有可用的结构ID{{only|JE|for=和结构标签}}。\n: brief: 结构ID",
+            "reason": "人工补充brief：该参数生成基岩版资源，基岩版输入结构ID；正文仍明确保留Java版结构标签能力，短标签不将JE专属输入归到BE。"
+        },
+        {
+            "old": "在聊天框中为命令执行者显示给定的[[结构]]、[[生物群系]]或{{in exp|exg=poi|for=[[兴趣点]]{{only|JE}}}}的最近坐标和[[距离]]。",
+            "new": "在聊天框中为命令执行者显示给定的[[结构]]、[[生物群系]]或[[兴趣点]]的最近坐标和[[距离]]。基岩版中，只有提供兴趣点子命令的版本才支持定位兴趣点。",
+            "reason": "人工补充用途范围，依据中文《基岩版26.70.20》“常规—实验性玩法”移除兴趣点（POI）子选项及“兴趣点”更改项称开放按类型或标签定位的/locate poi；原始《命令/locate》语法列出JE poi输入及BE的poi_type、tags两种输入，实际资源中支持该子命令的分支为release/experiment、beta/vanilla、beta/experiment，其余三个分支没有。用“提供兴趣点子命令的版本”限定BE，不将26.70.20之后的能力泛化到旧版、网易或无该语法的分支。"
+        },
+        {
+            "old": "基岩版1.21.100起，该参数必须包含命名空间，如{{cd|minecraft:}}。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按本轮授权从biome description删除版别起点和命名空间格式要求；保留生物群系ID用途与链接，Wiki历史原文和原有reason保留证据。"
+        },
+        {
+            "old": ": 参数必须包含命名空间，如{{cd|minecraft:}}。",
+            "new": "",
+            "expected_matches": 2,
+            "reason": "按本轮授权删除poi_type与tags description中的命名空间格式要求；两参数的兴趣点类型ID/标签用途和结构分支保留。"
+        },
+        {
+            "old": "在聊天框中为命令执行者显示给定的[[结构]]、[[生物群系]]或[[兴趣点]]的最近坐标和[[距离]]。基岩版中，只有提供兴趣点子命令的版本才支持定位兴趣点。",
+            "new": "定位最近的结构、生物群系，支持时也可定位兴趣点。",
+            "expected_matches": 1,
+            "reason": "按实际命令能力概括定位用途，删除输出位置、版本条件及旁注；不增添未支持分支。"
+        },
+        {
+            "old": ": 指定要定位的生物群系的命名空间ID{{only|JE|for=或生物群系标签}}。参见[[生物群系/ID]]{{only|JE|for=及{{slink|Java版标签/生物群系}}}}以查看所有可用的生物群系ID{{only|JE|for=和生物群系标签}}。",
+            "new": ": 指定要定位的生物群系ID。",
+            "expected_matches": 1,
+            "reason": "保留定位对象用途，删除ID目录引用和标签旁注。"
+        },
+        {
+            "old": ": 指定要定位的兴趣点类型ID或兴趣点标签。参见{{slink|兴趣点|兴趣点类型}}及{{slink|Java版标签/兴趣点类型}}以查看Java版可用的兴趣点ID和兴趣点标签。",
+            "new": ": 指定要定位的兴趣点类型或标签。",
+            "expected_matches": 1,
+            "reason": "保留兴趣点筛选用途，删除跨页引用和版本旁注。"
+        },
+        {
+            "old": ": 指定要定位的兴趣点类型ID。参见{{slink|兴趣点|兴趣点类型}}以查看可用的兴趣点类型ID。",
+            "new": ": 指定要定位的兴趣点类型。",
+            "expected_matches": 1,
+            "reason": "保留类型选择用途，删除目录引用。"
+        },
+        {
+            "old": ": 指定要定位的兴趣点标签。参见{{slink|兴趣点|兴趣点类型}}以查看可用的兴趣点标签。",
+            "new": ": 指定要定位的兴趣点标签。",
+            "expected_matches": 1,
+            "reason": "保留标签选择用途，删除目录引用。"
+        },
+        {
+            "old": ": 指定要定位的结构的命名空间ID{{only|JE|for=或结构标签}}。参见{{slink|生成结构|可被定位的结构}}{{only|JE|for=及{{slink|Java版标签/结构}}}}以查看所有可用的结构ID{{only|JE|for=和结构标签}}。",
+            "new": ": 指定要定位的结构ID。",
+            "expected_matches": 1,
+            "reason": "保留结构定位用途，删除目录引用和标签旁注。"
+        }
+    ]
+}

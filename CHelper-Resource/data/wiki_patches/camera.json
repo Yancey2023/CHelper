@@ -1,0 +1,288 @@
+{
+    "version": 1,
+    "reason": "为资源中复用的同名相机实体目标提供一致短名；不改写两处不同的用途原文。",
+    "replacements": [
+        {
+            "old": "{{argument|be=1|red: int|int}}、{{argument|be=1|green: int|int}}和{{argument|be=1|blue: int|int}}\n: 指定相机视角的RGB颜色。\n: {{arg desc|be=int}}且必须在0和255之间（含）。\r\n: 覆盖层淡入完成后为完全不透明，且不能指定半透明值。颜色在一条淡入淡出生效期间不变，新指令所给的颜色被忽略。\r\n: 省略<code>color</code>时默认为0、0、0，即黑色。",
+            "new": "; 关键字 <code>color</code>\r\n: 指定淡入淡出使用的颜色，并通过红、绿、蓝分量设置。brief: 颜色\r\n: 覆盖层淡入完成后为完全不透明，不能指定半透明值；一条淡入淡出生效期间颜色不变，新指令所给颜色会被忽略。默认颜色为黑色（0、0、0）。\r\n\r\n{{argument|be=1|red: int|int}}\r\n: 指定相机视角颜色的红色分量。brief: 红色分量\r\n\r\n{{argument|be=1|green: int|int}}\r\n: 指定相机视角颜色的绿色分量。brief: 绿色分量\r\n\r\n{{argument|be=1|blue: int|int}}\r\n: 指定相机视角颜色的蓝色分量。brief: 蓝色分量",
+            "expected_matches": 1,
+            "reason": "按用户授权删除省略color时的行为表述，保留颜色用途、显式颜色限制和独立默认颜色。"
+        },
+        {
+            "old": "{{argument|be=1|xViewOffset: float|Float}}和{{argument|be=1|yViewOffset: float|Float}}\n: 指定相机视角的偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效。\n: {{arg desc|be=Float}}且必须在-64和64之间（含）。",
+            "new": "{{argument|be=1|xViewOffset: float|Float}}\n: 指定相机视角的X轴偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效，brief: 视角X轴偏移\n\n{{argument|be=1|yViewOffset: float|Float}}\n: 指定相机视角的Y轴偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效，brief: 视角Y轴偏移",
+            "expected_matches": 1,
+            "reason": "按资源中独立的xViewOffset和yViewOffset参数拆开原文共同说明；明确各自轴向、follow_orbit条件及-64至64范围。"
+        },
+        {
+            "old": ":* <code>... '''fade''' ...</code>",
+            "new": ":* <code>... '''fade''' ...</code>\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "人工补充fade语法用途：当前中文Wiki页面的淡入淡出时长、颜色说明及示例表明，该分支为目标玩家相机视角设置淡入淡出效果。"
+        },
+        {
+            "old": ":* <code>... fade ...</code>",
+            "new": ":* <code>... fade ...</code>\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "在简化语法树中说明fade分支用途；依据本页淡入淡出时长、颜色参数说明及示例。"
+        },
+        {
+            "old": ": <code>camera <players: target> fade</code>",
+            "new": ": <code>camera <players: target> fade</code>\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "在完整语法表中说明fade分支用途；依据本页淡入淡出时长、颜色参数说明及示例。"
+        },
+        {
+            "old": ": <code>camera <players: target> fade color <red: int> <green: int> <blue: int></code>",
+            "new": ": <code>camera <players: target> fade color <red: int> <green: int> <blue: int></code>\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "为含color选项的完整fade语法保留相同用途说明；颜色具体作用由参数段说明。"
+        },
+        {
+            "old": ": <code>camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float></code>",
+            "new": ": <code>camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float></code>\r\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "该语法分支对目标玩家设置淡入淡出效果；三段时长职责由time组和各参数条目说明。"
+        },
+        {
+            "old": ": <code>camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float> color <red: int> <green: int> <blue: int></code>",
+            "new": ": <code>camera <players: target> fade time <fadeInSeconds: float> <holdSeconds: float> <fadeOutSeconds: float> color <red: int> <green: int> <blue: int></code>\r\n:: 为目标玩家的相机视角设置淡入淡出效果。",
+            "expected_matches": 1,
+            "reason": "该语法分支对目标玩家设置淡入淡出效果；三段时长职责由time组和各参数条目说明。"
+        },
+        {
+            "old": ": 指定相机将要固定于的实体。",
+            "new": ": <code>attach_to_entity</code>中指定固定实体；<code>target_entity</code>中指定聚焦实体（仅<code>minecraft:free</code>预设可用）。brief: 相机实体",
+            "expected_matches": 1,
+            "reason": "将两个同名entity: target参数定义统一为真实语法分支用途：attach_to_entity固定目标，target_entity聚焦目标；free预设限制只适用于后者。"
+        },
+        {
+            "old": ": 必须是{{cd|d=pretty|in_back|in_bounce|in_circ|in_cubic|in_elastic|in_expo|in_out_back|in_out_bounce|in_out_circ|in_out_cubic|in_out_elastic|in_out_expo|in_out_quad|in_out_quart|in_out_quint|in_out_sine|in_quad|in_quart|in_quint|in_sine|linear|out_back|out_bounce|out_circ|out_cubic|out_elastic|out_expo|out_quad|out_quart|out_quint|out_sine|spring}}之一。",
+            "new": ": 必须为以下其中之一：\n:* <code>in_back</code> — 缓入时先短暂向反方向偏移，再朝目标移动。\n:* <code>in_bounce</code> — 缓入并呈弹跳变化。\n:* <code>in_circ</code> — 缓入圆弧型曲线。\n:* <code>in_cubic</code> — 缓入三次曲线。\n:* <code>in_elastic</code> — 缓入时带弹性振荡。\n:* <code>in_expo</code> — 缓入指数型曲线。\n:* <code>in_out_back</code> — 起点先短暂反向偏移，终点越过后回弹，两端缓入缓出。\n:* <code>in_out_bounce</code> — 两端缓入缓出并呈弹跳变化。\n:* <code>in_out_circ</code> — 两端缓入缓出的圆弧型曲线。\n:* <code>in_out_cubic</code> — 两端缓入缓出的三次曲线。\n:* <code>in_out_elastic</code> — 两端缓入缓出并带弹性振荡。\n:* <code>in_out_expo</code> — 两端缓入缓出的指数型曲线。\n:* <code>in_out_quad</code> — 两端缓入缓出的二次曲线。\n:* <code>in_out_quart</code> — 两端缓入缓出的四次曲线。\n:* <code>in_out_quint</code> — 两端缓入缓出的五次曲线。\n:* <code>in_out_sine</code> — 两端缓入缓出的正弦曲线。\n:* <code>in_quad</code> — 缓入二次曲线。\n:* <code>in_quart</code> — 缓入四次曲线。\n:* <code>in_quint</code> — 缓入五次曲线。\n:* <code>in_sine</code> — 缓入正弦曲线。\n:* <code>linear</code> — 匀速线性变化。\n:* <code>out_back</code> — 快速起步，越过终点后回落。\n:* <code>out_bounce</code> — 快速起步并呈弹跳变化。\n:* <code>out_circ</code> — 缓出圆弧型曲线。\n:* <code>out_cubic</code> — 缓出三次曲线。\n:* <code>out_elastic</code> — 缓出时带弹性振荡。\n:* <code>out_expo</code> — 缓出指数型曲线。\n:* <code>out_quad</code> — 缓出二次曲线。\n:* <code>out_quart</code> — 缓出四次曲线。\n:* <code>out_quint</code> — 缓出五次曲线。\n:* <code>out_sine</code> — 缓出正弦曲线。\n:* <code>spring</code> — 弹簧式振荡过渡。",
+            "expected_matches": 2,
+            "reason": "保留原有32项ID并规范固定枚举引导；每项简述为人工补充，依据常见曲线名称解释，不是中文 Minecraft Wiki 原文。"
+        },
+        {
+            "old": ":* <code>... '''clear'''</code>",
+            "new": ":* <code>... '''clear'''</code>\n:: 清除指定玩家的相机视角效果。",
+            "expected_matches": 1,
+            "reason": "人工补充通用动作说明：Wiki语法中的players: target可指定目标玩家，说明清除该命令所作用的目标相机视角；不得把示例中的@a推广为所有玩家。"
+        },
+        {
+            "old": ": 指定要将相机视角聚焦的实体。只在使用<code>minecraft:free</code>预设时有效。",
+            "new": ": <code>attach_to_entity</code>中指定固定实体；<code>target_entity</code>中指定聚焦实体（仅<code>minecraft:free</code>预设可用）。brief: 相机实体",
+            "expected_matches": 1,
+            "reason": "将中文Wiki对entity: target的聚焦说明与attach_to_entity语法用途合并为一个共享参数描述；free预设限制仅落在target_entity聚焦分支，固定目标不受该限制。"
+        },
+        {
+            "old": ":* <code>... '''attach_to_entity''' <entity: target></code>",
+            "new": ":* <code>... '''attach_to_entity''' <entity: target></code>\n:: 将相机固定到实体上。",
+            "expected_matches": 1,
+            "reason": "说明摘自History对attach_to_entity语法行为的原句。"
+        },
+        {
+            "old": ":* <code>... '''detach_from_entity'''</code>",
+            "new": ":* <code>... '''detach_from_entity'''</code>\n:: 将相机取消固定于实体上。",
+            "expected_matches": 1,
+            "reason": "说明摘自History对detach_from_entity语法行为的原句。"
+        },
+        {
+            "old": ":* <code>... '''fov_clear''' [fovEaseTime: float] [fovEaseType: Easing]</code>",
+            "new": ":* <code>... '''fov_clear''' [fovEaseTime: float] [fovEaseType: Easing]</code>\n:: 清除相机视场角效果。",
+            "expected_matches": 1,
+            "reason": "区分fov_clear的清除动作与fov_set的设置动作，保留各自用途。"
+        },
+        {
+            "old": ":* <code>... '''fov_set''' <fov_value: float> [fovEaseTime: float] [fovEaseType: Easing]</code>",
+            "new": ":* <code>... '''fov_set''' <fov_value: float> [fovEaseTime: float] [fovEaseType: Easing]</code>\n:: 设置相机视场角。",
+            "expected_matches": 1,
+            "reason": "区分fov_set的设置动作与fov_clear的清除动作，保留各自用途。"
+        },
+        {
+            "old": ":* <code>... '''play_spline''' <name: string></code>",
+            "new": ":* <code>... '''play_spline''' <name: string></code>\n:: 播放行为包中的样条。",
+            "expected_matches": 1,
+            "reason": "精简play_spline用途，保留行为包样条来源和播放动作。"
+        },
+        {
+            "old": ": 指定相机视角的位置。只在使用<code>minecraft:free</code>预设时有效。",
+            "new": ": 指定相机视角的位置。只在使用<code>minecraft:free</code>预设时有效。brief: 相机位置",
+            "expected_matches": 1,
+            "reason": "position的原始brief过长，为共享pos资源节点设置简短标签。"
+        },
+        {
+            "old": "* <code>... '''remove_target'''</code>\n",
+            "new": "* <code>... '''remove_target'''</code>\n:: 清除相机当前的实体聚焦目标。\n",
+            "expected_matches": 1,
+            "reason": "人工补充说明：依据命令名称和相机目标语境，补足该动作的父节点用途；不是中文 Minecraft Wiki 原文。"
+        },
+        {
+            "old": "* <code>... remove_target</code>\n",
+            "new": "* <code>... remove_target</code>\n:: 清除相机当前的实体聚焦目标。\n",
+            "expected_matches": 1,
+            "reason": "人工补充说明：为简化语法树中的 inline 动作补充用途；不是中文 Minecraft Wiki 原文。"
+        },
+        {
+            "old": ": 已有一条淡入淡出正在播放时，新指令与之合并：淡入时长取两者中的较快者，开始淡出与结束的时刻取两者中的较晚者，透明度以当前值为起点，颜色取正在播放的一条。<ref name=\"camera-fade\">[https://learn.microsoft.com/zh-cn/minecraft/creator/documents/CameraSystem/CameraCommandIntroduction Camera System Introduction]，章节“Combining fades”和“Limitations on fades”，Microsoft Learn。</ref>\n: 单条命令的三段时长各自不超过10秒，合并后的总时长可超过10秒。三段之和不足0.5秒时，保持段延长至补足0.5秒。\n: 省略<code>time</code>时默认为1、0.5、1。",
+            "new": ": 已有一条淡入淡出正在播放时，新指令与之合并：淡入时长取两者中的较快者，开始淡出与结束的时刻取两者中的较晚者，透明度以当前值为起点，颜色取正在播放的一条。\n: 单条命令的三段时长各自不超过10秒，合并后的总时长可超过10秒。三段之和不足0.5秒时，保持段延长至补足0.5秒。\n: 三段时长默认值为1、0.5、1秒。",
+            "expected_matches": 1,
+            "reason": "按用户授权删除省略time时的行为表述，保留时长约束和独立默认数值。"
+        },
+        {
+            "old": "{{argument|be=1|fadeInSeconds: float|float}}、{{argument|be=1|holdSeconds: float|float}}和{{argument|be=1|fadeOutSeconds: float|float}}\r\n: 指定相机视角的淡入、保持和淡出持续时间，单位为秒。\r\n: {{arg desc|be=float}}且必须在0.0和10.0之间（含）\r\n: 已有一条淡入淡出正在播放时，新指令与之合并：淡入时长取两者中的较快者，开始淡出与结束的时刻取两者中的较晚者，透明度以当前值为起点，颜色取正在播放的一条。\r\n: 单条命令的三段时长各自不超过10秒，合并后的总时长可超过10秒。三段之和不足0.5秒时，保持段延长至补足0.5秒。\r\n: 三段时长默认值为1、0.5、1秒。",
+            "new": "; 关键字 <code>time</code>\r\n: 指定淡入、保持和淡出的持续时间，单位为秒。\r\n: 已有一条淡入淡出正在播放时，新指令与之合并：淡入时长取较快者，开始淡出与结束时刻取较晚者，透明度从当前值开始，颜色沿用正在播放的一条。\r\n: \r\n: 三段时长默认值依次为1、0.5、1秒。\r\n: brief: 三段时长\r\n\r\n{{argument|be=1|fadeInSeconds: float|float}}\r\n: 指定淡入持续时间，单位为秒。brief: 淡入时长\r\n: {{arg desc|be=float}}\r\n\r\n{{argument|be=1|holdSeconds: float|float}}\r\n: 指定保持持续时间，单位为秒。brief: 保持时长\r\n: {{arg desc|be=float}}\r\n\r\n{{argument|be=1|fadeOutSeconds: float|float}}\r\n: 指定淡出持续时间，单位为秒。brief: 淡出时长\r\n: {{arg desc|be=float}}",
+            "expected_matches": 1,
+            "reason": "按用户授权删除省略time时的行为表述，保留时长用途、范围、合并效果与默认数值。"
+        },
+        {
+            "old": ": 指定相机视场角平滑过渡的持续时间（秒），默认为0。",
+            "new": ": 指定相机视场角平滑过渡的持续时间（秒），默认为0。brief: 视场角过渡时长",
+            "expected_matches": 1,
+            "reason": "将过长brief缩短并保留视场角与时长职责。"
+        },
+        {
+            "old": ": 指定用于相机视场角的运镜函数/类型，默认为{{cd|linear}}。",
+            "new": ": 指定用于相机视场角的运镜函数/类型，默认为{{cd|linear}}。brief: 视场角运镜类型",
+            "expected_matches": 1,
+            "reason": "将过长brief缩短并保留视场角运镜类型职责。"
+        },
+        {
+            "old": ": 指定相机视角平滑过渡的持续时间（秒）。只在使用{{cd|minecraft:free}}预设时有效。",
+            "new": ": 指定相机视角平滑过渡的持续时间（秒）。只在使用{{cd|minecraft:free}}预设时有效。brief: 相机过渡时长",
+            "expected_matches": 1,
+            "reason": "将过长brief缩短并保留相机过渡时长职责。"
+        },
+        {
+            "old": ": 指定用于相机视角的运镜函数/类型。只在使用{{cd|minecraft:free}}预设时有效。",
+            "new": ": 指定用于相机视角的运镜函数/类型。只在使用{{cd|minecraft:free}}预设时有效。brief: 相机运镜类型",
+            "expected_matches": 1,
+            "reason": "将过长brief缩短并保留相机运镜类型职责。"
+        },
+        {
+            "old": ": 指定将自由视角的位置和朝向改为默认值（相机位置（0,0,0），旋转角度<code>xRot</code>=0，<code>yRot</code>=0）{{info needed|默认的位置和朝向并不稳定设置为对应json文件中所指向的位置和朝向，需要找到这种不稳定是因何引起}}。只在使用<code>minecraft:free</code>预设时有效。",
+            "new": ": 指定将自由视角的位置和朝向改为默认值（相机位置（0,0,0），旋转角度<code>xRot</code>=0，<code>yRot</code>=0）。原文注明这些默认值不会稳定地设置为对应JSON文件所指向的位置和朝向，原因未明。只在使用<code>minecraft:free</code>预设时有效。brief: 恢复默认位置朝向",
+            "expected_matches": 1,
+            "reason": "将过长brief缩短并保留参数恢复位置与朝向职责；将原文info needed中‘默认位置和朝向并不稳定设置为对应JSON文件中所指向的位置和朝向、原因待查’的提示写成资源可见的自然文字，避免抽取时丢失不确定性。"
+        },
+        {
+            "old": "{{argument|be=1|xEntityOffset: float|Float}}、{{argument|be=1|yEntityOffset: float|Float}}和{{argument|be=1|zEntityOffset: float|Float}}\n: 指定相机视角相对于实体的偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效。\n: {{arg desc|be=Float}}且必须在-64和64之间（含）。",
+            "new": "{{argument|be=1|xEntityOffset: float|Float}}\r\n: 指定相机视角相对于实体的X轴偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效。brief: 实体X偏移\r\n: {{arg desc|be=Float}}\r\n\r\n{{argument|be=1|yEntityOffset: float|Float}}\r\n: 指定相机视角相对于实体的Y轴偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效。brief: 实体Y偏移\r\n: {{arg desc|be=Float}}\r\n\r\n{{argument|be=1|zEntityOffset: float|Float}}\r\n: 指定相机视角相对于实体的Z轴偏移量。只在使用<code>minecraft:follow_orbit</code>预设时有效。brief: 实体Z偏移\r\n: {{arg desc|be=Float}}",
+            "expected_matches": 1,
+            "reason": "沿用原文说明，按X/Y/Z自然拆分参数标题；每个brief保留对应轴与实体相对参照，且完整说明继续保留follow_orbit适用范围。"
+        },
+        {
+            "old": "{{argument|be=1|xTargetCenterOffset: float|Float}}、{{argument|be=1|yTargetCenterOffset: float|Float}}和{{argument|be=1|zTargetCenterOffset: float|Float}}\n: 指定相机视角相对于聚焦/目标实体中心的偏移量。只在使用<code>minecraft:free</code>预设时有效。",
+            "new": "{{argument|be=1|xTargetCenterOffset: float|Float}}\r\n: 指定相机视角相对于聚焦/目标实体中心的X轴偏移量。只在使用<code>minecraft:free</code>预设时有效。brief: 目标中心X偏移\r\n\r\n{{argument|be=1|yTargetCenterOffset: float|Float}}\r\n: 指定相机视角相对于聚焦/目标实体中心的Y轴偏移量。只在使用<code>minecraft:free</code>预设时有效。brief: 目标中心Y偏移\r\n\r\n{{argument|be=1|zTargetCenterOffset: float|Float}}\r\n: 指定相机视角相对于聚焦/目标实体中心的Z轴偏移量。只在使用<code>minecraft:free</code>预设时有效。brief: 目标中心Z偏移",
+            "expected_matches": 1,
+            "reason": "沿用原文说明，按X/Y/Z自然拆分参数标题；每个brief保留对应轴与目标实体中心参照，且完整说明继续保留free适用范围。"
+        },
+        {
+            "old": ":* <code>... '''target_entity''' <entity: target> ...</code>\n:**",
+            "expected_matches": 1,
+            "reason": "人工补充：将参数段已说明的target_entity用途和free预设适用范围写在语法分支下，作为该文本节点的自然说明。",
+            "new": ":* <code>... '''target_entity''' <entity: target> ...</code>\n:: 将相机视角聚焦到指定实体。只在使用<code>minecraft:free</code>预设时有效。\n:**"
+        },
+        {
+            "old": ":* <code>... target_entity <entity: target> [target_center_offset <xTargetCenterOffset: float> <yTargetCenterOffset: float> <zTargetCenterOffset: float>]</code>",
+            "new": ":* <code>... target_entity <entity: target> [target_center_offset <xTargetCenterOffset: float> <yTargetCenterOffset: float> <zTargetCenterOffset: float>]</code>\r\n::* 将相机视角聚焦到指定实体。只在使用<code>minecraft:free</code>预设时有效。",
+            "expected_matches": 1,
+            "reason": "在简化语法树中为target_entity分支写明其聚焦用途和free预设限制；内容与相同命令分支的原参数说明一致。"
+        },
+        {
+            "old": ": <code>camera <players: target> target_entity <entity: target></code>",
+            "new": ": <code>camera <players: target> target_entity <entity: target></code>\n:: 将相机视角聚焦到指定实体。只在使用<code>minecraft:free</code>预设时有效。",
+            "expected_matches": 1,
+            "reason": "在展开语法列表中标明target_entity用途及free预设适用范围，保留源语法层级。"
+        },
+        {
+            "old": ": <code>camera <players: target> target_entity <entity: target> target_center_offset <xTargetCenterOffset: float> <yTargetCenterOffset: float> <zTargetCenterOffset: float></code>",
+            "new": ": <code>camera <players: target> target_entity <entity: target> target_center_offset <xTargetCenterOffset: float> <yTargetCenterOffset: float> <zTargetCenterOffset: float></code>\r\n:: 将相机视角聚焦到指定实体。只在使用<code>minecraft:free</code>预设时有效。",
+            "expected_matches": 1,
+            "reason": "为含target_center_offset的展开target_entity语法分支提供同样的聚焦用途说明；偏移参数仍按其自身说明独立提取。"
+        },
+        {
+            "old": "== 参数 ==\n{{info needed section}}",
+            "new": "== 参数 ==\n{{info needed section}}\n; 关键字 <code>set</code>\n: 设置指定玩家的相机视角或预设。\n; 关键字 <code>ease</code>\n: 控制相机视角过渡。brief: 过渡设置\n; 关键字 <code>entity_offset</code>\n: 指定相机相对于实体的偏移量。\n; 关键字 <code>facing</code>\n: 指定相机朝向的实体或坐标。\n; 关键字 <code>pos</code>\n: 指定相机位置；仅在使用<code>minecraft:free</code>预设时有效。\n; 关键字 <code>rot</code>\n: 设置相机X、Y轴旋转角度；<code>minecraft:follow_orbit</code>预设下还会修改玩家朝向。\n; 关键字 <code>view_offset</code>\n: 指定<code>minecraft:follow_orbit</code>预设下相机视角的偏移量。\n; 关键字 <code>target_entity</code>\n: <code>attach_to_entity</code>中指定固定目标；<code>target_entity</code>中指定聚焦目标，仅在<code>minecraft:free</code>预设下有效。\n; 关键字 <code>target_center_offset</code>\n: 指定<code>minecraft:free</code>预设下相机相对于目标实体中心的偏移量。",
+            "expected_matches": 1,
+            "reason": "依据同页参数说明，分别为set、ease及组合参数关键字写明简短用途；为避免同一text节点重复拼接各轴说明，组节点概括输入组成，轴向参数仍由各自参数条目说明。"
+        },
+        {
+            "old": ": 指定相机视角的垂直旋转角度。在使用<code>minecraft:follow_orbit</code>预设的情况下，还将修改玩家的朝向。",
+            "new": ": 指定相机视角绕X轴的旋转角度（垂直旋转）。在使用<code>minecraft:follow_orbit</code>预设时，还将修改玩家的朝向。brief: 垂直旋转",
+            "expected_matches": 1,
+            "reason": "按原文角度定义和资源xRot节点名称明确垂直旋转对应的X轴；仅在原文限定的follow_orbit预设下会修改玩家朝向。"
+        },
+        {
+            "old": ": 指定相机视角的水平旋转角度。在使用<code>minecraft:follow_orbit</code>预设的情况下，还将修改玩家的朝向。",
+            "new": ": 指定相机视角绕Y轴的旋转角度（水平旋转）。在使用<code>minecraft:follow_orbit</code>预设时，还将修改玩家的朝向。brief: 水平旋转",
+            "expected_matches": 1,
+            "reason": "按原文角度定义和资源yRot节点名称明确水平旋转对应的Y轴；follow_orbit下修改玩家朝向的条件来自原文。"
+        },
+        {
+            "old": ": {{arg desc|be=float}}由于游戏限制，实际的有效值范围在30和110之间（含）。",
+            "new": ": {{arg desc|be=float}}",
+            "expected_matches": 1,
+            "reason": "删除数值范围或越界处理限制，保留参数用途和必要分支条件。"
+        },
+        {
+            "old": ": {{arg desc|be=RelativeFloat}}且必须在-90和90之间（含）。",
+            "new": ": {{arg desc|be=RelativeFloat}}",
+            "expected_matches": 1,
+            "reason": "删除数值范围或越界处理限制，保留参数用途和必要分支条件。"
+        },
+        {
+            "old": "默认颜色为黑色（0、0、0）。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按用户最新要求删除color父说明中的独立默认颜色附注，保留颜色输入、透明度及淡入淡出期间的行为。"
+        },
+        {
+            "old": ": 三段时长默认值依次为1、0.5、1秒。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按用户最新要求删除time父说明中的默认时长数值，保留秒单位和淡入淡出合并行为。"
+        },
+        {
+            "old": "，默认为0。",
+            "new": "。",
+            "expected_matches": 1,
+            "reason": "删除fovEaseTime description中的默认数值，保留时长用途和秒单位。"
+        },
+        {
+            "old": "，默认为{{cd|linear}}。",
+            "new": "。",
+            "expected_matches": 1,
+            "reason": "删除fovEaseType description中的默认枚举值，保留运镜类型用途及完整曲线选项。"
+        },
+        {
+            "old": ": 指定将自由视角的位置和朝向改为默认值（相机位置（0,0,0），旋转角度<code>xRot</code>=0，<code>yRot</code>=0）。原文注明这些默认值不会稳定地设置为对应JSON文件所指向的位置和朝向，原因未明。只在使用<code>minecraft:free</code>预设时有效。brief: 恢复默认位置朝向",
+            "new": ": 恢复自由视角的位置和朝向。只在使用<code>minecraft:free</code>预设时有效。brief: 恢复默认位置朝向",
+            "expected_matches": 1,
+            "reason": "保留default输入值的恢复位置与朝向用途及free预设条件；删除具体默认坐标、依赖默认值的补充解释；brief和参数值名不变。"
+        },
+        {
+            "old": ": 必须为<code>default</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除default输入的限制句，值名由参数syntax自身保留。"
+        },
+        {
+            "old": "覆盖层淡入完成后为完全不透明，不能指定半透明值；一条淡入淡出生效期间颜色不变，新指令所给颜色会被忽略。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "精简color关键字说明，仅保留颜色用途；透明度和生效期间行为属于次要限制及副作用。"
+        },
+        {
+            "old": "已有一条淡入淡出正在播放时，新指令与之合并：淡入时长取较快者，开始淡出与结束时刻取较晚者，透明度从当前值开始，颜色沿用正在播放的一条。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "精简time关键字说明，保留淡入、保持和淡出时长用途与秒单位。"
+        },
+        {
+            "old": ": 相机视角/预设。",
+            "new": ": 指定要使用的相机预设。brief: 相机视角/预设",
+            "expected_matches": 1,
+            "reason": "为preset参数保留明确的预设选择用途。"
+        }
+    ]
+}

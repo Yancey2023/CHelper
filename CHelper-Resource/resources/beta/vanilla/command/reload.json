@@ -9,12 +9,12 @@
     "node": {
         "[all: reload_all]": {
             "type": "NORMAL_ID",
-            "brief": "重载所有包",
-            "description": "重载所有行为包和资源包，并让玩家重新加入世界。",
+            "brief": "重载所有行为包和资源包",
+            "description": "all：重载所有行为包和资源包。",
             "contents": [
                 {
                     "name": "all",
-                    "description": "重载所有行为包和资源包，并让玩家重新加入世界。"
+                    "description": "重载所有行为包和资源包。"
                 }
             ],
             "ignoreError": true

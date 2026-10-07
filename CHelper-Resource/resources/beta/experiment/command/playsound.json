@@ -2,45 +2,46 @@
     "name": [
         "playsound"
     ],
-    "description": "在指定位置向玩家播放声音事件。",
+    "description": "以指定音量和音高播放声音事件。",
     "syntax": [
         "/playsound <sound: string> [player: target] [position: x y z] [volume: float] [pitch: float] [minimumVolume: float]"
     ],
     "node": {
         "<sound: string>": {
             "type": "NORMAL_ID",
-            "brief": "声音",
-            "description": "要播放的声音事件。",
+            "brief": "要播放的声音事件",
+            "description": "指定要播放的声音事件。",
             "ignoreError": true,
             "key": "sound"
         },
         "[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "接收声音的玩家。",
+            "description": "指定播放声音的目标。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "播放声音的目标"
         },
         "[position: x y z]": {
             "type": "POSITION",
-            "brief": "方位",
-            "description": "声音发出的坐标。"
+            "brief": "声音发出的方位",
+            "description": "指定声音发出的方位。"
         },
         "[volume: float]": {
             "type": "FLOAT",
-            "brief": "范围",
-            "description": "控制声音响度与可听范围。"
+            "brief": "相对采样响度倍率",
+            "description": "指定声音的播放音量倍率。"
         },
         "[pitch: float]": {
             "type": "FLOAT",
-            "brief": "音调",
-            "description": "声音的音高和播放速度。"
+            "brief": "声音的音高",
+            "description": "指定声音的音高。"
         },
         "[minimumVolume: float]": {
             "type": "FLOAT",
-            "brief": "范围外音量",
-            "description": "正常可闻范围外的声音音量。"
+            "brief": "范围外最小音量",
+            "description": "指定正常可闻范围外的播放音量。"
         }
     }
 }

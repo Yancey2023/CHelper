@@ -2,14 +2,14 @@
     "name": [
         "gametest"
     ],
-    "description": "管理和运行游戏测试框架",
+    "description": "管理和运行游戏测试框架。",
     "syntax": [
         "/gametest clearall",
         "/gametest create <testName: string> [width: int] [height: int] [depth: int]",
         "/gametest pos",
         "/gametest run <testName: string> <stopOnFailure: Boolean> <repeatCount: int> [rotationSteps: int]",
         "/gametest run <testName: string> [rotationSteps: int]",
-        "/gametest runset [tag: string] [rotationSteps: int]",
+        "/gametest runset <tag list (optional flags 'withoutTags' and 'rotationSteps'): message>",
         "/gametest runsetuntilfail [tag: string] [rotationSteps: int]",
         "/gametest runthese",
         "/gametest runthis",
@@ -18,117 +18,129 @@
     "node": {
         "clearall": {
             "type": "TEXT",
-            "description": "清除所有的GameTest",
+            "description": "清除所有的测试。",
             "data": {
                 "name": "clearall",
-                "description": "清除所有的GameTest"
+                "description": "清除所有的测试。"
             }
         },
         "create": {
             "type": "TEXT",
-            "description": "创建GameTest",
+            "description": "创建测试。",
             "data": {
                 "name": "create",
-                "description": "创建GameTest"
+                "description": "创建测试。"
             }
         },
         "<testName: string>": {
             "type": "STRING",
-            "brief": "名称",
-            "description": "GameTest的名称",
+            "brief": "测试的名称",
+            "description": "指定测试的名称。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "[width: int]": {
             "type": "INTEGER",
-            "description": "测试结构的X轴大小"
+            "description": "指定结构的X轴大小。",
+            "brief": "结构的X轴大小"
         },
         "[height: int]": {
             "type": "INTEGER",
-            "description": "测试结构的Y轴大小"
+            "description": "指定结构的Y轴大小。",
+            "brief": "结构的Y轴大小"
         },
         "[depth: int]": {
             "type": "INTEGER",
-            "description": "测试结构的Z轴大小"
+            "description": "指定结构的Z轴大小。",
+            "brief": "结构的Z轴大小"
         },
         "pos": {
             "type": "TEXT",
-            "description": "在200格半径范围内寻找最近的GameTest结构方块",
+            "description": "定位最近的测试结构。",
             "data": {
                 "name": "pos",
-                "description": "在200格半径范围内寻找最近的GameTest结构方块"
+                "description": "定位最近的测试结构。"
             }
         },
         "run": {
             "type": "TEXT",
-            "description": "执行一个特定的GameTest",
+            "description": "执行一个特定的测试。",
             "data": {
                 "name": "run",
-                "description": "执行一个特定的GameTest"
+                "description": "执行一个特定的测试。"
             }
         },
         "<stopOnFailure: Boolean>": {
             "type": "BOOLEAN",
-            "brief": "失败停止",
-            "description": "测试失败后是否停止后续测试",
-            "descriptionTrue": "测试失败时停止后续测试",
-            "descriptionFalse": "测试失败时继续执行其他测试"
+            "description": "指定测试失败时是否停止后续执行。",
+            "descriptionTrue": "测试失败时停止后续执行。",
+            "descriptionFalse": "测试失败时继续后续执行。",
+            "brief": "失败时停止"
         },
         "<repeatCount: int>": {
             "type": "INTEGER",
-            "description": "重复次数",
-            "min": 1
+            "description": "指定测试的执行次数。",
+            "min": 1,
+            "brief": "测试的执行次数"
         },
         "[rotationSteps: int]": {
             "type": "INTEGER",
-            "description": "指定测试结构的旋转角度"
+            "description": "指定测试的旋转角度。",
+            "brief": "测试的旋转角度"
         },
         "runset": {
             "type": "TEXT",
-            "description": "创建和执行所有GameTest",
+            "description": "创建并执行测试。",
             "data": {
                 "name": "runset",
-                "description": "创建和执行所有GameTest"
+                "description": "创建并执行测试。"
             }
         },
         "[tag: string]": {
             "type": "STRING",
-            "brief": "名称",
-            "description": "要运行的游戏测试标签",
+            "brief": "测试标签",
+            "description": "指定用于筛选要执行的测试的标签。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "runsetuntilfail": {
             "type": "TEXT",
-            "description": "创建和执行所有GameTest，直到某个执行失败",
+            "description": "创建并执行测试，直至有测试失败。",
             "data": {
                 "name": "runsetuntilfail",
-                "description": "创建和执行所有GameTest，直到某个执行失败"
+                "description": "创建并执行测试，直至有测试失败。"
             }
         },
         "runthese": {
             "type": "TEXT",
-            "description": "在200格半径范围内执行GameTest",
+            "description": "执行附近的测试。",
             "data": {
                 "name": "runthese",
-                "description": "在200格半径范围内执行GameTest"
+                "description": "执行附近的测试。"
             }
         },
         "runthis": {
             "type": "TEXT",
-            "description": "执行或重新执行15格半径内的GameTest结构方块",
+            "description": "执行或重新执行测试结构。",
             "data": {
                 "name": "runthis",
-                "description": "执行或重新执行15格半径内的GameTest结构方块"
+                "description": "执行或重新执行测试结构。"
             }
         },
         "stopall": {
             "type": "TEXT",
-            "description": "停止执行所有GameTest",
+            "description": "停止执行所有测试。",
             "data": {
                 "name": "stopall",
-                "description": "停止执行所有GameTest"
+                "description": "停止执行所有测试。"
             }
+        },
+        "<tag list (optional flags 'withoutTags' and 'rotationSteps'): message>": {
+            "type": "STRING",
+            "brief": "测试标签列表",
+            "description": "指定要执行的测试标签。",
+            "canContainSpace": true,
+            "ignoreLater": true
         }
     }
 }

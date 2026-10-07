@@ -1,0 +1,34 @@
+{
+    "version": 1,
+    "reason": "将 state 参数中已有的 enabled/disabled 解释拆分成 Wiki 枚举选项，便于分别提供说明。",
+    "replacements": [
+        {
+            "old": ":对于<code>... query ...</code>，如果未指定，则会查询所有的状态；如果已指定，则仅在当前权限状态为指定状态时命令执行成功。",
+            "new": ":在<code>query</code>语法中，指定状态后，仅当当前权限状态与所指定状态一致时命令才执行成功。",
+            "reason": "按用户授权移除query中未指定参数的行为说明；已有“指定权限状态”用途和enabled/disabled枚举足以说明该参数。"
+        },
+        {
+            "old": ":必须为<code>enabled</code>（启用）或<code>disabled</code>（禁用）。",
+            "new": ":必须为以下其中之一：\n:* {{cd|enabled}} — 启用\n:* {{cd|disabled}} — 禁用",
+            "reason": "选项名称及中文状态词均直接取自命令页面原句。"
+        },
+        {
+            "new": "查询或设置玩家的输入权限。",
+            "expected_matches": 1,
+            "reason": "精简命令简介，概括query与set用途。",
+            "old": "对玩家的权限状态进行指定操作。"
+        },
+        {
+            "new": "",
+            "expected_matches": 1,
+            "reason": "将query筛选职责并入state用途句，避免重复说明。",
+            "old": "在<code>query</code>语法中，指定状态后，仅当当前权限状态与所指定状态一致时命令才执行成功。"
+        },
+        {
+            "old": ":指定权限的状态。",
+            "new": ":指定权限状态；query时用于筛选结果。brief: 权限的状态",
+            "expected_matches": 1,
+            "reason": "精简state参数说明，保留query分支用于筛选权限状态的职责。"
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+{
+    // “entities2”模板已补上“的掉落物”，此处去掉后缀中多余的“的”，保留原有雪傀儡及剪掉南瓜头语义。
+    "entities/snow_golem_shear": "{{entities2|entity!snow_golem|'剪掉南瓜头后}}"
+}

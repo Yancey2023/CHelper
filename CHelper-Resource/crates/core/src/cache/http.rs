@@ -32,10 +32,14 @@ impl HttpCache {
                 .parse()
                 .unwrap(),
         );
-        let client = reqwest::Client::builder()
+        let builder = reqwest::Client::builder()
             .default_headers(headers)
-            .timeout(Duration::from_secs(300))
-            .build()?;
+            .timeout(Duration::from_secs(300));
+        // Match the system TLS stack on Windows: the default backend can fail
+        // handshakes with Wiki POST and Minecraft asset endpoints on this host.
+        #[cfg(windows)]
+        let builder = builder.tls_backend_native();
+        let client = builder.build()?;
         Ok(Self {
             client,
             data_dir,

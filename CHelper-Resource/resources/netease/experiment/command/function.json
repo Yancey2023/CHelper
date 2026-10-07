@@ -2,15 +2,15 @@
     "name": [
         "function"
     ],
-    "description": "运行行为包内的1个函数",
+    "description": "运行函数。",
     "syntax": [
         "/function <name: filepath>"
     ],
     "node": {
         "<name: filepath>": {
             "type": "STRING",
-            "brief": "函数名",
-            "description": "要执行的函数或函数标签",
+            "brief": "行为包函数",
+            "description": "指定要执行的行为包函数。",
             "canContainSpace": true,
             "ignoreLater": true
         }

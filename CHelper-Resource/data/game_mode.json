@@ -1,56 +1,43 @@
 {
     "content": [
         {
-            "name": "survival",
-            "description": "生存模式"
+            "name": "survival"
         },
         {
-            "name": "creative",
-            "description": "创造模式"
+            "name": "creative"
         },
         {
-            "name": "adventure",
-            "description": "冒险模式"
+            "name": "adventure"
         },
         {
-            "name": "spectator",
-            "description": "旁观者模式"
+            "name": "spectator"
         },
         {
-            "name": "default",
-            "description": "世界默认模式"
+            "name": "default"
         },
         {
-            "name": "s",
-            "description": "生存模式"
+            "name": "s"
         },
         {
-            "name": "c",
-            "description": "创造模式"
+            "name": "c"
         },
         {
-            "name": "a",
-            "description": "冒险模式"
+            "name": "a"
         },
         {
-            "name": "d",
-            "description": "世界默认模式"
+            "name": "d"
         },
         {
-            "name": "0",
-            "description": "生存模式"
+            "name": "0"
         },
         {
-            "name": "1",
-            "description": "创造模式"
+            "name": "1"
         },
         {
-            "name": "2",
-            "description": "冒险模式"
+            "name": "2"
         },
         {
-            "name": "5",
-            "description": "世界默认模式"
+            "name": "5"
         }
     ]
 }

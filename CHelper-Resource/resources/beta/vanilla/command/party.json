@@ -9,9 +9,10 @@
     "node": {
         "<message: message>": {
             "type": "STRING",
-            "description": "要发送给队伍成员的消息。",
+            "description": "指定要发送的消息。",
             "canContainSpace": true,
-            "ignoreLater": false
+            "ignoreLater": true,
+            "brief": "要发送的消息"
         }
     }
 }

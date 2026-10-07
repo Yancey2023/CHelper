@@ -10,31 +10,32 @@
     "node": {
         "<position: x y z>": {
             "type": "POSITION",
-            "brief": "位置",
+            "brief": "要被更改方块的位置",
             "description": "指定要被更改方块的位置。"
         },
         "<tileName: Block>|<tileName: Block> <blockStates: block states>": {
             "type": "BLOCK",
             "nodeBlockType": 0,
-            "description": "指定更改后的新方块及其方块状态。"
+            "description": "指定更改后的新方块。 指定新方块的方块状态。",
+            "brief": "新方块及其状态"
         },
         "[replace|destroy|keep]": {
             "type": "NORMAL_ID",
-            "brief": "更改方式",
-            "description": "选择更改方块时对原方块的处理方式。",
+            "brief": "方块更改的处理方式",
+            "description": "指定方块更改的处理方式",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "destroy",
-                    "description": "原方块以掉落物的形式掉落，并播放方块被破坏的音效。"
+                    "description": "破坏原方块并生成掉落物。"
                 },
                 {
                     "name": "keep",
-                    "description": "仅当原方块是空气类方块时才进行更改。"
+                    "description": "仅在原方块为空气时更改。"
                 },
                 {
                     "name": "replace",
-                    "description": "原方块不掉落物品，且不播放方块被破坏的音效。"
+                    "description": "替换原方块。"
                 }
             ]
         }

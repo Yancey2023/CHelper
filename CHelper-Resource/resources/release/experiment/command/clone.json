@@ -10,67 +10,68 @@
     "node": {
         "<begin: x y z>": {
             "type": "POSITION",
-            "brief": "源坐标1",
-            "description": "源区域一端的坐标"
+            "brief": "源区域一个角点的坐标",
+            "description": "指定源区域一个角点的坐标。"
         },
         "<end: x y z>": {
             "type": "POSITION",
-            "brief": "源坐标2",
-            "description": "源区域另一端的坐标"
+            "brief": "对角点",
+            "description": "指定源区域与begin相对的另一个角点坐标。"
         },
         "<destination: x y z>": {
             "type": "POSITION",
-            "brief": "目标区域的坐标",
-            "description": "目标区域坐标"
+            "brief": "目标区域起点",
+            "description": "指定目标区域的起始坐标。"
         },
         "[maskMode: MaskMode]": {
             "type": "NORMAL_ID",
-            "brief": "标记模式",
-            "description": "过滤被复制方块的方式",
+            "brief": "是否过滤被复制方块",
+            "description": "指定是否过滤被复制方块。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "masked",
-                    "description": "仅复制非空气方块。会保持目的区域中原本会被替换为空气的方块不变。"
+                    "description": "仅复制非空气方块。"
                 },
                 {
                     "name": "replace",
-                    "description": "复制所有方块，用源区域的方块覆盖目标区域中的所有方块。"
+                    "description": "复制源区域的所有方块。"
                 }
             ]
         },
         "[cloneMode: CloneMode]|<cloneMode: CloneMode>": {
             "type": "NORMAL_ID",
-            "brief": "复制模式",
-            "description": "对源区域的操作方式",
+            "brief": "对源区域的操作",
+            "description": "指定对源区域的操作。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "force",
-                    "description": "强制复制，即使源区域与目标区域有重叠。"
+                    "description": "允许源区域与目标区域重叠时复制。"
                 },
                 {
                     "name": "move",
-                    "description": "将源区域复制到目标区域，并将源区域替换为空气。在filtered遮罩模式下，只有被复制的方块才会被替换为空气。"
+                    "description": "将选中的源方块移动到目标区域。"
                 },
                 {
                     "name": "normal",
-                    "description": "不执行force与move。"
+                    "description": "按常规方式复制。"
                 }
             ]
         },
         "filtered": {
             "type": "TEXT",
-            "description": "按指定方块筛选复制内容",
+            "description": "只复制指定的方块。",
             "data": {
                 "name": "filtered",
-                "description": "按指定方块筛选复制内容"
+                "description": "只复制指定的方块。"
             }
         },
         "<tileName: Block> [blockStates: block states]": {
             "type": "BLOCK",
-            "description": "用于筛选的方块",
-            "nodeBlockType": 0
+            "description": "指定筛选方块。 指定方块状态筛选条件。",
+            "nodeBlockType": 0,
+            "brief": "筛选方块条件"
         }
     }
 }

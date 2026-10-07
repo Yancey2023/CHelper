@@ -9,8 +9,8 @@
     "node": {
         "<maxPlayers: int>": {
             "type": "INTEGER",
-            "brief": "玩家数量上限值",
-            "description": "设置可加入多人游戏的玩家数量上限。",
+            "brief": "要设置的玩家数量上限值",
+            "description": "指定要设置的玩家数量上限值。",
             "min": 0,
             "max": 40
         }

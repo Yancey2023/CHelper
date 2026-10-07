@@ -1,0 +1,54 @@
+{
+    "version": 1,
+    "reason": "为已明确限定为玩家的目标参数添加短标签，标签对应参数名称及命令语法。",
+    "replacements": [
+        {
+            "old": "{{argument|be=1|player: target|CommandSelector<Player>}}\n: {{arg desc|be=player}}",
+            "new": "{{argument|be=1|player: target|CommandSelector<Player>}}\n: {{arg desc|be=player}}\n: 指定要设置权限等级的玩家。",
+            "expected_matches": 1,
+            "reason": "人工补充参数说明：player: target指向permission set要设置权限等级的玩家；语法句的客户端/BDS可用性说明属于set动作整体，不应串到目标选择器节点。"
+        },
+        {
+            "old": "{{argument|be=1|player: target|CommandSelector<Player>}}\n: {{arg desc|be=player}}\n: 指定要设置权限等级的玩家。",
+            "new": "{{argument|be=1|player: target|CommandSelector<Player>}}\n: {{arg desc|be=player}}\n: 指定要设置权限等级的玩家。\n: brief: 目标玩家",
+            "expected_matches": 1,
+            "reason": "短标签说明该参数指向语法中的 player 目标。"
+        },
+        {
+            "old": "::在客户端上设置玩家的权限等级。虽在BDS中可见，但使用无效。",
+            "new": "::在客户端上设置玩家的权限等级。",
+            "expected_matches": 1,
+            "reason": "删除BDS中使用无效的限制补充，保留set在客户端设置玩家权限等级的用途。"
+        },
+        {
+            "old": "枚举或重新加载权限列表，或设置玩家的权限等级。",
+            "new": "在BDS中可枚举当前使用的权限列表或从permissions.json重新加载操作员列表；在客户端可设置玩家的权限等级。",
+            "expected_matches": 1,
+            "reason": "中文 Wiki 将 permission list 与 permission reload 限定为 BDS 可用，且 reload 从 permissions.json 读取操作员列表；permission set 的用途是客户端设置玩家权限等级。为命令简介标明三种用途各自适用的上下文，不增加命令节点。"
+        },
+        {
+            "old": "若未指定参数，则为[[设置]]中“{{tr|玩家从邀请加入时的权限|收到邀請後加入的玩家權限}}”对应的身份。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求删除权限参数未指定时读取设置默认身份的叙述；字段用途和访客、成员、操作员枚举保留。"
+        },
+        {
+            "old": "在BDS中可枚举当前使用的权限列表或从permissions.json重新加载操作员列表；在客户端可设置玩家的权限等级。",
+            "new": "管理玩家权限和操作员列表。",
+            "expected_matches": 1,
+            "reason": "将根介绍精简为核心用途，细分动作仍由子命令说明。"
+        },
+        {
+            "old": "枚举当前使用的权限列表，仅[[BDS]]中可见。",
+            "new": "枚举当前使用的权限列表。",
+            "expected_matches": 1,
+            "reason": "保留list子命令用途，删除可用版别旁注。"
+        },
+        {
+            "old": "在服务器上重新从<samp>permissions.json</samp>文件加载操作员列表，仅BDS中可见。",
+            "new": "重新加载操作员列表。",
+            "expected_matches": 1,
+            "reason": "保留reload子命令用途，删除文件来源及版别旁注。"
+        }
+    ]
+}

@@ -12,6 +12,7 @@ use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
 use regex::Regex;
 use serde_json::Value;
+use std::path::Path;
 use std::sync::OnceLock;
 use std::time::Duration;
 
@@ -24,7 +25,9 @@ fn urlencode(s: &str) -> String {
     let mut out = String::new();
     for b in s.bytes() {
         match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
             other => out.push_str(&format!("%{other:02X}")),
         }
     }
@@ -58,7 +61,13 @@ impl<'a> Scribunto<'a> {
             .ok_or_else(|| anyhow::anyhow!("获取 CSRF token 失败"))
     }
 
-    async fn exec_console(&self, title: &str, content: &str, question: &str, token: &str) -> Result<String> {
+    async fn exec_console(
+        &self,
+        title: &str,
+        content: &str,
+        question: &str,
+        token: &str,
+    ) -> Result<String> {
         let form = [
             ("action", "scribunto-console"),
             ("title", title),
@@ -134,7 +143,9 @@ fn simplify(value: &Value) -> Value {
 fn postprocess_enum_map(maps: &mut Value) {
     let Value::Object(obj) = maps else { return };
     for (_, submap) in obj.iter_mut() {
-        let Value::Object(entries) = submap else { continue };
+        let Value::Object(entries) = submap else {
+            continue;
+        };
         for (_, v) in entries.iter_mut() {
             let mut taken = std::mem::take(v);
             if let Value::Array(items) = &taken {
@@ -181,8 +192,8 @@ pub async fn fetch_standardized_translation(http: &HttpCache) -> Result<Value> {
             .exec_console(title, &content, "=mw.text.jsonEncode(p)", &token)
             .await
             .with_context(|| format!("执行 Scribunto 控制台失败: {title}"))?;
-        let parsed: Value =
-            serde_json::from_str(ret.trim()).with_context(|| format!("解析模块数据失败: {title}"))?;
+        let parsed: Value = serde_json::from_str(ret.trim())
+            .with_context(|| format!("解析模块数据失败: {title}"))?;
         let simplified = simplify(&parsed);
         if !target.is_empty() {
             result.insert(target.to_string(), simplified);
@@ -207,7 +218,10 @@ async fn convert_to_simplified_chinese(scribunto: &Scribunto<'_>, value: &mut Va
     }
     let title = "Module:Autolink";
     // 转换函数只依赖 Module:ZhConversion；content 用任一可读模块页即可
-    let content = scribunto.raw(title).await.unwrap_or_else(|_| "return {}".to_string());
+    let content = scribunto
+        .raw(title)
+        .await
+        .unwrap_or_else(|_| "return {}".to_string());
     let token = scribunto.csrf_token().await?;
     let func = "function(input) local zhconv = require('Module:ZhConversion'); local result = {}; \
         for i, item in ipairs(input) do result[i] = zhconv.to_cn(item); end return result; end";
@@ -221,9 +235,14 @@ async fn convert_to_simplified_chinese(scribunto: &Scribunto<'_>, value: &mut Va
         .exec_console(title, &content, &question, &token)
         .await
         .context("执行简繁转换失败")?;
-    let converted: Vec<String> = serde_json::from_str(ret.trim()).context("解析简繁转换结果失败")?;
+    let converted: Vec<String> =
+        serde_json::from_str(ret.trim()).context("解析简繁转换结果失败")?;
     if converted.len() != unique.len() {
-        bail!("简繁转换结果数量不匹配: {} vs {}", converted.len(), unique.len());
+        bail!(
+            "简繁转换结果数量不匹配: {} vs {}",
+            converted.len(),
+            unique.len()
+        );
     }
     let mapping: IndexMap<String, String> = unique.into_iter().zip(converted).collect();
     replace_strings(value, &mapping);
@@ -270,7 +289,9 @@ async fn fetch_lson_module(http: &HttpCache, title: &str) -> Result<Value> {
 /// 游戏规则类型表：camelCase 名称 → "int" | "bool"。
 pub async fn fetch_gamerule_type_value(http: &HttpCache) -> Result<IndexMap<String, String>> {
     let value = fetch_lson_module(http, "Module:Gamerule_type_values_BE").await?;
-    let Value::Object(obj) = value else { bail!("Gamerule_type_values_BE 不是对象") };
+    let Value::Object(obj) = value else {
+        bail!("Gamerule_type_values_BE 不是对象")
+    };
     let mut map = IndexMap::new();
     for (k, v) in obj {
         if let Some(s) = v.as_str() {
@@ -359,15 +380,37 @@ fn remove_html(text: &str) -> String {
     static CODE_RE: OnceLock<Regex> = OnceLock::new();
     let ref_re = cached_regex(&REF_RE, r"(?s)<ref\b[^>]*>.*?</ref>|<ref\b[^>]*?/?>");
     let code_re = cached_regex(&CODE_RE, r"(?s)</?code\b[^>]*?/?>");
-    code_re.replace_all(&ref_re.replace_all(text, ""), "").to_string()
+    code_re
+        .replace_all(&ref_re.replace_all(text, ""), "")
+        .to_string()
 }
 
 /// 游戏规则描述（小写 ID → 中文描述），移植 `update_translation.py::game_rule`。
-pub async fn fetch_gamerule_descriptions(http: &HttpCache) -> Result<IndexMap<String, String>> {
+pub async fn fetch_gamerule_descriptions(
+    http: &HttpCache,
+    patches_dir: &Path,
+    edition: &str,
+) -> Result<IndexMap<String, String>> {
     let url = raw_url("游戏规则");
     let content = http.get_text(&url, TTL).await?;
+    parse_gamerule_descriptions(&content, patches_dir, edition)
+}
+
+/// Apply shared and edition-specific source edits before extracting the table.
+/// The cached Wiki original is never modified, and patch drift remains fatal.
+fn parse_gamerule_descriptions(
+    content: &str,
+    patches_dir: &Path,
+    edition: &str,
+) -> Result<IndexMap<String, String>> {
+    let shared = crate::wiki_patch::apply_page_patch("game_rules", content, patches_dir)?;
+    let patched = crate::wiki_patch::apply_page_patch(
+        "game_rules",
+        &shared.text,
+        &patches_dir.join(edition),
+    )?;
     let mut result = IndexMap::new();
-    for row in content.split('\n') {
+    for row in patched.text.split('\n') {
         if row.starts_with("|{{") || row.ends_with("}}") || !row.starts_with('|') {
             continue;
         }
@@ -411,11 +454,73 @@ pub async fn fetch_particle_descriptions(http: &HttpCache) -> Result<IndexMap<St
         let description = remove_tag(&description)?;
         let mut description = remove_html(&description);
         description = description
-            .replace("。''该粒子只能在空气中生成和存在。''", "（该粒子只能在空气中生成和存在）")
-            .replace("。''该粒子只能在水中生成和存在。''", "（该粒子只能在水中生成和存在）")
-            .replace("。该粒子只能在水中生成和存在。", "（该粒子只能在水中生成和存在）");
+            .replace(
+                "。''该粒子只能在空气中生成和存在。''",
+                "（该粒子只能在空气中生成和存在）",
+            )
+            .replace(
+                "。''该粒子只能在水中生成和存在。''",
+                "（该粒子只能在水中生成和存在）",
+            )
+            .replace(
+                "。该粒子只能在水中生成和存在。",
+                "（该粒子只能在水中生成和存在）",
+            );
         result.insert(name, description);
         row_index += 1;
     }
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn gamerule_source_patches_are_scoped_and_reject_drift() {
+        let temp_root = std::env::temp_dir();
+        let directory = temp_root.join(format!(
+            "chelper-gamerule-patches-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(directory.join("netease")).unwrap();
+        let write_patch = |path: &Path, old: &str, new: &str| {
+            std::fs::write(
+                path,
+                serde_json::to_vec(&json!({
+                    "version": 1,
+                    "reason": "人工补充：测试来源范围和漂移保护。",
+                    "replacements": [{"old": old, "new": new, "expected_matches": 1}]
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        };
+        write_patch(&directory.join("game_rules.json"), "原始用途", "共同用途");
+        write_patch(
+            &directory.join("netease/game_rules.json"),
+            "共同用途。新版本示例。",
+            "共同用途。",
+        );
+        let source = "|example-be=原始用途。新版本示例。\n|example-je=Java用途。\n";
+        let release = parse_gamerule_descriptions(source, &directory, "release").unwrap();
+        let netease = parse_gamerule_descriptions(source, &directory, "netease").unwrap();
+        assert_eq!(release.get("example").unwrap(), "共同用途。新版本示例。");
+        assert_eq!(netease.get("example").unwrap(), "共同用途。");
+        assert_eq!(release.len(), 1);
+        assert_eq!(netease.len(), 1);
+        assert!(parse_gamerule_descriptions(
+            &source.replace("新版本示例", "上游内容已改"),
+            &directory,
+            "netease"
+        )
+        .is_err());
+        assert!(directory.starts_with(&temp_root));
+        std::fs::remove_dir_all(directory).unwrap();
+    }
 }

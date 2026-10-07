@@ -2,7 +2,7 @@
     "name": [
         "music"
     ],
-    "description": "控制游戏音乐的播放、队列和音量。",
+    "description": "允许玩家控制音乐。",
     "syntax": [
         "/music play <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
         "/music queue <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
@@ -12,70 +12,71 @@
     "node": {
         "play": {
             "type": "TEXT",
-            "description": "开始播放指定音乐。",
+            "description": "播放音乐。",
             "data": {
                 "name": "play",
-                "description": "开始播放指定音乐。"
+                "description": "播放音乐。"
             }
         },
         "<trackName: string>": {
             "type": "STRING",
             "brief": "播放音乐名",
-            "description": "指定要播放或加入队列的音乐名称。",
+            "description": "指定播放音乐名。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "[volume: float]|<volume: float>": {
             "type": "FLOAT",
-            "description": "设置音乐音量。",
+            "description": "调整音乐音量",
             "min": 0,
-            "max": 1
+            "max": 1,
+            "brief": "调整音乐音量"
         },
         "[fadeSeconds: float]": {
             "type": "FLOAT",
-            "brief": "渐变时间",
-            "description": "设置音乐淡入或淡出的时长。",
+            "brief": "调整音乐淡入/淡出时间",
+            "description": "指定音乐淡入/淡出时长，单位为秒。",
             "min": 0,
             "max": 10
         },
         "[repeatMode: MusicRepeatMode]": {
             "type": "NORMAL_ID",
-            "brief": "是否循环播放",
-            "description": "控制这段音乐是否循环播放。",
+            "brief": "是否循环播放音乐",
+            "description": "指定是否循环播放音乐。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "loop",
-                    "description": "持续循环播放这段音乐。"
+                    "description": "循环播放"
                 },
                 {
                     "name": "play_once",
-                    "description": "播放一遍这段音乐。"
+                    "description": "仅播放一次"
                 }
             ]
         },
         "queue": {
             "type": "TEXT",
-            "description": "将指定音乐加入播放队列。",
+            "description": "将音乐添加到队列中。",
             "data": {
                 "name": "queue",
-                "description": "将指定音乐加入播放队列。"
+                "description": "将音乐添加到队列中。"
             }
         },
         "stop": {
             "type": "TEXT",
-            "description": "停止播放当前音乐。",
+            "description": "停止播放音乐。",
             "data": {
                 "name": "stop",
-                "description": "停止播放当前音乐。"
+                "description": "停止播放音乐。"
             }
         },
         "volume": {
             "type": "TEXT",
-            "description": "调整播放音量。",
+            "description": "调整音乐音量",
             "data": {
                 "name": "volume",
-                "description": "调整播放音量。"
+                "description": "调整音乐音量"
             }
         }
     }

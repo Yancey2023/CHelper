@@ -9,34 +9,34 @@
     "node": {
         "<event: MobEvent>": {
             "type": "NORMAL_ID",
-            "brief": "事件",
-            "description": "要控制或查询状态的生物事件。",
+            "brief": "要控制或查询的事件",
+            "description": "指定要控制或查询的事件。",
             "ignoreError": true,
             "contents": [
                 {
                     "name": "minecraft:ender_dragon_event",
-                    "description": "控制初次进入末地时生成末影龙的事件。"
+                    "description": "控制末影龙生成事件。"
                 },
                 {
                     "name": "minecraft:pillager_patrols_event",
-                    "description": "控制灾厄巡逻队生成。"
+                    "description": "控制灾厄巡逻队生成事件。"
                 },
                 {
                     "name": "minecraft:wandering_trader_event",
-                    "description": "控制流浪商人生成。"
+                    "description": "控制流浪商人生成事件。"
                 },
                 {
                     "name": "events_enabled",
-                    "description": "控制是否运行生物事件子系统及单项事件。"
+                    "description": "控制事件子系统。"
                 }
             ]
         },
         "[value: Boolean]": {
             "type": "BOOLEAN",
-            "brief": "是否启用事件",
-            "description": "控制事件是否启用；省略时查询当前状态。",
-            "descriptionFalse": "禁用此事件。",
-            "descriptionTrue": "启用此事件。"
+            "brief": "事件状态",
+            "description": "指定事件的状态。",
+            "descriptionFalse": "禁用事件。",
+            "descriptionTrue": "启用事件。"
         }
     }
 }

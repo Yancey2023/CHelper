@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "reason": "修正controller参数把动画控制器误指为渲染控制器的问题。",
+    "replacements": [
+        {
+            "old": ": 由{{filepath|<''资源包''>/entity/<''实体名称''>.entity.json}}文件内<code>\"minecraft:client_entity\".\"render_controllers\"</code>的参数定义。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工最小修正：本页第一句已写明“指定动画控制器”，本句仅误把它链接到render_controllers渲染控制器字段；删除错误字段引用，不重复用途，也不推断名称、资源ID或存储路径。"
+        },
+        {
+            "old": ": 应为[[基岩版Molang文档|Molang表达式]]。{{info needed}}",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "移除终止条件参数的表达式合法性限制，保留该参数用于指定动画终止条件的用途。"
+        },
+        {
+            "old": ": 由{{filepath|<''资源包''>/entity/<''实体名称''>.entity.json}}文件内<code>\"minecraft:client_entity\".\"animations\"</code>的参数定义。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简动画参数说明，保留动画用途，删除资源文件路径与字段细节。"
+        },
+        {
+            "old": ": 由{{filepath|<''资源包''>/animation_controllers/<''控制器''>.json}}文件内<code>-{}-\"animation_controllers\".\"<''控制器名称''>\".\"states\"</code>的参数定义。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简状态参数说明，保留动画播放后的状态用途，删除资源文件路径与字段细节。"
+        }
+    ]
+}

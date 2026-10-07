@@ -176,7 +176,7 @@ pub fn check_commands(
         changed,
         missing_resource_files,
         obsolete_resource_files,
-        description_reminder: "请由 reviewer 逐命令依据 Wiki 核对参数语义，复用或重命名既有节点。节点和枚举 ID 需要清晰的作用说明，布尔两态分别解释；description 不包含类型限制、默认值或枚举引导句，也避免使用指向 Wiki 后续内容的“以下”，应按实际用途完整改写。syntax 只包含主命令；execute 自动应用已复核的 REPEAT patch。其他命令不会自动推导节点或说明，Wiki 原文位于 output/command_wiki。".into(),
+        description_reminder: "请由 gpt-6-luna reviewer 核对 Wiki 原文和 JSON，复用或重命名既有节点。description 和 brief 从 patched Wiki 自动提取；需要规范化时维护 data/wiki_patches，歧义通过自然 Wiki 原文 patch 消除，不维护额外字段绑定或目录注册，不在 JSON 另写 AI 文案。固定句“必须为以下其中之一：”保留在原文并识别为枚举对象；Boolean 条件句可 patch 成明确的两态选项。brief 优先采用参数末尾的 brief：覆盖，过长会告警。syntax 只包含主命令；execute 自动应用已复核的 REPEAT patch。".into(),
     })
 }
 

@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "reason": "精简controlscheme命令简介，保留其修改相机控制方案的核心用途。",
+    "replacements": [
+        {
+            "old": "修改相机预设的控制方案。\n\n此命令需与{{cmd|camera}}命令一同使用。",
+            "new": "修改玩家的相机控制方案。",
+            "expected_matches": 1,
+            "reason": "保留控制方案用途，删除要求与camera命令一同使用的旁注。"
+        }
+    ]
+}

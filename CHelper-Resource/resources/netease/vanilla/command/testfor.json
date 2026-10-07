@@ -13,7 +13,8 @@
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "列出的目标"
         }
     }
 }

@@ -1,0 +1,78 @@
+{
+    "version": 1,
+    "reason": "为页面已有参数标题补充资源使用的等价参数名，使正式版和网易实验版按自然标题匹配同一段原文。",
+    "replacements": [
+        {
+            "old": ": {{arg desc|be=float}}且必须在10和90之间（含）。",
+            "new": "",
+            "expected_matches": 2,
+            "reason": "移除X轴和Y轴角度的合法取值范围，保留角度用途及参数元数据范围。"
+        },
+        {
+            "old": ": {{arg desc|be=float}}且必须在1和16之间（含）。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "移除最大距离参数的数值范围，参数名称本身表达最大距离用途，元数据范围保持不变。"
+        },
+        {
+            "old": "{{argument|be=1|players: target|CommandSelector<Player>}}",
+            "new": "{{argument|be=1|players: target|player: target|CommandSelector<Player>}}",
+            "expected_matches": 1,
+            "reason": "player与players表示同一目标参数，新增资源中的参数别名以便直接匹配。"
+        },
+        {
+            "old": "{{argument|be=1|x angle: float|float}}",
+            "new": "{{argument|be=1|x angle: float|xAngle: float|float}}",
+            "expected_matches": 1,
+            "reason": "资源使用驼峰参数名xAngle，对应原页面x angle。"
+        },
+        {
+            "old": "{{argument|be=1|y angle: float|float}}",
+            "new": "{{argument|be=1|y angle: float|yAngle: float|float}}",
+            "expected_matches": 1,
+            "reason": "资源使用驼峰参数名yAngle，对应原页面y angle。"
+        },
+        {
+            "old": "{{argument|be=1|max distance: float|float}}",
+            "new": "{{argument|be=1|max distance: float|maxDistance: float|float}}",
+            "expected_matches": 1,
+            "reason": "资源使用驼峰参数名maxDistance，对应原页面max distance。"
+        },
+        {
+            "old": "{{argument|be=1|target mode: AimAssistTargetMode|enum}}",
+            "new": "{{argument|be=1|target mode: AimAssistTargetMode|targetMode: string|enum}}",
+            "expected_matches": 1,
+            "reason": "资源使用targetMode: string名称，保留页面参数说明和选项。"
+        },
+        {
+            "old": "{{argument|be=1|preset id: string|basic_string}}",
+            "new": "{{argument|be=1|preset id: string|presetId: string|basic_string}}",
+            "expected_matches": 1,
+            "reason": "资源使用驼峰参数名presetId，对应原页面preset id。"
+        },
+        {
+            "old": "指定X轴角度，默认为50。",
+            "new": "指定X轴角度。",
+            "expected_matches": 1,
+            "reason": "删除X轴角度说明中的独立默认值注释，保留角度用途。"
+        },
+        {
+            "old": "指定Y轴角度，默认为50。",
+            "new": "指定Y轴角度。",
+            "expected_matches": 1,
+            "reason": "删除Y轴角度说明中的独立默认值注释，保留角度用途。"
+        },
+        {
+            "old": "指定最大距离，默认为8。",
+            "new": "指定最大距离。",
+            "expected_matches": 1,
+            "reason": "删除最大距离说明中的独立默认值注释，保留距离用途。"
+        },
+        {
+            "old": "指定瞄准模式，默认为{{cd|angle}}。必须为以下其中之一：",
+            "new": "指定瞄准模式。必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "删除模式说明中的默认枚举值注释，同时保留模式用途和枚举引导及选项。"
+        }
+    ]
+}

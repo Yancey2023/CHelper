@@ -2,23 +2,25 @@
     "name": [
         "give"
     ],
-    "description": "向玩家给予指定数量的物品",
+    "description": "给予玩家指定数量的物品。",
     "syntax": [
         "/give <player: target> <itemName: Item> [amount: int] [data: int] [components: json]"
     ],
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "被给予物品的玩家",
+            "description": "指定获得物品的玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "获得物品的玩家"
         },
         "<itemName: Item> [amount: int] [data: int] [components: json]": {
             "type": "ITEM",
-            "description": "指定要给予玩家的物品及其数量、数据值和组件",
-            "nodeItemType": 0
+            "description": "指定给予的物品。 指定给予的物品数量。 指定所给予物品的数据值。 指定所给予物品的物品堆叠组件。",
+            "nodeItemType": 0,
+            "brief": "物品、数量、数据、组件"
         }
     }
 }

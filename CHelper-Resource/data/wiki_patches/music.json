@@ -1,0 +1,47 @@
+{
+    "version": 1,
+    "reason": "将 repeatMode 的允许值与示例中的播放行为整理为可提取的枚举项。",
+    "replacements": [
+        {
+            "old": ": 所取值必须为 <code>loop</code> 与 <code>play_once</code> 中的一个。",
+            "new": ": 必须为以下其中之一：\n:* <code>loop</code> — 循环播放\n:* <code>play_once</code> — 仅播放一次",
+            "reason": "loop 的行为直接对应示例“循环播放音乐唱片Pigstep”；play_once 的行为由“将音乐唱片Stal添加到播放列表且仅播放一次”示例（未指定 repeatMode）与参数句“默认为 play_once”共同推断，并非 Wiki 对该枚举值的逐项定义。选项说明只保留示例中的播放方式短语。"
+        },
+        {
+            "old": ": 必须是单个单词（不含空格）或带引号的字符串。",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": ": 必须为音乐名或为Json路径指向的 <samp><a_resource_pack>/sounds/sound_definitions.json</samp> 文件中的 <code>\"record.<music_name>\"</code> 或 <code>\"music.game.<music_name>\"</code> （例如使用 <code>record.cat</code> 来播放音乐唱片cat）",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": ": 必须为浮点数，最小值为0，最大值为1.00。",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": ": 必须为浮点数，最小值为0，最大值为10。",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": "指定是否循环播放音乐，默认为<code>play_once</code>。",
+            "new": "指定是否循环播放音乐。",
+            "expected_matches": 1,
+            "reason": "删除repeatMode description中的默认枚举值，保留循环用途及loop/play_once两项动作说明。"
+        },
+        {
+            "new": ": 指定音乐淡入/淡出时长，单位为秒。brief: 调整音乐淡入/淡出时间",
+            "expected_matches": 1,
+            "reason": "补充fadeSeconds参数的秒单位并简化用途描述。",
+            "old": ": 调整音乐淡入/淡出时间"
+        }
+    ]
+}

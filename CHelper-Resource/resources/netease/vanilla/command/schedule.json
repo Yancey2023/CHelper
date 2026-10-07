@@ -2,7 +2,7 @@
     "name": [
         "schedule"
     ],
-    "description": "安排函数在特定的游戏刻后运行。",
+    "description": "计划执行函数。",
     "syntax": [
         "/schedule on_area_loaded add <from: x y z> <to: x y z> <function: filepath>",
         "/schedule on_area_loaded add circle <center: x y z> <radius: int> <function: filepath>",
@@ -11,67 +11,67 @@
     "node": {
         "on_area_loaded": {
             "type": "TEXT",
-            "description": "当指定区域被加载后，执行所计划的函数。",
+            "description": "区域加载条件下的函数计划。",
             "data": {
                 "name": "on_area_loaded",
-                "description": "当指定区域被加载后，执行所计划的函数。"
+                "description": "区域加载条件下的函数计划。"
             }
         },
         "add": {
             "type": "TEXT",
-            "description": "添加函数计划。",
+            "description": "安排函数执行计划。",
             "data": {
                 "name": "add",
-                "description": "添加函数计划。"
+                "description": "安排函数执行计划。"
             }
         },
         "<from: x y z>": {
             "type": "POSITION",
-            "brief": "坐标1",
-            "description": "指定用于定义矩形加载区域的两个对角坐标。"
+            "brief": "矩形区域一角",
+            "description": "指定矩形加载区域一个对角点的坐标。"
         },
         "<to: x y z>": {
             "type": "POSITION",
-            "brief": "坐标2",
-            "description": "指定用于定义矩形加载区域的两个对角坐标。"
+            "brief": "矩形对角点",
+            "description": "指定与from相对的另一个角点坐标。"
         },
         "<function: filepath>": {
             "type": "STRING",
             "brief": "函数",
-            "description": "指定要计划运行的函数。",
+            "description": "指定函数文件路径。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "circle": {
             "type": "TEXT",
-            "description": "按圆心和半径定义加载区域。",
+            "description": "当指定区域被加载后，执行所计划的函数。",
             "data": {
                 "name": "circle",
-                "description": "按圆心和半径定义加载区域。"
+                "description": "当指定区域被加载后，执行所计划的函数。"
             }
         },
         "<center: x y z>": {
             "type": "POSITION",
-            "brief": "中心坐标",
+            "brief": "圆形区域圆心",
             "description": "指定用于定义圆形加载区域的圆心的坐标。"
         },
         "<radius: int>": {
             "type": "INTEGER",
-            "brief": "半径",
+            "brief": "圆形区域半径",
             "description": "指定圆形常加载区域的半径作为从中心到圆周的区块数。"
         },
         "tickingarea": {
             "type": "TEXT",
-            "description": "当此常加载区域被添加时执行函数。",
+            "description": "常加载区域计划。",
             "data": {
                 "name": "tickingarea",
-                "description": "当此常加载区域被添加时执行函数。"
+                "description": "常加载区域计划。"
             }
         },
         "<name: string>": {
             "type": "STRING",
-            "brief": "常加载区域名称",
-            "description": "指定常加载区域的名称。",
+            "brief": "常加载区域的名称",
+            "description": "指定常加载区域的名称； add语法中在该区域被添加时执行函数。",
             "canContainSpace": true,
             "ignoreLater": false
         }

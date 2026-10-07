@@ -1,0 +1,84 @@
+{
+    "version": 1,
+    "reason": "为较长的BE参数说明提供简洁brief，人工拆分共用的两轴旋转说明到对应的单值字段；其他用途句保留Wiki原文。",
+    "replacements": [
+        {
+            "old": ": 指定该实体生成时的要朝向的实体。",
+            "new": ": 指定该实体生成时的要朝向的实体。brief: 朝向实体",
+            "expected_matches": 1,
+            "reason": "lookAtEntity参数短名。"
+        },
+        {
+            "old": ": 指定该实体生成时的要朝向的坐标。",
+            "new": ": 指定该实体生成时的要朝向的坐标。brief: 朝向坐标",
+            "expected_matches": 1,
+            "reason": "lookAtPosition参数短名。"
+        },
+        {
+            "old": ": 指定该实体的召唤时附带的实体事件，应为一个行为包内适用于实体的[[生成事件]]的名称。",
+            "new": ": 指定该实体的召唤时附带的实体事件。brief: 召唤事件",
+            "expected_matches": 1,
+            "reason": "删除事件名称格式限制，保留召唤时附带实体事件的用途及参数短名。"
+        },
+        {
+            "old": ": 指定该实体的名称，生成时为该实体命名。",
+            "new": ": 指定该实体的名称，生成时为该实体命名。brief: 实体名称",
+            "expected_matches": 1,
+            "reason": "nameTag参数短名。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{Argument|be=1|yRot: value|RelativeFloat}}和{{Argument|be=1|xRot: value|RelativeFloat}}\n: 指定该实体生成时的旋转角度。\n: 必须为两个单精度浮点数组成的朝向，分别表示绕Y轴旋转和绕X轴旋转，以度为单位。\n:* 绕Y轴旋转时，-180.0表示北，-90.0表示东，0.0表示南，90.0表示西。\n:* 绕X轴旋转时，竖直上方为-90.0，至竖直下方90.0。\n: 加上波浪号前缀将相对于执行朝向进行旋转。",
+            "new": "{{el|be|short=1}}：{{Argument|be=1|yRot: value|RelativeFloat}}\n: 指定该实体生成时绕Y轴旋转的角度，以度为单位。\n: brief: Y轴旋转角度\n: -180.0表示北，-90.0表示东，0.0表示南，90.0表示西。\n: 加上波浪号前缀将相对于执行朝向进行旋转。\n\n{{el|be|short=1}}：{{Argument|be=1|xRot: value|RelativeFloat}}\n: 指定该实体生成时绕X轴旋转的角度，以度为单位。\n: brief: X轴旋转角度\n: 竖直上方为-90.0，至竖直下方90.0。\n: 加上波浪号前缀将相对于执行朝向进行旋转。",
+            "expected_matches": 1,
+            "reason": "人工补充：中文Wiki原文把yRot与xRot共同说明为一对单精度浮点数，提取器将该共用段同时挂到两个单值RelativeFloat参数，造成各字段像是需要两个数字。依原文轴向定义拆分为yRot绕Y轴、xRot绕X轴，保留原有方向、度数单位和波浪号相对执行朝向语义；人工补充“Y轴旋转角度”“X轴旋转角度”短brief。仅修正字段说明，不改语法或参数类型。"
+        },
+        {
+            "old": "== 参数 ==",
+            "new": "== 参数 ==\n; <code>facing</code>\n: 指定该实体生成时的朝向，目标可以是实体或坐标。\n: brief: 生成实体朝向",
+            "expected_matches": 1,
+            "reason": "对facing字面节点增加自然用途说明，合并同页lookAtEntity“指定该实体生成时的要朝向的实体”和lookAtPosition“指定该实体生成时的要朝向的坐标”两句；语法中的spawnEvent和nameTag为后续可选参数，不属于facing用途。"
+        },
+        {
+            "old": "如果未指定，默认为命令执行位置。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求删除spawnPos未指定时默认命令执行位置的说明；字段仍保留召唤位置用途。"
+        },
+        {
+            "old": "{{IN|java}}玩家（{{code|minecraft:player}}）和浮漂（{{code|minecraft:fishing_bobber}}）实体无法被召唤。尝试召唤这两种实体会使命令执行失败。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除实体类型description中的目标合法性及失败说明；实体类型参数用途保留。"
+        },
+        {
+            "old": "{{IN|bedrock}}只有特定实体类型允许被召唤。允许召唤的实体类型可见于命令的自动补全建议列表。指定列表外的实体类型会使命令无法解析。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除基岩版实体类型description中的白名单、提示列表及无法解析限制；实体类型用途保留。"
+        },
+        {
+            "old": "指定该实体的名称，生成时为该实体命名。",
+            "new": "指定生成实体的名称。",
+            "expected_matches": 1,
+            "reason": "保留名称用途，删除重复释义。"
+        },
+        {
+            "old": "-180.0表示北，-90.0表示东，0.0表示南，90.0表示西。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "保留旋转用途及必要单位，删除举例和相对旋转旁注。"
+        },
+        {
+            "old": "竖直上方为-90.0，至竖直下方90.0。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "保留旋转用途及必要单位，删除举例和相对旋转旁注。"
+        },
+        {
+            "old": "加上波浪号前缀将相对于执行朝向进行旋转。",
+            "new": "",
+            "expected_matches": 2,
+            "reason": "删除相对执行朝向的旁注，保留yRot与xRot轴向用途和角度单位。"
+        }
+    ]
+}

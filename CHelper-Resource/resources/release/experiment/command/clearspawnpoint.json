@@ -9,11 +9,12 @@
     "node": {
         "[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "指定被删除出生点的玩家。如果没有指定，默认为命令执行者。",
+            "description": "指定被删除出生点的玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "被删除出生点的玩家"
         }
     }
 }

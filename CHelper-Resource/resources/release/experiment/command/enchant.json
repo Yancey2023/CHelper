@@ -2,7 +2,7 @@
     "name": [
         "enchant"
     ],
-    "description": "为一个实体手持的物品添加魔咒。受限于铁砧机制。",
+    "description": "为实体手持的物品添加魔咒。",
     "syntax": [
         "/enchant <player: target> <enchantmentId: int> [level: int]",
         "/enchant <player: target> <enchantmentName: Enchant> [level: int]"
@@ -10,21 +10,23 @@
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "目标实体",
+            "description": "指定目标。",
             "isOnlyOne": false,
-            "isMustPlayer": true,
+            "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "目标"
         },
         "<enchantmentId: int>": {
             "type": "INTEGER",
             "brief": "魔咒",
-            "description": "要添加到目标手持物品上的魔咒"
+            "description": "指定要添加到实体主手持有物品上的魔咒。"
         },
         "[level: int]": {
             "type": "INTEGER",
-            "description": "魔咒等级",
-            "min": 1
+            "description": "指定魔咒的等级。",
+            "min": 1,
+            "brief": "魔咒的等级"
         },
         "<enchantmentName: Enchant>": {
             "type": "NORMAL_ID",

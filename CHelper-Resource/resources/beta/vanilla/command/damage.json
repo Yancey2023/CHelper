@@ -10,44 +10,49 @@
     "node": {
         "<target: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "受到伤害的目标实体",
+            "description": "指定要被伤害的目标实体。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要被伤害的目标实体"
         },
         "<amount: int>": {
             "type": "INTEGER",
-            "brief": "伤害值",
-            "description": "造成的伤害值"
+            "min": 0,
+            "brief": "要造成的伤害值",
+            "description": "指定要造成的伤害值。"
         },
         "[cause: DamageCause]": {
             "type": "NORMAL_ID",
-            "description": "伤害的成因，决定造成的伤害类型",
+            "description": "指定伤害类型。",
             "ignoreError": true,
-            "key": "damageCause"
+            "key": "damageCause",
+            "brief": "伤害类型"
         },
         "<cause: DamageCause>": {
             "type": "NORMAL_ID",
-            "description": "伤害的成因，决定造成的伤害类型",
+            "description": "指定伤害类型。",
             "ignoreError": true,
-            "key": "damageCause"
+            "key": "damageCause",
+            "brief": "伤害类型"
         },
         "entity": {
             "type": "TEXT",
-            "description": "指定伤害来源实体",
+            "description": "指定伤害的直接来源实体。",
             "data": {
                 "name": "entity",
-                "description": "指定伤害来源实体"
+                "description": "指定伤害的直接来源实体。"
             }
         },
         "<damager: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "伤害的直接来源，可影响伤害造成的击退方向",
+            "description": "指定伤害的直接来源实体。",
             "isOnlyOne": true,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "伤害来源实体"
         }
     }
 }

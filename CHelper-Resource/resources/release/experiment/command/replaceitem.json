@@ -12,70 +12,73 @@
     "node": {
         "block": {
             "type": "TEXT",
-            "description": "替换方块容器槽位中的物品。",
+            "description": "指定要改变的方块的位置。",
             "data": {
                 "name": "block",
-                "description": "选择要替换物品的方块容器。"
+                "description": "指定要改变的方块的位置。"
             }
         },
         "<position: x y z>": {
             "type": "POSITION",
-            "brief": "方块位置",
-            "description": "指定要替换物品的方块位置。"
+            "brief": "要改变的方块的位置",
+            "description": "指定要改变的方块的位置。"
         },
         "slot.container": {
             "type": "TEXT",
-            "description": "选择容器物品栏。",
+            "description": "指定方块容器的物品栏槽位。",
             "data": {
                 "name": "slot.container",
-                "description": "指定方块的容器物品栏。"
+                "description": "指定方块容器的物品栏槽位。"
             }
         },
         "<slotId: int>": {
             "type": "INTEGER",
-            "brief": "槽位",
-            "description": "指定要替换物品的容器槽位。"
+            "brief": "槽位编号",
+            "description": "指定方块或实体物品栏的槽位编号。"
         },
         "<itemName: Item> [amount: int] [data: int] [components: json]": {
             "type": "ITEM",
-            "description": "指定要放入方块或实体物品栏槽位的物品。",
-            "nodeItemType": 0
+            "description": "指定要放入槽位的物品。 指定物品数量。 指定物品数据。 指定物品组件。",
+            "nodeItemType": 0,
+            "brief": "物品、数量、数据、组件"
         },
         "<oldItemHandling: ReplaceMode>": {
             "type": "NORMAL_ID",
-            "description": "指定槽位已有物品时的处理方式。",
+            "description": "指定如何处理指定槽位中的原有物品。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "destroy",
-                    "description": "移除槽位中的原有物品，再放入新物品。"
+                    "description": "替换槽位中的原有物品。"
                 },
                 {
                     "name": "keep",
-                    "description": "槽位已有物品时保留原物品，不放入新物品。"
+                    "description": "保留槽位中的现有物品。"
                 }
-            ]
+            ],
+            "brief": "原物品处理方式"
         },
         "entity": {
             "type": "TEXT",
-            "description": "替换实体物品栏中的物品。",
+            "description": "指定要改变的实体。",
             "data": {
                 "name": "entity",
-                "description": "选择要替换物品的实体物品栏。"
+                "description": "指定要改变的实体。"
             }
         },
         "<target: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要替换物品的实体。",
+            "description": "指定要改变的实体。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要改变的实体"
         },
         "<slotType: EntityEquipmentSlot>": {
             "type": "NORMAL_ID",
-            "brief": "物品栏",
-            "description": "指定实体中要替换物品的槽位类型。",
+            "brief": "实体物品栏的槽位类型",
+            "description": "指定实体物品栏的槽位类型。",
             "ignoreError": true,
             "key": "entitySlot"
         }

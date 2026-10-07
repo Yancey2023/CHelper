@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "reason": "为WebSocket服务端地址参数添加简短brief，保留URI校验及断开连接语义。",
+    "replacements": [
+        {
+            "old": "用于连接WebSocket服务器，WebSocket服务器使用命令信息与客户端交互，主要用于{{el|edu}}中。",
+            "new": "用于连接WebSocket服务器，WebSocket服务器使用命令信息与客户端交互，主要用于{{el|edu}}中。\n\n== 可用性 ==\n: 基岩版1.21.60起默认禁用，需启用“已启用 Websocket”选项。",
+            "expected_matches": 1,
+            "reason": "将历史记录中基岩版1.21.60起默认禁用、结果段未启用“已启用 Websocket”选项时失败的条件移至可用性小节。connect是同页标明的wsserver别名，保留其条件，同时使命令简介只说明共通用途。"
+        },
+        {
+            "old": ": 指向WebSocket服务器的URI。如果URI不等同于当前连接的服务器，则会先断开当前连接。域名解析在客户端完成。",
+            "new": ": 指向WebSocket服务器的URI。如果URI不等同于当前连接的服务器，则会先断开当前连接。域名解析在客户端完成。brief: 服务器URI",
+            "expected_matches": 1,
+            "reason": "将原文过长的URI说明缩为参数短名。"
+        },
+        {
+            "old": "用于连接WebSocket服务器，WebSocket服务器使用命令信息与客户端交互，主要用于{{el|edu}}中。",
+            "new": "连接WebSocket服务器。",
+            "expected_matches": 1,
+            "reason": "将命令简介精简为核心用途，移除交互机制和版别旁注。"
+        },
+        {
+            "old": "指向WebSocket服务器的URI。",
+            "new": "指定WebSocket服务器的URI。",
+            "expected_matches": 1,
+            "reason": "保留参数URI用途，删除冗余措辞。"
+        },
+        {
+            "old": ": 指定WebSocket服务器的URI。如果URI不等同于当前连接的服务器，则会先断开当前连接。域名解析在客户端完成。brief: 服务器URI",
+            "new": ": 指定WebSocket服务器的URI。brief: 服务器URI",
+            "expected_matches": 1,
+            "reason": "按本轮用途精简要求，仅保留服务器URI用途，删除切换连接副作用与客户端解析旁注。"
+        }
+    ]
+}

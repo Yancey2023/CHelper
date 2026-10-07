@@ -2,7 +2,7 @@
     "name": [
         "toggledownfall"
     ],
-    "description": "切换天气；晴天时转为降雨，降雨或雷暴时转为晴天。",
+    "description": "切换当前天气状态。",
     "syntax": [
         "/toggledownfall"
     ],

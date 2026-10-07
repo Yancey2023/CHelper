@@ -1,0 +1,84 @@
+{
+    "version": 1,
+    "reason": "按基岩版26.70.21更新GameTest runset多标签语法；旧语法与新语法按版本区分，避免把新版能力倒灌至旧版本。",
+    "replacements": [
+        {
+            "old": ": 指定要执行的测试的名称。",
+            "new": ": 指定用于筛选要执行的测试的标签。\n: brief: 测试标签",
+            "expected_matches": 1,
+            "reason": "中文《命令/gametest》原文对tag参数称其为测试名称，与中文《基岩版26.70.21》中SetA/SetB标签筛选示例及《游戏测试》基岩版GameTest框架用标签分类的语境不符；将共享tag节点用途更正为筛选标签，仍保留所有旧语法消费。"
+        },
+        {
+            "old": ": <code>gametest runset [tag: string] [rotationSteps: int]</code>\n:: 创建和执行所有测试。",
+            "new": ": <code>gametest runset [tag: string] [rotationSteps: int]</code>\n:: 创建并执行测试。\n: <code>gametest runset <tag list (optional flags 'withoutTags' and 'rotationSteps'): message></code>\n:: 创建并执行测试。",
+            "expected_matches": 1,
+            "reason": "中文《基岩版26.70.21》GameTest命令段记录新增多标签runset，并提供标签并集、withoutTags排除和显式rotationSteps旗标的例子；caidlist 1.26.70.21 mcpews原始语法与参数签名一致。旧页面语法保留并注明旧版本范围。"
+        },
+        {
+            "old": "{{argument|be=1|stopOnFailure: Boolean|enum}}\n: {{arg desc|be=bool}}",
+            "new": "{{argument|be=1|stopOnFailure: Boolean|enum}}\n: 指定测试失败时是否停止后续执行。brief: 失败时停止\n: 必须为以下其中之一：\n:* <code>true</code> — 测试失败时停止后续执行。\n:* <code>false</code> — 测试失败时继续后续执行。",
+            "expected_matches": 1,
+            "reason": "人工补充stopOnFailure用途、brief及true/false行为；两态说明保持一般化，不推断运行集合或重复机制。"
+        },
+        {
+            "old": "== 结果 ==",
+            "new": "{{argument|be=1|tag list (optional flags 'withoutTags' and 'rotationSteps'): message|message}}\n: 指定要执行的测试标签。可指定多个标签，匹配其中任一标签的测试；在 <code>withoutTags</code> 后指定要排除的标签；使用 <code>rotationSteps</code> 旗标指定旋转步数。\n: brief: 测试标签列表\n\n== 版本差异 ==\n旧语法适用于基岩版1.26.70.20及更早版本；自基岩版1.26.70.21起，`runset`使用多标签语法，并以`withoutTags`和`rotationSteps`旗标指定筛选条件及旋转步数。\n\n== 结果 ==",
+            "expected_matches": 1,
+            "reason": "中文《基岩版26.70.21》GameTest命令段记载新runset允许多个标签并集、withoutTags排除和显式rotationSteps旗标，并分别给出具体命令示例；版本语法切换点由该更新页与caidlist 1.26.70.21 beta命令数据共同确认。"
+        },
+        {
+            "old": ": {{arg desc|be=int}}且必须大于0。",
+            "new": ": {{arg desc|be=int}}",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除repeatCount description中的正数限制；参数仍表示测试执行次数，min元数据保持原样。"
+        },
+        {
+            "old": ": 1为顺时针旋转90度；2为顺时针旋转180度；3为顺时针旋转270度。其他值不会使测试旋转。",
+            "new": ": 1为顺时针旋转90度；2为顺时针旋转180度；3为顺时针旋转270度。",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除未列值的限制/无效输入效果说明；明确列出的旋转步数与方向保留。"
+        },
+        {
+            "old": "默认为5。",
+            "new": "",
+            "expected_matches": 3,
+            "reason": "按本轮授权删除GameTest结构宽度、高度和深度description中的默认数值；轴向用途保留。"
+        },
+        {
+            "old": ":: 执行或重新执行15格半径内的测试结构。",
+            "new": ":: 执行或重新执行测试结构。",
+            "expected_matches": 1,
+            "reason": "保留runthis的核心用途，删除半径细节。"
+        },
+        {
+            "old": ":: 创建和执行所有测试，直到某个执行失败。",
+            "new": ":: 创建并执行测试，直至有测试失败。",
+            "expected_matches": 1,
+            "reason": "保留runsetuntilfail动作，精简叙述。"
+        },
+        {
+            "old": ":: 在200格半径范围内寻找最近的测试结构。",
+            "new": ":: 定位最近的测试结构。",
+            "expected_matches": 1,
+            "reason": "保留pos用途，删除搜索半径。"
+        },
+        {
+            "old": ":: 在200格半径范围内执行测试。",
+            "new": ":: 执行附近的测试。",
+            "expected_matches": 1,
+            "reason": "保留runthese用途，删除半径细节。"
+        },
+        {
+            "old": "1为顺时针旋转90度；2为顺时针旋转180度；3为顺时针旋转270度。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除旋转步数换算举例，参数用途和枚举值保留。"
+        },
+        {
+            "old": "可指定多个标签，匹配其中任一标签的测试；在 <code>withoutTags</code> 后指定要排除的标签；使用 <code>rotationSteps</code> 旗标指定旋转步数。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除标签匹配规则和旗标旁注，保留组合输入的标签用途。"
+        }
+    ]
+}

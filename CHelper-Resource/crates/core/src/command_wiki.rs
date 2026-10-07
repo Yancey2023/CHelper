@@ -158,6 +158,29 @@ async fn archive_page(
             page.error = Some(format!("{error:#}"));
             if directory.join("page.wiki").exists() {
                 page.status = "retained".into();
+                // Keep the identity and capture time of the retained snapshot,
+                // rather than attributing old text to an unconfirmed redirect.
+                if let Ok(metadata) = std::fs::read_to_string(directory.join("source.json")) {
+                    if let Ok(previous) = serde_json::from_str::<serde_json::Value>(&metadata) {
+                        if let Some(url) = previous["source_url"].as_str() {
+                            page.source_url = url.to_string();
+                        }
+                        if let Some(url) = previous["raw_url"].as_str() {
+                            page.raw_url = url.to_string();
+                        }
+                        page.resolved_title =
+                            previous["resolved_title"].as_str().map(str::to_string);
+                        if let Some(redirects) = previous["redirects"].as_array() {
+                            page.redirects = redirects
+                                .iter()
+                                .filter_map(|value| value.as_str().map(str::to_string))
+                                .collect();
+                        }
+                        if let Some(captured_at) = previous["exported_at_unix"].as_u64() {
+                            page.exported_at_unix = captured_at;
+                        }
+                    }
+                }
             }
             tracing::warn!(command, error = ?page.error, "命令 Wiki 页面不可用");
         }

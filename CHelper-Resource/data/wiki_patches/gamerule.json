@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "reason": "移除依赖页面跳转的括号提示，并对通用 Boolean 参数补充仅描述值设置本身的人工两态说明。",
+    "replacements": [
+        {
+            "old": "{{see also|游戏规则#游戏规则列表}}\n\n{{el|je|short=1}}：{{argument|-{}-''规则名称''}}<br>",
+            "new": "{{see also|游戏规则#游戏规则列表}}\n\n; 关键字 <code>playerwaypoints</code>\n: 查询或设置<code>playerWaypoints</code>游戏规则。brief: 玩家导航规则\n\n{{el|je|short=1}}：{{argument|-{}-''规则名称''}}<br>",
+            "expected_matches": 1,
+            "reason": "人工补充playerwaypoints字面节点用途并去除输入大小写规则；其余Wiki编辑者旁白和大小写规则均不进入运行时说明。"
+        },
+        {
+            "old": ": 指定要设置或查询的游戏规则。只有某些预设的游戏规则会影响游戏玩法（见[[游戏规则#游戏规则列表|预设游戏规则]]）。",
+            "new": ": 指定要设置或查询的游戏规则。",
+            "expected_matches": 1,
+            "reason": "删除游戏规则范围的背景补充，仅保留规则参数用途；不描述大小写解析行为。"
+        },
+        {
+            "old": ": 指定游戏规则设置的值。",
+            "new": ": 指定要设置的游戏规则值。必须为以下其中之一：\n:* <code>true</code> — 将所选游戏规则的值设置为<code>true</code>。\n:* <code>false</code> — 将所选游戏规则的值设置为<code>false</code>。",
+            "expected_matches": 1,
+            "reason": "删除省略value时查询的语法行为，仅保留设置值用途和原有true/false枚举。"
+        },
+        {
+            "old": ": 指定游戏规则[[游戏规则/playerWaypoints|playerWaypoints]]设置的值，必须为以下其中之一：",
+            "new": ": 指定游戏规则[[游戏规则/playerWaypoints|playerWaypoints]]设置的值。brief: 游戏规则值\n: 必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "为playerWaypoints专用值参数提供短brief，保留原用途句和枚举引导。"
+        },
+        {
+            "old": ": 指定要设置的游戏规则值。",
+            "new": ": 指定要设置的游戏规则值。brief: 游戏规则设置的值\n",
+            "expected_matches": 1,
+            "reason": "明确恢复原有 Boolean 与整数 value 参数 brief“游戏规则设置的值”，只保留新的短用途说明，不加入省略参数查询行为。"
+        }
+    ]
+}

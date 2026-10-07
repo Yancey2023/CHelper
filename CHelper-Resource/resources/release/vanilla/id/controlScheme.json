@@ -3,19 +3,24 @@
     "type": "normal",
     "content": [
         {
-            "name": "camera_relative"
+            "name": "camera_relative",
+            "description": "相对相机进行移动，视角保持水平并跟随移动方向"
         },
         {
-            "name": "camera_relative_strafe"
+            "name": "camera_relative_strafe",
+            "description": "相对相机进行移动，视角保持水平并跟随朝向"
         },
         {
-            "name": "locked_player_relative_strafe"
+            "name": "locked_player_relative_strafe",
+            "description": "相对玩家进行移动，视角跟随朝向"
         },
         {
-            "name": "player_relative"
+            "name": "player_relative",
+            "description": "相对玩家进行移动，视角保持水平并跟随移动方向"
         },
         {
-            "name": "player_relative_strafe"
+            "name": "player_relative_strafe",
+            "description": "相对玩家进行移动，视角保持水平并跟随朝向"
         }
     ]
 }

@@ -8,7 +8,7 @@ use std::path::Path;
 const EXECUTE_PATCH: &str = include_str!("../../../data/command_patches/execute.json");
 
 /// Keep execute's original REPEAT entry and descriptions when synchronizing mcpews.
-/// The subcommand grammar belongs to repeat/execute.json rather than COMMAND nodes.
+/// The subcommand grammar comes from data/resource_definitions/repeat/execute.json.
 pub fn patched_command(command: &str) -> Option<Value> {
     match command {
         "execute" => Some(serde_json::from_str(EXECUTE_PATCH).expect("invalid execute patch")),
@@ -16,17 +16,15 @@ pub fn patched_command(command: &str) -> Option<Value> {
     }
 }
 
-/// Export the manually reviewed command, grammar, JSON and repeat definitions.
-/// Generation changes IDs; it does not infer node semantics or descriptions.
-pub fn write_reviewed_resources(source: &Path, output: &Path) -> Result<usize> {
-    let mut files = 0;
-    for directory in ["command", "grammer", "json", "repeat"] {
-        let source_dir = source.join(directory);
-        if source_dir.is_dir() {
-            files += copy_reviewed_directory(&source_dir, &output.join(directory))?;
-        }
+/// Export reviewed command structures; static definitions are loaded from data.
+/// The pipeline subsequently replaces command text with source-derived proposals.
+pub fn write_reviewed_commands(source: &Path, output: &Path) -> Result<usize> {
+    let source_dir = source.join("command");
+    if source_dir.is_dir() {
+        copy_reviewed_directory(&source_dir, &output.join("command"))
+    } else {
+        Ok(0)
     }
-    Ok(files)
 }
 
 /// Export the separately packed legacy block conversion data from the same reviewed source.

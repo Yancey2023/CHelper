@@ -4,24 +4,25 @@
         "tell",
         "w"
     ],
-    "description": "向一个或多个玩家发送私聊消息。",
+    "description": "将一条私聊消息发送给一个或多个玩家。",
     "syntax": [
         "/tell <target: target> <message: message>"
     ],
     "node": {
         "<target: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "选择私聊消息的接收玩家。",
+            "description": "指定私聊消息的接收玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "私聊消息的接收玩家"
         },
         "<message: message>": {
             "type": "STRING",
             "canContainSpace": true,
-            "brief": "消息",
-            "description": "指定要发送的私聊消息。",
+            "brief": "要发送的消息",
+            "description": "指定要发送的消息。",
             "ignoreLater": true
         }
     }

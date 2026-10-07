@@ -2,40 +2,41 @@
     "name": [
         "testforblocks"
     ],
-    "description": "测试两个区域中的方块是否相同，并返回匹配方块的总数量。",
+    "description": "测试两个区域中的方块是否相同。",
     "syntax": [
         "/testforblocks <begin: x y z> <end: x y z> <destination: x y z> [masked|all]"
     ],
     "node": {
         "<begin: x y z>": {
             "type": "POSITION",
-            "brief": "源坐标1",
-            "description": "指定源区域的两个对角方块之一。"
+            "brief": "源区域起点",
+            "description": "指定源区域的一个端点坐标。"
         },
         "<end: x y z>": {
             "type": "POSITION",
-            "brief": "源坐标2",
-            "description": "指定源区域的两个对角方块之一。"
+            "brief": "源区域另一端点",
+            "description": "指定源区域的另一个端点坐标。"
         },
         "<destination: x y z>": {
             "type": "POSITION",
-            "brief": "待检查区域坐标",
-            "description": "指定目标区域的下西北角坐标。"
+            "brief": "目标区域坐标",
+            "description": "指定目标区域的起点坐标。"
         },
         "[masked|all]": {
             "type": "NORMAL_ID",
-            "description": "按全部方块或仅非空气方块比较两个区域。",
+            "description": "指定测试模式。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "masked",
-                    "description": "将源区域的空气方块视为可匹配目标区域的任意方块。"
+                    "description": "源区域的空气方块可匹配目标区域的任意方块。"
                 },
                 {
                     "name": "all",
-                    "description": "比较两个区域中的所有方块。"
+                    "description": "两个区域的所有方块必须完全相同。"
                 }
-            ]
+            ],
+            "brief": "测试模式"
         }
     }
 }

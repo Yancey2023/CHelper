@@ -8,3 +8,7 @@ netease 相对该 release 版本**只多不少**，多出的 ID 在此目录以�
 
 规则：只叠加、不覆盖——已存在于正常管线结果中的 ID 会被忽略。
 注意：仅当该类别在本版本的生成结果中存在时才会被叠加（版本特性门控之外的类别会被跳过并警告）。
+
+## cameraEasing
+
+固定的 NetEase `caidlist` 快照没有 `cameraEasings` 类别，但现有 NetEase camera 命令的 `easeType` 和 `fovEaseType` 节点仍引用 `cameraEasing`。因此 vanilla 与 experiment 分支分别在 `cameraEasing.json` 登记现有维护目录中的32个ID，保持原顺序，映射值留空；此处只补枚举名称，不复制用途说明。最终用途说明继续由 `data/wiki_patches/camera.json` 提取并通过 wiki catalog 管线生成。

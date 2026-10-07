@@ -11,26 +11,26 @@
     "node": {
         "hold": {
             "type": "TEXT",
-            "description": "暂停服务器对存档文件的写入，以便从外部复制备份。",
+            "description": "暂停存档文件写入，以便备份。",
             "data": {
                 "name": "hold",
-                "description": "暂停服务器对存档文件的写入，以便从外部复制备份。"
+                "description": "暂停存档文件写入，以便备份。"
             }
         },
         "query": {
             "type": "TEXT",
-            "description": "显示存档文件的路径和需要截断的字节量。",
+            "description": "查询存档文件信息。",
             "data": {
                 "name": "query",
-                "description": "显示存档文件的路径和需要截断的字节量。"
+                "description": "查询存档文件信息。"
             }
         },
         "resume": {
             "type": "TEXT",
-            "description": "恢复服务器对存档文件的写入。",
+            "description": "恢复启用服务器对存档文件的写入。",
             "data": {
                 "name": "resume",
-                "description": "恢复服务器对存档文件的写入。"
+                "description": "恢复启用服务器对存档文件的写入。"
             }
         }
     }

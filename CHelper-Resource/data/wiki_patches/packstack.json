@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "reason": "将stackType已有说明转为枚举选项；为verbose和exclude-vanilla固定文本参数补充选项作用，避免把文本标记误解为Boolean值。",
+    "replacements": [
+        {
+            "old": ": 指定包的类型，必须为{{cd|client}}（资源包）或{{cd|server}}（行为包和脚本模块）。",
+            "new": ": 指定包的类型，必须为以下其中之一：\n:* {{cd|client}} — 资源包\n:* {{cd|server}} — 行为包和脚本模块",
+            "reason": "两个取值和其中文解释均来自命令页面 stackType 参数原句。"
+        },
+        {
+            "old": ": 指定是否显示未启用的包和包的详细信息，必须为{{cd|verbose}}。",
+            "new": ": 使用{{cd|verbose}}选项显示未启用的包和包的详细信息。\n: brief: 显示未启用包和详细信息",
+            "reason": "人工澄清该可选参数是固定文本标记而不是Boolean；选项的效果保留Wiki原句所述信息。"
+        },
+        {
+            "old": ": 指定是否排除原版包，必须为{{cd|exclude-vanilla}}。",
+            "new": ": 使用{{cd|exclude-vanilla}}选项从显示结果中排除原版包。\n: brief: 排除原版包",
+            "reason": "人工澄清该可选参数是固定文本标记而不是Boolean；排除原版包的效果来自Wiki原句。"
+        },
+        {
+            "old": "显示[[附加包|资源包]]、[[行为包]]和脚本模块数据。",
+            "new": "显示已加载的资源包、行为包和脚本模块。",
+            "expected_matches": 1,
+            "reason": "将根介绍精简为核心用途。"
+        },
+        {
+            "old": "使用{{cd|verbose}}选项显示未启用的包和包的详细信息。",
+            "new": "显示未启用的包和包详情。",
+            "expected_matches": 1,
+            "reason": "保留选项核心动作，删除自指式说明。"
+        },
+        {
+            "old": "使用{{cd|exclude-vanilla}}选项从显示结果中排除原版包。",
+            "new": "从结果中排除原版包。",
+            "expected_matches": 1,
+            "reason": "保留选项核心动作，删除自指式说明。"
+        }
+    ]
+}

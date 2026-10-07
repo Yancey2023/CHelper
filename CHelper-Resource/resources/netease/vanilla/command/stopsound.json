@@ -2,23 +2,24 @@
     "name": [
         "stopsound"
     ],
-    "description": "停止玩家正在播放的声音。",
+    "description": "停止声音事件播放。",
     "syntax": [
         "/stopsound <player: target> [sound: string]"
     ],
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "选择要停止声音的玩家。",
+            "description": "指定声音的接收者。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "声音的接收者"
         },
         "[sound: string]": {
             "type": "NORMAL_ID",
-            "brief": "声音",
-            "description": "指定要停止的声音事件；省略时停止该玩家的所有声音。",
+            "brief": "要停止的声音",
+            "description": "指定要停止的声音事件。",
             "ignoreError": true,
             "key": "sound"
         }

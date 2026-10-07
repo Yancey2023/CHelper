@@ -3,17 +3,17 @@
         "alwaysday",
         "daylock"
     ],
-    "description": "锁定白天或恢复昼夜更替。",
+    "description": "锁定或解除白天锁定。",
     "syntax": [
         "/alwaysday [lock: Boolean]"
     ],
     "node": {
         "[lock: Boolean]": {
             "type": "BOOLEAN",
-            "brief": "锁定白天",
-            "description": "锁定白天或恢复昼夜更替。",
-            "descriptionTrue": "将游戏时间设为5000刻，并停止昼夜更替。",
-            "descriptionFalse": "将游戏时间设为5000刻，并恢复昼夜更替。"
+            "brief": "是否锁定白天",
+            "description": "指定是否锁定终为白日。",
+            "descriptionTrue": "锁定白天并停止昼夜更替。",
+            "descriptionFalse": "恢复昼夜更替。"
         }
     }
 }

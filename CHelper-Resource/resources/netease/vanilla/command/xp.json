@@ -2,7 +2,7 @@
     "name": [
         "xp"
     ],
-    "description": "给予或移除玩家的经验值或经验等级",
+    "description": "给予玩家经验值或调整经验等级。",
     "syntax": [
         "/xp <amount: int> [player: target]",
         "/xp <amount: int>L [player: target]"
@@ -10,22 +10,23 @@
     "node": {
         "<amount: int>L|<amount: int>": {
             "type": "INTEGER_WITH_UNIT",
-            "brief": "经验数量",
-            "description": "给予或移除的经验数量，附加L时按等级计量",
+            "brief": "经验值或等级数量",
+            "description": "指定要给予玩家的经验值或经验等级的数量。 以L后缀指定经验等级，否则指定经验值。",
             "units": [
                 {
                     "name": "L",
-                    "description": "按经验等级计量"
+                    "description": "指定经验等级。"
                 }
             ]
         },
         "[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "获得或失去经验值或经验等级的玩家",
+            "description": "指定命令作用的目标玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "目标玩家"
         }
     }
 }

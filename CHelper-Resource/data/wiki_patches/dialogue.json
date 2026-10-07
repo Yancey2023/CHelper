@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "reason": "为场景和打开对话的玩家参数提供简短brief，保留其Wiki用途说明。",
+    "replacements": [
+        {
+            "old": "{{argument|be=1|player: target|CommandSelector<Player>}}",
+            "new": "{{argument|be=1|player: target|players: target|CommandSelector<Player>}}",
+            "expected_matches": 1,
+            "reason": "基岩版change语法使用players: target，而open语法使用player: target；将实际语法中的别名列在同一参数标题下，以便两个分支共用该参数说明。"
+        },
+        {
+            "old": ":指定从导入的行为包中对话文件显示的场景。",
+            "new": ":指定从导入的行为包中对话文件显示的场景。brief: 场景名称",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定场景时的行为说明，保留场景参数用途。"
+        },
+        {
+            "old": "* 在<code>open</code>中为可选参数，如果未指定，将使用该NPC最后的场景进行对话。\n* 在<code>change</code>中必须指定场景，否则改变无效。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "open和change的条件已并入sceneName参数用途句，避免同一参数出现多个用途候选；原文条件均完整保留。"
+        },
+        {
+            "old": ":指定打开NPC对话框的目标玩家，{{arg desc|be=CommandSelector<Player>}}",
+            "new": ":在<code>open</code>中指定对话玩家；在<code>change</code>中限定被改变对话的玩家。brief: 对话玩家\n:{{arg desc|be=CommandSelector<Player>}}",
+            "expected_matches": 1,
+            "reason": "按用户授权删除必选/可选标记及省略状态说明；保留显式指定玩家时的用途和效果。"
+        },
+        {
+            "old": "* 在<code>open</code>中为必选参数，用于指定打开对话的目标玩家；\n* 在<code>change</code>中为可选参数，用于决定是否仅改变该NPC对该玩家的对话，若为空，则改变该NPC对全局的对话。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "open和change的条件已并入player参数用途句，避免同一参数出现多个用途候选；原文条件均完整保留。"
+        },
+        {
+            "old": "且必须为单个NPC。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除参数合法取值或格式限制，保留参数用途。"
+        },
+        {
+            "old": "必须是一个场景名称（无空格）或有双引号字符串（可含有空格）。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除参数合法取值或格式限制，保留参数用途。"
+        },
+        {
+            "old": ":指定从导入的行为包中对话文件显示的场景。brief: 场景名称",
+            "new": ":指定要显示的场景。brief: 场景名称",
+            "expected_matches": 1,
+            "reason": "压缩sceneName用途描述，保留其指定显示场景的核心作用。"
+        },
+        {
+            "old": ":对于NPC内置的命令界面，有一个特有的选择器变量为[[目标选择器#@initiator|@initiator]]，它可以选择当前与该NPC进行交互（例如打开NPC对话框、使用NPC按钮和关闭NPC对话框）的玩家。如果该选择器用于NPC内置命令以外的命令，则不会选择到任何目标，也不会报错。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除player参数下关于@initiator的旁注和选择器行为解释，保留参数在open/change分支中的用途。"
+        }
+    ]
+}

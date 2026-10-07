@@ -2,47 +2,49 @@
     "name": [
         "spreadplayers"
     ],
-    "description": "将选中的实体随机分散到指定区域内的地表位置。",
+    "description": "把实体随机传送到区域内地表的某个位置。",
     "syntax": [
         "/spreadplayers <x: value> <z: value> <spreadDistance: float> <maxRange: float> <victim: target> [maxHeight: value]"
     ],
     "node": {
         "<x: value>": {
             "type": "RELATIVE_FLOAT",
-            "brief": "x",
-            "description": "指定分散区域中心的X坐标。",
+            "brief": "中心X坐标",
+            "description": "指定传送目的地区域中心的X坐标。",
             "canUseCaretNotation": true
         },
         "<z: value>": {
             "type": "RELATIVE_FLOAT",
-            "brief": "z",
-            "description": "指定分散区域中心的Z坐标。",
+            "brief": "中心Z坐标",
+            "description": "指定传送目的地区域中心的Z坐标。",
             "canUseCaretNotation": true
         },
         "<spreadDistance: float>": {
             "type": "FLOAT",
-            "brief": "最小间距",
-            "description": "指定各传送目标之间保持的最小距离。",
+            "brief": "传送目标之间的最小间距",
+            "description": "指定传送目标之间的最小间距。",
             "min": 0
         },
         "<maxRange: float>": {
             "type": "FLOAT",
-            "brief": "范围",
-            "description": "指定正方形分散区域边界与中心在X、Z轴上的距离。",
+            "brief": "区域范围",
+            "description": "指定正方形区域边界与中心的距离。",
             "min": 1
         },
         "<victim: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "选择要随机分散传送的实体。",
+            "description": "指定需要随机传送的目标。",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "需要随机传送的目标"
         },
         "[maxHeight: value]": {
-            "type": "INTEGER",
-            "brief": "最大高度",
-            "description": "限定传送位置的最高高度。"
+            "type": "RELATIVE_FLOAT",
+            "brief": "最高传送高度",
+            "description": "若指定，限制传送位置的最大高度。",
+            "canUseCaretNotation": false
         }
     }
 }

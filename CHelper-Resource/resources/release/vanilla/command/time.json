@@ -2,7 +2,7 @@
     "name": [
         "time"
     ],
-    "description": "控制或查询世界的时间。",
+    "description": "控制或查询时间。",
     "syntax": [
         "/time add <amount: int>",
         "/time query <time: TimeQuery>",
@@ -20,7 +20,8 @@
         },
         "<amount: int>": {
             "type": "INTEGER",
-            "description": "指定要增加或设置的时间。"
+            "description": "指定要增加或设置的时间。 单位为游戏刻。",
+            "brief": "要增加或设置的时间"
         },
         "query": {
             "type": "TEXT",
@@ -55,38 +56,40 @@
                     "name": "day",
                     "description": "游戏天数"
                 }
-            ]
+            ],
+            "brief": "要查询的数据"
         },
         "<timeMarkerName: timemarker name>": {
             "type": "NORMAL_ID",
-            "description": "指定要设置的时间标记",
+            "description": "指定要设置的时间标记。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "day",
-                    "description": "日间（1,000游戏刻）"
+                    "description": "1,000"
                 },
                 {
                     "name": "noon",
-                    "description": "正午（6,000游戏刻）"
+                    "description": "6,000"
                 },
                 {
                     "name": "sunset",
-                    "description": "日落（12,000游戏刻）"
+                    "description": "12,000"
                 },
                 {
                     "name": "night",
-                    "description": "夜晚（13,000游戏刻）"
+                    "description": "13,000"
                 },
                 {
                     "name": "midnight",
-                    "description": "午夜（18,000游戏刻）"
+                    "description": "18,000"
                 },
                 {
                     "name": "sunrise",
-                    "description": "日出（23,000游戏刻）"
+                    "description": "23,000"
                 }
-            ]
+            ],
+            "brief": "时间标记名称"
         }
     }
 }

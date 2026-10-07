@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "reason": "把 shakeType 已有的两个取值说明改成提取器可识别的枚举列表，并为两个缺少短名的参数补充 brief。",
+    "replacements": [
+        {
+            "old": ": 指定要施以视野摇晃效果的玩家。如果未指定，默认为命令执行者。",
+            "new": ": 指定要施以视野摇晃效果的玩家。",
+            "expected_matches": 1,
+            "reason": "删除关于省略参数的说明，保留玩家参数用途。"
+        },
+        {
+            "old": ": {{arg desc|be=float}}必须是0到4以内的数（包含0和4）。\n: 指定视野摇晃的强度。",
+            "new": ": {{arg desc|be=float}}\n: 指定视野摇晃的强度。brief: 摇晃强度",
+            "expected_matches": 1,
+            "reason": "移除强度的合法取值范围，保留强度用途和brief；参数元数据范围保持不变。"
+        },
+        {
+            "old": ": 必须为<code>positional</code>（坐标摇晃）或<code>rotational</code>（角度摇晃）。\n: 指定视野摇晃方向的种类。",
+            "new": ": 必须为以下其中之一：\n:* <code>positional</code> — 坐标摇晃。\n:* <code>rotational</code> — 角度摇晃。\n: 指定视野摇晃方向的种类。brief: 摇晃方向",
+            "expected_matches": 1,
+            "reason": "将 Wiki 已列出的坐标摇晃与角度摇晃两种值规范成固定枚举结构，并为参数提供短名。"
+        },
+        {
+            "old": "对玩家视野施以一定强度和时间的摇晃效果（若玩家在无障碍设置中禁用了视角摇晃，则不会看到此效果）。",
+            "new": "对玩家视野施以摇晃效果。",
+            "expected_matches": 1,
+            "reason": "保留中文Wiki原文“对玩家视野施以……摇晃效果”的用词，删除显示条件和强度、时长旁注。"
+        }
+    ]
+}

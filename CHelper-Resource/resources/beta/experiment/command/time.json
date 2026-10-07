@@ -2,7 +2,7 @@
     "name": [
         "time"
     ],
-    "description": "控制或查询世界的时间。",
+    "description": "控制或查询时间。",
     "syntax": [
         "/time add <amount: int>",
         "/time of <clockName: string> add <amount: int>",
@@ -28,7 +28,8 @@
         },
         "<amount: int>": {
             "type": "INTEGER",
-            "description": "指定要增加或设置的时间。"
+            "description": "指定要增加或设置的时间。 单位为游戏刻。",
+            "brief": "要增加或设置的时间"
         },
         "query": {
             "type": "TEXT",
@@ -61,9 +62,10 @@
             "contents": [
                 {
                     "name": "overworld",
-                    "description": "主世界世界时钟。"
+                    "description": "操作overworld世界时钟"
                 }
-            ]
+            ],
+            "brief": "要操作的世界时钟"
         },
         "pause": {
             "type": "TEXT",
@@ -91,53 +93,55 @@
         },
         "<timeMarkerName: timemarker name>": {
             "type": "NORMAL_ID",
-            "description": "指定要设置的时间标记",
+            "description": "指定要设置的时间标记。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "day",
-                    "description": "日间（1,000游戏刻）"
+                    "description": "1,000"
                 },
                 {
                     "name": "noon",
-                    "description": "正午（6,000游戏刻）"
+                    "description": "6,000"
                 },
                 {
                     "name": "sunset",
-                    "description": "日落（12,000游戏刻）"
+                    "description": "12,000"
                 },
                 {
                     "name": "night",
-                    "description": "夜晚（13,000游戏刻）"
+                    "description": "13,000"
                 },
                 {
                     "name": "midnight",
-                    "description": "午夜（18,000游戏刻）"
+                    "description": "18,000"
                 },
                 {
                     "name": "sunrise",
-                    "description": "日出（23,000游戏刻）"
+                    "description": "23,000"
                 }
-            ]
+            ],
+            "brief": "时间标记名称"
         },
         "[timeMarkerOccurrence: TimeMarkerOccurrence]": {
             "type": "NORMAL_ID",
-            "description": "选择时间标记相对于当前时间的搜索方式。",
+            "description": "指定寻找时间标记的方式",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "next",
-                    "description": "寻找晚于当前时间的下次标记（今天或明天）"
+                    "description": "寻找下一个时间标记"
                 },
                 {
                     "name": "stay",
-                    "description": "寻找同一天内的标记（今天）"
+                    "description": "寻找当天的时间标记"
                 },
                 {
                     "name": "previous",
-                    "description": "从当前时间（含）寻找上次标记（昨天或今天）"
+                    "description": "寻找上一个时间标记"
                 }
-            ]
+            ],
+            "brief": "时间标记查找方式"
         },
         "<time: TimeQuery2>": {
             "type": "NORMAL_ID",
@@ -160,7 +164,8 @@
                     "name": "time",
                     "description": "经过的总刻数"
                 }
-            ]
+            ],
+            "brief": "要查询的数据"
         }
     }
 }

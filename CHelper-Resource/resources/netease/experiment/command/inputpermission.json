@@ -2,7 +2,7 @@
     "name": [
         "inputpermission"
     ],
-    "description": "对玩家的权限状态进行指定操作。",
+    "description": "查询或设置玩家的输入权限。",
     "syntax": [
         "/inputpermission query <targets: target> <permission: permission> [state: state]",
         "/inputpermission set <targets: target> <permission: permission> <state: state>"
@@ -10,64 +10,65 @@
     "node": {
         "query": {
             "type": "TEXT",
-            "description": "查询玩家指定权限的当前状态。",
+            "description": "查询目标的指定权限的状态。",
             "data": {
                 "name": "query",
-                "description": "查询玩家指定权限的当前状态"
+                "description": "查询目标的指定权限的状态。"
             }
         },
         "<targets: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "要查询或修改权限状态的玩家。",
+            "description": "指定权限的拥有者。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "权限的拥有者"
         },
         "<permission: permission>": {
             "type": "NORMAL_ID",
             "brief": "操作所作用的权限",
-            "description": "要查询或修改的玩家操作权限。",
+            "description": "指定操作所作用的权限。",
             "ignoreError": true,
             "key": "inputPermission"
         },
         "[state: state]": {
             "type": "NORMAL_ID",
             "brief": "权限的状态",
-            "description": "要查询的权限状态。",
+            "description": "指定权限状态； query时用于筛选结果。",
             "ignoreError": true,
             "contents": [
                 {
                     "name": "enabled",
-                    "description": "允许玩家执行该操作。"
+                    "description": "启用"
                 },
                 {
                     "name": "disabled",
-                    "description": "禁止玩家执行该操作。"
+                    "description": "禁用"
                 }
             ]
         },
         "set": {
             "type": "TEXT",
-            "description": "修改玩家指定权限的状态。",
+            "description": "修改目标的指定权限的状态。",
             "data": {
                 "name": "set",
-                "description": "修改玩家指定权限的状态"
+                "description": "修改目标的指定权限的状态。"
             }
         },
         "<state: state>": {
             "type": "NORMAL_ID",
             "brief": "权限的状态",
-            "description": "要设置的权限状态。",
+            "description": "指定权限状态； query时用于筛选结果。",
             "ignoreError": true,
             "contents": [
                 {
                     "name": "enabled",
-                    "description": "允许玩家执行该操作。"
+                    "description": "启用"
                 },
                 {
                     "name": "disabled",
-                    "description": "禁止玩家执行该操作。"
+                    "description": "禁用"
                 }
             ]
         }

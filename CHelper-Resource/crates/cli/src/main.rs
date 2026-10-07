@@ -1,7 +1,9 @@
 //! CHelper 资源包生成器 CLI。
 
 use anyhow::{Context, Result};
-use chelper_core::{cache::HttpCache, command_sync, command_wiki, config::Config, pipeline};
+use chelper_core::{
+    cache::HttpCache, command_documentation, command_sync, command_wiki, config::Config, pipeline,
+};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -39,6 +41,17 @@ enum Command {
     CacheCommandWiki {
         #[arg(long)]
         refresh: bool,
+    },
+    /// 从本地 Wiki 原文应用 patch、提取说明并生成可审阅的资源提案
+    ExtractCommandDocs {
+        #[arg(value_delimiter = ',')]
+        editions: Vec<String>,
+        /// 仅处理指定命令；缺省为所选版本全部命令
+        #[arg(long, value_delimiter = ',')]
+        commands: Vec<String>,
+        /// 来源匹配完整时将提案写回维护源；有缺失字段时不写回
+        #[arg(long)]
+        apply: bool,
     },
     /// 对比资源包命令语法与 caidlist mcpews.json
     CheckCommands {
@@ -104,6 +117,20 @@ async fn main() -> Result<()> {
                 refresh,
             )
             .await?;
+            println!("{}", serde_json::to_string_pretty(&report)?);
+        }
+        Command::ExtractCommandDocs {
+            editions,
+            commands,
+            apply,
+        } => {
+            let editions = if editions.is_empty() {
+                vec!["release".into(), "beta".into(), "netease".into()]
+            } else {
+                editions
+            };
+            let report =
+                command_documentation::extract_command_docs(&cfg, &editions, &commands, apply)?;
             println!("{}", serde_json::to_string_pretty(&report)?);
         }
         Command::CheckCommands {

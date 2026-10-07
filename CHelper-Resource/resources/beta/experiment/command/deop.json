@@ -13,7 +13,8 @@
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要撤销管理员的玩家"
         }
     }
 }

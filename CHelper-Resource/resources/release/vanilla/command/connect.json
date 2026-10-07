@@ -2,16 +2,17 @@
     "name": [
         "connect"
     ],
-    "description": "用于连接WebSocket服务器，WebSocket服务器使用命令信息与客户端交互，主要用于教育版中。",
+    "description": "连接WebSocket服务器。",
     "syntax": [
         "/connect <serverUri: text>"
     ],
     "node": {
         "<serverUri: text>": {
             "type": "STRING",
-            "description": "指向WebSocket服务器的URI。如果URI不等同于当前连接的服务器，则会先断开当前连接。域名解析在客户端完成。",
+            "description": "指定WebSocket服务器的URI。",
             "canContainSpace": false,
-            "ignoreLater": false
+            "ignoreLater": false,
+            "brief": "服务器URI"
         }
     }
 }

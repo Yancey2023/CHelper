@@ -9,15 +9,15 @@
     "node": {
         "<effect: string>": {
             "type": "NORMAL_ID",
-            "brief": "粒子类型",
-            "description": "选择要显示的粒子类型。",
+            "brief": "要生成的粒子的粒子类型",
+            "description": "指定要生成的粒子的粒子类型。",
             "ignoreError": true,
             "key": "particleEmitter"
         },
         "[position: x y z]": {
             "type": "POSITION",
-            "brief": "位置",
-            "description": "指定粒子效果的生成位置。"
+            "brief": "要显示粒子的位置",
+            "description": "指定要显示粒子的位置。"
         }
     }
 }

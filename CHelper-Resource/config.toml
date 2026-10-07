@@ -2,6 +2,9 @@
 
 # 命令 Wiki 原文和来源元数据
 command_wiki_dir = "output/command_wiki"
+wiki_patches_dir = "data/wiki_patches"
+command_docs_dir = "output/command_docs"
+max_brief_chars = 12
 
 # HTTP 缓存过期时间（小时）
 http_ttl_hours = 24

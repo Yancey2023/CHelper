@@ -84,6 +84,18 @@ netease 相对指定的 release 版本**只多不少**。多出的 ID 放在
 - 只能叠加到本版本生成结果中已存在的类别（版本特性门控之外的类别会被跳过并警告）；
 - 文件按输出名命名（`entity.json`、`block.json`、`music.json`……）。
 
+## 静态语法与JSON定义
+
+`data/resource_definitions`是`grammer`、`json`、`repeat`的规范数据源：公共四份定义复用于六包，
+网易execute单独覆盖，保留该版本维度。可继续按`<版本>/<分支>/`覆盖整份同路径文件。
+维护说明应修改这里的数据，而非`resources`中的24份生成快照。
+
+生成器开始时验证并固定本轮所用定义，直接写入资源包，并刷新所选版本的静态快照。
+必需公共文件、网易专用定义缺失或结构损坏会报错，不能回退旧快照。
+目录与文件约定见[data/resource_definitions/README.md](../data/resource_definitions/README.md)。
+
+命令正文与参数说明仍从`data/wiki_patches`应用后的中文Wiki提取，ID译文沿用既有`translations`入口。
+
 ## 已知限制
 
 - 只支持公开仓库：caidlist 与 bedrock-samples 均为公开仓库，无需任何令牌。

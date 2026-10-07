@@ -9,8 +9,8 @@
     "node": {
         "<message: message>": {
             "type": "STRING",
-            "brief": "信息",
-            "description": "要在聊天中广播的消息。",
+            "brief": "要显示的消息",
+            "description": "指定要显示的消息。",
             "canContainSpace": true,
             "ignoreLater": true
         }

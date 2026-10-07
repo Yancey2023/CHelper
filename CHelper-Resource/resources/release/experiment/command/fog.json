@@ -2,7 +2,7 @@
     "name": [
         "fog"
     ],
-    "description": "更改玩家的迷雾效果",
+    "description": "用于更改玩家的迷雾效果。",
     "syntax": [
         "/fog <victim: target> <mode: delete> <userProvidedId: string>",
         "/fog <victim: target> push <fogId: string> <userProvidedId: string>"
@@ -10,46 +10,48 @@
     "node": {
         "<victim: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "修改玩家迷雾效果的目标",
+            "description": "指定修改玩家迷雾效果的目标。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "修改玩家迷雾效果的目标"
         },
         "<mode: delete>": {
             "type": "NORMAL_ID",
-            "description": "删除模式",
+            "description": "指定是只移除第一个还是移除所有名称为<userProvidedId: string>的迷雾。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "pop",
-                    "description": "只移除第一个"
+                    "description": "只移除第一个名称为<userProvidedId: string>的迷雾。"
                 },
                 {
                     "name": "remove",
-                    "description": "移除全部"
+                    "description": "移除所有名称为<userProvidedId: string>的迷雾。"
                 }
-            ]
+            ],
+            "brief": "删除模式"
         },
         "<userProvidedId: string>": {
             "type": "STRING",
-            "brief": "迷雾名称",
-            "description": "迷雾设置的名称",
+            "brief": "迷雾设置的名称",
+            "description": "指定迷雾设置的名称。",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "push": {
             "type": "TEXT",
-            "description": "更改玩家的迷雾效果",
             "data": {
                 "name": "push",
-                "description": "更改玩家的迷雾效果"
-            }
+                "description": "将指定迷雾加入目标玩家的迷雾效果栈。"
+            },
+            "description": "将指定迷雾加入目标玩家的迷雾效果栈。"
         },
         "<fogId: string>": {
             "type": "NORMAL_ID",
-            "brief": "迷雾ID",
-            "description": "修改的迷雾ID",
+            "brief": "修改的迷雾ID",
+            "description": "指定修改的迷雾ID。",
             "ignoreError": true,
             "key": "fog"
         }

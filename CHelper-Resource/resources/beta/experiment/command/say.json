@@ -11,7 +11,8 @@
             "type": "STRING",
             "description": "要发送的聊天消息。",
             "canContainSpace": true,
-            "ignoreLater": true
+            "ignoreLater": true,
+            "brief": "要发送的聊天消息"
         }
     }
 }

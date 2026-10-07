@@ -85,6 +85,12 @@ pub struct Config {
     pub output_dir: PathBuf,
     /// 各命令的 Wiki 原始页面和来源元数据（相对项目根）。
     pub command_wiki_dir: PathBuf,
+    /// Exact Wiki source edits applied before description extraction.
+    pub wiki_patches_dir: PathBuf,
+    /// Extraction reports, provenance and reviewable resource proposals.
+    pub command_docs_dir: PathBuf,
+    /// Warn when a generated brief exceeds this Unicode-character limit.
+    pub max_brief_chars: usize,
     /// 未翻译 ID 清单目录（相对项目根）。
     pub untranslated_dir: PathBuf,
     /// 已复核翻译目录（第 1 优先级；可含经人工复核的 AI 起草译文）。
@@ -115,6 +121,9 @@ impl Default for Config {
             cache_dir: PathBuf::from("cache"),
             output_dir: PathBuf::from("output/chelper"),
             command_wiki_dir: PathBuf::from("output/command_wiki"),
+            wiki_patches_dir: PathBuf::from("data/wiki_patches"),
+            command_docs_dir: PathBuf::from("output/command_docs"),
+            max_brief_chars: 12,
             untranslated_dir: PathBuf::from("output/untranslated"),
             translations_dir: PathBuf::from("translations"),
             ai_translations_dir: PathBuf::from("ai_translations"),
@@ -178,6 +187,8 @@ impl Config {
         cfg.cache_dir = join_root(&cfg.project_root, &cfg.cache_dir);
         cfg.output_dir = join_root(&cfg.project_root, &cfg.output_dir);
         cfg.command_wiki_dir = join_root(&cfg.project_root, &cfg.command_wiki_dir);
+        cfg.wiki_patches_dir = join_root(&cfg.project_root, &cfg.wiki_patches_dir);
+        cfg.command_docs_dir = join_root(&cfg.project_root, &cfg.command_docs_dir);
         cfg.untranslated_dir = join_root(&cfg.project_root, &cfg.untranslated_dir);
         cfg.translations_dir = join_root(&cfg.project_root, &cfg.translations_dir);
         cfg.ai_translations_dir = join_root(&cfg.project_root, &cfg.ai_translations_dir);

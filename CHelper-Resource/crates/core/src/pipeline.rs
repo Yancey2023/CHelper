@@ -2,11 +2,15 @@
 
 use crate::cache::{HttpCache, RepoSource};
 use crate::chelper::{write_resource_pack, ChelperInput};
+use crate::command_documentation::{
+    enrich_option_catalog, export_documented_commands, extract_command_docs, require_complete,
+};
 use crate::command_patch::{
-    write_netease_extension_ids, write_old2new_resources, write_reviewed_resources,
+    write_netease_extension_ids, write_old2new_resources, write_reviewed_commands,
 };
 use crate::command_wiki::{archive_command_pages, CommandWikiReport};
 use crate::config::Config;
+use crate::resource_definitions::ResourceDefinitions;
 use crate::sources::bedrock_lang::fetch_bedrock_lang;
 use crate::sources::caidlist::{remove_minecraft_namespace, Enums, RepoSnapshot};
 use crate::sources::java_lang::{fetch_java_lang, JavaLang};
@@ -20,6 +24,7 @@ use crate::{jfmt::to_string_pretty4, manifest::write_manifest, write_crlf};
 use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
 use serde_json::Value;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -45,6 +50,9 @@ pub struct GenerateReport {
     pub warnings: usize,
     pub untranslated_ids: usize,
     pub command_wiki: Option<CommandWikiReport>,
+    pub documented_commands: usize,
+    pub patched_wiki_pages: usize,
+    pub documentation_warnings: usize,
 }
 
 /// 支持的版本：release / beta 用 master 的对应数据目录；netease 用 netease 源的 version/release。
@@ -57,11 +65,60 @@ fn version_dir_for(edition: &str) -> &'static str {
 }
 
 pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Result<GenerateReport> {
+    let mut static_definitions = BTreeMap::new();
     for edition in editions {
         if !matches!(edition.as_str(), "release" | "beta" | "netease") {
             bail!("未知版本: {edition}（支持 release / beta / netease）");
         }
+        for branch in ["vanilla", "experiment"] {
+            static_definitions.insert(
+                (edition.clone(), branch.to_string()),
+                ResourceDefinitions::load(
+                    &cfg.data_dir.join("resource_definitions"),
+                    edition,
+                    branch,
+                )?,
+            );
+        }
     }
+    let stage = crate::output_stage::OutputStage::new(&cfg.output_dir)?;
+    let project = cfg.project_root.canonicalize()?;
+    let resources = project
+        .join("resources")
+        .canonicalize()
+        .unwrap_or_else(|_| project.join("resources"));
+    let data = cfg
+        .data_dir
+        .canonicalize()
+        .unwrap_or_else(|_| cfg.data_dir.clone());
+    if stage.target() == project
+        || stage.target().starts_with(resources)
+        || stage.target().starts_with(data)
+    {
+        bail!("资源输出不能覆盖项目维护源: {}", stage.target().display());
+    }
+    stage.preserve_unselected(editions)?;
+    let mut staged_cfg = cfg.clone();
+    staged_cfg.output_dir = stage.path().to_path_buf();
+    let report = generate_staged(&staged_cfg, editions, refresh, &static_definitions).await?;
+    for ((edition, branch), definitions) in &static_definitions {
+        definitions.write_to(
+            &cfg.project_root
+                .join("resources")
+                .join(edition)
+                .join(branch),
+        )?;
+    }
+    stage.publish()?;
+    Ok(report)
+}
+
+async fn generate_staged(
+    cfg: &Config,
+    editions: &[String],
+    refresh: bool,
+    static_definitions: &BTreeMap<(String, String), ResourceDefinitions>,
+) -> Result<GenerateReport> {
     let http = Arc::new(HttpCache::new(&cfg.cache_dir)?);
     let mut report = GenerateReport::default();
     let mut untranslated_warnings = Vec::new();
@@ -77,6 +134,14 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
     .await?;
     report.warnings += wiki.unavailable;
     report.command_wiki = Some(wiki);
+
+    // Source-derived descriptions must be complete before exporting any resource pack.
+    let command_docs = extract_command_docs(cfg, editions, &[], false)?;
+    require_complete(&command_docs)?;
+    report.documented_commands = command_docs.commands;
+    report.patched_wiki_pages = command_docs.patched_pages;
+    report.documentation_warnings = command_docs.warnings;
+    report.warnings += command_docs.warnings;
 
     // —— 数据源快照 ——
     let master_source = RepoSource::new(
@@ -96,20 +161,30 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
     let gamerule_type = fetch_gamerule_type_value(&http).await?;
     tracing::info!("抓取 wiki 方块属性描述…");
     let block_property_descriptions = fetch_block_property_descriptions(&http).await?;
-    tracing::info!("抓取 wiki 游戏规则描述（第 2 优先级）…");
-    let gamerule_wiki = fetch_gamerule_descriptions(&http).await?;
     tracing::info!("抓取 wiki 基岩版粒子描述（第 2 优先级）…");
     let particle_wiki = fetch_particle_descriptions(&http).await?;
     tracing::info!("抓取 Java 版语言文件…");
     let java_lang = fetch_java_lang(&http, &cfg.java_manifest_url).await?;
 
     // —— 项目手工数据 ——
-    let game_mode = load_jsonc_file(&cfg.data_dir.join("game_mode.json"))
+    let mut game_mode = load_jsonc_file(&cfg.data_dir.join("game_mode.json"))
         .context("缺少 data/game_mode.json（游戏模式手工数据）")?;
+    let gamemode_document = serde_json::from_str(&std::fs::read_to_string(
+        cfg.command_wiki_dir.join("gamemode/extracted.json"),
+    )?)?;
+    let game_mode_sources = enrich_option_catalog(&mut game_mode, &gamemode_document, "gameMode")?;
+    std::fs::create_dir_all(cfg.command_docs_dir.join("catalogs"))?;
+    std::fs::write(
+        cfg.command_docs_dir.join("catalogs/gameMode.sources.json"),
+        serde_json::to_string_pretty(&game_mode_sources)?,
+    )?;
     let potion_descriptions = load_jsonc_file(&cfg.data_dir.join("potion_descriptions.json"))
         .context("缺少 data/potion_descriptions.json（药水描述数据）")?;
 
     for edition in editions {
+        tracing::info!("[{edition}] 抓取并修补 wiki 游戏规则描述（第 2 优先级）…");
+        let gamerule_wiki =
+            fetch_gamerule_descriptions(&http, &cfg.wiki_patches_dir, edition).await?;
         let (snapshot, version_dir) = if edition == "netease" {
             let source = RepoSource::new(
                 "netease",
@@ -198,6 +273,7 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
             };
             let files = write_resource_pack(input, &output_dir)
                 .with_context(|| format!("[{edition}/{branch}] 写出资源包失败"))?;
+            crate::wiki_catalog::refresh_generated_catalogs(cfg, &output_dir, edition, branch)?;
             let files = files
                 + if edition == "netease"
                     && !support::place_command_feature_sub_command(&core_version, branch)
@@ -221,14 +297,24 @@ pub async fn generate(cfg: &Config, editions: &[String], refresh: bool) -> Resul
             .with_context(|| format!("[{edition}/{branch}] 写出 manifest.json 失败"))?;
             let files = files
                 + 1
-                + write_reviewed_resources(
+                + write_reviewed_commands(
                     &cfg.project_root
                         .join("resources")
                         .join(edition)
                         .join(branch),
                     output_dir.parent().unwrap(),
-                )?;
+                )?
+                + static_definitions
+                    .get(&(edition.clone(), branch.to_string()))
+                    .context("缺少已加载的静态资源定义")?
+                    .write_to(output_dir.parent().unwrap())?;
             let entries: usize = result_maps.values().map(|m| m.len()).sum();
+            export_documented_commands(
+                &command_docs,
+                edition,
+                branch,
+                output_dir.parent().unwrap(),
+            )?;
             tracing::info!(
                 "[{edition}/{branch}] 写出 {files} 个文件（{entries} 条目，{} 条警告）",
                 warnings.len()

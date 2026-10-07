@@ -2,7 +2,7 @@
     "name": [
         "camerashake"
     ],
-    "description": "对玩家视野施以一定强度和时间的摇晃效果。",
+    "description": "对玩家视野施以摇晃效果。",
     "syntax": [
         "/camerashake add <player: target> [intensity: float] [seconds: float] [shakeType: CameraShakeType]",
         "/camerashake stop [player: target]"
@@ -18,37 +18,38 @@
         },
         "<player: target>|[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "要施以视野摇晃效果的玩家",
+            "description": "指定要施以视野摇晃效果的玩家。",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
-            "isWildcard": false
+            "isWildcard": false,
+            "brief": "要施以视野摇晃效果的玩家"
         },
         "[intensity: float]": {
             "type": "FLOAT",
             "brief": "摇晃强度",
-            "description": "视野摇晃的强度",
+            "description": "指定视野摇晃的强度。",
             "min": 0,
             "max": 4
         },
         "[seconds: float]": {
             "type": "FLOAT",
-            "brief": "摇晃时长",
-            "description": "视野摇晃的时长"
+            "brief": "视野摇晃的时长",
+            "description": "指定视野摇晃的时长。 以秒为单位。"
         },
         "[shakeType: CameraShakeType]": {
             "type": "NORMAL_ID",
-            "brief": "摇晃种类",
-            "description": "视野摇晃方向的种类",
+            "brief": "摇晃方向",
+            "description": "指定视野摇晃方向的种类。",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "positional",
-                    "description": "坐标摇晃"
+                    "description": "坐标摇晃。"
                 },
                 {
                     "name": "rotational",
-                    "description": "角度摇晃"
+                    "description": "角度摇晃。"
                 }
             ]
         },

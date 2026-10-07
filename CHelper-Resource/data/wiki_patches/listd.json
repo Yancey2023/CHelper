@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "reason": "将命令适用条件补入用途说明，并从页面参数用途提取简短说明标签、保留枚举选项的字段用途。",
+    "replacements": [
+        {
+            "old": ":* <code>stats</code> — 向信息中加入{{nbt|double|avgpacketloss}}、{{nbt|int|avgping}}、{{nbt|int|maxbps}}、{{nbt|double|packetloss}}和{{nbt|int|ping}}。",
+            "new": ":* <code>stats</code> — 附加网络统计信息。\n: brief: 附加信息",
+            "reason": "brief 为已定义枚举参数的简短用途标签；各选项的字段名称与用途仍直接来自 Wiki 原句。"
+        },
+        {
+            "old": "返回当前在线玩家及其信息。",
+            "new": "当WebSocket端与客户端在同一设备时，返回当前在线玩家及其信息；两者不在同一设备时，效果与{{cmd|list}}相同。",
+            "reason": "补入中文《命令/listd》用法段明确记载的同设备限制及异设备时与list效果相同这一适用条件。"
+        },
+        {
+            "old": "获取所有在线玩家的XUID：{{cmd|link=none|listd uuids}}",
+            "new": "获取所有在线玩家的UUID：{{cmd|link=none|listd uuids}}",
+            "reason": "修正示例与同页参数定义的冲突：uuids选项列出uuid字段；xuid字段另被定义为Xbox UID。"
+        },
+        {
+            "old": "当WebSocket端与客户端在同一设备时，返回当前在线玩家及其信息；两者不在同一设备时，效果与{{cmd|list}}相同。",
+            "new": "同设备返回当前在线玩家信息，异设备时效果与{{cmd|list}}相同。",
+            "expected_matches": 1,
+            "reason": "人工精简命令简介，保留WebSocket同设备条件及异设备时与list相同的必要区别。"
+        },
+        {
+            "old": ":* <code>ids</code> — 同时列出{{nbt|long|randomId}}。",
+            "new": ":* <code>ids</code> — 附加randomId。",
+            "expected_matches": 1,
+            "reason": "人工精简ids选项说明，保留其附加randomId的用途。"
+        },
+        {
+            "old": ":* <code>uuids</code> — 同时列出{{nbt|string|uuid}}。",
+            "new": ":* <code>uuids</code> — 附加UUID。",
+            "expected_matches": 1,
+            "reason": "人工精简uuids选项说明，保留其附加UUID的用途。"
+        }
+    ]
+}

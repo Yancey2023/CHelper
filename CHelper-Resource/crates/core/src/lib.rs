@@ -8,16 +8,24 @@
 
 pub mod cache;
 pub mod chelper;
+pub mod command_descriptions;
+pub mod command_doc;
+pub mod command_documentation;
 pub mod command_patch;
 pub mod command_sync;
 pub mod command_wiki;
 pub mod config;
 pub mod jfmt;
 pub mod manifest;
+mod output_stage;
 pub mod pipeline;
+pub mod resource_definitions;
 pub mod sources;
 pub mod support;
 pub mod translate;
+pub mod wiki_catalog;
+pub mod wiki_extract;
+pub mod wiki_patch;
 
 use anyhow::Result;
 

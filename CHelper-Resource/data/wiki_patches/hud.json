@@ -1,0 +1,58 @@
+{
+    "version": 1,
+    "reason": "将基岩版 HUD 可见性已有的 hide/reset 解释拆分成可匹配的 Wiki 枚举选项，并人工补回具体操作对象与reset效果。",
+    "replacements": [
+        {
+            "old": ":指定将被修改HUD可见性的目标。",
+            "new": ":指定将被修改HUD可见性的目标。brief: 玩家",
+            "expected_matches": 1,
+            "reason": "目标参数为player目标选择器，增加简短用途标签并保留原有目标说明。"
+        },
+        {
+            "old": ":如果未指定，默认为<code>all</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求删除HUD元素未指定时的默认行为说明。"
+        },
+        {
+            "old": ":指定将对HUD可见性做出的修改。",
+            "new": ":指定将对HUD可见性做出的修改。brief: 可见性操作",
+            "expected_matches": 1,
+            "reason": "为visible参数增加简短用途标签，保留原有HUD可见性用途说明。"
+        },
+        {
+            "old": ":必须为<code>hide</code>（隐藏）或<code>reset</code>（重置）。",
+            "new": ":必须为以下其中之一：\n:* <code>hide</code> — 隐藏指定的HUD元素。\n:* <code>reset</code> — 恢复指定HUD元素的默认显示状态。",
+            "reason": "选项名称来自命令页面参数原句；具体操作说明是人工补充，依据父提交已有说明“隐藏指定的HUD元素/恢复指定HUD元素的默认显示状态”，并与中文Wiki示例中reset health使生命值重新显示相符。"
+        },
+        {
+            "old": ":必须为以下之一：",
+            "new": ":必须为以下其中之一：",
+            "reason": "按 Wiki 参数枚举原文把枚举引导语整理为统一句式，不改值或用途说明。"
+        },
+        {
+            "old": ":* <code>air_bubbles</code> － [[氧气值]]\n:* <code>all</code> － 所有的HUD\n:* <code>armor</code> － [[护甲值]]\n:* <code>crosshair</code> － 屏幕上的十字准星\n:* <code>health</code> － [[生命值]]\n:* <code>horse_health</code> － 骑乘坐骑时坐骑的生命值\n:* <code>hotbar</code> － [[快捷栏]]\n:* <code>hunger</code> － [[饥饿值]]\n:* <code>item_text</code> － 物品文本\n:* <code>paperdoll</code> － [[HUD#纸娃娃|纸娃娃]]\n:* <code>progress_bar</code> － [[经验条]]\n:* <code>status_effects</code> － [[状态效果]]图标\n:* <code>tooltips</code> － [[提示框]]\n:* <code>touch_controls</code> － [[HUD#触屏按键|触控按键]]",
+            "new": ":* <code>air_bubbles</code> [[氧气值]]\n:* <code>all</code> 所有的HUD\n:* <code>armor</code> [[护甲值]]\n:* <code>crosshair</code> 屏幕上的十字准星\n:* <code>health</code> [[生命值]]\n:* <code>horse_health</code> 骑乘时坐骑的生命值\n:* <code>hotbar</code> [[快捷栏]]\n:* <code>hunger</code> [[饥饿值]]\n:* <code>item_text</code> 物品文本\n:* <code>paperdoll</code> [[HUD#纸娃娃|纸娃娃]]\n:* <code>progress_bar</code> [[经验条]]\n:* <code>status_effects</code> [[状态效果]]图标\n:* <code>tooltips</code> [[提示框]]\n:* <code>touch_controls</code> [[HUD#触屏按键|触控按键]]",
+            "expected_matches": 1,
+            "reason": "人工清理 HUD 枚举列表的排版分隔符“－”，避免其落入每项用途说明开头；将 horse_health 的“骑乘坐骑时坐骑”压缩为“骑乘时坐骑”，保留条件和对象。中文《命令/hud》原句可核对各项用途，未改变枚举值或适用范围。"
+        },
+        {
+            "old": "指定将被修改HUD可见性的目标。",
+            "new": "指定目标玩家。",
+            "expected_matches": 1,
+            "reason": "保留玩家目标用途，删除冗长修饰。"
+        },
+        {
+            "old": "指定将被修改的HUD元素。",
+            "new": "指定HUD元素。",
+            "expected_matches": 1,
+            "reason": "保留元素选择用途，删除冗余措辞。"
+        },
+        {
+            "old": "指定HUD元素。",
+            "new": "指定HUD元素。brief: 将被修改的HUD元素",
+            "expected_matches": 1,
+            "reason": "恢复既有brief“将被修改的HUD元素”，仅保留本轮缩短后的用途说明。"
+        }
+    ]
+}

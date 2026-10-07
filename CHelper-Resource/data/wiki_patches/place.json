@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "reason": "依据中文Wiki place 参数用途和默认行为，将三项 Boolean 的一般用途与省略时行为保留在父说明，并将 true/false 各自效果拆至状态选项。",
+    "replacements": [
+        {
+            "old": ":{{in|be}}{{arg desc|be=basic_string}}且只能为以下其中之一：",
+            "new": ":{{in|be}}{{arg desc|be=basic_string}}必须为以下其中之一：",
+            "reason": "将真实枚举值前的限制句规范为提取器约定的固定枚举引导语，原有枚举值及其说明保持不变。"
+        },
+        {
+            "old": "以指定位置为生成原点，放置[[已配置的地物]]、[[结构地物]]、[[结构模板]]或[[结构池]]。",
+            "new": "在指定位置放置地物、地物规则、结构或结构池。",
+            "reason": "精简命令用途，概括页面列出的地物、地物规则、结构及结构池放置操作。"
+        },
+        {
+            "old": ": 指定放置结构时是否忽略起始高度，默认为<samp>false</samp>。",
+            "new": ": 指定放置结构时是否忽略起始高度。\n: brief: 忽略起始高度\n: 必须为以下其中之一：\n:* <code>true</code> — 忽略放置结构时的起始高度。\n:* <code>false</code> — 放置结构时使用起始高度。",
+            "reason": "按用户授权移除条件式默认表述，保留Boolean参数用途与显式默认值。"
+        },
+        {
+            "old": ": 指定被放置结构是否保留拼图方块，默认为<samp>false</samp>。",
+            "new": ": 指定被放置结构是否保留拼图方块。\n: brief: 保留拼图方块\n: 必须为以下其中之一：\n:* <code>true</code> — 保留被放置结构中的拼图方块。\n:* <code>false</code> — 不保留被放置结构中的拼图方块。",
+            "reason": "按用户授权移除条件式默认表述，保留Boolean参数用途与显式默认值。"
+        },
+        {
+            "old": ": 指定放置结构池时的结构中的起始[[拼图方块]]。",
+            "new": ": 指定结构池的起始拼图方块。\n: brief: 起始拼图方块",
+            "expected_matches": 1,
+            "reason": "精简jigsawTarget参数用途，并保留其起始拼图方块职责。"
+        },
+        {
+            "old": ": 指定被放置结构是否包含实体，默认为<code>false</code>。",
+            "new": ": 指定被放置结构是否包含实体。\n: brief: 包含结构实体\n: 必须为以下其中之一：\n:* <code>true</code> — 放置结构时包含结构内的实体。\n:* <code>false</code> — 放置结构时不包含结构内的实体。",
+            "reason": "按用户授权移除条件式默认表述，保留Boolean参数用途与显式默认值。"
+        },
+        {
+            "old": "指定流体处理方式，默认为{{cd|apply_waterlogging}}。",
+            "new": "指定流体处理方式。",
+            "expected_matches": 1,
+            "reason": "删除liquidSettings description中的默认枚举值，保留流体处理用途及两个选项动作说明。"
+        },
+        {
+            "old": ": 指定要放置的结构地物。原版中的结构地物参见[[生成结构]]。",
+            "new": ": 指定要放置的结构地物。",
+            "expected_matches": 1,
+            "reason": "删除对其他文档的引用，保留structure关键字和参数的用途。"
+        }
+    ]
+}

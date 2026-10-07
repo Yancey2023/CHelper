@@ -9,15 +9,15 @@
     "node": {
         "<messageId: string>": {
             "type": "STRING",
-            "brief": "消息ID",
-            "description": "指定要触发的脚本事件ID。",
+            "brief": "触发脚本事件的消息ID",
+            "description": "指定触发脚本事件的消息ID",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "<message: message>": {
             "type": "STRING",
-            "brief": "文本",
-            "description": "传递给脚本事件的消息。",
+            "brief": "触发脚本事件的消息",
+            "description": "指定触发脚本事件的消息。",
             "canContainSpace": true,
             "ignoreLater": true
         }
