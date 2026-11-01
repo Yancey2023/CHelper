@@ -20,6 +20,8 @@
 
 #include <chelper/auto_suggestion/Suggestion.h>
 #include <chelper/util/HashContainer.h>
+#include <concepts>
+#include <functional>
 
 namespace CHelper::AutoSuggestion {
 
@@ -35,6 +37,9 @@ namespace CHelper::AutoSuggestion {
 
         void addSuggestion(std::vector<Suggestion> &suggestions, Suggestion &&suggestion);
 
+        // 非回调部分留在 .cpp，避免模板中的 reserve 实例改变其他热函数的内联决策。
+        void reserveForCombine(const Suggestions &suggestions);
+
     public:
         void addSpaceSuggestion(Suggestion &&suggestion);
 
@@ -46,7 +51,38 @@ namespace CHelper::AutoSuggestion {
 
         void addIdSuggestion(Suggestion &&suggestion);
 
-        void combine(Suggestions &suggestions, const std::function<bool(Suggestion &suggestion)> &function);
+        template<class Function>
+            requires requires(Function &function, Suggestion &suggestion) {
+                { std::invoke(function, suggestion) } -> std::convertible_to<bool>;
+            }
+        // MSVC 展开合并循环后会使 NodeOptional 处理器超出内联预算，
+        // 给高频节点分发增加调用。保留原来的合并调用边界，回调仍在模板实例内优化。
+#if defined(_MSC_VER) && !defined(__clang__)
+        __declspec(noinline)
+#endif
+        void combine(Suggestions &suggestions, Function &&function) {
+            reserveForCombine(suggestions);
+            for (auto &item: suggestions.spaceSuggestions) {
+                if (std::invoke(function, item)) {
+                    addSuggestion(spaceSuggestions, std::move(item));
+                }
+            }
+            for (auto &item: suggestions.symbolSuggestions) {
+                if (std::invoke(function, item)) {
+                    addSuggestion(symbolSuggestions, std::move(item));
+                }
+            }
+            for (auto &item: suggestions.literalSuggestions) {
+                if (std::invoke(function, item)) {
+                    addSuggestion(literalSuggestions, std::move(item));
+                }
+            }
+            for (auto &item: suggestions.idSuggestions) {
+                if (std::invoke(function, item)) {
+                    addSuggestion(idSuggestions, std::move(item));
+                }
+            }
+        }
 
         std::vector<Suggestion> collect();
     };

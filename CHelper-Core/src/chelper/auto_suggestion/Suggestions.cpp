@@ -47,32 +47,12 @@ namespace CHelper::AutoSuggestion {
         addSuggestion(idSuggestions, std::move(suggestion));
     }
 
-    void Suggestions::combine(Suggestions &suggestions, const std::function<bool(Suggestion &suggestion)> &function) {
+    void Suggestions::reserveForCombine(const Suggestions &suggestions) {
         seenSuggestionHashes.reserve(seenSuggestionHashes.size() + suggestions.seenSuggestionHashes.size());
         spaceSuggestions.reserve(spaceSuggestions.size() + suggestions.spaceSuggestions.size());
         symbolSuggestions.reserve(symbolSuggestions.size() + suggestions.symbolSuggestions.size());
         literalSuggestions.reserve(literalSuggestions.size() + suggestions.literalSuggestions.size());
         idSuggestions.reserve(idSuggestions.size() + suggestions.idSuggestions.size());
-        for (auto &item: suggestions.spaceSuggestions) {
-            if (function(item)) {
-                addSuggestion(spaceSuggestions, std::move(item));
-            }
-        }
-        for (auto &item: suggestions.symbolSuggestions) {
-            if (function(item)) {
-                addSuggestion(symbolSuggestions, std::move(item));
-            }
-        }
-        for (auto &item: suggestions.literalSuggestions) {
-            if (function(item)) {
-                addSuggestion(literalSuggestions, std::move(item));
-            }
-        }
-        for (auto &item: suggestions.idSuggestions) {
-            if (function(item)) {
-                addSuggestion(idSuggestions, std::move(item));
-            }
-        }
     }
 
     std::vector<Suggestion> Suggestions::collect() {

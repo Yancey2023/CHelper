@@ -41,10 +41,4 @@ namespace CHelper {
                            });
     }
 
-    void TokensView::forEach(std::function<void(const Token &token)> function) const {
-        std::for_each(lexerResult->allTokens.begin() + static_cast<std::u16string::difference_type>(start),
-                      lexerResult->allTokens.begin() + static_cast<std::u16string::difference_type>(end),
-                      std::move(function));
-    }
-
 }// namespace CHelper

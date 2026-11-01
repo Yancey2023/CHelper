@@ -41,18 +41,6 @@ namespace CHelper::Old2New {
         return str;
     }
 
-    bool expect(TokenReader &tokenReader, const std::function<bool(const Token &token)> &check) {
-        tokenReader.push();
-        tokenReader.skipSpace();
-        const Token *token = tokenReader.read();
-        if (token == nullptr || !check(*token)) {
-            tokenReader.restore();
-            return false;
-        }
-        tokenReader.pop();
-        return true;
-    }
-
     bool expectString(TokenReader &tokenReader) {
         return expect(tokenReader, [](const Token &token) {
             return token.type == TokenType::STRING;
