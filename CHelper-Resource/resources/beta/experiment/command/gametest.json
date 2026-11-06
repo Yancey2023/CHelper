@@ -1,134 +1,146 @@
 {
-  "name": [
-    "gametest"
-  ],
-  "description": "基于测试代码与测试结构配对的服务端测试自动化工具",
-  "syntax": [
-    "/gametest clearall",
-    "/gametest create <testName: string> [width: int] [height: int] [depth: int]",
-    "/gametest pos",
-    "/gametest run <testName: string> <stopOnFailure: Boolean> <repeatCount: int> [rotationSteps: int]",
-    "/gametest run <testName: string> [rotationSteps: int]",
-    "/gametest runset [tag: string] [rotationSteps: int]",
-    "/gametest runsetuntilfail [tag: string] [rotationSteps: int]",
-    "/gametest runthese",
-    "/gametest runthis",
-    "/gametest stopall"
-  ],
-  "node": {
-    "clearall": {
-      "type": "TEXT",
-      "description": "清除所有的GameTest",
-      "data": {
-        "name": "clearall",
-        "description": "清除所有的GameTest"
-      }
-    },
-    "create": {
-      "type": "TEXT",
-      "description": "创建GameTest",
-      "data": {
-        "name": "create",
-        "description": "创建GameTest"
-      }
-    },
-    "<testName: string>": {
-      "type": "STRING",
-      "brief": "名称",
-      "description": "GameTest的名称",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "[width: int]": {
-      "type": "INTEGER",
-      "description": "宽度"
-    },
-    "[height: int]": {
-      "type": "INTEGER",
-      "description": "高度"
-    },
-    "[depth: int]": {
-      "type": "INTEGER",
-      "description": "深度"
-    },
-    "pos": {
-      "type": "TEXT",
-      "description": "在200格半径范围内寻找最近的GameTest结构方块",
-      "data": {
-        "name": "pos",
-        "description": "在200格半径范围内寻找最近的GameTest结构方块"
-      }
-    },
-    "run": {
-      "type": "TEXT",
-      "description": "执行一个特定的GameTest",
-      "data": {
-        "name": "run",
-        "description": "执行一个特定的GameTest"
-      }
-    },
-    "<stopOnFailure: Boolean>": {
-      "type": "BOOLEAN",
-      "brief": "失败时是否停止",
-      "description": "在测试失败的时候是否停止测试",
-      "descriptionTrue": "在测试失败的时候停止测试",
-      "descriptionFalse": "忽略测试失败，依然进行测试"
-    },
-    "<repeatCount: int>": {
-      "type": "INTEGER",
-      "description": "重复次数",
-      "min": 1
-    },
-    "[rotationSteps: int]": {
-      "type": "INTEGER",
-      "description": "旋转"
-    },
-    "runset": {
-      "type": "TEXT",
-      "description": "创建和执行所有GameTest",
-      "data": {
-        "name": "runset",
-        "description": "创建和执行所有GameTest"
-      }
-    },
-    "[tag: string]": {
-      "type": "STRING",
-      "brief": "名称",
-      "description": "GameTest的名称",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "runsetuntilfail": {
-      "type": "TEXT",
-      "description": "创建和执行所有GameTest，直到某个执行失败",
-      "data": {
-        "name": "runsetuntilfail",
-        "description": "创建和执行所有GameTest，直到某个执行失败"
-      }
-    },
-    "runthese": {
-      "type": "TEXT",
-      "description": "在200格半径范围内执行GameTest",
-      "data": {
-        "name": "runthese",
-        "description": "在200格半径范围内执行GameTest"
-      }
-    },
-    "runthis": {
-      "type": "TEXT",
-      "description": "执行或重新执行15格半径内的GameTest结构方块",
-      "data": {
-        "name": "runthis",
-        "description": "执行或重新执行15格半径内的GameTest结构方块"
-      }
-    },
-    "stopall": {
-      "type": "TEXT",
-      "description": "停止执行所有GameTest",
-      "data": {
-        "name": "stopall",
-        "description": "停止执行所有GameTest"
-      }
+    "name": [
+        "gametest"
+    ],
+    "description": "管理和运行游戏测试框架。",
+    "syntax": [
+        "/gametest clearall",
+        "/gametest create <testName: string> [width: int] [height: int] [depth: int]",
+        "/gametest pos",
+        "/gametest run <testName: string> <stopOnFailure: Boolean> <repeatCount: int> [rotationSteps: int]",
+        "/gametest run <testName: string> [rotationSteps: int]",
+        "/gametest runset <tag list (optional flags 'withoutTags' and 'rotationSteps'): message>",
+        "/gametest runsetuntilfail [tag: string] [rotationSteps: int]",
+        "/gametest runthese",
+        "/gametest runthis",
+        "/gametest stopall"
+    ],
+    "node": {
+        "clearall": {
+            "type": "TEXT",
+            "description": "清除所有的测试。",
+            "data": {
+                "name": "clearall",
+                "description": "清除所有的测试。"
+            }
+        },
+        "create": {
+            "type": "TEXT",
+            "description": "创建测试。",
+            "data": {
+                "name": "create",
+                "description": "创建测试。"
+            }
+        },
+        "<testName: string>": {
+            "type": "STRING",
+            "brief": "测试的名称",
+            "description": "指定测试的名称。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "[width: int]": {
+            "type": "INTEGER",
+            "description": "指定结构的X轴大小。",
+            "brief": "结构的X轴大小"
+        },
+        "[height: int]": {
+            "type": "INTEGER",
+            "description": "指定结构的Y轴大小。",
+            "brief": "结构的Y轴大小"
+        },
+        "[depth: int]": {
+            "type": "INTEGER",
+            "description": "指定结构的Z轴大小。",
+            "brief": "结构的Z轴大小"
+        },
+        "pos": {
+            "type": "TEXT",
+            "description": "定位最近的测试结构。",
+            "data": {
+                "name": "pos",
+                "description": "定位最近的测试结构。"
+            }
+        },
+        "run": {
+            "type": "TEXT",
+            "description": "执行一个特定的测试。",
+            "data": {
+                "name": "run",
+                "description": "执行一个特定的测试。"
+            }
+        },
+        "<stopOnFailure: Boolean>": {
+            "type": "BOOLEAN",
+            "description": "指定测试失败时是否停止后续执行。",
+            "descriptionTrue": "测试失败时停止后续执行。",
+            "descriptionFalse": "测试失败时继续后续执行。",
+            "brief": "失败时停止"
+        },
+        "<repeatCount: int>": {
+            "type": "INTEGER",
+            "description": "指定测试的执行次数。",
+            "min": 1,
+            "brief": "测试的执行次数"
+        },
+        "[rotationSteps: int]": {
+            "type": "INTEGER",
+            "description": "指定测试的旋转角度。",
+            "brief": "测试的旋转角度"
+        },
+        "runset": {
+            "type": "TEXT",
+            "description": "创建并执行测试。",
+            "data": {
+                "name": "runset",
+                "description": "创建并执行测试。"
+            }
+        },
+        "[tag: string]": {
+            "type": "STRING",
+            "brief": "测试标签",
+            "description": "指定用于筛选要执行的测试的标签。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "runsetuntilfail": {
+            "type": "TEXT",
+            "description": "创建并执行测试，直至有测试失败。",
+            "data": {
+                "name": "runsetuntilfail",
+                "description": "创建并执行测试，直至有测试失败。"
+            }
+        },
+        "runthese": {
+            "type": "TEXT",
+            "description": "执行附近的测试。",
+            "data": {
+                "name": "runthese",
+                "description": "执行附近的测试。"
+            }
+        },
+        "runthis": {
+            "type": "TEXT",
+            "description": "执行或重新执行测试结构。",
+            "data": {
+                "name": "runthis",
+                "description": "执行或重新执行测试结构。"
+            }
+        },
+        "stopall": {
+            "type": "TEXT",
+            "description": "停止执行所有测试。",
+            "data": {
+                "name": "stopall",
+                "description": "停止执行所有测试。"
+            }
+        },
+        "<tag list (optional flags 'withoutTags' and 'rotationSteps'): message>": {
+            "type": "STRING",
+            "brief": "测试标签列表",
+            "description": "指定要执行的测试标签。",
+            "canContainSpace": true,
+            "ignoreLater": true
+        }
     }
-  }
 }

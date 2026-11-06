@@ -65,7 +65,7 @@ namespace CHelper {
         //一个Node可能会生成多个ASTNode，这些ASTNode使用id进行区分
         Node::NodeWithType node;
         //子节点为AND类型和OR类型特有
-        std::pmr::vector<ASTNode> childNodes;
+        std::pmr::vector<ASTNode> childNodes{CPackMemoryRouter::getAllocationResource()};
         TokensView tokens;
         //不要直接用这个，这里不包括ID错误，只有结构错误，应该用getErrorReason()
         ErrorReasonList errorReasons;

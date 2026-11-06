@@ -1,10 +1,10 @@
 {
-  "name": [
-    "toggledownfall"
-  ],
-  "description": "切换天气",
-  "syntax": [
-    "/toggledownfall"
-  ],
-  "node": {}
+    "name": [
+        "toggledownfall"
+    ],
+    "description": "切换当前天气状态。",
+    "syntax": [
+        "/toggledownfall"
+    ],
+    "node": {}
 }

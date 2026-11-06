@@ -39,7 +39,7 @@ namespace CHelper {
             if (!descriptions.has_value()) [[unlikely]] {
                 node.emplace(*nodeAllData);
             } else {
-                std::pmr::vector<Node::NodeWithType> nodeDataChildren;
+                std::pmr::vector<Node::NodeWithType> nodeDataChildren{CPackMemoryRouter::getAllocationResource()};
                 nodeDataChildren.reserve(descriptions.value().size() + 1);
                 size_t i = 0;
                 for (const auto &item: descriptions.value()) {

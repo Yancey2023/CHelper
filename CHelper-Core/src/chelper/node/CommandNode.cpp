@@ -55,7 +55,7 @@ namespace CHelper::Node {
                        const std::optional<std::u16string> &description,
                        const std::string_view key)
         : NodeSerializable(id, description, false),
-          key(key.data(), key.size()) {}
+          key(key.data(), key.size(), CPackMemoryRouter::getAllocationResource()) {}
 
     NodeLF::NodeLF(const std::optional<std::string> &id,
                    const std::optional<std::u16string> &description)
@@ -83,7 +83,7 @@ namespace CHelper::Node {
             bool allowMissingID,
             const std::function<ASTNode(const NodeWithType &node, TokenReader &tokenReader)> &getNormalIdASTNode)
         : NodeSerializable(id, description, false),
-          key(std::pmr::string(key.data(), key.size())),
+          key(std::pmr::string(key.data(), key.size(), CPackMemoryRouter::getAllocationResource())),
           ignoreError(ignoreError),
           allowMissingID(allowMissingID),
           getNormalIdASTNode(getNormalIdASTNode) {}
@@ -144,6 +144,9 @@ namespace CHelper::Node {
         : NodeSerializable(id, description, false),
           data(data),
           getTextASTNode(getTextASTNode) {}
+
+    NodeAnd::NodeAnd(std::initializer_list<NodeWithType> childNodes)
+        : NodeAnd(std::pmr::vector<NodeWithType>(childNodes, CPackMemoryRouter::getAllocationResource())) {}
 
     NodeAnd::NodeAnd(std::pmr::vector<NodeWithType> childNodes)
         : childNodes(std::move(childNodes)) {
@@ -222,6 +225,11 @@ namespace CHelper::Node {
 #endif
     }
 
+    NodeOr::NodeOr(std::initializer_list<NodeWithType> childNodes, bool isAttachToEnd, bool isUseFirst,
+                   bool noSuggestion, const char16_t *defaultErrorReason, ASTNodeId::ASTNodeId nodeId)
+        : NodeOr(std::pmr::vector<NodeWithType>(childNodes, CPackMemoryRouter::getAllocationResource()),
+                 isAttachToEnd, isUseFirst, noSuggestion, defaultErrorReason, nodeId) {}
+
     NodeOr::NodeOr(std::pmr::vector<NodeWithType> childNodes,
                    bool isAttachToEnd,
                    bool isUseFirst,
@@ -247,7 +255,7 @@ namespace CHelper::Node {
     }
 
     static std::shared_ptr<NormalId> getNormalId(char16_t symbol, const std::optional<std::u16string> &description) {
-        std::pmr::u16string name;
+        std::pmr::u16string name{CPackMemoryRouter::getAllocationResource()};
         name.push_back(symbol);
         return NormalId::make(name, description);
     }
@@ -321,7 +329,7 @@ namespace CHelper::Node {
                                  const std::u16string_view key,
                                  std::pmr::vector<std::pmr::string> value)
         : NodeSerializable(id, description, false),
-          key(key.data(), key.size()),
+          key(key.data(), key.size(), CPackMemoryRouter::getAllocationResource()),
           value(std::move(value)) {}
 
     NodeWithType NodeJsonEntry::getNodeJsonAllEntry() {
@@ -338,7 +346,7 @@ namespace CHelper::Node {
                                const std::optional<std::u16string> &description,
                                const std::string_view data)
         : NodeSerializable(id, description, false),
-          data(data.data(), data.size()) {}
+          data(data.data(), data.size(), CPackMemoryRouter::getAllocationResource()) {}
 
     NodeJsonNull::NodeJsonNull(const std::optional<std::string> &id,
                                const std::optional<std::u16string> &description)

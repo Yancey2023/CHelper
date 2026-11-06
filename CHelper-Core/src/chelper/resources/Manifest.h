@@ -26,7 +26,7 @@ namespace CHelper {
     class Manifest {
     public:
         std::optional<std::pmr::u16string> name, description, version, versionType, branch, author, updateDate;
-        std::pmr::u16string packId;
+        std::pmr::u16string packId{CPackMemoryRouter::getAllocationResource()};
         int32_t versionCode;
         std::optional<bool> isBasicPack, isDefault;
     };

@@ -21,6 +21,8 @@
 #include <chelper/lexer/Lexer.h>
 #include <chelper/lexer/TokenReader.h>
 #include <chelper/util/HashContainer.h>
+#include <concepts>
+#include <functional>
 #include <pch.h>
 
 namespace CHelper::Old2New {
@@ -45,7 +47,21 @@ namespace CHelper::Old2New {
         DataFix(const TokensView &tokens, std::u16string content);
     };
 
-    bool expect(TokenReader &tokenReader, const std::function<bool(const Token &token)> &check);
+    template<class Function>
+        requires requires(Function &check, const Token &token) {
+            { std::invoke(check, token) } -> std::convertible_to<bool>;
+        }
+    bool expect(TokenReader &tokenReader, Function &&check) {
+        tokenReader.push();
+        tokenReader.skipSpace();
+        const Token *token = tokenReader.read();
+        if (token == nullptr || !std::invoke(check, *token)) {
+            tokenReader.restore();
+            return false;
+        }
+        tokenReader.pop();
+        return true;
+    }
 
     bool expectString(TokenReader &tokenReader);
 

@@ -1,0 +1,18 @@
+{
+    "name": [
+        "party"
+    ],
+    "description": "在组队中发送队内消息。",
+    "syntax": [
+        "/party <message: message>"
+    ],
+    "node": {
+        "<message: message>": {
+            "type": "STRING",
+            "description": "指定要发送的消息。",
+            "canContainSpace": true,
+            "ignoreLater": true,
+            "brief": "要发送的消息"
+        }
+    }
+}

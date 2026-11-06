@@ -1,31 +1,31 @@
 {
-  "name": [
-    "listd"
-  ],
-  "description": "列出在服务器上的玩家（隐藏命令）",
-  "syntax": [
-    "/listd [details: string]"
-  ],
-  "node": {
-    "[details: string]": {
-      "type": "NORMAL_ID",
-      "brief": "内容",
-      "description": "要列出的内容",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "ids",
-          "description": "玩家的ID"
-        },
-        {
-          "name": "stats",
-          "description": "玩家的统计"
-        },
-        {
-          "name": "uuids",
-          "description": "玩家的UUID"
+    "name": [
+        "listd"
+    ],
+    "description": "同设备返回当前在线玩家信息，异设备时效果与list相同。",
+    "syntax": [
+        "/listd [details: ListDetails]"
+    ],
+    "node": {
+        "[details: ListDetails]": {
+            "type": "NORMAL_ID",
+            "brief": "附加信息",
+            "description": "ids：附加randomId。 uuids：附加UUID。 stats：附加网络统计信息。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "ids",
+                    "description": "附加randomId。"
+                },
+                {
+                    "name": "stats",
+                    "description": "附加网络统计信息。"
+                },
+                {
+                    "name": "uuids",
+                    "description": "附加UUID。"
+                }
+            ]
         }
-      ]
     }
-  }
 }

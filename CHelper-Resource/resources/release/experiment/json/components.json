@@ -95,7 +95,7 @@
                 },
                 {
                     "key": "minecraft:can_destroy",
-                    "description": "控制此物品/方块（在冒险模式下）可以破坏的方块类型。此效果不会改变原本的破坏速度和破坏后掉落物。",
+                    "description": "控制冒险模式下可破坏的方块类型。",
                     "value": [
                         "BLOCKS"
                     ]

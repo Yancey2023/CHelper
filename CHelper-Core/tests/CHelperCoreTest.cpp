@@ -68,4 +68,63 @@ namespace CHelper::Test {
         }
     }
 
+    TEST(CHelperCoreTest, ScheduleIntegerWithUnitSurvivesJsonRoundTrip) {
+        const std::filesystem::path resourceDir(RESOURCE_DIR);
+        const std::vector<std::pair<std::string, std::string>> resourceVariants{
+                {"release", "vanilla"},
+                {"release", "experiment"},
+                {"beta", "vanilla"},
+                {"beta", "experiment"}};
+        const std::vector<std::pair<std::string, std::string>> units{
+                {"D", "D后缀代表游戏日"},
+                {"S", "S后缀代表秒"},
+                {"T", "T后缀或无后缀代表游戏刻"},
+                {"d", "游戏日"},
+                {"s", "秒"},
+                {"t", "游戏刻"}};
+        const std::vector<std::u16string> validCommands{
+                u"schedule delay add test:scheduled 10D",
+                u"schedule delay add test:scheduled 20S",
+                u"schedule delay add test:scheduled 30T",
+                u"schedule delay add test:scheduled 40"};
+        const std::vector<std::u16string> invalidCommands{
+                u"schedule delay add test:scheduled 10X",
+                u"schedule delay add test:scheduled 10Dtail"};
+
+        for (const auto &[edition, branch]: resourceVariants) {
+            SCOPED_TRACE(edition + "/" + branch);
+            auto source = CHelper::serialization::createCPackByDirectory(resourceDir / "resources" / edition / branch);
+            ASSERT_NE(source, nullptr);
+
+            const std::string json = source->toJson();
+            EXPECT_NE(json.find("\"units\""), std::string::npos);
+            for (const auto &[name, description]: units) {
+                SCOPED_TRACE(name);
+                EXPECT_NE(json.find(description), std::string::npos);
+            }
+
+            auto restored = CHelper::serialization::createCPackByJson(json);
+            ASSERT_NE(restored, nullptr);
+            const std::string roundTripJson = restored->toJson();
+            EXPECT_NE(roundTripJson.find("\"units\""), std::string::npos);
+            for (const auto &[name, description]: units) {
+                SCOPED_TRACE(name);
+                EXPECT_NE(roundTripJson.find(description), std::string::npos);
+            }
+
+            std::shared_ptr<const CPack> sharedPack(std::move(restored));
+            CHelperCore core(std::move(sharedPack));
+            for (const auto &command: validCommands) {
+                auto context = std::unique_ptr<CommandContext>(core.createContext(command));
+                ASSERT_NE(context, nullptr);
+                EXPECT_TRUE(context->getErrorReasons().empty()) << utf8::utf16to8(command);
+            }
+            for (const auto &command: invalidCommands) {
+                auto context = std::unique_ptr<CommandContext>(core.createContext(command));
+                ASSERT_NE(context, nullptr);
+                EXPECT_FALSE(context->getErrorReasons().empty()) << utf8::utf16to8(command);
+            }
+        }
+    }
+
 }// namespace CHelper::Test

@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "reason": "将 Boolean 参数用途与 true/false 两态行为分别呈现；按省略说明清理要求删除省略叙述并保留两态共同设置游戏时间的语义。",
+    "replacements": [
+        {
+            "old": ": 指定是否锁定终为白日。必须为<samp>true</samp>或<samp>false</samp>，默认为<samp>true</samp>。\n: 若为<samp>false</samp>，将同时打开昼夜更替，反之亦然，并同时设置游戏时间为5000刻，游戏正午前1小时。",
+            "new": ": 指定是否锁定终为白日。brief: 是否锁定白天\n: 必须为以下其中之一：\n:* <samp>true</samp> — 锁定白天，停止昼夜更替，并将游戏时间设为5000刻（游戏正午前1小时）。\n:* <samp>false</samp> — 恢复昼夜更替，并将游戏时间设为5000刻（游戏正午前1小时）。",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求移除 true 状态后的省略效果叙述；父描述只保留参数用途，false 状态保留昼夜更替与时间变更的共同结果。brief 沿用该参数的短用途。"
+        },
+        {
+            "old": "锁定或解锁终为白日。",
+            "new": "锁定或解除白天锁定。",
+            "expected_matches": 1,
+            "reason": "将命令介绍精简为核心用途。"
+        },
+        {
+            "old": "锁定白天，停止昼夜更替，并将游戏时间设为5000刻（游戏正午前1小时）。",
+            "new": "锁定白天。",
+            "expected_matches": 1,
+            "reason": "保留true状态核心动作，删除昼夜变化和时间调整旁注。"
+        },
+        {
+            "old": "恢复昼夜更替，并将游戏时间设为5000刻（游戏正午前1小时）。",
+            "new": "解除白天锁定。",
+            "expected_matches": 1,
+            "reason": "保留false状态核心动作，删除时间调整旁注。"
+        },
+        {
+            "old": ": 指定是否锁定终为白日。brief: 是否锁定白天\n: 必须为以下其中之一：\n:* <samp>true</samp> — 锁定白天。\n:* <samp>false</samp> — 解除白天锁定。",
+            "new": ": 指定是否锁定终为白日。brief: 是否锁定白天\n: 必须为以下其中之一：\n:* <samp>true</samp> — 锁定白天并停止昼夜更替。\n:* <samp>false</samp> — 恢复昼夜更替。",
+            "expected_matches": 1,
+            "reason": "按根交叉复核意见保留Boolean两态核心动作，删除时间刻数与正午换算旁注。"
+        }
+    ]
+}

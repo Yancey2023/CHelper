@@ -1,0 +1,66 @@
+{
+    "version": 1,
+    "reason": "保留命名空间规则，去掉提取后只剩“此官方文档”而无法定位来源的悬空指代。",
+    "replacements": [
+        {
+            "old": "{{argument|recipe|resource_location|recipe: string|basic_string}} ",
+            "new": "; 固定值 <code>*</code>\n: 表示所有配方。\n\n{{argument|recipe|resource_location|recipe: string|basic_string}} ",
+            "expected_matches": 1,
+            "reason": "用中文Wiki标准定义列表形式说明语法中星号表示所有配方。"
+        },
+        {
+            "old": ": 指定要给予或剥夺的配方。",
+            "new": ": 指定要给予或剥夺的配方；在基岩版语法中，<code>*</code>可代替配方ID并表示所有配方。",
+            "expected_matches": 1,
+            "reason": "将基岩版星号可代替配方ID并表示所有配方的语法含义保留在配方参数说明；该事实来自同页give/take语法说明。"
+        },
+        {
+            "old": "为玩家给予（解锁）所有配方。",
+            "new": "为玩家解锁配方。",
+            "expected_matches": 2,
+            "reason": "精简give用途，保留为玩家解锁配方的动作。"
+        },
+        {
+            "old": "为玩家给予（解锁）指定配方。",
+            "new": "为玩家解锁配方。",
+            "expected_matches": 2,
+            "reason": "精简Java版和基岩版give用途，保留解锁配方的动作。"
+        },
+        {
+            "old": "剥夺（锁定）玩家的所有配方。",
+            "new": "锁定玩家的配方。",
+            "expected_matches": 2,
+            "reason": "精简take用途，保留锁定玩家配方的动作。"
+        },
+        {
+            "old": "剥夺（锁定）玩家的指定配方。",
+            "new": "锁定玩家的配方。",
+            "expected_matches": 2,
+            "reason": "精简Java版和基岩版take用途，保留锁定玩家配方的动作。"
+        },
+        {
+            "old": "，参见[https://learn.microsoft.com/en-us/minecraft/creator/commands/commands/recipe?view=minecraft-bedrock-stable#values 此官方文档]。",
+            "new": "。",
+            "expected_matches": 1,
+            "reason": "命名空间规则仍完整保留在前一句；原文链接标题提取为无目标的“此官方文档”，本修复只移除悬空引用，不引入链接内容或新事实。"
+        },
+        {
+            "old": ": {{arg desc|je=resource_location}}{{IN|be}}必须为一个配方的ID，命名空间不可省略（如果有）或添加（如果没有）。",
+            "new": ": {{arg desc|je=resource_location}}{{IN|be}}",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": "给予或剥夺（解锁或锁定）玩家的[[配方]]。",
+            "new": "给予或剥夺玩家的配方。",
+            "expected_matches": 1,
+            "reason": "压缩命令简介，保留给予和剥夺配方的用途。"
+        },
+        {
+            "old": ": 指定要给予或剥夺的配方；在基岩版语法中，<code>*</code>可代替配方ID并表示所有配方。",
+            "new": ": 指定要给予或剥夺的配方。",
+            "expected_matches": 1,
+            "reason": "移除参数说明中的特殊通配行为；独立literal节点*仍保留表示所有配方的用途。"
+        }
+    ]
+}

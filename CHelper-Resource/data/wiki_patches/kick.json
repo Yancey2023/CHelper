@@ -1,0 +1,24 @@
+{
+    "version": 1,
+    "reason": "将基岩版 reason 参数的语法标为可选，符合本页明确的省略默认消息、缺参成功结果和无 reason 示例。",
+    "replacements": [
+        {
+            "old": ": 指定将显示给被踢出玩家的消息。{{in|je}}若未指定则使用默认消息“{{tp|multiplayer.disconnect.kicked}}”。{{in|be}}若未指定则使用默认消息“您已被踢出游戏”。",
+            "new": ": 指定将显示给被踢出玩家的消息。",
+            "expected_matches": 1,
+            "reason": "删除未指定踢出原因时的默认消息说明，保留reason参数用途。"
+        },
+        {
+            "old": ":<code>kick <name: target> <reason: message></code>",
+            "new": ":<code>kick <name: target> [reason: message]</code>",
+            "expected_matches": 1,
+            "reason": "同一页面说明未指定 reason 时使用默认消息、缺少 reason 时成功，并给出 `/kick player` 示例；将单一基岩版参数的语法按这些相互印证的原文证据改为可选。"
+        },
+        {
+            "old": ": {{in|be}}也可以是玩家的XUID（Xbox UID）。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简目标参数用途，移除替代标识旁注，保留选择要踢出玩家的核心职责。"
+        }
+    ]
+}

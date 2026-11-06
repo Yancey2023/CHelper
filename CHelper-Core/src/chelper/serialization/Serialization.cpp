@@ -74,6 +74,8 @@ namespace CHelper {
             throw std::runtime_error("fail to open file: " + path.string());
         }
         os << writeJson(value);
+        os.close();
+        if (!os) throw std::runtime_error("fail to write file: " + path.string());
     }
 
     // content 为已编码的 JSON 文本，原样写出（非模板重载优先于模板匹配 std::string）
@@ -86,16 +88,18 @@ namespace CHelper {
             throw std::runtime_error("fail to open file: " + path.string());
         }
         os << content;
+        os.close();
+        if (!os) throw std::runtime_error("fail to write file: " + path.string());
     }
 
     // 收集全部 Grammar 条目；grammarNodes 中的每个节点都必须有对应的语法图
-    [[nodiscard]] std::vector<GrammarEntry> collectGrammarEntries(const CPack &cpack) {
+    [[nodiscard]] std::vector<GrammarEntry> CPack::collectGrammarEntries() const {
         std::vector<GrammarEntry> grammarEntries;
-        grammarEntries.reserve(cpack.grammarNodes.size());
-        for (const auto &[id, content]: cpack.grammarNodes) {
+        grammarEntries.reserve(grammarNodes.size());
+        for (const auto &[id, content]: grammarNodes) {
             (void) content;
-            const auto graph = cpack.grammarGraphs.find(id);
-            if (graph == cpack.grammarGraphs.end()) [[unlikely]] {
+            const auto graph = grammarGraphs.find(id);
+            if (graph == grammarGraphs.end()) [[unlikely]] {
                 throw std::runtime_error("missing grammar graph");
             }
             grammarEntries.emplace_back(id, "grammar", graph->second);
@@ -121,7 +125,7 @@ namespace CHelper {
             const IdEntry entry = BlockIdsEntry{"block", blockIds};
             writeJsonToFileWithCreateDirectory(path / "id" / "block.json", entry);
         }
-        for (const auto &entry: collectGrammarEntries(*this)) {
+        for (const auto &entry: collectGrammarEntries()) {
             writeJsonToFileWithCreateDirectory(path / "grammer" / (entry.id + ".json"), entry);
         }
         for (const auto &item: jsonNodes) {
@@ -147,7 +151,7 @@ namespace CHelper {
         idEntries.push_back(ItemIdsEntry{"item", itemIds});
         idEntries.push_back(BlockIdsEntry{"block", blockIds});
         // glz::obj 持引用，条目列表须是具名局部变量而不是临时对象
-        std::vector<GrammarEntry> grammarEntries = collectGrammarEntries(*this);
+        std::vector<GrammarEntry> grammarEntries = collectGrammarEntries();
         // jsonNodes 不可拷贝（FreeableNodeWithTypes），通过引用写出
         auto value = glz::obj{"manifest", manifest, "id", idEntries, "grammar", grammarEntries,
                               "json", jsonNodes, "repeat", repeatNodeData, "command", *commands};
@@ -187,7 +191,7 @@ namespace CHelper {
         writeOne(jsonNodes);
         writeOne(repeatNodeData);
         writeOne(commands);
-        writeOne(collectGrammarEntries(*this));
+        writeOne(collectGrammarEntries());
         buffer.resize(ix);
         std::ofstream ostream(path, std::ios::binary);
         if (!ostream.is_open()) [[unlikely]] {
@@ -195,6 +199,7 @@ namespace CHelper {
         }
         ostream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
         ostream.close();
+        if (!ostream) throw std::runtime_error("fail to write file: " + path.string());
     }
 }// namespace CHelper
 #endif
@@ -212,7 +217,6 @@ namespace CHelper::serialization {
             CPackMemoryScope memoryScope(cpackMemory);
             auto cpack = std::unique_ptr<CPack>(new CPack());
             cpack->cpackMemory = cpackMemory;
-            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
             cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
             // 加载阶段随上下文传递，各段落只允许反序列化自己合法的节点类型
             NodeReadContext ctx;
@@ -228,6 +232,7 @@ namespace CHelper::serialization {
                 readJsonFromFile(entry, file.path(), ctx);
                 cpack->applyId(entry);
             }
+            cpack->initializeNamespaceIds();
             // Grammar 是按资源类型目录发现的，不绑定 target_selector 或任何固定文件名。
             // 资源包之间可以共享父目录中的 Grammar 资源（例如 vanilla/experiment）。
             std::vector<std::filesystem::path> grammarDirectories;
@@ -302,12 +307,10 @@ namespace CHelper::serialization {
             Node::initializeStaticNodes();
             auto cpackMemory = std::make_shared<CPackMemoryResource>();
             CPackMemoryScope memoryScope(cpackMemory);
-            // cpack 必须先于 ctx/data 构造（从而后于它们析构）：
-            // ~CPack 会把路由 current 重置，若 ctx/data 晚于 cpack 析构，
-            // 其 pmr 成员的池内存会在 current 失效后被错误交还给全局堆
+            // CPack 和临时读取数据都在本资源作用域中构造，分配器记录实际资源。
+            // 临时读取数据先销毁，资源池由 cpackMemory 保持到本作用域结束。
             auto cpack = std::unique_ptr<CPack>(new CPack());
             cpack->cpackMemory = cpackMemory;
-            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
             cpack->commands = CHelper::allocateShared<std::pmr::vector<Node::NodePerCommand>>(cpackMemory);
             NodeReadContext ctx;
             ctx.createStage = Node::NodeCreateStage::JSON_NODE;
@@ -326,6 +329,7 @@ namespace CHelper::serialization {
             for (const auto &entry: data.id) {
                 cpack->applyId(entry);
             }
+            cpack->initializeNamespaceIds();
             for (auto &entry: data.grammar) {
                 cpack->applyGrammar(std::move(entry), trail);
             }
@@ -349,14 +353,14 @@ namespace CHelper::serialization {
         LoadTrail trail;
         try {
             trail.push("start load CPack by binary");
+            if (data.empty()) throw std::runtime_error("empty binary CPack");
             // 二进制格式一次性读取所有节点，JSON_NODE 阶段覆盖全部可序列化的节点类型
             Node::initializeStaticNodes();
             auto cpackMemory = std::make_shared<CPackMemoryResource>();
             CPackMemoryScope memoryScope(cpackMemory);
-            // cpack 必须先于 ctx/cpackData 构造（从而后于它们析构），理由同 createCPackByJson
+            // 与 JSON 入口一样，让临时读取数据先于 CPack 销毁。
             auto cpack = std::unique_ptr<CPack>(new CPack());
             cpack->cpackMemory = cpackMemory;
-            cpack->destructionMemoryScope.bindAsOwner(cpackMemory);
             NodeReadContext ctx;
             ctx.createStage = Node::NodeCreateStage::JSON_NODE;
             ctx.cpackMemory = cpackMemory;
@@ -384,6 +388,7 @@ namespace CHelper::serialization {
             if (it < end) {
                 readSection(cpackData.grammar, "grammar data");
             }
+            if (it != end) throw std::runtime_error("unexpected trailing bytes in binary CPack");
             cpack->manifest = std::move(cpackData.manifest);
             cpack->normalIds = std::move(cpackData.normalIds);
             cpack->namespaceIds = std::move(cpackData.namespaceIds);
@@ -392,6 +397,7 @@ namespace CHelper::serialization {
             cpack->jsonNodes = std::move(cpackData.jsonNodes);
             cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
             cpack->commands = std::move(cpackData.commands);
+            cpack->initializeNamespaceIds();
             cpack->grammarGraphs.reserve(cpackData.grammar.size());
             cpack->grammarNodes.reserve(cpackData.grammar.size());
             for (auto &entry: cpackData.grammar) {

@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <charconv>
 #include <chelper/node/CommandNode.h>
 #include <chelper/old2new/Old2New.h>
 
@@ -39,18 +40,6 @@ namespace CHelper::Old2New {
         str.erase(0, str.find_first_not_of(' '));
         str.erase(str.find_last_not_of(' ') + 1);
         return str;
-    }
-
-    bool expect(TokenReader &tokenReader, const std::function<bool(const Token &token)> &check) {
-        tokenReader.push();
-        tokenReader.skipSpace();
-        const Token *token = tokenReader.read();
-        if (token == nullptr || !check(*token)) {
-            tokenReader.restore();
-            return false;
-        }
-        tokenReader.pop();
-        return true;
     }
 
     bool expectString(TokenReader &tokenReader) {
@@ -166,13 +155,14 @@ namespace CHelper::Old2New {
         // get block id
         auto blockId = std::u16string(blockIdToken.string());
         // get block data value
-        char *end;
-        std::string dataValueStr = utf8::utf16to8(dataValueToken.string());
-        std::intmax_t dataValue = std::strtoimax(dataValueStr.c_str(), &end, 10);
-        if (end == dataValueStr.c_str() || *end != '\0' ||
-            dataValue == HUGE_VALF || dataValue == -HUGE_VALF ||
-            dataValue < 0) [[unlikely]] {
-            // if it is not an integer or in range, return block id directly
+        const std::string dataValueStr = utf8::utf16to8(dataValueToken.string());
+        int64_t dataValue = 0;
+        std::string_view number = dataValueStr;
+        while (number.starts_with(' ')) number.remove_prefix(1);
+        if (number.starts_with('+')) number.remove_prefix(1);
+        const auto [end, error] = std::from_chars(number.data(), number.data() + number.size(), dataValue);
+        if (error != std::errc{} || end != number.data() + number.size() ||
+            dataValue < 0 || dataValue > std::numeric_limits<uint32_t>::max()) {
             return blockId;
         }
         // get key

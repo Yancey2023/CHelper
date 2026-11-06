@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "reason": "为 port 参数添加短 brief，保留其 Wiki 原始用途说明与端口范围信息。",
+    "replacements": [
+        {
+            "old": "== 参数 ==",
+            "new": "== 参数 ==\n; 关键字 <code>debugger</code>\n: 调试器的连接、监听和关闭操作。brief: 调试器操作\n; 关键字 <code>diagnostics</code>\n: 开始或停止捕获诊断。brief: 诊断捕获\n; 关键字 <code>profiler</code>\n: 启用或禁用跟踪脚本性能的分析器。brief: 脚本性能分析器",
+            "expected_matches": 1,
+            "reason": "自然关键词定义：debugger组包括语法段中分别说明的调试器关闭、连接和监听操作；diagnostics、profiler 则是同页语法中各自覆盖两个相反操作的命令组，分别用其原有组级说明作为父级用途，具体操作由后续 start/stop 子命令说明。"
+        },
+        {
+            "old": "== 语法 ==\n:<code>script debugger close</code>",
+            "new": "== 语法 ==\n; {{cd|debugger}}\n: 调试器的连接、监听和关闭操作。\n:<code>script debugger close</code>",
+            "expected_matches": 1,
+            "reason": "在原有debugger语法组前添加自然分组标题与概括，概括直接对应同组close、connect、listen三条语法用途，便于父节点提取。"
+        },
+        {
+            "old": "指定调试器的[[wzh:通讯埠|端口]]，可用端口范围为1024-65535。",
+            "new": "指定调试器的[[wzh:通讯埠|端口]]，可用端口范围为1024-65535。brief: 调试器端口",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 参数原句“指定调试器的端口，可用端口范围为1024-65535”，brief 简称调试器端口。"
+        },
+        {
+            "old": "::启用或禁用跟踪脚本性能的分析器。\n\n== 参数 ==",
+            "new": "::启用或禁用跟踪脚本性能的分析器。\n\n=== 旧版语法 ===\n* '''基岩版（旧版）'''\n: <code>script watchdog exportstats</code>\n:: 用于导出一个包含内存使用和对象句柄数统计的文件。\n\n== 参数 ==",
+            "expected_matches": 1,
+            "reason": "该语法/用途补充依据旧中文 Minecraft Wiki「基岩版1.19.30」历史和技术性→命令段：旧版有`script watchdog exportstats`语法，命令原句为“用于导出一个包含内存使用和对象句柄数统计的文件。”完整原文上下文和来源URL见 output/command_wiki/script/references/exportstats-zh-wiki-history.md。使用旧版语法标题限定来源结构、不在资源说明中输出版本沿革；仅已有对应节点的资源会消费该自然来源。"
+        },
+        {
+            "old": ":<code>script diagnostics startcapture</code>\n:<code>script diagnostics stopcapture</code>\n::开始或停止捕获诊断。",
+            "new": ":<code>script diagnostics startcapture</code>\n::开始捕获诊断。\n:<code>script diagnostics stopcapture</code>\n::停止捕获诊断。",
+            "expected_matches": 1,
+            "reason": "中文 Wiki 将两个相反操作共用“开始或停止捕获诊断”描述；按实际语法关键字 startcapture 与 stopcapture 分别表达该语句已列明的动作，避免两个独立命令节点都获得含混的双向说明。"
+        },
+        {
+            "old": ":<code>script profiler start</code>\n:<code>script profiler stop</code>\n::启用或禁用跟踪脚本性能的分析器。",
+            "new": ":<code>script profiler start</code>\n::启用跟踪脚本性能的分析器。\n:<code>script profiler stop</code>\n::禁用跟踪脚本性能的分析器。",
+            "expected_matches": 1,
+            "reason": "中文 Wiki 将 profiler start/stop 共用“启用或禁用”说明；按实际语法关键字 start 与 stop 分别表达同句中的启用和禁用动作，使每个节点只说明自己的操作。"
+        },
+        {
+            "old": "指定调试器的[[wzh:通讯埠|端口]]，可用端口范围为1024-65535。",
+            "new": "指定调试器的[[wzh:通讯埠|端口]]。",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除port description中的数值范围限制；端口参数用途及min/max元数据保持原样。"
+        },
+        {
+            "old": "调试GameTest框架选项。",
+            "new": "管理GameTest调试、诊断和性能分析。",
+            "expected_matches": 1,
+            "reason": "将根介绍精简为核心用途。"
+        },
+        {
+            "old": "用于导出一个包含内存使用和对象句柄数统计的文件。",
+            "new": "导出内存和对象句柄统计。",
+            "expected_matches": 1,
+            "reason": "保留exportstats用途，删除输出文件旁注。"
+        }
+    ]
+}

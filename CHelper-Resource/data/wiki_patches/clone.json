@@ -1,0 +1,132 @@
+{
+    "version": 1,
+    "reason": "规范化两个基岩版枚举引导句，保留 Wiki 原有的模式和源区域说明。",
+    "replacements": [
+        {
+            "old": ": 若未定义，默认为<code>replace</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除遮罩模式未定义时的默认行为说明，枚举用途与明确模式值的效果保留。"
+        },
+        {
+            "old": ": 若未指定，默认为<code>normal</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除复制模式未指定时的默认行为说明，枚举用途与明确模式值的效果保留。"
+        },
+        {
+            "old": ": 定义目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标，游戏会根据<code><begin></code>与<code><end></code>的坐标算出目标区域的范围。",
+            "new": ": 定义目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标，游戏会根据<code><begin></code>与<code><end></code>的坐标算出目标区域的范围。brief: 目标区域起点",
+            "expected_matches": 1,
+            "reason": "为destination坐标参数增加简短用途标签；原文仍说明该点定义目标区域范围的基准。"
+        },
+        {
+            "old": "指定是否过滤被复制方块。必须为下列之一：",
+            "new": "指定是否过滤被复制方块。必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "将筛选模式引导改成提取器固定句式，后续 masked/replace 原文选项保持不变。"
+        },
+        {
+            "old": "指定对源区域的操作。必须为下列之一：",
+            "new": "指定对源区域的操作。必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "将复制模式引导改成提取器固定句式，force/move/normal 原文选项保持不变。"
+        },
+        {
+            "old": ": 指定在<code>filtered</code>模式下时要复制的方块ID。",
+            "new": ": 指定在<code>filtered</code>模式下时要复制的方块ID。brief: 筛选方块条件",
+            "expected_matches": 1,
+            "reason": "复合方块筛选节点还包含下一参数的blockStates，使用简短标签概括这组筛选条件。"
+        },
+        {
+            "old": ": 指定复制时需要符合的方块状态。",
+            "new": ": 指定复制时需要符合的方块状态。brief: 筛选方块条件",
+            "expected_matches": 1,
+            "reason": "与同一复合节点的tileName参数使用一致短名。"
+        },
+        {
+            "old": "* <code>move</code> — 将源区域复制到目标区域，并将源区域替换为空气。在filtered遮罩模式下，只有被复制的方块才会被替换为空气。",
+            "new": "* <code>move</code> — 将选中的源方块移动到目标区域。允许源区域与目标区域重叠。在filtered遮罩模式下，只有被复制的方块会被移动。",
+            "expected_matches": 1,
+            "reason": "人工补充中文依据与适用范围：同页结果表明确 /clone ... move ... 在源区域和目标区域重叠时仍可执行成功，因此“将源区域替换为空气”的无条件表述会错误覆盖重叠的目标区域。修正文案说明被清除的范围和重叠部分保留目标方块的情形；依据中文 Minecraft Wiki《命令/clone》的结果表与move语法，限基岩版clone。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{argument|be=1|begin: x y z|CommandPosition}}和{{argument|be=1|end: x y z|CommandPosition}}\r\n: 定义源区域的两组对角方块坐标。",
+            "new": "{{el|be|short=1}}：{{argument|be=1|begin: x y z|CommandPosition}}\r\n: 指定源区域一个角点的坐标。\r\n\r\n{{argument|be=1|end: x y z|CommandPosition}}\r\n: 指定源区域与<code>begin</code>相对的另一个角点坐标；这两个角点共同确定源区域。brief: 对角点",
+            "expected_matches": 1,
+            "reason": "按clone实际语法中两个独立POSITION节点拆开参数职责：begin为一个角点，end为相对角点；保留角点共同确定源区域的关系，不把两个坐标说成每个单独参数的职责。"
+        },
+        {
+            "old": ": 指定源区域与<code>begin</code>相对的另一个角点坐标；这两个角点共同确定源区域。",
+            "new": ": 指定源区域与<code>begin</code>相对的另一个角点坐标。",
+            "expected_matches": 1,
+            "reason": "人工精简参数说明，保留end与begin的相对角点职责，删除对两点共同确定区域的重复说明。"
+        },
+        {
+            "old": ": 定义目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标，游戏会根据<code><begin></code>与<code><end></code>的坐标算出目标区域的范围。brief: 目标区域起点",
+            "new": ": 指定目标区域的起始坐标。brief: 目标区域起点",
+            "expected_matches": 1,
+            "reason": "人工精简destination用途，保留其指定目标区域起点的职责，删除坐标方向与区域计算细节。"
+        },
+        {
+            "old": "仅复制非空气方块。会保持目的区域中原本会被替换为空气的方块不变。",
+            "new": "仅复制非空气方块。",
+            "expected_matches": 1,
+            "reason": "人工精简masked用途，删除目标区域副作用说明，保留核心筛选行为。"
+        },
+        {
+            "old": "复制所有方块，用源区域的方块覆盖目标区域中的''所有''方块。",
+            "new": "复制源区域的所有方块。",
+            "expected_matches": 1,
+            "reason": "人工精简replace用途，删除强调和重复的覆盖细节。"
+        },
+        {
+            "old": "强制复制，即使源区域与目标区域有重叠。",
+            "new": "允许源区域与目标区域重叠时复制。",
+            "expected_matches": 1,
+            "reason": "人工精简force用途，保留允许重叠复制的核心行为。"
+        },
+        {
+            "old": "将选中的源方块移动到目标区域。允许源区域与目标区域重叠。在filtered遮罩模式下，只有被复制的方块会被移动。",
+            "new": "将选中的源方块移动到目标区域。",
+            "expected_matches": 1,
+            "reason": "人工精简move用途，保留移动方块的核心行为，删除重叠及筛选模式下的补充说明。"
+        },
+        {
+            "old": "不执行force与move。",
+            "new": "按常规方式复制。",
+            "expected_matches": 1,
+            "reason": "人工将normal用途改为正向说明其核心动作。"
+        },
+        {
+            "old": ": 使命令只复制指定方块，需要额外指定一个方块。",
+            "new": ": 只复制指定的方块。",
+            "expected_matches": 1,
+            "reason": "人工精简filtered用途，保留筛选行为，删除参数提示。"
+        },
+        {
+            "old": ": 指定在<code>filtered</code>模式下时要复制的方块ID。brief: 筛选方块条件",
+            "new": ": 指定筛选方块。brief: 筛选方块条件",
+            "expected_matches": 1,
+            "reason": "人工精简复合筛选参数说明，保留指定方块的职责。"
+        },
+        {
+            "old": ": 指定复制时需要符合的方块状态。brief: 筛选方块条件",
+            "new": ": 指定方块状态筛选条件。brief: 筛选方块条件",
+            "expected_matches": 1,
+            "reason": "人工精简复合筛选参数说明，保留方块状态筛选职责。"
+        },
+        {
+            "old": ": 指定源区域与<code>begin</code>相对的另一个角点坐标。",
+            "new": ": 指定源区域与begin相对的另一个角点坐标。",
+            "expected_matches": 1,
+            "reason": "根据交叉核验进一步精简end参数，删除边界数学规则和坐标例子，仅保留另一个源区域角点的用途。"
+        },
+        {
+            "old": ": 构成边角的方块在此方块的坐标正方向上延伸。因此，各轴上较小的坐标将会正好贴合区域边界，但较大的坐标将会超过边界1方块，源区域的体积则为(x<sub>大</sub> - x<sub>小</sub> + 1) × (y<sub>大</sub> - y<sub>小</sub> + 1) × (z<sub>大</sub> - z<sub>小</sub> + 1)。例如：<code>0 0 0 0 0 0</code>的体积为1方块，<code>0 0 0 1 1 1</code>与<code>1 1 1 0 0 0</code>都指定同一块8方块大小的区域。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除end端点说明中的边界数学、体积公式及坐标例子，让该参数只保留另一个源区域角点的用途。"
+        }
+    ]
+}

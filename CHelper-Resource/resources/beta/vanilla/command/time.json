@@ -1,92 +1,171 @@
 {
-  "name": [
-    "time"
-  ],
-  "description": "更改或查询世界的游戏时间",
-  "syntax": [
-    "/time add <amount: int>",
-    "/time query <time: TimeQuery>",
-    "/time set <amount: int>",
-    "/time set <time: TimeSpec>"
-  ],
-  "node": {
-    "add": {
-      "type": "TEXT",
-      "description": "增加时间",
-      "data": {
-        "name": "add",
-        "description": "增加时间"
-      }
-    },
-    "<amount: int>": {
-      "type": "INTEGER",
-      "description": "时间值"
-    },
-    "query": {
-      "type": "TEXT",
-      "description": "查询时间",
-      "data": {
-        "name": "query",
-        "description": "查询时间"
-      }
-    },
-    "set": {
-      "type": "TEXT",
-      "description": "设置时间",
-      "data": {
-        "name": "set",
-        "description": "设置时间"
-      }
-    },
-    "<time: TimeQuery>": {
-      "type": "NORMAL_ID",
-      "description": "要查询的时间",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "daytime",
-          "description": "查询自当天日出后流逝的游戏刻数"
+    "name": [
+        "time"
+    ],
+    "description": "控制或查询时间。",
+    "syntax": [
+        "/time add <amount: int>",
+        "/time of <clockName: string> add <amount: int>",
+        "/time of <clockName: string> pause",
+        "/time of <clockName: string> query time",
+        "/time of <clockName: string> resume",
+        "/time of <clockName: string> set <amount: int>",
+        "/time of <clockName: string> set <timeMarkerName: timemarker name> [timeMarkerOccurrence: TimeMarkerOccurrence]",
+        "/time pause",
+        "/time query <time: TimeQuery2>",
+        "/time resume",
+        "/time set <amount: int>",
+        "/time set <timeMarkerName: timemarker name> [timeMarkerOccurrence: TimeMarkerOccurrence]"
+    ],
+    "node": {
+        "add": {
+            "type": "TEXT",
+            "description": "增加昼夜更替时间。",
+            "data": {
+                "name": "add",
+                "description": "增加昼夜更替时间。"
+            }
         },
-        {
-          "name": "gametime",
-          "description": "查询世界总共流逝的游戏刻数"
+        "<amount: int>": {
+            "type": "INTEGER",
+            "description": "指定要增加或设置的时间。 单位为游戏刻。",
+            "brief": "要增加或设置的时间"
         },
-        {
-          "name": "day",
-          "description": "查询已流逝的游戏天数"
+        "query": {
+            "type": "TEXT",
+            "description": "查询当前经过的时间。",
+            "data": {
+                "name": "query",
+                "description": "查询当前经过的时间。"
+            }
+        },
+        "set": {
+            "type": "TEXT",
+            "description": "设置昼夜更替时间。",
+            "data": {
+                "name": "set",
+                "description": "设置昼夜更替时间。"
+            }
+        },
+        "<time: TimeQuery2>": {
+            "type": "NORMAL_ID",
+            "description": "指定要查询的数据。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "daytime",
+                    "description": "当日时间"
+                },
+                {
+                    "name": "gametime",
+                    "description": "游戏时间"
+                },
+                {
+                    "name": "day",
+                    "description": "游戏天数"
+                },
+                {
+                    "name": "time",
+                    "description": "经过的总刻数"
+                }
+            ],
+            "brief": "要查询的数据"
+        },
+        "<timeMarkerName: timemarker name>": {
+            "type": "NORMAL_ID",
+            "description": "指定要设置的时间标记。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "day",
+                    "description": "1,000"
+                },
+                {
+                    "name": "noon",
+                    "description": "6,000"
+                },
+                {
+                    "name": "sunset",
+                    "description": "12,000"
+                },
+                {
+                    "name": "night",
+                    "description": "13,000"
+                },
+                {
+                    "name": "midnight",
+                    "description": "18,000"
+                },
+                {
+                    "name": "sunrise",
+                    "description": "23,000"
+                }
+            ],
+            "brief": "时间标记名称"
+        },
+        "of": {
+            "type": "TEXT",
+            "description": "指定要操作的世界时钟。",
+            "data": {
+                "name": "of",
+                "description": "指定要操作的世界时钟。"
+            }
+        },
+        "<clockName: string>": {
+            "type": "NORMAL_ID",
+            "description": "指定要操作的世界时钟。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "overworld",
+                    "description": "操作overworld世界时钟"
+                }
+            ],
+            "brief": "要操作的世界时钟"
+        },
+        "pause": {
+            "type": "TEXT",
+            "description": "暂停世界时钟。",
+            "data": {
+                "name": "pause",
+                "description": "暂停世界时钟。"
+            }
+        },
+        "resume": {
+            "type": "TEXT",
+            "description": "取消暂停世界时钟。",
+            "data": {
+                "name": "resume",
+                "description": "取消暂停世界时钟。"
+            }
+        },
+        "time": {
+            "type": "TEXT",
+            "description": "查询世界时钟经过的总刻数。",
+            "data": {
+                "name": "time",
+                "description": "查询世界时钟经过的总刻数。"
+            }
+        },
+        "[timeMarkerOccurrence: TimeMarkerOccurrence]": {
+            "type": "NORMAL_ID",
+            "description": "指定寻找时间标记的方式",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "next",
+                    "description": "寻找下一个时间标记"
+                },
+                {
+                    "name": "stay",
+                    "description": "寻找当天的时间标记"
+                },
+                {
+                    "name": "previous",
+                    "description": "寻找上一个时间标记"
+                }
+            ],
+            "brief": "时间标记查找方式"
         }
-      ]
-    },
-    "<time: TimeSpec>": {
-      "type": "NORMAL_ID",
-      "description": "要设置的时间",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "day",
-          "description": "白天(1000t)"
-        },
-        {
-          "name": "noon",
-          "description": "中午(6000t)"
-        },
-        {
-          "name": "sunset",
-          "description": "日落(12000t)"
-        },
-        {
-          "name": "night",
-          "description": "晚上(13000t)"
-        },
-        {
-          "name": "midnight",
-          "description": "午夜(18000t)"
-        },
-        {
-          "name": "sunrise",
-          "description": "日出(23000t)"
-        }
-      ]
     }
-  }
 }

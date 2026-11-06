@@ -844,6 +844,61 @@ TEST(BinaryUtilTest, CommandGraphBinaryReferencesAndBounds) {
     }
 }
 
+TEST(BinaryUtilTest, BinaryBooleansNormalizeNonzeroBytesWithoutInvalidObjectRepresentations) {
+    for (unsigned byte = 0; byte <= UINT8_MAX; ++byte) {
+        SCOPED_TRACE(byte);
+        const std::string binary(1, static_cast<char>(byte));
+        bool value = false;
+        ASSERT_NO_THROW(CHelper::readBinary(value, binary));
+        EXPECT_EQ(value, byte != 0);
+    }
+    for (const bool value: {false, true}) {
+        std::string binary;
+        CHelper::writeBinary(binary, value);
+        EXPECT_EQ(binary, std::string(1, value ? '\x01' : '\x00'));
+    }
+}
+
+TEST(BinaryUtilTest, PropertyReadersRejectTruncationInvalidTypesAndImpossibleCounts) {
+    using namespace CHelper;
+    const auto check = []<class T>(const T &source, const size_t typeOffset) {
+        std::string binary;
+        writeBinary(binary, source);
+        for (size_t size = 0; size < binary.size(); ++size) {
+            SCOPED_TRACE(size);
+            T value;
+            EXPECT_THROW(readBinary(value, std::string_view(binary.data(), size)), std::runtime_error);
+        }
+        for (const unsigned type: {3u, 255u}) {
+            T value;
+            auto invalid = binary;
+            invalid[typeOffset] = static_cast<char>(type);
+            EXPECT_THROW(readBinary(value, invalid), std::runtime_error);
+        }
+    };
+    Property property;
+    property.type = PropertyType::STRING;
+    property.defaultValue.string = new PropertyString(u"default");
+    property.valid.emplace();
+    property.valid->emplace_back().string = new PropertyString(u"valid");
+    check(property, sizeof(std::uint32_t));
+
+    BlockPropertyDescription description;
+    description.type = PropertyType::STRING;
+    description.values.emplace_back().valueName.string = new PropertyString(u"value");
+    description.values.back().description = u"description";
+    check(description, sizeof(std::uint32_t) + 1);
+
+    // Empty name, BOOLEAN type/default, present valid-list, impossible count.
+    const std::string propertyCount("\0\0\0\0\1\1\1\xff\xff\xff\xff", 11);
+    Property value;
+    EXPECT_THROW(readBinary(value, propertyCount), std::runtime_error);
+    // Empty name, absent description, BOOLEAN type, impossible count.
+    const std::string descriptionCount("\0\0\0\0\0\1\xff\xff\xff\xff", 10);
+    BlockPropertyDescription descriptionValue;
+    EXPECT_THROW(readBinary(descriptionValue, descriptionCount), std::runtime_error);
+}
+
 TEST(BinaryUtilTest, FixedWidthVectorBinary) {
     const std::string bytes("\x02\x00\x00\x00\x78\x56\x34\x12\xff\xff\xff\xff", 12);
     std::vector<std::uint32_t> values;

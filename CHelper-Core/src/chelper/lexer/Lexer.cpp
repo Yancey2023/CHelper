@@ -211,7 +211,7 @@ namespace CHelper::Lexer {
     };
 
     std::shared_ptr<LexerResult> lex(const std::u16string_view content) {
-        std::pmr::u16string copiedContent(content.data(), content.size());
+        std::pmr::u16string copiedContent(content.data(), content.size(), CPackMemoryRouter::getAllocationResource());
         // 使用同一词法规则先精确计数，避免 arena 保留逐次扩容的旧 token 数组。
         TokenCounter counter;
         Lexer countLexer(copiedContent, counter);

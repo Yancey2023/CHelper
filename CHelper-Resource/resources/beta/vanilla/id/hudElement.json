@@ -4,27 +4,27 @@
     "content": [
         {
             "name": "air_bubbles",
-            "description": "氧气槽"
+            "description": "氧气值"
         },
         {
             "name": "all",
-            "description": "全部"
+            "description": "所有的HUD"
         },
         {
             "name": "armor",
-            "description": "盔甲条"
+            "description": "护甲值"
         },
         {
             "name": "crosshair",
-            "description": "十字准星"
+            "description": "屏幕上的十字准星"
         },
         {
             "name": "health",
-            "description": "生命条"
+            "description": "生命值"
         },
         {
             "name": "horse_health",
-            "description": "骑乘生物生命条"
+            "description": "骑乘时坐骑的生命值"
         },
         {
             "name": "hotbar",
@@ -32,11 +32,11 @@
         },
         {
             "name": "hunger",
-            "description": "饥饿条"
+            "description": "饥饿值"
         },
         {
             "name": "item_text",
-            "description": "物品提示"
+            "description": "物品文本"
         },
         {
             "name": "paperdoll",
@@ -48,15 +48,15 @@
         },
         {
             "name": "status_effects",
-            "description": "状态效果"
+            "description": "状态效果图标"
         },
         {
             "name": "tooltips",
-            "description": "提示消息"
+            "description": "提示框"
         },
         {
             "name": "touch_controls",
-            "description": "触屏按键"
+            "description": "触控按键"
         }
     ]
 }

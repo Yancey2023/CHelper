@@ -1,59 +1,62 @@
 {
-  "name": [
-    "dialogue"
-  ],
-  "description": "为玩家打开NPC的对话框",
-  "syntax": [
-    "/dialogue change <npc: target> <sceneName: string> [players: target]",
-    "/dialogue open <npc: target> <player: target> [sceneName: string]"
-  ],
-  "node": {
-    "change": {
-      "type": "TEXT",
-      "description": "改变场景",
-      "data": {
-        "name": "change",
-        "description": "改变场景"
-      }
-    },
-    "<npc: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "要打开的NPC目标，必须为一个NPC",
-      "isOnlyOne": true,
-      "isMustPlayer": false,
-      "isMustNPC": true,
-      "isWildcard": false
-    },
-    "<sceneName: string>|[sceneName: string]": {
-      "type": "STRING",
-      "brief": "场景名",
-      "description": "从导入的行为包中对话文件显示的场景",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "[players: target]": {
-      "type": "TARGET_SELECTOR",
-      "description": "打开NPC对话框的目标玩家，必须为一个玩家",
-      "isOnlyOne": true,
-      "isMustPlayer": true,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "open": {
-      "type": "TEXT",
-      "description": "打开场景",
-      "data": {
-        "name": "open",
-        "description": "打开场景"
-      }
-    },
-    "<player: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "打开NPC对话框的目标玩家，必须为一个玩家",
-      "isOnlyOne": true,
-      "isMustPlayer": true,
-      "isMustNPC": false,
-      "isWildcard": false
+    "name": [
+        "dialogue"
+    ],
+    "description": "为玩家打开或改变NPC的对话框。",
+    "syntax": [
+        "/dialogue change <npc: target> <sceneName: string> [players: target]",
+        "/dialogue open <npc: target> <player: target> [sceneName: string]"
+    ],
+    "node": {
+        "change": {
+            "type": "TEXT",
+            "description": "通过场景文件改变NPC的对话。",
+            "data": {
+                "name": "change",
+                "description": "通过场景文件改变NPC的对话。"
+            }
+        },
+        "<npc: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定要打开或改变的NPC目标。",
+            "isOnlyOne": true,
+            "isMustPlayer": false,
+            "isMustNPC": true,
+            "isWildcard": false,
+            "brief": "要打开或改变的NPC目标"
+        },
+        "<sceneName: string>|[sceneName: string]": {
+            "type": "STRING",
+            "brief": "场景名称",
+            "description": "指定要显示的场景。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "[players: target]": {
+            "type": "TARGET_SELECTOR",
+            "description": "在open中指定对话玩家； 在change中限定被改变对话的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "对话玩家"
+        },
+        "open": {
+            "type": "TEXT",
+            "description": "打开NPC的对话，或以该NPC为活动对象进行场景对话。",
+            "data": {
+                "name": "open",
+                "description": "打开NPC的对话，或以该NPC为活动对象进行场景对话。"
+            }
+        },
+        "<player: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "在open中指定对话玩家； 在change中限定被改变对话的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "对话玩家"
+        }
     }
-  }
 }

@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "reason": "为伤害类型和来源实体参数设置简短标签，description仍保留Wiki中的用途、默认值和效果说明。",
+    "replacements": [
+        {
+            "old": "指定伤害的成因，即要造成的[[伤害类型]]，默认为{{only|for=<code>minecraft:generic</code>|je}}或{{only|for=<code>none</code>|be}}，其会影响的游戏内容如[[死亡消息]]。",
+            "new": "指定伤害的成因，即要造成的[[伤害类型]]，其会影响的游戏内容如[[死亡消息]]。brief: 伤害类型",
+            "expected_matches": 1,
+            "reason": "删除未指定伤害原因的默认行为及参数可省略/必填的叙述，保留伤害类型用途与效果说明。"
+        },
+        {
+            "old": "同时指定其发射者为伤害的实际来源。",
+            "new": "同时指定其发射者为伤害的实际来源。brief: 伤害来源实体",
+            "expected_matches": 1,
+            "reason": "damager参数指定直接来源实体。"
+        },
+        {
+            "old": "没有指定时，<code><entity></code>参数指定的实体视为实际来源。",
+            "new": "没有指定时，<code><entity></code>参数指定的实体视为实际来源。brief: 实际伤害来源",
+            "expected_matches": 1,
+            "reason": "source参数指定造成伤害的实际来源，区别于直接来源。"
+        },
+        {
+            "old": "所有伤害类型参见[https://learn.microsoft.com/en-us/minecraft/creator/reference/content/vanillalistingsreference/addonentitydamagesources 官方附加包文档]。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "移除参数description末尾的外部文档引用；它不解释当前输入值，且不应在命令提示中留下独立的链接提示。伤害类型参数的用途、版别默认值和可选/必选语法范围保留；依据本页中文Wiki的参数及两条基岩版语法。"
+        },
+        {
+            "old": "指定伤害的成因，即要造成的[[伤害类型]]，其会影响的游戏内容如[[死亡消息]]。brief: 伤害类型",
+            "new": "指定伤害类型。brief: 伤害类型",
+            "expected_matches": 1,
+            "reason": "人工精简cause用途，保留伤害类型职责，删除影响范围旁注。"
+        },
+        {
+            "old": "指定伤害的直接来源，这会影响伤害造成的击退方向。可用于指定[[弹射物]]或[[被激活的TNT]]为伤害的直接来源，同时指定其发射者为伤害的实际来源。brief: 伤害来源实体",
+            "new": "指定伤害的直接来源实体。brief: 伤害来源实体",
+            "expected_matches": 1,
+            "reason": "人工精简entity用途，保留直接伤害来源职责，删除例子及击退效果旁注。"
+        },
+        {
+            "old": "指定伤害的实际来源，视为由该生物造成此伤害并增加相关[[统计]]，导致生物反击或声望下降，且造成死亡时为击杀者。没有指定时，<code><entity></code>参数指定的实体视为实际来源。brief: 实际伤害来源",
+            "new": "指定伤害的实际来源。brief: 实际伤害来源",
+            "expected_matches": 1,
+            "reason": "人工精简source用途，保留实际伤害来源职责，删除后续效果与默认关系说明。"
+        }
+    ]
+}

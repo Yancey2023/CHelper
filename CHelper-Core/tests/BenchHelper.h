@@ -51,7 +51,7 @@
  * 3. 样例取自真实资源包，不使用人造微基准
  *
  * 用例名统一以 Bench. 开头，可以单独运行：
- * CHelperTest --gtest_filter=Bench.*
+ * CHelperBench --gtest_filter=Bench.*
  */
 
 namespace CHelper::Test {
@@ -72,15 +72,21 @@ namespace CHelper::Test {
     };
 
     inline void startAllocCounting() {
+#ifndef CHELPER_BENCH_TIMING_ONLY
         Detail::gAllocCalls.store(0, std::memory_order_relaxed);
         Detail::gNetBytes.store(0, std::memory_order_relaxed);
         Detail::gCounting.store(true, std::memory_order_relaxed);
+#endif
     }
 
     inline AllocSnapshot stopAllocCounting() {
+#ifdef CHELPER_BENCH_TIMING_ONLY
+        return {};
+#else
         Detail::gCounting.store(false, std::memory_order_relaxed);
         return AllocSnapshot{Detail::gAllocCalls.load(std::memory_order_relaxed),
                              Detail::gNetBytes.load(std::memory_order_relaxed)};
+#endif
     }
 
     // ================= 统计工具 =================
@@ -122,7 +128,7 @@ namespace CHelper::Test {
         }
 
         void print() const {
-            std::printf("%-52s n=%-5zu avg %8.4f ms  p50 %8.4f  p95 %8.4f  max %8.4f  new %8.1f  net %8.1f KiB\n",
+            std::printf("%-52s n=%-5zu avg %12.9f ms  p50 %12.9f  p95 %12.9f  max %12.9f  new %8.1f  net %8.1f KiB\n",
                         std::string(name).c_str(), count, count ? totalMs / double(count) : 0.0,
                         percentile(0.50), percentile(0.95), maxMs, count ? double(allocCalls) / double(count) : 0.0,
                         count ? double(netBytes) / double(count) / 1024.0 : 0.0);
@@ -167,6 +173,7 @@ namespace CHelper::Test {
      * 因此全部用启动时一次性分配的定长开放寻址表，不使用任何容器
      */
     namespace HeapProfile {
+#ifndef CHELPER_BENCH_TIMING_ONLY
 
         constexpr size_t LIVE_CAPACITY = size_t(1) << 19;
         constexpr size_t SITE_CAPACITY = 512;
@@ -299,6 +306,7 @@ namespace CHelper::Test {
                        tables.freeSiteCount.get(), top);
         }
 
+#endif
     }// namespace HeapProfile
 
     /**
@@ -328,6 +336,7 @@ namespace CHelper::Test {
 // ================= 全局 operator new / delete 辅助函数 =================
 // 全局 operator new/delete 的定义位于 BenchTest.cpp；辅助函数保留在头文件中，
 // 方便分配器实现访问 benchmark 的计数状态。
+#ifndef CHELPER_BENCH_TIMING_ONLY
 inline void *chelperBenchAlloc(size_t size, const void *callSite) {
     if (CHelper::Test::Detail::gCounting.load(std::memory_order_relaxed)) {
         CHelper::Test::Detail::gAllocCalls.fetch_add(1, std::memory_order_relaxed);
@@ -401,3 +410,4 @@ inline void chelperBenchAlignedFree(void *pointer, const void *callSite) noexcep
     }
     std::free(allocation.allocation);
 }
+#endif

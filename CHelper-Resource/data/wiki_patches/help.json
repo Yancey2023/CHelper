@@ -1,0 +1,23 @@
+{
+    "version": 1,
+    "reason": "将命令参数说明中的用途短标签显式标注，标签取自 Wiki 原句。",
+    "replacements": [
+        {
+            "old": ": {{arg desc|je=string|type=greedy|be=string}}必须为一个英文单词（不含空格）。\n: 指定要提供帮助的命令名称。",
+            "new": ": {{arg desc|je=string|type=greedy|be=string}}\n: 指定要提供帮助的命令名称。",
+            "expected_matches": 1,
+            "reason": "移除命令名称的词法合法性说明，保留命令名称用途。"
+        },
+        {
+            "old": ": {{arg desc|be=int}}\n: 指定要展示的命令列表的页码。小于1的数字会被视为1，大于总页数会被默认为展示最后一页。",
+            "new": ": {{arg desc|be=int}}\n: 指定要展示的命令列表的页码。",
+            "expected_matches": 1,
+            "reason": "移除页码输入越界时的裁剪行为说明，保留参数用途。"
+        },
+        {
+            "old": ": 指定要提供帮助的命令名称。{{IN|java}}还可以进一步提供该命令更精确的参数来获取更精确的信息。",
+            "new": ": 指定要提供帮助的命令名称。\n: brief: 命令名称\n: {{IN|java}}还可以进一步提供该命令更精确的参数来获取更精确的信息。",
+            "reason": "brief 摘自原句‘命令名称’，其余原文完整保留。"
+        }
+    ]
+}

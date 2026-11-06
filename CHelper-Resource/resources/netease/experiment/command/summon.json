@@ -1,73 +1,74 @@
 {
-  "name": [
-    "summon"
-  ],
-  "description": "召唤一个实体",
-  "syntax": [
-    "/summon <entityType: EntityType> <nameTag: string> [spawnPos: x y z]",
-    "/summon <entityType: EntityType> [spawnPos: x y z] [yRot: value] [xRot: value] [spawnEvent: string] [nameTag: string]",
-    "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtEntity: target> [spawnEvent: string] [nameTag: string]",
-    "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtPosition: x y z> [spawnEvent: string] [nameTag: string]"
-  ],
-  "node": {
-    "<entityType: EntityType>": {
-      "type": "NAMESPACE_ID",
-      "brief": "实体类型",
-      "description": "要被召唤的实体类型",
-      "ignoreError": true,
-      "key": "entity"
-    },
-    "<nameTag: string>|[nameTag: string]": {
-      "type": "STRING",
-      "brief": "实体名",
-      "description": "该实体的名称",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "[spawnPos: x y z]": {
-      "type": "POSITION",
-      "brief": "实体召唤位置",
-      "description": "该实体的召唤位置。如果未指定，默认为命令执行位置"
-    },
-    "[yRot: value]": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "ry",
-      "description": "该实体的水平旋转角度(-180.0表示北，-90.0表示东，0.0表示南，90.0表示西)",
-      "canUseCaretNotation": false
-    },
-    "[xRot: value]": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "rx",
-      "description": "该实体的垂直旋转角度(竖直上方为-90.0，至竖直下方90.0)",
-      "canUseCaretNotation": false
-    },
-    "[spawnEvent: string]": {
-      "type": "NORMAL_ID",
-      "brief": "实体生成事件",
-      "description": "该实体的召唤时附带的游戏内事件",
-      "ignoreError": true,
-      "key": "entityEvent"
-    },
-    "facing": {
-      "type": "TEXT",
-      "description": "朝向某个实体或坐标",
-      "data": {
-        "name": "facing",
-        "description": "朝向某个实体或坐标"
-      }
-    },
-    "<lookAtEntity: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "该实体朝向的实体",
-      "isOnlyOne": true,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "<lookAtPosition: x y z>": {
-      "type": "POSITION",
-      "brief": "朝向的坐标",
-      "description": "该实体朝向的坐标"
+    "name": [
+        "summon"
+    ],
+    "description": "召唤一个实体。",
+    "syntax": [
+        "/summon <entityType: EntityType> <nameTag: string> [spawnPos: x y z]",
+        "/summon <entityType: EntityType> [spawnPos: x y z] [yRot: value] [xRot: value] [spawnEvent: string] [nameTag: string]",
+        "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtEntity: target> [spawnEvent: string] [nameTag: string]",
+        "/summon <entityType: EntityType> [spawnPos: x y z] facing <lookAtPosition: x y z> [spawnEvent: string] [nameTag: string]"
+    ],
+    "node": {
+        "<entityType: EntityType>": {
+            "type": "NAMESPACE_ID",
+            "brief": "要被召唤的实体类型",
+            "description": "指定要被召唤的实体类型。",
+            "ignoreError": true,
+            "key": "entity"
+        },
+        "<nameTag: string>|[nameTag: string]": {
+            "type": "STRING",
+            "brief": "实体名称",
+            "description": "指定生成实体的名称。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "[spawnPos: x y z]": {
+            "type": "POSITION",
+            "brief": "该实体的召唤位置",
+            "description": "指定该实体的召唤位置。"
+        },
+        "[yRot: value]": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "Y轴旋转角度",
+            "description": "指定该实体生成时绕Y轴旋转的角度，以度为单位。",
+            "canUseCaretNotation": false
+        },
+        "[xRot: value]": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "X轴旋转角度",
+            "description": "指定该实体生成时绕X轴旋转的角度，以度为单位。",
+            "canUseCaretNotation": false
+        },
+        "[spawnEvent: string]": {
+            "type": "NORMAL_ID",
+            "brief": "召唤事件",
+            "description": "指定该实体的召唤时附带的实体事件。",
+            "ignoreError": true,
+            "key": "entityEvent"
+        },
+        "facing": {
+            "type": "TEXT",
+            "description": "指定该实体生成时的朝向，目标可以是实体或坐标。",
+            "data": {
+                "name": "facing",
+                "description": "指定该实体生成时的朝向，目标可以是实体或坐标。"
+            }
+        },
+        "<lookAtEntity: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定该实体生成时的要朝向的实体。",
+            "isOnlyOne": true,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "朝向实体"
+        },
+        "<lookAtPosition: x y z>": {
+            "type": "POSITION",
+            "brief": "朝向坐标",
+            "description": "指定该实体生成时的要朝向的坐标。"
+        }
     }
-  }
 }

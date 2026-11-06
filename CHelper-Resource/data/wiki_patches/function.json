@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "reason": "本资源命令语法是基岩版 function <name: filepath>；参数原文混合了Java版函数标签与基岩版函数语义，按本资源版别补明基岩版实际作用。",
+    "replacements": [
+        {
+            "old": ": 指定要执行的函数或函数标签。",
+            "new": ": 指定要执行的行为包函数。brief: 行为包函数",
+            "expected_matches": 1,
+            "reason": "中文Wiki该参数句未区分版别，而本资源只支持基岩版 filepath 参数；基岩版语法运行行为包内函数，不支持Java版函数标签。人工补充版别限定以避免将Java语义套用于基岩版。"
+        }
+    ]
+}

@@ -1,10 +1,10 @@
 {
-  "name": [
-    "list"
-  ],
-  "description": "列出在服务器上的玩家",
-  "syntax": [
-    "/list"
-  ],
-  "node": {}
+    "name": [
+        "list"
+    ],
+    "description": "列出在服务器上的玩家。",
+    "syntax": [
+        "/list"
+    ],
+    "node": {}
 }

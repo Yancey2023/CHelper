@@ -1,0 +1,18 @@
+{
+    "name": [
+        "connect"
+    ],
+    "description": "连接WebSocket服务器。",
+    "syntax": [
+        "/connect <serverUri: text>"
+    ],
+    "node": {
+        "<serverUri: text>": {
+            "type": "STRING",
+            "description": "指定WebSocket服务器的URI。",
+            "canContainSpace": false,
+            "ignoreLater": false,
+            "brief": "服务器URI"
+        }
+    }
+}

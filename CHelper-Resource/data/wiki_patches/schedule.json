@@ -1,0 +1,114 @@
+{
+    "version": 1,
+    "reason": "为共享参数及命令关键字补充可独立理解的用途；按各语法分支准确说明关键字并将共享参数描述收窄到共同语义，将区域端点分开说明，并将 Java/基岩版 replace/append 标题写成版别参数模板。",
+    "replacements": [
+        {
+            "old": ": 指定要计划运行的函数。",
+            "new": ": 指定函数文件路径。brief: 函数",
+            "expected_matches": 1,
+            "reason": "function输入在添加和清除计划的语法中均为CommandFilePath；用该参数共同的用途“函数文件路径”描述类型，不将版本分支操作写入共享参数说明。"
+        },
+        {
+            "old": "== 参数 ==",
+            "new": "== 参数 ==\n; 关键字 <code>add</code>\n: 安排函数执行计划。\n; 关键字 <code>delay</code>\n: 指定函数延时执行的计划。\n; 关键字 <code>on_area_loaded</code>\n: 区域加载条件下的函数计划。brief: 区域加载计划\n; 关键字 <code>tickingarea</code>\n: 常加载区域计划。brief: 常加载区计划\n; 关键字 <code>function</code>\n: 清除指定函数对应的区域加载计划。brief: 清除函数计划",
+            "expected_matches": 1,
+            "reason": "依据同页语法与结果定义关键字：add用于添加计划、delay用于延时计划，on_area_loaded和tickingarea简述其共同指向的计划类别或目标，function仅用于区域加载计划的清除语法。brief为对应关键字的简短用途。"
+        },
+        {
+            "old": "* '''基岩版'''\n: <code><nowiki>schedule delay add <function: filepath> <time: int> [replace|append]</nowiki></code>",
+            "new": "* '''基岩版'''\n; 延时计划\n: <code><nowiki>schedule delay add <function: filepath> <time: int> [replace|append]</nowiki></code>",
+            "expected_matches": 1,
+            "reason": "用自然子标题标记schedule delay语法组，便于同页后续syntax用途句与延时计划上下文对应。"
+        },
+        {
+            "old": ":: 将指定函数延时运行。\n: <code>schedule on_area_loaded add <from: x y z> <to: x y z> <function: filepath></code>",
+            "new": ":: 将指定函数延时运行。\n; 区域加载计划\n: <code>schedule on_area_loaded add <from: x y z> <to: x y z> <function: filepath></code>",
+            "expected_matches": 1,
+            "reason": "用自然子标题区分区域加载计划语法组，保留原命令用途句。"
+        },
+        {
+            "old": ": <code>schedule delay clear <function: filepath></code>\n:: 将之前指定的函数从计划中移除。",
+            "new": "; 延时计划清除\n: <code>schedule delay clear <function: filepath></code>\n:: 将之前指定的函数从计划中移除。",
+            "expected_matches": 1,
+            "reason": "为延时计划清除语法单独标出自然小标题，避免与前面的区域加载清除分支混淆。"
+        },
+        {
+            "old": "{{el|je|short=1}}：<code>append|replace</code><br>\n{{el|be|short=1}}：<code>replace|append</code>\n: 指定是否取代还在等待执行的函数或函数标签。",
+            "new": "{{argument|je=1|append|replace|enum}}<br>\n{{argument|be=1|replace|append|enum}}\n: 指定是否取代还在等待执行的函数或函数标签。必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "把 Java 参数 `append|replace` 与基岩版参数 `replace|append` 分别写为带 edition 的 argument 模板，保留原顺序和分别适用版本；标准枚举引导句及两个选项说明保持不变。"
+        },
+        {
+            "old": "{{argument|time|time|time: int|int}}\n: 指定等待的时间。为0时执行失败。\n: {{arg desc|je=time|be=int|min=0}}",
+            "new": "{{argument|time|time|time: int|int}}\n: 指定等待的时间。为0时执行失败。\n: {{arg desc|je=time|be=int|min=0}}\n:* <code>D</code> — D后缀代表游戏日\n:* <code>S</code> — S后缀代表秒\n:* <code>T</code> — T后缀或无后缀代表游戏刻\n:* <code>d</code> — 游戏日\n:* <code>s</code> — 秒\n:* <code>t</code> — 游戏刻",
+            "expected_matches": 1,
+            "reason": "大写D/S/T用途依据中文Minecraft Wiki“基岩版1.21.50”命令格式原文“T后缀或无后缀代表游戏刻，S后缀代表秒，D后缀代表游戏日”。小写d/s/t是现有INTEGER_WITH_UNIT资源中的单位项；为给这些已有值提供简短用途，正文复用大写同单位的中文含义“游戏日、秒、游戏刻”。来源页面未单列小写形式；这些短说明不声明游戏命令接受小写后缀，也不修改可接受单位metadata。中文页面来源：https://zh.minecraft.wiki/w/%E5%9F%BA%E5%B2%A9%E7%89%881.21.50?variant=zh-cn。"
+        },
+        {
+            "old": "指定用于定义矩形加载区域的两个对角坐标。",
+            "new": "指定用于定义矩形加载区域的两个对角坐标。brief: 矩形区域坐标",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 参数原句“指定用于定义矩形加载区域的两个对角坐标”，brief 简称矩形区域坐标。"
+        },
+        {
+            "old": "指定用于定义圆形加载区域的圆心的坐标。",
+            "new": "指定用于定义圆形加载区域的圆心的坐标。brief: 圆形区域圆心",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 参数原句“指定用于定义圆形加载区域的圆心的坐标”，brief 简称圆形区域圆心。"
+        },
+        {
+            "old": "指定圆形常加载区域的半径作为从中心到圆周的区块数。",
+            "new": "指定圆形常加载区域的半径作为从中心到圆周的区块数。brief: 圆形区域半径",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 参数原句“指定圆形常加载区域的半径作为从中心到圆周的区块数”，brief 简称圆形区域半径。"
+        },
+        {
+            "old": "指定常加载区域的名称。当此常加载区域被添加时执行函数。",
+            "new": "指定常加载区域的名称；add语法中在该区域被添加时执行函数。",
+            "expected_matches": 1,
+            "reason": "精简常加载区域名称参数，并保留该函数行为仅适用于add语法的分支上下文。"
+        },
+        {
+            "old": ":* <code>replace</code> —— （默认值）取代此函数或函数标签的现有计划。",
+            "new": ":* <code>replace</code> —— （默认值）取代此函数或函数标签的现有计划。\n: brief: 计划更新方式",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 对 replace/append 的共同用途说明“是否取代还在等待执行的函数或函数标签”，为枚举参数设置简短 brief。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{argument|be=1|from: x y z|CommandPosition}}和{{argument|be=1|to: x y z|CommandPosition}}\n: 指定用于定义矩形加载区域的两个对角坐标。brief: 矩形区域坐标\n: {{arg desc|be=CommandPosition}}\n: 小于-30,000,000或大于30,000,000的<code>x</code>和<code>z</code>坐标会被视为-30,000,000或30,000,000。",
+            "new": "{{argument|be=1|from: x y z|CommandPosition}}\n: 指定矩形加载区域一个对角点的坐标。brief: 矩形区域一角\n: {{arg desc|be=CommandPosition}}\n\n\n{{argument|be=1|to: x y z|CommandPosition}}\n: 指定与<code>from</code>相对的另一个角点坐标。brief: 矩形对角点\n: {{arg desc|be=CommandPosition}}\n",
+            "expected_matches": 1,
+            "reason": "精简to参数说明，保留其相对from的另一个角点职责。"
+        },
+        {
+            "old": ": {{arg desc|be=int}}应为从0到2,147,483,647之间的整数。",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": ": 必须为1个完整的单词（无空格）或1个被引号包围的字符串。",
+            "new": ": ",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{argument|be=1|center: x y z|CommandPosition}}\n: 指定用于定义圆形加载区域的圆心的坐标。brief: 圆形区域圆心\n: {{arg desc|be=CommandPosition}}\n: 小于-30,000,000或大于30,000,000的<code>x</code>和<code>z</code>坐标会被视为-30,000,000或30,000,000。",
+            "new": "{{el|be|short=1}}：{{argument|be=1|center: x y z|CommandPosition}}\n: 指定用于定义圆形加载区域的圆心的坐标。brief: 圆形区域圆心\n: {{arg desc|be=CommandPosition}}",
+            "expected_matches": 1,
+            "reason": "删除坐标越界裁剪说明，保留圆形区域圆心用途。"
+        },
+        {
+            "old": "（默认值）取代此函数或函数标签的现有计划。",
+            "new": "取代此函数或函数标签的现有计划。",
+            "expected_matches": 1,
+            "reason": "删除replace选项description中的默认标记，保留取代现有计划的动作。"
+        },
+        {
+            "old": "为0时执行失败。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按用户范围清理要求删除time description中的无效输入失败条件；等待时间用途、游戏刻单位、后缀说明、参数brief和元数据保持不变。"
+        }
+    ]
+}

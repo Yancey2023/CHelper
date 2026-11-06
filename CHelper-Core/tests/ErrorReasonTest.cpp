@@ -1,12 +1,41 @@
-#include "BenchHelper.h"
 #include <array>
+#include <atomic>
 #include <barrier>
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <gtest/gtest.h>
+#include <memory_resource>
 #include <thread>
 
 namespace CHelper::Test {
+    class DiagnosticResource final : public std::pmr::memory_resource {
+        std::atomic<int64_t> bytes{0};
+        void *do_allocate(size_t size, size_t alignment) override {
+            auto *result = std::pmr::new_delete_resource()->allocate(size, alignment);
+            bytes.fetch_add(static_cast<int64_t>(size), std::memory_order_relaxed);
+            return result;
+        }
+        void do_deallocate(void *pointer, size_t size, size_t alignment) override {
+            std::pmr::new_delete_resource()->deallocate(pointer, size, alignment);
+            bytes.fetch_sub(static_cast<int64_t>(size), std::memory_order_relaxed);
+        }
+        bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
+
+    public:
+        int64_t retainedBytes() const { return bytes.load(std::memory_order_relaxed); }
+    };
+
+    class DiagnosticScope : public ErrorReasonMemoryScope {
+    public:
+        explicit DiagnosticScope([[maybe_unused]] DiagnosticResource &resource)
+#if defined(CHELPER_RESOURCE_AUDIT)
+            : ErrorReasonMemoryScope(&resource){}
+#else
+            : ErrorReasonMemoryScope() {
+        }
+#endif
+    };
+
 
     static_assert(!std::is_constructible_v<ErrorReason, ErrorReasonLevel::ErrorReasonLevel, size_t, size_t, ErrorReasonCode>);
     static_assert(!std::is_copy_constructible_v<ErrorReason>);
@@ -41,9 +70,9 @@ namespace CHelper::Test {
                 finish.arrive_and_wait();
             }
         });
-        startAllocCounting();
+        DiagnosticResource resource;
         {
-            ErrorReasonMemoryScope scope;
+            DiagnosticScope scope(resource);
             for (size_t round = 0; round < rounds; ++round) {
                 for (auto &error: shared) error = ErrorReasons::unknownId(ErrorReasonLevel::ID_ERROR, {0, 1}, u"参数");
                 weak[round] = shared.front();
@@ -59,10 +88,12 @@ namespace CHelper::Test {
             EXPECT_TRUE(error.expired());
             error.reset();
         }
-        const auto allocations = stopAllocCounting();
+
         worker.join();
         // 弱引用、活动作用域和未使用的批量引用释放后，所有诊断块都应归还。
-        EXPECT_LE(allocations.netBytes, 0);
+#if defined(CHELPER_RESOURCE_AUDIT)
+        EXPECT_EQ(resource.retainedBytes(), 0);
+#endif
     }
 
     TEST(ErrorReasonTest, SmallParametersRemainOwnedAcrossBlockBoundaries) {
@@ -124,9 +155,9 @@ namespace CHelper::Test {
         std::vector<std::shared_ptr<ErrorReason>> errors;
         errors.reserve(threadCount * errorsPerThread);
         for (auto &items: weak) items.reserve(errorsPerThread);
-        startAllocCounting();
+        DiagnosticResource resource;
         {
-            ErrorReasonMemoryScope scope;
+            DiagnosticScope scope(resource);
             for (size_t i = 0; i < threadCount * errorsPerThread; ++i) {
                 auto error = ErrorReasons::unknownMeaning(ErrorReasonLevel::CONTENT_ERROR, {i, i + 1}, std::u16string_view(u"参数"));
                 weak[i % threadCount].push_back(error);
@@ -134,8 +165,9 @@ namespace CHelper::Test {
             }
         }
         errors.clear();
-        const auto retained = stopAllocCounting();
-        ASSERT_GT(retained.netBytes, 0);
+#if defined(CHELPER_RESOURCE_AUDIT)
+        ASSERT_GT(resource.retainedBytes(), 0);
+#endif
         for (const auto &items: weak) {
             for (const auto &item: items) ASSERT_TRUE(item.expired());
         }
@@ -149,12 +181,14 @@ namespace CHelper::Test {
                 finish.arrive_and_wait();
             });
         }
-        startAllocCounting();
+
         start.arrive_and_wait();
         finish.arrive_and_wait();
-        const auto released = stopAllocCounting();
+
         for (auto &thread: threads) thread.join();
-        EXPECT_LE(retained.netBytes + released.netBytes, 0);
+#if defined(CHELPER_RESOURCE_AUDIT)
+        EXPECT_EQ(resource.retainedBytes(), 0);
+#endif
     }
 
     TEST(ErrorReasonTest, SharedBlocksOutliveScopeAndReleaseWithWeakPointers) {
@@ -240,23 +274,25 @@ namespace CHelper::Test {
         }
     }
 
+#if defined(CHELPER_RESOURCE_AUDIT)
     TEST(ErrorReasonTest, LastWeakReferenceReleasesRetainedBlock) {
         std::weak_ptr<ErrorReason> weak;
-        startAllocCounting();
+        DiagnosticResource resource;
         {
-            ErrorReasonMemoryScope scope;
+            ErrorReasonMemoryScope scope(&resource);
             const auto error = ErrorReasons::requireSpace(ErrorReasonLevel::REQUIRE_SPACE, {0, 0});
             weak = error;
         }
-        const auto retained = stopAllocCounting();
+        const auto retained = resource.retainedBytes();
         ASSERT_TRUE(weak.expired());
-        ASSERT_GT(retained.netBytes, 0);
-        startAllocCounting();
+        ASSERT_GT(retained, 0);
+
         weak.reset();
-        const auto released = stopAllocCounting();
-        // 未提供大小的 delete 在一些平台按实际块大小计数，可能包含分配器填充。
-        EXPECT_LE(retained.netBytes + released.netBytes, 0);
+
+        // 审计上游只在最后一个弱引用释放后收回整个诊断块。
+        EXPECT_EQ(resource.retainedBytes(), 0);
     }
+#endif
 
     TEST(ErrorReasonTest, DeferredArgumentsOwnTheirTextAfterInputAndScopeDestruction) {
         std::shared_ptr<ErrorReason> error;

@@ -1,0 +1,149 @@
+{
+    "version": 1,
+    "reason": "将参数原文已有的 ride/howsToFill/teleportRules 枚举选项及用途拆分为可匹配结构。",
+    "replacements": [
+        {
+            "old": ": 指定将被传送的实体。",
+            "new": ": 指定开始骑乘时传送坐骑还是乘客。\n: brief: 传送方向",
+            "expected_matches": 1,
+            "reason": "人工补充参数用途及brief：teleportRules选择传送方向，不直接指定实体；两种具体方向由原文的teleport_ride和teleport_rider选项说明。"
+        },
+        {
+            "old": ": 必须是<code>teleport_ride</code>（传送坐骑至乘客）或<code>teleport_rider</code>（传送乘客至坐骑）。",
+            "new": ": 必须为以下其中之一：\n:* <code>teleport_ride</code> — 传送坐骑至乘客\n:* <code>teleport_rider</code> — 传送乘客至坐骑",
+            "reason": "值和两种传送方向均摘自命令页面 teleportRules 参数原句。"
+        },
+        {
+            "old": ": 必须是<code>if_group_fits</code>或<code>until_full</code>。",
+            "new": ": 指定乘客与坐骑的匹配方式。\n: 必须为以下其中之一：",
+            "reason": "补充howToFill父用途并保留原枚举引导和选项说明。"
+        },
+        {
+            "old": ": 必须是<code>no_ride_change</code>， <code>reassign_rides</code>或 <code>skip_riders</code>。",
+            "new": ": 指定召唤坐骑时如何处理现有骑乘关系。\n: 必须为以下其中之一：",
+            "reason": "补充rideRules父用途并保留原枚举引导和选项说明。"
+        },
+        {
+            "old": ":* 如果未指定，默认为<code>until_full</code>。",
+            "new": ": brief: 乘客分配方式\n:* 默认值为<code>until_full</code>。",
+            "reason": "保留 howToFill 原 brief；省略时采用 until_full 的含义并入该枚举选项说明，以便提取器将默认行为保留在结构化选项中。"
+        },
+        {
+            "old": ":* 如果未指定，默认为<code>reassign_rides</code>。",
+            "new": ": brief: 乘坐处理规则\n:* 默认值为<code>reassign_rides</code>。",
+            "reason": "保留 rideRules 原 brief；省略时采用 reassign_rides 的含义并入该枚举选项说明，以便提取器将默认行为保留在结构化选项中。"
+        },
+        {
+            "old": ":* <code>until_full</code>让指定的<code><riders: target></code>逐个尝试骑乘至指定的坐骑上，直到该坐骑满载。",
+            "new": ":* <code>until_full</code>让指定的<code><riders: target></code>逐个尝试骑乘至指定的坐骑上，直到该坐骑满载。",
+            "reason": "不变更显式选择until_full后的行为。"
+        },
+        {
+            "old": ":* <code>reassign_rides</code>使正在骑乘的<code><riders: target></code>停止骑乘，然后为所有<code><riders: target></code>召唤实体。",
+            "new": ":* <code>reassign_rides</code>使正在骑乘的<code><riders: target></code>停止骑乘，然后为所有<code><riders: target></code>召唤实体。",
+            "reason": "保留显式选择reassign_rides后的行为。"
+        },
+        {
+            "old": ": 如果未指定，默认为<code>teleport_rider</code>。",
+            "new": ": 默认值为<code>teleport_rider</code>。",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定时的行为说明，保留teleportRules独立默认值。"
+        },
+        {
+            "old": ": 必须是一个实体类型的ID。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除实体类型格式限制，保留指定召唤实体的参数用途。"
+        },
+        {
+            "old": ": 只有特定实体类型允许被召唤。允许召唤的实体类型可见于命令的自动补全建议列表。指定列表外的实体类型会使命令无法解析。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除实体类型的可用性及解析限制，保留参数用途。"
+        },
+        {
+            "old": "默认值为<code>teleport_rider</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除teleportRules description中的默认枚举标记，保留传送方向两态及各自动作说明。"
+        },
+        {
+            "old": ":* 默认值为<code>until_full</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除howToFill选项中的默认标记，保留until_full值及其操作说明。"
+        },
+        {
+            "old": ":* 默认值为<code>reassign_rides</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除rideRules选项中的默认标记，保留reassign_rides值及其操作说明。"
+        },
+        {
+            "old": "用于使实体骑乘或停止骑乘其他实体。{{in|be}}可使坐骑逐出其乘客，亦可召唤坐骑或乘客。",
+            "new": "控制实体之间的骑乘关系。",
+            "expected_matches": 1,
+            "reason": "精简命令简介，概括骑乘用途，删除模式效果的详细列举。"
+        },
+        {
+            "old": ": 指定乘客。\n: 如果处于<code>start_riding</code>模式并且<code>teleportRules: TeleportRules</code>是<code>teleport_ride</code>时，应仅有一个实体。",
+            "new": ": 指定乘客。",
+            "expected_matches": 1,
+            "reason": "删除riders参数的模式限制说明，保留乘客用途。"
+        },
+        {
+            "old": ": 指定坐骑。\n: 应仅有一个实体。",
+            "new": ": 指定坐骑。",
+            "expected_matches": 1,
+            "reason": "删除ride参数的数量限制说明，保留坐骑用途。"
+        },
+        {
+            "old": ":* <code>if_group_fits</code>只会在指定的所有<code><riders: target></code>都能一起骑上指定的坐骑时才会使它们骑乘。",
+            "new": ":* <code>if_group_fits</code>：所有乘客能同时骑乘时才执行。",
+            "expected_matches": 1,
+            "reason": "压缩if_group_fits选项说明，保留整组乘客须能同时骑乘的含义。"
+        },
+        {
+            "old": ":* <code>until_full</code>让指定的<code><riders: target></code>逐个尝试骑乘至指定的坐骑上，直到该坐骑满载。",
+            "new": ":* <code>until_full</code>：逐个安排乘客骑乘，直至坐骑满载。",
+            "expected_matches": 1,
+            "reason": "压缩until_full选项说明，保留逐个骑乘至满载的含义。"
+        },
+        {
+            "old": ":* <code>skip_riders</code>仅为没有在骑乘的<code><riders: target></code>召唤实体。",
+            "new": ":* <code>skip_riders</code>：仅为未骑乘的乘客召唤实体。",
+            "expected_matches": 1,
+            "reason": "压缩skip_riders选项说明，保留其筛选条件。"
+        },
+        {
+            "old": ":* <code>no_ride_change</code>仅为没有骑乘且没有被骑乘的<code><riders: target></code>召唤实体。",
+            "new": ":* <code>no_ride_change</code>：仅为未骑乘且无乘客的实体召唤。",
+            "expected_matches": 1,
+            "reason": "压缩no_ride_change选项说明，保留其筛选条件。"
+        },
+        {
+            "old": ":* <code>reassign_rides</code>使正在骑乘的<code><riders: target></code>停止骑乘，然后为所有<code><riders: target></code>召唤实体。",
+            "new": ":* <code>reassign_rides</code>：停止现有骑乘关系，再为乘客召唤实体。",
+            "expected_matches": 1,
+            "reason": "压缩reassign_rides选项说明，保留先停止骑乘再召唤的用途。"
+        },
+        {
+            "old": ": 指定实体生成时执行的事件。应为一个[[生成事件]]（行为包中的实体事件）的名称。",
+            "new": ": 指定实体生成时执行的事件。",
+            "expected_matches": 1,
+            "reason": "删除spawnEvent格式旁注，保留参数用途。"
+        },
+        {
+            "old": "对于每个指定的坐骑，如果可被骑乘且没有满载，则在其所在的位置召唤一个实体，然后让它们骑乘到坐骑上。",
+            "new": "为指定坐骑召唤实体乘客。",
+            "expected_matches": 1,
+            "reason": "将summon_rider语法说明压缩为其核心用途。"
+        },
+        {
+            "old": "在每个指定的乘客的位置召唤一个实体，然后让乘客骑乘所召唤的实体。",
+            "new": "为指定乘客召唤坐骑。",
+            "expected_matches": 1,
+            "reason": "将summon_ride语法说明压缩为其核心用途。"
+        }
+    ]
+}

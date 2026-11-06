@@ -25,7 +25,7 @@ namespace CHelper {
 
     class NormalId {
     public:
-        std::pmr::u16string name;
+        std::pmr::u16string name{CPackMemoryRouter::getAllocationResource()};
         std::optional<std::pmr::u16string> description;
 
     private:
@@ -39,7 +39,7 @@ namespace CHelper {
 
         void buildHash();
 
-        [[nodiscard]] bool fastMatch(XXH64_hash_t strHash);
+        [[nodiscard]] bool fastMatch(XXH64_hash_t strHash) const;
 
         [[nodiscard]] XXH64_hash_t getNameHash() const {
             if (nameHash.has_value()) return *nameHash;
@@ -64,7 +64,7 @@ namespace CHelper {
             auto result = allocateSharedFromDefault<NormalId>();
             result->name.assign(name.data(), name.size());
             if (description.has_value()) {
-                result->description.emplace(description->data(), description->size());
+                result->description.emplace(description->data(), description->size(), CPackMemoryRouter::getAllocationResource());
             }
             return result;
         }

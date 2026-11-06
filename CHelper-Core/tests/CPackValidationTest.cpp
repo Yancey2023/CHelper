@@ -26,6 +26,16 @@ namespace CHelper::Test {
 
     //非法CPack数据必须在加载/初始化阶段fail-fast，不能进入Parser导致崩溃或未定义行为
 
+    TEST(CPackValidationTest, TruncatedBlockDescriptionStopsBeforeReadingLaterFields) {
+        // Exact resource bytes from the UBSan fuzz crash (excluding its mode byte).
+        std::string binary(70, '\0');
+        binary[33] = '\7';
+        std::fill_n(binary.begin() + 50, 8, 'J');
+        binary[59] = '%';
+        binary[69] = ';';
+        EXPECT_THROW(serialization::createCPackByBinary(binary), std::runtime_error);
+    }
+
     TEST(CPackValidationTest, ValidMinimalCpack) {
         std::unique_ptr<CPack> cpack;
         EXPECT_TRUE(tryCreateCpack(makeCpackJson("[]", "[]", R"([

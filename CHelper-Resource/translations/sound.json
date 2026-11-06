@@ -1,0 +1,16 @@
+{
+    // 译名标准化表将 Bamboo Trapdoor 译为“竹活板门”。该底层引用同时供竹活板门开、关音效模板使用。
+    // https://zh.minecraft.wiki/w/Minecraft_Wiki:%E8%AF%91%E5%90%8D%E6%A0%87%E5%87%86%E5%8C%96
+    "block_sound.bamboo_wood_trapdoor": "ST: bamboo trapdoor",
+    // 网易版缺少 close.*/open.*辅助模板，使用 format 内置模板并沿用同一Wiki标准词。
+    "close.bamboo_wood_trapdoor": "{{format|'%s：关闭'|block_sound.bamboo_wood_trapdoor}}",
+    "open.bamboo_wood_trapdoor": "{{format|'%s：打开'|block_sound.bamboo_wood_trapdoor}}",
+
+    // 基岩版 sound_definitions 将此事件映射为 subtitles.block.generic.footsteps；中文 Wiki 的铜傀儡像音效表将 step 声音描述为“在方块上行走”，字幕为“脚步声”。
+    // https://zh.minecraft.wiki/w/%E9%93%9C%E5%82%80%E5%84%A1%E5%83%8F
+    "mob.copper_golem.step": "铜傀儡：脚步声",
+
+    // 中文 Wiki 字幕表将 subtitles.item.nautilus_saddle_equip 译为“鞍：被装备”；该命令音效在游戏音效映射中指向此字幕键。
+    // https://zh.minecraft.wiki/w/%E5%AD%97%E5%B9%95
+    "mob.nautilus.saddle": "JE: subtitles.item.nautilus_saddle_equip"
+}

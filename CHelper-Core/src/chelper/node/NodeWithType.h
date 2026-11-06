@@ -102,7 +102,7 @@ namespace CHelper::Node {
 
     class FreeableNodeWithTypes {
     public:
-        std::pmr::vector<NodeWithType> nodes;
+        std::pmr::vector<NodeWithType> nodes{CPackMemoryRouter::getAllocationResource()};
 
         FreeableNodeWithTypes() = default;
 

@@ -1,18 +1,18 @@
 {
-  "name": [
-    "me"
-  ],
-  "description": "显示一条关于你自己的信息",
-  "syntax": [
-    "/me <message: message>"
-  ],
-  "node": {
-    "<message: message>": {
-      "type": "STRING",
-      "brief": "信息",
-      "description": "要显示的信息",
-      "canContainSpace": true,
-      "ignoreLater": true
+    "name": [
+        "me"
+    ],
+    "description": "广播一条关于你的信息。",
+    "syntax": [
+        "/me <message: message>"
+    ],
+    "node": {
+        "<message: message>": {
+            "type": "STRING",
+            "brief": "要显示的消息",
+            "description": "指定要显示的消息。",
+            "canContainSpace": true,
+            "ignoreLater": true
+        }
     }
-  }
 }

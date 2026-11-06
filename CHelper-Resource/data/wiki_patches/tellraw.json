@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "reason": "基岩版命令资源只保留基岩版文本组件示例，避免把Java版格式示例混入基岩版参数说明。",
+    "replacements": [
+        {
+            "old": ": 指定要发送的[[文本组件]]消息。（例：<code>{\"text\":\"Hi there!\",\"bold\":\"true\"}</code>{{only|JE}}；<code>{\"rawtext\":[{\"text\":\"Hello world\"}]}</code>{{only|be}}）",
+            "new": ": 指定要发送的[[文本组件]]消息。",
+            "expected_matches": 1,
+            "reason": "精简参数说明，保留文本组件消息用途并删除JSON示例。"
+        }
+    ]
+}

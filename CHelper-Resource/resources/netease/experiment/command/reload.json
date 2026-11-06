@@ -1,10 +1,23 @@
 {
-  "name": [
-    "reload"
-  ],
-  "description": "重新加载行为包中的函数和脚本",
-  "syntax": [
-    "/reload"
-  ],
-  "node": {}
+    "name": [
+        "reload"
+    ],
+    "description": "重新加载行为包中的函数和脚本。",
+    "syntax": [
+        "/reload [all: reload_all]"
+    ],
+    "node": {
+        "[all: reload_all]": {
+            "type": "NORMAL_ID",
+            "brief": "重载所有行为包和资源包",
+            "description": "all：重载所有行为包和资源包。",
+            "contents": [
+                {
+                    "name": "all",
+                    "description": "重载所有行为包和资源包。"
+                }
+            ],
+            "ignoreError": true
+        }
+    }
 }

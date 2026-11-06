@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "reason": "人工最小修正文中文结果条件中跨版固定权限等级断言。中文 op 页说明基岩版将玩家权限改为“操作员”，而 Java 版 op-permission-level 可配置为1至4；不能把默认值4当作两版撤销管理员身份的共同失败条件。保留原文明确的“指定玩家都不是管理员”条件，不断言 Java 对1至3级操作员的 deop 行为。",
+  "replacements": [
+    {
+      "old": "{{Result table|指定玩家都不是管理员或权限等级不是4|fail}}",
+      "new": "{{Result table|指定玩家都不是管理员|fail}}",
+      "expected_matches": 1,
+      "reason": "人工补充：依中文 op 页，BE玩家权限为visitor/member/operator类别，JE op-permission-level可配置为1至4。原deop结果行未标版别，却把固定4作为失败条件；删去缺少跨版依据的等级片段，保留原有非管理员条件。不以执行/deop所需权限等级推断目标玩家等级。"
+    }
+  ]
+}

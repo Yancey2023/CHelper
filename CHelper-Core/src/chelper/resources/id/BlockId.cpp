@@ -45,158 +45,130 @@ namespace CHelper {
             nodeBlockStateSeparator, nodeBlockStateRightBracket);
     static const Node::NodeWithType unknownBlockStateNode = nodeUnknownBlockState;
 
-    Property::Property(const Property &aProperty) noexcept {
-        type = aProperty.type;
-        name = aProperty.name;
-        if (type == PropertyType::STRING) {
-            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
-            if (aProperty.valid.has_value()) {
-                size_t size = aProperty.valid.value().size();
-                valid = std::pmr::vector<PropertyValue>(size);
-                for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
+    Property::Property(const Property &other) {
+        try {
+            name = other.name;
+            if (other.type == PropertyType::STRING) {
+                defaultValue.string = nullptr;
+                type = PropertyType::STRING;
+                defaultValue.string = new PropertyString(*other.defaultValue.string);
+                if (other.valid) {
+                    valid.emplace(CPackMemoryRouter::getAllocationResource());
+                    valid->reserve(other.valid->size());
+                    for (const auto &value: *other.valid) {
+                        auto text = std::make_unique<PropertyString>(*value.string);
+                        PropertyValue entry;
+                        entry.string = text.get();
+                        valid->push_back(entry);
+                        text.release();
+                    }
                 }
             } else {
-                valid = std::nullopt;
+                if (other.valid) valid.emplace(*other.valid, CPackMemoryRouter::getAllocationResource());
+                defaultValue = other.defaultValue;
+                type = other.type;
             }
-        } else {
-            defaultValue = aProperty.defaultValue;
-            valid = aProperty.valid;
+        } catch (...) {
+            release();
+            throw;
         }
     }
 
-    Property::Property(Property &&aProperty) noexcept {
-        type = aProperty.type;
-        aProperty.type = PropertyType::BOOLEAN;
-        name = std::move(aProperty.name);
-        defaultValue = aProperty.defaultValue;
-        aProperty.defaultValue.boolean = true;
-        valid = std::move(aProperty.valid);
+    Property::Property(Property &&other) noexcept
+        : type(std::exchange(other.type, PropertyType::BOOLEAN)),
+          name(std::move(other.name)), defaultValue(other.defaultValue), valid(std::move(other.valid)) {
+        other.defaultValue.boolean = true;
+        other.valid.reset();
     }
 
-    Property &Property::operator=(const Property &aProperty) noexcept {
-        type = aProperty.type;
-        name = aProperty.name;
-        if (type == PropertyType::STRING) {
-            defaultValue.string = new CHelper::PropertyString(*aProperty.defaultValue.string);
-            if (aProperty.valid.has_value()) {
-                size_t size = aProperty.valid.value().size();
-                valid = std::pmr::vector<PropertyValue>(size);
-                for (size_t i = 0; i < size; ++i) {
-                    valid.value()[i].string = new CHelper::PropertyString(*aProperty.valid.value()[i].string);
-                }
-            } else {
-                valid = std::nullopt;
-            }
-        } else {
-            defaultValue = aProperty.defaultValue;
-            valid = aProperty.valid;
+    Property &Property::operator=(const Property &other) {
+        if (this != &other) {
+            Property copy(other);
+            *this = std::move(copy);
         }
         return *this;
     }
 
-    Property &Property::operator=(Property &&aProperty) noexcept {
-        type = aProperty.type;
-        aProperty.type = PropertyType::BOOLEAN;
-        name = std::move(aProperty.name);
-        defaultValue = aProperty.defaultValue;
-        aProperty.defaultValue.boolean = true;
-        valid = std::move(aProperty.valid);
+    Property &Property::operator=(Property &&other) {
+        if (this != &other) {
+            release();
+            name = std::move(other.name);
+            if (other.valid) valid.emplace(std::move(*other.valid));
+            type = std::exchange(other.type, PropertyType::BOOLEAN);
+            defaultValue = other.defaultValue;
+            other.defaultValue.boolean = true;
+            other.valid.reset();
+        }
         return *this;
     }
 
-    Property::~Property() {
-        if (type == PropertyType::STRING) {
-            delete defaultValue.string;
-            if (valid.has_value()) {
-                for (const auto &item: valid.value()) {
-                    delete item.string;
-                }
-            }
-        }
-    }
+    Property::~Property() { release(); }
 
     void Property::release() {
         if (type == PropertyType::STRING) {
             delete defaultValue.string;
-            if (valid.has_value()) {
-                for (const auto &item: valid.value()) {
-                    delete item.string;
-                }
-            }
+            if (valid)
+                for (const auto &value: *valid) delete value.string;
         }
         type = PropertyType::BOOLEAN;
         defaultValue.boolean = true;
-        valid = std::nullopt;
+        valid.reset();
     }
 
-    BlockPropertyDescription::BlockPropertyDescription(const BlockPropertyDescription &aBlockPropertyDescription) noexcept {
-        type = aBlockPropertyDescription.type;
-        propertyName = aBlockPropertyDescription.propertyName;
-        description = aBlockPropertyDescription.description;
-        if (type == PropertyType::STRING) {
-            size_t size = aBlockPropertyDescription.values.size();
-            values.resize(size);
-            for (size_t i = 0; i < size; ++i) {
-                BlockPropertyValueDescription &t1 = values[i];
-                const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
-                t1.description = t2.description;
+    BlockPropertyDescription::BlockPropertyDescription(const BlockPropertyDescription &other) {
+        try {
+            propertyName = other.propertyName;
+            description = copyPmrU16StringOptional(other.description);
+            values.reserve(other.values.size());
+            if (other.type == PropertyType::STRING) {
+                type = PropertyType::STRING;
+                for (const auto &value: other.values) {
+                    BlockPropertyValueDescription entry;
+                    entry.description = copyPmrU16StringOptional(value.description);
+                    auto text = std::make_unique<PropertyString>(*value.valueName.string);
+                    entry.valueName.string = text.get();
+                    values.push_back(std::move(entry));
+                    text.release();
+                }
+            } else {
+                values = other.values;
+                type = other.type;
             }
-        } else {
-            values = aBlockPropertyDescription.values;
+        } catch (...) {
+            release();
+            throw;
         }
     }
 
-    BlockPropertyDescription::BlockPropertyDescription(BlockPropertyDescription &&aBlockPropertyDescription) noexcept {
-        type = aBlockPropertyDescription.type;
-        aBlockPropertyDescription.type = PropertyType::BOOLEAN;
-        propertyName = std::move(aBlockPropertyDescription.propertyName);
-        description = std::move(aBlockPropertyDescription.description);
-        values = std::move(aBlockPropertyDescription.values);
-    }
+    BlockPropertyDescription::BlockPropertyDescription(BlockPropertyDescription &&other) noexcept
+        : type(std::exchange(other.type, PropertyType::BOOLEAN)), propertyName(std::move(other.propertyName)),
+          description(std::move(other.description)), values(std::move(other.values)) {}
 
-    BlockPropertyDescription &BlockPropertyDescription::operator=(const BlockPropertyDescription &aBlockPropertyDescription) noexcept {
-        type = aBlockPropertyDescription.type;
-        propertyName = aBlockPropertyDescription.propertyName;
-        description = aBlockPropertyDescription.description;
-        if (type == PropertyType::STRING) {
-            size_t size = aBlockPropertyDescription.values.size();
-            values.resize(size);
-            for (size_t i = 0; i < size; ++i) {
-                BlockPropertyValueDescription &t1 = values[i];
-                const BlockPropertyValueDescription &t2 = aBlockPropertyDescription.values[i];
-                t1.valueName.string = new CHelper::PropertyString(*t2.valueName.string);
-                t1.description = t2.description;
-            }
-        } else {
-            values = aBlockPropertyDescription.values;
+    BlockPropertyDescription &BlockPropertyDescription::operator=(const BlockPropertyDescription &other) {
+        if (this != &other) {
+            BlockPropertyDescription copy(other);
+            *this = std::move(copy);
         }
         return *this;
     }
 
-    BlockPropertyDescription &BlockPropertyDescription::operator=(BlockPropertyDescription &&aBlockPropertyDescription) noexcept {
-        type = aBlockPropertyDescription.type;
-        aBlockPropertyDescription.type = PropertyType::BOOLEAN;
-        propertyName = std::move(aBlockPropertyDescription.propertyName);
-        description = std::move(aBlockPropertyDescription.description);
-        values = std::move(aBlockPropertyDescription.values);
+    BlockPropertyDescription &BlockPropertyDescription::operator=(BlockPropertyDescription &&other) {
+        if (this != &other) {
+            release();
+            propertyName = std::move(other.propertyName);
+            description.reset();
+            if (other.description) description.emplace(std::move(*other.description));
+            values = std::move(other.values);
+            type = std::exchange(other.type, PropertyType::BOOLEAN);
+        }
         return *this;
     }
 
-    BlockPropertyDescription::~BlockPropertyDescription() {
-        if (type == PropertyType::STRING) {
-            for (const auto &item: values) {
-                delete item.valueName.string;
-            }
-        }
-    }
+    BlockPropertyDescription::~BlockPropertyDescription() { release(); }
+
     void BlockPropertyDescription::release() {
-        if (type == PropertyType::STRING) {
-            for (const auto &item: values) {
-                delete item.valueName.string;
-            }
-        }
+        if (type == PropertyType::STRING)
+            for (const auto &value: values) delete value.valueName.string;
         type = PropertyType::BOOLEAN;
         values.clear();
     }
@@ -318,7 +290,7 @@ namespace CHelper {
         } else if (defaultDescription.has_value()) {
             description = std::u16string_view(defaultDescription.value());
         }
-        std::pmr::u16string annotatedDescription;
+        std::pmr::u16string annotatedDescription{CPackMemoryRouter::getAllocationResource()};
         if (isDefaultValue || isInvalid) {
             annotatedDescription.reserve(description.value_or(u"").size() + (isDefaultValue ? 5 : 0) + (isInvalid ? 4 : 0));
             if (isInvalid) annotatedDescription.append(u"（无效）");
@@ -352,7 +324,7 @@ namespace CHelper {
             const BlockPropertyDescription &blockPropertyDescription,
             PropertyValue defaultValue,
             const std::optional<std::pmr::vector<PropertyValue>> &valid) {
-        std::pmr::vector<Node::NodeWithType> valueNodes;
+        std::pmr::vector<Node::NodeWithType> valueNodes{CPackMemoryRouter::getAllocationResource()};
         valueNodes.reserve(blockPropertyDescription.values.size());
         for (auto &item: blockPropertyDescription.values) {
             bool isDefaultValue;
@@ -512,7 +484,7 @@ namespace CHelper {
         auto result = allocateSharedFromDefault<BlockStateNode>();
         result->properties = std::move(properties);
         result->children.nodes.reserve(3);
-        std::pmr::vector<Node::NodeWithType> entries;
+        std::pmr::vector<Node::NodeWithType> entries{CPackMemoryRouter::getAllocationResource()};
         entries.reserve(result->properties.size());
         for (const auto &property: result->properties) entries.push_back(property->node);
         auto *known = new Node::NodeOr(std::move(entries), false);
@@ -534,7 +506,7 @@ namespace CHelper {
                 node = unknownBlockStateNode;
                 return *node;
             }
-            std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2;
+            std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode2{CPackMemoryRouter::getAllocationResource()};
             //已知的方块状态
             if (properties.has_value()) [[likely]] {
                 //所属条目只解析一次，避免每属性重复线性扫全部条目
@@ -567,7 +539,7 @@ namespace CHelper {
                             utf8::utf16to8(propertyName)));
                 };
                 if (propertyNodes != nullptr) {
-                    std::pmr::vector<std::shared_ptr<BlockPropertyNode>> entries;
+                    std::pmr::vector<std::shared_ptr<BlockPropertyNode>> entries{CPackMemoryRouter::getAllocationResource()};
                     entries.reserve(properties->size());
                     for (const auto &property: *properties) {
                         entries.push_back(propertyNodes->getNode(findDescription(property.name), property));
@@ -577,7 +549,7 @@ namespace CHelper {
                     return *node;
                 }
                 blockStateEntryChildNode2.reserve(2);
-                std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1;
+                std::pmr::vector<Node::NodeWithType> blockStateEntryChildNode1{CPackMemoryRouter::getAllocationResource()};
                 blockStateEntryChildNode1.reserve(properties.value().size());
                 std::ranges::transform(
                         properties.value(),

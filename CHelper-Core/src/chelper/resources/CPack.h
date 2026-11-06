@@ -32,12 +32,12 @@ namespace CHelper {
 
     // id 数据条目：由 "type" 键区分（normal / namespace / block / item）
     struct NormalIdEntry {
-        std::pmr::string id;
+        std::pmr::string id{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> content;
     };
 
     struct NamespaceIdEntry {
-        std::pmr::string id;
+        std::pmr::string id{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> content;
     };
 
@@ -47,7 +47,7 @@ namespace CHelper {
     };
 
     struct ItemIdsEntry {
-        std::pmr::string id;
+        std::pmr::string id{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> content;
     };
 
@@ -56,7 +56,7 @@ namespace CHelper {
     // Grammar 资源条目：content 复用 JSON 节点表格式，组合节点通过节点 id 绑定。
     // type 用于资源类型校验，避免把其他资源误当作 Grammar 读取。
     struct GrammarEntry {
-        std::pmr::string id;
+        std::pmr::string id{CPackMemoryRouter::getAllocationResource()};
         std::pmr::string type = "grammar";
         std::shared_ptr<Node::NodeJsonElement> content;
     };
@@ -64,23 +64,23 @@ namespace CHelper {
     // 单文件 JSON 格式
     struct CPackJsonData {
         Manifest manifest;
-        std::pmr::vector<IdEntry> id;
-        std::pmr::vector<GrammarEntry> grammar;
-        std::pmr::vector<Node::NodeJsonElement> json;
-        std::pmr::vector<Node::RepeatData> repeat;
-        std::pmr::vector<Node::NodePerCommand> command;
+        std::pmr::vector<IdEntry> id{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<GrammarEntry> grammar{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::NodeJsonElement> json{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::RepeatData> repeat{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::NodePerCommand> command{CPackMemoryRouter::getAllocationResource()};
     };
 
     // 二进制（MessagePack）格式
     struct CPackData {
         Manifest manifest;
-        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
-        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds{CPackMemoryRouter::getAllocationResource()};
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
         std::shared_ptr<BlockIds> blockIds;
-        std::pmr::vector<GrammarEntry> grammar;
-        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
-        std::pmr::vector<Node::RepeatData> repeatNodeData;
+        std::pmr::vector<GrammarEntry> grammar{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::RepeatData> repeatNodeData{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
     };
 
@@ -102,10 +102,10 @@ namespace CHelper {
         std::unique_ptr<CPack> createCPackByBinary(std::string_view data);
     }// namespace serialization
 
+    // 加载完成后按只读资源使用。借出的 ID、语法和缓存引用须先于资源包销毁；
+    // 返回 shared_ptr 不代表其中的派生缓存独立拥有整个 PMR 内存池。
     class CPack {
     private:
-        CPackMemoryScope destructionMemoryScope;
-
         // 默认构造不做任何工作，成员由 Serialization.cpp 的读取函数填充
         CPack() = default;
 
@@ -123,31 +123,33 @@ namespace CHelper {
         friend std::unique_ptr<CPack> serialization::createCPackByBinary(std::string_view data);
 
     public:
-        ~CPack() {
-            destructionMemoryScope.prepareForDestruction();
-        }
+        ~CPack() = default;
 
         Manifest manifest;
-        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds;
-        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds;
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>>> normalIds{CPackMemoryRouter::getAllocationResource()};
+        PmrDenseMap<std::pmr::string, std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>> namespaceIds{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<BlockIds> blockIds;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<ItemId>>> itemIds;
-        std::pmr::vector<Node::NodeJsonElement> jsonNodes;
-        std::pmr::vector<Node::RepeatData> repeatNodeData;
-        PmrDenseMap<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes;
-        PmrDenseMap<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs;
-        PmrDenseMap<std::pmr::string, Node::NodeWithType> grammarNodes;
+        std::pmr::vector<Node::NodeJsonElement> jsonNodes{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<Node::RepeatData> repeatNodeData{CPackMemoryRouter::getAllocationResource()};
+        PmrDenseMap<std::pmr::string, std::pair<const Node::RepeatData *, Node::NodeWithType>> repeatNodes{CPackMemoryRouter::getAllocationResource()};
+        PmrDenseMap<std::pmr::string, std::shared_ptr<Node::NodeJsonElement>> grammarGraphs{CPackMemoryRouter::getAllocationResource()};
+        PmrDenseMap<std::pmr::string, Node::NodeWithType> grammarNodes{CPackMemoryRouter::getAllocationResource()};
         std::shared_ptr<std::pmr::vector<Node::NodePerCommand>> commands;
         Node::NodeCommand mainNode;
 
     private:
         Node::FreeableNodeWithTypes cacheNodes;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> blockNamespaceIds;
+        std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> itemNamespaceIds;
 
         /**
          * 在CPack初始化完成、Parser使用之前，集中校验CPack的结构不变量，
          * 非法数据在这里fail-fast，而不是进入Parser导致越界/空指针/未定义行为
          */
         void validate() const;
+        void initializeNamespaceIds();
+        [[nodiscard]] std::vector<GrammarEntry> collectGrammarEntries() const;
 
         void applyId(const IdEntry &entry);
 

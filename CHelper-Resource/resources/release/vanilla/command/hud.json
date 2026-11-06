@@ -1,42 +1,43 @@
 {
-  "name": [
-    "hud"
-  ],
-  "description": "修改HUD可见性",
-  "syntax": [
-    "/hud <target: target> <visible: HudVisibility> [hud_element: HudElement]"
-  ],
-  "node": {
-    "<target: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "被修改HUD可见性的玩家",
-      "isOnlyOne": false,
-      "isMustPlayer": true,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "<visible: HudVisibility>": {
-      "type": "NORMAL_ID",
-      "brief": "可见性",
-      "description": "对HUD可见性做出的修改",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "hide",
-          "description": "隐藏"
+    "name": [
+        "hud"
+    ],
+    "description": "修改HUD的可见性。",
+    "syntax": [
+        "/hud <target: target> <visible: HudVisibility> [hud_element: HudElement]"
+    ],
+    "node": {
+        "<target: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定目标玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "玩家"
         },
-        {
-          "name": "reset",
-          "description": "重置"
+        "<visible: HudVisibility>": {
+            "type": "NORMAL_ID",
+            "brief": "可见性操作",
+            "description": "指定将对HUD可见性做出的修改。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "hide",
+                    "description": "隐藏指定的HUD元素。"
+                },
+                {
+                    "name": "reset",
+                    "description": "恢复指定HUD元素的默认显示状态。"
+                }
+            ]
+        },
+        "[hud_element: HudElement]": {
+            "type": "NORMAL_ID",
+            "brief": "将被修改的HUD元素",
+            "description": "指定HUD元素。",
+            "ignoreError": true,
+            "key": "hudElement"
         }
-      ]
-    },
-    "[hud_element: HudElement]": {
-      "type": "NORMAL_ID",
-      "brief": "HUD元素",
-      "description": "将被修改的HUD元素",
-      "ignoreError": true,
-      "key": "hudElement"
     }
-  }
 }

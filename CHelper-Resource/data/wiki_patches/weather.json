@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "reason": "将基岩版查询语法的行为说明从命令简介移到对应语法旁，保留原文含义并让query节点有直接来源。 将同名的clear|rain|thunder参数头显式接入基岩版节点，以自动匹配通用说明。",
+    "replacements": [
+        {
+            "old": "更改游戏中的[[天气]]。{{in|be}}也可用于显示当前天气。",
+            "new": "更改游戏中的[[天气]]。",
+            "expected_matches": 1,
+            "reason": "后半句仅描述基岩版weather query，不作为根命令描述。"
+        },
+        {
+            "old": ": <code>weather query</code>",
+            "new": ": <code>weather query</code>\n:: 也可用于显示当前天气。",
+            "expected_matches": 1,
+            "reason": "将原简介中明确的查询行为附到唯一对应的query语法。"
+        },
+        {
+            "old": "{{cd|clear{{!}}rain{{!}}thunder}}\n:* <code>clear</code> - 将天气设为晴天，且晴天结束后将变为雷暴雨。\n:* <code>rain</code> - 将天气设为雨天（寒冷的生物群系会下雪），且结束后变为晴天。\n:* <code>thunder</code> - 将天气设为雷暴雨（寒冷的生物群系会下雷暴雪），且结束后变为晴天。",
+            "new": "{{argument|clear|rain|thunder|enum}}\n: 指定要设置的天气，必须为以下其中之一：\n:* <code>clear</code> — 将天气设为晴天。\n:* <code>rain</code> — 将天气设为雨天。\n:* <code>thunder</code> — 将天气设为雷暴雨。\n: brief: 天气类型",
+            "expected_matches": 1,
+            "reason": "将原有clear、rain、thunder天气值和各自核心作用按标准枚举参数组织；人工精简天气选项，删除寒冷群系表现和天气结束后的变化旁注。"
+        },
+        {
+            "old": ": {{in|java}}若未指定，则为随机取值，取值范围与指定的天气种类有关：\n:* <code>clear</code> - 12000到180000之间（含），即10分钟到150分钟之间（含）。\n:* <code>rain</code> - 12000到24000之间（含），即10分钟到20分钟之间（含）。\n:* <code>thunder</code> - 3600到15600之间（含），即3分钟到13分钟之间（含）。",
+            "new": ": {{in|java}}若未指定，则为随机取值，取值范围与指定的天气种类有关：clear天气为12000到180000之间（含），即10分钟到150分钟之间（含）；rain天气为12000到24000之间（含），即10分钟到20分钟之间（含）；thunder天气为3600到15600之间（含），即3分钟到13分钟之间（含）。",
+            "expected_matches": 1,
+            "reason": "将duration参数的三条Java随机时长条件改为同一说明句，完整保留clear、rain、thunder对应范围；这些条件描述持续时间而不是天气枚举效果，避免相同值名称被提取为weather参数contents候选。"
+        },
+        {
+            "old": ": {{in|be}}指定的时间以游戏刻为单位。若为0或未指定，天气时长将6000到18000之间（含）随机取值，即5分钟到15分钟之间（含）。",
+            "new": ": {{in|be}}指定的时间以游戏刻为单位。",
+            "expected_matches": 1,
+            "reason": "人工精简duration用途，保留以游戏刻计时的单位说明，删除0值特殊行为和时长范围。"
+        },
+        {
+            "old": ": {{arg desc|je=time|min=1|be=int}}且应在0到1000000之间（含）。",
+            "new": ": {{arg desc|je=time|min=1|be=int}}",
+            "expected_matches": 1,
+            "reason": "移除天气持续时间的上界说明，保留参数类型定义。"
+        }
+    ]
+}

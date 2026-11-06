@@ -1,0 +1,24 @@
+{
+    "version": 1,
+    "reason": "人工补充简短brief，避免将声音类别的完整用途句用作参数标签；保留中文Wiki原句和命令语法。",
+    "replacements": [
+        {
+            "old": ": 指定要停止的声音所属的类别，对应于游戏选项中“音乐和声音”设置的分类。",
+            "new": ": 指定要停止的声音所属的类别，对应于游戏选项中“音乐和声音”设置的分类。\n: brief: 声音类别",
+            "expected_matches": 1,
+            "reason": "人工补充简短brief“声音类别”，概括该参数的类别用途，不改变Java版类别的适用范围或枚举值。"
+        },
+        {
+            "old": "{{argument|sound|minecraft:resource_location|sound: string|basic_string}}\n: 指定要停止的声音。若未指定，则停止所有声音。",
+            "new": "{{argument|sound|minecraft:resource_location|sound: string|basic_string}}\n: 指定要停止的声音事件。brief: 要停止的声音",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定sound时停止所有声音的行为说明，保留声音参数用途。"
+        },
+        {
+            "old": ": {{in|java}}{{arg desc|je=resource_location}}应为一个声音事件（例如，<code>entity.pig.ambient</code>）。\n: {{in|bedrock}}{{arg desc|be=string}}应为一个声音事件（例如，<code>mob.pig.say</code>）。",
+            "new": ": {{in|java}}{{arg desc|je=resource_location}}\n: {{in|bedrock}}{{arg desc|be=string}}",
+            "expected_matches": 1,
+            "reason": "合并sound参数的重复声音事件说明，并保留Java/基岩版参数类型模板。"
+        }
+    ]
+}

@@ -1,0 +1,138 @@
+{
+    "version": 1,
+    "reason": "规范结构动画选项和Boolean枚举，并人工补充简短brief；说明实体/方块包含状态以及waterlogged解析提示和次级层语义；原文Boolean默认true由省略参数时的行为补充表达，避免提取器丢弃默认值。",
+    "replacements": [
+        {
+            "old": ": 指定结构名称。格式应为<code>name</code>或<code>namespace:name</code>。如果未指定命名空间，则默认为<code>mystructure:</code>。",
+            "new": ": 指定结构名称。如果未指定命名空间，则默认为<code>mystructure:</code>。",
+            "expected_matches": 1,
+            "reason": "移除结构名称的合法格式限制，保留名称用途和默认命名空间信息。"
+        },
+        {
+            "old": "用于在不使用[[结构方块]]的情况下保存或加载结构。",
+            "new": "用于在不使用[[结构方块]]的情况下保存、加载或删除结构。",
+            "expected_matches": 1,
+            "reason": "中文《命令/structure》页面除保存和加载外还列出必需结构名称的delete语法，并明确说明删除已存储的结构；补入该直接支持的用途，避免命令简介遗漏一个实际子命令。"
+        },
+        {
+            "old": "<code>270_degrees</code>- 按顺时针旋转270度",
+            "new": "<code>270_degrees</code> — 按顺时针旋转270度",
+            "expected_matches": 1,
+            "reason": "修正中文 Wiki 枚举项漏写分隔空格造成的连字符粘连；保留该选项的旋转角度与顺时针方向原意。"
+        },
+        {
+            "old": ": 指定生成结构使用的动画。必须为<code>block_by_block</code>或<code>layer_by_layer</code>。",
+            "new": ": 指定生成结构使用的动画。必须为以下其中之一：\n:* <code>block_by_block</code> — 逐方块放置\n:* <code>layer_by_layer</code> — 逐层放置",
+            "expected_matches": 1,
+            "reason": "将原文明确列出的两个合法选项改成提取器可读取的列表；选项说明取自中文Wiki《基岩版1.17.0》对/structure加载动画三种模式的列举。"
+        },
+        {
+            "old": "{{argument|be=1|from: x y z|CommandPosition}}和{{argument|be=1|to: x y z|CommandPosition}}（保存结构用法）\n: 定义源区域的两组对角方块坐标。可以使用相对坐标和局部坐标来指定命令执行地的相对距离。\n: {{arg desc|be=CommandPosition}}\n{{argument|be=1|to: x y z|CommandPosition}}（加载结构用法）\n: 定义目标区域的西北方向较低（即在各轴上坐标值最小）的点的坐标。\n: {{arg desc|be=CommandPosition}}",
+            "new": "{{argument|be=1|from: x y z|CommandPosition}}（保存结构用法）\n: 指定源区域的一个端点坐标。可以使用相对坐标和局部坐标来指定命令执行地的相对距离。brief: 保存端点\n: {{arg desc|be=CommandPosition}}\n{{argument|be=1|to: x y z|CommandPosition}}（保存与加载用法）\n: 保存时指定源区域另一端点，加载时指定放置坐标。brief: 结构坐标\n: {{arg desc|be=CommandPosition}}",
+            "expected_matches": 1,
+            "reason": "人工补充：结构save语法按from、to顺序接收两个POSITION值；中文Wiki原句说明两者共同定义源区域的两组对角坐标。分别说明from单点、同名to在保存与加载语法中的条件用途；相对/局部坐标限制仅放在保存条件，加载仍说明单一西北角放置坐标。"
+        },
+        {
+            "old": ": 指定是否加载（或保存）结构中的实体，默认为<code>true</code>。",
+            "new": ": 指定加载或保存结构时是否包含实体。\n: brief: 是否包含实体\n: 必须为以下其中之一：\n:* <code>true</code> — 加载（或保存）结构中的实体。\n:* <code>false</code> — 不加载（或保存）结构中的实体。",
+            "expected_matches": 1,
+            "reason": "true与false的明确效果分列说明，删除未指定参数时加载或保存实体的行为描述。"
+        },
+        {
+            "old": ": 指定加载（或保存）时是否包括方块，默认为<code>true</code>。",
+            "new": ": 指定加载或保存结构时是否包括方块。\n: brief: 是否包含方块\n: 必须为以下其中之一：\n:* <code>true</code> — 加载（或保存）时包括方块。\n:* <code>false</code> — 加载（或保存）时不包括方块。",
+            "expected_matches": 1,
+            "reason": "true与false的明确效果分列说明，删除未指定参数时加载或保存方块的行为描述。"
+        },
+        {
+            "old": ": 指定结构的完整性，即每个方块被加载的概率，通过<code>seed</code>参数可指定加载时使用的随机种子。\n: {{arg desc|be=float}}且应在0到100之间（含）。",
+            "new": ": 指定结构的完整性，即每个方块被加载的概率，通过<code>seed</code>参数可指定加载时使用的随机种子。\n: brief: 结构完整度\n: {{arg desc|be=float}}",
+            "expected_matches": 1,
+            "reason": "移除完整度的合法数值范围，保留每方块加载概率、seed用途和brief；参数元数据范围保持不变。"
+        },
+        {
+            "old": ": 指定随机种子，该种子决定前述参数<code>integrity</code>的行为，当后者为 0 或 100 时，本参数实际上无效。如果未指定，则为一个随机值。",
+            "new": ": 指定随机种子，该种子决定<code>integrity</code>参数的行为。\n: brief: 随机种子",
+            "expected_matches": 1,
+            "reason": "删除随机种子未指定时的默认行为及完整度边界处的无效说明，保留其对integrity参数的用途。"
+        },
+        {
+            "old": ": 指定生成的含水结构是否正确含水，即包括次级层。通常，[[含水方块]]、[[双层台阶]]等信息会存储于结构数据的次级层。该参数仅为了提示解析之用，若方块本就包括次级层，则加载时也会加载。默认为<code>false</code>。",
+            "new": ": 指定解析器是否将结构视为含水。\n: brief: 含水状态\n: 必须为以下其中之一：\n:* <code>true</code> — 为解析器提供含水状态提示。\n:* <code>false</code> — 不向解析器提供含水状态提示。",
+            "expected_matches": 1,
+            "reason": "删除waterlogged参数省略时的行为说明，true与false的明确提示效果分别保留。"
+        },
+        {
+            "old": ": 指定结构名称。如果未指定命名空间，则默认为<code>mystructure:</code>。",
+            "new": ": 指定结构名称。",
+            "expected_matches": 1,
+            "reason": "删除结构名称说明中的默认命名空间注释，保留结构名称用途。"
+        },
+        {
+            "old": "<code>memory</code> - 保存在内存中（默认）",
+            "new": "<code>memory</code> - 保存在内存中",
+            "expected_matches": 1,
+            "reason": "删除memory选项说明中的默认状态注释，保留选项ID和存储位置用途。"
+        },
+        {
+            "old": "<code>0_degrees</code> - 不旋转（默认）",
+            "new": "<code>0_degrees</code> - 不旋转",
+            "expected_matches": 1,
+            "reason": "删除旋转选项说明中的默认状态注释，保留选项ID和旋转效果。"
+        },
+        {
+            "old": "<code>none</code> - 无（默认）",
+            "new": "<code>none</code> - 无",
+            "expected_matches": 1,
+            "reason": "删除镜像选项说明中的默认状态注释，保留选项ID和镜像效果。"
+        },
+        {
+            "old": ": 指定结构的完整性，即每个方块被加载的概率，通过<code>seed</code>参数可指定加载时使用的随机种子。\n: brief: 结构完整度",
+            "new": ": 指定每个方块的加载概率。\n: brief: 结构完整度",
+            "expected_matches": 1,
+            "reason": "人工精简integrity用途，保留每个方块的加载概率含义，删除seed参数说明。"
+        },
+        {
+            "old": ": 指定随机种子，该种子决定<code>integrity</code>参数的行为。\n: brief: 随机种子",
+            "new": ": 指定用于integrity的随机种子。\n: brief: 随机种子",
+            "expected_matches": 1,
+            "reason": "人工精简seed用途，保留其用于integrity的职责。"
+        },
+        {
+            "old": ": 指定源区域的一个端点坐标。可以使用相对坐标和局部坐标来指定命令执行地的相对距离。brief: 保存端点",
+            "new": ": 指定源区域的一个端点坐标。brief: 保存端点",
+            "expected_matches": 1,
+            "reason": "人工精简from参数用途，删除相对及局部坐标旁注，保留源区域端点职责。"
+        },
+        {
+            "old": ": 指定动画的时长。",
+            "new": ": 指定动画时长。单位为秒。\n: brief: 动画的时长",
+            "expected_matches": 1,
+            "reason": "人工补充动画时长的必要单位，语法字段animationSeconds明确为秒。"
+        },
+        {
+            "old": "<code>true</code> — 加载（或保存）结构中的实体。",
+            "new": "<code>true</code> — 包含实体。",
+            "expected_matches": 1,
+            "reason": "精简includeEntities两态说明，保留通用包含含义。"
+        },
+        {
+            "old": "<code>false</code> — 不加载（或保存）结构中的实体。",
+            "new": "<code>false</code> — 不包含实体。",
+            "expected_matches": 1,
+            "reason": "精简includeEntities两态说明，保留通用不包含含义。"
+        },
+        {
+            "old": "<code>true</code> — 加载（或保存）时包括方块。",
+            "new": "<code>true</code> — 包含方块。",
+            "expected_matches": 1,
+            "reason": "精简includeBlocks两态说明，保留通用包含含义。"
+        },
+        {
+            "old": "<code>false</code> — 加载（或保存）时不包括方块。",
+            "new": "<code>false</code> — 不包含方块。",
+            "expected_matches": 1,
+            "reason": "精简includeBlocks两态说明，保留通用不包含含义。"
+        }
+    ]
+}

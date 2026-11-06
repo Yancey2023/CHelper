@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <chelper/util/CPackMemory.h>
+#include <chelper/serialization/PmrAdapters.h>
 #include <pch.h>
 
 namespace CHelper {
@@ -131,7 +131,9 @@ namespace glz {
     struct from<CHelper::BinaryFormat, T> {
         template<auto Opts, class V, is_context Ctx, class It, class End>
         static void op(V &&value, Ctx &&ctx, It &&it, End &&end) noexcept {
-            using Raw = raw_type_t<T>;
+            // Arbitrary input bytes are valid uint8_t representations, but only
+            // 0 and 1 are valid bool representations. Convert after reading.
+            using Raw = std::conditional_t<std::is_same_v<T, bool>, std::uint8_t, raw_type_t<T>>;
             if (static_cast<size_t>(end - it) < sizeof(Raw)) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
@@ -245,7 +247,7 @@ namespace glz {
             bool hasValue = false;
             from<CHelper::BinaryFormat, bool>::template op<Opts>(hasValue, ctx, it, end);
             if (hasValue) {
-                value.emplace();
+                CHelper::emplaceScopedOptional(value);
                 from<CHelper::BinaryFormat, T>::template op<Opts>(*value, ctx, it, end);
             } else {
                 value.reset();
@@ -356,6 +358,10 @@ namespace glz {
             if (bool(ctx.error)) [[unlikely]] {
                 return;
             }
+            if (size > static_cast<size_t>(end - it)) {
+                ctx.error = error_code::unexpected_end;
+                return;
+            }
             value.clear();
             using Element = typename T::value_type;
             // 固定宽度数值数组与线路布局一致，一次边界检查后直接拷贝。
@@ -418,6 +424,10 @@ namespace glz {
             std::uint32_t size = 0;
             from<CHelper::BinaryFormat, std::uint32_t>::template op<Opts>(size, ctx, it, end);
             if (bool(ctx.error)) [[unlikely]] {
+                return;
+            }
+            if (size > static_cast<size_t>(end - it)) {
+                ctx.error = error_code::unexpected_end;
                 return;
             }
             value.clear();

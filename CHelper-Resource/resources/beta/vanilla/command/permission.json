@@ -1,0 +1,49 @@
+{
+    "name": [
+        "ops",
+        "permission"
+    ],
+    "description": "管理玩家权限和操作员列表。",
+    "syntax": [
+        "/permission set <player: target> [permission: PermissionLevel]"
+    ],
+    "node": {
+        "set": {
+            "type": "TEXT",
+            "description": "在客户端上设置玩家的权限等级。",
+            "data": {
+                "name": "set",
+                "description": "在客户端上设置玩家的权限等级。"
+            }
+        },
+        "<player: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定要设置权限等级的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "目标玩家"
+        },
+        "[permission: PermissionLevel]": {
+            "type": "NORMAL_ID",
+            "description": "指定权限等级所对应的身份。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "visitor",
+                    "description": "访客"
+                },
+                {
+                    "name": "member",
+                    "description": "成员"
+                },
+                {
+                    "name": "operator",
+                    "description": "操作员"
+                }
+            ],
+            "brief": "权限等级所对应的身份"
+        }
+    }
+}

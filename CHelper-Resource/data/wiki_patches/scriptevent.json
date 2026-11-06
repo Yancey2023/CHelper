@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "reason": "将空消息漏洞从当前 message 参数用途移至原有条件结果行；scriptevent 页本身将 MCPE-185429 标记为已修复，但1.21.100.20历史条目只明确/msg、/tell、/w，因此不把该日期扩写成 scriptevent 修复日期，也不声称按该日期划分其各 bundle。",
+    "replacements": [
+        {
+            "old": ":指定触发脚本事件的消息。\n: 由于漏洞，此参数实际可以为空。",
+            "new": ":指定触发脚本事件的消息。\n: brief: 触发脚本事件的消息",
+            "expected_matches": 1,
+            "reason": "按页面列出的必填message语法，参数description仅说明该输入的用途；空消息例外由结果行关联MCPE-185429并标记已修复，因此从参数用途中移走，不断言 scriptevent 的具体修复版本。"
+        },
+        {
+            "old": "{{Result table|<code>message: message</code>未指定<ref name=\"MCPE-185429\">{{bug|MCPE-185429|||Fixed}}</ref>||success}}",
+            "new": "{{Result table|在漏洞修复前，<code>message: message</code>未指定时命令仍会成功<ref name=\"MCPE-185429\">{{bug|MCPE-185429|||Fixed}}</ref>||success}}",
+            "expected_matches": 1,
+            "reason": "scriptevent 页面自身将此未提供 message 仍成功的结果与 MCPE-185429 已修复标记相连；在结果条件中明确这是修复前的漏洞行为。基岩版 1.21.100.20 的修复条目来自命令/msg（/tell、/w别名）历史，未确认直接提及 scriptevent，因此不添加 scriptevent 日期历史。"
+        },
+        {
+            "old": "* 使用消息ID{{cd|foo:bar}}来触发脚本事件：<code>/scriptevent foo:bar</code>",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "无消息示例依赖已有Fixed标记的漏洞，移除这条当前无效示例；旧行为仍由结果行保留并明确限定在漏洞修复前。"
+        },
+        {
+            "old": ":指定触发脚本事件的消息ID，必须含有非<code>minecraft</code>的命名空间。",
+            "new": ":指定触发脚本事件的消息ID",
+            "expected_matches": 1,
+            "reason": "删除参数的数值范围、合法性、格式或越界处理限制，保留用途及分支上下文。"
+        }
+    ]
+}

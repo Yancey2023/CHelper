@@ -108,8 +108,8 @@
             },
             {
                 "type": "NORMAL_ID",
-                "brief": "朝向的部位",
-                "description": "需要朝向实体的哪个位置",
+                "brief": "执行锚点",
+                "description": "指定命令上下文的执行锚点。",
                 "ignoreError": false,
                 "contents": [
                     {
@@ -236,7 +236,7 @@
                     },
                     {
                         "name": "nether",
-                        "description": "下届"
+                        "description": "下界"
                     },
                     {
                         "name": "the_end",

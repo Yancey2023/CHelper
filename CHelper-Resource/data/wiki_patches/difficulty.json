@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "reason": "将基岩版难度枚举引导规范成提取器识别的固定句式；四个难度选项及其别名原样保留。",
+    "replacements": [
+        {
+            "old": "新的游戏难度。必须为以下之一：",
+            "new": "新的游戏难度。必须为以下其中之一：",
+            "expected_matches": 1,
+            "reason": "只补齐固定枚举引导语，不改难度选项、参数名或语法。"
+        },
+        {
+            "old": ":* <code>peaceful</code>（{{in|be|nc=1}}可简写为<code>p</code>或<code>0</code>）为[[和平]]难度",
+            "new": ":* <code>peaceful</code>、<code>p</code>、<code>0</code> — 和平难度。",
+            "expected_matches": 1,
+            "reason": "保留peaceful及其两个合法别名作为代码值，精简选项用途为和平难度。"
+        },
+        {
+            "old": ":* <code>easy</code>（{{in|be|nc=1}}可简写为<code>e</code>或<code>1</code>）为[[简单]]难度",
+            "new": ":* <code>easy</code>、<code>e</code>、<code>1</code> — 简单难度。",
+            "expected_matches": 1,
+            "reason": "保留easy及其两个合法别名作为代码值，精简选项用途为简单难度。"
+        },
+        {
+            "old": ":* <code>normal</code>（{{in|be|nc=1}}可简写为<code>n</code>或<code>2</code>）为[[普通]]难度",
+            "new": ":* <code>normal</code>、<code>n</code>、<code>2</code> — 普通难度。",
+            "expected_matches": 1,
+            "reason": "保留normal及其两个合法别名作为代码值，精简选项用途为普通难度。"
+        },
+        {
+            "old": ":* <code>hard</code>（{{in|be|nc=1}}可简写为<code>h</code>或<code>3</code>）为[[困难]]难度",
+            "new": ":* <code>hard</code>、<code>h</code>、<code>3</code> — 困难难度。",
+            "expected_matches": 1,
+            "reason": "保留hard及其两个合法别名作为代码值，精简选项用途为困难难度。"
+        }
+    ]
+}

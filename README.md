@@ -63,33 +63,64 @@ see: <https://www.yanceymc.cn/chelper_doc/>
 
 ## Third-party
 
+The following lists the main libraries, assets, and development tools used by each module. Versions are declared in [CMake](./CHelper-Core/CMakeLists.txt), the [Android version catalog](./CHelper-Android/gradle/libs.versions.toml), and the [pnpm workspace catalog](./pnpm-workspace.yaml). Each project retains its own license.
+
 ### CHelper-Core
 
-|                      project                       |                   description                   |                                              license                                              |
-| :------------------------------------------------: | :---------------------------------------------: | :-----------------------------------------------------------------------------------------------: |
-|        [fmt](https://github.com/fmtlib/fmt)        |               formatting library                |                 [MIT license](https://github.com/fmtlib/fmt/blob/master/LICENSE)                  |
-|     [spdlog](https://github.com/gabime/spdlog)     |            Fast C++ logging library             |                 [MIT license](https://github.com/gabime/spdlog/blob/v1.x/LICENSE)                 |
-| [rapidjson](https://github.com/Tencent/rapidjson)  |       a JSON parser and generator for C++       |            [MIT license](https://github.com/Tencent/rapidjson/blob/master/license.txt)            |
-|    [utfcpp](https://github.com/nemtrif/utfcpp)     |        UTF-8 with C++ in a Portable Way         |             [BSL-1.0 license](https://github.com/nemtrif/utfcpp/blob/master/LICENSE)              |
-|    [xxHash](https://github.com/Cyan4973/xxHash)    | Extremely fast non-cryptographic hash algorithm |               [BSD-2-Clause ](https://github.com/Cyan4973/xxHash/blob/dev/LICENSE)                |
-| [GoogleTest](https://github.com/google/googletest) |           Google's C++ test framework           | [BSD 3-Clause "New" or "Revised" License](https://github.com/google/googletest/blob/main/LICENSE) |
-|              [Qt](https://www.qt.io/)              |          desktop application framework          |                         [LGPL license](https://doc.qt.io/qt-6/lgpl.html)                          |
+| project                                                        | description                        | license                                                              |
+| :------------------------------------------------------------- | :--------------------------------- | :------------------------------------------------------------------- |
+| [fmt](https://github.com/fmtlib/fmt)                           | C++ formatting                     | [MIT](https://github.com/fmtlib/fmt/blob/HEAD/LICENSE)               |
+| [spdlog](https://github.com/gabime/spdlog)                     | C++ logging                        | [MIT](https://github.com/gabime/spdlog/blob/HEAD/LICENSE)            |
+| [glaze](https://github.com/stephenberry/glaze)                 | JSON and MessagePack serialization | [MIT](https://github.com/stephenberry/glaze/blob/HEAD/LICENSE)       |
+| [unordered_dense](https://github.com/martinus/unordered_dense) | Hash maps and sets                 | [MIT](https://github.com/martinus/unordered_dense/blob/HEAD/LICENSE) |
+| [utfcpp](https://github.com/nemtrif/utfcpp)                    | UTF-8 conversion and validation    | [BSL-1.0](https://github.com/nemtrif/utfcpp/blob/HEAD/LICENSE)       |
+| [xxHash](https://github.com/Cyan4973/xxHash)                   | Non-cryptographic hashing          | [BSD-2-Clause](https://github.com/Cyan4973/xxHash/blob/HEAD/LICENSE) |
+
+Native tests and benchmarks additionally use [GoogleTest](https://github.com/google/googletest) ([BSD-3-Clause](https://github.com/google/googletest/blob/HEAD/LICENSE)). The optional desktop debugging application uses [Qt](https://www.qt.io/) ([LGPL-3.0 / GPL-3.0 / commercial licensing](https://doc.qt.io/qt/licensing.html)). These development dependencies are not part of the Android or WASM builds.
 
 ### CHelper-Android
 
-|                                 project                                  |                                         description                                         |                                            license                                             |
-| :----------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
-|             [androidx](https://github.com/androidx/androidx)             | a suite of libraries, tools, and guidance to help developers write high-quality apps easier |   [Apache-2.0 license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt)    |
-| [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) |                      Kotlin multiplatform / multi-format serialization                      | [Apache-2.0 license](https://github.com/Kotlin/kotlinx.serialization/blob/master/LICENSE.txt)  |
-|                [okhttp](https://github.com/square/okhttp)                |              Square’s meticulous HTTP client for the JVM, Android, and GraalVM              |         [Apache-2.0 license](https://github.com/square/okhttp/blob/master/LICENSE.txt)         |
-|              [retrofit](https://github.com/square/retrofit)              |                       A type-safe HTTP client for Android and the JVM                       |        [Apache-2.0 license](https://github.com/square/retrofit/blob/trunk/LICENSE.txt)         |
-|       [DeviceCompat](https://github.com/getActivity/XXPermissions)       |                               Device Compatibility Framework                                |      [Apache-2.0 license](https://github.com/getActivity/DeviceCompat/blob/main/LICENSE)       |
-|      [XXPermissions](https://github.com/getActivity/XXPermissions)       |                                Android Permission Framework                                 |     [Apache-2.0 license](https://github.com/getActivity/XXPermissions/blob/master/LICENSE)     |
-|            [Toaster](https://github.com/getActivity/Toaster)             |                                   Android Toast Framework                                   |        [Apache-2.0 license](https://github.com/getActivity/Toaster/blob/master/LICENSE)        |
-|         [EasyWindow](https://github.com/getActivity/EasyWindow)          |                              Android Floating Window Framework                              |      [Apache-2.0 license](https://github.com/getActivity/EasyWindow/blob/master/LICENSE)       |
-|          [tabler-icons](https://github.com/tabler/tabler-icons)          |                      A set of free MIT-licensed high-quality SVG icons                      |            [MIT License](https://github.com/tabler/tabler-icons/blob/main/LICENSE)             |
-|               [Crunch](https://github.com/boxbeam/Crunch)                |                       The fastest Java expression compiler/evaluator                        |              [MIT license](https://github.com/boxbeam/Crunch/blob/master/LICENSE)              |
-|              [junit](https://github.com/junit-team/junit4)               |                      A programmer-oriented testing framework for Java                       | [Eclipse Public License 1.0](https://github.com/junit-team/junit4/blob/main/LICENSE-junit.txt) |
+The Android application includes CHelper-Core and its runtime libraries above, together with the following libraries and assets. Kotlin, Coroutines, Okio, and Brotli include runtime dependencies brought in by the application libraries.
+
+| project                                                                  | description                                                                      | license                                                                             |
+| :----------------------------------------------------------------------- | :------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| [AndroidX](https://github.com/androidx/androidx)                         | AppCompat, Activity, Compose, RecyclerView, Navigation, DataStore, and Lifecycle | [Apache-2.0](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt)   |
+| [Kotlin](https://github.com/JetBrains/kotlin)                            | Kotlin standard library                                                          | [Apache-2.0](https://github.com/JetBrains/kotlin/blob/HEAD/license/LICENSE.txt)     |
+| [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines)       | Coroutines and asynchronous streams                                              | [Apache-2.0](https://github.com/Kotlin/kotlinx.coroutines/blob/master/LICENSE.txt)  |
+| [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) | Kotlin serialization                                                             | [Apache-2.0](https://github.com/Kotlin/kotlinx.serialization/blob/HEAD/LICENSE.txt) |
+| [Coil](https://github.com/coil-kt/coil)                                  | Compose image loading and OkHttp integration                                     | [Apache-2.0](https://github.com/coil-kt/coil/blob/HEAD/LICENSE.txt)                 |
+| [OkHttp](https://github.com/square/okhttp)                               | HTTP client, logging interceptor, and Brotli integration                         | [Apache-2.0](https://github.com/square/okhttp/blob/HEAD/LICENSE.txt)                |
+| [Okio](https://github.com/square/okio)                                   | I/O for OkHttp and Coil                                                          | [Apache-2.0](https://github.com/square/okio/blob/HEAD/LICENSE.txt)                  |
+| [Brotli](https://github.com/google/brotli)                               | Brotli decompression used by OkHttp                                              | [MIT](https://github.com/google/brotli/blob/master/LICENSE)                         |
+| [Retrofit](https://github.com/square/retrofit)                           | HTTP APIs and kotlinx.serialization converter                                    | [Apache-2.0](https://github.com/square/retrofit/blob/HEAD/LICENSE.txt)              |
+| [DeviceCompat](https://github.com/getActivity/DeviceCompat)              | Device compatibility                                                             | [Apache-2.0](https://github.com/getActivity/DeviceCompat/blob/HEAD/LICENSE)         |
+| [XXPermissions](https://github.com/getActivity/XXPermissions)            | Android permissions                                                              | [Apache-2.0](https://github.com/getActivity/XXPermissions/blob/HEAD/LICENSE)        |
+| [Toaster](https://github.com/getActivity/Toaster)                        | Toast notifications                                                              | [Apache-2.0](https://github.com/getActivity/Toaster/blob/HEAD/LICENSE)              |
+| [EasyWindow](https://github.com/getActivity/EasyWindow)                  | Floating windows                                                                 | [Apache-2.0](https://github.com/getActivity/EasyWindow/blob/HEAD/LICENSE)           |
+| [tabler-icons](https://github.com/tabler/tabler-icons)                   | SVG icons                                                                        | [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE)                     |
+| [Crunch](https://github.com/boxbeam/Crunch)                              | Expression compiler and evaluator                                                | [MIT](https://github.com/boxbeam/Crunch/blob/HEAD/LICENSE)                          |
+
+Local unit tests additionally use [JUnit 4](https://github.com/junit-team/junit4) ([EPL-1.0](https://github.com/junit-team/junit4/blob/HEAD/LICENSE-junit.txt)); instrumentation tests use AndroidX Test. JUnit's EPL-1.0 notice is also retained in the Android application's open source terms.
+
+The application displays its bundled notices from [open_source_terms.txt](./CHelper-Android/app/src/main/assets/about/open_source_terms.txt). Release and beta builds also use the vendor-provided [UMeng SDKs](https://www.umeng.com/); their terms and the application's [privacy policy](./CHelper-Android/app/src/main/assets/about/privacy_policy.txt) apply separately.
+
+### CHelper-Web and CHelper-Doc
+
+| project                                                               | description                      | license                                                                       |
+| :-------------------------------------------------------------------- | :------------------------------- | :---------------------------------------------------------------------------- |
+| [Vue](https://github.com/vuejs/core)                                  | Web UI                           | [MIT](https://github.com/vuejs/core/blob/main/LICENSE)                        |
+| [markdown-it](https://github.com/markdown-it/markdown-it)             | Documentation Markdown rendering | [MIT](https://github.com/markdown-it/markdown-it/blob/master/LICENSE)         |
+| [VitePress](https://github.com/vuejs/vitepress)                       | Documentation site               | [MIT](https://github.com/vuejs/vitepress/blob/main/LICENSE)                   |
+| [Vite](https://github.com/vitejs/vite)                                | Development server and bundler   | [MIT](https://github.com/vitejs/vite/blob/main/LICENSE)                       |
+| [vite-plugin-vue](https://github.com/vitejs/vite-plugin-vue)          | Vue integration for Vite         | [MIT](https://github.com/vitejs/vite-plugin-vue/blob/main/LICENSE)            |
+| [TypeScript](https://github.com/microsoft/TypeScript)                 | Type checking                    | [Apache-2.0](https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt)   |
+| [Vue language-tools](https://github.com/vuejs/language-tools)         | vue-tsc type checking            | [MIT](https://github.com/vuejs/language-tools/blob/master/LICENSE)            |
+| [Prettier](https://github.com/prettier/prettier)                      | Formatting                       | [MIT](https://github.com/prettier/prettier/blob/main/LICENSE)                 |
+| [Vitest](https://github.com/vitest-dev/vitest)                        | Unit tests                       | [MIT](https://github.com/vitest-dev/vitest/blob/main/LICENSE)                 |
+| [Vue Test Utils](https://github.com/vuejs/test-utils)                 | Component tests                  | [MIT](https://github.com/vuejs/test-utils/blob/main/LICENSE)                  |
+| [jsdom](https://github.com/jsdom/jsdom)                               | DOM test environment             | [MIT](https://github.com/jsdom/jsdom/blob/main/LICENSE.txt)                   |
+| [Playwright](https://github.com/microsoft/playwright)                 | Browser tests                    | [Apache-2.0](https://github.com/microsoft/playwright/blob/main/LICENSE)       |
+| [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) | Node.js type definitions         | [MIT](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/LICENSE) |
 
 ## Special Thanks
 

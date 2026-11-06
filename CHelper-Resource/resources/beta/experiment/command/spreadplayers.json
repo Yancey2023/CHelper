@@ -1,48 +1,50 @@
 {
-  "name": [
-    "spreadplayers"
-  ],
-  "description": "把实体随机传送到区域内地表的某个位置",
-  "syntax": [
-    "/spreadplayers <x: value> <z: value> <spreadDistance: float> <maxRange: float> <victim: target> [maxHeight: value]"
-  ],
-  "node": {
-    "<x: value>": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "x",
-      "description": "中心x坐标",
-      "canUseCaretNotation": true
-    },
-    "<z: value>": {
-      "type": "RELATIVE_FLOAT",
-      "brief": "z",
-      "description": "中心z坐标",
-      "canUseCaretNotation": true
-    },
-    "<spreadDistance: float>": {
-      "type": "FLOAT",
-      "brief": "最小间距",
-      "description": "传送目标之间的最小间距。最小值为0.0",
-      "min": 0
-    },
-    "<maxRange: float>": {
-      "type": "FLOAT",
-      "brief": "范围",
-      "description": "目标区域边界与区域中心在x和z轴上的距离（因此区域是正方形而不是圆形）。必须比传送目标之间的最小间距大，且最小值为1.0",
-      "min": 1
-    },
-    "<victim: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "需要随机传送的目标",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "[maxHeight: value]": {
-      "type": "INTEGER",
-      "brief": "最大高度",
-      "description": "限制传送位置的最大高度"
+    "name": [
+        "spreadplayers"
+    ],
+    "description": "把实体随机传送到区域内地表的某个位置。",
+    "syntax": [
+        "/spreadplayers <x: value> <z: value> <spreadDistance: float> <maxRange: float> <victim: target> [maxHeight: value]"
+    ],
+    "node": {
+        "<x: value>": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "中心X坐标",
+            "description": "指定传送目的地区域中心的X坐标。",
+            "canUseCaretNotation": true
+        },
+        "<z: value>": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "中心Z坐标",
+            "description": "指定传送目的地区域中心的Z坐标。",
+            "canUseCaretNotation": true
+        },
+        "<spreadDistance: float>": {
+            "type": "FLOAT",
+            "brief": "传送目标之间的最小间距",
+            "description": "指定传送目标之间的最小间距。",
+            "min": 0
+        },
+        "<maxRange: float>": {
+            "type": "FLOAT",
+            "brief": "区域范围",
+            "description": "指定正方形区域边界与中心的距离。",
+            "min": 1
+        },
+        "<victim: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定需要随机传送的目标。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "需要随机传送的目标"
+        },
+        "[maxHeight: value]": {
+            "type": "RELATIVE_FLOAT",
+            "brief": "最高传送高度",
+            "description": "若指定，限制传送位置的最大高度。",
+            "canUseCaretNotation": false
+        }
     }
-  }
 }

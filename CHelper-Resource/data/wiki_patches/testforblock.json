@@ -1,0 +1,18 @@
+{
+    "version": 1,
+    "reason": "将 testforblock 方块类型与状态的两个基岩版参数头合并为自然参数段，供复合 BLOCK 节点直接匹配。",
+    "replacements": [
+        {
+            "old": "{{argument|be=1|tileName: Block|enum}}\n: 指定要探测的方块类型。\n: {{arg desc|be=Block}}\n\n{{argument|be=1|blockStates: block states|BlockStateCommandParam}}\n: 指定要探测的方块状态。\n: {{Arg desc|be=BlockStateCommandParam}}",
+            "new": "{{argument|be=1|tileName: Block|enum}}{{argument|be=1|blockStates: block states|BlockStateCommandParam}}\n: 指定要探测的方块类型。\n: 指定要探测的方块状态。\n: brief: 要探测的方块类型和状态\n: {{arg desc|be=Block}}\n: {{Arg desc|be=BlockStateCommandParam}}",
+            "expected_matches": 1,
+            "reason": "原 Wiki 分别说明 tileName 与 blockStates；复合 BLOCK 节点同时接收方块类型与状态，brief 概括两项输入。没有更改参数或版本能力。"
+        },
+        {
+            "old": "{{arg desc|be=CommandPosition}}不可超出正常游戏范围。",
+            "new": "{{arg desc|be=CommandPosition}}",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除坐标description中的正常游戏范围限制；坐标用途及POS类型元数据保留。"
+        }
+    ]
+}

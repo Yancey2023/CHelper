@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "reason": "精简op命令简介，保留授予管理员身份的核心用途。",
+    "replacements": [
+        {
+            "old": "{{in|bedrock}}此命令将玩家在“玩家权限”屏幕中的权限改为“操作员”。在[[BDS|专用服务器]]中，玩家还会被记录在<samp>permissions.json</samp>文件里。<samp>permissions.json</samp>文件可以由{{cmd|permission}}命令重新加载。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "人工精简简介，删除重复的权限设置说明及专用服务器文件细节，保留上方授予管理员身份的核心用途。"
+        }
+    ]
+}

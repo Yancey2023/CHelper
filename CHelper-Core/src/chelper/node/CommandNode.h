@@ -81,7 +81,7 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::WRAPPED;
             NodeWithType innerNode;
             //存储下一个节点，需要调用构造函数之后再进行添加
-            std::pmr::vector<NodeWrapped *> nextNodes;
+            std::pmr::vector<NodeWrapped *> nextNodes{CPackMemoryRouter::getAllocationResource()};
             bool hasNextLF = false;
 
             explicit NodeWrapped(NodeWithType innerNode);
@@ -149,19 +149,21 @@ namespace CHelper {
         class NodeAnd : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::AND;
-            std::pmr::vector<NodeWithType> childNodes;
-            std::pmr::vector<std::pmr::string> childNodeIds;
+            std::pmr::vector<NodeWithType> childNodes{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::vector<std::pmr::string> childNodeIds{CPackMemoryRouter::getAllocationResource()};
 
             NodeAnd() = default;
 
             explicit NodeAnd(std::pmr::vector<NodeWithType> childNodes);
+
+            explicit NodeAnd(std::initializer_list<NodeWithType> childNodes);
         };
 
         class NodeOr : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OR;
-            std::pmr::vector<NodeWithType> childNodes;
-            std::pmr::vector<std::pmr::string> childNodeIds;
+            std::pmr::vector<NodeWithType> childNodes{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::vector<std::pmr::string> childNodeIds{CPackMemoryRouter::getAllocationResource()};
             bool isAttachToEnd = false, isUseFirst = false;
             bool noSuggestion = false;
             const char16_t *defaultErrorReason = nullptr;
@@ -170,6 +172,13 @@ namespace CHelper {
             NodeOr() = default;
 
             NodeOr(std::pmr::vector<NodeWithType> childNodes,
+                   bool isAttachToEnd,
+                   bool isUseFirst = false,
+                   bool noSuggestion = false,
+                   const char16_t *defaultErrorReason = nullptr,
+                   ASTNodeId::ASTNodeId nodeId = ASTNodeId::NONE);
+
+            NodeOr(std::initializer_list<NodeWithType> childNodes,
                    bool isAttachToEnd,
                    bool isUseFirst = false,
                    bool noSuggestion = false,
@@ -192,11 +201,11 @@ namespace CHelper {
         };
 
         struct EqualData {
-            std::pmr::u16string name;
+            std::pmr::u16string name{CPackMemoryRouter::getAllocationResource()};
             std::optional<std::pmr::u16string> description;
             bool canUseNotEqual = false;
             //序列化用：值节点在同文件节点表里的id，初始化阶段解析到nodeValue
-            std::pmr::string valueNodeId;
+            std::pmr::string valueNodeId{CPackMemoryRouter::getAllocationResource()};
             NodeWithType nodeValue;
 
             EqualData() = default;
@@ -261,7 +270,7 @@ namespace CHelper {
             static NodeText nodeEqual;
             static NodeText nodeNotEqual;
             static NodeOr nodeEqualOrNotEqual;
-            std::pmr::vector<EqualData> equalDatas;
+            std::pmr::vector<EqualData> equalDatas{CPackMemoryRouter::getAllocationResource()};
             std::shared_ptr<std::pmr::vector<std::shared_ptr<NormalId>>> nodeKeyContent;
             NodeNormalId nodeKey;
 
@@ -275,10 +284,10 @@ namespace CHelper {
             NodeWithType nodeElement;
             NodeWithType nodeSeparator;
             NodeWithType nodeRight;
-            std::pmr::string nodeLeftId;
-            std::pmr::string nodeElementId;
-            std::pmr::string nodeSeparatorId;
-            std::pmr::string nodeRightId;
+            std::pmr::string nodeLeftId{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::string nodeElementId{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::string nodeSeparatorId{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::string nodeRightId{CPackMemoryRouter::getAllocationResource()};
             NodeOr nodeElementOrRight;
             NodeOr nodeSeparatorOrRight;
 
@@ -323,7 +332,7 @@ namespace CHelper {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::OPTIONAL;
             NodeWithType optionalNode;
-            std::pmr::string optionalNodeId;
+            std::pmr::string optionalNodeId{CPackMemoryRouter::getAllocationResource()};
 
             NodeOptional() = default;
 
@@ -369,12 +378,12 @@ namespace CHelper {
         class NodePerCommand : public NodeBase {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::PER_COMMAND;
-            std::pmr::vector<std::pmr::u16string> name;
+            std::pmr::vector<std::pmr::u16string> name{CPackMemoryRouter::getAllocationResource()};
             std::optional<std::pmr::u16string> description;
-            std::pmr::vector<std::pmr::u16string> syntax;
+            std::pmr::vector<std::pmr::u16string> syntax{CPackMemoryRouter::getAllocationResource()};
             FreeableNodeWithTypes nodes;
-            std::pmr::vector<NodeWrapped> wrappedNodes;
-            std::pmr::vector<NodeWrapped *> startNodes;
+            std::pmr::vector<NodeWrapped> wrappedNodes{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::vector<NodeWrapped *> startNodes{CPackMemoryRouter::getAllocationResource()};
 
             NodePerCommand() = default;
         };
@@ -423,7 +432,7 @@ namespace CHelper {
         class NodeJson : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON;
-            std::pmr::string key;
+            std::pmr::string key{CPackMemoryRouter::getAllocationResource()};
             NodeWithType nodeJson;
 
             NodeJson(const std::optional<std::string> &id,
@@ -503,16 +512,16 @@ namespace CHelper {
         };
 
         struct RepeatData {
-            std::pmr::string id;
+            std::pmr::string id{CPackMemoryRouter::getAllocationResource()};
             FreeableNodeWithTypes breakNodes;
-            std::pmr::vector<FreeableNodeWithTypes> repeatNodes;
-            std::pmr::vector<bool> isEnd;
+            std::pmr::vector<FreeableNodeWithTypes> repeatNodes{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::vector<bool> isEnd{std::pmr::polymorphic_allocator<bool>{CPackMemoryRouter::getAllocationResource()}};
         };
 
         class NodeRepeat : public NodeSerializable {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::REPEAT;
-            std::pmr::string key;
+            std::pmr::string key{CPackMemoryRouter::getAllocationResource()};
             const RepeatData *repeatData = nullptr;
             NodeWithType nodeElement;
 
@@ -548,7 +557,7 @@ namespace CHelper {
         public:
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON_ELEMENT;
             FreeableNodeWithTypes nodes;
-            std::pmr::string startNodeId;
+            std::pmr::string startNodeId{CPackMemoryRouter::getAllocationResource()};
             NodeWithType start;
 
             NodeJsonElement() = default;
@@ -561,8 +570,8 @@ namespace CHelper {
             static constexpr NodeTypeId::NodeTypeId nodeTypeId = NodeTypeId::JSON_ENTRY;
             static NodeSingleSymbol nodeSeparator;
             static NodeEntry nodeAllEntry;
-            std::pmr::u16string key;
-            std::pmr::vector<std::pmr::string> value;
+            std::pmr::u16string key{CPackMemoryRouter::getAllocationResource()};
+            std::pmr::vector<std::pmr::string> value{CPackMemoryRouter::getAllocationResource()};
             NodeText nodeKey;
             NodeOr nodeValue;
             std::optional<NodeEntry> nodeEntry;
@@ -584,7 +593,7 @@ namespace CHelper {
             static NodeSingleSymbol nodeRight;
             static NodeSingleSymbol nodeSeparator;
             static NodeList nodeAllList;
-            std::pmr::string data;
+            std::pmr::string data{CPackMemoryRouter::getAllocationResource()};
             std::optional<NodeList> nodeList;
 
             NodeJsonList() = default;
@@ -609,7 +618,7 @@ namespace CHelper {
             static NodeSingleSymbol nodeListLeft;
             static NodeSingleSymbol nodeListRight;
             static NodeSingleSymbol nodeListSeparator;
-            std::pmr::vector<NodeJsonEntry> data;
+            std::pmr::vector<NodeJsonEntry> data{CPackMemoryRouter::getAllocationResource()};
             std::optional<NodeOr> nodeElement1;
             NodeOr nodeElement2;
             NodeList nodeList;

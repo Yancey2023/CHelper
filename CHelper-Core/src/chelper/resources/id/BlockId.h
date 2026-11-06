@@ -40,6 +40,9 @@ namespace CHelper {
     public:
         using std::pmr::u16string::basic_string;
         using std::pmr::u16string::operator=;
+        PropertyString() : std::pmr::u16string(CPackMemoryRouter::getAllocationResource()) {}
+        PropertyString(const PropertyString &other)
+            : std::pmr::u16string(other, CPackMemoryRouter::getAllocationResource()) {}
 
         static void *operator new(size_t bytes) {
             return allocateCPackObject(bytes, alignof(PropertyString));
@@ -57,19 +60,19 @@ namespace CHelper {
     class Property {
     public:
         PropertyType::PropertyType type = PropertyType::BOOLEAN;
-        std::pmr::u16string name;
+        std::pmr::u16string name{CPackMemoryRouter::getAllocationResource()};
         PropertyValue defaultValue;
         std::optional<std::pmr::vector<PropertyValue>> valid;
 
         Property() = default;
 
-        Property(const Property &aProperty) noexcept;
+        Property(const Property &aProperty);
 
         Property(Property &&aProperty) noexcept;
 
-        Property &operator=(const Property &aProperty) noexcept;
+        Property &operator=(const Property &aProperty);
 
-        Property &operator=(Property &&aProperty) noexcept;
+        Property &operator=(Property &&aProperty);
 
         ~Property();
 
@@ -85,19 +88,19 @@ namespace CHelper {
     class BlockPropertyDescription {
     public:
         PropertyType::PropertyType type = PropertyType::BOOLEAN;
-        std::pmr::u16string propertyName;
+        std::pmr::u16string propertyName{CPackMemoryRouter::getAllocationResource()};
         std::optional<std::pmr::u16string> description;
-        std::pmr::vector<BlockPropertyValueDescription> values;
+        std::pmr::vector<BlockPropertyValueDescription> values{CPackMemoryRouter::getAllocationResource()};
 
         BlockPropertyDescription() = default;
 
-        BlockPropertyDescription(const BlockPropertyDescription &aBlockPropertyDescription) noexcept;
+        BlockPropertyDescription(const BlockPropertyDescription &aBlockPropertyDescription);
 
         BlockPropertyDescription(BlockPropertyDescription &&aBlockPropertyDescription) noexcept;
 
-        BlockPropertyDescription &operator=(const BlockPropertyDescription &aBlockPropertyDescription) noexcept;
+        BlockPropertyDescription &operator=(const BlockPropertyDescription &aBlockPropertyDescription);
 
-        BlockPropertyDescription &operator=(BlockPropertyDescription &&aBlockPropertyDescription) noexcept;
+        BlockPropertyDescription &operator=(BlockPropertyDescription &&aBlockPropertyDescription);
 
         ~BlockPropertyDescription();
 
@@ -106,14 +109,14 @@ namespace CHelper {
 
     class PerBlockPropertyDescription {
     public:
-        std::pmr::vector<std::pmr::u16string> blocks;
-        std::pmr::vector<BlockPropertyDescription> properties;
+        std::pmr::vector<std::pmr::u16string> blocks{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<BlockPropertyDescription> properties{CPackMemoryRouter::getAllocationResource()};
     };
 
     class BlockPropertyDescriptions {
     public:
-        std::pmr::vector<BlockPropertyDescription> common;
-        std::pmr::vector<PerBlockPropertyDescription> block;
+        std::pmr::vector<BlockPropertyDescription> common{CPackMemoryRouter::getAllocationResource()};
+        std::pmr::vector<PerBlockPropertyDescription> block{CPackMemoryRouter::getAllocationResource()};
 
         [[nodiscard]] const BlockPropertyDescription &getPropertyDescription(
                 std::u16string_view blockIdWithNamespace,
@@ -155,7 +158,7 @@ namespace CHelper {
     };
 
     struct BlockStateNode {
-        std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties;
+        std::pmr::vector<std::shared_ptr<BlockPropertyNode>> properties{CPackMemoryRouter::getAllocationResource()};
         Node::FreeableNodeWithTypes children;
         Node::NodeWithType node;
     };

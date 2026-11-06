@@ -1,276 +1,285 @@
 {
-  "name": [
-    "scoreboard"
-  ],
-  "description": "管理记分板的目标、玩家和队伍",
-  "syntax": [
-    "/scoreboard objectives add <objective: string> dummy [displayName: string]",
-    "/scoreboard objectives list",
-    "/scoreboard objectives remove <objective: string>",
-    "/scoreboard objectives setdisplay <list|sidebar> [objective: string] [ascending|descending]",
-    "/scoreboard objectives setdisplay belowname [objective: string]",
-    "/scoreboard players <set|add|remove> <player: target> <objective: string> <count: int>",
-    "/scoreboard players list [playername: target]",
-    "/scoreboard players operation <targetName: target> <targetObjective: string> <operation: operator> <selector: target> <objective: string>",
-    "/scoreboard players random <player: target> <objective: string> <min: int> <max: int>",
-    "/scoreboard players reset <player: target> [objective: string]",
-    "/scoreboard players test <player: target> <objective: string> <min: wildcard int> [max: wildcard int]"
-  ],
-  "node": {
-    "objectives": {
-      "type": "TEXT",
-      "description": "创建、列出、删除、显示记分项",
-      "data": {
-        "name": "objectives",
-        "description": "创建、列出、删除、显示记分项"
-      }
-    },
-    "add": {
-      "type": "TEXT",
-      "description": "创建记分项",
-      "data": {
-        "name": "add",
-        "description": "创建记分项"
-      }
-    },
-    "<objective: string>|[objective: string]": {
-      "type": "STRING",
-      "brief": "记分项",
-      "description": "记分项的名字",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "[ascending|descending]": {
-      "type": "NORMAL_ID",
-      "description": "排序顺序",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "ascending",
-          "description": "升序"
+    "name": [
+        "scoreboard"
+    ],
+    "description": "管理记分板中的记分项和分数持有者。",
+    "syntax": [
+        "/scoreboard objectives add <objective: string> dummy [displayName: string]",
+        "/scoreboard objectives list",
+        "/scoreboard objectives remove <objective: string>",
+        "/scoreboard objectives setdisplay <list|sidebar> [objective: string] [ascending|descending]",
+        "/scoreboard objectives setdisplay belowname [objective: string]",
+        "/scoreboard players <set|add|remove> <player: target> <objective: string> <count: int>",
+        "/scoreboard players list [playername: target]",
+        "/scoreboard players operation <targetName: target> <targetObjective: string> <operation: operator> <selector: target> <objective: string>",
+        "/scoreboard players random <player: target> <objective: string> <min: int> <max: int>",
+        "/scoreboard players reset <player: target> [objective: string]",
+        "/scoreboard players test <player: target> <objective: string> <min: wildcard int> [max: wildcard int]"
+    ],
+    "node": {
+        "objectives": {
+            "type": "TEXT",
+            "description": "管理记分项。",
+            "data": {
+                "name": "objectives",
+                "description": "管理记分项。"
+            }
         },
-        {
-          "name": "descending",
-          "description": "降序"
+        "add": {
+            "type": "TEXT",
+            "description": "创建一个具有指定名称、准则和显示名称（可选）的记分项。",
+            "data": {
+                "name": "add",
+                "description": "创建一个具有指定名称、准则和显示名称（可选）的记分项。"
+            }
+        },
+        "<objective: string>|[objective: string]": {
+            "type": "STRING",
+            "brief": "记分项名称",
+            "description": "表示记分项的名称。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "[ascending|descending]": {
+            "type": "NORMAL_ID",
+            "description": "指定排列顺序。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "ascending",
+                    "description": "按升序排列。"
+                },
+                {
+                    "name": "descending",
+                    "description": "按降序排列。"
+                }
+            ],
+            "brief": "排序顺序"
+        },
+        "dummy": {
+            "type": "TEXT",
+            "description": "表示为新建记分项时要设定的准则。",
+            "data": {
+                "name": "dummy",
+                "description": "表示为新建记分项时要设定的准则。"
+            }
+        },
+        "[displayName: string]": {
+            "type": "STRING",
+            "brief": "记分项显示名称",
+            "description": "表示记分项的显示名称。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "list": {
+            "type": "TEXT",
+            "description": "列出记分项或分数持有者。",
+            "data": {
+                "name": "list",
+                "description": "列出记分项或分数持有者。"
+            }
+        },
+        "remove": {
+            "type": "TEXT",
+            "description": "删除指定记分项。",
+            "data": {
+                "name": "remove",
+                "description": "删除指定记分项。"
+            }
+        },
+        "setdisplay": {
+            "type": "TEXT",
+            "description": "在指定位置显示记分项分数。",
+            "data": {
+                "name": "setdisplay",
+                "description": "在指定位置显示记分项分数。"
+            }
+        },
+        "<list|sidebar>": {
+            "type": "NORMAL_ID",
+            "description": "指定记分项分数的显示位置。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "list",
+                    "description": "在游戏菜单的玩家列表显示分数信息。"
+                },
+                {
+                    "name": "sidebar",
+                    "description": "在屏幕侧边显示记分项分数。"
+                }
+            ],
+            "brief": "显示位置"
+        },
+        "belowname": {
+            "type": "TEXT",
+            "description": "在玩家名称标签下方显示记分项分数。",
+            "data": {
+                "name": "belowname",
+                "description": "在玩家名称标签下方显示记分项分数。"
+            }
+        },
+        "players": {
+            "type": "TEXT",
+            "description": "管理分数持有者及其分数。",
+            "data": {
+                "name": "players",
+                "description": "管理分数持有者及其分数。"
+            }
+        },
+        "<set|add|remove>": {
+            "type": "NORMAL_ID",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "set",
+                    "description": "设置指定分数持有者在指定记分项中的分数。"
+                },
+                {
+                    "name": "add",
+                    "description": "增加指定分数持有者在指定记分项中的分数值。"
+                },
+                {
+                    "name": "remove",
+                    "description": "减少指定分数持有者在指定记分项中的分数值。"
+                }
+            ],
+            "description": "set：设置指定分数持有者在指定记分项中的分数。 add：增加指定分数持有者在指定记分项中的分数值。 remove：减少指定分数持有者在指定记分项中的分数值。",
+            "brief": "分数操作"
+        },
+        "<player: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定分数持有者。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": true,
+            "brief": "表示1个或多个分数持有者"
+        },
+        "<count: int>": {
+            "type": "INTEGER",
+            "brief": "分数值",
+            "description": "指定分数或增减量。"
+        },
+        "[playername: target]": {
+            "type": "TARGET_SELECTOR",
+            "brief": "表示分数持有者",
+            "description": "指定分数持有者。 允许指定多个分数持有者。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": true
+        },
+        "operation": {
+            "type": "TEXT",
+            "description": "表示要应用的操作。",
+            "data": {
+                "name": "operation",
+                "description": "表示要应用的操作。"
+            }
+        },
+        "<targetName: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定分数持有者。 允许指定多个分数持有者。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": true,
+            "brief": "表示分数持有者"
+        },
+        "<targetObjective: string>": {
+            "type": "STRING",
+            "brief": "表示目标记分项",
+            "description": "表示目标记分项。",
+            "canContainSpace": true,
+            "ignoreLater": false
+        },
+        "<operation: operator>": {
+            "type": "NORMAL_ID",
+            "description": "表示要应用的操作。",
+            "ignoreError": false,
+            "contents": [
+                {
+                    "name": "+=",
+                    "description": "将来源分数加到目标分数。"
+                },
+                {
+                    "name": "-=",
+                    "description": "从目标分数中减去来源分数。"
+                },
+                {
+                    "name": "*=",
+                    "description": "将目标分数乘以来源分数。"
+                },
+                {
+                    "name": "/=",
+                    "description": "将目标分数除以来源分数并取整。"
+                },
+                {
+                    "name": "%=",
+                    "description": "将目标分数除以来源分数并取余。"
+                },
+                {
+                    "name": "=",
+                    "description": "将来源分数赋给目标分数。"
+                },
+                {
+                    "name": "<",
+                    "description": "将较小分数赋给目标分数。"
+                },
+                {
+                    "name": ">",
+                    "description": "将较大分数赋给目标分数。"
+                },
+                {
+                    "name": "><",
+                    "description": "交换目标分数和来源分数。"
+                }
+            ],
+            "brief": "表示要应用的操作"
+        },
+        "<selector: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "表示来源分数持有者——其分数将作为输入源。",
+            "isOnlyOne": false,
+            "isMustPlayer": false,
+            "isMustNPC": false,
+            "isWildcard": true,
+            "brief": "来源分数持有者"
+        },
+        "random": {
+            "type": "TEXT",
+            "description": "设置指定分数持有者的随机分数值。",
+            "data": {
+                "name": "random",
+                "description": "设置指定分数持有者的随机分数值。"
+            }
+        },
+        "<min: wildcard int>|<min: int>": {
+            "type": "INTEGER",
+            "description": "指定分数范围下限。",
+            "brief": "最小值"
+        },
+        "[max: wildcard int]|<max: int>": {
+            "type": "INTEGER",
+            "description": "指定分数范围上限。",
+            "brief": "最大值"
+        },
+        "reset": {
+            "type": "TEXT",
+            "description": "清除指定分数持有者在记分项中的分数。",
+            "data": {
+                "name": "reset",
+                "description": "清除指定分数持有者在记分项中的分数。"
+            }
+        },
+        "test": {
+            "type": "TEXT",
+            "description": "检测目标分数是否在指定范围内。",
+            "data": {
+                "name": "test",
+                "description": "检测目标分数是否在指定范围内。"
+            }
         }
-      ]
-    },
-    "dummy": {
-      "type": "TEXT",
-      "description": "虚拟型",
-      "data": {
-        "name": "dummy",
-        "description": "虚拟型"
-      }
-    },
-    "[displayName: string]": {
-      "type": "STRING",
-      "brief": "记分项显示的名字",
-      "description": "记分项显示的名字",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "list": {
-      "type": "TEXT",
-      "description": "列出所有存在的记分项、显示名称与准则，或显示所有被记分板系统追踪的实体",
-      "data": {
-        "name": "list",
-        "description": "列出所有存在的记分项、显示名称与准则，或显示所有被记分板系统追踪的实体"
-      }
-    },
-    "remove": {
-      "type": "TEXT",
-      "description": "删除记分项",
-      "data": {
-        "name": "remove",
-        "description": "删除记分项"
-      }
-    },
-    "setdisplay": {
-      "type": "TEXT",
-      "description": "显示分数项",
-      "data": {
-        "name": "setdisplay",
-        "description": "显示分数项"
-      }
-    },
-    "<list|sidebar>": {
-      "type": "NORMAL_ID",
-      "description": "位置",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "list",
-          "description": "玩家列表"
-        },
-        {
-          "name": "sidebar",
-          "description": "侧边栏"
-        }
-      ]
-    },
-    "belowname": {
-      "type": "TEXT",
-      "description": "名称下方",
-      "data": {
-        "name": "belowname",
-        "description": "名称下方"
-      }
-    },
-    "players": {
-      "type": "TEXT",
-      "description": "设置、增加、扣除、列出、运算、清空、检测实体分数",
-      "data": {
-        "name": "players",
-        "description": "设置、增加、扣除、列出、运算、清空、检测实体分数"
-      }
-    },
-    "<set|add|remove>": {
-      "type": "NORMAL_ID",
-      "description": "设置、增加或移除",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "set",
-          "description": "设置分数（并在已有分数存在时覆盖之）"
-        },
-        {
-          "name": "add",
-          "description": "增加分数（如果没有分数则当作0分修改）"
-        },
-        {
-          "name": "remove",
-          "description": "扣除分数（如果没有分数则当作0分修改）"
-        }
-      ]
-    },
-    "<player: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "目标实体",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": true
-    },
-    "<count: int>": {
-      "type": "INTEGER",
-      "brief": "分数数值",
-      "description": "要设置、增加、扣除的实体分数数值"
-    },
-    "[playername: target]": {
-      "type": "TARGET_SELECTOR",
-      "brief": "分数持有者",
-      "description": "分数持有者。指定名称对应的玩家无需在线，且不必是一个真实存在的玩家名。",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": true
-    },
-    "operation": {
-      "type": "TEXT",
-      "description": "分数运算",
-      "data": {
-        "name": "operation",
-        "description": "分数运算"
-      }
-    },
-    "<targetName: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "目标实体",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": true
-    },
-    "<targetObjective: string>": {
-      "type": "STRING",
-      "brief": "记分项",
-      "description": "记分项的名字",
-      "canContainSpace": true,
-      "ignoreLater": false
-    },
-    "<operation: operator>": {
-      "type": "NORMAL_ID",
-      "description": "运算操作",
-      "ignoreError": false,
-      "contents": [
-        {
-          "name": "+=",
-          "description": "求和"
-        },
-        {
-          "name": "-=",
-          "description": "求差"
-        },
-        {
-          "name": "*=",
-          "description": "求积"
-        },
-        {
-          "name": "/=",
-          "description": "求商"
-        },
-        {
-          "name": "%=",
-          "description": "求余"
-        },
-        {
-          "name": "=",
-          "description": "赋值"
-        },
-        {
-          "name": "<",
-          "description": "取较小值"
-        },
-        {
-          "name": ">",
-          "description": "取较大值"
-        },
-        {
-          "name": "><",
-          "description": "交换分数"
-        }
-      ]
-    },
-    "<selector: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "目标实体",
-      "isOnlyOne": false,
-      "isMustPlayer": false,
-      "isMustNPC": false,
-      "isWildcard": true
-    },
-    "random": {
-      "type": "TEXT",
-      "description": "随机生成分数（包含最小值和最大值）",
-      "data": {
-        "name": "random",
-        "description": "随机生成分数（包含最小值和最大值）"
-      }
-    },
-    "<min: wildcard int>|<min: int>": {
-      "type": "INTEGER",
-      "description": "最小值"
-    },
-    "[max: wildcard int]|<max: int>": {
-      "type": "INTEGER",
-      "description": "最大值"
-    },
-    "reset": {
-      "type": "TEXT",
-      "description": "重置分数",
-      "data": {
-        "name": "reset",
-        "description": "重置分数"
-      }
-    },
-    "test": {
-      "type": "TEXT",
-      "description": "检测目标分数是否在区间内",
-      "data": {
-        "name": "test",
-        "description": "检测目标分数是否在区间内"
-      }
     }
-  }
 }

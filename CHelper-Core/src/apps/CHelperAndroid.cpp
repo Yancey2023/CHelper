@@ -20,182 +20,249 @@
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 #include <chelper/CHelperCore.h>
+#include <chelper/serialization/IO.h>
+#include <chelper/serialization/Serialization.h>
 #include <jni.h>
 #include <pch.h>
 #include <spdlog/sinks/android_sink.h>
 
-std::u16string jstring2u16string(JNIEnv *env, jstring jString) {
-    if (jString == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call jstring2u16string when jString is null");
-        return {};
+namespace {
+    template<class T>
+    class LocalRef {
+        JNIEnv *env;
+        T value;
+
+    public:
+        LocalRef(JNIEnv *env, T value) : env(env), value(value) {}
+        ~LocalRef() {
+            if (value) env->DeleteLocalRef(value);
+        }
+        LocalRef(const LocalRef &) = delete;
+        T get() const { return value; }
+        T release() { return std::exchange(value, nullptr); }
+    };
+    void checkJni([[maybe_unused]] JNIEnv *env) {
+#if CHelperDebug
+        // 字段 ID、对象类型、数组范围由本层保证；只在调试时验证这些不变量。
+        if (env->ExceptionCheck()) throw std::runtime_error("JNI operation failed");
+#endif
     }
-    jsize length = env->GetStringLength(jString);
-    const jchar *jchars = env->GetStringChars(jString, nullptr);
-    std::u16string str = std::u16string(reinterpret_cast<const char16_t *>(jchars), length);
-    env->ReleaseStringChars(jString, jchars);
-    return str;
-}
-
-jstring u16string2jstring(JNIEnv *env, const std::u16string_view u16string) {
-    return env->NewString(reinterpret_cast<const jchar *>(u16string.data()), static_cast<jsize>(u16string.size()));
-}
-
-std::string jstring2string(JNIEnv *env, jstring jString) {
-    if (jString == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call jstring2string when jString is null");
-        return {};
+    template<class T>
+    T requireJni(JNIEnv *env, T value) {
+        // 这些分配/查找函数通过空返回值表示失败；正常路径不再调用 ExceptionCheck。
+        if (!value) throw std::runtime_error("JNI allocation or lookup failed");
+        return value;
     }
-    const char *cstr = env->GetStringUTFChars(jString, nullptr);
-    std::string str = cstr;
-    env->ReleaseStringUTFChars(jString, cstr);
-    return str;
+    jsize checkedSize(size_t value) {
+        if (value > static_cast<size_t>(std::numeric_limits<jsize>::max())) throw std::length_error("JNI result is too large");
+        return static_cast<jsize>(value);
+    }
+    void throwJavaError(JNIEnv *env, const char *message) noexcept {
+        if (env->ExceptionCheck()) return;
+        LocalRef<jclass> type(env, env->FindClass("java/lang/RuntimeException"));
+        if (type.get()) env->ThrowNew(type.get(), message);
+    }
+    template<class Function>
+    auto jniCall(JNIEnv *env, Function &&function) noexcept -> std::invoke_result_t<Function> {
+        using Result = std::invoke_result_t<Function>;
+        try {
+            return std::invoke(std::forward<Function>(function));
+        } catch (const std::exception &error) { throwJavaError(env, error.what()); } catch (...) {
+            throwJavaError(env, "unknown CHelper native error");
+        }
+        if constexpr (!std::is_void_v<Result>) return Result{};
+    }
+    struct JavaBindings {
+        jclass errorType = nullptr, suggestionType = nullptr, clickType = nullptr;
+        jfieldID errorText = nullptr, errorStart = nullptr, errorEnd = nullptr;
+        jfieldID suggestionName = nullptr, suggestionDescription = nullptr;
+        jfieldID clickText = nullptr, clickSelection = nullptr;
+        void initialize(JNIEnv *env) {
+            const auto load = [&](const char *name, jclass &type) {
+                LocalRef<jclass> local(env, requireJni(env, env->FindClass(name)));
+                type = static_cast<jclass>(requireJni(env, env->NewGlobalRef(local.get())));
+            };
+            load("yancey/chelper/core/ErrorReason", errorType);
+            load("yancey/chelper/core/Suggestion", suggestionType);
+            load("yancey/chelper/core/ClickSuggestionResult", clickType);
+            errorText = requireJni(env, env->GetFieldID(errorType, "errorReason", "Ljava/lang/String;"));
+            errorStart = requireJni(env, env->GetFieldID(errorType, "start", "I"));
+            errorEnd = requireJni(env, env->GetFieldID(errorType, "end", "I"));
+            suggestionName = requireJni(env, env->GetFieldID(suggestionType, "name", "Ljava/lang/String;"));
+            suggestionDescription = requireJni(env, env->GetFieldID(suggestionType, "description", "Ljava/lang/String;"));
+            clickText = requireJni(env, env->GetFieldID(clickType, "text", "Ljava/lang/String;"));
+            clickSelection = requireJni(env, env->GetFieldID(clickType, "selection", "I"));
+        }
+        void clear(JNIEnv *env) noexcept {
+            for (auto type: {errorType, suggestionType, clickType})
+                if (type) env->DeleteGlobalRef(type);
+            errorType = suggestionType = clickType = nullptr;
+        }
+    } bindings;
+
+    class JavaStringChars {
+        JNIEnv *env;
+        jstring value;
+        const jchar *characters;
+        jsize length;
+
+    public:
+        JavaStringChars(JNIEnv *env, jstring value) : env(env), value(value) {
+            if (!value) throw std::invalid_argument("null Java string");
+            length = env->GetStringLength(value);
+            characters = requireJni(env, env->GetStringChars(value, nullptr));
+        }
+        ~JavaStringChars() { env->ReleaseStringChars(value, characters); }
+        JavaStringChars(const JavaStringChars &) = delete;
+        std::u16string_view view() const {
+            return {reinterpret_cast<const char16_t *>(characters), static_cast<size_t>(length)};
+        }
+    };
+
+    template<class Consumer>
+    auto withAssetData(JNIEnv *env, jobject managerObject, const std::string &path, Consumer &&consume) {
+        if (!managerObject) throw std::invalid_argument("null Android asset manager");
+        auto *manager = AAssetManager_fromJava(env, managerObject);
+        if (!manager) throw std::runtime_error("invalid Android asset manager");
+        const std::unique_ptr<AAsset, decltype(&AAsset_close)> asset(
+                AAssetManager_open(manager, path.c_str(), AASSET_MODE_BUFFER), AAsset_close);
+        if (!asset) throw std::runtime_error("cannot open asset: " + path);
+        const auto length = AAsset_getLength64(asset.get());
+        if (length < 0) throw std::runtime_error("failed to read asset size");
+        // Decode while the asset owns the buffer; the decoded pack owns its data.
+        if (length == 0) return std::invoke(std::forward<Consumer>(consume), std::string_view{});
+        if (const auto *buffer = AAsset_getBuffer(asset.get())) {
+            return std::invoke(std::forward<Consumer>(consume), std::string_view(static_cast<const char *>(buffer), static_cast<size_t>(length)));
+        }
+        if (AAsset_seek64(asset.get(), 0, SEEK_SET) < 0) throw std::runtime_error("failed to seek asset: " + path);
+        std::string data(static_cast<size_t>(length), '\0');
+        size_t offset = 0;
+        while (offset < data.size()) {
+            const int count = AAsset_read(asset.get(), data.data() + offset, data.size() - offset);
+            if (count <= 0) throw std::runtime_error("failed to read asset: " + path);
+            offset += static_cast<size_t>(count);
+        }
+        return std::invoke(std::forward<Consumer>(consume), std::string_view(data));
+    }
+}// namespace
+
+std::u16string jstring2u16string(JNIEnv *env, jstring value) {
+    const JavaStringChars characters(env, value);
+    return std::u16string(characters.view());
 }
 
-jstring string2jstring(JNIEnv *env, const std::string &string) {
-    return env->NewStringUTF(string.c_str());
+jstring u16string2jstring(JNIEnv *env, std::u16string_view value) {
+    return requireJni(env, env->NewString(reinterpret_cast<const jchar *>(value.data()), checkedSize(value.size())));
+}
+
+std::string jstring2string(JNIEnv *env, jstring value) {
+    const JavaStringChars characters(env, value);
+    return utf8::utf16to8(characters.view());
 }
 
 jobject errorReason2jobject(JNIEnv *env, jclass errorReasonClass, const CHelper::ErrorReason &errorReason) {
-    jobject javaErrorReason = env->AllocObject(errorReasonClass);
-    env->SetObjectField(javaErrorReason,
-                        env->GetFieldID(errorReasonClass, "errorReason", "Ljava/lang/String;"),
-                        u16string2jstring(env, errorReason.getMessage()));
-    env->SetIntField(javaErrorReason,
-                     env->GetFieldID(errorReasonClass, "start", "I"),
-                     static_cast<jint>(errorReason.start));
-    env->SetIntField(javaErrorReason,
-                     env->GetFieldID(errorReasonClass, "end", "I"),
-                     static_cast<jint>(errorReason.end));
-    return javaErrorReason;
+    // 三个 DTO 的所有字段均由下方 native 代码写入，无需运行随后被覆盖的默认初始化。
+    LocalRef<jobject> result(env, requireJni(env, env->AllocObject(errorReasonClass)));
+    LocalRef<jstring> text(env, u16string2jstring(env, errorReason.getMessage()));
+    env->SetObjectField(result.get(), bindings.errorText, text.get());
+    env->SetIntField(result.get(), bindings.errorStart, checkedSize(errorReason.start));
+    env->SetIntField(result.get(), bindings.errorEnd, checkedSize(errorReason.end));
+    checkJni(env);
+    return result.release();
 }
 
 jobjectArray errorReasons2jobjectArray(JNIEnv *env, const std::vector<std::shared_ptr<const CHelper::ErrorReason>> &errorReasons) {
-    jclass errorReasonClass = env->FindClass("yancey/chelper/core/ErrorReason");
-    jobjectArray result = env->NewObjectArray(static_cast<jsize>(errorReasons.size()), errorReasonClass, nullptr);
+    LocalRef<jobjectArray> result(env, requireJni(env, env->NewObjectArray(checkedSize(errorReasons.size()), bindings.errorType, nullptr)));
     for (size_t i = 0; i < errorReasons.size(); ++i) {
-        env->SetObjectArrayElement(result, i, errorReason2jobject(env, errorReasonClass, *errorReasons[i]));
+        LocalRef<jobject> entry(env, errorReason2jobject(env, bindings.errorType, *errorReasons[i]));
+        env->SetObjectArrayElement(result.get(), static_cast<jsize>(i), entry.get());
+        checkJni(env);
     }
-    return result;
+    return result.release();
 }
 
 jobject suggestion2jobject(JNIEnv *env, jclass suggestionClass, const CHelper::AutoSuggestion::Suggestion &suggestion) {
-    jobject javaSuggestion = env->AllocObject(suggestionClass);
-    env->SetObjectField(javaSuggestion,
-                        env->GetFieldID(suggestionClass, "name", "Ljava/lang/String;"),
-                        u16string2jstring(env, suggestion.content->name));
-    env->SetObjectField(javaSuggestion,
-                        env->GetFieldID(suggestionClass, "description", "Ljava/lang/String;"),
-                        suggestion.content->description.has_value()
-                                ? u16string2jstring(env, suggestion.content->description.value())
-                                : nullptr);
-    return javaSuggestion;
+    LocalRef<jobject> result(env, requireJni(env, env->AllocObject(suggestionClass)));
+    LocalRef<jstring> name(env, u16string2jstring(env, suggestion.content->name));
+    LocalRef<jstring> description(env, suggestion.content->description ? u16string2jstring(env, *suggestion.content->description) : nullptr);
+    env->SetObjectField(result.get(), bindings.suggestionName, name.get());
+    env->SetObjectField(result.get(), bindings.suggestionDescription, description.get());
+    checkJni(env);
+    return result.release();
 }
 
 jobjectArray suggestions2jobjectArray(JNIEnv *env, const std::vector<CHelper::AutoSuggestion::Suggestion> &suggestions) {
-    jclass suggestionClass = env->FindClass("yancey/chelper/core/Suggestion");
-    jobjectArray result = env->NewObjectArray(static_cast<jsize>(suggestions.size()), suggestionClass, nullptr);
+    LocalRef<jobjectArray> result(env, requireJni(env, env->NewObjectArray(checkedSize(suggestions.size()), bindings.suggestionType, nullptr)));
     for (size_t i = 0; i < suggestions.size(); ++i) {
-        env->SetObjectArrayElement(result, i, suggestion2jobject(env, suggestionClass, suggestions[i]));
+        LocalRef<jobject> entry(env, suggestion2jobject(env, bindings.suggestionType, suggestions[i]));
+        env->SetObjectArrayElement(result.get(), static_cast<jsize>(i), entry.get());
+        checkJni(env);
     }
-    return result;
+    return result.release();
 }
 
 jintArray syntaxTokenTypes2jintArray(JNIEnv *env, const std::vector<CHelper::SyntaxHighlight::SyntaxTokenType::SyntaxTokenType> &tokenTypes) {
-    jintArray result = env->NewIntArray(static_cast<jsize>(tokenTypes.size()));
-    std::vector<jint> tokenTypes0(tokenTypes.size());
-    for (size_t i = 0; i < tokenTypes.size(); ++i) {
-        tokenTypes0[i] = static_cast<jint>(tokenTypes[i]);
-    }
-    env->SetIntArrayRegion(result, 0, static_cast<jsize>(tokenTypes0.size()), tokenTypes0.data());
-    return result;
+    LocalRef<jintArray> result(env, requireJni(env, env->NewIntArray(checkedSize(tokenTypes.size()))));
+    const std::vector<jint> values(tokenTypes.begin(), tokenTypes.end());
+    if (!values.empty()) env->SetIntArrayRegion(result.get(), 0, checkedSize(values.size()), values.data());
+    checkJni(env);
+    return result.release();
 }
 
 jobject clickSuggestionResult2jobject(JNIEnv *env, const std::pair<std::u16string, size_t> &result) {
-    jclass resultClass = env->FindClass("yancey/chelper/core/ClickSuggestionResult");
-    jobject javaResult = env->AllocObject(resultClass);
-    env->SetObjectField(javaResult,
-                        env->GetFieldID(resultClass, "text", "Ljava/lang/String;"),
-                        u16string2jstring(env, result.first));
-    env->SetIntField(javaResult,
-                     env->GetFieldID(resultClass, "selection", "I"),
-                     static_cast<jint>(result.second));
-    return javaResult;
+    LocalRef<jobject> output(env, requireJni(env, env->AllocObject(bindings.clickType)));
+    LocalRef<jstring> text(env, u16string2jstring(env, result.first));
+    env->SetObjectField(output.get(), bindings.clickText, text.get());
+    env->SetIntField(output.get(), bindings.clickSelection, checkedSize(result.second));
+    checkJni(env);
+    return output.release();
 }
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-#ifdef __ANDROID__
-    spdlog::set_default_logger(spdlog::android_logger_mt("android", "CHelperNative"));
-#endif
-    return JNI_VERSION_1_6;
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env = nullptr;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
+    try {
+        bindings.initialize(env);
+        spdlog::set_default_logger(spdlog::android_logger_mt("android", "CHelperNative"));
+        return JNI_VERSION_1_6;
+    } catch (...) {
+        bindings.clear(env);
+        return JNI_ERR;
+    }
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
 Java_yancey_chelper_core_CHelperCore_create0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jobject assetManager, jstring cpack_path) {
-    if (cpack_path == nullptr) {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_create0 when cpack_path is null");
-        return reinterpret_cast<jlong>(nullptr);
-    }
-    try {
-        std::string cpackPath = jstring2string(env, cpack_path);
-        if (assetManager == nullptr) [[unlikely]] {
-            // 显式构造 string_view：Android 同时可见 createByBinary(path) 与
-            // createByBinary(string_view) 两个重载，直接传 std::string 会产生歧义
-            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(cpackPath));
-            return reinterpret_cast<jlong>(core);
-        } else {
-            AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
-            AAsset *asset = AAssetManager_open(mgr, cpackPath.c_str(), AASSET_MODE_BUFFER);
-            if (asset == nullptr) [[unlikely]] {
-                return reinterpret_cast<jlong>(nullptr);
-            }
-            auto dataFileSize = static_cast<size_t>(AAsset_getLength(asset));
-            char *buffer = new char[dataFileSize];
-            int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
-            AAsset_close(asset);
-            CHelper::CHelperCore *core = CHelper::CHelperCore::createByBinary(std::string_view(buffer, numBytesRead));
-            delete[] buffer;
-            return reinterpret_cast<jlong>(core);
-        }
-    } catch (const std::exception &e) {
-        //CPackLoadError 的 what() 内嵌原始错误与完整加载轨迹，
-        //抛成 Java 异常后由 CHelperCore.kt 拼进 init 的报错信息，直达资源包作者
-        SPDLOG_WARN("fail to init CHelper Core: {}", e.what());
-        if (const auto clazz = env->FindClass("java/lang/RuntimeException"); clazz != nullptr) {
-            env->ThrowNew(clazz, e.what());
-        }
-        return reinterpret_cast<jlong>(nullptr);
-    } catch (...) {
-        SPDLOG_WARN("fail to init CHelper Core");
-        return reinterpret_cast<jlong>(nullptr);
-    }
+    return jniCall(env, [&]() -> jlong {
+        const auto path = jstring2string(env, cpack_path);
+        // A null AssetManager denotes a filesystem path, never binary file contents.
+        const auto create = [](std::string_view data) {
+            auto pack = CHelper::serialization::createCPackByBinary(data);
+            return reinterpret_cast<jlong>(new CHelper::CHelperCore(std::move(pack)));
+        };
+        if (assetManager) return withAssetData(env, assetManager, path, create);
+        return create(CHelper::readFileToString(std::filesystem::path(path)));
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_yancey_chelper_core_CHelperCore_release0(
         [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    delete reinterpret_cast<CHelper::CHelperCore *>(pointer);
+    return jniCall(env, [&]() -> void {
+        delete reinterpret_cast<CHelper::CHelperCore *>(pointer);
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jlong JNICALL
 Java_yancey_chelper_core_CHelperCore_createContext0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jstring command) {
-    auto *core = reinterpret_cast<CHelper::CHelperCore *>(pointer);
-    if (core == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_createContext0 when core is nullptr");
-        return reinterpret_cast<jlong>(nullptr);
-    }
-    if (command == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_createContext0 when command is null");
-        return reinterpret_cast<jlong>(nullptr);
-    }
-    try {
-        auto *context = core->createContext(jstring2u16string(env, command));
-        return reinterpret_cast<jlong>(context);
-    } catch (...) {
-        SPDLOG_WARN("fail to create CommandContext");
-        return reinterpret_cast<jlong>(nullptr);
-    }
+    return jniCall(env, [&]() -> jlong {
+        const auto *core = reinterpret_cast<const CHelper::CHelperCore *>(pointer);
+        if (!core) return jlong{};
+        const JavaStringChars characters(env, command);
+        return reinterpret_cast<jlong>(core->createContext(characters.view()));
+    });
 }
 
 CHelper::Old2New::BlockFixData blockFixData0;
@@ -203,37 +270,22 @@ CHelper::Old2New::BlockFixData blockFixData0;
 extern "C" [[maybe_unused]] JNIEXPORT jboolean JNICALL
 Java_yancey_chelper_core_CHelperCore_old2newInit0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jobject assetManager, jstring blockFixDataPath) {
-    if (blockFixDataPath == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_old2newInit0 when blockFixDataPath is nullptr");
-        return false;
-    }
-    std::string blockFixDataPath0 = jstring2string(env, blockFixDataPath);
-    try {
-        AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
-        AAsset *asset = AAssetManager_open(mgr, blockFixDataPath0.c_str(), AASSET_MODE_BUFFER);
-        if (asset == nullptr) [[unlikely]] {
-            return false;
-        }
-        auto dataFileSize = static_cast<size_t>(AAsset_getLength(asset));
-        char *buffer = new char[dataFileSize];
-        int numBytesRead = AAsset_read(asset, buffer, dataFileSize);
-        AAsset_close(asset);
-        blockFixData0 = CHelper::Old2New::blockFixDataFromBinary(std::string_view(buffer, numBytesRead));
-        delete[] buffer;
-        return true;
-    } catch (const std::exception &e) {
-        return false;
-    }
+    return jniCall(env, [&]() -> jboolean {
+        return withAssetData(env, assetManager, jstring2string(env, blockFixDataPath), [](std::string_view data) -> jboolean {
+            blockFixData0 = CHelper::Old2New::blockFixDataFromBinary(data);
+            return JNI_TRUE;
+        });
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_yancey_chelper_core_CHelperCore_old2new0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jstring old) {
-    if (old == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CHelperCore_old2new0 when old is nullptr");
-        return nullptr;
-    }
-    return u16string2jstring(env, CHelper::CHelperCore::old2new(blockFixData0, jstring2u16string(env, old)));
+    return jniCall(env, [&]() -> jstring {
+        if (!old) return nullptr;
+        // Kotlin initializes this table before exposing conversion calls.
+        return u16string2jstring(env, CHelper::CHelperCore::old2new(blockFixData0, jstring2u16string(env, old)));
+    });
 }
 
 // 和CHelperCore不同，CommandContext没有可变状态，
@@ -243,129 +295,156 @@ Java_yancey_chelper_core_CHelperCore_old2new0(
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
 Java_yancey_chelper_core_CommandContext_release0(
         [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    CHelper::CHelperCore::deleteContext(reinterpret_cast<CHelper::CommandContext *>(pointer));
+    return jniCall(env, [&]() -> void {
+        CHelper::CHelperCore::deleteContext(reinterpret_cast<CHelper::CommandContext *>(pointer));
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_yancey_chelper_core_CommandContext_command0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_command0 when context is nullptr");
-        return nullptr;
-    }
-    return u16string2jstring(env, context->getCommand());
+    return jniCall(env, [&]() -> jstring {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_command0 when context is nullptr");
+            return nullptr;
+        }
+        return u16string2jstring(env, context->getCommand());
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_yancey_chelper_core_CommandContext_getStructure0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getStructure0 when context is nullptr");
-        return nullptr;
-    }
-    return u16string2jstring(env, context->getStructure());
+    return jniCall(env, [&]() -> jstring {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getStructure0 when context is nullptr");
+            return nullptr;
+        }
+        return u16string2jstring(env, context->getStructure());
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jstring JNICALL
 Java_yancey_chelper_core_CommandContext_getParamHint0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getParamHint0 when context is nullptr");
-        return nullptr;
-    }
-    return u16string2jstring(env, context->getParamHint(index));
+    return jniCall(env, [&]() -> jstring {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getParamHint0 when context is nullptr");
+            return nullptr;
+        }
+        return u16string2jstring(env, context->getParamHint(index));
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_yancey_chelper_core_CommandContext_getErrorReasons0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getErrorReasons0 when context is nullptr");
-        return errorReasons2jobjectArray(env, {});
-    }
-    return errorReasons2jobjectArray(env, context->getErrorReasons());
+    return jniCall(env, [&]() -> jobjectArray {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getErrorReasons0 when context is nullptr");
+            return errorReasons2jobjectArray(env, {});
+        }
+        return errorReasons2jobjectArray(env, context->getErrorReasons());
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_yancey_chelper_core_CommandContext_getSuggestionsSize0(
         [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestionsSize0 when context is nullptr");
-        return 0;
-    }
-    return static_cast<jint>(context->getSuggestions(index).size());
+    return jniCall(env, [&]() -> jint {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestionsSize0 when context is nullptr");
+            return 0;
+        }
+        return static_cast<jint>(context->getSuggestions(index).size());
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_yancey_chelper_core_CommandContext_getSuggestion0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index, jint which) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when context is nullptr");
-        return nullptr;
-    }
-    if (which < 0) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when which < 0");
-        return nullptr;
-    }
-    std::vector<CHelper::AutoSuggestion::Suggestion> suggestions = context->getSuggestions(index);
-    if (static_cast<jint>(suggestions.size()) <= which) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when suggestions.size() <= which");
-        return nullptr;
-    }
-    return suggestion2jobject(env, env->FindClass("yancey/chelper/core/Suggestion"), suggestions.at(which));
+    return jniCall(env, [&]() -> jobject {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when context is nullptr");
+            return nullptr;
+        }
+        if (which < 0) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when which < 0");
+            return nullptr;
+        }
+        std::vector<CHelper::AutoSuggestion::Suggestion> suggestions = context->getSuggestions(index);
+        if (static_cast<jint>(suggestions.size()) <= which) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestion0 when suggestions.size() <= which");
+            return nullptr;
+        }
+        return suggestion2jobject(env, bindings.suggestionType, suggestions[static_cast<size_t>(which)]);
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobjectArray JNICALL
 Java_yancey_chelper_core_CommandContext_getSuggestions0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestions0 when context is nullptr");
-        return suggestions2jobjectArray(env, {});
-    }
-    return suggestions2jobjectArray(env, context->getSuggestions(index));
+    return jniCall(env, [&]() -> jobjectArray {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getSuggestions0 when context is nullptr");
+            return suggestions2jobjectArray(env, {});
+        }
+        return suggestions2jobjectArray(env, context->getSuggestions(index));
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
 Java_yancey_chelper_core_CommandContext_getNodeCount0(
         [[maybe_unused]] JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getNodeCount0 when context is nullptr");
-        return 0;
-    }
-    return static_cast<jint>(context->getNodeCount());
+    return jniCall(env, [&]() -> jint {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getNodeCount0 when context is nullptr");
+            return 0;
+        }
+        return static_cast<jint>(context->getNodeCount());
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jobject JNICALL
 Java_yancey_chelper_core_CommandContext_applySuggestion0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer, jint index, jint which) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_applySuggestion0 when context is nullptr");
-        return nullptr;
-    }
-    std::optional<std::pair<std::u16string, size_t>> result = context->applySuggestion(index, which);
-    if (result.has_value()) [[likely]] {
-        return clickSuggestionResult2jobject(env, result.value());
-    } else {
-        return nullptr;
-    }
+    return jniCall(env, [&]() -> jobject {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_applySuggestion0 when context is nullptr");
+            return nullptr;
+        }
+        std::optional<std::pair<std::u16string, size_t>> result = context->applySuggestion(index, which);
+        if (result.has_value()) [[likely]] {
+            return clickSuggestionResult2jobject(env, result.value());
+        } else {
+            return nullptr;
+        }
+    });
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT jintArray JNICALL
 Java_yancey_chelper_core_CommandContext_getColors0(
         JNIEnv *env, [[maybe_unused]] jobject thiz, jlong pointer) {
-    auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
-    if (context == nullptr) [[unlikely]] {
-        SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getColors0 when context is nullptr");
-        return nullptr;
-    }
-    return syntaxTokenTypes2jintArray(env, context->getSyntaxResult().tokenTypes);
+    return jniCall(env, [&]() -> jintArray {
+        auto *context = reinterpret_cast<CHelper::CommandContext *>(pointer);
+        if (context == nullptr) [[unlikely]] {
+            SPDLOG_WARN("call Java_yancey_chelper_core_CommandContext_getColors0 when context is nullptr");
+            return nullptr;
+        }
+        return syntaxTokenTypes2jintArray(env, context->getSyntaxResult().tokenTypes);
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *) {
+    JNIEnv *env = nullptr;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) == JNI_OK) bindings.clear(env);
 }

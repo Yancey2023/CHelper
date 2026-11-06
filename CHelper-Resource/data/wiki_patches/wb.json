@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "reason": "精简worldbuilder命令简介，保留能力切换用途。",
+    "replacements": [
+        {
+            "old": "启用或禁用worldbuilder（世界建造者）能力，该能力同样可通过{{cmd|ability}}命令调整。",
+            "new": "启用或禁用worldbuilder（世界建造者）能力。",
+            "expected_matches": 1,
+            "reason": "保留命令核心用途，删除ability命令旁注。"
+        }
+    ]
+}

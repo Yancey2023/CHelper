@@ -32,6 +32,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,13 +43,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.widget.Text
 
@@ -332,33 +336,43 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel, onRequestInputFocus:
         }
 
         // 粘贴按钮——尝试通过 Compose clipboard 读取，如果失败提示手动长按粘贴
-        val composeClipboard = LocalClipboardManager.current
+        val composeClipboard = LocalClipboard.current
+        val context = LocalContext.current
+        val coroutineScope = rememberCoroutineScope()
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
-                    .clickable {
-                        // Compose ClipboardManager 在窗口有焦点时可以工作
-                        val text = try {
-                            composeClipboard.getText()?.text?.trim()
-                        } catch (_: Exception) {
-                            null
-                        }
+                modifier =
+                    Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
+                        .clickable {
+                            coroutineScope.launch {
+                                val text =
+                                    try {
+                                        composeClipboard
+                                            .getClipEntry()
+                                            ?.clipData
+                                            ?.getItemAt(0)
+                                            ?.coerceToText(context)
+                                            ?.toString()
+                                            ?.trim()
+                                    } catch (error: CancellationException) {
+                                        throw error
+                                    } catch (_: Exception) {
+                                        null
+                                    }
 
-                        if (!text.isNullOrEmpty()) {
-                            viewModel.currentBlockInput = text
-                            viewModel.toastMessage = "已粘贴"
-                        } else {
-                            viewModel.toastMessage = "无法读取剪贴板，请手动粘贴"
+                                if (!text.isNullOrEmpty()) {
+                                    viewModel.currentBlockInput = text
+                                    viewModel.toastMessage = "已粘贴"
+                                } else {
+                                    viewModel.toastMessage = "无法读取剪贴板，请手动粘贴"
+                                }
+                            }
                         }
-                    }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = "尝试从剪贴板粘贴",

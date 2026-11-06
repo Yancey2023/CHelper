@@ -585,12 +585,20 @@ namespace CHelper {
     void forEachObjectMember(glz::is_context auto &&ctx, auto &&it, auto &&end, F &&f) {
         if constexpr (Fmt == glz::JSON) {
             glz::skip_ws<Opts>(ctx, it, end);
+            if (it >= end) {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
             if (*it != '{') [[unlikely]] {
                 ctx.error = glz::error_code::expected_brace;
                 return;
             }
             ++it;
             glz::skip_ws<Opts>(ctx, it, end);
+            if (it >= end) {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
             if (*it == '}') {
                 ++it;
                 return;
@@ -605,11 +613,19 @@ namespace CHelper {
                     key = decoded;
                 }
                 glz::skip_ws<Opts>(ctx, it, end);
-                ++it;// ':'
+                if (it >= end || *it != ':') {
+                    ctx.error = glz::error_code::syntax_error;
+                    return;
+                }
+                ++it;
                 glz::skip_ws<Opts>(ctx, it, end);
                 f(key, ctx, it, end);
                 if (bool(ctx.error)) return;
                 glz::skip_ws<Opts>(ctx, it, end);
+                if (it >= end) {
+                    ctx.error = glz::error_code::unexpected_end;
+                    return;
+                }
                 if (*it == ',') {
                     ++it;
                     continue;
@@ -651,12 +667,20 @@ namespace CHelper {
     void forEachArrayElement(glz::is_context auto &&ctx, auto &&it, auto &&end, F &&f) {
         if constexpr (Fmt == glz::JSON) {
             glz::skip_ws<Opts>(ctx, it, end);
+            if (it >= end) {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
             if (*it != '[') [[unlikely]] {
                 ctx.error = glz::error_code::expected_bracket;
                 return;
             }
             ++it;
             glz::skip_ws<Opts>(ctx, it, end);
+            if (it >= end) {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
             if (*it == ']') {
                 ++it;
                 return;
@@ -665,6 +689,10 @@ namespace CHelper {
                 f(ctx, it, end);
                 if (bool(ctx.error)) return;
                 glz::skip_ws<Opts>(ctx, it, end);
+                if (it >= end) {
+                    ctx.error = glz::error_code::unexpected_end;
+                    return;
+                }
                 if (*it == ',') {
                     ++it;
                     continue;
@@ -687,9 +715,17 @@ namespace CHelper {
             if (tag >= 0x90 && tag <= 0x9f) {
                 size = tag & 0x0f;
             } else if (tag == 0xdc) {
+                if (end - it < 2) {
+                    ctx.error = glz::error_code::unexpected_end;
+                    return;
+                }
                 size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 8) | static_cast<std::uint8_t>(it[1]);
                 it += 2;
             } else if (tag == 0xdd) {
+                if (end - it < 4) {
+                    ctx.error = glz::error_code::unexpected_end;
+                    return;
+                }
                 size = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[0])) << 24) |
                        (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[1])) << 16) |
                        (static_cast<std::uint32_t>(static_cast<std::uint8_t>(it[2])) << 8) | static_cast<std::uint8_t>(it[3]);
@@ -734,7 +770,7 @@ namespace CHelper {
             skipNull<Fmt, Opts>(ctx, it, end);
             value.reset();
         } else {
-            value.emplace();
+            emplaceScopedOptional(value);
             glz::parse<Fmt>::template op<Opts>(*value, ctx, it, end);
         }
     }
@@ -807,6 +843,7 @@ namespace CHelper {
                                  glz::is_context auto &&ctx, auto &&it, auto &&end) {
         switch (type) {
             case PropertyType::STRING:
+                v.string = nullptr;
                 v.string = new CHelper::PropertyString();
                 glz::parse<CHelper::BinaryFormat>::template op<Opts>(static_cast<std::pmr::u16string &>(*v.string), ctx, it, end);
                 break;
@@ -1563,7 +1600,7 @@ namespace CHelper {
                     if (bool(ctx3.error)) [[unlikely]] {
                         return;
                     }
-                    static_cast<Node::NodeSerializable *>(node.data)->id = std::pmr::string(id.data(), id.size());
+                    static_cast<Node::NodeSerializable *>(node.data)->id = std::pmr::string(id.data(), id.size(), CPackMemoryRouter::getAllocationResource());
                     t.nodes.nodes.push_back(std::move(node));
                 });
             } else if (key == "wrappedNodes") {
@@ -1694,7 +1731,7 @@ namespace CHelper {
                     t.valid = std::nullopt;
                     return;
                 }
-                t.valid = std::make_optional<std::pmr::vector<PropertyValue>>();
+                emplaceScopedOptional(t.valid);
                 forEachArrayElement<Fmt, Opts>(ctx2, it2, end2, [&](auto &&ctx3, auto &&it3, auto &&end3) {
                     PropertyValue propertyValue;
                     PropertyType::PropertyType type = t.type;
@@ -1736,19 +1773,33 @@ namespace CHelper {
     void readBinaryProperty(Property &t, glz::is_context auto &&ctx, auto &&it, auto &&end) {
         t.release();
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.name, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
+        if (t.type > PropertyType::INTEGER) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
         readBinaryPropertyValue<Opts>(t.defaultValue, t.type, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
         bool hasValid = false;
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(hasValid, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
         if (hasValid) {
             std::uint32_t size = 0;
             glz::parse<CHelper::BinaryFormat>::template op<Opts>(size, ctx, it, end);
-            t.valid = std::make_optional<std::pmr::vector<PropertyValue>>();
+            if (bool(ctx.error)) [[unlikely]] { return; }
+            const size_t minimumValueBytes = t.type == PropertyType::BOOLEAN ? 1 : sizeof(std::uint32_t);
+            if (size > static_cast<size_t>(end - it) / minimumValueBytes) [[unlikely]] {
+                ctx.error = glz::error_code::unexpected_end;
+                return;
+            }
+            emplaceScopedOptional(t.valid);
             t.valid.value().reserve(size);
             for (std::uint32_t i = 0; i < size; ++i) {
-                PropertyValue propertyValue;
+                auto &propertyValue = t.valid.value().emplace_back();
                 readBinaryPropertyValue<Opts>(propertyValue, t.type, ctx, it, end);
-                t.valid.value().push_back(propertyValue);
+                if (bool(ctx.error)) [[unlikely]] { return; }
             }
         } else {
             t.valid = std::nullopt;
@@ -1795,7 +1846,7 @@ namespace CHelper {
                     skipNull<Fmt, Opts>(ctx2, it2, end2);
                     t.description = std::nullopt;
                 } else {
-                    t.description.emplace();
+                    emplaceScopedOptional(t.description);
                     glz::parse<Fmt>::template op<Opts>(t.description.value(), ctx2, it2, end2);
                 }
             } else if (key == "values") [[likely]] {
@@ -1814,7 +1865,7 @@ namespace CHelper {
                                                                skipNull<Fmt, Opts>(ctx4, it4, end4);
                                                                blockPropertyValueDescription.description = std::nullopt;
                                                            } else {
-                                                               blockPropertyValueDescription.description.emplace();
+                                                               emplaceScopedOptional(blockPropertyValueDescription.description);
                                                                glz::parse<Fmt>::template op<Opts>(
                                                                        blockPropertyValueDescription.description.value(),
                                                                        ctx4, it4, end4);
@@ -1863,16 +1914,31 @@ namespace CHelper {
                                             auto &&end) {
         t.release();
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.propertyName, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.description, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(t.type, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
+        if (t.type > PropertyType::INTEGER) [[unlikely]] {
+            ctx.error = glz::error_code::no_matching_variant_type;
+            return;
+        }
         std::uint32_t size = 0;
         glz::parse<CHelper::BinaryFormat>::template op<Opts>(size, ctx, it, end);
+        if (bool(ctx.error)) [[unlikely]] { return; }
+        // Each entry includes a value and at least an optional-description flag.
+        const size_t minimumEntryBytes = (t.type == PropertyType::BOOLEAN ? 1 : sizeof(std::uint32_t)) + 1;
+        if (size > static_cast<size_t>(end - it) / minimumEntryBytes) [[unlikely]] {
+            ctx.error = glz::error_code::unexpected_end;
+            return;
+        }
         t.values.reserve(size);
         for (std::uint32_t i = 0; i < size; ++i) {
-            BlockPropertyValueDescription blockPropertyValueDescription;
+            auto &blockPropertyValueDescription = t.values.emplace_back();
             readBinaryPropertyValue<Opts>(blockPropertyValueDescription.valueName, t.type, ctx, it, end);
+            if (bool(ctx.error)) [[unlikely]] { return; }
             glz::parse<CHelper::BinaryFormat>::template op<Opts>(blockPropertyValueDescription.description, ctx, it, end);
-            t.values.push_back(std::move(blockPropertyValueDescription));
+            if (bool(ctx.error)) [[unlikely]] { return; }
         }
     }
 }// namespace CHelper

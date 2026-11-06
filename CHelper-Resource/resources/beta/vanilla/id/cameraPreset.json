@@ -4,27 +4,27 @@
     "content": [
         {
             "name": "minecraft:first_person",
-            "description": "第一人称视角"
+            "description": "第一人称视角。"
         },
         {
             "name": "minecraft:fixed_boom",
-            "description": "第三人称固定视角"
+            "description": "固定镜头视角的轨道相机。"
         },
         {
             "name": "minecraft:follow_orbit",
-            "description": "第三人称越肩视角"
+            "description": "轨道相机。"
         },
         {
             "name": "minecraft:free",
-            "description": "自由视角"
+            "description": "自由视角。"
         },
         {
             "name": "minecraft:third_person",
-            "description": "第三人称背面视角"
+            "description": "第三人称视角背面。"
         },
         {
             "name": "minecraft:third_person_front",
-            "description": "第三人称正面视角"
+            "description": "第三人称视角正面。"
         }
     ]
 }

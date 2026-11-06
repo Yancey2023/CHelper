@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "reason": "将实体事件动作说明放在对应语法分支下，以便按语法字面量自动提取；说明内容沿用页面介绍。",
+    "replacements": [
+        {
+            "old": ": 必须为玩家名称或[[目标选择器]]。\n: 指定实体事件的作用对象。",
+            "new": ": 指定实体事件的作用对象。",
+            "expected_matches": 1,
+            "reason": "移除目标参数的合法词法形式限制，保留实体事件作用对象用途。"
+        },
+        {
+            "old": ": 必须为单词（其间不能夹杂空格）或用引号标记的字符串。\n: 指定命令触发的实体事件。应使用[[生成事件]]。",
+            "new": ": 指定命令触发的实体事件。应使用[[生成事件]]。",
+            "expected_matches": 1,
+            "reason": "移除事件名称的词法格式限制，保留事件名称用途及Wiki指向。"
+        },
+        {
+            "old": ": <code>event entity <target: target> <eventName: string></code>",
+            "new": ": <code>event entity <target: target> <eventName: string></code>\n:: 触发实体事件。",
+            "expected_matches": 1,
+            "reason": "给现有 entity 动作补充与页面介绍相同的简短说明，供常量节点自动匹配。"
+        },
+        {
+            "old": ": 指定实体事件的作用对象。",
+            "new": ": 指定实体事件的作用对象。brief: 事件作用对象",
+            "expected_matches": 1,
+            "reason": "brief沿用资源既有标签，明确target参数用途。"
+        },
+        {
+            "old": ": 指定命令触发的实体事件。应使用[[生成事件]]。",
+            "new": ": 指定命令触发的实体事件。brief: 实体事件名称",
+            "expected_matches": 1,
+            "reason": "删除生成事件类型限制，保留实体事件名称用途和原brief。"
+        }
+    ]
+}

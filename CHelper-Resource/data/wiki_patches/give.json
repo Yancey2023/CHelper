@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "reason": "把原有多目标分配事实限定于基岩版实际的 player 参数说明，便于按真实参数标题自动匹配。",
+    "replacements": [
+        {
+            "old": "== 用法 ==\n给予玩家指定数量的物品，若<code><targets></code>或<code>player: target</code>指定了多个目标，每个目标都会收到指定数量的物品。",
+            "new": "== 用法 ==\n给予玩家指定数量的物品。",
+            "expected_matches": 1,
+            "reason": "保留原命令用途，避免多目标事实与参数说明重复。"
+        },
+        {
+            "old": "{{argument|targets|entity|player: target|CommandSelector<Player>}}\n:{{arg desc|je=entity|amount=multiple|type=players|be=player}}",
+            "new": "{{argument|targets|entity|player: target|CommandSelector<Player>}}\n: 给予玩家指定数量的物品，若<code>player: target</code>指定了多个目标，每个目标都会收到指定数量的物品。brief: 获得物品的玩家\n:{{arg desc|je=entity|amount=multiple|type=players|be=player}}",
+            "expected_matches": 1,
+            "reason": "保留中文Wiki原用法句中的多目标数量语义，但只引用当前基岩版资源实际使用的player: target参数；移除Java版targets参数，避免跨版套用。"
+        },
+        {
+            "old": "{{argument|item|item_stack|itemName: Item|CommandItem}}\n:指定给予的物品。",
+            "new": "{{argument|item|item_stack|itemName: Item|CommandItem}}\n:指定给予的物品。brief: 物品",
+            "expected_matches": 1,
+            "reason": "brief概括itemName参数本身的用途；合并语法的数量、数据和组件分别由各自参数的短brief说明。"
+        },
+        {
+            "old": "{{argument|count|integer|amount: int|int}}\n:指定给予的物品数量。必须在{{only|je|for={{range|1个|100组}}（目标物品最大堆叠数&times;100，一般为6400）}}或{{only|be|for={{range|1|32767}}}}间（含）。若未指定，默认为1。",
+            "new": "{{argument|count|integer|amount: int|int}}\n:指定给予的物品数量。默认数量为1。brief: 数量",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定数量时的行为说明，保留数量范围和默认数值。"
+        },
+        {
+            "old": "{{argument|be=1|data: int|int}}\n:指定所给予物品的[[基岩版数据值|数据值]]。必须为介于0和32767之间的整数（含），但是当数据值对于指定的物品ID无效时，会被重置为0。若未指定，默认为0。",
+            "new": "{{argument|be=1|data: int|int}}\n:指定所给予物品的[[基岩版数据值|数据值]]。默认数据值为0。brief: 数据",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定数据值时的行为说明，保留有效范围、无效输入效果和默认数值。"
+        },
+        {
+            "old": "{{argument|be=1|components: json|Json::Value}}\n:指定所给予物品的[[基岩版物品堆叠组件|物品堆叠组件]]。",
+            "new": "{{argument|be=1|components: json|Json::Value}}\n:指定所给予物品的[[基岩版物品堆叠组件|物品堆叠组件]]。brief: 组件",
+            "expected_matches": 1,
+            "reason": "为合并语法中的components参数提供短brief，保留原有物品堆叠组件说明。"
+        },
+        {
+            "old": "指定给予的物品数量。默认数量为1。",
+            "new": "指定给予的物品数量。",
+            "expected_matches": 1,
+            "reason": "删除description中的默认数量，保留物品数量用途；brief和非文案元数据不变。"
+        },
+        {
+            "old": "默认数据值为0。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除description中的默认数据值，保留数据值用途；brief和非文案元数据不变。"
+        },
+        {
+            "new": ": 指定获得物品的玩家。brief: 获得物品的玩家",
+            "expected_matches": 1,
+            "reason": "精简目标参数用途，删除多目标分配行为旁注。",
+            "old": ": 给予玩家指定数量的物品，若<code>player: target</code>指定了多个目标，每个目标都会收到指定数量的物品。brief: 获得物品的玩家"
+        }
+    ]
+}

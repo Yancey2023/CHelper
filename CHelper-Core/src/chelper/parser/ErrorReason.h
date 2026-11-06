@@ -60,9 +60,17 @@ namespace CHelper {
 
         ErrorReasonMemoryScope *previous;
         Detail::ErrorReasonMemoryResource *memory = nullptr;
+#if defined(CHELPER_RESOURCE_AUDIT)
+        std::pmr::memory_resource *upstream;
+#endif
 
     public:
+#if defined(CHELPER_RESOURCE_AUDIT)
+        // Audit-only injection: the upstream must outlive strong and weak results.
+        explicit ErrorReasonMemoryScope(std::pmr::memory_resource *upstream = std::pmr::new_delete_resource());
+#else
         ErrorReasonMemoryScope();
+#endif
         ~ErrorReasonMemoryScope();
 
         ErrorReasonMemoryScope(const ErrorReasonMemoryScope &) = delete;

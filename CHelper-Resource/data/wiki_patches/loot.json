@@ -1,0 +1,135 @@
+{
+    "version": 1,
+    "reason": "为同一目标实体节点提供统一短标签，标注内容取自各自实体用途原句。",
+    "replacements": [
+        {
+            "old": "且应指向路径为<code>loot_tables/loot_table: string.json</code>的战利品表。",
+            "new": "且应指向<code>loot_tables/<loot_table>.json</code>路径下的战利品表。",
+            "reason": "中文 Wiki 的参数段明确写出目录为 loot_tables/，对应语法参数名是 loot_table；string 是参数类型，不是路径名的一部分。将类型标注从路径占位符中去掉，仅保留参数名，不推断其它目录或扩展名。"
+        },
+        {
+            "old": ": 指定用来模拟杀死生物或获取战利品的工具。",
+            "new": ": 指定用于该操作的工具。brief: 工具",
+            "expected_matches": 1,
+            "reason": "精简共享工具参数用途，保留工具职责。"
+        },
+        {
+            "old": ": 指定要给予物品的一个或多个玩家。",
+            "new": ": 指定要给予物品的一个或多个玩家。brief: 接收物品的玩家",
+            "expected_matches": 1,
+            "reason": "为players参数提供简短用途brief，原有目标范围说明保留。"
+        },
+        {
+            "old": "== 参数 ==\n{{el|je|short=1}}：{{argument|loot_table|loot_table}}<br>",
+            "new": "== 参数 ==\n; 关键字 <code>loot</code>\n: 使用指定战利品表作为战利品来源。brief: 战利品来源\n\n{{el|je|short=1}}：{{argument|loot_table|loot_table}}<br>",
+            "expected_matches": 1,
+            "reason": "用中文Wiki该来源分支原文归纳同名loot字面值的用途；此处的loot是来源选择项，不是命令主描述。"
+        },
+        {
+            "old": "直接使用指定[[战利品表]]。",
+            "new": "使用指定的战利品表作为战利品来源。",
+            "expected_matches": 1,
+            "reason": "与基岩版同名loot来源用途统一概括为使用指定战利品表；战利品表参数的实际路径说明仍保留在参数段。"
+        },
+        {
+            "old": "模拟使用指定工具获取指定战利品表。",
+            "new": "使用指定的战利品表作为战利品来源。",
+            "expected_matches": 1,
+            "reason": "与Java版同名loot来源用途统一概括为使用指定战利品表；工具的具体作用保留在工具参数段。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{argument|slot|item_slot}}<br>\n{{el|be|short=1}}：{{argument|be=1|slotType: EntityEquipmentSlot|enum}}，<code>slot.container</code>和{{argument|be=1|slotId: int|int}}  \n: 指定要修改的物品栏[[槽位]]。\n: {{arg desc|je=item_slot|be=int}}",
+            "new": "{{el|je|short=1}}：{{argument|slot|item_slot}}\n: 指定要替换物品的物品栏槽位。\n\n{{el|be|short=1}}：{{argument|be=1|slotType: EntityEquipmentSlot|enum}}\n: 指定实体物品栏槽位类型。\n\n<code>slot.container</code>\n: 指定方块容器物品栏。\n\n{{argument|be=1|slotId: int|int}}\n: 指定物品栏槽位编号。",
+            "expected_matches": 1,
+            "reason": "按中文Wiki原有槽位说明区分真实语法参数：Java版slot选择物品栏槽位，基岩版slotType选择实体槽位类型，slot.container选择方块容器物品栏，slotId为编号。"
+        },
+        {
+            "old": ": 指定要清空并放入物品的连续槽位数。",
+            "new": ": 指定要清空并放入物品的连续槽位数。指定时会先清空相应数量的连续槽位，再按顺序放置物品；空物品堆叠也会正常放置。，brief: 连续槽位数",
+            "expected_matches": 1,
+            "reason": "按用户授权删除count未指定时的处理说明，保留明确指定count时的行为与槽位约束。"
+        },
+        {
+            "old": "用物品堆叠按顺序逐一替换连续的[[槽位]]。空物品堆叠会清空一个槽位。",
+            "new": "从指定槽位起按序替换物品栏槽位。",
+            "expected_matches": 2,
+            "reason": "精简replace block/entity共同用途，保留起始槽位和按序替换职责。"
+        },
+        {
+            "old": "清空指定数量的连续的[[槽位]]，并将物品按顺序放置至其中。空物品堆叠也会正常放置。若生成的物品堆叠数量超过指定的槽位数量，超出的物品堆叠直不会生成。",
+            "new": "从指定槽位起按序替换物品栏槽位。",
+            "expected_matches": 1,
+            "reason": "精简Java版replace用途，保留起始槽位和按序替换职责。"
+        },
+        {
+            "old": "清空指定数量的连续的[[槽位]]，并将物品按顺序放置至其中。空物品堆叠也会正常放置。若生成的物品堆叠数量超过指定的槽位数量，超出的物品堆叠直接忽略。要求一个实体或目标容器必须存在指定数量的连续槽位，才会进行清除和放置。",
+            "new": "从指定槽位起按序替换物品栏槽位。",
+            "expected_matches": 1,
+            "reason": "精简基岩版replace用途，保留起始槽位和按序替换职责。"
+        },
+        {
+            "old": ": 指定要模拟杀死的实体。",
+            "new": ": kill时指定被模拟杀死的实体。",
+            "expected_matches": 1,
+            "reason": "精简kill来源实体用途，并保留与replace entity目标的分支差异。"
+        },
+        {
+            "old": ": 指定要修改的一个或多个实体。",
+            "new": ": replace entity时指定要修改物品栏的实体。",
+            "expected_matches": 1,
+            "reason": "精简replace entity目标用途，并保留与kill来源实体的分支差异。"
+        },
+        {
+            "old": ": kill时指定被模拟杀死的实体。",
+            "new": ": kill时指定被模拟杀死的实体。brief: 目标实体",
+            "reason": "保留实体字段brief，应用精简后的kill来源用途。"
+        },
+        {
+            "old": ": replace entity时指定要修改物品栏的实体。",
+            "new": ": replace entity时指定要修改物品栏的实体。brief: 目标实体",
+            "reason": "保留实体字段brief，应用精简后的replace entity目标用途。"
+        },
+        {
+            "old": ": 指定要生成物品实体的位置。",
+            "new": ": insert时指定容器坐标；spawn时指定物品生成坐标。\n: brief: 容器或物品实体生成位置",
+            "expected_matches": 1,
+            "reason": "精简position参数，并保留insert与spawn分支职责。"
+        },
+        {
+            "old": ": 指定用来模拟挖掘或钓鱼的工具物品。",
+            "new": ": 指定用于该操作的工具。brief: 工具",
+            "expected_matches": 1,
+            "reason": "精简tool参数用途，保留工具职责。"
+        },
+        {
+            "old": "空物品堆叠会被直接忽略。",
+            "new": "",
+            "expected_matches": 5,
+            "reason": "删除give、insert和spawn语法说明中的空物品堆叠处理旁注，保留各目标用途。"
+        },
+        {
+            "old": "空物品堆叠也会生成，但会立即消失。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除spawn语法说明中的空物品副作用旁注，保留生成物品实体的用途。"
+        },
+        {
+            "old": "且应指向<code>loot_tables/<loot_table>.json</code>路径下的战利品表。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除loot_table路径形式旁注，保留指定战利品表的用途。"
+        },
+        {
+            "old": "可以为<code>mainhand</code>（使用执行者主手的物品）、<code>offhand</code>（使用执行者副手的物品），或指定物品ID。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除tool用途后的选项列表旁注；mainhand、offhand仍保留在参数语法中。"
+        },
+        {
+            "old": "指定时会先清空相应数量的连续槽位，再按顺序放置物品；空物品堆叠也会正常放置。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除count参数的具体槽位处理步骤，保留连续槽位数量用途。"
+        }
+    ]
+}

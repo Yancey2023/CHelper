@@ -1,0 +1,144 @@
+{
+    "version": 1,
+    "reason": "为填充方块及其方块状态组成的复合输入提供短名；具体description保留各参数原文。",
+    "replacements": [
+        {
+            "old": "== 参数 ==",
+            "new": "== 参数 ==\n; 关键字 <code>replace</code>\n: 单独使用时与默认效果相同，但在其后指定<code><filter></code>{{only|je|short=1}}或<code>replaceTileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。brief: replace模式",
+            "expected_matches": 1,
+            "reason": "自然关键词定义：fill的replace literal可单独使用，也可接筛选方块；JE语法使用filter，基岩版语法使用replaceTileName。行为与条件来自该页参数段replace选项原句，供共享literal节点提取；其他oldBlockHandling选项说明不变。"
+        },
+        {
+            "old": ": 指定用于填充该区域的方块。",
+            "new": ": 指定用于填充该区域的方块。brief: 填充方块及状态",
+            "expected_matches": 1,
+            "reason": "复合资源节点还包含blockStates输入，采用同时概括两项的短标签。"
+        },
+        {
+            "old": ": 指定方块要使用的[[方块状态]]。",
+            "new": ": 指定方块要使用的[[方块状态]]。brief: 填充方块及状态",
+            "expected_matches": 1,
+            "reason": "与复合节点中的填充方块输入使用同一短标签。"
+        },
+        {
+            "old": "源区域的体积则为",
+            "new": "填充区域的体积则为",
+            "expected_matches": 1,
+            "reason": "人工补充：将误称为“源区域”的体积对象改为本命令正在定义的填充区域；说明仍只适用于fill的from/to坐标范围。"
+        },
+        {
+            "old": ": 指定要替换的方块的方块状态。",
+            "new": ": 指定被替换方块的状态。brief: 要替换的方块及状态",
+            "expected_matches": 1,
+            "reason": "人工补充复合参数用途，并按用户授权删除未指定方块行为说明。"
+        },
+        {
+            "old": "{{argument|filter|block_predicate|tileName: Block|Block}}",
+            "new": "{{argument|filter|block_predicate|replaceTileName: Block|Block}}",
+            "expected_matches": 1,
+            "reason": "人工修复参数名职责错配：语法中的填充目标是tileName，replace分支的筛选条件则是replaceTileName；让参数标题与页面语法一致，避免提取器把筛选方块说明并入填充方块节点。"
+        },
+        {
+            "old": ": 指定将要替换的方块。若未指定，将替换填充区域内的所有方块。",
+            "new": ": 指定要替换的方块。brief: 要替换的方块及状态",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定替换方块时的行为说明，保留显式输入用途和现有brief。"
+        },
+        {
+            "old": ": 定义填充区域的两组对角方块坐标。",
+            "new": ": 定义填充区域的两组对角方块坐标。",
+            "expected_matches": 1,
+            "reason": "人工补充短名：将from/to共用的过长坐标标签缩短为准确概括其填充区域坐标用途的brief，不改各坐标说明正文。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{cd|d=pretty|outline{{!}}hollow{{!}}destroy{{!}}strict{{!}}replace{{!}}keep|replace|outline{{!}}hollow{{!}}destroy{{!}}strict}}<br>\n{{el|be|short=1}}：{{argument|be=1|oldBlockHandling: FillMode}}\n: 指定方块更改的处理方式，必须为以下其中之一：",
+            "new": "{{argument|je=1|outline|hollow|destroy|strict|replace|keep|enum}}<br>\n{{argument|be=1|oldBlockHandling: FillMode|FillMode}}\n: 指定方块更改的处理方式，必须为以下其中之一：\n: brief: 方块更改的处理方式",
+            "expected_matches": 1,
+            "reason": "把真实JE枚举值标题整理为标准参数声明，方便逐项选项说明进入枚举；保持基岩版oldBlockHandling: FillMode类型声明及同一组值。strict的仅Java条件、replace的JE/BE筛选差别仍保留在各选项原句。"
+        },
+        {
+            "old": "{{el|be|short=1}}：{{argument|be=1|from: x y z|CommandPosition}}和{{argument|be=1|to: x y z|CommandPosition}}\r\n: 定义填充区域的两组对角方块坐标。",
+            "new": "{{el|be|short=1}}：{{argument|be=1|from: x y z|CommandPosition}}\r\n: 指定填充区域一个角点的坐标。\r\n\r\n{{argument|be=1|to: x y z|CommandPosition}}\r\n: 指定与<code>from</code>相对的另一个区域角点。brief: 另一个角点",
+            "expected_matches": 1,
+            "reason": "精简to参数说明，保留它相对from的另一个区域角点用途。"
+        },
+        {
+            "old": ": 若未指定，默认用指定方块替换填充区域内所有方块（包括空气），而不以实体形式掉落被替换的方块和方块内容物。",
+            "new": ": 默认用指定方块替换填充区域内所有方块（包括空气），而不以实体形式掉落被替换的方块和方块内容物。",
+            "expected_matches": 1,
+            "reason": "按用户授权删除未指定处理方式的条件措辞，保留原有默认行为和效果。"
+        },
+        {
+            "old": ": 单独使用时与默认效果相同，但在其后指定<code><filter></code>{{only|je|short=1}}或<code>replaceTileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。brief: replace模式",
+            "new": ": 在其后指定<code><filter></code>{{only|je|short=1}}或<code>replaceTileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。brief: replace模式",
+            "expected_matches": 1,
+            "reason": "删除该关键字description中依赖默认效果的比较，保留指定筛选方块类型的用途。"
+        },
+        {
+            "old": ": 默认用指定方块替换填充区域内所有方块（包括空气），而不以实体形式掉落被替换的方块和方块内容物。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除处理方式description中的默认行为独立说明；参数用途和各枚举动作由前文及选项说明提供。"
+        },
+        {
+            "old": "。若被填充的区域没有内部（长、宽、高至少一个不足3方格）时，与默认效果相似。",
+            "new": "。",
+            "expected_matches": 2,
+            "reason": "删除hollow和outline选项中对默认效果的依赖比较，保留各选项的方块处理动作及区域条件。"
+        },
+        {
+            "old": "单独使用时与默认效果相同，但在其后指定<code><filter></code>{{only|je|short=1}}或<code>tileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。",
+            "new": "在其后指定<code><filter></code>{{only|je|short=1}}或<code>tileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。",
+            "expected_matches": 1,
+            "reason": "删除replace枚举值中依赖默认效果的比较，保留指定筛选方块类型的用途。"
+        },
+        {
+            "old": ": 构成边角的方块在此方块的坐标正方向上延伸。因此，各轴上较小的坐标将会正好贴合区域边界，但较大的坐标将会超过边界1方块，填充区域的体积则为(x<sub>大</sub> - x<sub>小</sub> + 1) × (y<sub>大</sub> - y<sub>小</sub> + 1) × (z<sub>大</sub> - z<sub>小</sub> + 1)。例如：<code>0 0 0 0 0 0</code>的体积为1方块，<code>0 0 0 1 1 1</code>与<code>1 1 1 0 0 0</code>都指定同一块8方块大小的区域。",
+            "reason": "删除填充坐标的体积推导和示例，保留from/to端点用途。",
+            "expected_matches": 1,
+            "new": ""
+        },
+        {
+            "old": ": 指定用于填充该区域的方块。brief: 填充方块及状态",
+            "reason": "精简复合填充输入说明，概括方块与状态。",
+            "expected_matches": 1,
+            "new": ": 指定填充方块及其状态。brief: 填充方块及状态"
+        },
+        {
+            "old": ": 指定方块要使用的[[方块状态]]。brief: 填充方块及状态",
+            "reason": "精简复合填充输入说明，概括方块与状态。",
+            "expected_matches": 1,
+            "new": ": 指定填充方块及其状态。brief: 填充方块及状态"
+        },
+        {
+            "old": "用指定方块替换填充区域内所有方块（包括空气），原有方块视为被无附魔的下界合金[[锹]]或[[镐]]采掘而掉落对应的物品实体形式。（这意味着只能被[[剪刀]]采集的方块，如[[藤蔓]]，不会掉落；流体方块同理。）",
+            "reason": "精简destroy枚举项，保留替换与掉落物核心动作。",
+            "expected_matches": 1,
+            "new": "替换区域内方块并生成掉落物。"
+        },
+        {
+            "old": "仅用指定方块替换填充区域外层的方块。内部方块被替换为空气。",
+            "reason": "精简hollow枚举项，保留外层和内部动作。",
+            "expected_matches": 1,
+            "new": "仅替换外层方块，内部填为空气。"
+        },
+        {
+            "old": "仅用指定方块替换填充区域外层的方块。内部方块不受影响。",
+            "reason": "精简outline枚举项，保留外层和内部动作。",
+            "expected_matches": 1,
+            "new": "仅替换外层方块，保留内部方块。"
+        },
+        {
+            "old": "在其后指定<code><filter></code>{{only|je|short=1}}或<code>tileName: Block</code>{{only|be|short=1}}可限制被替换的方块类型。",
+            "reason": "精简replace枚举项，保留后续筛选方块用途。",
+            "expected_matches": 1,
+            "new": "可在其后指定筛选方块。"
+        },
+        {
+            "old": "在放置方块时不触发自身及紧挨着的方块的方块更新和形状更新。",
+            "reason": "精简strict枚举项，保留抑制相邻方块更新的核心效果。",
+            "expected_matches": 1,
+            "new": "放置方块时不触发相邻方块更新。"
+        }
+    ]
+}

@@ -21,6 +21,8 @@
 #include "old2new/Old2New.h"
 #include <chelper/CommandContext.h>
 #include <chelper/resources/CPack.h>
+#include <concepts>
+#include <functional>
 #include <pch.h>
 
 namespace CHelper {
@@ -41,7 +43,32 @@ namespace CHelper {
     public:
         explicit CHelperCore(std::shared_ptr<const CPack> cpack);
 
-        static CHelperCore *create(const std::function<std::unique_ptr<CPack>()> &getCPack);
+        template<class Provider>
+            requires requires(Provider &getCPack) {
+                { std::invoke(getCPack) } -> std::convertible_to<std::unique_ptr<CPack>>;
+            }
+        static CHelperCore *create(Provider &&getCPack) {
+            try {
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+                const auto start = std::chrono::high_resolution_clock::now();
+#endif
+                std::unique_ptr<CPack> cPack = std::invoke(getCPack);
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+                const auto end = std::chrono::high_resolution_clock::now();
+#endif
+                //provider返回nullptr说明资源包加载失败，不允许产生内部cpack为nullptr的CHelperCore，
+                //否则后续getCPack()/createContext()会解引用空指针
+                if (cPack == nullptr) [[unlikely]] {
+                    throw std::runtime_error("getCPack returned nullptr");
+                }
+                SPDLOG_INFO("CPack load successfully ({})", FORMAT_ARG(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)));
+                return new CHelperCore(std::move(cPack));
+            } catch ([[maybe_unused]] const std::exception &e) {
+                //CPackLoadError 的 what() 已内嵌原始错误与完整加载轨迹，整体打印给资源包作者
+                SPDLOG_ERROR("{}", e.what());
+                return nullptr;
+            }
+        }
 
 #ifndef CHELPER_NO_FILESYSTEM
         static CHelperCore *createByDirectory(const std::filesystem::path &cpackPath);

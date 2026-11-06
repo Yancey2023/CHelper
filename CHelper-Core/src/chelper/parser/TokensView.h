@@ -21,7 +21,10 @@
 
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
+#include <concepts>
+#include <functional>
 #include <pch.h>
+#include <type_traits>
 
 namespace CHelper {
 
@@ -51,12 +54,18 @@ namespace CHelper {
 
         [[nodiscard]] bool isAllSpace() const;
 
-        void forEach(std::function<void(const Token &token)> function) const;
-
         template<class Function>
+            requires std::invocable<Function &, const Token &>
         void forEach(Function &&function) const {
             for (size_t i = start; i < end; ++i) {
-                function(lexerResult->allTokens[i]);
+                const Token &token = lexerResult->allTokens[i];
+                // MSVC 对 std::invoke 包装的大 lambda 会保留逐 token 调用；
+                // 普通回调直接调用，成员指针仍保留 std::invoke 的支持。
+                if constexpr (std::is_member_pointer_v<std::remove_cvref_t<Function>>) {
+                    std::invoke(function, token);
+                } else {
+                    function(token);
+                }
             }
         }
 

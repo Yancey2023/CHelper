@@ -1,0 +1,60 @@
+{
+    "version": 1,
+    "reason": "修复标题文本参数的共享提取结果，按Java文本组件、基岩纯文本message与JSON文本分别说明，并为共享时长参数分别提供可辨识的短标签；时长说明保留用途、独立默认值和单位，不包含数值边界或重复语法要求。",
+    "replacements": [
+        {
+            "old": "== 参数 ==",
+            "new": "== 参数 ==\n; 关键字 <code>clear</code>\n: 清除指定玩家屏幕标题。\n; 关键字 <code>reset</code>\n: 将指定玩家的淡入、持续、淡出时间设为默认值（10[[游戏刻]]、70游戏刻、20游戏刻）。{{in|je}}还会清空其标题和副标题。\n: brief: 标题时长重置\n; 关键字 <code>times</code>\n: 更改指定玩家屏幕标题的淡入、持续、淡出时间。\n: brief: 标题显示时长",
+            "expected_matches": 1,
+            "reason": "将同页详细信息中clear和reset两条用途句作为自然关键词定义，保留reset对JE清空标题和副标题的原条件说明；语句来源为详细信息小节原文，不添加新行为。 并将times详细信息原句也作为标准关键词定义，避免把fadeIn/stay/fadeOut三个参数用途误用作父命令说明。 times用途取自同页详细信息原句。"
+        },
+        {
+            "old": ": 指定屏幕标题的类型，必须为{{cd|actionbar}}、{{cd|subtitle}}或{{cd|title}}，描述见{{slink||详细信息}}。",
+            "new": ": 指定屏幕标题的类型，必须为以下其中之一：\n:* {{cd|actionbar}} — 在动作栏显示文本。\n:* {{cd|subtitle}} — 设置屏幕副标题文本。\n:* {{cd|title}} — 显示或修改屏幕标题。\n: brief: 标题类型",
+            "expected_matches": 1,
+            "reason": "将既有三个枚举值整理为可识别列表；人工精简每项用途，删除指回详细信息章节的自指旁注。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{argument|title|component}}<br>\n{{el|be|short=1}}：{{argument|be=1|titleText: message|CommandMessage}}或{{argument|be=1|raw json titleText: json|Json::Value}}\n: 指定标题、副标题、动作栏上方要显示的文本。\n: {{in|je}}{{arg desc|je=component}}\n: {{in|be|nc=1}}：\n:* 对于<code>titleText: message</code>，{{arg desc|be=CommandMessage}}\n:* 对于<code>raw json titleText: json</code>，{{arg desc|be=Json::Value}}",
+            "new": "{{el|je|short=1}}：{{argument|title|component}}\n: 指定标题、副标题、动作栏上方要显示的文本。brief: 标题显示文本\n: {{arg desc|je=component}}\n\n{{el|be|short=1}}：{{argument|be=1|titleText: message|CommandMessage}}\n: 指定标题、副标题、动作栏上方要显示的文本。brief: 标题显示文本\n: {{arg desc|be=CommandMessage}}\n\n{{el|be|short=1}}：{{argument|be=1|raw json titleText: json|Json::Value}}\n: 指定标题、副标题、动作栏上方要显示的JSON文本。brief: 标题JSON文本\n: {{arg desc|be=Json::Value}}",
+            "expected_matches": 1,
+            "reason": "title页面语法区分Java title文本组件、Bedrock title的message与titleraw的raw JSON参数，参数段给出CommandMessage和Json::Value类型。各自沿用参数段原句“指定标题、副标题、动作栏上方要显示的文本。”；仅在JSON分支补“JSON”以说明格式。拆分参数标题消除“或”解析出的空选项及孤立标点。"
+        },
+        {
+            "old": ": 指定要显示屏幕标题的玩家。",
+            "new": ": 指定屏幕标题操作的目标玩家。\n: brief: 目标玩家",
+            "expected_matches": 1,
+            "reason": "人工补充共享targets参数说明，按详细信息中的title/subtitle/actionbar显示、clear清除、reset重置时长并清空标题（JE）、times更改时长四类用法，说明该玩家是被操作屏幕标题的目标而非命令执行者；brief简写为目标玩家。"
+        },
+        {
+            "old": "{{el|je|short=1}}：{{argument|fadeIn|integer}}、{{argument|stay|integer}}、{{argument|fadeOut|integer}}<br>\n{{el|be|short=1}}：{{argument|be=1|fadeIn: int|int}}、{{argument|be=1|stay: int|int}}、{{argument|be=1|fadeOut: int|int}}\n: 指定屏幕标题的淡入、持续、淡出时间的时长。默认为10（0.5秒）、70（3.5秒）、20（1秒），单位[[游戏刻]]。\n: {{in|be}}单位为[[游戏刻]]，且小于0的值将被视为0。\n: {{arg desc|je=time|min=0|be=int}}",
+            "new": "{{el|je|short=1}}：{{argument|fadeIn|integer}}\n: 标题淡入时长默认为10游戏刻（0.5秒）。brief: 标题淡入时长\n: {{arg desc|je=time|min=0}}\n\n{{el|je|short=1}}：{{argument|stay|integer}}\n: 标题持续时长默认为70游戏刻（3.5秒）。brief: 标题持续时长\n: {{arg desc|je=time|min=0}}\n\n{{el|je|short=1}}：{{argument|fadeOut|integer}}\n: 标题淡出时长默认为20游戏刻（1秒）。brief: 标题淡出时长\n: {{arg desc|je=time|min=0}}\n\n{{el|be|short=1}}：{{argument|be=1|fadeIn: int|int}}\n: 标题淡入时长默认为10游戏刻（0.5秒）。brief: 标题淡入时长\n: {{arg desc|be=int}}\n\n{{el|be|short=1}}：{{argument|be=1|stay: int|int}}\n: 标题持续时长默认为70游戏刻（3.5秒）。brief: 标题持续时长\n: {{arg desc|be=int}}\n\n{{el|be|short=1}}：{{argument|be=1|fadeOut: int|int}}\n: 标题淡出时长默认为20游戏刻（1秒）。brief: 标题淡出时长\n: {{arg desc|be=int}}",
+            "expected_matches": 1,
+            "reason": "人工补充：中文Wiki按fadeIn、stay、fadeOut顺序列出默认值10/70/20游戏刻及对应0.5/3.5/1秒，基岩版说明游戏刻单位。移除负数回退和times语法必填说明，后者由syntax表达；拆开参数说明保持各自职责。"
+        },
+        {
+            "old": ": 将指定玩家的淡入、持续、淡出时间设为默认值（10[[游戏刻]]、70游戏刻、20游戏刻）。{{in|je}}还会清空其标题和副标题。",
+            "new": ": 重置指定玩家屏幕标题的淡入、持续、淡出时间。{{in|je}}还会清空其标题和副标题。",
+            "expected_matches": 2,
+            "reason": "将reset动作简化为重置用途并删除内嵌默认值，保留Java版清空标题与副标题的效果。"
+        },
+        {
+            "old": "标题淡入时长默认为10游戏刻（0.5秒）。",
+            "new": "指定标题淡入时长。单位为游戏刻。",
+            "expected_matches": 2,
+            "reason": "删除淡入时长说明中的独立默认值，保留时长用途和单位换算。"
+        },
+        {
+            "old": "标题持续时长默认为70游戏刻（3.5秒）。",
+            "new": "指定标题持续时长。单位为游戏刻。",
+            "expected_matches": 2,
+            "reason": "删除持续时长说明中的独立默认值，保留时长用途和单位换算。"
+        },
+        {
+            "old": "标题淡出时长默认为20游戏刻（1秒）。",
+            "new": "指定标题淡出时长。单位为游戏刻。",
+            "expected_matches": 2,
+            "reason": "删除淡出时长说明中的独立默认值，保留时长用途和单位换算。"
+        }
+    ]
+}

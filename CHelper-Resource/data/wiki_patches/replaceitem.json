@@ -1,0 +1,373 @@
+{
+    "version": 1,
+    "reason": "人工拆分slot.container、slotId和slotType三个不同参数的用途，并为entitySlot ID补充会影响可用性的实体适用条件；数值范围与其他约束仍由Wiki约束字段承载。",
+    "replacements": [
+        {
+            "old": ": 指定被放置于方块或实体的物品栏槽位内的物品。必须为[[基岩版数据值/物品ID|物品ID]]。",
+            "new": ": 指定被放置于方块或实体的物品栏槽位内的物品。必须为[[基岩版数据值/物品ID|物品ID]]。brief: 物品",
+            "expected_matches": 1,
+            "reason": "brief概括itemName参数本身的用途；数量、数据和组件分别由各自参数的短brief说明。"
+        },
+        {
+            "old": "<code>amount: int</code>（可选）\n: 指定被放置物品的数量。必须在1至64间（含），可以突破物品的堆叠限制。\n: 当该值突破某物品的堆叠限制时，命令仍会执行成功，但得到的总是该物品的最大堆叠数量（如执行<code>/replaceitem entity @a slot.weapon.mainhand 0 snowball 64</code>会将所有玩家的主手替换为16个雪球）。",
+            "new": "<code>amount: int</code>（可选）\n: 指定被放置物品的数量。必须在1至64间（含），可以突破物品的堆叠限制。\n: 当该值突破某物品的堆叠限制时，命令仍会执行成功，但得到的总是该物品的最大堆叠数量（如执行<code>/replaceitem entity @a slot.weapon.mainhand 0 snowball 64</code>会将所有玩家的主手替换为16个雪球）。brief: 数量",
+            "expected_matches": 1,
+            "reason": "为合并语法中的amount参数提供短brief，保留原有数量说明。"
+        },
+        {
+            "old": "<code>data: int</code>（可选）\n: 指定被放置物品的物品数据。必须为一个在-2,147,483,648至2,147,483,647间（含，不输入逗号）的整数，且在对指定物品无效时被重置为0。若未指定，默认为0。",
+            "new": "<code>data: int</code>（可选）\n: 指定被放置物品的物品数据。必须为一个在-2,147,483,648至2,147,483,647间（含，不输入逗号）的整数，且在对指定物品无效时被重置为0。若未指定，默认为0。brief: 数据",
+            "expected_matches": 1,
+            "reason": "为合并语法中的data参数提供短brief，保留原有数据说明。"
+        },
+        {
+            "old": "若未指定，默认为0。",
+            "new": "默认值为0。",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求删除data字段未指定时的条件描述，保留独立默认数值0。"
+        },
+        {
+            "old": "<code>components: json</code>（可选）\n: 指定被放置物品的[[基岩版物品堆叠组件|物品堆叠组件]]。类似于[[NBT标签]]，但仅支持{{cd|minecraft:can_place_on|minecraft:can_destroy|minecraft:item_lock|minecraft:keep_on_death|d=、}}。",
+            "new": "<code>components: json</code>（可选）\n: 指定被放置物品的[[基岩版物品堆叠组件|物品堆叠组件]]。类似于[[NBT标签]]，但仅支持{{cd|minecraft:can_place_on|minecraft:can_destroy|minecraft:item_lock|minecraft:keep_on_death|d=、}}。brief: 组件",
+            "expected_matches": 1,
+            "reason": "为合并语法中的components参数提供短brief，保留原有物品堆叠组件说明。"
+        },
+        {
+            "old": "<code>slotType: EntityEquipmentSlot</code>、<code>slot.container</code>和<code>slotId: int</code>\n: 指定要改变的物品栏槽位。有效值取决于要改变的方块或实体。\n\n: 对于方块，必须为<code>-{}-slot.container ''槽位编号''</code>，其中''槽位编号''用具体的槽位编号数值代替。\n:* [[箱子]]、[[发射器]]、[[投掷器]]、[[漏斗]]和[[陷阱箱]]左上角的槽位被编号为0，而后从左到右、从上到下递增（例如，箱子的第一行槽位被从左至右编号为0至8）。大型箱子与大型陷阱箱被视为一个整体，其槽位编号为0至53。\n:* [[酿造台]]底部槽位从左至右编号为0至2，而其顶部槽位为3。烈焰粉的槽位为4。\n:* [[熔炉]]的槽位中输入槽位编号为0，燃料槽位为1，而输出槽位为2。",
+            "new": "<code>slot.container</code>\n: 用于指定方块的容器物品栏。对于方块，必须为<code>-{}-slot.container ''槽位编号''</code>，其中''槽位编号''用具体的槽位编号数值代替。\n:* [[箱子]]、[[发射器]]、[[投掷器]]、[[漏斗]]和[[陷阱箱]]左上角的槽位被编号为0，而后从左到右、从上到下递增（例如，箱子的第一行槽位被从左至右编号为0至8）。大型箱子与大型陷阱箱被视为一个整体，其槽位编号为0至53。\n:* [[酿造台]]底部槽位从左至右编号为0至2，而其顶部槽位为3。烈焰粉的槽位为4。\n:* [[熔炉]]的槽位中输入槽位编号为0，燃料槽位为1，而输出槽位为2。\n\n<code>slotId: int</code>\n: 指定要修改的方块或实体槽位编号。槽位编号用具体的槽位编号数值代替。\n: brief: 槽位编号\n\n<code>slotType: EntityEquipmentSlot</code>\n: 指定实体物品栏的槽位类型。",
+            "expected_matches": 1,
+            "reason": "人工拆分复合参数说明：slot.container选择容器物品栏，slotId是数值编号，slotType选择实体槽位类型。避免旧资源和自动提取将三种不同参数串成同一句；数值范围及slotType可选值留在相应约束字段。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}\n| rowspan=\"6\" style=\"text-align: center;\" | 任意值",
+            "new": "| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位）\n| rowspan=\"6\" style=\"text-align: center;\" | 任意值",
+            "reason": "为外置 entitySlot 的 slot.weapon.mainhand 添加中文基岩版物品组件示例中的用途原词“惯用手栏位”；该外部来源、原文上下文和 URL 归档于 output/command_wiki/replaceitem/references/entity-slot-labels.md。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.hotbar ''槽位编号''}}\n| style=\"text-align: center;\"|0至8",
+            "new": "| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏）\n| style=\"text-align: center;\"|0至8",
+            "reason": "为外置 entitySlot 的 slot.hotbar 使用中文命令示例原词“快捷栏”；对应原文上下文和 URL 归档于 output/command_wiki/replaceitem/references/entity-slot-labels.md。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}\n|-",
+            "new": "| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手）\n|-",
+            "reason": "为外置 entitySlot 的 slot.weapon.offhand 使用中文命令示例原词“副手”；对应原文上下文和 URL 归档于 output/command_wiki/replaceitem/references/entity-slot-labels.md。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.inventory ''槽位编号''}}\n| style=\"text-align: center;\" | 0至物品栏的槽位上限",
+            "new": "| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏）\n| style=\"text-align: center;\" | 0至物品栏的槽位上限",
+            "reason": "为外置 entitySlot 的 slot.inventory 使用中文命令示例原词“物品栏”；对应原文上下文和 URL 归档于 output/command_wiki/replaceitem/references/entity-slot-labels.md。"
+        },
+        {
+            "old": ": 对于实体，必须为下列之一，其中''槽位编号''用具体的槽位编号数值代替：",
+            "new": ": 实体槽位类型见下表。",
+            "reason": "将实体槽位表的引导说明改为明确指向下表；槽位编号占位符的说明已放在slotId参数下，实体表仅列出slotType的有效类型及适用范围。"
+        },
+        {
+            "old": ": 必须是下列之一：\n:* <code>destroy</code> - 忽略指定槽位中的原始物品，直接进行替换。\n:* <code>keep</code> - 如果一个物品占用了该槽位，则不进行替换。",
+            "new": ": 指定如何处理指定槽位中的原有物品。必须为以下其中之一：\n:* <code>destroy</code> - 忽略指定槽位中的原始物品，直接进行替换。\n:* <code>keep</code> - 如果一个物品占用了该槽位，则不进行替换。\n: brief: 原物品处理方式",
+            "reason": "补全oldItemHandling参数段的自然用途说明：两个原文选项都处理指定槽位的原有物品；并将枚举引导统一为提取器识别的句式。brief为选项用途短名。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.enderchest ''槽位编号''}}",
+            "new": "| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏）",
+            "expected_matches": 1,
+            "reason": "人工补充简短用途标签；按该表相邻的实体适用范围表述，不把限制推广至所有实体。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.saddle ''槽位编号''}}",
+            "new": "| {{cd|-{}-slot.saddle ''槽位编号''}}（驯服马、驴、骡的鞍槽）",
+            "expected_matches": 1,
+            "reason": "人工补充简短用途标签；按该表相邻的实体适用范围表述，不把限制推广至所有实体。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.armor ''槽位编号''}}",
+            "new": "| {{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽）",
+            "expected_matches": 1,
+            "reason": "人工补充简短用途标签；按该表相邻的实体适用范围表述，不把限制推广至所有实体。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.chest ''槽位编号''}}",
+            "new": "| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位，仅装备箱子的羊驼、驴和骡；通过 /replaceitem 或 /loot 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2）",
+            "expected_matches": 1,
+            "reason": "使slot.chest在参数说明和实体槽位目录中的用途描述一致，并将中文Wiki明确记载的-1至箱子大小减2范围表述为受漏洞影响时的槽位编号范围，限定于通过replaceitem或loot操作已装备箱子的羊驼、驴、骡槽位；来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": "| 仅驮箱子的[[驴]]和[[骡]]",
+            "new": "| 仅装备箱子的[[羊驼]]、[[驴]]和[[骡]]",
+            "expected_matches": 1,
+            "reason": "修正 slot.chest 适用实体遗漏：中文《装备槽位组》明确列出仅装备箱子的羊驼、驴和骡；羊驼早在基岩版1.1.0.0加入，早于本资源支持的最低版本1.21.50.07。来源：https://zh.minecraft.wiki/w/装备槽位组；历史：https://zh.minecraft.wiki/w/繁殖。"
+        },
+        {
+            "old": "| 仅[[玩家]]、[[村民]]、[[猪灵]]、[[熊猫]]、[[悦灵]]、[[漏斗矿车]]、[[运输矿车]]、[[命令方块矿车]]，以及驯服的[[马]]、[[驴]]、[[骡]]和[[羊驼]]",
+            "new": "| 仅带有<code>minecraft:inventory</code>组件的实体",
+            "expected_matches": 1,
+            "reason": "用中文《装备槽位组》当前命令槽位表对 slot.inventory 的直接条件替换旧硬编码实体清单：仅带有 minecraft:inventory 组件的实体。该表也给出索引范围0至物品栏大小减1；此处仅更新适用条件。来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": "| style=\"text-align: center;\" | 0至14",
+            "new": "| style=\"text-align: center;\" | 0至箱子空间减1；<code>/replaceitem</code>和<code>/loot</code>存在漏洞，槽位编号为-1至箱子大小减2",
+            "expected_matches": 1,
+            "reason": "修正 slot.chest 的槽位编号说明。中文《装备槽位组》列出一般范围0至箱子空间减1，并明确 /replaceitem 与 /loot 存在漏洞，槽位编号实际为-1至箱子大小减2；此限定只修复slot.chest，不推广至其他槽位或旧版本。来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": ": 实体槽位类型见下表。",
+            "new": ": 实体槽位类型见下表。\n:* <code>slot.weapon.mainhand</code> — 惯用手栏位，仅盔甲架、生物及玩家\n:* <code>slot.weapon.offhand</code> — 副手，仅盔甲架、生物及玩家\n:* <code>slot.armor.head</code> — 头盔，仅盔甲架、生物及玩家\n:* <code>slot.armor.body</code> — 身体装备栏位，狼铠储存于此\n:* <code>slot.armor.chest</code> — 胸甲，仅盔甲架、生物及玩家\n:* <code>slot.armor.legs</code> — 护腿，仅盔甲架、生物及玩家\n:* <code>slot.armor.feet</code> — 靴子，仅盔甲架、生物及玩家\n:* <code>slot.enderchest</code> — 玩家末影箱物品栏，仅玩家\n:* <code>slot.hotbar</code> — 快捷栏，仅玩家\n:* <code>slot.inventory</code> — 物品栏，仅带有<code>minecraft:inventory</code>组件的实体\n:* <code>slot.saddle</code> — 已驯服的马、驴和骡的马鞍槽位\n:* <code>slot.armor</code> — 驯服马的马铠槽，仅驯服的马\n:* <code>slot.chest</code> — 箱子栏位，仅装备箱子的羊驼、驴和骡；通过 <code>/replaceitem</code> 或 <code>/loot</code> 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2",
+            "expected_matches": 1,
+            "reason": "人工补充 replaceitem 实际支持的 entitySlot 用途和适用范围。slot.saddle 保留仅适用于已驯服马、驴、骡的条件，与中文《装备槽位组》对应行一致。slot.chest 的-1至箱子大小减2范围依据中文《装备槽位组》明确记载的命令漏洞，仅限定于 /replaceitem 与 /loot 操作带箱子的羊驼、驴、骡槽位；来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": "{{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位）",
+            "new": "{{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手）",
+            "new": "{{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.armor.head ''槽位编号''}}（头盔）",
+            "new": "{{cd|-{}-slot.armor.head ''槽位编号''}}（头盔，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲）",
+            "new": "{{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿）",
+            "new": "{{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子）",
+            "new": "{{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子，仅盔甲架、生物及玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的rowspan适用实体限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏）",
+            "new": "{{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏，仅玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的仅玩家限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏）",
+            "new": "{{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏，仅玩家）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的仅玩家限制一致。"
+        },
+        {
+            "old": "{{cd|-{}-slot.inventory ''槽位编号''}}（物品栏）",
+            "new": "{{cd|-{}-slot.inventory ''槽位编号''}}（物品栏，仅带有minecraft:inventory组件的实体）",
+            "reason": "依据中文《装备槽位组》对 slot.inventory 的直接适用条件更新用途说明：仅带有 minecraft:inventory 组件的实体。来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": "{{cd|-{}-slot.saddle ''槽位编号''}}（驯服马、驴、骡的鞍槽）",
+            "new": "{{cd|-{}-slot.saddle ''槽位编号''}}（已驯服的马、驴和骡的马鞍槽位）",
+            "reason": "将鞍槽用途与明确实体条件合并为自然句，保留仅适用于已驯服马、驴和骡的限定；依据中文《装备槽位组》slot.saddle对应行。"
+        },
+        {
+            "old": "{{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽）",
+            "new": "{{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽，仅驯服的马）",
+            "reason": "人工补充entitySlot目录用途说明，与下方表格的实体限制一致。"
+        },
+        {
+            "old": "| {{cd|-{}-slot.equippable ''槽位编号''}}\n| style=\"text-align: center;\" | 0至1仅[[目标选择器#物品|<code>hasitem</code>]]\n| 0：仅[[马]]、[[驴]]和[[骡]]；''物品名''必须为[[鞍]]或[[空气]]<br>1：仅[[马]]和[[羊驼]]；''物品名''必须属于[[马铠]]（马）、[[地毯]]（羊驼）或[[空气]]\n|}",
+            "new": "|}\n: 本命令不支持的值：<code>slot.equippable</code>。\n: <code>slot.equippable</code> 仅用于目标选择器的 <code>hasitem</code> 物品槽位条件。<code>/replaceitem</code> 和 <code>/loot</code> 均不支持此槽位类型。",
+            "expected_matches": 1,
+            "reason": "中文《装备槽位组》明确指出 /replaceitem 和 /loot 不支持 slot.equippable；它只用于 hasitem 条件，因此从 /replaceitem 有效槽位表删除该行并在表外注明。来源：https://zh.minecraft.wiki/w/装备槽位组。"
+        },
+        {
+            "old": "指定要改变的实体。必须为一个玩家名或[[目标选择器]]。",
+            "new": "指定要改变的实体。",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除target description中的输入形式限制；保留实体目标用途，目标选择器元数据不改。"
+        },
+        {
+            "old": "指定被放置于方块或实体的物品栏槽位内的物品。必须为[[基岩版数据值/物品ID|物品ID]]。brief: 物品",
+            "new": "指定被放置于方块或实体的物品栏槽位内的物品。brief: 物品",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除itemName description中的格式限制；物品用途和brief保留。"
+        },
+        {
+            "old": "指定被放置物品的数量。必须在1至64间（含），可以突破物品的堆叠限制。\n: 当该值突破某物品的堆叠限制时，命令仍会执行成功，但得到的总是该物品的最大堆叠数量（如执行<code>/replaceitem entity @a slot.weapon.mainhand 0 snowball 64</code>会将所有玩家的主手替换为16个雪球）。brief: 数量",
+            "new": "指定被放置物品的数量，可以突破物品的堆叠限制。brief: 数量",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除amount的上下界及越过物品堆叠数后的裁剪描述；数量用途与允许高于通常堆叠数的说明保留。"
+        },
+        {
+            "old": "指定被放置物品的物品数据。必须为一个在-2,147,483,648至2,147,483,647间（含，不输入逗号）的整数，且在对指定物品无效时被重置为0。默认值为0。brief: 数据",
+            "new": "指定被放置物品的物品数据。默认值为0。brief: 数据",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除data的整数范围和无效值回退说明；数据用途及独立默认值保留，未修改字段元数据。"
+        },
+        {
+            "old": "指定被放置物品的[[基岩版物品堆叠组件|物品堆叠组件]]。类似于[[NBT标签]]，但仅支持{{cd|minecraft:can_place_on|minecraft:can_destroy|minecraft:item_lock|minecraft:keep_on_death|d=、}}。brief: 组件",
+            "new": "指定被放置物品的[[基岩版物品堆叠组件|物品堆叠组件]]，类似于[[NBT标签]]。brief: 组件",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除components的合法值白名单；保留物品堆叠组件用途及其与NBT标签的关系。"
+        },
+        {
+            "old": ": 实体槽位类型见下表。\n:* <code>slot.weapon.mainhand</code> — 惯用手栏位，仅盔甲架、生物及玩家\n:* <code>slot.weapon.offhand</code> — 副手，仅盔甲架、生物及玩家\n:* <code>slot.armor.head</code> — 头盔，仅盔甲架、生物及玩家\n:* <code>slot.armor.body</code> — 身体装备栏位，狼铠储存于此\n:* <code>slot.armor.chest</code> — 胸甲，仅盔甲架、生物及玩家\n:* <code>slot.armor.legs</code> — 护腿，仅盔甲架、生物及玩家\n:* <code>slot.armor.feet</code> — 靴子，仅盔甲架、生物及玩家\n:* <code>slot.enderchest</code> — 玩家末影箱物品栏，仅玩家\n:* <code>slot.hotbar</code> — 快捷栏，仅玩家\n:* <code>slot.inventory</code> — 物品栏，仅带有<code>minecraft:inventory</code>组件的实体\n:* <code>slot.saddle</code> — 已驯服的马、驴和骡的马鞍槽位\n:* <code>slot.armor</code> — 驯服马的马铠槽，仅驯服的马\n:* <code>slot.chest</code> — 箱子栏位，仅装备箱子的羊驼、驴和骡；通过 <code>/replaceitem</code> 或 <code>/loot</code> 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2",
+            "new": ": 实体槽位类型见下表。\n:* <code>slot.weapon.mainhand</code> — 惯用手栏位\n:* <code>slot.weapon.offhand</code> — 副手\n:* <code>slot.armor.head</code> — 头盔\n:* <code>slot.armor.body</code> — 身体装备栏位，狼铠储存于此\n:* <code>slot.armor.chest</code> — 胸甲\n:* <code>slot.armor.legs</code> — 护腿\n:* <code>slot.armor.feet</code> — 靴子\n:* <code>slot.enderchest</code> — 玩家末影箱物品栏\n:* <code>slot.hotbar</code> — 快捷栏\n:* <code>slot.inventory</code> — 物品栏\n:* <code>slot.saddle</code> — 马鞍槽位\n:* <code>slot.armor</code> — 马铠槽\n:* <code>slot.chest</code> — 箱子栏位",
+            "expected_matches": 1,
+            "reason": "按本轮授权清理entitySlot目录中的目标类型/组件资格、槽位编号上下界与漏洞影响说明。保留13个槽位枚举值及各自的栏位用途；玩家末影箱条目保留其用途对象，未知值排除标记和固定枚举结构均保留。"
+        },
+        {
+            "old": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位，仅盔甲架、生物及玩家）\n| rowspan=\"6\" style=\"text-align: center;\" | 任意值\n| rowspan=\"6\" | 仅[[盔甲架]]、[[生物]]及[[玩家]]（虽然并非所有生物会显示或利用这些物品）\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏，仅玩家）\n| style=\"text-align: center;\" | 0至26\n| rowspan=\"2\" | 仅[[玩家]]\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏，仅玩家）\n| style=\"text-align: center;\"|0至8\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏，仅带有minecraft:inventory组件的实体）\n| style=\"text-align: center;\" | 0至物品栏的槽位上限\n| 仅带有<code>minecraft:inventory</code>组件的实体\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（已驯服的马、驴和骡的马鞍槽位）\n| style=\"text-align: center;\" | 任意值\n| 仅驯服的[[马]]、[[驴]]和[[骡]]；''物品名''必须为[[鞍]]或[[空气]]\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽，仅驯服的马）\n| style=\"text-align: center;\" | 0至1\n| 仅驯服的[[马]]；''物品名''必须属于[[马铠]]或[[空气]]\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位，仅装备箱子的羊驼、驴和骡；通过 /replaceitem 或 /loot 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2）\n| style=\"text-align: center;\" | 0至箱子空间减1；<code>/replaceitem</code>和<code>/loot</code>存在漏洞，槽位编号为-1至箱子大小减2\n| 仅装备箱子的[[羊驼]]、[[驴]]和[[骡]]\n|-\n|}",
+            "new": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位）\n| rowspan=\"6\" style=\"text-align: center;\" |\n| rowspan=\"6\" |\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏）\n| style=\"text-align: center;\" |\n| rowspan=\"2\" |\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏）\n| style=\"text-align: center;\"|\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（马鞍槽位）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（马铠槽）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位）\n| style=\"text-align: center;\" |\n|\n|-\n|}",
+            "expected_matches": 1,
+            "reason": "按本轮授权清理entitySlot示意表中的数字上下界、越界漏洞和目标/物品资格限制。保留表头、所有槽位行与列结构，并使表中各槽位用途与前面的枚举选项一致。"
+        },
+        {
+            "old": "指定被放置物品的数量，可以突破物品的堆叠限制。brief: 数量",
+            "new": "指定被放置物品的数量。brief: 数量",
+            "expected_matches": 1,
+            "reason": "在删除堆叠上限回退说明后，移除会暗示可超出堆叠上限的残余语句；保留纯数量用途。"
+        },
+        {
+            "old": "默认值为0。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按本轮授权删除物品data description中的独立默认数值；物品数据用途保留。"
+        },
+        {
+            "old": "替换方块（箱子、熔炉等）或实体（玩家或生物）物品栏内的物品。",
+            "new": "替换方块或实体物品栏中的物品。",
+            "expected_matches": 1,
+            "reason": "精简命令简介，删除对象举例。"
+        },
+        {
+            "old": "可用[[坐标#相对坐标|波浪号]]（<code>~ ~ ~</code>）或[[坐标#局部坐标|脱字符]]（<code>^ ^ ^</code>）来指定一个相对于命令执行处的位置。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "保留方块坐标用途，删除坐标写法举例。"
+        },
+        {
+            "old": "用于指定方块的容器物品栏。",
+            "new": "指定方块容器的物品栏槽位。",
+            "expected_matches": 1,
+            "reason": "保留容器槽位用途，删除冗余措辞。"
+        },
+        {
+            "old": "槽位编号用具体的槽位编号数值代替。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除槽位编号重复说明。"
+        },
+        {
+            "old": "本命令不支持的值：<code>slot.equippable</code>。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "按本轮要求删除unsupported槽位值例外旁注；已有槽位枚举不变。"
+        },
+        {
+            "old": "<code>slot.equippable</code> 仅用于目标选择器的 <code>hasitem</code> 物品槽位条件。<code>/replaceitem</code> 和 <code>/loot</code> 均不支持此槽位类型。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除槽位参数的例外及旁注，不改变现有枚举选项。"
+        },
+        {
+            "old": "忽略指定槽位中的原始物品，直接进行替换。",
+            "new": "替换槽位中的原有物品。",
+            "expected_matches": 1,
+            "reason": "保留destroy选项的核心动作。"
+        },
+        {
+            "old": "如果一个物品占用了该槽位，则不进行替换。",
+            "new": "保留槽位中的现有物品。",
+            "expected_matches": 1,
+            "reason": "保留keep选项的核心动作。"
+        },
+        {
+            "old": "对于方块，必须为<code>-{}-slot.container ''槽位编号''</code>，其中''槽位编号''用具体的槽位编号数值代替。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除slot.container的语法重复说明，保留槽位用途。"
+        },
+        {
+            "old": "[[箱子]]、[[发射器]]、[[投掷器]]、[[漏斗]]和[[陷阱箱]]左上角的槽位被编号为0，而后从左到右、从上到下递增（例如，箱子的第一行槽位被从左至右编号为0至8）。大型箱子与大型陷阱箱被视为一个整体，其槽位编号为0至53。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除slot.container编号长列表和举例。"
+        },
+        {
+            "old": "[[酿造台]]底部槽位从左至右编号为0至2，而其顶部槽位为3。烈焰粉的槽位为4。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除slot.container编号长列表和举例。"
+        },
+        {
+            "old": "[[熔炉]]的槽位中输入槽位编号为0，燃料槽位为1，而输出槽位为2。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除slot.container编号长列表和举例。"
+        },
+        {
+            "old": "指定要修改的方块或实体槽位编号。",
+            "new": "指定方块或实体物品栏的槽位编号。",
+            "expected_matches": 1,
+            "reason": "保留槽位编号用途，精简重复措辞。"
+        },
+        {
+            "old": "身体装备栏位，狼铠储存于此",
+            "new": "身体装备栏位",
+            "expected_matches": 1,
+            "reason": "保留entitySlot枚举项的槽位用途，删除物品示例旁注。"
+        },
+        {
+            "old": "指定被放置于方块或实体的物品栏槽位内的物品。",
+            "new": "指定要放入槽位的物品。",
+            "expected_matches": 1,
+            "reason": "保留组合ITEM节点中物品部分的简短用途。"
+        },
+        {
+            "old": "指定被放置物品的数量。",
+            "new": "指定物品数量。",
+            "expected_matches": 1,
+            "reason": "保留组合ITEM节点中数量部分的简短用途。"
+        },
+        {
+            "old": "指定被放置物品的物品数据。",
+            "new": "指定物品数据。",
+            "expected_matches": 1,
+            "reason": "保留组合ITEM节点中数据部分的简短用途。"
+        },
+        {
+            "old": "指定被放置物品的[[基岩版物品堆叠组件|物品堆叠组件]]，类似于[[NBT标签]]。",
+            "new": "指定物品组件。",
+            "expected_matches": 1,
+            "reason": "保留组合ITEM节点中组件部分的简短用途，删除类比旁注。"
+        },
+        {
+            "old": "实体槽位类型见下表。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "保留slotType的用途，删除跨页列表旁注。"
+        },
+        {
+            "old": ": \n:* <code>slot.weapon.mainhand</code>",
+            "new": ": 必须为以下其中之一：\n:* <code>slot.weapon.mainhand</code>",
+            "expected_matches": 1,
+            "reason": "恢复entitySlot目录必需的固定枚举引导；下方13个原有槽位选项及其短用途保持不变。"
+        },
+        {
+            "old": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位）\n| rowspan=\"6\" style=\"text-align: center;\" |\n| rowspan=\"6\" |\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏）\n| style=\"text-align: center;\" |\n| rowspan=\"2\" |\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏）\n| style=\"text-align: center;\"|\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（马鞍槽位）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（马铠槽）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位）\n| style=\"text-align: center;\" |\n|\n|-\n|}",
+            "new": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位，仅盔甲架、生物及玩家）\n| rowspan=\"6\" style=\"text-align: center;\" | 任意值\n| rowspan=\"6\" | 仅[[盔甲架]]、[[生物]]及[[玩家]]（虽然并非所有生物会显示或利用这些物品）\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏，仅玩家）\n| style=\"text-align: center;\" | 0至26\n| rowspan=\"2\" | 仅[[玩家]]\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏，仅玩家）\n| style=\"text-align: center;\"|0至8\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏，仅带有minecraft:inventory组件的实体）\n| style=\"text-align: center;\" | 0至物品栏的槽位上限\n| 仅带有<code>minecraft:inventory</code>组件的实体\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（已驯服的马、驴和骡的马鞍槽位）\n| style=\"text-align: center;\" | 任意值\n| 仅驯服的[[马]]、[[驴]]和[[骡]]；''物品名''必须为[[鞍]]或[[空气]]\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽，仅驯服的马）\n| style=\"text-align: center;\" | 0至1\n| 仅驯服的[[马]]；''物品名''必须属于[[马铠]]或[[空气]]\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位，仅装备箱子的羊驼、驴和骡；通过 /replaceitem 或 /loot 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2）\n| style=\"text-align: center;\" | 0至箱子空间减1；<code>/replaceitem</code>和<code>/loot</code>存在漏洞，槽位编号为-1至箱子大小减2\n| 仅装备箱子的[[羊驼]]、[[驴]]和[[骡]]\n|-\n|}",
+            "expected_matches": 1,
+            "reason": "恢复entitySlot来源表格的完整行列结构和已有槽位映射，确保目录选项不因表格结构精简而丢失；未修改目录ID或字段元数据。"
+        },
+        {
+            "old": ":* <code>slot.chest</code> — 箱子栏位",
+            "new": ":* <code>slot.chest</code> — 箱子栏位\n: 本命令不支持的值：<code>slot.equippable</code>。",
+            "expected_matches": 1,
+            "reason": "恢复entitySlot的不支持值标记，保留所有自然槽位枚举和目录排除语义。"
+        },
+        {
+            "old": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位，仅盔甲架、生物及玩家）\n| rowspan=\"6\" style=\"text-align: center;\" | 任意值\n| rowspan=\"6\" | 仅[[盔甲架]]、[[生物]]及[[玩家]]（虽然并非所有生物会显示或利用这些物品）\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子，仅盔甲架、生物及玩家）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏，仅玩家）\n| style=\"text-align: center;\" | 0至26\n| rowspan=\"2\" | 仅[[玩家]]\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏，仅玩家）\n| style=\"text-align: center;\"|0至8\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏，仅带有minecraft:inventory组件的实体）\n| style=\"text-align: center;\" | 0至物品栏的槽位上限\n| 仅带有<code>minecraft:inventory</code>组件的实体\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（已驯服的马、驴和骡的马鞍槽位）\n| style=\"text-align: center;\" | 任意值\n| 仅驯服的[[马]]、[[驴]]和[[骡]]；''物品名''必须为[[鞍]]或[[空气]]\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（驯服马的马铠槽，仅驯服的马）\n| style=\"text-align: center;\" | 0至1\n| 仅驯服的[[马]]；''物品名''必须属于[[马铠]]或[[空气]]\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位，仅装备箱子的羊驼、驴和骡；通过 /replaceitem 或 /loot 操作此类带箱子的实体槽位时，受该漏洞影响，槽位编号范围为-1至箱子大小减2）\n| style=\"text-align: center;\" | 0至箱子空间减1；<code>/replaceitem</code>和<code>/loot</code>存在漏洞，槽位编号为-1至箱子大小减2\n| 仅装备箱子的[[羊驼]]、[[驴]]和[[骡]]\n|-\n|}",
+            "new": "{| class=\"wikitable\" data-description=\"Slot information\"\n! 槽位\n! 槽位编号\n! 限制\n|-\n| {{cd|-{}-slot.weapon.mainhand ''槽位编号''}}（惯用手栏位）\n| rowspan=\"7\" style=\"text-align: center;\" |\n| rowspan=\"7\" |\n|-\n| {{cd|-{}-slot.weapon.offhand ''槽位编号''}}（副手）\n|-\n| {{cd|-{}-slot.armor.head ''槽位编号''}}（头盔）\n|-\n| {{cd|-{}-slot.armor.body ''槽位编号''}}（身体装备栏位）\n|-\n| {{cd|-{}-slot.armor.chest ''槽位编号''}}（胸甲）\n|-\n| {{cd|-{}-slot.armor.legs ''槽位编号''}}（护腿）\n|-\n| {{cd|-{}-slot.armor.feet ''槽位编号''}}（靴子）\n|-\n| {{cd|-{}-slot.enderchest ''槽位编号''}}（玩家末影箱物品栏）\n| style=\"text-align: center;\" |\n| rowspan=\"2\" |\n|-\n| {{cd|-{}-slot.hotbar ''槽位编号''}}（快捷栏）\n| style=\"text-align: center;\"|\n|-\n| {{cd|-{}-slot.inventory ''槽位编号''}}（物品栏）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.saddle ''槽位编号''}}（马鞍槽位）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.armor ''槽位编号''}}（马铠槽）\n| style=\"text-align: center;\" |\n|\n|-\n| {{cd|-{}-slot.chest ''槽位编号''}}（箱子栏位）\n| style=\"text-align: center;\" |\n|\n|-\n|}",
+            "expected_matches": 1,
+            "reason": "保留entitySlot完整表格行列和全部槽位用途，并使表格与13个枚举项的短用途一致，消除重复用途歧义；未改目录ID或元数据。"
+        }
+    ]
+}

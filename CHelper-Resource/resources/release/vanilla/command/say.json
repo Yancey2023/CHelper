@@ -1,17 +1,18 @@
 {
-  "name": [
-    "say"
-  ],
-  "description": "通过聊天框向多个玩家发送消息",
-  "syntax": [
-    "/say <message: message>"
-  ],
-  "node": {
-    "<message: message>": {
-      "type": "STRING",
-      "description": "消息",
-      "canContainSpace": true,
-      "ignoreLater": true
+    "name": [
+        "say"
+    ],
+    "description": "通过聊天框向多个玩家发送消息。",
+    "syntax": [
+        "/say <message: message>"
+    ],
+    "node": {
+        "<message: message>": {
+            "type": "STRING",
+            "description": "要发送的聊天消息。",
+            "canContainSpace": true,
+            "ignoreLater": true,
+            "brief": "要发送的聊天消息"
+        }
     }
-  }
 }

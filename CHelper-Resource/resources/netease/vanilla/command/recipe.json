@@ -1,52 +1,54 @@
 {
-  "name": [
-    "recipe"
-  ],
-  "description": "给予或剥夺（解锁或锁定）玩家的合成配方",
-  "syntax": [
-    "/recipe give <player: target> *",
-    "/recipe give <player: target> <recipe: string>",
-    "/recipe take <player: target> *",
-    "/recipe take <player: target> <recipe: string>"
-  ],
-  "node": {
-    "give": {
-      "type": "TEXT",
-      "description": "对玩家给予（解锁）指定合成配方",
-      "data": {
-        "name": "give",
-        "description": "对玩家给予（解锁）指定合成配方"
-      }
-    },
-    "<player: target>": {
-      "type": "TARGET_SELECTOR",
-      "description": "玩家",
-      "isOnlyOne": false,
-      "isMustPlayer": true,
-      "isMustNPC": false,
-      "isWildcard": false
-    },
-    "<recipe: string>": {
-      "type": "NORMAL_ID",
-      "description": "配方",
-      "ignoreError": true,
-      "key": "recipe"
-    },
-    "take": {
-      "type": "TEXT",
-      "description": "对玩家剥夺（锁定）指定合成配方",
-      "data": {
-        "name": "take",
-        "description": "对玩家剥夺（锁定）指定合成配方"
-      }
-    },
-    "*": {
-      "type": "TEXT",
-      "description": "配方",
-      "data": {
-        "name": "*",
-        "description": "全部配方"
-      }
+    "name": [
+        "recipe"
+    ],
+    "description": "给予或剥夺玩家的配方。",
+    "syntax": [
+        "/recipe give <player: target> *",
+        "/recipe give <player: target> <recipe: string>",
+        "/recipe take <player: target> *",
+        "/recipe take <player: target> <recipe: string>"
+    ],
+    "node": {
+        "give": {
+            "type": "TEXT",
+            "description": "为玩家解锁配方。",
+            "data": {
+                "name": "give",
+                "description": "为玩家解锁配方。"
+            }
+        },
+        "<player: target>": {
+            "type": "TARGET_SELECTOR",
+            "description": "指定要给予或剥夺配方的玩家。",
+            "isOnlyOne": false,
+            "isMustPlayer": true,
+            "isMustNPC": false,
+            "isWildcard": false,
+            "brief": "要给予或剥夺配方的玩家"
+        },
+        "<recipe: string>": {
+            "type": "NORMAL_ID",
+            "description": "指定要给予或剥夺的配方。",
+            "ignoreError": true,
+            "key": "recipe",
+            "brief": "要给予或剥夺的配方"
+        },
+        "take": {
+            "type": "TEXT",
+            "description": "锁定玩家的配方。",
+            "data": {
+                "name": "take",
+                "description": "锁定玩家的配方。"
+            }
+        },
+        "*": {
+            "type": "TEXT",
+            "description": "表示所有配方。",
+            "data": {
+                "name": "*",
+                "description": "表示所有配方。"
+            }
+        }
     }
-  }
 }

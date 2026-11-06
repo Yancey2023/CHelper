@@ -54,12 +54,8 @@ namespace CHelper::SyntaxHighlight {
 
         void update(size_t index, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
 #if CHelperDebug
-            if (tokenTypes[index] != SyntaxTokenType::UNKNOWN && str[index] != '[' && str[index] != ']' && str[index] != '{' && str[index] != '}') {
-                SPDLOG_ERROR("replace syntax");
-            }
-            if (index > str.length()) {
-                SPDLOG_ERROR("index out of range");
-                return;
+            if (index >= tokenTypes.size() || index >= str.size()) {
+                throw std::out_of_range("syntax token index out of range");
             }
 #endif
             tokenTypes[index] = syntaxTokenType;
@@ -67,23 +63,12 @@ namespace CHelper::SyntaxHighlight {
 
         void update(size_t start, size_t end, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
 #if CHelperDebug
-            for (size_t i = start; i < end; i++) {
-                if (tokenTypes[i] != SyntaxTokenType::UNKNOWN && str[i] != '[' && str[i] != ']' && str[i] != '{' && str[i] != '}') {
-                    SPDLOG_ERROR("replace syntax");
-                }
-            }
-            if (start > str.length() || end > str.length()) {
-                SPDLOG_ERROR("index out of range");
-                return;
-            }
-            if (start > end) {
-                SPDLOG_ERROR("start should less than end");
-                return;
+            if (start > end || end > tokenTypes.size() || end > str.size()) {
+                throw std::out_of_range("syntax token range out of range");
             }
 #endif
-            std::fill(tokenTypes.begin() + static_cast<std::u16string::difference_type>(start),
-                      tokenTypes.begin() + static_cast<std::u16string::difference_type>(end),
-                      syntaxTokenType);
+            std::fill(tokenTypes.begin() + static_cast<std::ptrdiff_t>(start),
+                      tokenTypes.begin() + static_cast<std::ptrdiff_t>(end), syntaxTokenType);
         }
 
         void update(const TokensView &tokensView, SyntaxTokenType::SyntaxTokenType syntaxTokenType) {
@@ -93,6 +78,7 @@ namespace CHelper::SyntaxHighlight {
 
     class SyntaxResult {
     public:
+        // Borrows the command text. The source AST/context must outlive this view.
         std::u16string_view str;
         std::vector<SyntaxTokenType::SyntaxTokenType> tokenTypes;
 

@@ -6,11 +6,13 @@ on:
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "CHelper-Core/**"
   pull_request:
     branches: ["master", "dev"]
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "CHelper-Core/**"
 
 jobs:
   build:
@@ -34,4 +36,4 @@ jobs:
 
       - name: Build with Gradle
         working-directory: ${{ github.workspace }}/CHelper-Android
-        run: ./gradlew build
+        run: ./gradlew build --warning-mode all

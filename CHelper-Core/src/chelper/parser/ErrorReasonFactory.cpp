@@ -32,12 +32,37 @@ namespace CHelper {
             size_t unusedReferences = 0;
             // 每个块独立共享所有权，保留一个错误不会保留整条长命令的所有错误。
             alignas(std::max_align_t) std::byte buffer[64 * 1024];
+#if defined(CHELPER_RESOURCE_AUDIT)
+            std::pmr::memory_resource *upstream;
+            std::pmr::monotonic_buffer_resource overflow;
+#else
             std::pmr::monotonic_buffer_resource overflow{std::pmr::new_delete_resource()};
+#endif
             size_t used = 0;
 
         public:
             // buffer 由分配后构造的对象写入，不需要在每个块创建时清零。
+#if defined(CHELPER_RESOURCE_AUDIT)
+            explicit ErrorReasonMemoryResource(std::pmr::memory_resource *upstream)
+                : upstream(upstream), overflow(upstream) {}
+            static ErrorReasonMemoryResource *create(std::pmr::memory_resource *upstream) {
+                void *storage = upstream->allocate(sizeof(ErrorReasonMemoryResource), alignof(ErrorReasonMemoryResource));
+                try {
+                    return std::construct_at(static_cast<ErrorReasonMemoryResource *>(storage), upstream);
+                } catch (...) {
+                    upstream->deallocate(storage, sizeof(ErrorReasonMemoryResource), alignof(ErrorReasonMemoryResource));
+                    throw;
+                }
+            }
+            void destroy() noexcept {
+                auto *owner = upstream;
+                std::destroy_at(this);
+                owner->deallocate(this, sizeof(ErrorReasonMemoryResource), alignof(ErrorReasonMemoryResource));
+            }
+#else
             ErrorReasonMemoryResource() {}
+            void destroy() noexcept { delete this; }
+#endif
 
             void retain() noexcept {
                 if (unusedReferences == 0) {
@@ -49,13 +74,13 @@ namespace CHelper {
             }
 
             void release() noexcept {
-                if (references.fetch_sub(1, std::memory_order_acq_rel) == 1) delete this;
+                if (references.fetch_sub(1, std::memory_order_acq_rel) == 1) destroy();
             }
 
             void releaseOwner() noexcept {
                 // 移除作用域引用和未使用的份额，留下所有活动强/弱控制块的引用。
                 const size_t count = unusedReferences + 1;
-                if (references.fetch_sub(count, std::memory_order_acq_rel) == count) delete this;
+                if (references.fetch_sub(count, std::memory_order_acq_rel) == count) destroy();
             }
 
             void *allocate(size_t bytes, size_t alignment) {
@@ -123,7 +148,11 @@ namespace CHelper {
         thread_local ErrorReasonMemoryScope *currentMemoryScope = nullptr;
     }
 
+#if defined(CHELPER_RESOURCE_AUDIT)
+    ErrorReasonMemoryScope::ErrorReasonMemoryScope(std::pmr::memory_resource *upstream) : previous(currentMemoryScope), upstream(upstream) { currentMemoryScope = this; }
+#else
     ErrorReasonMemoryScope::ErrorReasonMemoryScope() : previous(currentMemoryScope) { currentMemoryScope = this; }
+#endif
     ErrorReasonMemoryScope::~ErrorReasonMemoryScope() {
         currentMemoryScope = previous;
         if (memory != nullptr) memory->releaseOwner();
@@ -151,7 +180,11 @@ namespace CHelper {
                 if (currentMemoryScope != nullptr) {
                     auto &current = currentMemoryScope->memory;
                     if (current == nullptr || current->isFull()) {
+#if defined(CHELPER_RESOURCE_AUDIT)
+                        auto *next = ErrorReasonMemoryResource::create(currentMemoryScope->upstream);
+#else
                         auto *next = new ErrorReasonMemoryResource;
+#endif
                         if (current != nullptr) current->releaseOwner();
                         current = next;
                     }

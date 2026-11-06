@@ -110,9 +110,7 @@ namespace CHelper {
         memoryScope.release();
     }
 
-    CommandContext::~CommandContext() {
-        memoryScope.prepareForDestruction();
-    }
+    CommandContext::~CommandContext() = default;
 
     std::u16string CommandContext::getStructure() const {
         return CommandStructure::getStructure(astNode);

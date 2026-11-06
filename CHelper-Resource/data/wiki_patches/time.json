@@ -1,0 +1,114 @@
+{
+    "version": 1,
+    "reason": "维护命令/time六份版别资源；基岩版时间单位/负值规则、旧语法承接、新世界时钟版本范围及共享时间标记名称。",
+    "replacements": [
+        {
+            "old": "指定要增加或设置的时间。",
+            "new": "指定要增加或设置的时间。{{in|be}}单位为游戏刻。",
+            "expected_matches": 1,
+            "reason": "依据中文Wiki《命令/time》用法段，基岩版时间值按DayTime游戏刻计，示例列出25001刻及当日1000刻。原扩写的负值限制来自结果表所述“基岩版26.60起”行为及其两个例外；该版别条件无法安全映射到旧release/网易资源，因此将日期与该限制一并从参数说明移除，中文Wiki结果表和reason仍保留依据。不把JE时间后缀或非负限制移植到BE INTEGER。"
+        },
+        {
+            "old": "== 参数 ==\n{{argument|time|time|amount: int|int}}",
+            "expected_matches": 1,
+            "new": "== 参数 ==\n{{el|be|short=1}}：{{argument|be=1|time: TimeQuery|enum}}\n: 指定要查询的数据。必须为以下其中之一：\n:* <code>day</code> — 游戏天数\n:* <code>daytime</code> — 当日时间\n:* <code>gametime</code> — 游戏时间\n\n; 关键字 <code>time</code>\n: 查询世界时钟经过的总刻数。\n\n{{argument|time|time|amount: int|int}}",
+            "reason": "人工补充旧版基岩语法参数：R6 before 的中文《命令/time》语法/参数段直接列出 time: TimeQuery 及 day、daytime、gametime；这些值仍供当前网易1.21.50资源使用。最新页面已合并并删去旧版参数声明，为保持该实际资源能力，用清楚标注的旧版参数说明承接，不扩展节点或值。该补充不是最新页面原句。 新增的`time` bare keyword描述只匹配世界时钟查询语法中的字面节点，避免与`time: TimeQuery`/`TimeQuery2` typed参数用途混合。"
+        },
+        {
+            "old": "控制或查询[[世界时钟]]的[[时间]]。",
+            "reason": "人工合并版别与时间范围：新版中文《命令/time》介绍为世界时钟，历史段说明26.50.26首次加入creator_world_clocks实验、26.60.29起实验结束；网易1.21.50及release旧版不能无条件声称支持世界时钟子命令。R6 before原文SHA256=43F17D6EA87C2C2D9FC1AB4CBFBFCE0B3E911B863DAB24912ADD53B1FA8BD623；当前中文来源 https://zh.minecraft.wiki/w/命令/time。",
+            "new": "控制或查询时间。",
+            "expected_matches": 1
+        },
+        {
+            "expected_matches": 1,
+            "old": "* '''基岩版'''",
+            "reason": "人工补充旧版基岩语法：R6 before 的中文《命令/time》完整语法段列出未启用creator_world_clocks时的add、TimeQuery、amount/TimeSpec set分支；最新页面将旧分支合并进统一语法。明确标注旧范围，供release旧语法与网易1.21.50资源复核，不将其声明为当前beta的限定。该补充不是最新页面原句。",
+            "new": "* '''基岩版'''（旧版：不启用下述实验性玩法）\n: <code>time add <amount: int></code>\n:: 增加昼夜更替时间。\n: <code>time query <time: TimeQuery></code>\n:: 查询当前经过的时间。\n: <code>time set <amount: int></code>\n: <code>time set <time: TimeSpec></code>\n:: 设置昼夜更替时间。\n\n* '''基岩版'''（26.60.29起，不需要creator_world_clocks实验）"
+        },
+        {
+            "old": "{{in|be}}必须为{{cd|overworld}}。若未指定，则操作{{cd|overworld}}世界时钟。",
+            "new": "{{in|be}}必须为以下其中之一：\n:* {{cd|overworld}} — 操作{{cd|overworld}}世界时钟",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求移除世界时钟参数省略时默认操作overworld的叙述；保留基岩版显式overworld值和对应用途。"
+        },
+        {
+            "old": "现在{{cmd|time set|link=none}}子命令会直接设置昼夜更替时间，而不再通过增加来达到当日同一时间。",
+            "new": "使用{{cd|amount: int}}参数的{{cmd|time set|link=none}}直接设置昼夜更替时间；使用{{cd|time: TimeSpec}}参数时仍只会增加到对应的当日时间。",
+            "expected_matches": 1,
+            "reason": "Wiki当前用法段区分基岩版数字参数直接设置与TimeSpec只向前增加；25001刻执行time set day变为49000的示例验证了TimeSpec仍会前进。将1.17.30历史句限定到amount参数，消除泛称造成的表面冲突。"
+        },
+        {
+            "reason": "人工补充旧版基岩时间标记枚举：R6 before 的中文《命令/time》参数段列出day、midnight、night、noon、sunrise、sunset及其对应刻数；最新页删除TimeSpec参数段，时间标记部分仅保留名称。为维护仍消费timeMarkerName的旧资源，补回同页旧段列明的值与数字；sunrise/sunset仅标为基岩版。该补充不是最新页面原句。",
+            "expected_matches": 1,
+            "new": "指定要设置的时间标记。必须为以下其中之一：\n:* {{cd|day}} — 1,000\n:* {{cd|midnight}} — 18,000\n:* {{cd|night}} — 13,000\n:* {{cd|noon}} — 6,000\n:* {{in|be}}{{cd|sunrise}} — 23,000\n:* {{in|be}}{{cd|sunset}} — 12,000\n: brief: 时间标记名称",
+            "old": "指定要设置的时间标记，可以是{{cd|day}}、{{cd|midnight}}、{{cd|night}}或{{cd|noon}}，{{in|be}}还可以是{{cd|sunrise}}或{{cd|sunset}}。"
+        },
+        {
+            "old": "寻找到的标记可以是当前所处时刻的标记，这种情况下执行成功，时间不变。",
+            "new": "寻找到的标记可以是当前所处时刻的标记，这种情况下执行成功，时间不变。brief: 时间标记查找方式",
+            "expected_matches": 1,
+            "reason": "依据 Wiki 对 timeMarkerOccurrence 同一参数的用途原句“指定寻找时间标记的方式”，为过长 brief 添加短标签“时间标记查找方式”。"
+        },
+        {
+            "old": "* {{cd|next}}（默认） — 寻找晚于当前时间的下次标记（今天或明天）",
+            "new": "* {{cd|next}}（默认） — 寻找晚于当前时间的下次标记（今天或明天）",
+            "expected_matches": 1,
+            "reason": "按省略说明清理要求保留原文next选项默认标记及其查找用途，移除对省略整个参数的叙述。"
+        },
+        {
+            "reason": "将基岩版新旧语法共同使用的add用途简化为准确概括昼夜更替时间的句子；新旧版本操作当前昼夜更替时间或指定时钟的昼夜更替时间，句意均成立。人工简化，不改变版本能力。",
+            "new": ":: 增加昼夜更替时间。",
+            "old": ":: 增加世界时钟的昼夜更替时间。",
+            "expected_matches": 1
+        },
+        {
+            "reason": "将当前time query通用说明简化为新旧基岩语法均成立的用途；避免将旧版time query范围写成世界时钟。人工简化，不改变版本能力。",
+            "new": ":: 查询当前经过的时间。",
+            "old": ":: 查询整个世界经过的时间。",
+            "expected_matches": 1
+        },
+        {
+            "reason": "将基岩版新旧语法共同使用的set用途简化为准确概括昼夜更替时间的句子；数字与时间标记形式都可设定昼夜更替时间。人工简化，不改变版本能力。",
+            "new": ":: 设置昼夜更替时间。",
+            "old": ":: 设置世界时钟的昼夜更替时间。",
+            "expected_matches": 1
+        },
+        {
+            "expected_matches": 1,
+            "reason": "该共享amount参数只以amount: int命名，旧原文的time别名与查询参数time: TimeQuery重名，导致候选用途合并。以中文Wiki其他命令的基岩版参数格式保留int类型和amount命名，消除歧义，不改变命令能力。",
+            "old": "{{argument|time|time|amount: int|int}}",
+            "new": "{{argument|be=1|amount: int|int}}"
+        },
+        {
+            "old": "如果命名空间ID是一个非NBT标签且字面量符合<code>&lt;time></code>{{only|je}}/<code>amount: int</code>{{only|be}}参数的语法，则游戏会将其视作优先参数。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除时间标记参数的优先解析旁注。"
+        },
+        {
+            "old": "寻找到的标记可以是当前所处时刻的标记，这种情况下执行成功，时间不变。",
+            "new": "",
+            "expected_matches": 1,
+            "reason": "删除查找当前标记的特殊行为，保留查找用途。"
+        },
+        {
+            "old": "寻找晚于当前时间的下次标记（今天或明天）",
+            "new": "寻找下一个时间标记",
+            "expected_matches": 1,
+            "reason": "保留next枚举项用途，删除日期举例。"
+        },
+        {
+            "old": "寻找同一天内的标记（今天）",
+            "new": "寻找当天的时间标记",
+            "expected_matches": 1,
+            "reason": "保留stay枚举项用途，删除举例。"
+        },
+        {
+            "old": "从当前时间（含）寻找上次标记（昨天或今天）",
+            "new": "寻找上一个时间标记",
+            "expected_matches": 1,
+            "reason": "保留previous枚举项用途，删除日期细节。"
+        }
+    ]
+}

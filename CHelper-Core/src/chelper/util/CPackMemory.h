@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <chelper/util/ResourceAudit.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
@@ -19,6 +21,7 @@
 #include <mutex>
 #include <new>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -31,11 +34,10 @@ namespace CHelper {
      */
     class CPackMemoryResource {
     private:
-        std::pmr::monotonic_buffer_resource resource;
+        MonotonicResource resource{std::pmr::new_delete_resource()};
 
     public:
-        CPackMemoryResource()
-            : resource(std::pmr::new_delete_resource()) {}
+        CPackMemoryResource() = default;
 
         void *allocate(const size_t bytes, const size_t alignment) {
             return resource.allocate(bytes, alignment);
@@ -50,72 +52,26 @@ namespace CHelper {
         }
     };
 
-    class CPackMemoryRouter final : public std::pmr::memory_resource {
-    private:
-        inline static std::once_flag installFlag;
-        inline static std::atomic<std::pmr::memory_resource *> upstream = nullptr;
+    // Only selects a resource at construction. Every allocator stores that actual
+    // resource; the process-wide PMR default is never replaced.
+    class CPackMemoryRouter {
         inline static thread_local std::pmr::memory_resource *current = nullptr;
         inline static thread_local size_t scopeDepth = 0;
 
-        [[nodiscard]] static CPackMemoryRouter &instance() noexcept {
-            static CPackMemoryRouter router;
-            return router;
-        }
-
-        void *do_allocate(const size_t bytes, const size_t alignment) override {
-            return current == nullptr ? upstream.load(std::memory_order_acquire)->allocate(bytes, alignment)
-                                      : current->allocate(bytes, alignment);
-        }
-
-        void do_deallocate(void *pointer, const size_t bytes, const size_t alignment) override {
-            if (current == nullptr) {
-                upstream.load(std::memory_order_acquire)->deallocate(pointer, bytes, alignment);
-            } else {
-                current->deallocate(pointer, bytes, alignment);
-            }
-        }
-
-        [[nodiscard]] bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override {
-            return this == &other;
-        }
-
     public:
-        static void install() {
-            std::call_once(installFlag, [] {
-                upstream.store(std::pmr::get_default_resource(), std::memory_order_release);
-                std::pmr::set_default_resource(&instance());
-            });
-        }
-
-        static void setCurrent(std::pmr::memory_resource *memory) noexcept {
-            current = memory;
-        }
-
-        [[nodiscard]] static std::pmr::memory_resource *getCurrent() noexcept {
-            return current;
-        }
-
-        // 将所有权固定到分配时的资源；没有活动作用域时也绕过线程路由器。
+        static void install() noexcept {}// Compatibility for existing scoped callers.
+        static void setCurrent(std::pmr::memory_resource *memory) noexcept { current = memory; }
+        [[nodiscard]] static std::pmr::memory_resource *getCurrent() noexcept { return current; }
         [[nodiscard]] static std::pmr::memory_resource *getAllocationResource() noexcept {
-            if (current != nullptr) return current;
-            auto *resource = std::pmr::get_default_resource();
-            return resource == &instance() ? upstream.load(std::memory_order_acquire) : resource;
+            return current != nullptr ? current : std::pmr::get_default_resource();
         }
-
         [[nodiscard]] static size_t enter(std::pmr::memory_resource *memory) noexcept {
-            setCurrent(memory);
+            current = memory;
             return ++scopeDepth;
         }
-
-        static void leave(const size_t depth, std::pmr::memory_resource *previous) noexcept {
-            if (scopeDepth == 0) {
-                setCurrent(previous);
-                return;
-            }
-            if (scopeDepth == depth) {
-                setCurrent(previous);
-            }
-            --scopeDepth;
+        static void leave(size_t depth, std::pmr::memory_resource *previous) noexcept {
+            if (scopeDepth == depth || scopeDepth == 0) current = previous;
+            if (scopeDepth != 0) --scopeDepth;
         }
     };
 
@@ -177,11 +133,8 @@ namespace CHelper {
         }
     }
 
-    /**
-     * Makes default-constructed PMR containers created while loading a CPack
-     * use that CPack's resource. The owner's scope activates during destruction,
-     * after loading has restored the caller's resource, and outlives all PMR members.
-     */
+    // Selects the resource captured by project containers during construction.
+    // Destruction always uses the captured allocator, without re-entering a scope.
     class CPackMemoryScope {
     private:
         std::pmr::memory_resource *previous = nullptr;
@@ -194,17 +147,9 @@ namespace CHelper {
 
         explicit CPackMemoryScope(const std::shared_ptr<CPackMemoryResource> &memory)
             : previous(CPackMemoryRouter::getCurrent()), memory(memory), active(true) {
-            CPackMemoryRouter::install();
             depth = CPackMemoryRouter::enter(this->memory->getResource());
         }
 
-        void bindAsOwner(const std::shared_ptr<CPackMemoryResource> &ownerMemory) {
-            release();
-            memory = ownerMemory;
-            previous = nullptr;
-            depth = 0;
-            CPackMemoryRouter::install();
-        }
 
         void release() noexcept {
             if (active) {
@@ -213,14 +158,6 @@ namespace CHelper {
             }
         }
 
-        void prepareForDestruction() noexcept {
-            if (!active) {
-                previous = CPackMemoryRouter::getCurrent();
-                CPackMemoryRouter::install();
-                depth = CPackMemoryRouter::enter(memory->getResource());
-                active = true;
-            }
-        }
 
         ~CPackMemoryScope() {
             release();
@@ -254,7 +191,7 @@ namespace CHelper {
             : memory(other.memory) {}
 
         [[nodiscard]] T *allocate(const size_type count) {
-            if (!memory) [[unlikely]] {
+            if (!memory || count > std::numeric_limits<size_type>::max() / sizeof(T)) [[unlikely]] {
                 throw std::bad_alloc();
             }
             return static_cast<T *>(memory->allocate(count * sizeof(T), alignof(T)));
@@ -276,14 +213,27 @@ namespace CHelper {
     template<class T, class... Args>
     [[nodiscard]] std::shared_ptr<T> allocateShared(const std::shared_ptr<CPackMemoryResource> &memory,
                                                     Args &&...args) {
-        return std::allocate_shared<T>(CPackAllocator<T>(memory), std::forward<Args>(args)...);
+        if constexpr (sizeof...(Args) == 0 && std::uses_allocator_v<T, std::pmr::polymorphic_allocator<std::byte>>) {
+            return std::allocate_shared<T>(CPackAllocator<T>(memory), memory->getResource());
+        } else {
+            return std::allocate_shared<T>(CPackAllocator<T>(memory), std::forward<Args>(args)...);
+        }
     }
 
     template<class T, class... Args>
     [[nodiscard]] std::shared_ptr<T> allocateSharedFromDefault(Args &&...args) {
         return std::allocate_shared<T>(
-                std::pmr::polymorphic_allocator<T>(std::pmr::get_default_resource()),
+                std::pmr::polymorphic_allocator<T>(CPackMemoryRouter::getAllocationResource()),
                 std::forward<Args>(args)...);
+    }
+
+    template<class T>
+    T &emplaceScopedOptional(std::optional<T> &value) {
+        if constexpr (std::uses_allocator_v<T, std::pmr::polymorphic_allocator<std::byte>>) {
+            return value.emplace(CPackMemoryRouter::getAllocationResource());
+        } else {
+            return value.emplace();
+        }
     }
 
     template<class String>
@@ -291,7 +241,7 @@ namespace CHelper {
         if (!value.has_value()) {
             return std::nullopt;
         }
-        return std::pmr::string(value->data(), value->size());
+        return std::pmr::string(value->data(), value->size(), CPackMemoryRouter::getAllocationResource());
     }
 
     template<class String>
@@ -299,7 +249,7 @@ namespace CHelper {
         if (!value.has_value()) {
             return std::nullopt;
         }
-        return std::pmr::u16string(value->data(), value->size());
+        return std::pmr::u16string(value->data(), value->size(), CPackMemoryRouter::getAllocationResource());
     }
 
     template<class T>
