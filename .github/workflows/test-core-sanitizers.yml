@@ -43,5 +43,5 @@ jobs:
           cmake --build build/fuzz --target CHelperFuzz --parallel 2
       - name: Smoke fuzz resource loading and editor queries
         env:
-          UBSAN_OPTIONS: halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: build/fuzz/CHelperFuzz -max_total_time=60 -max_len=65536
