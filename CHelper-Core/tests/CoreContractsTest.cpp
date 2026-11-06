@@ -89,9 +89,9 @@ namespace CHelper::Test {
             *destination = *source;
             EXPECT_EQ(*destination->defaultValue.string, *source->defaultValue.string);
             EXPECT_NE(destination->defaultValue.string, source->defaultValue.string);
-            const auto &self = *destination;
+            auto &self = *destination;
             *destination = self;
-            *destination = std::move(*destination);
+            *destination = std::move(self);
             EXPECT_EQ(*destination->defaultValue.string, *source->defaultValue.string);
             *destination = std::move(*source);
             EXPECT_EQ(source->type, PropertyType::BOOLEAN);

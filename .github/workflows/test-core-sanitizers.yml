@@ -27,6 +27,9 @@ jobs:
           key: core-sanitizers-${{ runner.os }}-${{ hashFiles('CHelper-Core/CMakeLists.txt') }}
       - name: Configure instrumented tests
         run: cmake -S CHelper-Core -B build/sanitizers -G Ninja -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHELPER_ENABLE_SANITIZERS=ON -DCHELPER_ENABLE_RESOURCE_AUDIT=ON
+      - name: Report failed configuration
+        if: failure()
+        run: cat build/sanitizers/CMakeFiles/CMakeConfigureLog.yaml
       - name: Build and run tests
         env:
           ASAN_OPTIONS: detect_leaks=1
