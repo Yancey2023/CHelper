@@ -5,6 +5,9 @@ project(CHelper LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# The project uses headers, not C++ modules. Avoid Ninja's implicit module scan
+# (and an unnecessary dependency on clang-scan-deps).
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 if(MSVC)
   # Qt 的预编译库使用动态 CRT；核心、应用和依赖统一使用相同运行库。
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")

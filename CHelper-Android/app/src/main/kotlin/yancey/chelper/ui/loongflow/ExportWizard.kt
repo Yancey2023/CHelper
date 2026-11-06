@@ -340,35 +340,39 @@ private fun ExportStepRecord(viewModel: LoongFlowViewModel, onRequestInputFocus:
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
-                    .clickable {
-                        coroutineScope.launch {
-                            val text = try {
-                                composeClipboard.getClipEntry()?.clipData?.getItemAt(0)
-                                    ?.coerceToText(context)?.toString()?.trim()
-                            } catch (error: CancellationException) {
-                                throw error
-                            } catch (_: Exception) {
-                                null
-                            }
+                modifier =
+                    Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
+                        .clickable {
+                            coroutineScope.launch {
+                                val text =
+                                    try {
+                                        composeClipboard
+                                            .getClipEntry()
+                                            ?.clipData
+                                            ?.getItemAt(0)
+                                            ?.coerceToText(context)
+                                            ?.toString()
+                                            ?.trim()
+                                    } catch (error: CancellationException) {
+                                        throw error
+                                    } catch (_: Exception) {
+                                        null
+                                    }
 
-                            if (!text.isNullOrEmpty()) {
-                                viewModel.currentBlockInput = text
-                                viewModel.toastMessage = "已粘贴"
-                            } else {
-                                viewModel.toastMessage = "无法读取剪贴板，请手动粘贴"
+                                if (!text.isNullOrEmpty()) {
+                                    viewModel.currentBlockInput = text
+                                    viewModel.toastMessage = "已粘贴"
+                                } else {
+                                    viewModel.toastMessage = "无法读取剪贴板，请手动粘贴"
+                                }
                             }
                         }
-                    }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = "尝试从剪贴板粘贴",
