@@ -21,29 +21,29 @@
 
 namespace CHelper::AutoSuggestion {
 
-    Suggestion::Suggestion(size_t start,
-                           size_t end,
-                           bool isAddSpace,
-                           const std::shared_ptr<NormalId> &content)
-        : start(start),
-          end(end),
-          isAddSpace(isAddSpace),
-          content(content) {}
+    Suggestion::Suggestion(size_t start, size_t end, bool isAddSpace, const std::shared_ptr<NormalId> &content) noexcept
+        : start(start), end(end), isAddSpace(isAddSpace), content(content) {}
 
-    Suggestion::Suggestion(const TokensView &tokens,
-                           bool isAddSpace,
-                           const std::shared_ptr<NormalId> &content)
-        : start(tokens.startIndex),
-          end(tokens.endIndex),
-          isAddSpace(isAddSpace),
-          content(content) {}
+    Suggestion::Suggestion(size_t start, size_t end, bool isAddSpace, std::shared_ptr<NormalId> &&content) noexcept
+        : start(start), end(end), isAddSpace(isAddSpace), content(std::move(content)) {}
+
+    Suggestion::Suggestion(const TokensView &tokens, bool isAddSpace, const std::shared_ptr<NormalId> &content) noexcept
+        : Suggestion(tokens.startIndex, tokens.endIndex, isAddSpace, content) {}
+
+    Suggestion::Suggestion(const TokensView &tokens, bool isAddSpace, std::shared_ptr<NormalId> &&content) noexcept
+        : Suggestion(tokens.startIndex, tokens.endIndex, isAddSpace, std::move(content)) {}
 
     [[nodiscard]] XXH64_hash_t Suggestion::hashCode() const {
-        // 常见 ID 和描述很短，合并到栈上后一次哈希，省去流式状态的初始化与多次更新。
-        // 字节顺序与下方流式路径完全相同，保持已有去重规则。
+        // 字段边界在最终摘要中混合，不扩大缓冲区或改变短字符串的快速路径。
+        // 去重只保存摘要，不复制 Suggestion 或增加 content 的引用计数。
         std::byte buffer[256];
+        constexpr size_t rangeBytes = sizeof(start) + sizeof(end);
+        const uint8_t flags = uint8_t(content->description.has_value()) | (uint8_t(isAddSpace) << 1);
+        // 原摘要已覆盖文本和范围；字段边界只需编码长度与两位标志。
+        // 字段区分不需要另做两次乘法混合。
+        const uint64_t fieldHash = (uint64_t(content->name.size()) << 2) | flags;
         const size_t descriptionSize = content->description ? content->description->size() : 0;
-        if (content->name.size() + descriptionSize <= (sizeof(buffer) - sizeof(start) - sizeof(end)) / sizeof(char16_t)) {
+        if (content->name.size() + descriptionSize <= (sizeof(buffer) - rangeBytes) / sizeof(char16_t)) {
             const size_t nameBytes = content->name.size() * sizeof(char16_t);
             const size_t descriptionBytes = descriptionSize * sizeof(char16_t);
             std::memcpy(buffer, content->name.data(), nameBytes);
@@ -53,14 +53,14 @@ namespace CHelper::AutoSuggestion {
             const size_t size = nameBytes + descriptionBytes;
             std::memcpy(buffer + size, &start, sizeof(start));
             std::memcpy(buffer + size + sizeof(start), &end, sizeof(end));
-            return XXH3_64bits(buffer, size + sizeof(start) + sizeof(end));
+            return XXH3_64bits(buffer, size + rangeBytes) ^ fieldHash;
         }
+        const std::array<size_t, 2> fields{start, end};
         XXH3_state_t hashState;
         XXH3_64bits_reset(&hashState);
         content->updateHashState(hashState);
-        XXH3_64bits_update(&hashState, &start, sizeof(start));
-        XXH3_64bits_update(&hashState, &end, sizeof(end));
-        return XXH3_64bits_digest(&hashState);
+        XXH3_64bits_update(&hashState, fields.data(), sizeof(fields));
+        return XXH3_64bits_digest(&hashState) ^ fieldHash;
     }
 
 }// namespace CHelper::AutoSuggestion

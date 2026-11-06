@@ -26,9 +26,8 @@ namespace CHelper {
         }
     }
 
-    [[nodiscard]] bool NormalId::fastMatch(XXH64_hash_t strHash) {
-        buildHash();
-        return *nameHash == strHash;
+    [[nodiscard]] bool NormalId::fastMatch(XXH64_hash_t strHash) const {
+        return getNameHash() == strHash;
     }
 
     void NormalId::updateHashState(XXH3_state_t &state) const {
@@ -42,7 +41,7 @@ namespace CHelper {
         auto result = allocateSharedFromDefault<NormalId>();
         result->name.assign(name.data(), name.size());
         if (!description.empty()) {
-            result->description.emplace(description.data(), description.size());
+            result->description.emplace(description.data(), description.size(), CPackMemoryRouter::getAllocationResource());
         }
         return result;
     }

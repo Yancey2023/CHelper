@@ -22,12 +22,110 @@
 #include <gtest/gtest.h>
 #include <xxhash.h>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#endif
+
 #ifdef _MSC_VER
 #define CHELPER_BENCH_RETURN_ADDRESS() _ReturnAddress()
 #else
 #define CHELPER_BENCH_RETURN_ADDRESS() __builtin_extract_return_addr(__builtin_return_address(0))
 #endif
 
+namespace {
+
+    // 只在基准测试生命周期两端操作策略，不向被测循环加入轮询或系统调用。
+    class BenchExecutionPolicy final : public testing::Environment {
+        std::string requested = "inherit";
+#ifdef _WIN32
+        PROCESS_POWER_THROTTLING_STATE original{};
+        bool restore = false;
+        bool ready = false;
+
+        bool report(std::string_view phase, DWORD control, DWORD state) const {
+            PROCESS_POWER_THROTTLING_STATE actual{};
+            actual.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+            if (!GetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &actual, sizeof(actual))) {
+                ADD_FAILURE() << "failed to read benchmark execution policy: " << GetLastError();
+                return false;
+            }
+            std::printf("bench windows_qos phase=%.*s requested=%s supported=1 control=%lu state=%lu\n",
+                        int(phase.size()), phase.data(), requested.c_str(), actual.ControlMask, actual.StateMask);
+            constexpr DWORD speed = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
+            if ((actual.ControlMask & speed) != (control & speed) || (actual.StateMask & speed) != (state & speed)) {
+                ADD_FAILURE() << "benchmark execution policy changed or was not applied";
+                return false;
+            }
+            return true;
+        }
+
+        std::pair<DWORD, DWORD> expected() const {
+            if (requested == "high") return {PROCESS_POWER_THROTTLING_EXECUTION_SPEED, 0};
+            if (requested == "eco") return {PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_EXECUTION_SPEED};
+            if (requested == "system") return {0, 0};
+            return {original.ControlMask, original.StateMask};
+        }
+#endif
+
+    public:
+        void SetUp() override {
+#ifdef _MSC_VER
+            char *value = nullptr;
+            size_t size = 0;
+            ASSERT_EQ(_dupenv_s(&value, &size, "CHELPER_BENCH_WINDOWS_QOS"), 0);
+            std::unique_ptr<char, decltype(&std::free)> owned(value, &std::free);
+#else
+            const char *value = std::getenv("CHELPER_BENCH_WINDOWS_QOS");
+#endif
+            if (value) requested = value;
+            ASSERT_TRUE(requested == "high" || requested == "eco" || requested == "system" || requested == "inherit")
+                    << "invalid CHELPER_BENCH_WINDOWS_QOS";
+#ifdef _WIN32
+            original.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+            ASSERT_TRUE(GetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &original, sizeof(original)))
+                    << "failed to read original benchmark execution policy: " << GetLastError();
+            if (requested != "inherit") {
+                auto desired = original;
+                constexpr DWORD speed = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
+                const auto [control, state] = expected();
+                desired.ControlMask = (desired.ControlMask & ~speed) | control;
+                desired.StateMask = (desired.StateMask & ~speed) | state;
+                ASSERT_TRUE(SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &desired, sizeof(desired)))
+                        << "failed to set benchmark execution policy: " << GetLastError();
+                restore = true;
+            }
+            ready = true;
+            const auto [control, state] = expected();
+            ASSERT_TRUE(report("begin", control, state));
+#else
+            std::printf("bench windows_qos phase=begin requested=%s supported=0 control=0 state=0\n", requested.c_str());
+#endif
+        }
+
+        void TearDown() override {
+#ifdef _WIN32
+            if (!ready) return;
+            const auto [control, state] = expected();
+            (void) report("end", control, state);
+            if (restore) {
+                ASSERT_TRUE(SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &original, sizeof(original)))
+                        << "failed to restore benchmark execution policy: " << GetLastError();
+            }
+            (void) report("restore", original.ControlMask, original.StateMask);
+#else
+            std::printf("bench windows_qos phase=end requested=%s supported=0 control=0 state=0\n", requested.c_str());
+#endif
+        }
+    };
+
+    [[maybe_unused]] const auto executionPolicy = testing::AddGlobalTestEnvironment(new BenchExecutionPolicy);
+
+}// namespace
+
+#ifndef CHELPER_BENCH_TIMING_ONLY
 // 只在测试可执行文件中替换全局分配器，避免把非标准 operator new/delete
 // 放进头文件导致 MSVC C4595，同时保证所有测试翻译单元共用同一套计数器。
 void *operator new(size_t size) {
@@ -100,6 +198,7 @@ void operator delete(void *p, size_t, std::align_val_t) noexcept { chelperBenchA
 void operator delete[](void *p, size_t, std::align_val_t) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
 void operator delete(void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
 void operator delete[](void *p, std::align_val_t, const std::nothrow_t &) noexcept { chelperBenchAlignedFree(p, CHELPER_BENCH_RETURN_ADDRESS()); }
+#endif
 
 using namespace CHelper;
 using namespace CHelper::Test;
@@ -114,12 +213,22 @@ namespace {
         return resourceDir() / "resources" / "beta" / "vanilla";
     }
 
+    [[nodiscard]] std::filesystem::path binaryPack(std::string_view prefix) {
+        std::filesystem::path selected;
+        for (const auto &entry: std::filesystem::directory_iterator(resourceDir() / "generated" / "cpack")) {
+            const auto name = entry.path().filename().string();
+            if (entry.path().extension() == ".cpack" && name.starts_with(prefix) && entry.path() > selected) selected = entry.path();
+        }
+        if (selected.empty()) throw std::runtime_error("benchmark resource pack is missing: " + std::string(prefix));
+        return selected;
+    }
+
     [[nodiscard]] std::filesystem::path vanillaBin() {
-        return resourceDir() / "generated" / "cpack" / "beta-vanilla-1.26.0.29.cpack";
+        return binaryPack("beta-vanilla-");
     }
 
     [[nodiscard]] std::filesystem::path experimentBin() {
-        return resourceDir() / "generated" / "cpack" / "beta-experiment-1.26.0.29.cpack";
+        return binaryPack("beta-experiment-");
     }
 
 }// namespace
@@ -414,6 +523,7 @@ TEST(Bench, RequestPhases) {
  * 存活分配归属：加载一个 CPack，然后统计销毁过程中哪类分配点贡献了最多 free
  * 用来判断池化/复用到底该覆盖哪些对象（2 万次 free 占了卸载耗时的绝大部分）
  */
+#ifndef CHELPER_BENCH_TIMING_ONLY
 TEST(Bench, LiveAllocationAttribution) {
     HeapProfile::enabled = true;
     HeapProfile::resetCounters();
@@ -434,6 +544,7 @@ TEST(Bench, LiveAllocationAttribution) {
     HeapProfile::enabled = false;
     HeapProfile::resetCounters();
 }
+#endif
 
 /**
  * 单个命令的逐阶段分解：找出哪种输入最贵

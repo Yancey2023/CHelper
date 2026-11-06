@@ -6,11 +6,13 @@ on:
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "CHelper-Core/**"
   pull_request:
     branches: ["master", "dev"]
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "CHelper-Core/**"
 
 jobs:
   build:

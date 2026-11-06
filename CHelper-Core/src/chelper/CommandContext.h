@@ -30,34 +30,31 @@ namespace CHelper {
     private:
         // AST 的各项分配一起存活到上下文销毁，无需逐块回收或维护池的空闲链表。
         alignas(std::max_align_t) std::byte buffer[1024];
-        std::pmr::monotonic_buffer_resource resource;
+        MonotonicResource resource;
 
     public:
         CommandContextMemoryResource()
             : resource(buffer, sizeof(buffer), std::pmr::new_delete_resource()) {
-            CPackMemoryRouter::install();
-            std::pmr::memory_resource *previous = CPackMemoryRouter::getCurrent();
-            CPackMemoryRouter::setCurrent(nullptr);
             Node::initializeStaticNodes();
-            CPackMemoryRouter::setCurrent(previous);
         }
 
         [[nodiscard]] std::pmr::memory_resource *getResource() noexcept {
             return &resource;
         }
+#if defined(CHELPER_RESOURCE_AUDIT)
+        [[nodiscard]] MonotonicResource::Snapshot snapshot() const noexcept { return resource.snapshot(); }
+#endif
     };
 
     class CommandContextMemoryScope {
     private:
-        std::pmr::memory_resource *resource;
         std::pmr::memory_resource *restore = nullptr;
         size_t depth = 0;
         bool active = false;
 
     public:
         explicit CommandContextMemoryScope(std::pmr::memory_resource *resource)
-            : resource(resource), restore(CPackMemoryRouter::getCurrent()), active(true) {
-            CPackMemoryRouter::install();
+            : restore(CPackMemoryRouter::getCurrent()), active(true) {
             depth = CPackMemoryRouter::enter(resource);
         }
 
@@ -68,14 +65,6 @@ namespace CHelper {
             }
         }
 
-        void prepareForDestruction() noexcept {
-            if (!active) {
-                restore = CPackMemoryRouter::getCurrent();
-                CPackMemoryRouter::install();
-                depth = CPackMemoryRouter::enter(resource);
-                active = true;
-            }
-        }
 
         ~CommandContextMemoryScope() {
             release();
@@ -120,13 +109,20 @@ namespace CHelper {
 
         [[nodiscard]] const CPack &getCPack() const { return *cpack; }
 
+#if defined(CHELPER_RESOURCE_AUDIT)
+        [[nodiscard]] MonotonicResource::Snapshot getMemorySnapshot() const noexcept {
+            return memory.snapshot();
+        }
+#endif
+
         /**
-         * 获取这个上下文对应的命令文本
+         * 获取这个上下文对应的命令文本（借用视图，仅在上下文存活期间有效）
          */
         [[nodiscard]] std::u16string_view getCommand() const { return command; }
 
         /**
-         * 获取解析好的AST
+         * 获取解析好的 AST（借用视图，仅在上下文存活期间有效）。
+         * 发布给查询线程后不得修改其引用的资源节点。
          */
         [[nodiscard]] const ASTNode *getAstNode() const { return &astNode; }
 
@@ -142,13 +138,16 @@ namespace CHelper {
         [[nodiscard]] std::u16string getParamHint(size_t index) const;
 
         /**
-         * 获取指定位置的补全建议
+         * 获取指定位置的补全建议；内容直接引用共享资源，不复制文本。
+         * 返回结果仅保证在当前 CommandContext 存活期间有效；调用方须保持
+         * 上下文存活，且不得修改其共享资源。结果容器及其复制引用必须先于
+         * 上下文销毁，shared_ptr 不单独保证底层 PMR 资源的生命周期。
          * @param index 光标位置
          */
         [[nodiscard]] std::vector<AutoSuggestion::Suggestion> getSuggestions(size_t index) const;
 
         /**
-         * 获取语法高亮结果
+         * 获取语法高亮结果；其中 str 借用命令文本，须保持当前上下文存活。
          */
         [[nodiscard]] SyntaxHighlight::SyntaxResult getSyntaxResult() const;
 

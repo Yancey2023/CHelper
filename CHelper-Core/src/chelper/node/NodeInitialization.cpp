@@ -17,6 +17,7 @@
  */
 
 #include <chelper/node/CommandNode.h>
+#include <chelper/node/GrammarValidation.h>
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
@@ -66,6 +67,7 @@ namespace CHelper::Node {
     struct NodeInitialization<NodeIntegerWithUnit> {
         static void init(NodeIntegerWithUnit &node, const CPack &cpack) {
             node.nodeUnits = NodeNormalId("UNITS", u"单位", node.units, false);
+            for (const auto &id: *node.units) id->buildHash();
             node.nodeIntegerWithUnit = NodeAnd({NodeIntegerWithUnit::nodeInteger, node.nodeUnits});
             node.nodeIntegerMaybeHaveUnit = NodeOr({node.nodeIntegerWithUnit, NodeIntegerWithUnit::nodeInteger}, false, true);
         }
@@ -111,6 +113,12 @@ namespace CHelper::Node {
                     throw std::runtime_error("missing content");
                 }
             }
+            // 顶层表由 CPack 统一预热，避免每个引用节点都重新遍历整张表。
+            if (node.contents.has_value())
+                for (const auto &id: *node.customContents) {
+                    id->buildHash();
+                    id->getIdWithNamespace()->buildHash();
+                }
         }
     };
 
@@ -134,6 +142,8 @@ namespace CHelper::Node {
                     throw std::runtime_error("missing content");
                 }
             }
+            if (node.contents.has_value())
+                for (const auto &id: *node.customContents) id->buildHash();
         }
     };
 
@@ -202,6 +212,7 @@ namespace CHelper::Node {
             node.nodeKeyContent->reserve(node.equalDatas.size());
             for (const auto &item: node.equalDatas) {
                 node.nodeKeyContent->push_back(NormalId::make(item.name, item.description));
+                node.nodeKeyContent->back()->buildHash();
             }
             node.nodeKey = NodeNormalId("KEY", u"参数名", node.nodeKeyContent, true);
             for (auto &item: node.equalDatas) {
@@ -281,7 +292,7 @@ namespace CHelper::Node {
                 throw std::runtime_error(
                         fmt::format(R"(json entry "{}" must have at least one value node)", utf8::utf16to8(node.key)));
             }
-            std::pmr::vector<NodeWithType> valueNodes;
+            std::pmr::vector<NodeWithType> valueNodes{CPackMemoryRouter::getAllocationResource()};
             valueNodes.reserve(node.value.size());
             for (const auto &item: node.value) {
                 valueNodes.emplace_back(findNode(item, node));
@@ -445,6 +456,7 @@ namespace CHelper::Node {
                 //start node无法解析时不能继续，否则Parser会使用data为nullptr的节点导致未定义行为
                 throw std::runtime_error(fmt::format("unknown start node id: {}", node.startNodeId));
             }
+            validateGrammar(node);
             const auto findJsonNode = [&](const std::string_view id, const NodeSerializable &owner) -> NodeWithType {
                 const auto *entry = findNodeEntry(id);
                 if (entry == nullptr) [[unlikely]] {
@@ -471,14 +483,14 @@ namespace CHelper::Node {
             if (node.data.empty()) [[unlikely]] {
                 node.nodeElement1 = std::nullopt;
             } else {
-                std::pmr::vector<NodeWithType> nodeElementData;
+                std::pmr::vector<NodeWithType> nodeElementData{CPackMemoryRouter::getAllocationResource()};
                 nodeElementData.reserve(node.data.size());
                 for (const auto &item: node.data) {
                     nodeElementData.emplace_back(item);
                 }
                 node.nodeElement1 = NodeOr(std::move(nodeElementData), false);
             }
-            std::pmr::vector<NodeWithType> nodeElementData;
+            std::pmr::vector<NodeWithType> nodeElementData{CPackMemoryRouter::getAllocationResource()};
             if (node.nodeElement1.has_value()) [[likely]] {
                 nodeElementData.reserve(2);
                 nodeElementData.emplace_back(node.nodeElement1.value());
@@ -499,7 +511,7 @@ namespace CHelper::Node {
                 for (const auto &item: node.data.value().nodes) {
                     initNode(item, cpack);
                 }
-                std::pmr::vector<NodeWithType> nodeDataElement;
+                std::pmr::vector<NodeWithType> nodeDataElement{CPackMemoryRouter::getAllocationResource()};
                 nodeDataElement.reserve(node.data.value().nodes.size());
                 for (const auto &item: node.data.value().nodes) {
                     nodeDataElement.push_back(item);

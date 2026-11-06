@@ -1,11 +1,50 @@
 #include "BenchHelper.h"
 #include <gtest/gtest.h>
 #include <xxhash.h>
+#ifdef _WIN32
+#include <Windows.h>
+#include <psapi.h>
+#else
+#include <sys/resource.h>
+#endif
 
 using namespace CHelper;
 using namespace CHelper::Test;
 
 namespace {
+
+    uint64_t longBenchPageFaults() {
+#ifdef _WIN32
+        PROCESS_MEMORY_COUNTERS counters{};
+        if (!GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters))) {
+            throw std::runtime_error("failed to read benchmark page fault counter");
+        }
+        return counters.PageFaultCount;
+#else
+        rusage usage{};
+        if (getrusage(RUSAGE_SELF, &usage) != 0) {
+            throw std::runtime_error("failed to read benchmark page fault counter");
+        }
+        return uint64_t(usage.ru_minflt) + uint64_t(usage.ru_majflt);
+#endif
+    }
+
+    uint64_t longBenchThreadCycles() {
+#ifdef _WIN32
+        ULONG64 cycles = 0;
+        if (!QueryThreadCycleTime(GetCurrentThread(), &cycles)) {
+            throw std::runtime_error("failed to read benchmark thread cycle counter");
+        }
+        return cycles;
+#else
+        return 0;
+#endif
+    }
+
+    struct LongBenchSample {
+        int64_t startNs, endNs;
+        uint64_t threadCycles, faults;
+    };
 
     // 展示阶段也计入错误查询，包含所有输出文本的格式化。
     template<class Errors>
@@ -148,6 +187,9 @@ TEST(Bench, LongCommand) {
     const std::string kind = longBenchEnvironment("LONG_KIND").value_or("flat");
     const size_t count = longBenchOption("LONG_COUNT", 2048);
     const size_t repeat = longBenchOption("LONG_REPEAT", 5);
+    const size_t warmup = longBenchOption("LONG_WARMUP", 1);
+    const bool trackPageFaults = longBenchOption("LONG_TRACK_PAGE_FAULTS", 1) != 0;
+    const bool recordSamples = longBenchOption("LONG_RECORD_SAMPLES", 0) != 0;
     const auto command = longBenchCommand(kind, count);
     const size_t cursor = longBenchOption("LONG_CURSOR", command.size());
     const bool includeApply = longBenchOption("LONG_APPLY", 0) != 0;
@@ -164,8 +206,15 @@ TEST(Bench, LongCommand) {
     Stats suggestions{"long suggestions"}, hint{"long hint"}, structure{"long structure"};
     Stats syntax{"long syntax"}, errors{"long errors"};
     Stats apply{"long apply"};
-    for (size_t iteration = 0; iteration < repeat + 1; ++iteration) {
-        const bool measured = iteration != 0;
+    Stats faultFree{"long fault-free total"}, faulting{"long faulting total"};
+    for (auto *stats: {&total, &create, &suggestions, &hint, &structure, &syntax, &errors, &destroy, &apply, &faultFree, &faulting}) {
+        stats->samplesMs.reserve(repeat);
+    }
+    uint64_t measuredFaults = 0;
+    std::vector<LongBenchSample> samples;
+    if (recordSamples) samples.reserve(repeat);
+    for (size_t iteration = 0; iteration < warmup + repeat; ++iteration) {
+        const bool measured = iteration >= warmup;
         AllocSnapshot allocations;
         const auto measure = [&](Stats &stats, auto &&body) {
             if (measured) startAllocCounting();
@@ -180,6 +229,10 @@ TEST(Bench, LongCommand) {
             }
         };
         std::unique_ptr<CommandContext> context;
+        // Counter queries stay outside the total timing window. Reserve sample
+        // storage above so benchmark bookkeeping does not fault in that window.
+        const auto faultsBefore = measured && trackPageFaults ? longBenchPageFaults() : 0;
+        const auto cyclesBefore = measured && recordSamples ? longBenchThreadCycles() : 0;
         const auto start = std::chrono::steady_clock::now();
         measure(create, [&] { context.reset(core.createContext(command)); });
         measure(suggestions, [&] { (void) context->getSuggestions(cursor); });
@@ -193,10 +246,55 @@ TEST(Bench, LongCommand) {
         if (includeApply) measure(apply, [&] { (void) context->applySuggestion(cursor, 0); });
         measure(destroy, [&] { context.reset(); });
         const auto end = std::chrono::steady_clock::now();
-        if (measured) total.add(std::chrono::duration<double, std::milli>(end - start).count(), allocations);
+        const auto cyclesAfter = measured && recordSamples ? longBenchThreadCycles() : 0;
+        const auto faultsAfter = measured && trackPageFaults ? longBenchPageFaults() : 0;
+        if (measured) {
+            const double elapsed = std::chrono::duration<double, std::milli>(end - start).count();
+            total.add(elapsed, allocations);
+            uint64_t faults = 0;
+            if (trackPageFaults) {
+#ifdef _WIN32
+                faults = DWORD(faultsAfter - faultsBefore);
+#else
+                faults = faultsAfter - faultsBefore;
+#endif
+                measuredFaults += faults;
+                (faults == 0 ? faultFree : faulting).add(elapsed, allocations);
+            }
+            if (recordSamples) {
+                samples.push_back({std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count(),
+                                   std::chrono::duration_cast<std::chrono::nanoseconds>(end.time_since_epoch()).count(),
+                                   cyclesAfter - cyclesBefore, faults});
+            }
+        }
+    }
+#ifdef _WIN32
+    constexpr bool threadCyclesSupported = true;
+#else
+    constexpr bool threadCyclesSupported = false;
+#endif
+    if (recordSamples) {
+        std::printf("long samples count=%zu clock=steady_nanoseconds thread_cycles_supported=%d faults_tracked=%d\n",
+                    samples.size(), threadCyclesSupported, trackPageFaults);
+        for (size_t i = 0; i < samples.size(); ++i) {
+            const auto &sample = samples[i];
+            std::printf("long sample index=%zu start_ns=%lld end_ns=%lld thread_cycles=%llu faults=%llu "
+                        "total_ms=%.9f construct_ms=%.9f suggestions_ms=%.9f hint_ms=%.9f structure_ms=%.9f "
+                        "syntax_ms=%.9f errors_ms=%.9f destroy_ms=%.9f apply_ms=%.9f\n",
+                        i, static_cast<long long>(sample.startNs), static_cast<long long>(sample.endNs),
+                        static_cast<unsigned long long>(sample.threadCycles), static_cast<unsigned long long>(sample.faults),
+                        total.samplesMs[i], create.samplesMs[i], suggestions.samplesMs[i], hint.samplesMs[i],
+                        structure.samplesMs[i], syntax.samplesMs[i], errors.samplesMs[i], destroy.samplesMs[i],
+                        includeApply ? apply.samplesMs[i] : 0.0);
+        }
     }
     for (const auto *stats: {&total, &create, &suggestions, &hint, &structure, &syntax, &errors, &destroy}) stats->print();
     if (includeApply) apply.print();
+    std::printf("long page_faults tracking=%d warmup=%zu measured=%zu fault_free=%zu faulting=%zu total_faults=%llu\n",
+                trackPageFaults, warmup, total.count, faultFree.count, faulting.count,
+                static_cast<unsigned long long>(measuredFaults));
+    if (faultFree.count) faultFree.print();
+    if (faulting.count) faulting.print();
     std::printf("long output format=%d characters=%zu\n", formatOutput, messageCharacters);
     std::fflush(stdout);
     if (longBenchOption("LONG_VERIFY", 1)) {

@@ -1,0 +1,44 @@
+name: core-sanitizers
+
+on:
+  push:
+    branches: [master, dev]
+    paths: ["CHelper-Core/**", ".github/workflows/test-core-sanitizers.yml"]
+  pull_request:
+    branches: [master, dev]
+    paths: ["CHelper-Core/**", ".github/workflows/test-core-sanitizers.yml"]
+
+jobs:
+  sanitizer-and-fuzz:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-19 g++-13
+          python -m pip install -r scripts/requirements-build.txt
+      - uses: actions/cache@v5
+        with:
+          path: CHelper-Core/3rdparty_downloads
+          key: core-sanitizers-${{ runner.os }}-${{ hashFiles('CHelper-Core/CMakeLists.txt') }}
+      - name: Configure instrumented tests
+        run: cmake -S CHelper-Core -B build/sanitizers -G Ninja -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHELPER_ENABLE_SANITIZERS=ON -DCHELPER_ENABLE_RESOURCE_AUDIT=ON
+      - name: Build and run tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: |
+          cmake --build build/sanitizers --target CHelperTest --parallel 2
+          ctest --test-dir build/sanitizers --output-on-failure
+      - name: Configure and build fuzz target
+        run: |
+          cmake -S CHelper-Core -B build/fuzz -G Ninja -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=OFF -DCHELPER_BUILD_FUZZERS=ON -DCHELPER_ENABLE_SANITIZERS=ON
+          cmake --build build/fuzz --target CHelperFuzz --parallel 2
+      - name: Smoke fuzz resource loading and editor queries
+        env:
+          UBSAN_OPTIONS: halt_on_error=1
+        run: build/fuzz/CHelperFuzz -max_total_time=60 -max_len=65536

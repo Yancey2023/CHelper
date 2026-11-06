@@ -175,15 +175,12 @@ namespace CHelper::Test {
                 for (const size_t start: {size_t{0}, size_t{17}, SIZE_MAX}) {
                     const size_t end = start == SIZE_MAX ? start : start + 23;
                     const AutoSuggestion::Suggestion suggestion(start, end, false, id);
-                    std::string bytes(reinterpret_cast<const char *>(name.data()), name.size() * sizeof(char16_t));
-                    if (description.has_value()) {
-                        bytes.append(reinterpret_cast<const char *>(description->data()), description->size() * sizeof(char16_t));
-                    }
-                    bytes.append(reinterpret_cast<const char *>(&start), sizeof(start));
-                    bytes.append(reinterpret_cast<const char *>(&end), sizeof(end));
-                    const auto expected = XXH3_64bits(bytes.data(), bytes.size());
-                    EXPECT_EQ(suggestion.hashCode(), expected);
-                    EXPECT_EQ(suggestion.hashCode(), expected);
+                    // 摘要不是外部协议，不固定内部布局；检查匹配与去重所需的语义。
+                    const AutoSuggestion::Suggestion duplicate(start, end, false, NormalId::make(name, description));
+                    EXPECT_EQ(suggestion.hashCode(), duplicate.hashCode());
+                    EXPECT_NE(suggestion.hashCode(), AutoSuggestion::Suggestion(start ^ 1, end, false, id).hashCode());
+                    EXPECT_NE(suggestion.hashCode(), AutoSuggestion::Suggestion(start, end ^ 1, false, id).hashCode());
+                    EXPECT_NE(suggestion.hashCode(), AutoSuggestion::Suggestion(start, end, true, id).hashCode());
                 }
             }
         }

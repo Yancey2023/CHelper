@@ -30,12 +30,12 @@ namespace CHelper {
 
     class TokenReader {
     private:
-        std::pmr::vector<size_t> lineFeedIndexes;
+        std::pmr::vector<size_t> lineFeedIndexes{CPackMemoryRouter::getAllocationResource()};
 
     public:
         const std::shared_ptr<LexerResult> lexerResult;
         size_t index = 0;
-        std::pmr::vector<size_t> indexStack;
+        std::pmr::vector<size_t> indexStack{CPackMemoryRouter::getAllocationResource()};
         IdMatchCache idMatches;
 
         explicit TokenReader(const std::shared_ptr<LexerResult> &lexerResult);

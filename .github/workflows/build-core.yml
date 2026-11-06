@@ -109,14 +109,7 @@ jobs:
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperTest
 
       - name: Run Test
-        working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            "${{ matrix.build_type }}/CHelperTest.exe"
-          else
-            ./CHelperTest
-          fi
+        run: ctest --test-dir ${{ steps.strings.outputs.build-output-dir }} -C ${{ matrix.build_type }} --output-on-failure
 
       - name: Build Resource Generator
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target CHelperResourceGenerator

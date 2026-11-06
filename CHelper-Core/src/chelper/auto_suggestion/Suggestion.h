@@ -33,13 +33,18 @@ namespace CHelper {
             size_t start, end;
             //如果光标在最后面，是否需要在最后加空格
             bool isAddSpace;
-            //内容
+            // 内容直接引用资源；本结果及其复制引用须先于来源 CommandContext 销毁。
+            // 沿用原 API 的指针类型；发布后只读由调用方约定保证。
             std::shared_ptr<NormalId> content;
 
         public:
-            Suggestion(size_t start, size_t end, bool isAddSpace, const std::shared_ptr<NormalId> &content);
+            Suggestion(size_t start, size_t end, bool isAddSpace, const std::shared_ptr<NormalId> &content) noexcept;
 
-            Suggestion(const TokensView &tokens, bool isAddSpace, const std::shared_ptr<NormalId> &content);
+            Suggestion(size_t start, size_t end, bool isAddSpace, std::shared_ptr<NormalId> &&content) noexcept;
+
+            Suggestion(const TokensView &tokens, bool isAddSpace, const std::shared_ptr<NormalId> &content) noexcept;
+
+            Suggestion(const TokensView &tokens, bool isAddSpace, std::shared_ptr<NormalId> &&content) noexcept;
 
             [[nodiscard]] XXH64_hash_t hashCode() const;
         };

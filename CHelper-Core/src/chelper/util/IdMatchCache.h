@@ -68,7 +68,9 @@ namespace CHelper {
                 matches.emplace(key, result);
             } else {
                 DenseSet<XXH64_hash_t, XXHashDigest> names;
-                names.reserve(contents->size());
+                if constexpr (requires { contents->front()->getIdWithNamespace(); }) names.reserve(contents->size() * 2);
+                else
+                    names.reserve(contents->size());
                 for (const auto &item: *contents) {
                     names.insert(item->getNameHash());
                     if constexpr (requires { item->getIdWithNamespace(); }) {

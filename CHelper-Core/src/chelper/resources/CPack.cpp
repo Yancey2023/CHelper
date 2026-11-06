@@ -79,6 +79,19 @@ namespace CHelper {
         commands->push_back(std::move(item));
     }
 
+    void CPack::initializeNamespaceIds() {
+        const auto asNamespaceIds = [this](const auto &source) {
+            auto result = allocateShared<std::pmr::vector<std::shared_ptr<NamespaceId>>>(cpackMemory);
+            if (source != nullptr) {
+                result->reserve(source->size());
+                for (const auto &id: *source) result->push_back(id);
+            }
+            return result;
+        };
+        blockNamespaceIds = asNamespaceIds(blockIds ? blockIds->blockStateValues : nullptr);
+        itemNamespaceIds = asNamespaceIds(itemIds);
+    }
+
     void CPack::afterApply(LoadTrail &trail) {
         for (const auto &item: jsonNodes) {
             LoadTrail::Scope jsonScope(trail, fmt::format(R"(json "{}")", item.id.value_or("?")));
@@ -98,10 +111,10 @@ namespace CHelper {
         cacheNodes.nodes.reserve(cachedNodeCount);
         repeatNodes.reserve(repeatNodeData.size());
         for (const auto &item: repeatNodeData) {
-            std::pmr::vector<Node::NodeWithType> content;
+            std::pmr::vector<Node::NodeWithType> content{CPackMemoryRouter::getAllocationResource()};
             content.reserve(item.repeatNodes.size());
             for (const auto &item2: item.repeatNodes) {
-                std::pmr::vector<Node::NodeWithType> perContent;
+                std::pmr::vector<Node::NodeWithType> perContent{CPackMemoryRouter::getAllocationResource()};
                 perContent.reserve(item2.nodes.size());
                 for (const auto &item3: item2.nodes) {
                     auto nodeWrapped = new Node::NodeWrapped(item3);
@@ -112,7 +125,7 @@ namespace CHelper {
                 content.emplace_back(*node);
                 cacheNodes.nodes.emplace_back(*node);
             }
-            std::pmr::vector<Node::NodeWithType> breakChildNodes;
+            std::pmr::vector<Node::NodeWithType> breakChildNodes{CPackMemoryRouter::getAllocationResource()};
             breakChildNodes.reserve(item.breakNodes.nodes.size());
             for (const auto &item2: item.breakNodes.nodes) {
                 auto nodeWrapped = new Node::NodeWrapped(item2);
@@ -220,9 +233,9 @@ namespace CHelper {
     std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>>
     CPack::getNamespaceId(const std::string_view key) const {
         if (key == "block") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(blockIds->blockStateValues);
+            return blockNamespaceIds;
         } else if (key == "item") [[unlikely]] {
-            return std::reinterpret_pointer_cast<std::pmr::vector<std::shared_ptr<NamespaceId>>>(itemIds);
+            return itemNamespaceIds;
         }
         auto it = namespaceIds.find(key);
         if (it == namespaceIds.end()) [[unlikely]] {

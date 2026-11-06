@@ -27,7 +27,7 @@ namespace CHelper {
     class LexerResult {
     public:
         const std::pmr::u16string content;
-        std::pmr::vector<Token> allTokens;
+        std::pmr::vector<Token> allTokens{CPackMemoryRouter::getAllocationResource()};
 
         LexerResult(std::pmr::u16string content, std::pmr::vector<Token> allTokens);
 

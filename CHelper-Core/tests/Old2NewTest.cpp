@@ -53,9 +53,34 @@ namespace CHelper::Test {
                 uR"(structure load aaa 0 0 0 0_degrees none true true 0.5 aaa)",
                 uR"(setblock ~~~ acacia_door["direction":1])",
         };
-        for (const auto &item: oldCommands) {
-            SPDLOG_INFO("{}", styled(utf8::utf16to8(item), fg(fmt::color::red)));
-            SPDLOG_INFO("{}", styled(utf8::utf16to8(Old2New::old2new(blockFixData, item)), fg(fmt::color::lime_green)));
+        const std::vector<std::u16string> expected = {
+                uR"EXPECTED(execute as @e[x=~5] at @s if block ~~-1~ stone["stone_type"="stone"] run setblock ~~1~ command_block["conditional_bit"=false,"facing_direction"=0])EXPECTED",
+                uR"EXPECTED(execute as @e[type=zombie] at @s run summon lightning_bolt)EXPECTED",
+                uR"EXPECTED(execute as @e[type=zombie] at @s if block ~ ~-1 ~ minecraft:sand run summon lightning_bolt)EXPECTED",
+                uR"EXPECTED(execute as @e[c=10] at @s as @p at @s run summon creeper ~ ~ ~ 0 0)EXPECTED",
+                uR"EXPECTED(execute as Yancey at @s run summon ender_dragon)EXPECTED",
+                uR"EXPECTED(execute as @e[x=~5] at @s if block ~~-1~ stone["stone_type"="granite"] run setblock ~~1~ stone["stone_type"="granite_smooth"])EXPECTED",
+                uR"EXPECTED(setblock ~~~ stone)EXPECTED",
+                uR"EXPECTED(setblock ~~~ minecraft:command_block["conditional_bit"=false,"facing_direction"=1])EXPECTED",
+                uR"EXPECTED(setblock ~~~ stone["stone_type"="diorite"])EXPECTED",
+                uR"EXPECTED(setblock ~~~ stone["stone_type"="diorite"] replace)EXPECTED",
+                uR"EXPECTED(fill ~~~~~~ stone)EXPECTED",
+                uR"EXPECTED(fill ~~~~~~ stone["stone_type"="diorite_smooth"])EXPECTED",
+                uR"EXPECTED(fill ~~~~~~ stone["stone_type"="diorite_smooth"] hollow)EXPECTED",
+                uR"EXPECTED(fill ~~~~~~ stone["stone_type"="diorite_smooth"] replace stone)EXPECTED",
+                uR"EXPECTED(fill ~~~~~~ stone["stone_type"="diorite_smooth"] replace stone["stone_type"="andesite"])EXPECTED",
+                uR"EXPECTED(testforblock ~~~ stone)EXPECTED",
+                uR"EXPECTED(testforblock ~~~ stone["stone_type"="diorite"])EXPECTED",
+                uR"EXPECTED(testforblock ~~~ stone["stone_type"="diorite"] replace)EXPECTED",
+                uR"EXPECTED(/execute as @e[name="Yancey NB"] at @s positioned ~~2.5 ~ if block ~~-1~ stone["stone_type"="granite"] run /setblock ~ ~-1 ~ command_block["conditional_bit"=false,"facing_direction"=0])EXPECTED",
+                uR"EXPECTED(execute as @a[tag=!OP] at @s if block ~~0.05~0.3 air if block ~-0.3~-0.05~ air if block ~~-0.05~0.3 air if block ~0.3~-0.05~0.3 air if block ~-0.3~-0.05~-0.3 air if block ~0.3~-0.05~-0.3 air if block ~-0.3~-0.05~0.3 air run scoreboard players add @s fly 1)EXPECTED",
+                uR"EXPECTED(summon creeper ~ ~ ~ 0 0 minecraft:become_charged "充能苦力怕")EXPECTED",
+                uR"EXPECTED(structure load aaa 0 0 0 0_degrees none true true true 0.5 aaa)EXPECTED",
+                uR"EXPECTED(setblock ~~~ acacia_door["direction"=1])EXPECTED",
+        };
+        ASSERT_EQ(oldCommands.size(), expected.size());
+        for (size_t i = 0; i < oldCommands.size(); ++i) {
+            EXPECT_EQ(Old2New::old2new(blockFixData, oldCommands[i]), expected[i]) << utf8::utf16to8(oldCommands[i]);
         }
     }
 

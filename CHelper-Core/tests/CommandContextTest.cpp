@@ -268,9 +268,8 @@ namespace CHelper::Test {
         EXPECT_EQ(parsed.front()->getMessage(), message);
     }
 
-    TEST(CommandContextTest, CopiesTemporaryInputAndResultsOutliveContext) {
+    TEST(CommandContextTest, CopiesTemporaryInputAndOwnsTextResults) {
         const auto cpack = loadCPack();
-        std::vector<AutoSuggestion::Suggestion> suggestions;
         std::optional<std::pair<std::u16string, size_t>> applied;
         std::u16string structure, hint;
         {
@@ -278,13 +277,13 @@ namespace CHelper::Test {
             CommandContext context(cpack, input);
             input.assign(1024, u'x');
             EXPECT_EQ(context.getCommand(), u"gi");
-            suggestions = context.getSuggestions(2);
+            const auto suggestions = context.getSuggestions(2);
+            ASSERT_FALSE(suggestions.empty());
+            EXPECT_FALSE(suggestions.front().content->name.empty());
             structure = context.getStructure();
             hint = context.getParamHint(2);
             applied = context.applySuggestion(2, 0);
         }
-        ASSERT_FALSE(suggestions.empty());
-        EXPECT_FALSE(suggestions.front().content->name.empty());
         EXPECT_FALSE(structure.empty());
         EXPECT_FALSE(hint.empty());
         ASSERT_TRUE(applied);
