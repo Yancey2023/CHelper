@@ -844,6 +844,21 @@ TEST(BinaryUtilTest, CommandGraphBinaryReferencesAndBounds) {
     }
 }
 
+TEST(BinaryUtilTest, BinaryBooleansNormalizeNonzeroBytesWithoutInvalidObjectRepresentations) {
+    for (unsigned byte = 0; byte <= UINT8_MAX; ++byte) {
+        SCOPED_TRACE(byte);
+        const std::string binary(1, static_cast<char>(byte));
+        bool value = false;
+        ASSERT_NO_THROW(CHelper::readBinary(value, binary));
+        EXPECT_EQ(value, byte != 0);
+    }
+    for (const bool value: {false, true}) {
+        std::string binary;
+        CHelper::writeBinary(binary, value);
+        EXPECT_EQ(binary, std::string(1, value ? '\x01' : '\x00'));
+    }
+}
+
 TEST(BinaryUtilTest, FixedWidthVectorBinary) {
     const std::string bytes("\x02\x00\x00\x00\x78\x56\x34\x12\xff\xff\xff\xff", 12);
     std::vector<std::uint32_t> values;

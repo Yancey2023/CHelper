@@ -131,7 +131,9 @@ namespace glz {
     struct from<CHelper::BinaryFormat, T> {
         template<auto Opts, class V, is_context Ctx, class It, class End>
         static void op(V &&value, Ctx &&ctx, It &&it, End &&end) noexcept {
-            using Raw = raw_type_t<T>;
+            // Arbitrary input bytes are valid uint8_t representations, but only
+            // 0 and 1 are valid bool representations. Convert after reading.
+            using Raw = std::conditional_t<std::is_same_v<T, bool>, std::uint8_t, raw_type_t<T>>;
             if (static_cast<size_t>(end - it) < sizeof(Raw)) [[unlikely]] {
                 ctx.error = error_code::unexpected_end;
                 return;
