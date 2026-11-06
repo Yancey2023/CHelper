@@ -166,9 +166,9 @@ chelper_fetch_thirdparty(
   EXCLUDE_FROM_ALL)
 chelper_fetch_thirdparty(
   unordered_dense GIT_REPOSITORY
-  https://github.com/martinus/unordered_dense.git GIT_TAG v5.2.0 SYSTEM)
+  https://github.com/martinus/unordered_dense.git GIT_TAG v5.3.3 SYSTEM)
 chelper_fetch_thirdparty(
-  glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v9.0.0)
+  glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v9.1.0)
 chelper_fetch_thirdparty(spdlog GIT_REPOSITORY
                          https://github.com/gabime/spdlog.git GIT_TAG v1.17.0)
 if(BUILD_TESTING OR CHELPER_BUILD_BENCHMARKS)

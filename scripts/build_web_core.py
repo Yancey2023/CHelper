@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 
-EMSCRIPTEN_VERSION = "6.0.10"
+EMSCRIPTEN_VERSION = "6.0.13"
 
 
 def ensure_download_emsdk(toolchain_dir: str):
@@ -77,7 +77,13 @@ def build_web_core(toolchain_dir: str):
             "-s",
             "WASM=1",
             "-s",
-            "EXPORTED_RUNTIME_METHODS=[]",
+            "EXPORTED_RUNTIME_METHODS=['HEAPU8','HEAPU32']",
+            "-s",
+            "MODULARIZE=1",
+            "-s",
+            "EXPORT_ES6=1",
+            "-s",
+            "EXPORT_NAME=createCHelperModule",
         ],
         check=True,
     )
@@ -85,23 +91,23 @@ def build_web_core(toolchain_dir: str):
         os.path.join(build_directory, "libCHelperWeb.wasm"),
         os.path.join(".", "CHelper-Web", "src", "assets", "libCHelperWeb.wasm"),
     )
-    shutil.copyfile(
-        os.path.join(build_directory, "libCHelperWeb.js"),
-        os.path.join(".", "CHelper-Web", "src", "core", "libCHelperWeb.js"),
-    )
     with open(os.path.join(build_directory, "libCHelperWeb.js"), "r") as fp:
         content = fp.read()
         content = "import wasmUrl from '@/assets/libCHelperWeb.wasm?url'\n\n" + content
-        content = content.replace('locateFile("libCHelperWeb.wasm")', "wasmUrl;")
-        content = content.replace(
-            "var wasmExports;createWasm()",
-            "var wasmExports;export var createWasmFuture = createWasm()",
-        )
+        # Use Emscripten's public async module factory. Generated implementation
+        # details (such as createWasm and local export variables) can change.
         content += """
-// 内存视图可能因内存增长（ALLOW_MEMORY_GROWTH）而失效，每次读取前通过 HEAPU8 获取底层 buffer
+let wasmModule
+export const createWasmFuture = createCHelperModule({
+  locateFile: () => wasmUrl,
+}).then((module) => {
+  wasmModule = module
+})
+
+// 内存视图可能因内存增长（ALLOW_MEMORY_GROWTH）而失效，每次读取前通过 wasmModule.HEAPU8 获取底层 buffer
 let u16View = null
 function getHEAPU16() {
-  const buffer = HEAPU8.buffer
+  const buffer = wasmModule.HEAPU8.buffer
   if (u16View === null || u16View.buffer !== buffer) {
     u16View = new Uint16Array(buffer)
   }
@@ -129,9 +135,9 @@ function checkMemRange(start, byteLength, what) {
     throw new Error(`Invalid WASM buffer: ${what} 长度非法: ${byteLength}`)
   }
   const end = start + byteLength
-  if (start < 0 || end > HEAPU8.byteLength || end < start) {
+  if (start < 0 || end > wasmModule.HEAPU8.byteLength || end < start) {
     throw new Error(
-      `Invalid WASM buffer: ${what} 越界 [${start}, ${end}), 内存大小 ${HEAPU8.byteLength}`,
+      `Invalid WASM buffer: ${what} 越界 [${start}, ${end}), 内存大小 ${wasmModule.HEAPU8.byteLength}`,
     )
   }
 }
@@ -142,7 +148,7 @@ function readU32(ptr) {
     throw new Error(`Invalid WASM buffer: u32 读取位置未 4 字节对齐: ${ptr}`)
   }
   checkMemRange(ptr, 4, 'u32')
-  return { value: HEAPU32[ptr >>> 2], next: ptr + 4 }
+  return { value: wasmModule.HEAPU32[ptr >>> 2], next: ptr + 4 }
 }
 
 // 读取 [u32 长度][u16 字符串]（ptr 已 4 对齐），返回 { value, next }
@@ -159,7 +165,7 @@ function readUtf16(ptr) {
 
 // 写入 utf16 编码并以0结尾的字符串，返回起始指针（仅用于向 C++ 传入命令文本）
 function writeString(content) {
-  const ptr = _malloc((content.length + 1) * 2)
+  const ptr = wasmModule._malloc((content.length + 1) * 2)
   const start = ptr / 2
   const end = start + content.length
   let i = start
@@ -175,8 +181,8 @@ function writeString(content) {
 // 返回 { value, next }，value 形如 { id, title, description }
 function readSuggestionRecord(ptr, which) {
   checkMemRange(ptr, 8, `补全建议头部(记录 ${which})`)
-  const nameLength = HEAPU32[ptr >>> 2]
-  const descriptionLength = HEAPU32[(ptr + 4) >>> 2]
+  const nameLength = wasmModule.HEAPU32[ptr >>> 2]
+  const descriptionLength = wasmModule.HEAPU32[(ptr + 4) >>> 2]
   checkMemRange(
     ptr + 8,
     (nameLength + descriptionLength) * 2,
@@ -207,8 +213,8 @@ function readErrorReasons(basePtr) {
   for (let i = 0; i < count.value; i++) {
     ptr = align4(ptr) // C++ 在每条记录末尾写入了补齐到 4 的 padding
     checkMemRange(ptr, 12, `错误记录 ${i}`)
-    const start = HEAPU32[ptr >>> 2]
-    const end = HEAPU32[(ptr + 4) >>> 2]
+    const start = wasmModule.HEAPU32[ptr >>> 2]
+    const end = wasmModule.HEAPU32[(ptr + 4) >>> 2]
     const reason = readUtf16(ptr + 8)
     errorReasons.push({ start, end, errorReason: reason.value })
     ptr = reason.next
@@ -237,17 +243,17 @@ function readSuggestions(basePtr) {
 // 所有和命令相关的功能都在CommandContext上执行
 export class CHelperCore {
   constructor(cpack) {
-    const cpackPtr = _malloc(cpack.byteLength)
-    HEAP8.set(cpack, cpackPtr)
-    this._corePtr = _init(cpackPtr, cpack.byteLength)
-    _free(cpackPtr)
+    const cpackPtr = wasmModule._malloc(cpack.byteLength)
+    wasmModule.HEAPU8.set(cpack, cpackPtr)
+    this._corePtr = wasmModule._init(cpackPtr, cpack.byteLength)
+    wasmModule._free(cpackPtr)
     if (this._corePtr === 0) {
       throw 'fail to init CHelper core'
     }
   }
 
   release() {
-    _release(this._corePtr)
+    wasmModule._release(this._corePtr)
     this._corePtr = 0
   }
 
@@ -280,7 +286,7 @@ function readSyntaxTokens(ptr) {
   checkMemRange(count.next, count.value, '语法 token 数量')
   const syntaxTokens = []
   for (let i = 0; i < count.value; i++) {
-    syntaxTokens.push(HEAPU8[count.next + i])
+    syntaxTokens.push(wasmModule.HEAPU8[count.next + i])
   }
   return syntaxTokens
 }
@@ -293,21 +299,21 @@ export class CommandContext {
   // corePtr 是CHelperCore对应的指针，command 是命令文本
   constructor(corePtr, command) {
     const ptr = writeString(command)
-    this._contextPtr = _createCommandContext(corePtr, ptr)
-    _free(ptr)
+    this._contextPtr = wasmModule._createCommandContext(corePtr, ptr)
+    wasmModule._free(ptr)
     if (this._contextPtr === 0) {
       throw 'fail to create CommandContext'
     }
   }
 
   release() {
-    _releaseCommandContext(this._contextPtr)
+    wasmModule._releaseCommandContext(this._contextPtr)
     this._contextPtr = 0
   }
 
   // 获取这个上下文对应的命令文本
   getCommand() {
-    const ptr = _contextGetCommand(this._contextPtr)
+    const ptr = wasmModule._contextGetCommand(this._contextPtr)
     if (ptr === 0) {
       return ''
     }
@@ -316,7 +322,7 @@ export class CommandContext {
 
   // 获取命令结构
   getStructure() {
-    const ptr = _contextGetStructure(this._contextPtr)
+    const ptr = wasmModule._contextGetStructure(this._contextPtr)
     if (ptr === 0) {
       return ''
     }
@@ -325,7 +331,7 @@ export class CommandContext {
 
   // 获取指定位置的参数注释
   getParamHint(index) {
-    const ptr = _contextGetParamHint(this._contextPtr, index)
+    const ptr = wasmModule._contextGetParamHint(this._contextPtr, index)
     if (ptr === 0) {
       return ''
     }
@@ -334,7 +340,7 @@ export class CommandContext {
 
   // 获取命令的错误原因
   getErrorReasons() {
-    const ptr = _contextGetErrorReasons(this._contextPtr)
+    const ptr = wasmModule._contextGetErrorReasons(this._contextPtr)
     if (ptr === 0) {
       return []
     }
@@ -343,12 +349,12 @@ export class CommandContext {
 
   // 获取指定位置的补全提示数量
   getSuggestionSize(index) {
-    return _contextGetSuggestionSize(this._contextPtr, index)
+    return wasmModule._contextGetSuggestionSize(this._contextPtr, index)
   }
 
   // 获取指定位置的其中一个补全提示
   getSuggestion(index, which) {
-    const ptr = _contextGetSuggestion(this._contextPtr, index, which)
+    const ptr = wasmModule._contextGetSuggestion(this._contextPtr, index, which)
     if (ptr === 0) {
       return null
     }
@@ -357,7 +363,7 @@ export class CommandContext {
 
   // 获取指定位置的所有补全提示
   getAllSuggestions(index) {
-    const ptr = _contextGetAllSuggestions(this._contextPtr, index)
+    const ptr = wasmModule._contextGetAllSuggestions(this._contextPtr, index)
     if (ptr === 0) {
       return []
     }
@@ -367,17 +373,17 @@ export class CommandContext {
   // 把指定位置的其中一个补全提示应用到命令文本
   // 不会修改自身的状态，同样的操作可以重复执行
   applySuggestion(index, which) {
-    return readClickSuggestionResult(_contextApplySuggestion(this._contextPtr, index, which))
+    return readClickSuggestionResult(wasmModule._contextApplySuggestion(this._contextPtr, index, which))
   }
 
   // 获取每个字符的token类型，用于语法高亮
   getSyntaxTokens() {
-    return readSyntaxTokens(_contextGetSyntaxTokens(this._contextPtr))
+    return readSyntaxTokens(wasmModule._contextGetSyntaxTokens(this._contextPtr))
   }
 
   // 获取最佳解析路径中已经匹配的命令语义节点数量
   getNodeCount() {
-    return _contextGetNodeCount(this._contextPtr)
+    return wasmModule._contextGetNodeCount(this._contextPtr)
   }
 }
 """

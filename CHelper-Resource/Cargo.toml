@@ -14,20 +14,20 @@ debug = "line-tables-only"
 
 [workspace.dependencies]
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = { version = "1.0.151", features = ["preserve_order"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
 serde_json5 = "0.2.1"
-indexmap = "2"
-tokio = { version = "1.53.2", features = ["full"] }
+indexmap = "2.14.2"
+tokio = { version = "1.54.1", features = ["full"] }
 reqwest = { version = "0.13.5", features = ["json", "gzip", "form"] }
 anyhow = "1.0.104"
 thiserror = "2.0.21"
 clap = { version = "4.6.7", features = ["derive"] }
 tar = "0.4.46"
-flate2 = "1.1.10"
+flate2 = "1.1.11"
 regex = "1.13.1"
-sha2 = "0.11.0"
+sha2 = "0.11.1"
 sha1 = "0.11.0"
 hex = "0.4.3"
-toml = "1.1.6"
+toml = "1.2.1"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
