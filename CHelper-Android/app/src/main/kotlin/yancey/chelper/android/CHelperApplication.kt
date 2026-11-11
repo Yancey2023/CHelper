@@ -26,22 +26,43 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import com.hjq.toast.Toaster
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.android.window.LoongFlowWindowManager
+import yancey.chelper.android.work.LibrarySyncScheduler
 import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
+import yancey.chelper.data.StartupState
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 
 class CHelperApplication : Application() {
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    lateinit var startup: StartupState
+        private set
+
     override fun onCreate() {
         super.onCreate()
+        BackgroundStore.init(
+            dataDir.resolve("theme"),
+            maxOf(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels)
+                .coerceIn(720, 2048),
+        )
+        val credentialsReady = CompletableDeferred<Unit>()
+        startup =
+            StartupState(SettingsDataStore(this), BackgroundStore.INSTANCE, applicationScope) {
+                credentialsReady.await()
+            }
         // 隐私政策管理初始化
         PolicyGrantManager.init(
             assets.open("about/privacy_policy.txt").bufferedReader().use { it.readText() },
-            dataDir.resolve("lastReadContent.txt")
+            dataDir.resolve("lastReadContent.txt"),
         )
         // 用于数据分析和性能监控的第三方库初始化，依赖于 PolicyGrantManager
         MonitorUtil.init(this)
@@ -51,25 +72,29 @@ class CHelperApplication : Application() {
             Gravity.BOTTOM,
             0,
             TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                20f,
-                resources.displayMetrics
-            ).toInt()
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    20f,
+                    resources.displayMetrics,
+                )
+                .toInt(),
         )
         // 游龙悬浮窗单例初始化
         LoongFlowWindowManager.init(this)
         // 网络服务初始化
         ServiceManager.init(this)
-        LoginUtil.init(dataDir.resolve("library").resolve("user.json")) { throwable ->
-            Log.e("LoginUtil", "fail to read user from json", throwable)
-            MonitorUtil.generateCustomLog(throwable, "ReadUserException")
+        applicationScope.launch(Dispatchers.IO) {
+            try {
+                LoginUtil.init(this@CHelperApplication) { throwable ->
+                    Log.e("LoginUtil", "Unable to restore protected session", throwable)
+                    MonitorUtil.generateCustomLog(throwable, "ReadUserException")
+                }
+            } finally {
+                credentialsReady.complete(Unit)
+            }
         }
+        LibrarySyncScheduler.observe(this, applicationScope)
         // 访客认证初始化（用于自动访客登录）
         GuestAuthUtil.init(this)
-        // 设置初始化
-        SettingsDataStore(this).init()
-        // 自定义主题初始化
-        BackgroundStore.init(dataDir.resolve("theme"))
 
         // 悬浮窗前台服务通知渠道
         createFloatingWindowNotificationChannel()
@@ -77,13 +102,15 @@ class CHelperApplication : Application() {
 
     private fun createFloatingWindowNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                FLOATING_WINDOW_CHANNEL_ID,
-                "悬浮窗服务",
-                NotificationManager.IMPORTANCE_LOW // 低优先级，不发声不震动
-            ).apply {
-                description = "CHelper 悬浮窗运行时的常驻通知"
-            }
+            val channel =
+                NotificationChannel(
+                        FLOATING_WINDOW_CHANNEL_ID,
+                        "悬浮窗服务",
+                        NotificationManager.IMPORTANCE_LOW, // 低优先级，不发声不震动
+                    )
+                    .apply {
+                        description = "CHelper 悬浮窗运行时的常驻通知"
+                    }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
@@ -93,3 +120,6 @@ class CHelperApplication : Application() {
         const val FLOATING_WINDOW_CHANNEL_ID = "floating_window_channel"
     }
 }
+
+val android.content.Context.startupState: StartupState
+    get() = (applicationContext as CHelperApplication).startup

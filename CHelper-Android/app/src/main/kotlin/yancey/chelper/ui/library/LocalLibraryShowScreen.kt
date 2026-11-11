@@ -36,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
@@ -70,13 +70,16 @@ import yancey.chelper.ui.library.mcd.parseMCDStructure
 @Composable
 fun LocalLibraryShowScreen(
     library: LibraryFunction?,
-    onEdit: (() -> Unit)? = null
+    onEdit: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
-    val ambiguousDefault by settingsDataStore.ambiguousLineDefault()
-        .collectAsState(initial = "comment")
-    val hideMetadata by settingsDataStore.isHideMetadataPreview().collectAsState(initial = false)
+    val ambiguousDefault by
+        settingsDataStore
+            .ambiguousLineDefault()
+            .collectAsStateWithLifecycle(initialValue = "comment")
+    val hideMetadata by
+        settingsDataStore.isHideMetadataPreview().collectAsStateWithLifecycle(initialValue = false)
     val resolvedSource = remember(library) { library?.toFullLocalMcd().orEmpty() }
     var showMenu by remember { mutableStateOf(false) }
     var showRawSource by remember { mutableStateOf(false) }
@@ -85,15 +88,17 @@ fun LocalLibraryShowScreen(
 
     fun openLoongFlowImport() {
         val currentLibrary = library ?: return
-        if (XXPermissions.isGrantedPermission(
+        if (
+            XXPermissions.isGrantedPermission(
                 context,
-                PermissionLists.getSystemAlertWindowPermission()
+                PermissionLists.getSystemAlertWindowPermission(),
             )
         ) {
-            val shown = LoongFlowWindowManager.INSTANCE.showImport(
-                context,
-                currentLibrary.copy(content = resolvedSource)
-            )
+            val shown =
+                LoongFlowWindowManager.INSTANCE.showImport(
+                    context,
+                    currentLibrary.copy(content = resolvedSource),
+                )
             if (!shown) Toaster.show("游龙窗口打开失败")
         } else {
             showPermissionDialog = true
@@ -108,49 +113,44 @@ fun LocalLibraryShowScreen(
                     Icon(
                         id = R.drawable.loong_flow_import,
                         contentDescription = "游龙导入",
-                        modifier = Modifier
-                            .clickable { openLoongFlowImport() }
-                            .padding(5.dp)
-                            .size(24.dp)
+                        modifier =
+                            Modifier.clickable { openLoongFlowImport() }.padding(5.dp).size(24.dp),
                     )
                 }
                 Icon(
                     id = R.drawable.more,
                     contentDescription = "更多操作",
-                    modifier = Modifier
-                        .clickable { showMenu = true }
-                        .padding(5.dp)
-                        .size(24.dp)
+                    modifier = Modifier.clickable { showMenu = true }.padding(5.dp).size(24.dp),
                 )
             }
-        }
+        },
     ) {
         // MCDContentView 现在不再自带 LazyColumn，需要外层提供滚动；
         // 这里用 verticalScroll 给整个内容区一个垂直滚动通道
         if (showRawSource) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(CHelperTheme.colors.backgroundComponent)
-                    .padding(12.dp)
-                    .verticalScroll(rememberScrollState())
-                    .horizontalScroll(rememberScrollState())
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(horizontal = 15.dp, vertical = 10.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(CHelperTheme.colors.backgroundComponent)
+                        .padding(12.dp)
+                        .verticalScroll(rememberScrollState())
+                        .horizontalScroll(rememberScrollState())
             ) {
                 Text(text = resolvedSource)
             }
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
+                modifier =
+                    Modifier.fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 15.dp, vertical = 10.dp)
             ) {
                 MCDContentView(
                     content = resolvedSource,
                     ambiguousDefault = ambiguousDefault,
-                    showMetadata = !hideMetadata
+                    showMetadata = !hideMetadata,
                 )
             }
         }
@@ -160,12 +160,13 @@ fun LocalLibraryShowScreen(
         MenuDialog(
             onDismissRequest = { showMenu = false },
             data = buildList {
-                if (onEdit != null) add("编辑" to "edit")
-                add("逐行复制" to "line_copy")
-                add("复制全部 MCD 源码" to "copy_all")
-                add((if (showRawSource) "查看可视化" else "查看源码") to "toggle_view")
-                add("关闭" to "close")
-            }.toTypedArray(),
+                    if (onEdit != null) add("编辑" to "edit")
+                    add("逐行复制" to "line_copy")
+                    add("复制全部 MCD 源码" to "copy_all")
+                    add((if (showRawSource) "查看可视化" else "查看源码") to "toggle_view")
+                    add("关闭" to "close")
+                }
+                    .toTypedArray(),
             onChoose = { action ->
                 when (action) {
                     "edit" -> onEdit?.invoke()
@@ -179,27 +180,28 @@ fun LocalLibraryShowScreen(
 
                     "toggle_view" -> showRawSource = !showRawSource
                 }
-            }
+            },
         )
     }
 
     if (showLineCopy) {
-        val commands = remember(resolvedSource, ambiguousDefault) {
-            parseMCDStructure(resolvedSource, ambiguousDefault).chains.flatMap { chain ->
-                chain.items.mapNotNull { item ->
-                    when (item) {
-                        is ChainItem.Block -> item.block.command.takeIf(String::isNotEmpty)
-                        is ChainItem.RawCommand -> item.command.takeIf(String::isNotEmpty)
-                        is ChainItem.Comment -> null
+        val commands =
+            remember(resolvedSource, ambiguousDefault) {
+                parseMCDStructure(resolvedSource, ambiguousDefault).chains.flatMap { chain ->
+                    chain.items.mapNotNull { item ->
+                        when (item) {
+                            is ChainItem.Block -> item.block.command.takeIf(String::isNotEmpty)
+                            is ChainItem.RawCommand -> item.command.takeIf(String::isNotEmpty)
+                            is ChainItem.Comment -> null
+                        }
                     }
                 }
             }
-        }
         if (commands.isEmpty()) {
             DisposableEffect(Unit) {
                 Toaster.show("没有可复制的命令")
                 showLineCopy = false
-                onDispose { }
+                onDispose {}
             }
         } else {
             LineCopyDialog(commands = commands, onDismiss = { showLineCopy = false })
@@ -217,7 +219,7 @@ fun LocalLibraryShowScreen(
                     .request { _, deniedList ->
                         Toaster.show(if (deniedList.isEmpty()) "悬浮窗权限获取成功" else "悬浮窗权限获取失败")
                     }
-            }
+            },
         )
     }
 }
@@ -226,38 +228,41 @@ fun LocalLibraryShowScreen(
 fun LocalLibraryShowScreen(
     localEntryId: String? = null,
     id: Int? = null,
-    navController: NavHostController? = null
+    navController: NavHostController? = null,
 ) {
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunction by if (localEntryId != null) {
-        localCommandLabDataStore.localLibraryFunction(localEntryId)
-    } else {
-        localCommandLabDataStore.localLibraryFunction(id)
-    }
-        .collectAsState(initial = null)
+    val localLibraryFunction by
+        if (localEntryId != null) {
+                localCommandLabDataStore.localLibraryFunction(localEntryId)
+            } else {
+                localCommandLabDataStore.localLibraryFunction(id)
+            }
+            .collectAsStateWithLifecycle(initialValue = null)
     LocalLibraryShowScreen(
         library = localLibraryFunction,
-        onEdit = localLibraryFunction?.localEntryId?.let { targetId ->
-            { navController?.navigate(LibraryEditScreenKey(localEntryId = targetId)) }
-        }
+        onEdit =
+            localLibraryFunction?.localEntryId?.let { targetId ->
+                { navController?.navigate(LibraryEditScreenKey(localEntryId = targetId)) }
+            },
     )
 }
 
 @Preview
 @Composable
 fun LibraryShowScreenLightThemePreview() {
-    val library = LibraryFunction().apply {
-        name = "Library"
-        author = AuthorInfo(name = "Author")
-        content = buildString {
-            appendLine("@name=TestLibrary")
-            appendLine("@version=1.0.0")
-            appendLine("# This is a comment")
-            appendLine("/say Hello")
-            appendLine("/tp @s 0 0 0")
+    val library =
+        LibraryFunction().apply {
+            name = "Library"
+            author = AuthorInfo(name = "Author")
+            content = buildString {
+                appendLine("@name=TestLibrary")
+                appendLine("@version=1.0.0")
+                appendLine("# This is a comment")
+                appendLine("/say Hello")
+                appendLine("/tp @s 0 0 0")
+            }
         }
-    }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
         LocalLibraryShowScreen(library = library)
     }
@@ -266,17 +271,18 @@ fun LibraryShowScreenLightThemePreview() {
 @Preview
 @Composable
 fun LibraryShowScreenDarkThemePreview() {
-    val library = LibraryFunction().apply {
-        name = "Library"
-        author = AuthorInfo(name = "Author")
-        content = buildString {
-            appendLine("@name=TestLibrary")
-            appendLine("@version=1.0.0")
-            appendLine("# This is a comment")
-            appendLine("/say Hello")
-            appendLine("/tp @s 0 0 0")
+    val library =
+        LibraryFunction().apply {
+            name = "Library"
+            author = AuthorInfo(name = "Author")
+            content = buildString {
+                appendLine("@name=TestLibrary")
+                appendLine("@version=1.0.0")
+                appendLine("# This is a comment")
+                appendLine("/say Hello")
+                appendLine("/tp @s 0 0 0")
+            }
         }
-    }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
         LocalLibraryShowScreen(library = library)
     }

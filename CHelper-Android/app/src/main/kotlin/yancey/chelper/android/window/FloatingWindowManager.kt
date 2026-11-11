@@ -34,7 +34,6 @@ import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,8 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.rememberLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigationevent.NavigationEventDispatcher
@@ -51,11 +50,10 @@ import androidx.navigationevent.NavigationEventDispatcherOwner
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.hjq.window.EasyWindow
 import com.hjq.window.draggable.MovingWindowDraggableRule
-import kotlinx.coroutines.launch
 import yancey.chelper.R
 import yancey.chelper.android.service.FloatingWindowService
+import yancey.chelper.android.startupState
 import yancey.chelper.data.BackgroundStore
-import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.FloatingWindowNavHost
 import yancey.chelper.ui.common.CHelperTheme
 
@@ -64,24 +62,21 @@ class FloatWindowBackPressedOwner(override val lifecycle: Lifecycle) :
     override val onBackPressedDispatcher = OnBackPressedDispatcher()
 }
 
-class FloatWindowNavigationEventOwner(override val navigationEventDispatcher: NavigationEventDispatcher) :
-    NavigationEventDispatcherOwner
+class FloatWindowNavigationEventOwner(
+    override val navigationEventDispatcher: NavigationEventDispatcher
+) : NavigationEventDispatcherOwner
 
-/**
- * 悬浮窗管理
- */
-class FloatingWindowManager(
-    private val application: Application,
-) {
+/** 悬浮窗管理 */
+class FloatingWindowManager(private val application: Application) {
     /** 游龙独立悬浮窗管理器 */
-    val loongFlowManager: LoongFlowWindowManager get() = LoongFlowWindowManager.INSTANCE
+    val loongFlowManager: LoongFlowWindowManager
+        get() = LoongFlowWindowManager.INSTANCE
 
     private var mainViewWindow: EasyWindow<*>? = null
     private var iconViewWindow: EasyWindow<*>? = null
     private var composeLifecycleOwner: ComposeLifecycleOwner? = null
     private var floatBackPressedOwner: FloatWindowBackPressedOwner? = null
     private var navController: NavController? = null
-    private var theme by mutableStateOf(CHelperTheme.Theme.Light)
     private var isMainViewVisible by mutableStateOf(false)
 
     val isUsingFloatingWindow: Boolean
@@ -105,132 +100,159 @@ class FloatingWindowManager(
         floatingWindowScreenAlpha: Float,
         isFloatingWindowFontAlphaSync: Boolean,
     ) {
-        val settingsDataStore = SettingsDataStore(context)
-        // 在创建 ComposeView 前同步确定主题，避免悬浮窗先以亮色首帧渲染再动画切换到夜间
-        theme = CHelperTheme.themeOf(settingsDataStore.themeIdBlocking(), isSystemDarkMode())
-        val iconSize = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            floatingWindowIconSize.toFloat(),
-            application.resources.displayMetrics
-        ).toInt()
+        val iconSize =
+            TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    floatingWindowIconSize.toFloat(),
+                    application.resources.displayMetrics,
+                )
+                .toInt()
         val iconView = ImageView(context)
         iconView.setImageResource(R.drawable.pack_icon)
-        iconView.layoutParams = FrameLayout.LayoutParams(
-            iconSize,
-            iconSize,
-            Gravity.START or Gravity.TOP
-        )
-        val mainView = object : FrameLayout(context) {
-            override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-                if (event?.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                    if (navController != null && navController?.currentBackStackEntry != null && navController?.previousBackStackEntry == null) {
-                        iconView.callOnClick()
-                    } else {
-                        floatBackPressedOwner?.onBackPressedDispatcher?.onBackPressed()
-                    }
-                    return true
-                }
-                return super.dispatchKeyEvent(event)
-            }
-        }.apply {
-            isFocusable = true
-            isFocusableInTouchMode = true
-        }
-        val composeView = ComposeView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
-            }
-            setContent {
-                val backgroundBitmap =
-                    BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(initial = null)
-                CHelperTheme(
-                    theme,
-                    backgroundBitmap.value,
-                    screenAlphaOverride = if (isFloatingWindowFontAlphaSync) 1.0f else floatingWindowScreenAlpha
-                ) {
-                    val lifecycleOwner = rememberLifecycleOwner()
-                    val navigationEventDispatcher = remember { NavigationEventDispatcher() }
-                    val navigationEventOwner =
-                        remember { FloatWindowNavigationEventOwner(navigationEventDispatcher) }
-                    val navController = rememberNavController()
-                    val softwareKeyboardController = LocalSoftwareKeyboardController.current
-                    DisposableEffect(navController, lifecycleOwner, softwareKeyboardController) {
-                        this@FloatingWindowManager.navController = navController
-                        navController.setLifecycleOwner(lifecycleOwner)
-                        navController.setOnBackPressedDispatcher(floatBackPressedOwner!!.onBackPressedDispatcher)
-                        val listener = NavController.OnDestinationChangedListener { _, _, _ ->
-                            // 修复：输入框获取到焦点后切换页面，焦点仍停留在上一个页面的的输入框，导致无法获取返回键事件
-                            mainView.clearFocus()
-                            mainView.requestFocus()
-                            softwareKeyboardController?.hide()
+        iconView.layoutParams =
+            FrameLayout.LayoutParams(
+                iconSize,
+                iconSize,
+                Gravity.START or Gravity.TOP,
+            )
+        val mainView =
+            object : FrameLayout(context) {
+                    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+                        if (
+                            event?.keyCode == KeyEvent.KEYCODE_BACK &&
+                                event.action == KeyEvent.ACTION_UP
+                        ) {
+                            if (
+                                navController != null &&
+                                    navController?.currentBackStackEntry != null &&
+                                    navController?.previousBackStackEntry == null
+                            ) {
+                                iconView.callOnClick()
+                            } else {
+                                floatBackPressedOwner?.onBackPressedDispatcher?.onBackPressed()
+                            }
+                            return true
                         }
-                        navController.addOnDestinationChangedListener(listener)
-                        onDispose {
-                            navController.removeOnDestinationChangedListener(listener)
-                            if (this@FloatingWindowManager.navController == navController) {
-                                this@FloatingWindowManager.navController = null
+                        return super.dispatchKeyEvent(event)
+                    }
+                }
+                .apply {
+                    isFocusable = true
+                    isFocusableInTouchMode = true
+                }
+        val composeView =
+            ComposeView(context).apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+                }
+                setContent {
+                    val startupSettings by
+                        context.startupState.settings.collectAsStateWithLifecycle()
+                    val ready = startupSettings ?: return@setContent
+                    val initialTheme =
+                        CHelperTheme.themeOf(
+                            ready.themeId ?: "MODE_NIGHT_FOLLOW_SYSTEM",
+                            isSystemDarkMode(),
+                        )
+                    val backgroundBitmap =
+                        BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsStateWithLifecycle(
+                            initialValue = BackgroundStore.INSTANCE.backgroundBitmap
+                        )
+                    CHelperTheme(
+                        initialTheme,
+                        backgroundBitmap.value,
+                        screenAlphaOverride =
+                            if (isFloatingWindowFontAlphaSync) 1.0f else floatingWindowScreenAlpha,
+                    ) {
+                        val lifecycleOwner = rememberLifecycleOwner()
+                        val navigationEventDispatcher = remember { NavigationEventDispatcher() }
+                        val navigationEventOwner = remember {
+                            FloatWindowNavigationEventOwner(navigationEventDispatcher)
+                        }
+                        val navController = rememberNavController()
+                        val softwareKeyboardController = LocalSoftwareKeyboardController.current
+                        DisposableEffect(
+                            navController,
+                            lifecycleOwner,
+                            softwareKeyboardController,
+                        ) {
+                            this@FloatingWindowManager.navController = navController
+                            navController.setLifecycleOwner(lifecycleOwner)
+                            navController.setOnBackPressedDispatcher(
+                                floatBackPressedOwner!!.onBackPressedDispatcher
+                            )
+                            val listener = NavController.OnDestinationChangedListener { _, _, _ ->
+                                // 修复：输入框获取到焦点后切换页面，焦点仍停留在上一个页面的的输入框，导致无法获取返回键事件
+                                mainView.clearFocus()
+                                mainView.requestFocus()
+                                softwareKeyboardController?.hide()
+                            }
+                            navController.addOnDestinationChangedListener(listener)
+                            onDispose {
+                                navController.removeOnDestinationChangedListener(listener)
+                                if (this@FloatingWindowManager.navController == navController) {
+                                    this@FloatingWindowManager.navController = null
+                                }
                             }
                         }
-                    }
-                    CompositionLocalProvider(
-                        LocalOnBackPressedDispatcherOwner provides floatBackPressedOwner!!,
-                        LocalNavigationEventDispatcherOwner provides navigationEventOwner,
-                    ) {
-                        FloatingWindowNavHost(
-                            navController = navController,
-                            shutdown = { stopFloatingWindow() },
-                            hideView = { iconView.callOnClick() },
-                            isWindowVisible = isMainViewVisible,
-                        )
+                        CompositionLocalProvider(
+                            LocalOnBackPressedDispatcherOwner provides floatBackPressedOwner!!,
+                            LocalNavigationEventDispatcherOwner provides navigationEventOwner,
+                        ) {
+                            FloatingWindowNavHost(
+                                navController = navController,
+                                shutdown = { stopFloatingWindow() },
+                                hideView = { iconView.callOnClick() },
+                                isWindowVisible = isMainViewVisible,
+                            )
+                        }
                     }
                 }
             }
-        }
         mainView.addView(composeView)
-        iconViewWindow = EasyWindow.with(application)
-            .setContentView(iconView)
-            .setWindowDraggableRule(MovingWindowDraggableRule())
-            .setOutsideTouchable(true)
-            .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
-            .setWindowAnim(0)
-            .setWindowAlpha(floatingWindowIconAlpha)
-        mainViewWindow = EasyWindow.with(application)
-            .setContentView(mainView)
-            .setWindowSize(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT
-            )
-            .removeWindowFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-            .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            .setSystemUiVisibility(
-                (mainView.systemUiVisibility
-                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
-            )
-            .setWindowAnim(0)
-            .setWindowAlpha(if (isFloatingWindowFontAlphaSync) floatingWindowScreenAlpha else 1.0f)
-        composeLifecycleOwner = ComposeLifecycleOwner().apply {
-            attachToDecorView(mainViewWindow!!.rootLayout)
-            onCreate()
-            onStart()
-            lifecycleScope.launch {
-                settingsDataStore.themeId().collect {
-                    theme = CHelperTheme.themeOf(it, isSystemDarkMode())
-                }
+        iconViewWindow =
+            EasyWindow.with(application)
+                .setContentView(iconView)
+                .setWindowDraggableRule(MovingWindowDraggableRule())
+                .setOutsideTouchable(true)
+                .setWindowLocation(Gravity.START or Gravity.TOP, 0, 0)
+                .setWindowAnim(0)
+                .setWindowAlpha(floatingWindowIconAlpha)
+        mainViewWindow =
+            EasyWindow.with(application)
+                .setContentView(mainView)
+                .setWindowSize(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                )
+                .removeWindowFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                .setSystemUiVisibility(
+                    (mainView.systemUiVisibility or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+                )
+                .setWindowAnim(0)
+                .setWindowAlpha(
+                    if (isFloatingWindowFontAlphaSync) floatingWindowScreenAlpha else 1.0f
+                )
+        composeLifecycleOwner =
+            ComposeLifecycleOwner().apply {
+                attachToDecorView(mainViewWindow!!.rootLayout)
+                onCreate()
             }
-        }
         floatBackPressedOwner = FloatWindowBackPressedOwner(composeLifecycleOwner!!.lifecycle)
         mainView.requestFocus()
         iconView.setOnClickListener {
             mainViewWindow?.apply {
                 if (windowViewVisibility == View.VISIBLE) {
-                    composeLifecycleOwner?.onPause()
+                    composeLifecycleOwner?.hide()
                     mainView.clearFocus()
                     windowViewVisibility = View.INVISIBLE
                     isMainViewVisible = false
                 } else {
-                    composeLifecycleOwner?.onResume()
+                    composeLifecycleOwner?.show()
                     mainView.requestFocus()
                     windowViewVisibility = View.VISIBLE
                     isMainViewVisible = true
@@ -248,18 +270,15 @@ class FloatingWindowManager(
         }
     }
 
-    /**
-     * 关闭悬浮窗
-     */
+    /** 关闭悬浮窗 */
     fun stopFloatingWindow() {
         isMainViewVisible = false
         FloatingWindowService.stop(application)
         mainViewWindow.let {
             if (it != null) {
                 composeLifecycleOwner?.apply {
-                    onStop()
                     onDestroy()
-                    detachFromDecorView(it.contentView)
+                    detachFromDecorView(it.rootLayout)
                 }
                 composeLifecycleOwner = null
                 floatBackPressedOwner = null
@@ -277,5 +296,6 @@ class FloatingWindowManager(
     }
 
     private fun isSystemDarkMode(): Boolean =
-        (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
 }

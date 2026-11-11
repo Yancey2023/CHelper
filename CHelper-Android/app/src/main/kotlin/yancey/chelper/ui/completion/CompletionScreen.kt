@@ -44,11 +44,11 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +69,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -79,6 +80,7 @@ import yancey.chelper.R
 import yancey.chelper.android.widget.CommandEditText
 import yancey.chelper.core.ErrorReason
 import yancey.chelper.core.SelectedString
+import yancey.chelper.core.Suggestion
 import yancey.chelper.core.Theme
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.HistoryScreenKey
@@ -89,14 +91,14 @@ import yancey.chelper.ui.common.layout.RootView
 import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Text
 
-//@Composable
-//fun CommandTextField(
+// @Composable
+// fun CommandTextField(
 //    value: TextFieldState,
 //    modifier: Modifier = Modifier,
 //    hint: String? = null,
 //    errorReasons: Array<ErrorReason?>?,
 //    syntaxHighlightTokens: IntArray?,
-//) {
+// ) {
 //    var textLayoutResult: TextLayoutResult? = null
 //    val scrollState = rememberScrollState()
 //    val syntaxHighlightBoolean = CHelperTheme.colors.syntaxHighlightBoolean
@@ -205,7 +207,8 @@ import yancey.chelper.ui.common.widget.Text
 //                        val lineStart = textLayoutResult!!.getLineForOffset(start)
 //                        val lineEnd = textLayoutResult!!.getLineForOffset(end)
 //                        if (lineStart == lineEnd) {
-//                            val y = (textLayoutResult!!.getLineBottom(lineStart) + underlineDeltaY)
+//                            val y = (textLayoutResult!!.getLineBottom(lineStart) +
+// underlineDeltaY)
 //                            drawLine(
 //                                color = underlineErrorReason,
 //                                start = Offset(
@@ -259,24 +262,22 @@ import yancey.chelper.ui.common.widget.Text
 //        },
 //        scrollState = scrollState
 //    )
-//}
+// }
 
 @Composable
 fun ToolbarItem(@DrawableRes id: Int, description: String, onClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .padding(5.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.padding(5.dp).clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             id = id,
             modifier = Modifier.size(24.dp),
-            contentDescription = description
+            contentDescription = description,
         )
         Text(
             text = description,
-            style = TextStyle(fontSize = 14.sp)
+            style = TextStyle(fontSize = 14.sp),
         )
     }
 }
@@ -287,66 +288,65 @@ fun CompletionScreenTopBar(
     paramHint: String?,
     errorReasons: Array<ErrorReason>?,
     fontSize: TextUnit = TextUnit.Unspecified,
-    onErrorClick: (ErrorReason) -> Unit = {}
+    onErrorClick: (ErrorReason) -> Unit = {},
 ) {
     Column {
         Text(
             text = structure ?: "欢迎使用CHelper",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
-            style = TextStyle(
-                fontSize = fontSize,
-            )
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+            style = TextStyle(fontSize = fontSize),
         )
         Text(
             text = paramHint ?: "作者：Yancey",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
-            style = TextStyle(
-                color = CHelperTheme.colors.textSecondary,
-                fontSize = fontSize,
-            )
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+            style =
+                TextStyle(
+                    color = CHelperTheme.colors.textSecondary,
+                    fontSize = fontSize,
+                ),
         )
         if (!errorReasons.isNullOrEmpty()) {
             if (errorReasons.size > 1) {
                 Text(
                     text = "可能的错误原因：",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
-                    style = TextStyle(
-                        color = CHelperTheme.colors.textErrorReason,
-                        fontSize = fontSize,
-                    )
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+                    style =
+                        TextStyle(
+                            color = CHelperTheme.colors.textErrorReason,
+                            fontSize = fontSize,
+                        ),
                 )
             }
             errorReasons.forEachIndexed { index, error ->
                 Text(
-                    text = if (errorReasons.size == 1) {
-                        "${error.errorReason ?: "未知错误"} · 点此定位"
-                    } else {
-                        "${index + 1}. ${error.errorReason ?: "未知错误"} · 点此定位"
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onErrorClick(error) }
-                        .padding(horizontal = 5.dp, vertical = 2.dp),
-                    style = TextStyle(
-                        color = CHelperTheme.colors.textErrorReason,
-                        fontSize = fontSize,
-                    )
+                    text =
+                        if (errorReasons.size == 1) {
+                            "${error.errorReason ?: "未知错误"} · 点此定位"
+                        } else {
+                            "${index + 1}. ${error.errorReason ?: "未知错误"} · 点此定位"
+                        },
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clickable { onErrorClick(error) }
+                            .padding(horizontal = 5.dp, vertical = 2.dp),
+                    style =
+                        TextStyle(
+                            color = CHelperTheme.colors.textErrorReason,
+                            fontSize = fontSize,
+                        ),
                 )
             }
         }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(CHelperTheme.colors.line)
-        )
+        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(CHelperTheme.colors.line))
     }
+}
+
+@Composable
+private fun rememberSuggestion(viewModel: CompletionViewModel, index: Int): Suggestion? {
+    val revision = viewModel.suggestionsUpdateTimes
+    var suggestion by remember(viewModel, revision, index) { mutableStateOf<Suggestion?>(null) }
+    LaunchedEffect(viewModel, revision, index) { suggestion = viewModel.getSuggestion(index) }
+    return suggestion
 }
 
 @Composable
@@ -360,49 +360,56 @@ fun CompletionScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val commandEditorHeight = (LocalConfiguration.current.screenHeightDp / 3)
-        .coerceIn(120, 220)
-        .dp
+    val commandEditorHeight = (LocalConfiguration.current.screenHeightDp / 3).coerceIn(120, 220).dp
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
-    val cpackBranch by settingsDataStore.cpackBranch()
-        .collectAsState(initial = "")
-    val isCrowded by settingsDataStore.isCrowded()
-        .collectAsState(initial = false)
-    val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
-        .collectAsState(initial = false)
-    val isSavingWhenPausing by settingsDataStore.isSavingWhenPausing()
-        .collectAsState(initial = false)
-    val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
-        .collectAsState(initial = true)
-    val isSyntaxHighlight by settingsDataStore.isSyntaxHighlight()
-        .collectAsState(initial = false)
-    val isShowErrorReason by settingsDataStore.isShowErrorReason()
-        .collectAsState(initial = false)
-    val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
-        .collectAsState(initial = 20000)
+    val cpackBranch by
+        settingsDataStore.cpackBranch().collectAsStateWithLifecycle(initialValue = "")
+    val isCrowded by settingsDataStore.isCrowded().collectAsStateWithLifecycle(initialValue = false)
+    val isHideWindowWhenCopying by
+        settingsDataStore
+            .isHideWindowWhenCopying()
+            .collectAsStateWithLifecycle(initialValue = false)
+    val isSavingWhenPausing by
+        settingsDataStore.isSavingWhenPausing().collectAsStateWithLifecycle(initialValue = false)
+    val isCheckingBySelection by
+        settingsDataStore.isCheckingBySelection().collectAsStateWithLifecycle(initialValue = true)
+    val isSyntaxHighlight by
+        settingsDataStore.isSyntaxHighlight().collectAsStateWithLifecycle(initialValue = false)
+    val isShowErrorReason by
+        settingsDataStore.isShowErrorReason().collectAsStateWithLifecycle(initialValue = false)
+    val syntaxHighlightMaxLength by
+        settingsDataStore
+            .syntaxHighlightMaxLength()
+            .collectAsStateWithLifecycle(initialValue = 20000)
     var isCommandEditorHintVisible by remember { mutableStateOf(false) }
-    var isLifecycleResumed by remember(lifecycleOwner) {
-        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-    }
+    var isLifecycleResumed by
+        remember(lifecycleOwner) {
+            mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+        }
 
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { source, _ ->
+        val observer = LifecycleEventObserver { source, event ->
+            if (event == Lifecycle.Event.ON_STOP) viewModel.flushDraft()
             isLifecycleResumed = source.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            viewModel.flushDraft()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     LaunchedEffect(
         viewModel.nodeCount,
         viewModel.isCommandEditorMode,
         isScreenVisible,
-        isLifecycleResumed
+        isLifecycleResumed,
     ) {
-        if (!shouldShowCommandEditorHint(
+        if (
+            !shouldShowCommandEditorHint(
                 viewModel.nodeCount,
                 viewModel.isCommandEditorMode,
-                isScreenVisible && isLifecycleResumed
+                isScreenVisible && isLifecycleResumed,
             )
         ) {
             isCommandEditorHintVisible = false
@@ -411,26 +418,28 @@ fun CompletionScreen(
         }
     }
 
-    DisposableEffect(viewModel, syntaxHighlightMaxLength) {
-        viewModel.syntaxHighlightMaxLength = syntaxHighlightMaxLength
-        onDispose { }
+    DisposableEffect(viewModel, isSavingWhenPausing) {
+        viewModel.setDraftSaving(isSavingWhenPausing)
+        onDispose { viewModel.flushDraft() }
     }
-
-    DisposableEffect(isSavingWhenPausing) {
-        if (isSavingWhenPausing) {
-            viewModel.resumeText()
-        }
-        onDispose { }
-    }
-    DisposableEffect(viewModel, cpackBranch) {
-        viewModel.refreshCHelperCore(
-            context,
-            cpackBranch,
-            isCheckingBySelection,
-            isSyntaxHighlight,
-            isShowErrorReason
-        )
-        onDispose { }
+    LaunchedEffect(
+        viewModel,
+        cpackBranch,
+        isCheckingBySelection,
+        isSyntaxHighlight,
+        isShowErrorReason,
+        syntaxHighlightMaxLength,
+    ) {
+        snapshotFlow { viewModel.command.text.toString() to viewModel.command.selection }
+            .collect {
+                viewModel.analyze(
+                    cpackBranch,
+                    isCheckingBySelection,
+                    isSyntaxHighlight,
+                    isShowErrorReason,
+                    syntaxHighlightMaxLength,
+                )
+            }
     }
     val clipboard = LocalClipboard.current
     val commandEditText = remember { arrayOfNulls<CommandEditText>(1) }
@@ -439,29 +448,22 @@ fun CompletionScreen(
     }
     RootView {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(CHelperTheme.colors.backgroundComponent)
+            modifier = Modifier.fillMaxSize().background(CHelperTheme.colors.backgroundComponent)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f)
-            ) {
+            Column(modifier = Modifier.fillMaxSize().weight(1f)) {
                 if (!isCrowded) {
                     CompletionScreenTopBar(
                         viewModel.structure,
                         viewModel.paramHint,
                         if (isShowErrorReason) viewModel.errorReasons else null,
-                        onErrorClick = onErrorClick
+                        onErrorClick = onErrorClick,
                     )
                 }
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                ) {
-                    items(if (isCrowded) (viewModel.suggestionsSize + 1) else viewModel.suggestionsSize) { suggestionIndex ->
+                LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
+                    items(
+                        if (isCrowded) (viewModel.suggestionsSize + 1)
+                        else viewModel.suggestionsSize
+                    ) { suggestionIndex ->
                         if (isCrowded) {
                             if (suggestionIndex == 0) {
                                 CompletionScreenTopBar(
@@ -469,74 +471,58 @@ fun CompletionScreen(
                                     viewModel.paramHint,
                                     if (isShowErrorReason) viewModel.errorReasons else null,
                                     14.sp,
-                                    onErrorClick
+                                    onErrorClick,
                                 )
                             } else {
                                 val realIndex = suggestionIndex - 1
+                                val suggestion = rememberSuggestion(viewModel, realIndex)
                                 val suggestionText =
-                                    remember(viewModel.suggestionsUpdateTimes, realIndex) {
-                                        val suggestion = viewModel.getSuggestion(realIndex)
-                                        if (suggestion != null && suggestion.description != null) {
-                                            (suggestion.name
-                                                ?: "") + " - " + suggestion.description!!
-                                        } else {
-                                            suggestion?.name ?: ""
-                                        }
-                                    }
+                                    suggestion?.let {
+                                        (it.name ?: "") +
+                                            (it.description?.let { description ->
+                                                " - $description"
+                                            } ?: "")
+                                    } ?: ""
                                 Text(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable(onClick = {
-                                            viewModel.onItemClick(realIndex)
-                                            viewModel.onSelectionChanged(
-                                                isCheckingBySelection,
-                                                isSyntaxHighlight,
-                                                isShowErrorReason
+                                    modifier =
+                                        Modifier.fillMaxWidth()
+                                            .clickable(
+                                                onClick = {
+                                                    viewModel.onItemClick(realIndex)
+                                                }
                                             )
-                                        })
-                                        .padding(5.dp),
+                                            .padding(5.dp),
                                     text = suggestionText,
-                                    style = TextStyle(
-                                        fontSize = 14.sp
-                                    )
+                                    style = TextStyle(fontSize = 14.sp),
                                 )
                             }
                         } else {
                             Column(
-                                modifier = Modifier
-                                    .clickable(onClick = {
-                                        viewModel.onItemClick(suggestionIndex)
-                                        viewModel.onSelectionChanged(
-                                            isCheckingBySelection,
-                                            isSyntaxHighlight,
-                                            isShowErrorReason
+                                modifier =
+                                    Modifier.clickable(
+                                            onClick = {
+                                                viewModel.onItemClick(suggestionIndex)
+                                            }
                                         )
-                                    })
-                                    .padding(5.dp)
+                                        .padding(5.dp)
                             ) {
-                                val suggestion =
-                                    remember(viewModel.suggestionsUpdateTimes, suggestionIndex) {
-                                        viewModel.getSuggestion(suggestionIndex)
-                                    }
+                                val suggestion = rememberSuggestion(viewModel, suggestionIndex)
                                 suggestion?.name?.let {
                                     Text(
                                         text = it,
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        style = TextStyle(
-                                            fontSize = 14.sp
-                                        )
+                                        modifier = Modifier.fillMaxWidth(),
+                                        style = TextStyle(fontSize = 14.sp),
                                     )
                                 }
                                 suggestion?.description?.let {
                                     Text(
                                         text = it,
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 14.sp
-                                        )
+                                        modifier = Modifier.fillMaxWidth(),
+                                        style =
+                                            TextStyle(
+                                                color = CHelperTheme.colors.textSecondary,
+                                                fontSize = 14.sp,
+                                            ),
                                     )
                                 }
                             }
@@ -546,167 +532,177 @@ fun CompletionScreen(
             }
             if (viewModel.isShowMenu) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(CHelperTheme.colors.background)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.SpaceAround
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .background(CHelperTheme.colors.background)
+                            .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.SpaceAround,
                 ) {
                     ToolbarItem(
                         id = R.drawable.arrow_back_up,
                         description = stringResource(R.string.layout_completion_undo),
                         onClick = {
                             viewModel.command.undoState.undo()
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.arrow_forward_up,
                         description = stringResource(R.string.layout_completion_redo),
                         onClick = {
                             viewModel.command.undoState.redo()
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.x,
                         description = stringResource(R.string.layout_completion_clear),
                         onClick = {
                             viewModel.command.clearText()
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.history,
                         description = stringResource(R.string.layout_completion_history),
                         onClick = {
                             navController.navigate(HistoryScreenKey)
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.box,
                         description = stringResource(R.string.layout_completion_local_library),
                         onClick = {
                             navController.navigate(LocalLibraryListScreenKey)
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.book,
                         description = "网络库",
                         onClick = {
                             navController.navigate(PublicLibraryListScreenKey)
-                        }
+                        },
                     )
                     ToolbarItem(
                         id = R.drawable.power,
                         description = stringResource(R.string.layout_completion_shut_down),
                         onClick = {
                             shutdown()
-                        }
+                        },
                     )
                 }
             }
             if (isCommandEditorHintVisible) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(CHelperTheme.colors.background)
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(CHelperTheme.colors.mainColor),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .background(CHelperTheme.colors.background)
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(CHelperTheme.colors.mainColor),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "命令有点长了，长按下方箭头可进入多行编辑",
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                viewModel.isCommandEditorMode = true
-                                isCommandEditorHintVisible = false
-                                Toaster.show("已开启多行编辑，再次长按箭头退出")
-                            }
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        style = TextStyle(color = Color.White, fontSize = 13.sp)
+                        modifier =
+                            Modifier.weight(1f)
+                                .clickable {
+                                    viewModel.setEditorMode(true)
+                                    isCommandEditorHintVisible = false
+                                    Toaster.show("已开启多行编辑，再次长按箭头退出")
+                                }
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                        style = TextStyle(color = Color.White, fontSize = 13.sp),
                     )
                     Text(
                         text = "×",
-                        modifier = Modifier
-                            .clickable { isCommandEditorHintVisible = false }
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        style = TextStyle(color = Color.White, fontSize = 18.sp)
+                        modifier =
+                            Modifier.clickable { isCommandEditorHintVisible = false }
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                        style = TextStyle(color = Color.White, fontSize = 18.sp),
                     )
                 }
             }
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (viewModel.isCommandEditorMode) commandEditorHeight else 40.dp)
-                    .background(CHelperTheme.colors.background),
-                verticalAlignment = if (viewModel.isCommandEditorMode) Alignment.Top else Alignment.CenterVertically
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(if (viewModel.isCommandEditorMode) commandEditorHeight else 40.dp)
+                        .background(CHelperTheme.colors.background),
+                verticalAlignment =
+                    if (viewModel.isCommandEditorMode) Alignment.Top
+                    else Alignment.CenterVertically,
             ) {
                 Icon(
-                    id = if (viewModel.isShowMenu) R.drawable.chevron_down else R.drawable.chevron_up,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = { viewModel.isShowMenu = !viewModel.isShowMenu },
-                            onLongClickLabel = if (viewModel.isCommandEditorMode) "退出多行编辑" else "进入多行编辑",
-                            onLongClick = {
-                                viewModel.isCommandEditorMode = !viewModel.isCommandEditorMode
-                                isCommandEditorHintVisible = false
-                                if (viewModel.isCommandEditorMode) {
-                                    viewModel.viewModelScope.launch {
-                                        settingsDataStore.claimCommandEditorHint()
-                                    }
-                                }
-                                Toaster.show(
+                    id =
+                        if (viewModel.isShowMenu) R.drawable.chevron_down
+                        else R.drawable.chevron_up,
+                    modifier =
+                        Modifier.combinedClickable(
+                                onClick = { viewModel.isShowMenu = !viewModel.isShowMenu },
+                                onLongClickLabel =
+                                    if (viewModel.isCommandEditorMode) "退出多行编辑" else "进入多行编辑",
+                                onLongClick = {
+                                    viewModel.setEditorMode(!viewModel.isCommandEditorMode)
+                                    isCommandEditorHintVisible = false
                                     if (viewModel.isCommandEditorMode) {
-                                        "已开启多行编辑，再次长按箭头退出"
-                                    } else {
-                                        "已退出多行编辑"
+                                        viewModel.viewModelScope.launch {
+                                            settingsDataStore.claimCommandEditorHint()
+                                        }
                                     }
-                                )
-                            }
-                        )
-                        .padding(8.dp)
-                        .size(24.dp),
-                    contentDescription = stringResource(R.string.layout_completion_icon_show_menu_content_description) +
-                            if (viewModel.isCommandEditorMode) "，长按退出多行编辑" else "，长按进入多行编辑"
+                                    Toaster.show(
+                                        if (viewModel.isCommandEditorMode) {
+                                            "已开启多行编辑，再次长按箭头退出"
+                                        } else {
+                                            "已退出多行编辑"
+                                        }
+                                    )
+                                },
+                            )
+                            .padding(8.dp)
+                            .size(24.dp),
+                    contentDescription =
+                        stringResource(
+                            R.string.layout_completion_icon_show_menu_content_description
+                        ) + if (viewModel.isCommandEditorMode) "，长按退出多行编辑" else "，长按进入多行编辑",
                 )
-//                CommandTextField(
-//                    value = viewModel.command,
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .weight(1f),
-//                    hint = stringResource(R.string.layout_completion_command_hint),
-//                    errorReasons = viewModel.errorReasons,
-//                    syntaxHighlightTokens = viewModel.syntaxHighlightTokens
-//                )
+                //                CommandTextField(
+                //                    value = viewModel.command,
+                //                    modifier = Modifier
+                //                        .fillMaxSize()
+                //                        .weight(1f),
+                //                    hint =
+                // stringResource(R.string.layout_completion_command_hint),
+                //                    errorReasons = viewModel.errorReasons,
+                //                    syntaxHighlightTokens = viewModel.syntaxHighlightTokens
+                //                )
                 val theme = CHelperTheme.theme
                 val textMain = CHelperTheme.colors.textMain
                 val textSecondary = CHelperTheme.colors.textSecondary
                 val hintStr = stringResource(R.string.layout_completion_command_hint)
                 AndroidView(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxSize().weight(1f),
                     factory = { context ->
                         CommandEditText(context).apply {
                             commandEditText[0] = this
-                            layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
+                            layoutParams =
+                                ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                )
                             background = null
                             hint = hintStr
                             setEditorMode(viewModel.isCommandEditorMode)
                             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-                            setListener({ str ->
-                                viewModel.command.edit {
-                                    replace(0, length, str)
-                                    selection = TextRange(selectionStart, selectionEnd)
-                                }
-                            }, {
-                                viewModel.command.edit {
-                                    selection = TextRange(selectionStart, selectionEnd)
-                                }
-                            })
+                            setListener(
+                                { str ->
+                                    viewModel.command.edit {
+                                        replace(0, length, str)
+                                        selection = TextRange(selectionStart, selectionEnd)
+                                    }
+                                },
+                                {
+                                    viewModel.command.edit {
+                                        selection = TextRange(selectionStart, selectionEnd)
+                                    }
+                                },
+                            )
                         }
                     },
                     update = { view ->
@@ -716,61 +712,56 @@ fun CompletionScreen(
                         view.setTextColor(textMain.toArgb())
                         view.setHintTextColor(textSecondary.toArgb())
                         view.setTheme(
-                            if (theme == CHelperTheme.Theme.Light) Theme.THEME_DAY else Theme.THEME_NIGHT,
-                            textMain.toArgb()
+                            if (theme == CHelperTheme.Theme.Light) Theme.THEME_DAY
+                            else Theme.THEME_NIGHT,
+                            textMain.toArgb(),
                         )
                         val str = viewModel.command.text.toString()
                         val selectionStart = viewModel.command.selection.start
                         val selectionEnd = viewModel.command.selection.end
-                        if (view.text.toString() != str ||
-                            view.selectionStart != selectionStart ||
-                            view.selectionEnd != selectionEnd
+                        if (
+                            view.text.toString() != str ||
+                                view.selectionStart != selectionStart ||
+                                view.selectionEnd != selectionEnd
                         ) {
                             view.setSelectedString(
                                 SelectedString(
                                     str,
                                     selectionStart,
-                                    selectionEnd
+                                    selectionEnd,
                                 )
                             )
                         }
                         view.setErrorReasons(viewModel.errorReasons)
                         view.setColors(viewModel.syntaxHighlightTokens)
-                    }
+                    },
                 )
                 Icon(
                     id = R.drawable.copy,
-                    modifier = Modifier
-                        .clickable {
-                            viewModel.onCopy(viewModel.command.text.toString())
-                            viewModel.viewModelScope.launch {
-                                clipboard.setClipEntry(
-                                    ClipEntry(
-                                        ClipData.newPlainText(
-                                            null,
-                                            viewModel.command.text
+                    modifier =
+                        Modifier.clickable {
+                                viewModel.onCopy(viewModel.command.text.toString())
+                                viewModel.viewModelScope.launch {
+                                    clipboard.setClipEntry(
+                                        ClipEntry(
+                                            ClipData.newPlainText(
+                                                null,
+                                                viewModel.command.text,
+                                            )
                                         )
                                     )
-                                )
-                                Toaster.show("已复制")
+                                    Toaster.show("已复制")
+                                }
+                                if (isHideWindowWhenCopying) {
+                                    hideView()
+                                }
                             }
-                            if (isHideWindowWhenCopying) {
-                                hideView()
-                            }
-                        }
-                        .padding(8.dp)
-                        .size(24.dp),
-                    contentDescription = stringResource(R.string.common_icon_copy_content_description)
+                            .padding(8.dp)
+                            .size(24.dp),
+                    contentDescription =
+                        stringResource(R.string.common_icon_copy_content_description),
                 )
             }
-        }
-        DisposableEffect(viewModel.command.text, viewModel.command.selection) {
-            viewModel.onSelectionChanged(
-                isCheckingBySelection,
-                isSyntaxHighlight,
-                isShowErrorReason
-            )
-            onDispose { }
         }
     }
 }
@@ -782,13 +773,10 @@ fun CompletionScreenLightThemePreview() {
     val viewModel = remember {
         CompletionViewModel(application).apply {
             isShowMenu = true
-            suggestionsSize = 20
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        CompletionScreen(
-            viewModel = viewModel
-        )
+        CompletionScreen(viewModel = viewModel)
     }
 }
 
@@ -799,12 +787,9 @@ fun CompletionScreenDarkThemePreview() {
     val viewModel = remember {
         CompletionViewModel(application).apply {
             isShowMenu = true
-            suggestionsSize = 20
         }
     }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        CompletionScreen(
-            viewModel = viewModel
-        )
+        CompletionScreen(viewModel = viewModel)
     }
 }

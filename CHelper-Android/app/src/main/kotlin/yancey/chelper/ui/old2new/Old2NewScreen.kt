@@ -29,7 +29,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -49,32 +50,23 @@ import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextField
 
 @Composable
-fun Old2NewScreen(viewModel: Old2NewViewModel = viewModel(), old2new: (String) -> String) {
+fun Old2NewScreen(viewModel: Old2NewViewModel = viewModel(), old2new: suspend (String) -> String) {
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_old2new_title)) {
         Column(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(15.dp))
                 TextField(
                     state = viewModel.oldCommand,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp)
-                        .height(200.dp),
-                    hint = stringResource(R.string.layout_old2new_old_command_hint)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(200.dp),
+                    hint = stringResource(R.string.layout_old2new_old_command_hint),
                 )
                 Spacer(modifier = Modifier.height(15.dp))
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp)
-                        .height(200.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(200.dp)
                 ) {
-                    Text(text = viewModel.newCommand)
+                    Text(text = if (viewModel.isConverting) "转换中..." else viewModel.newCommand)
                 }
                 Spacer(modifier = Modifier.height(15.dp))
             }
@@ -83,18 +75,23 @@ fun Old2NewScreen(viewModel: Old2NewViewModel = viewModel(), old2new: (String) -
                 viewModel.viewModelScope.launch {
                     clipboard.getClipEntry()?.clipData?.apply {
                         if (itemCount > 0) {
-                            viewModel.oldCommand.setTextAndPlaceCursorAtEnd(getItemAt(0).text.toString())
+                            viewModel.oldCommand.setTextAndPlaceCursorAtEnd(
+                                getItemAt(0).text.toString()
+                            )
                         }
                     }
                 }
             }
-            Button(stringResource(R.string.layout_old2new_copy_new_command)) {
+            Button(
+                stringResource(R.string.layout_old2new_copy_new_command),
+                enabled = !viewModel.isConverting,
+            ) {
                 viewModel.viewModelScope.launch {
                     clipboard.setClipEntry(
                         ClipEntry(
                             ClipData.newPlainText(
                                 null,
-                                viewModel.newCommand
+                                viewModel.newCommand,
                             )
                         )
                     )
@@ -102,9 +99,9 @@ fun Old2NewScreen(viewModel: Old2NewViewModel = viewModel(), old2new: (String) -
                 }
             }
         }
-        DisposableEffect(viewModel.oldCommand.text, old2new) {
-            viewModel.newCommand = old2new(viewModel.oldCommand.text.toString())
-            onDispose { }
+        LaunchedEffect(viewModel, old2new) {
+            snapshotFlow { viewModel.oldCommand.text.toString() }
+                .collect { viewModel.convert(it, old2new) }
         }
     }
 }
@@ -114,7 +111,7 @@ fun Old2NewScreen(viewModel: Old2NewViewModel = viewModel(), old2new: (String) -
 fun Old2NewScreenLightThemePreview() {
     CHelperTheme(
         theme = CHelperTheme.Theme.Light,
-        backgroundBitmap = null
+        backgroundBitmap = null,
     ) {
         Old2NewScreen(viewModel = viewModel(), old2new = { old -> old })
     }
@@ -125,7 +122,7 @@ fun Old2NewScreenLightThemePreview() {
 fun Old2NewScreenDarkThemePreview() {
     CHelperTheme(
         theme = CHelperTheme.Theme.Dark,
-        backgroundBitmap = null
+        backgroundBitmap = null,
     ) {
         Old2NewScreen(viewModel = viewModel(), old2new = { old -> old })
     }

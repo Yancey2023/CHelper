@@ -24,11 +24,11 @@ import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import java.io.InputStream
+import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -38,16 +38,15 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.intOrNull
-import java.io.InputStream
-import java.io.OutputStream
 
-private val Context.settingsDataStore: DataStore<Settings> by dataStore(
-    fileName = "settings.json",
-    serializer = SettingsSerializer,
-    produceMigrations = {
-        listOf(SettingsMigrationToV74(it))
-    }
-)
+private val Context.settingsDataStore: DataStore<Settings> by
+    dataStore(
+        fileName = "settings.json",
+        serializer = SettingsSerializer,
+        produceMigrations = {
+            listOf(SettingsMigrationToV74(it))
+        },
+    )
 
 @Serializable
 data class Settings(
@@ -83,9 +82,7 @@ object SettingsSerializer : Serializer<Settings> {
     override suspend fun readFrom(input: InputStream): Settings =
         try {
             withContext(Dispatchers.IO) {
-                Json.decodeFromString<Settings>(
-                    input.readBytes().decodeToString()
-                )
+                Json.decodeFromString<Settings>(input.readBytes().decodeToString())
             }
         } catch (serialization: SerializationException) {
             throw CorruptionException("Unable to read Settings", serialization)
@@ -93,38 +90,20 @@ object SettingsSerializer : Serializer<Settings> {
 
     override suspend fun writeTo(t: Settings, output: OutputStream) {
         withContext(Dispatchers.IO) {
-            output.write(
-                Json.encodeToString(t)
-                    .encodeToByteArray()
-            )
+            output.write(Json.encodeToString(t).encodeToByteArray())
         }
     }
 }
 
 class SettingsDataStore(private val context: Context) {
 
-    /**
-     * 预热进程级共享的 DataStore，把设置文件读进内存缓存。
-     * 必须在 Application.onCreate 中、任何 UI 创建前调用一次。
-     * 之后 BaseComposeActivity / 悬浮窗的 [themeIdBlocking] 才能在主线程上
-     * 几乎零开销地同步读取主题，避免冷读磁盘导致启动卡顿与首帧主题错误。
-     */
-    fun init() {
-        runBlocking { context.settingsDataStore.data.first() }
-    }
+    fun settings(): Flow<Settings> = context.settingsDataStore.data
 
     fun isEnableUpdateNotifications(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isEnableUpdateNotifications ?: true }
 
     fun themeId(): Flow<String> =
         context.settingsDataStore.data.map { it.themeId ?: "MODE_NIGHT_FOLLOW_SYSTEM" }
-
-    /**
-     * 同步读取主题设置。
-     * Application.onCreate 已经通过 init() 预热过 DataStore，这里只会命中内存缓存，
-     * 供 Activity / 悬浮窗在首帧渲染前确定主题，避免启动时先渲染亮色再动画切换到夜间。
-     */
-    fun themeIdBlocking(): String = runBlocking { themeId().first() }
 
     fun floatingWindowIconAlpha(): Flow<Float> =
         context.settingsDataStore.data.map { it.floatingWindowAlpha ?: 1.0f }
@@ -147,8 +126,7 @@ class SettingsDataStore(private val context: Context) {
     fun isSavingWhenPausing(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isSavingWhenPausing ?: true }
 
-    fun isCrowded(): Flow<Boolean> =
-        context.settingsDataStore.data.map { it.isCrowded ?: false }
+    fun isCrowded(): Flow<Boolean> = context.settingsDataStore.data.map { it.isCrowded ?: false }
 
     fun isShowErrorReason(): Flow<Boolean> =
         context.settingsDataStore.data.map { it.isShowErrorReason ?: true }
@@ -288,9 +266,7 @@ class SettingsDataStore(private val context: Context) {
     }
 }
 
-/**
- * 0.4.0 版本之后，软件设置存储从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移
- */
+/** 0.4.0 版本之后，软件设置存储从自己写的框架改为使用官方方案 DataScore，该文件用于数据迁移 */
 class SettingsMigrationToV74(private val context: Context) : DataMigration<Settings> {
     override suspend fun shouldMigrate(currentData: Settings): Boolean {
         return context.dataDir.resolve("settings").resolve("settings.json").exists()
@@ -298,13 +274,18 @@ class SettingsMigrationToV74(private val context: Context) : DataMigration<Setti
 
     override suspend fun migrate(currentData: Settings): Settings {
         return try {
-            val oldSettings = Json.decodeFromString<JsonObject>(
-                context.dataDir.resolve("settings").resolve("settings.json").readBytes()
-                    .decodeToString()
-            )
+            val oldSettings =
+                Json.decodeFromString<JsonObject>(
+                    context.dataDir
+                        .resolve("settings")
+                        .resolve("settings.json")
+                        .readBytes()
+                        .decodeToString()
+                )
             var cpackBranch = (oldSettings["cpackPath"] as? JsonPrimitive)?.content
-            if (cpackBranch == null ||
-                !(cpackBranch == "release-vanilla" ||
+            if (
+                cpackBranch == null ||
+                    !(cpackBranch == "release-vanilla" ||
                         cpackBranch == "release-experiment" ||
                         cpackBranch == "beta-vanilla" ||
                         cpackBranch == "beta-experiment" ||
@@ -314,20 +295,33 @@ class SettingsMigrationToV74(private val context: Context) : DataMigration<Setti
                 cpackBranch = null
             }
             currentData.copy(
-                isEnableUpdateNotifications = (oldSettings["isEnableUpdateNotifications"] as? JsonPrimitive)?.booleanOrNull,
+                isEnableUpdateNotifications =
+                    (oldSettings["isEnableUpdateNotifications"] as? JsonPrimitive)?.booleanOrNull,
                 themeId = (oldSettings["themeId"] as? JsonPrimitive)?.content,
-                floatingWindowAlpha = (oldSettings["floatingWindowAlpha"] as? JsonPrimitive)?.floatOrNull,
-                floatingWindowSize = (oldSettings["floatingWindowSize"] as? JsonPrimitive)?.intOrNull,
-                isCheckingBySelection = (oldSettings["isCheckingBySelection"] as? JsonPrimitive)?.booleanOrNull,
-                isHideWindowWhenCopying = (oldSettings["isHideWindowWhenCopying"] as? JsonPrimitive)?.booleanOrNull,
-                isSavingWhenPausing = (oldSettings["isSavingWhenPausing"] as? JsonPrimitive)?.booleanOrNull,
-                isCrowded = (oldSettings["isCrowed"] as? JsonPrimitive)?.booleanOrNull,// 之前的配置文件中 crowded 名字拼写错了
-                isShowErrorReason = (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
-                isSyntaxHighlight = (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
+                floatingWindowAlpha =
+                    (oldSettings["floatingWindowAlpha"] as? JsonPrimitive)?.floatOrNull,
+                floatingWindowSize =
+                    (oldSettings["floatingWindowSize"] as? JsonPrimitive)?.intOrNull,
+                isCheckingBySelection =
+                    (oldSettings["isCheckingBySelection"] as? JsonPrimitive)?.booleanOrNull,
+                isHideWindowWhenCopying =
+                    (oldSettings["isHideWindowWhenCopying"] as? JsonPrimitive)?.booleanOrNull,
+                isSavingWhenPausing =
+                    (oldSettings["isSavingWhenPausing"] as? JsonPrimitive)?.booleanOrNull,
+                isCrowded =
+                    (oldSettings["isCrowed"] as? JsonPrimitive)
+                        ?.booleanOrNull, // 之前的配置文件中 crowded 名字拼写错了
+                isShowErrorReason =
+                    (oldSettings["isShowErrorReason"] as? JsonPrimitive)?.booleanOrNull,
+                isSyntaxHighlight =
+                    (oldSettings["isSyntaxHighlight"] as? JsonPrimitive)?.booleanOrNull,
                 cpackBranch = cpackBranch,
-                isFloatingWindowFontAlphaSync = (oldSettings["isFloatingWindowFontAlphaSync"] as? JsonPrimitive)?.booleanOrNull,
-                syntaxHighlightMaxLength = (oldSettings["syntaxHighlightMaxLength"] as? JsonPrimitive)?.intOrNull,
-                publicLibraryHomeRecommend = (oldSettings["publicLibraryHomeRecommend"] as? JsonPrimitive)?.booleanOrNull,
+                isFloatingWindowFontAlphaSync =
+                    (oldSettings["isFloatingWindowFontAlphaSync"] as? JsonPrimitive)?.booleanOrNull,
+                syntaxHighlightMaxLength =
+                    (oldSettings["syntaxHighlightMaxLength"] as? JsonPrimitive)?.intOrNull,
+                publicLibraryHomeRecommend =
+                    (oldSettings["publicLibraryHomeRecommend"] as? JsonPrimitive)?.booleanOrNull,
             )
         } catch (_: Throwable) {
             currentData

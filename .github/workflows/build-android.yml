@@ -6,12 +6,16 @@ on:
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "scripts/check_android_headers.py"
+      - "scripts/format_android.py"
       - "CHelper-Core/**"
   pull_request:
     branches: ["master", "dev"]
     paths:
       - ".github/workflows/build-android.yml"
       - "CHelper-Android/**"
+      - "scripts/check_android_headers.py"
+      - "scripts/format_android.py"
       - "CHelper-Core/**"
 
 jobs:
@@ -20,6 +24,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - name: Check Android license headers
+        run: python3 scripts/check_android_headers.py
 
       - name: Set up JDK 27
         uses: actions/setup-java@v6

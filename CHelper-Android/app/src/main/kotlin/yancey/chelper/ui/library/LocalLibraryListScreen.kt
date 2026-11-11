@@ -34,11 +34,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -99,25 +100,29 @@ fun LocalLibraryListScreen(
 ) {
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
-        .collectAsState(initial = null)
+    val localLibraryFunctions by
+        localCommandLabDataStore
+            .localLibraryFunctions()
+            .collectAsStateWithLifecycle(initialValue = null)
     val clipboard = LocalClipboard.current
     val searchQuery = viewModel.keyword.text.toString()
-    val filteredLibraries by produceState(
-        initialValue = emptyList(),
-        localLibraryFunctions,
-        searchQuery,
-        viewModel.localSort
-    ) {
-        if (searchQuery.isNotBlank()) delay(150)
-        value = withContext(Dispatchers.Default) {
-            filterAndSortLocalLibraries(
-                libraries = localLibraryFunctions.orEmpty(),
-                query = searchQuery,
-                sort = viewModel.localSort
-            )
+    val filteredLibraries by
+        produceState(
+            initialValue = emptyList(),
+            localLibraryFunctions,
+            searchQuery,
+            viewModel.localSort,
+        ) {
+            if (searchQuery.isNotBlank()) delay(150)
+            value =
+                withContext(Dispatchers.Default) {
+                    filterAndSortLocalLibraries(
+                        libraries = localLibraryFunctions.orEmpty(),
+                        query = searchQuery,
+                        sort = viewModel.localSort,
+                    )
+                }
         }
-    }
 
     var showLocalMenuId by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirmId by remember { mutableStateOf<String?>(null) }
@@ -151,61 +156,59 @@ fun LocalLibraryListScreen(
         headerRight = {
             Icon(
                 id = R.drawable.file_arrow_left,
-                modifier = Modifier
-                    .clickable {
-                        viewModel.isShowImportDialog = true
-                    }
-                    .padding(5.dp)
-                    .size(24.dp),
-                contentDescription = stringResource(R.string.layout_library_list_icon_import_content_description)
+                modifier =
+                    Modifier.clickable {
+                            viewModel.isShowImportDialog = true
+                        }
+                        .padding(5.dp)
+                        .size(24.dp),
+                contentDescription =
+                    stringResource(R.string.layout_library_list_icon_import_content_description),
             )
             Icon(
                 id = R.drawable.plus,
-                modifier = Modifier
-                    .clickable {
-                        // 顶栏 "+" 默认就是新建"本地"命令库（草稿存本地、可手动上传到云端）。
-                        // 之前直接跳 CPLUploadScreen 把"新建"硬挂在云端入口上，会让没登录的
-                        // 用户进去看到要登录的报错，已登录用户也被迫先发布到云端才能记录。
-                        // 想直接发到云端的入口保留在下方"上传指令"快捷操作里。
-                        navController.navigate(LibraryEditScreenKey(id = null))
-                    }
-                    .padding(5.dp)
-                    .size(24.dp),
-                contentDescription = stringResource(R.string.layout_library_list_icon_add_content_description)
+                modifier =
+                    Modifier.clickable {
+                            // 顶栏 "+" 默认就是新建"本地"命令库（草稿存本地、可手动上传到云端）。
+                            // 之前直接跳 CPLUploadScreen 把"新建"硬挂在云端入口上，会让没登录的
+                            // 用户进去看到要登录的报错，已登录用户也被迫先发布到云端才能记录。
+                            // 想直接发到云端的入口保留在下方"上传指令"快捷操作里。
+                            navController.navigate(LibraryEditScreenKey(id = null))
+                        }
+                        .padding(5.dp)
+                        .size(24.dp),
+                contentDescription =
+                    stringResource(R.string.layout_library_list_icon_add_content_description),
             )
             Icon(
                 id = R.drawable.more,
-                modifier = Modifier
-                    .clickable { showLocalToolsMenu = true }
-                    .padding(5.dp)
-                    .size(24.dp),
-                contentDescription = "本地库管理"
+                modifier =
+                    Modifier.clickable { showLocalToolsMenu = true }.padding(5.dp).size(24.dp),
+                contentDescription = "本地库管理",
             )
             // 账户入口：把原来"我的" tab 砍掉后挪到这里。已登录弹菜单（账户中心/登出），
             // 未登录直接跳 CPLUserScreen 让用户去登录注册
             Icon(
                 id = R.drawable.ic_user,
-                modifier = Modifier
-                    .clickable {
-                        if (viewModel.isLoggedIn) {
-                            showAccountMenu = true
-                        } else {
-                            navController.navigate(CPLUserScreenKey)
+                modifier =
+                    Modifier.clickable {
+                            if (viewModel.isLoggedIn) {
+                                showAccountMenu = true
+                            } else {
+                                navController.navigate(CPLUserScreenKey)
+                            }
                         }
-                    }
-                    .padding(5.dp)
-                    .size(24.dp),
-                contentDescription = "账户"
+                        .padding(5.dp)
+                        .size(24.dp),
+                contentDescription = "账户",
             )
-        }) {
+        },
+    ) {
         Column {
             Spacer(Modifier.height(10.dp))
             TextField(
                 state = viewModel.keyword,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(horizontal = 15.dp),
+                modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 15.dp),
                 contentAlignment = Alignment.CenterStart,
                 hint = stringResource(R.string.layout_library_list_search_hint),
                 horizontalPadding = 20.dp,
@@ -213,73 +216,183 @@ fun LocalLibraryListScreen(
                 clipCornerSize = 20.dp,
             )
             Spacer(Modifier.height(10.dp))
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(15.dp, 0.dp)
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(15.dp, 0.dp)) {
                 // 用户信息 + 我的云端库 区域
                 if (viewModel.isLoggedIn) {
-                    item(key = "user_header") {
-                        UserCloudLibrariesSection(
+                    item(key = "user_header", contentType = "header") {
+                        UserCloudLibrariesHeader(
                             viewModel = viewModel,
-                            navController = navController
+                            navController = navController,
                         )
+                    }
+                    if (viewModel.myCloudLibraries.isEmpty()) {
+                        item(key = "cloud_empty", contentType = "empty") {
+                            LibraryGroupItem(1, 2) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        if (viewModel.isCloudLibrariesLoading) "加载中..."
+                                        else "暂无云端命令库",
+                                        style =
+                                            TextStyle(
+                                                color = CHelperTheme.colors.textSecondary,
+                                                fontSize = 13.sp,
+                                            ),
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        itemsIndexed(
+                            viewModel.myCloudLibraries,
+                            key = { _, library -> "cloud:${requireNotNull(library.id)}" },
+                            contentType = { _, _ -> "cloud-library" },
+                        ) { index, library ->
+                            LibraryGroupItem(index + 1, viewModel.myCloudLibraries.size + 1) {
+                                Row(
+                                    modifier =
+                                        Modifier.clickable {
+                                                library.id?.let {
+                                                    navController.navigate(
+                                                        PublicLibraryShowScreenKey(
+                                                            id = it,
+                                                            isPrivate = true,
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            .padding(15.dp, 10.dp)
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = library.name ?: "未命名",
+                                            style = TextStyle(fontSize = 14.sp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Text(
+                                            text = library.note ?: "",
+                                            style =
+                                                TextStyle(
+                                                    color = CHelperTheme.colors.textSecondary,
+                                                    fontSize = 12.sp,
+                                                ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    if (library.hasPublicVersion == true) {
+                                        // 公开版与私有版不一致 → 显示"待同步"提醒（橙色）；
+                                        // 已同步 → 显示"已发布"（主题色）。后端权威。
+                                        if (library.hasUnsyncedChanges == true) {
+                                            Text(
+                                                text = "待同步",
+                                                style =
+                                                    TextStyle(
+                                                        fontSize = 11.sp,
+                                                        color = Color(0xFFE65100),
+                                                    ),
+                                                modifier =
+                                                    Modifier.align(Alignment.CenterVertically),
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "已发布",
+                                                style =
+                                                    TextStyle(
+                                                        fontSize = 11.sp,
+                                                        color = CHelperTheme.colors.mainColor,
+                                                    ),
+                                                modifier =
+                                                    Modifier.align(Alignment.CenterVertically),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    item(key = "cloud_spacing", contentType = "spacing") {
                         Spacer(Modifier.height(10.dp))
                     }
                 } else {
-                    item(key = "login_hint") {
+                    item(key = "login_hint", contentType = "header") {
                         LoginHintCard(navController = navController)
                         Spacer(Modifier.height(10.dp))
                     }
                 }
 
                 // 本地库标题
-                item(key = "local_header") {
+                item(key = "local_header", contentType = "header") {
                     Text(
-                        text = if (isSelectionMode) {
-                            "已选择 ${selectedLocalIds.size} 项"
-                        } else {
-                            "本地命令库 · ${viewModel.localSort.label}"
-                        },
+                        text =
+                            if (isSelectionMode) {
+                                "已选择 ${selectedLocalIds.size} 项"
+                            } else {
+                                "本地命令库 · ${viewModel.localSort.label}"
+                            },
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 8.dp),
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textMain
-                        )
+                        style =
+                            TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textMain,
+                            ),
                     )
                 }
 
-                // 本地库列表
-                item(key = "local_list") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(color = CHelperTheme.colors.backgroundComponent)
-                    ) {
-                        filteredLibraries.forEachIndexed { index, entry ->
-                            val library = entry.library
-                            val localEntryId = entry.localEntryId
-                            val isSelected = localEntryId in selectedLocalIds
+                if (filteredLibraries.isEmpty()) {
+                    item(key = "local_empty", contentType = "empty") {
+                        LibraryGroupItem(0, 1) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(60.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = "暂无本地命令库",
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 14.sp,
+                                        ),
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    itemsIndexed(
+                        filteredLibraries,
+                        key = { _, entry -> "local:${entry.localEntryId}" },
+                        contentType = { _, _ -> "local-library" },
+                    ) { index, entry ->
+                        val library = entry.library
+                        val localEntryId = entry.localEntryId
+                        val isSelected = localEntryId in selectedLocalIds
+                        LibraryGroupItem(index, filteredLibraries.size) {
                             Row(
-                                modifier = Modifier
-                                    .clickable(onClick = {
-                                        if (isSelectionMode) {
-                                            selectedLocalIds = if (isSelected) {
-                                                selectedLocalIds - localEntryId
-                                            } else {
-                                                selectedLocalIds + localEntryId
+                                modifier =
+                                    Modifier.clickable(
+                                            onClick = {
+                                                if (isSelectionMode) {
+                                                    selectedLocalIds =
+                                                        if (isSelected) {
+                                                            selectedLocalIds - localEntryId
+                                                        } else {
+                                                            selectedLocalIds + localEntryId
+                                                        }
+                                                } else {
+                                                    navController.navigate(
+                                                        LocalLibraryShowScreenKey(
+                                                            localEntryId = localEntryId
+                                                        )
+                                                    )
+                                                }
                                             }
-                                        } else {
-                                            navController.navigate(
-                                                LocalLibraryShowScreenKey(localEntryId = localEntryId)
-                                            )
-                                        }
-                                    })
-                                    .padding(20.dp, 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                        )
+                                        .padding(20.dp, 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -288,29 +401,39 @@ fun LocalLibraryListScreen(
                                             modifier = Modifier.weight(1f, fill = false),
                                             style = TextStyle(fontSize = 14.sp),
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                         // 本地未同步标签：仅当关联过云端（有 uuid）且本地又改过才亮
                                         // 纯本地草稿 / 已同步的本地副本都不显示，保持列表干净
-                                        if (library.localUnsynced && !library.uuid.isNullOrEmpty()) {
+                                        if (
+                                            library.localUnsynced && !library.uuid.isNullOrEmpty()
+                                        ) {
                                             Spacer(Modifier.width(6.dp))
                                             Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(
-                                                        CHelperTheme.colors.mainColor.copy(
-                                                            alpha = 0.15f
+                                                modifier =
+                                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                                        .background(
+                                                            CHelperTheme.colors.mainColor.copy(
+                                                                alpha = 0.15f
+                                                            )
                                                         )
-                                                    )
-                                                    .padding(horizontal = 6.dp, vertical = 1.dp)
+                                                        .padding(horizontal = 6.dp, vertical = 1.dp)
                                             ) {
                                                 Text(
-                                                    text = "本地未同步",
-                                                    style = TextStyle(
-                                                        fontSize = 10.sp,
-                                                        color = CHelperTheme.colors.mainColor,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
+                                                    text =
+                                                        when {
+                                                            library.localSyncError != null ->
+                                                                "同步失败，将重试"
+                                                            library.localSyncRevision != null ->
+                                                                "等待同步"
+                                                            else -> "本地未同步"
+                                                        },
+                                                    style =
+                                                        TextStyle(
+                                                            fontSize = 10.sp,
+                                                            color = CHelperTheme.colors.mainColor,
+                                                            fontWeight = FontWeight.Medium,
+                                                        ),
                                                 )
                                             }
                                         }
@@ -318,53 +441,37 @@ fun LocalLibraryListScreen(
                                     Text(
                                         text = library.note ?: "",
                                         modifier = Modifier.fillMaxWidth(),
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 14.sp
-                                        ),
+                                        style =
+                                            TextStyle(
+                                                color = CHelperTheme.colors.textSecondary,
+                                                fontSize = 14.sp,
+                                            ),
                                         maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        overflow = TextOverflow.Ellipsis,
                                     )
                                 }
                                 if (isSelectionMode) {
                                     Icon(
-                                        id = if (isSelected) R.drawable.check_circle else R.drawable.circle,
+                                        id =
+                                            if (isSelected) R.drawable.check_circle
+                                            else R.drawable.circle,
                                         contentDescription = if (isSelected) "取消选择" else "选择",
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .padding(start = 5.dp)
-                                            .size(24.dp)
+                                        modifier =
+                                            Modifier.align(Alignment.CenterVertically)
+                                                .padding(start = 5.dp)
+                                                .size(24.dp),
                                     )
                                 } else {
                                     Icon(
                                         id = R.drawable.more,
                                         contentDescription = "更多操作",
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .clickable { showLocalMenuId = localEntryId }
-                                            .padding(start = 5.dp)
-                                            .size(24.dp)
+                                        modifier =
+                                            Modifier.align(Alignment.CenterVertically)
+                                                .clickable { showLocalMenuId = localEntryId }
+                                                .padding(start = 5.dp)
+                                                .size(24.dp),
                                     )
                                 }
-                            }
-                            if (index < filteredLibraries.lastIndex) {
-                                Divider(padding = 0.dp)
-                            }
-                        }
-                        if (filteredLibraries.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(60.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "暂无本地命令库",
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 14.sp
-                                    )
-                                )
                             }
                         }
                     }
@@ -374,9 +481,10 @@ fun LocalLibraryListScreen(
     }
 
     // 本地库操作菜单
-    val menuLibrary = localLibraryFunctions.orEmpty().firstOrNull {
-        it.localEntryId == showLocalMenuId
-    }
+    val menuLibrary =
+        localLibraryFunctions.orEmpty().firstOrNull {
+            it.localEntryId == showLocalMenuId
+        }
     if (showLocalMenuId != null && menuLibrary != null) {
         val library = menuLibrary
         val localEntryId = requireNotNull(library.localEntryId)
@@ -387,7 +495,8 @@ fun LocalLibraryListScreen(
             add("导出" to "export")
             add("删除" to "delete")
             add("关闭" to "close")
-        }.toTypedArray()
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showLocalMenuId = null },
             data = menuItems,
@@ -397,7 +506,7 @@ fun LocalLibraryListScreen(
                         viewModel.uploadToCloud(
                             library = library,
                             localEntryId = localEntryId,
-                            localDataStore = localCommandLabDataStore
+                            localDataStore = localCommandLabDataStore,
                         )
                     }
 
@@ -407,7 +516,9 @@ fun LocalLibraryListScreen(
 
                     "duplicate" -> {
                         viewModel.viewModelScope.launch {
-                            localCommandLabDataStore.addLocalLibraryFunction(library.toLocalDuplicate())
+                            localCommandLabDataStore.addLocalLibraryFunction(
+                                library.toLocalDuplicate()
+                            )
                             Toaster.show("已创建本地副本")
                         }
                     }
@@ -420,7 +531,7 @@ fun LocalLibraryListScreen(
                                 ClipEntry(
                                     ClipData.newPlainText(
                                         null,
-                                        output
+                                        output,
                                     )
                                 )
                             )
@@ -432,14 +543,15 @@ fun LocalLibraryListScreen(
                         showDeleteConfirmId = localEntryId
                     }
                 }
-            }
+            },
         )
     }
 
     // 删除确认对话框
-    val deleteLibrary = localLibraryFunctions.orEmpty().firstOrNull {
-        it.localEntryId == showDeleteConfirmId
-    }
+    val deleteLibrary =
+        localLibraryFunctions.orEmpty().firstOrNull {
+            it.localEntryId == showDeleteConfirmId
+        }
     if (showDeleteConfirmId != null && deleteLibrary != null) {
         IsConfirmDialog(
             onDismissRequest = { showDeleteConfirmId = null },
@@ -453,7 +565,7 @@ fun LocalLibraryListScreen(
                     localCommandLabDataStore.removeLocalLibraryFunction(idToDelete)
                     Toaster.show("已删除")
                 }
-            }
+            },
         )
     }
 
@@ -478,13 +590,14 @@ fun LocalLibraryListScreen(
                         }
                     }
                 }
-            }
+            },
         )
     }
     if (viewModel.isShowExportDialog) {
-        val output = remember(localLibraryFunctions) {
-            Json.encodeToString(localLibraryFunctions?.toList())
-        }
+        val output =
+            remember(localLibraryFunctions) {
+                Json.encodeToString(localLibraryFunctions?.toList())
+            }
         IsConfirmDialog(
             onDismissRequest = { viewModel.isShowExportDialog = false },
             title = "导出",
@@ -496,51 +609,55 @@ fun LocalLibraryListScreen(
                         ClipEntry(
                             ClipData.newPlainText(
                                 null,
-                                output
+                                output,
                             )
                         )
                     )
                     Toaster.show("已复制")
                 }
-            }
+            },
         )
     }
 
     if (showLocalToolsMenu) {
-        val allVisibleSelected = filteredLibraries.isNotEmpty() &&
+        val allVisibleSelected =
+            filteredLibraries.isNotEmpty() &&
                 filteredLibraries.all { it.localEntryId in selectedLocalIds }
         MenuDialog(
             onDismissRequest = { showLocalToolsMenu = false },
             data = buildList {
-                add("排序：${viewModel.localSort.label}" to "sort")
-                if (!isSelectionMode) add("进入批量选择" to "selection_mode")
-                if (isSelectionMode) add(
-                    (if (allVisibleSelected) "取消选择当前结果" else "选择当前结果") to "toggle_visible"
-                )
-                if (isSelectionMode && selectedLocalIds.isNotEmpty()) {
-                    add("导出已选 (${selectedLocalIds.size})" to "export_selected")
-                    add("删除已选 (${selectedLocalIds.size})" to "delete_selected")
+                    add("排序：${viewModel.localSort.label}" to "sort")
+                    if (!isSelectionMode) add("进入批量选择" to "selection_mode")
+                    if (isSelectionMode)
+                        add((if (allVisibleSelected) "取消选择当前结果" else "选择当前结果") to "toggle_visible")
+                    if (isSelectionMode && selectedLocalIds.isNotEmpty()) {
+                        add("导出已选 (${selectedLocalIds.size})" to "export_selected")
+                        add("删除已选 (${selectedLocalIds.size})" to "delete_selected")
+                    }
+                    if (isSelectionMode) add("退出批量选择" to "clear_selection")
+                    add("导出全部本地库" to "export_all")
+                    add("关闭" to "close")
                 }
-                if (isSelectionMode) add("退出批量选择" to "clear_selection")
-                add("导出全部本地库" to "export_all")
-                add("关闭" to "close")
-            }.toTypedArray(),
+                    .toTypedArray(),
             onChoose = { action ->
                 when (action) {
                     "sort" -> showSortMenu = true
                     "selection_mode" -> localSelectionMode = true
                     "toggle_visible" -> {
                         val visibleIds = filteredLibraries.map { it.localEntryId }.toSet()
-                        selectedLocalIds = if (allVisibleSelected) {
-                            selectedLocalIds - visibleIds
-                        } else {
-                            selectedLocalIds + visibleIds
-                        }
+                        selectedLocalIds =
+                            if (allVisibleSelected) {
+                                selectedLocalIds - visibleIds
+                            } else {
+                                selectedLocalIds + visibleIds
+                            }
                     }
 
                     "export_selected" -> {
-                        val selected = localLibraryFunctions.orEmpty()
-                            .filter { it.localEntryId in selectedLocalIds }
+                        val selected =
+                            localLibraryFunctions.orEmpty().filter {
+                                it.localEntryId in selectedLocalIds
+                            }
                         val output = Json.encodeToString(selected)
                         viewModel.viewModelScope.launch {
                             clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(null, output)))
@@ -556,7 +673,7 @@ fun LocalLibraryListScreen(
 
                     "export_all" -> viewModel.isShowExportDialog = true
                 }
-            }
+            },
         )
     }
 
@@ -564,7 +681,7 @@ fun LocalLibraryListScreen(
         MenuDialog(
             onDismissRequest = { showSortMenu = false },
             data = LocalLibrarySort.entries.map { it.label to it.name }.toTypedArray(),
-            onChoose = { value -> viewModel.localSort = LocalLibrarySort.valueOf(value) }
+            onChoose = { value -> viewModel.localSort = LocalLibrarySort.valueOf(value) },
         )
     }
 
@@ -583,7 +700,7 @@ fun LocalLibraryListScreen(
                     val count = localCommandLabDataStore.removeLocalLibraryFunctions(ids)
                     Toaster.show("已删除 $count 个命令库")
                 }
-            }
+            },
         )
     }
 
@@ -592,17 +709,18 @@ fun LocalLibraryListScreen(
     if (showAccountMenu) {
         MenuDialog(
             onDismissRequest = { showAccountMenu = false },
-            data = arrayOf(
-                "账户中心" to "account",
-                "退出登录" to "logout",
-                "关闭" to "close"
-            ),
+            data =
+                arrayOf(
+                    "账户中心" to "account",
+                    "退出登录" to "logout",
+                    "关闭" to "close",
+                ),
             onChoose = { action ->
                 when (action) {
                     "account" -> navController.navigate(CPLUserScreenKey)
                     "logout" -> showLogoutConfirm = true
                 }
-            }
+            },
         )
     }
 
@@ -615,49 +733,50 @@ fun LocalLibraryListScreen(
             onConfirm = {
                 viewModel.logout()
                 Toaster.show("已退出登录")
-            }
+            },
         )
     }
 }
 
 @Composable
-private fun UserCloudLibrariesSection(
+private fun UserCloudLibrariesHeader(
     viewModel: LocalLibraryListViewModel,
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(color = CHelperTheme.colors.backgroundComponent)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+                .background(color = CHelperTheme.colors.backgroundComponent)
     ) {
         // 用户信息行
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    navController.navigate(CPLUserScreenKey)
-                }
-                .padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clickable {
+                        navController.navigate(CPLUserScreenKey)
+                    }
+                    .padding(15.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // 头像：用 AsyncImage 拉真实头像，拉不到再 fallback 到默认 user 图标
             // gravatarUrl 优先（用户上传的），没有再用站点头像兜底
             val user = viewModel.currentUser
             val profile = viewModel.userProfile
-            val avatarUrl = user?.gravatarUrl
-                ?: profile?.avatarUrl
-                ?: user?.id?.let { "https://abyssous.site/avatar/$it" }
+            val avatarUrl =
+                user?.gravatarUrl
+                    ?: profile?.avatarUrl
+                    ?: user?.id?.let { "https://abyssous.site/avatar/$it" }
             AsyncImage(
                 model = avatarUrl,
                 contentDescription = "Avatar",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.15f)),
+                modifier =
+                    Modifier.size(40.dp)
+                        .clip(CircleShape)
+                        .background(CHelperTheme.colors.mainColor.copy(alpha = 0.15f)),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.ic_user),
-                error = painterResource(id = R.drawable.ic_user)
+                error = painterResource(id = R.drawable.ic_user),
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -667,33 +786,37 @@ private fun UserCloudLibrariesSection(
                     Text(
                         text = user?.nickname ?: profile?.nickname ?: "已登录",
                         modifier = Modifier.weight(1f, fill = false),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = CHelperTheme.colors.textMain
-                        ),
+                        style =
+                            TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = CHelperTheme.colors.textMain,
+                            ),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
 
                     val tier = (profile?.tier ?: user?.tier) ?: 0
                     Spacer(Modifier.width(6.dp))
                     Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                if (tier > 0) CHelperTheme.colors.mainColor.copy(alpha = 0.15f)
-                                else CHelperTheme.colors.background
-                            )
-                            .padding(horizontal = 6.dp, vertical = 1.dp)
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (tier > 0) CHelperTheme.colors.mainColor.copy(alpha = 0.15f)
+                                    else CHelperTheme.colors.background
+                                )
+                                .padding(horizontal = 6.dp, vertical = 1.dp)
                     ) {
                         Text(
                             text = "Tier $tier",
-                            style = TextStyle(
-                                fontSize = 10.sp,
-                                color = if (tier > 0) CHelperTheme.colors.mainColor else CHelperTheme.colors.textSecondary,
-                                fontWeight = FontWeight.Medium
-                            )
+                            style =
+                                TextStyle(
+                                    fontSize = 10.sp,
+                                    color =
+                                        if (tier > 0) CHelperTheme.colors.mainColor
+                                        else CHelperTheme.colors.textSecondary,
+                                    fontWeight = FontWeight.Medium,
+                                ),
                         )
                     }
                     if (tier >= 2) {
@@ -701,50 +824,57 @@ private fun UserCloudLibrariesSection(
                         Image(
                             painter = painterResource(id = R.drawable.ic_verified_advanced),
                             contentDescription = null,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(12.dp),
                         )
                     } else if (tier == 1) {
                         Spacer(Modifier.width(4.dp))
                         Image(
                             painter = painterResource(id = R.drawable.ic_verified_normal),
                             contentDescription = null,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(12.dp),
                         )
                     }
 
                     // 称号：放在 tier 徽章后面，没有就不渲染
-                    profile?.userTitle?.takeIf { it.isNotBlank() }?.let { title ->
-                        Spacer(Modifier.width(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.10f))
-                                .padding(horizontal = 6.dp, vertical = 1.dp)
-                        ) {
-                            Text(
-                                text = title,
-                                style = TextStyle(
-                                    fontSize = 10.sp,
-                                    color = CHelperTheme.colors.mainColor,
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                maxLines = 1
-                            )
+                    profile
+                        ?.userTitle
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { title ->
+                            Spacer(Modifier.width(4.dp))
+                            Box(
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(10.dp))
+                                        .background(
+                                            CHelperTheme.colors.mainColor.copy(alpha = 0.10f)
+                                        )
+                                        .padding(horizontal = 6.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = title,
+                                    style =
+                                        TextStyle(
+                                            fontSize = 10.sp,
+                                            color = CHelperTheme.colors.mainColor,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
+                                    maxLines = 1,
+                                )
+                            }
                         }
-                    }
                 }
                 Text(
                     text = "查看个人中心",
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = CHelperTheme.colors.textSecondary
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 12.sp,
+                            color = CHelperTheme.colors.textSecondary,
+                        ),
                 )
             }
             Icon(
                 id = R.drawable.chevron_right,
                 modifier = Modifier.size(20.dp),
-                contentDescription = null
+                contentDescription = null,
             )
         }
 
@@ -752,27 +882,25 @@ private fun UserCloudLibrariesSection(
 
         // 快捷操作按钮行
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 15.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             // 站内信按钮
             QuickActionButton(
                 icon = R.drawable.ic_mail,
                 label = "站内信",
-                onClick = { navController.navigate(MessageScreenKey) }
+                onClick = { navController.navigate(MessageScreenKey) },
             )
             // 上传新指令按钮
             QuickActionButton(
                 icon = R.drawable.upload,
                 label = "上传指令",
-                onClick = { navController.navigate(CPLUploadScreenKey()) }
+                onClick = { navController.navigate(CPLUploadScreenKey()) },
             )
             QuickActionButton(
                 icon = R.drawable.ic_heart,
                 label = "创作季",
-                onClick = { navController.navigate(ActivityCenterScreenKey()) }
+                onClick = { navController.navigate(ActivityCenterScreenKey()) },
             )
             // 创作者主页按钮
             QuickActionButton(
@@ -780,11 +908,9 @@ private fun UserCloudLibrariesSection(
                 label = "创作者",
                 onClick = {
                     navController.navigate(
-                        UserProfileScreenKey(
-                            id = viewModel.currentUser?.id ?: 0
-                        )
+                        UserProfileScreenKey(id = viewModel.currentUser?.id ?: 0)
                     )
-                }
+                },
             )
         }
 
@@ -792,46 +918,46 @@ private fun UserCloudLibrariesSection(
 
         // 我的云端库标题
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 15.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     id = R.drawable.box,
                     modifier = Modifier.size(18.dp),
-                    contentDescription = null
+                    contentDescription = null,
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "我的云端库",
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = CHelperTheme.colors.textMain
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = CHelperTheme.colors.textMain,
+                        ),
                 )
             }
             if (viewModel.isCloudLibrariesLoading) {
                 Text(
                     text = "加载中...",
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = CHelperTheme.colors.textSecondary
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 12.sp,
+                            color = CHelperTheme.colors.textSecondary,
+                        ),
                 )
             } else {
                 // 显式刷新入口：缓存命中时用户看不到自动刷新，需要这个出口手动绕过 TTL。
                 // 比如上传 / 删除完云端库立刻想确认列表对齐。
                 Icon(
                     id = R.drawable.refresh,
-                    modifier = Modifier
-                        .clickable { viewModel.refreshUserState(forceRefresh = true) }
-                        .padding(4.dp)
-                        .size(18.dp),
-                    contentDescription = "刷新云端库"
+                    modifier =
+                        Modifier.clickable { viewModel.refreshUserState(forceRefresh = true) }
+                            .padding(4.dp)
+                            .size(18.dp),
+                    contentDescription = "刷新云端库",
                 )
             }
         }
@@ -844,148 +970,93 @@ private fun UserCloudLibrariesSection(
             QuotaBar(
                 used = used,
                 limit = limit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp)
-                    .padding(bottom = 8.dp)
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = 15.dp).padding(bottom = 8.dp),
             )
-        }
-
-        // 云端库列表
-        if (viewModel.myCloudLibraries.isEmpty() && !viewModel.isCloudLibrariesLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "暂无云端命令库",
-                    style = TextStyle(
-                        color = CHelperTheme.colors.textSecondary,
-                        fontSize = 13.sp
-                    )
-                )
-            }
-        } else {
-            viewModel.myCloudLibraries.forEachIndexed { index, library ->
-                if (index > 0) Divider(padding = 0.dp)
-                Row(
-                    modifier = Modifier
-                        .clickable {
-                            library.id?.let {
-                                navController.navigate(
-                                    PublicLibraryShowScreenKey(id = it, isPrivate = true)
-                                )
-                            }
-                        }
-                        .padding(15.dp, 10.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = library.name ?: "未命名",
-                            style = TextStyle(fontSize = 14.sp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = library.note ?: "",
-                            style = TextStyle(
-                                color = CHelperTheme.colors.textSecondary,
-                                fontSize = 12.sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    if (library.hasPublicVersion == true) {
-                        // 公开版与私有版不一致 → 显示"待同步"提醒（橙色）；
-                        // 已同步 → 显示"已发布"（主题色）。后端权威。
-                        if (library.hasUnsyncedChanges == true) {
-                            Text(
-                                text = "待同步",
-                                style = TextStyle(
-                                    fontSize = 11.sp,
-                                    color = Color(0xFFE65100)
-                                ),
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            )
-                        } else {
-                            Text(
-                                text = "已发布",
-                                style = TextStyle(
-                                    fontSize = 11.sp,
-                                    color = CHelperTheme.colors.mainColor
-                                ),
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }
 
-/**
- * 容量进度条：单纯展示 used/limit 的视觉条
- * limit == -1 表示无限制，进度条按固定 10% 显示，文案换成"无限制"
- * 配额接近用满时颜色加深一档，给用户提个醒
- */
+/** One lazy row retains the rounded card outline without composing its off-screen siblings. */
+@Composable
+private fun LibraryGroupItem(index: Int, count: Int, content: @Composable () -> Unit) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(
+                        topStart = if (index == 0) 10.dp else 0.dp,
+                        topEnd = if (index == 0) 10.dp else 0.dp,
+                        bottomStart = if (index == count - 1) 10.dp else 0.dp,
+                        bottomEnd = if (index == count - 1) 10.dp else 0.dp,
+                    )
+                )
+                .background(CHelperTheme.colors.backgroundComponent)
+    ) {
+        content()
+        if (index < count - 1) Divider(padding = 0.dp)
+    }
+}
+
+/** 容量进度条：单纯展示 used/limit 的视觉条 limit == -1 表示无限制，进度条按固定 10% 显示，文案换成"无限制" 配额接近用满时颜色加深一档，给用户提个醒 */
 @Composable
 private fun QuotaBar(
     used: Int,
     limit: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val unlimited = limit == -1
-    val ratio = if (unlimited) {
-        0.1f
-    } else {
-        (used.toFloat() / limit.toFloat()).coerceIn(0f, 1f)
-    }
-    val barColor = when {
-        unlimited -> CHelperTheme.colors.mainColor
-        ratio >= 0.9f -> Color(0xFFD32F2F)
-        ratio >= 0.7f -> Color(0xFFE65100)
-        else -> CHelperTheme.colors.mainColor
-    }
+    val ratio =
+        if (unlimited) {
+            0.1f
+        } else {
+            (used.toFloat() / limit.toFloat()).coerceIn(0f, 1f)
+        }
+    val barColor =
+        when {
+            unlimited -> CHelperTheme.colors.mainColor
+            ratio >= 0.9f -> Color(0xFFD32F2F)
+            ratio >= 0.7f -> Color(0xFFE65100)
+            else -> CHelperTheme.colors.mainColor
+        }
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "容量",
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = CHelperTheme.colors.textSecondary
-                )
+                style =
+                    TextStyle(
+                        fontSize = 11.sp,
+                        color = CHelperTheme.colors.textSecondary,
+                    ),
             )
             Text(
                 text = if (unlimited) "$used / 无限制" else "$used / $limit",
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    color = CHelperTheme.colors.textSecondary
-                )
+                style =
+                    TextStyle(
+                        fontSize = 11.sp,
+                        color = CHelperTheme.colors.textSecondary,
+                    ),
             )
         }
         Spacer(Modifier.height(4.dp))
         // 用 Box 做轨道+前景两层，比拉 LinearProgressIndicator 自定义颜色省事
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(CHelperTheme.colors.background)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(ratio)
+            modifier =
+                Modifier.fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp))
-                    .background(barColor)
+                    .background(CHelperTheme.colors.background)
+        ) {
+            Box(
+                modifier =
+                    Modifier.fillMaxWidth(ratio)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(barColor)
             )
         }
     }
@@ -998,55 +1069,57 @@ private fun LoginHintCard(navController: NavHostController) {
     // "我的" tab 的时候，访客访问站内信的入口跟着丢了，这里补回来。
     // 站内信里有面向所有人的公告，登录态不是看消息的前置条件
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(color = CHelperTheme.colors.backgroundComponent)
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(color = CHelperTheme.colors.backgroundComponent)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    navController.navigate(CPLUserScreenKey)
-                }
-                .padding(20.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clickable {
+                        navController.navigate(CPLUserScreenKey)
+                    }
+                    .padding(20.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "登录后可管理云端命令库",
-                style = TextStyle(
-                    color = CHelperTheme.colors.mainColor,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                style =
+                    TextStyle(
+                        color = CHelperTheme.colors.mainColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
             )
         }
         Divider(padding = 0.dp)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { navController.navigate(MessageScreenKey) }
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clickable { navController.navigate(MessageScreenKey) }
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 id = R.drawable.ic_mail,
                 modifier = Modifier.size(18.dp),
-                contentDescription = null
+                contentDescription = null,
             )
             Spacer(Modifier.width(8.dp))
             Text(
                 text = "站内信",
                 modifier = Modifier.weight(1f),
-                style = TextStyle(
-                    color = CHelperTheme.colors.textMain,
-                    fontSize = 14.sp
-                )
+                style =
+                    TextStyle(
+                        color = CHelperTheme.colors.textMain,
+                        fontSize = 14.sp,
+                    ),
             )
             Icon(
                 id = R.drawable.chevron_right,
                 modifier = Modifier.size(16.dp),
-                contentDescription = null
+                contentDescription = null,
             )
         }
     }
@@ -1056,27 +1129,28 @@ private fun LoginHintCard(navController: NavHostController) {
 private fun QuickActionButton(
     icon: Int,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             id = icon,
             modifier = Modifier.size(24.dp),
-            contentDescription = label
+            contentDescription = label,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            style = TextStyle(
-                fontSize = 11.sp,
-                color = CHelperTheme.colors.textSecondary
-            )
+            style =
+                TextStyle(
+                    fontSize = 11.sp,
+                    color = CHelperTheme.colors.textSecondary,
+                ),
         )
     }
 }

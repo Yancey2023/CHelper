@@ -18,19 +18,18 @@
 
 package yancey.chelper.network.library.interceptor
 
+import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import yancey.chelper.network.library.util.GuestAuthUtil
 import yancey.chelper.network.library.util.LoginUtil
 import yancey.chelper.network.library.util.WafHelper
-import java.io.IOException
 
 /**
  * 认证拦截器
- * 
- * 自动为发往 abyssous.site 的请求添加 Authorization header
- * 优先使用正式用户 token，否则使用访客 token
+ *
+ * 自动为发往 abyssous.site 的请求添加 Authorization header 优先使用正式用户 token，否则使用访客 token
  */
 class AuthInterceptor private constructor() : Interceptor {
 
@@ -39,15 +38,17 @@ class AuthInterceptor private constructor() : Interceptor {
         val request = chain.request()
 
         if (request.url.host == "abyssous.site") {
-            val builder = request.newBuilder()
-                // 后端分享等接口靠 X-Client / UA 识别安卓端，浏览器直接调会 403
-                .header("X-Client", "chelper-android")
-                .header(
-                    "User-Agent",
-                    request.header("User-Agent")
-                        ?.takeIf { it.contains("CHelper", ignoreCase = true) }
-                        ?: "CHelper-Android"
-                )
+            val builder =
+                request
+                    .newBuilder()
+                    // 后端分享等接口靠 X-Client / UA 识别安卓端，浏览器直接调会 403
+                    .header("X-Client", "chelper-android")
+                    .header(
+                        "User-Agent",
+                        request.header("User-Agent")?.takeIf {
+                            it.contains("CHelper", ignoreCase = true)
+                        } ?: "CHelper-Android",
+                    )
 
             // 添加 WAF Cookie
             val wafCookie = WafHelper.getCookie()
@@ -56,7 +57,10 @@ class AuthInterceptor private constructor() : Interceptor {
             }
 
             // 添加 Authorization Header
-            if (!isAuthEndpoint(request.url.encodedPath)) {
+            if (
+                !isAuthEndpoint(request.url.encodedPath) &&
+                    request.header("Authorization").isNullOrEmpty()
+            ) {
                 // 获取 token（正式用户优先，否则访客）
                 val token = runBlocking {
                     getToken()
@@ -73,35 +77,36 @@ class AuthInterceptor private constructor() : Interceptor {
         return chain.proceed(request)
     }
 
-    /**
-     * 判断是否是认证相关的 endpoint（登录/注册/验证码等）
-     * 这些 endpoint 不需要添加 Authorization header，避免循环调用
-     */
+    /** 判断是否是认证相关的 endpoint（登录/注册/验证码等） 这些 endpoint 不需要添加 Authorization header，避免循环调用 */
     private fun isAuthEndpoint(path: String): Boolean {
-        val authPaths = listOf(
-            "/guest/login",
-            "/guest/register",
-            "/login",
-            "/register",
-            "/captcha"
-        )
+        val authPaths =
+            listOf(
+                "/guest/login",
+                "/guest/register",
+                "/login",
+                "/register",
+                "/captcha",
+            )
         return authPaths.any { path.contains(it, ignoreCase = true) }
     }
 
     /**
      * 获取当前有效的 token
-     * 
+     *
      * 优先级：正式用户 > 访客
      */
     private suspend fun getToken(): String? {
         // 尝试正式用户 token
         try {
-            LoginUtil.getToken()?.let { return it }
-        } catch (_: Exception) {
-        }
+            LoginUtil.getToken()?.let {
+                return it
+            }
+        } catch (_: Exception) {}
 
         // 尝试访客 token
-        GuestAuthUtil.guestToken?.let { return it }
+        GuestAuthUtil.guestToken?.let {
+            return it
+        }
 
         // 尝试自动访客登录/注册
         if (GuestAuthUtil.ensureLoggedIn()) {

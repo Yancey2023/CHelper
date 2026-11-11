@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,49 +71,64 @@ fun SettingsScreen(
     var isShowChooseAmbiguousLineDialog by remember { mutableStateOf(false) }
     var isShowChooseLibraryHomeRecommendDialog by remember { mutableStateOf(false) }
     var isShowInputSyntaxHighlightMaxLengthDialog by remember { mutableStateOf(false) }
-    val isEnableUpdateNotifications by settingsDataStore.isEnableUpdateNotifications()
-        .collectAsState(initial = null)
-    val themeId by settingsDataStore.themeId()
-        .collectAsState(initial = "MODE_NIGHT_FOLLOW_SYSTEM")
-    val cpackBranch by settingsDataStore.cpackBranch()
-        .collectAsState(initial = null)
-    val isCheckingBySelection by settingsDataStore.isCheckingBySelection()
-        .collectAsState(initial = null)
-    val isHideWindowWhenCopying by settingsDataStore.isHideWindowWhenCopying()
-        .collectAsState(initial = null)
-    val isSavingWhenPausing by settingsDataStore.isSavingWhenPausing()
-        .collectAsState(initial = null)
-    val isCrowded by settingsDataStore.isCrowded()
-        .collectAsState(initial = null)
-    val isShowErrorReason by settingsDataStore.isShowErrorReason()
-        .collectAsState(initial = null)
-    val isSyntaxHighlight by settingsDataStore.isSyntaxHighlight()
-        .collectAsState(initial = null)
-    val floatingWindowIconAlpha by settingsDataStore.floatingWindowIconAlpha()
-        .collectAsState(initial = null)
-    val floatingWindowScreenAlpha by settingsDataStore.floatingWindowScreenAlpha()
-        .collectAsState(initial = null)
-    val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
-        .collectAsState(initial = null)
-    val isFloatingWindowFontAlphaSync by settingsDataStore.isFloatingWindowFontAlphaSync()
-        .collectAsState(initial = null)
+    val isEnableUpdateNotifications by
+        settingsDataStore
+            .isEnableUpdateNotifications()
+            .collectAsStateWithLifecycle(initialValue = null)
+    val themeId by
+        settingsDataStore
+            .themeId()
+            .collectAsStateWithLifecycle(initialValue = "MODE_NIGHT_FOLLOW_SYSTEM")
+    val cpackBranch by
+        settingsDataStore.cpackBranch().collectAsStateWithLifecycle(initialValue = null)
+    val isCheckingBySelection by
+        settingsDataStore.isCheckingBySelection().collectAsStateWithLifecycle(initialValue = null)
+    val isHideWindowWhenCopying by
+        settingsDataStore.isHideWindowWhenCopying().collectAsStateWithLifecycle(initialValue = null)
+    val isSavingWhenPausing by
+        settingsDataStore.isSavingWhenPausing().collectAsStateWithLifecycle(initialValue = null)
+    val isCrowded by settingsDataStore.isCrowded().collectAsStateWithLifecycle(initialValue = null)
+    val isShowErrorReason by
+        settingsDataStore.isShowErrorReason().collectAsStateWithLifecycle(initialValue = null)
+    val isSyntaxHighlight by
+        settingsDataStore.isSyntaxHighlight().collectAsStateWithLifecycle(initialValue = null)
+    val floatingWindowIconAlpha by
+        settingsDataStore.floatingWindowIconAlpha().collectAsStateWithLifecycle(initialValue = null)
+    val floatingWindowScreenAlpha by
+        settingsDataStore
+            .floatingWindowScreenAlpha()
+            .collectAsStateWithLifecycle(initialValue = null)
+    val floatingWindowIconSize by
+        settingsDataStore.floatingWindowIconSize().collectAsStateWithLifecycle(initialValue = null)
+    val isFloatingWindowFontAlphaSync by
+        settingsDataStore
+            .isFloatingWindowFontAlphaSync()
+            .collectAsStateWithLifecycle(initialValue = null)
     var tagClickBehavior by remember { mutableStateOf("search") }
     var ambiguousLineDefault by remember { mutableStateOf("comment") }
-    val isHideMetadataPreview by settingsDataStore.isHideMetadataPreview()
-        .collectAsState(initial = false)
-    val isEnableMcdHighlight by settingsDataStore.isEnableMcdHighlight()
-        .collectAsState(initial = true)
-    val isEnableLoongFlowImportMiniIcon by settingsDataStore.isEnableLoongFlowImportMiniIcon()
-        .collectAsState(initial = true)
-    val isPublicLibraryHomeRecommend by settingsDataStore.isPublicLibraryHomeRecommend()
-        .collectAsState(initial = true)
-    val syntaxHighlightMaxLength by settingsDataStore.syntaxHighlightMaxLength()
-        .collectAsState(initial = null)
+    val isHideMetadataPreview by
+        settingsDataStore.isHideMetadataPreview().collectAsStateWithLifecycle(initialValue = false)
+    val isEnableMcdHighlight by
+        settingsDataStore.isEnableMcdHighlight().collectAsStateWithLifecycle(initialValue = true)
+    val isEnableLoongFlowImportMiniIcon by
+        settingsDataStore
+            .isEnableLoongFlowImportMiniIcon()
+            .collectAsStateWithLifecycle(initialValue = true)
+    val isPublicLibraryHomeRecommend by
+        settingsDataStore
+            .isPublicLibraryHomeRecommend()
+            .collectAsStateWithLifecycle(initialValue = true)
+    val syntaxHighlightMaxLength by
+        settingsDataStore
+            .syntaxHighlightMaxLength()
+            .collectAsStateWithLifecycle(initialValue = null)
     // DataStore flow -> 本地变量同步（首次加载时拿到持久化值）
-    val tagClickBehaviorFlow by settingsDataStore.tagClickBehavior()
-        .collectAsState(initial = "search")
-    val ambiguousLineDefaultFlow by settingsDataStore.ambiguousLineDefault()
-        .collectAsState(initial = "comment")
+    val tagClickBehaviorFlow by
+        settingsDataStore.tagClickBehavior().collectAsStateWithLifecycle(initialValue = "search")
+    val ambiguousLineDefaultFlow by
+        settingsDataStore
+            .ambiguousLineDefault()
+            .collectAsStateWithLifecycle(initialValue = "comment")
     SideEffect {
         if (tagClickBehavior != tagClickBehaviorFlow) {
             tagClickBehavior = tagClickBehaviorFlow
@@ -143,7 +158,7 @@ fun SettingsScreen(
                 "beta-vanilla",
                 "beta-experiment",
                 "netease-vanilla",
-                "netease-experiment"
+                "netease-experiment",
             )
         val cpackBranchTranslations =
             arrayOf(
@@ -152,33 +167,35 @@ fun SettingsScreen(
                 "测试版-原版-",
                 "测试版-实验性玩法-",
                 "中国版-原版-",
-                "中国版-实验性玩法-"
+                "中国版-实验性玩法-",
             )
         val newCPackBranchesWithTranslate = mutableListOf<Pair<String, String>>()
         for (filename in filenames) {
             for (i in 0..<cpackBranches.size) {
                 if (filename!!.startsWith(cpackBranches[i])) {
-                    val version = filename.substring(
-                        cpackBranches[i].length,
-                        filename.length - ".cpack".length
+                    val version =
+                        filename.substring(
+                            cpackBranches[i].length,
+                            filename.length - ".cpack".length,
+                        )
+                    newCPackBranchesWithTranslate.add(
+                        "${cpackBranchTranslations[i]}${version}" to cpackBranches[i]
                     )
-                    newCPackBranchesWithTranslate.add("${cpackBranchTranslations[i]}${version}" to cpackBranches[i])
                 }
             }
         }
         cpackBranchesWithTranslate = newCPackBranchesWithTranslate.toTypedArray()
     }
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_settings_title)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             CollectionName(stringResource(R.string.layout_settings_application_update))
             Collection {
                 SettingsItem(
                     name = stringResource(R.string.layout_settings_is_enable_update_notification),
-                    description = stringResource(R.string.layout_settings_is_enable_update_notification_description),
+                    description =
+                        stringResource(
+                            R.string.layout_settings_is_enable_update_notification_description
+                        ),
                     checked = isEnableUpdateNotifications,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -191,14 +208,16 @@ fun SettingsScreen(
             Collection {
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_background),
-                    description = stringResource(R.string.layout_settings_choose_background_description),
+                    description =
+                        stringResource(R.string.layout_settings_choose_background_description),
                 ) {
                     chooseBackground()
                 }
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_restore_background),
-                    description = stringResource(R.string.layout_settings_restore_background_description),
+                    description =
+                        stringResource(R.string.layout_settings_restore_background_description),
                 ) {
                     isShowResumeBackgroundDialog = true
                 }
@@ -212,14 +231,20 @@ fun SettingsScreen(
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_icon_alpha),
-                    description = stringResource(R.string.layout_settings_floating_window_icon_alpha_description),
+                    description =
+                        stringResource(
+                            R.string.layout_settings_floating_window_icon_alpha_description
+                        ),
                 ) {
                     isShowInputFloatingWindowIconAlphaDialog = true
                 }
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_screen_alpha),
-                    description = stringResource(R.string.layout_settings_floating_window_screen_alpha_description),
+                    description =
+                        stringResource(
+                            R.string.layout_settings_floating_window_screen_alpha_description
+                        ),
                 ) {
                     isShowInputFloatingWindowScreenAlphaDialog = true
                 }
@@ -237,7 +262,10 @@ fun SettingsScreen(
                 Divider()
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_floating_window_icon_size),
-                    description = stringResource(R.string.layout_settings_floating_window_icon_size_description),
+                    description =
+                        stringResource(
+                            R.string.layout_settings_floating_window_icon_size_description
+                        ),
                 ) {
                     isShowInputFloatingWindowIconSizeDialog = true
                 }
@@ -255,18 +283,20 @@ fun SettingsScreen(
                     }
                 NameAndAction(
                     name = stringResource(R.string.layout_settings_choose_cpack),
-                    description = stringResource(
-                        R.string.layout_settings_current_cpack,
-                        currentCpackBranchTranslation
-                            ?: stringResource(R.string.layout_settings_unknown_branch)
-                    )
+                    description =
+                        stringResource(
+                            R.string.layout_settings_current_cpack,
+                            currentCpackBranchTranslation
+                                ?: stringResource(R.string.layout_settings_unknown_branch),
+                        ),
                 ) {
                     isShowChooseCpackBranchDialog = true
                 }
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_checking_by_selection),
-                    description = stringResource(R.string.layout_setting_checking_by_selection_description),
+                    description =
+                        stringResource(R.string.layout_setting_checking_by_selection_description),
                     checked = isCheckingBySelection,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -277,7 +307,10 @@ fun SettingsScreen(
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_hide_window_when_copying),
-                    description = stringResource(R.string.layout_setting_is_hide_window_when_copying_description),
+                    description =
+                        stringResource(
+                            R.string.layout_setting_is_hide_window_when_copying_description
+                        ),
                     checked = isHideWindowWhenCopying,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -288,7 +321,8 @@ fun SettingsScreen(
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_saving_when_pausing),
-                    description = stringResource(R.string.layout_setting_is_saving_when_pausing_description),
+                    description =
+                        stringResource(R.string.layout_setting_is_saving_when_pausing_description),
                     checked = isSavingWhenPausing,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -310,7 +344,8 @@ fun SettingsScreen(
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_show_error_reason),
-                    description = stringResource(R.string.layout_setting_is_show_error_reason_description),
+                    description =
+                        stringResource(R.string.layout_setting_is_show_error_reason_description),
                     checked = isShowErrorReason,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -321,7 +356,8 @@ fun SettingsScreen(
                 Divider()
                 SettingsItem(
                     name = stringResource(R.string.layout_setting_is_syntax_highlight),
-                    description = stringResource(R.string.layout_setting_is_syntax_highlight_description),
+                    description =
+                        stringResource(R.string.layout_setting_is_syntax_highlight_description),
                     checked = isSyntaxHighlight,
                     onCheckedChange = {
                         coroutineScope.launch {
@@ -355,7 +391,8 @@ fun SettingsScreen(
                 Divider()
                 NameAndAction(
                     name = "无法推断行的默认处理",
-                    description = "当前: ${if (ambiguousLineDefault == "comment") "当作注释" else "当作指令"}",
+                    description =
+                        "当前: ${if (ambiguousLineDefault == "comment") "当作注释" else "当作指令"}",
                 ) {
                     isShowChooseAmbiguousLineDialog = true
                 }
@@ -412,7 +449,8 @@ fun SettingsScreen(
                 coroutineScope.launch {
                     settingsDataStore.setThemeId(it)
                 }
-            })
+            },
+        )
     }
     if (isShowResumeBackgroundDialog) {
         IsConfirmDialog(
@@ -420,13 +458,12 @@ fun SettingsScreen(
             content = "是否恢复背景？",
             onConfirm = {
                 restoreBackground()
-            }
+            },
         )
     }
     if (isShowInputFloatingWindowIconSizeDialog && floatingWindowIconSize != null) {
-        val textFieldState = rememberTextFieldState(
-            initialText = floatingWindowIconSize!!.toString()
-        )
+        val textFieldState =
+            rememberTextFieldState(initialText = floatingWindowIconSize!!.toString())
         InputStringDialog(
             onDismissRequest = { isShowInputFloatingWindowIconSizeDialog = false },
             title = "请输入悬浮窗图标大小",
@@ -442,15 +479,15 @@ fun SettingsScreen(
                     coroutineScope.launch {
                         settingsDataStore.setFloatingWindowIconSize(integer)
                     }
-                } catch (_: NumberFormatException) {
-                }
-            }
+                } catch (_: NumberFormatException) {}
+            },
         )
     }
     if (isShowInputFloatingWindowIconAlphaDialog && floatingWindowIconAlpha != null) {
-        val textFieldState = rememberTextFieldState(
-            initialText = (floatingWindowIconAlpha!! * 100).toInt().toString()
-        )
+        val textFieldState =
+            rememberTextFieldState(
+                initialText = (floatingWindowIconAlpha!! * 100).toInt().toString()
+            )
         InputStringDialog(
             onDismissRequest = { isShowInputFloatingWindowIconAlphaDialog = false },
             title = "请输入图标透明度",
@@ -466,15 +503,15 @@ fun SettingsScreen(
                     coroutineScope.launch {
                         settingsDataStore.setFloatingWindowIconAlpha(integer / 100f)
                     }
-                } catch (_: NumberFormatException) {
-                }
-            }
+                } catch (_: NumberFormatException) {}
+            },
         )
     }
     if (isShowInputFloatingWindowScreenAlphaDialog && floatingWindowScreenAlpha != null) {
-        val textFieldState = rememberTextFieldState(
-            initialText = (floatingWindowScreenAlpha!! * 100).toInt().toString()
-        )
+        val textFieldState =
+            rememberTextFieldState(
+                initialText = (floatingWindowScreenAlpha!! * 100).toInt().toString()
+            )
         InputStringDialog(
             onDismissRequest = { isShowInputFloatingWindowScreenAlphaDialog = false },
             title = "请输入透明度",
@@ -490,9 +527,8 @@ fun SettingsScreen(
                     coroutineScope.launch {
                         settingsDataStore.setFloatingWindowScreenAlpha(integer / 100f)
                     }
-                } catch (_: NumberFormatException) {
-                }
-            }
+                } catch (_: NumberFormatException) {}
+            },
         )
     }
     if (isShowChooseCpackBranchDialog) {
@@ -505,64 +541,70 @@ fun SettingsScreen(
                 coroutineScope.launch {
                     settingsDataStore.setCpackBranch(it)
                 }
-            })
+            },
+        )
     }
     if (isShowChooseTagClickDialog) {
         SelectionDialog(
             title = "选择 Tag 点击行为",
             initialValue = tagClickBehavior,
             onDismissRequest = { isShowChooseTagClickDialog = false },
-            data = arrayOf(
-                "搜索该 Tag" to "search",
-                "进入详情页" to "detail"
-            ),
+            data =
+                arrayOf(
+                    "搜索该 Tag" to "search",
+                    "进入详情页" to "detail",
+                ),
             onChoose = {
                 tagClickBehavior = it
                 coroutineScope.launch {
                     settingsDataStore.setTagClickBehavior(it)
                 }
-            })
+            },
+        )
     }
     if (isShowChooseAmbiguousLineDialog) {
         SelectionDialog(
             title = "选择模糊行处理方式",
             initialValue = ambiguousLineDefault,
             onDismissRequest = { isShowChooseAmbiguousLineDialog = false },
-            data = arrayOf(
-                "当作注释" to "comment",
-                "当作指令" to "command"
-            ),
+            data =
+                arrayOf(
+                    "当作注释" to "comment",
+                    "当作指令" to "command",
+                ),
             onChoose = {
                 ambiguousLineDefault = it
                 coroutineScope.launch {
                     settingsDataStore.setAmbiguousLineDefault(it)
                 }
-            })
+            },
+        )
     }
     if (isShowChooseLibraryHomeRecommendDialog) {
         SelectionDialog(
             title = "选择云端库首页推荐方式",
             initialValue = if (isPublicLibraryHomeRecommend) "true" else "false",
             onDismissRequest = { isShowChooseLibraryHomeRecommendDialog = false },
-            data = arrayOf(
-                "猜你喜欢" to "true",
-                "按时间最新发布" to "false"
-            ),
+            data =
+                arrayOf(
+                    "猜你喜欢" to "true",
+                    "按时间最新发布" to "false",
+                ),
             onChoose = {
                 Log.d("CPL_Tab", "Settings: user chose isRecommend=$it")
                 coroutineScope.launch {
                     settingsDataStore.setPublicLibraryHomeRecommend(it == "true")
                     Log.d(
                         "CPL_Tab",
-                        "Settings: saved to DataStore isRecommend=${it == "true"}"
+                        "Settings: saved to DataStore isRecommend=${it == "true"}",
                     )
                 }
-            })
+            },
+        )
     }
     if (isShowInputSyntaxHighlightMaxLengthDialog && syntaxHighlightMaxLength != null) {
-        val textFieldState = rememberTextFieldState(
-            initialText = syntaxHighlightMaxLength!!.toString()
-        )
+        val textFieldState =
+            rememberTextFieldState(initialText = syntaxHighlightMaxLength!!.toString())
         InputStringDialog(
             onDismissRequest = { isShowInputSyntaxHighlightMaxLengthDialog = false },
             title = "请输入高亮自动关闭阈值 (0-100000)",
@@ -578,9 +620,8 @@ fun SettingsScreen(
                     coroutineScope.launch {
                         settingsDataStore.setSyntaxHighlightMaxLength(integer)
                     }
-                } catch (_: NumberFormatException) {
-                }
-            }
+                } catch (_: NumberFormatException) {}
+            },
         )
     }
 }
@@ -590,7 +631,7 @@ fun SettingsScreen(
 fun SettingsScreenLightThemePreview() {
     CHelperTheme(
         theme = CHelperTheme.Theme.Light,
-        backgroundBitmap = null
+        backgroundBitmap = null,
     ) {
         SettingsScreen(
             chooseBackground = {},
@@ -604,7 +645,7 @@ fun SettingsScreenLightThemePreview() {
 fun SettingsScreenDarkThemePreview() {
     CHelperTheme(
         theme = CHelperTheme.Theme.Dark,
-        backgroundBitmap = null
+        backgroundBitmap = null,
     ) {
         SettingsScreen(
             chooseBackground = {},

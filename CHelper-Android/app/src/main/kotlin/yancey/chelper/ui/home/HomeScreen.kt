@@ -31,7 +31,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,16 +44,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.toast.Toaster
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.android.util.PolicyGrantManager
 import yancey.chelper.android.window.FloatingWindowManager
@@ -83,22 +79,26 @@ import yancey.chelper.ui.common.widget.Text
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     navController: NavHostController = rememberNavController(),
-    floatingWindowManager: FloatingWindowManager? = null
+    floatingWindowManager: FloatingWindowManager? = null,
 ) {
     val context = LocalContext.current
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
-    val isShowPublicLibrary by settingsDataStore.isShowPublicLibrary()
-        .collectAsState(initial = false)
-    val floatingWindowIconSize by settingsDataStore.floatingWindowIconSize()
-        .collectAsState(initial = 40)
-    val floatingWindowIconAlpha by settingsDataStore.floatingWindowIconAlpha()
-        .collectAsState(initial = 1.0f)
-    val floatingWindowScreenAlpha by settingsDataStore.floatingWindowScreenAlpha()
-        .collectAsState(initial = 1.0f)
-    val isFloatingWindowFontAlphaSync by settingsDataStore.isFloatingWindowFontAlphaSync()
-        .collectAsState(initial = true)
-    val publicLibraryMinVersion by settingsDataStore.publicLibraryMinVersion()
-        .collectAsState(initial = 0)
+    val isShowPublicLibrary by
+        settingsDataStore.isShowPublicLibrary().collectAsStateWithLifecycle(initialValue = false)
+    val floatingWindowIconSize by
+        settingsDataStore.floatingWindowIconSize().collectAsStateWithLifecycle(initialValue = 40)
+    val floatingWindowIconAlpha by
+        settingsDataStore.floatingWindowIconAlpha().collectAsStateWithLifecycle(initialValue = 1.0f)
+    val floatingWindowScreenAlpha by
+        settingsDataStore
+            .floatingWindowScreenAlpha()
+            .collectAsStateWithLifecycle(initialValue = 1.0f)
+    val isFloatingWindowFontAlphaSync by
+        settingsDataStore
+            .isFloatingWindowFontAlphaSync()
+            .collectAsStateWithLifecycle(initialValue = true)
+    val publicLibraryMinVersion by
+        settingsDataStore.publicLibraryMinVersion().collectAsStateWithLifecycle(initialValue = 0)
 
     DisposableEffect(viewModel.pendingAnnouncementUrl) {
         viewModel.pendingAnnouncementUrl?.let { url ->
@@ -107,11 +107,12 @@ fun HomeScreen(
                 context.startActivity(
                     Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
-            }.onFailure {
-                Toaster.show("无法打开链接")
             }
+                .onFailure {
+                    Toaster.show("无法打开链接")
+                }
         }
-        onDispose { }
+        onDispose {}
     }
 
     DisposableEffect(viewModel.announcementLinkMessage) {
@@ -119,44 +120,43 @@ fun HomeScreen(
             viewModel.announcementLinkMessage = null
             Toaster.show(message)
         }
-        onDispose { }
+        onDispose {}
     }
 
     RootView {
         Column(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(CHelperTheme.colors.backgroundComponent)
-                        .padding(horizontal = 25.dp, vertical = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(horizontal = 25.dp, vertical = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Image(
                         painter = painterResource(R.drawable.pack_icon),
                         contentDescription = stringResource(R.string.app_name),
-                        modifier = Modifier.size(width = 70.dp, height = 70.dp)
+                        modifier = Modifier.size(width = 70.dp, height = 70.dp),
                     )
                     Column(modifier = Modifier.padding(start = 20.dp)) {
                         Text(
                             text = stringResource(R.string.layout_home_app_name),
-                            style = TextStyle(
-                                color = CHelperTheme.colors.textBond,
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textBond,
+                                    fontSize = 25.sp,
+                                    fontWeight = FontWeight.Bold,
+                                ),
                         )
                         Text(
                             text = stringResource(R.string.layout_home_app_description),
-                            style = TextStyle(
-                                color = CHelperTheme.colors.textBond,
-                                fontSize = 18.sp
-                            ),
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textBond,
+                                    fontSize = 18.sp,
+                                ),
                         )
                     }
                 }
@@ -170,11 +170,14 @@ fun HomeScreen(
                             } else {
                                 navController.navigate(CompletionScreenKey)
                             }
-                        }
+                        },
                     )
                     Divider()
                     NameAndAction(
-                        name = stringResource(R.string.layout_home_command_completion_floating_window_mode),
+                        name =
+                            stringResource(
+                                R.string.layout_home_command_completion_floating_window_mode
+                            ),
                         onClick = {
                             if (viewModel.isUsingFloatingWindow(floatingWindowManager)) {
                                 viewModel.stopFloatingWindow(floatingWindowManager)
@@ -189,10 +192,12 @@ fun HomeScreen(
                                     floatingWindowManager,
                                 )
                             }
-                        }
+                        },
                     )
                     Divider()
-                    NameAndAction(stringResource(R.string.layout_home_command_completion_settings)) {
+                    NameAndAction(
+                        stringResource(R.string.layout_home_command_completion_settings)
+                    ) {
                         navController.navigate(SettingsScreenKey)
                     }
                 }
@@ -225,9 +230,10 @@ fun HomeScreen(
                     }
                     Divider()
                     NameAndAction("游龙导出") {
-                        if (!XXPermissions.isGrantedPermission(
+                        if (
+                            !XXPermissions.isGrantedPermission(
                                 context,
-                                PermissionLists.getSystemAlertWindowPermission()
+                                PermissionLists.getSystemAlertWindowPermission(),
                             )
                         ) {
                             viewModel.isShowPermissionRequestWindow = true
@@ -236,7 +242,9 @@ fun HomeScreen(
                         }
                     }
                     Divider()
-                    NameAndAction(stringResource(R.string.layout_home_experimental_feature_raw_json_studio)) {
+                    NameAndAction(
+                        stringResource(R.string.layout_home_experimental_feature_raw_json_studio)
+                    ) {
                         navController.navigate(RawtextScreenKey)
                     }
                 }
@@ -270,7 +278,7 @@ fun HomeScreen(
             },
             onCancel = {
                 viewModel.isShowPermissionRequestWindow = false
-            }
+            },
         )
     }
     if (viewModel.isShowXiaomiClipboardPermissionTips) {
@@ -278,7 +286,8 @@ fun HomeScreen(
             onDismissRequest = {
                 viewModel.isShowXiaomiClipboardPermissionTips = false
             },
-            content = "对于小米手机和红米手机，需要将写入剪切板权限设置为始终允许才能在悬浮窗复制文本。具体设置方式如下：设置-应用设置-权限管理-应用权限管理-CHelper-写入剪切板-始终允许。",
+            content =
+                "对于小米手机和红米手机，需要将写入剪切板权限设置为始终允许才能在悬浮窗复制文本。具体设置方式如下：设置-应用设置-权限管理-应用权限管理-CHelper-写入剪切板-始终允许。",
             cancelText = "不再提示",
             onCancel = {
                 viewModel.dismissShowXiaomiClipboardPermissionTipsForever()
@@ -302,23 +311,20 @@ fun HomeScreen(
                     isFloatingWindowFontAlphaSync,
                     floatingWindowManager,
                 )
-            }
+            },
         )
     }
     if (viewModel.isShowPolicyGrantDialog) {
         val policyPageTitle = stringResource(R.string.layout_about_privacy_policy)
         PolicyGrantDialog(
-            content = if (viewModel.policyGrantState == PolicyGrantManager.State.NOT_READ)
-                stringResource(R.string.dialog_policy_grant_message_if_unread) else
-                stringResource(R.string.dialog_policy_grant_message_if_updated),
+            content =
+                if (viewModel.policyGrantState == PolicyGrantManager.State.NOT_READ)
+                    stringResource(R.string.dialog_policy_grant_message_if_unread)
+                else stringResource(R.string.dialog_policy_grant_message_if_updated),
             readPolicy = {
-                viewModel.viewModelScope.launch {
-                    val content = withContext(Dispatchers.IO) {
-                        context.assets.open("about/privacy_policy.txt").bufferedReader()
-                            .use { it.readText() }
-                    }
-                    navController.navigate(ShowTextScreenKey(policyPageTitle, content))
-                }
+                navController.navigate(
+                    ShowTextScreenKey(policyPageTitle, "about/privacy_policy.txt")
+                )
             },
             onConfirm = {
                 viewModel.agreePolicy()
@@ -347,19 +353,22 @@ fun HomeScreen(
         IsConfirmDialog(
             onDismissRequest = { viewModel.dismissCommandLabVersionDialog() },
             title = "版本提示",
-            content = "公有命令库需要最新版软件才能使用，请下载最新版软件体验完整功能。"
+            content = "公有命令库需要最新版软件才能使用，请下载最新版软件体验完整功能。",
         )
     }
     if (viewModel.isShowUpdateNotificationsDialog) {
-        val content = remember(viewModel.latestVersionInfo) {
-            viewModel.latestVersionInfo!!.versionName + "版本已发布，欢迎下载体验。本次更新内容如下：\n" + viewModel.latestVersionInfo!!.changelog
-        }
+        val content =
+            remember(viewModel.latestVersionInfo) {
+                viewModel.latestVersionInfo!!.versionName +
+                    "版本已发布，欢迎下载体验。本次更新内容如下：\n" +
+                    viewModel.latestVersionInfo!!.changelog
+            }
         IsConfirmDialog(
             onDismissRequest = { viewModel.isShowUpdateNotificationsDialog = false },
             title = "更新提醒",
             content = content,
             cancelText = "忽略此版本",
-            onCancel = { viewModel.ignoreLatestVersion() }
+            onCancel = { viewModel.ignoreLatestVersion() },
         )
     }
 }

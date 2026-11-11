@@ -19,7 +19,6 @@
 package yancey.chelper.android.activity
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -32,14 +31,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.hjq.permissions.XXPermissions
-import com.hjq.permissions.permission.PermissionLists
 import com.hjq.toast.Toaster
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.data.BackgroundStore
@@ -47,12 +43,8 @@ import yancey.chelper.ui.CommandLabDeepLink
 import yancey.chelper.ui.CommandLabDeepLinkParser
 import yancey.chelper.ui.NavHost
 import yancey.chelper.ui.openCommandLabDeepLink
-import java.io.BufferedInputStream
-import java.io.IOException
 
-/**
- * 首页
- */
+/** 首页 */
 class HomeActivity : BaseComposeActivity() {
     private lateinit var floatingWindowManager: FloatingWindowManager
     private var backgroundJob: Job? = null
@@ -64,16 +56,19 @@ class HomeActivity : BaseComposeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         floatingWindowManager = FloatingWindowManager(application)
-        onBackPressedCallback = object : OnBackPressedCallback(false) {
-            override fun handleOnBackPressed() {
-                if (backgroundJob != null && backgroundJob!!.isActive) {
-                    isShowSavingBackgroundDialog.value = true
+        onBackPressedCallback =
+            object : OnBackPressedCallback(false) {
+                override fun handleOnBackPressed() {
+                    if (backgroundJob != null && backgroundJob!!.isActive) {
+                        isShowSavingBackgroundDialog.value = true
+                    }
                 }
             }
-        }
         onBackPressedDispatcher.addCallback(onBackPressedCallback)
         photoPicker =
-            registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { setBackground(it) }
+            registerForActivityResult(ActivityResultContracts.PickVisualMedia()) {
+                setBackground(it)
+            }
         queueDeepLink(intent)
         setContent {
             val navController = rememberNavController()
@@ -114,60 +109,37 @@ class HomeActivity : BaseComposeActivity() {
     }
 
     private fun chooseBackground() {
-        if (XXPermissions.isGrantedPermission(
-                this,
-                PermissionLists.getReadMediaImagesPermission()
-            )
-        ) {
-            photoPicker.launch(
-                PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    .build()
-            )
-        } else {
-            XXPermissions.with(this)
-                .permission(PermissionLists.getReadMediaImagesPermission())
-                .request { _, deniedList ->
-                    if (deniedList.isEmpty()) {
-                        Toaster.show("图片访问权限申请成功")
-                    } else {
-                        Toaster.show("图片访问权限申请失败")
-                    }
-                }
-        }
+        photoPicker.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
     }
 
     private fun setBackground(uri: Uri?) {
-        backgroundJob?.cancel()
-        if (uri == null) {
-            return
-        }
-        backgroundJob = lifecycleScope.launch {
-            onBackPressedCallback.isEnabled = true
-            try {
-                withContext(Dispatchers.Default) {
-                    val bitmap = contentResolver.openInputStream(uri)?.use { inputStream ->
-                        BufferedInputStream(inputStream).use {
-                            BitmapFactory.decodeStream(it)
-                        }
-                    } ?: throw IOException("无法打开图片")
-                    BackgroundStore.INSTANCE.setBackGroundDrawable(bitmap)
-                }
-            } catch (e: Exception) {
-                Toaster.show(e.message ?: "未知错误")
-            } finally {
-                onBackPressedCallback.isEnabled = false
-                isShowSavingBackgroundDialog.value = false
-            }
-        }
+        if (uri == null) return
+        changeBackground { BackgroundStore.INSTANCE.replace(contentResolver, uri) }
     }
 
     private fun restoreBackground() {
-        try {
-            BackgroundStore.INSTANCE.setBackGroundDrawable(null)
-        } catch (e: IOException) {
-            Toaster.show(e.message)
-            MonitorUtil.generateCustomLog(e, "ResetBackgroundException")
+        changeBackground { BackgroundStore.INSTANCE.restore() }
+    }
+
+    private fun changeBackground(action: suspend () -> Unit) {
+        backgroundJob?.cancel()
+        backgroundJob = lifecycleScope.launch {
+            onBackPressedCallback.isEnabled = true
+            try {
+                action()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Toaster.show(e.message ?: "背景设置失败")
+                MonitorUtil.generateCustomLog(e, "BackgroundChangeException")
+            } finally {
+                if (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                    onBackPressedCallback.isEnabled = false
+                    isShowSavingBackgroundDialog.value = false
+                }
+            }
         }
     }
 }

@@ -20,182 +20,192 @@ package yancey.chelper.ui.library.search
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import yancey.chelper.network.ServiceManager
-import yancey.chelper.network.library.data.AuthorInfo
+import yancey.chelper.data.LibrarySearchRepository
+import yancey.chelper.data.NetworkLibrarySearchRepository
+import yancey.chelper.data.matchingLibraries
 import yancey.chelper.network.library.data.LibraryFunction
+import yancey.chelper.network.library.util.LoginUtil
 
-class LibrarySearchViewModel : ViewModel() {
+internal data class LibrarySearchUiState(
+    val query: String = "",
+    val localLibraries: List<LibraryFunction> = emptyList(),
+    val privateLibraries: List<LibraryFunction> = emptyList(),
+    val publicLibraries: List<LibraryFunction> = emptyList(),
+    val localLoading: Boolean = false,
+    val privateLoading: Boolean = false,
+    val publicLoading: Boolean = false,
+    val privateError: String? = null,
+    val publicError: String? = null,
+    val currentPage: Int = 0,
+    val hasMore: Boolean = false,
+) {
+    val isLoading
+        get() = localLoading || privateLoading || publicLoading
+
+    val localAndPrivateLibraries
+        get() = localLibraries + privateLibraries
+}
+
+internal class LibrarySearchViewModel(
+    private val repository: LibrarySearchRepository = NetworkLibrarySearchRepository(),
+    private val requestScope: CoroutineScope? = null,
+    private val localDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val accountId: StateFlow<Int?> = LoginUtil.accountId,
+) : ViewModel() {
     val keyword = TextFieldState()
+    private val _uiState = MutableStateFlow(LibrarySearchUiState())
+    val uiState = _uiState.asStateFlow()
+    private val scope
+        get() = requestScope ?: viewModelScope
 
-    // 第一栏：来自本地和私有云端库的匹配项
-    var localAndPrivateLibraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
+    private var generation = 0L
+    private var publicJob: Job? = null
+    private var privateJob: Job? = null
+    private var localJob: Job? = null
+    private var initialKeywordSet = false
+    private var publicVersion = 0L
+    private var privateVersion = 0L
 
-    // 第二栏：来自公开市场库的匹配项
-    var publicLibraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
-
-    var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
-
-    // 公开市场库的分页参数
-    var currentPage by mutableIntStateOf(1)
-    var totalPages by mutableIntStateOf(1)
-    var hasMore by mutableStateOf(true)
-
-    private var searchJob: Job? = null
+    init {
+        var observedAccount = accountId.value
+        scope.launch {
+            accountId.collect { ownerId ->
+                if (ownerId != observedAccount) {
+                    observedAccount = ownerId
+                    ++privateVersion
+                    privateJob?.cancel()
+                    _uiState.value =
+                        _uiState.value.copy(
+                            privateLibraries = emptyList(),
+                            privateLoading = false,
+                            privateError = null,
+                        )
+                    if (ownerId != null) fetchPrivate(_uiState.value.query, generation)
+                }
+            }
+        }
+    }
 
     fun setInitialKeyword(initialWord: String?) {
-        if (!initialWord.isNullOrBlank()) {
-            keyword.setTextAndPlaceCursorAtEnd(initialWord)
-        }
+        if (initialKeywordSet) return
+        initialKeywordSet = true
+        if (!initialWord.isNullOrBlank()) keyword.setTextAndPlaceCursorAtEnd(initialWord)
     }
 
     fun search(localLibraryFunctions: List<LibraryFunction>?) {
-        val q = keyword.text.toString().trim()
-        if (q.isEmpty()) {
-            // 清空搜索结果
-            localAndPrivateLibraries.clear()
-            publicLibraries.clear()
-            currentPage = 1
-            hasMore = false
-            return
+        val query = keyword.text.toString().trim()
+        val version = ++generation
+        ++publicVersion
+        ++privateVersion
+        publicJob?.cancel()
+        privateJob?.cancel()
+        localJob?.cancel()
+        _uiState.value = LibrarySearchUiState(query = query)
+        if (query.isEmpty()) return
+        refreshLocal(localLibraryFunctions)
+        fetchPrivate(query, version)
+        fetchPublic(query, version, reset = true)
+    }
+
+    fun refreshLocal(libraries: List<LibraryFunction>?) {
+        val state = _uiState.value
+        if (state.query.isEmpty()) return
+        localJob?.cancel()
+        val version = generation
+        _uiState.value = state.copy(localLoading = true)
+        localJob = scope.launch {
+            val matches =
+                withContext(localDispatcher) {
+                    libraries.orEmpty().matchingLibraries(state.query, "[本地包]")
+                }
+            if (version == generation)
+                _uiState.value = _uiState.value.copy(localLibraries = matches, localLoading = false)
         }
-
-        loadFunctions(localLibraryFunctions, searchStr = q, resetPage = true)
     }
 
-    fun loadMore(localLibraryFunctions: List<LibraryFunction>?) {
-        val q = keyword.text.toString().trim()
-        if (q.isEmpty() || !hasMore || isLoading) return
-        currentPage++
-        loadFunctions(localLibraryFunctions, searchStr = q, resetPage = false)
+    fun retryPrivate() = fetchPrivate(_uiState.value.query, generation)
+
+    fun retryPublic() =
+        fetchPublic(_uiState.value.query, generation, _uiState.value.currentPage == 0)
+
+    fun loadMore() {
+        val state = _uiState.value
+        if (!state.publicLoading && state.hasMore && state.publicError == null) {
+            fetchPublic(state.query, generation, reset = false)
+        }
     }
 
-    private fun loadFunctions(
-        localLibraryFunctions: List<LibraryFunction>?,
-        searchStr: String, resetPage: Boolean
-    ) {
-        if (isLoading) return
-
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-
-            if (resetPage) {
-                currentPage = 1
-                localAndPrivateLibraries.clear()
-                publicLibraries.clear()
-            }
-
+    private fun fetchPrivate(query: String, version: Long) {
+        if (query.isEmpty()) return
+        val requestVersion = ++privateVersion
+        val ownerId = accountId.value
+        privateJob?.cancel()
+        _uiState.value = _uiState.value.copy(privateLoading = true, privateError = null)
+        privateJob = scope.launch {
             try {
-                // 并行执行两部分逻辑
-                withContext(Dispatchers.IO) {
-                    val publicJob = launch { fetchPublicLibraries(searchStr) }
-
-                    // 私有与本地过滤只在第一页加载时查一次即可
-                    if (resetPage) {
-                        launch { fetchLocalAndPrivateLibraries(localLibraryFunctions, searchStr) }
-                    }
-
-                    publicJob.join()
-                }
+                val matches = repository.privateLibraries(query)
+                if (
+                    version == generation &&
+                        requestVersion == privateVersion &&
+                        accountId.value == ownerId
+                )
+                    _uiState.value = _uiState.value.copy(privateLibraries = matches)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                errorMessage = "网络错误: ${e.message}"
-                if (!resetPage && currentPage > 1) {
-                    currentPage--
-                }
+                if (
+                    version == generation &&
+                        requestVersion == privateVersion &&
+                        accountId.value == ownerId
+                )
+                    _uiState.value = _uiState.value.copy(privateError = e.message ?: "加载私有库失败")
             } finally {
-                isLoading = false
+                if (version == generation && requestVersion == privateVersion)
+                    _uiState.value = _uiState.value.copy(privateLoading = false)
             }
         }
     }
 
-    /**
-     * 加载第二栏数据，从远端获取市场公开库
-     */
-    private suspend fun fetchPublicLibraries(searchStr: String) {
-        val response = ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
-            pageNum = currentPage,
-            pageSize = 20,
-            keyword = searchStr
-        )
-
-        withContext(Dispatchers.Main) {
-            if (response.isSuccess() && response.data != null) {
-                val data = response.data!!
-                val functions = data.functions?.filterNotNull() ?: emptyList()
-                publicLibraries.addAll(functions)
-
-                val total = data.totalCount ?: 0
-                val size = data.perPage ?: 20
-                totalPages = if (size > 0) (total + size - 1) / size else 1
-                hasMore = currentPage < totalPages
-            } else {
-                if (publicLibraries.isEmpty()) {
-                    errorMessage = response.message ?: "加载公开库失败"
-                }
+    private fun fetchPublic(query: String, version: Long, reset: Boolean) {
+        if (query.isEmpty()) return
+        val requestVersion = ++publicVersion
+        publicJob?.cancel()
+        val page = if (reset) 1 else _uiState.value.currentPage + 1
+        _uiState.value = _uiState.value.copy(publicLoading = true, publicError = null)
+        publicJob = scope.launch {
+            try {
+                val result = repository.publicLibraries(query, page)
+                if (version != generation || requestVersion != publicVersion) return@launch
+                val existing = if (reset) emptyList() else _uiState.value.publicLibraries
+                val ids = existing.mapNotNullTo(HashSet()) { it.id }
+                val added = result.libraries.filter { it.id?.let(ids::add) ?: true }
+                _uiState.value =
+                    _uiState.value.copy(
+                        publicLibraries = existing + added,
+                        currentPage = page,
+                        hasMore = page < result.totalPages,
+                    )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (version == generation && requestVersion == publicVersion)
+                    _uiState.value = _uiState.value.copy(publicError = e.message ?: "加载公开库失败")
+            } finally {
+                if (version == generation && requestVersion == publicVersion)
+                    _uiState.value = _uiState.value.copy(publicLoading = false)
             }
-        }
-    }
-
-    /**
-     * 加载第一栏数据，从本地和云端私有库过滤
-     */
-    private suspend fun fetchLocalAndPrivateLibraries(
-        localLibraryFunctions: List<LibraryFunction>?,
-        searchStr: String
-    ) {
-        val searchLower = searchStr.lowercase()
-        val tempMatches = mutableListOf<LibraryFunction>()
-
-        // 扫描本地库 (转换为 LibraryFunction 做格式统一，我们借用 name, note 等字段)
-        localLibraryFunctions?.forEach { localFunc ->
-            val nameMatch = localFunc.name?.lowercase()?.contains(searchLower) == true
-            val tagsMatch = localFunc.tags?.any { it.lowercase().contains(searchLower) } == true
-            val noteMatch = localFunc.note?.lowercase()?.contains(searchLower) == true
-            if (nameMatch || tagsMatch || noteMatch) {
-                tempMatches.add(localFunc.copy(author = AuthorInfo(name = "[本地包]")))
-            }
-        }
-
-        // 2. 扫描云端私有库
-        try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getMyLibraries()
-            if (response.isSuccess() && response.data != null) {
-                val privateList = response.data!!.functions?.filterNotNull() ?: emptyList()
-                privateList.forEach { privateFunc ->
-                    val nameMatch = privateFunc.name?.lowercase()?.contains(searchLower) == true
-                    val tagsMatch =
-                        privateFunc.tags?.any { it.lowercase().contains(searchLower) } == true
-                    val noteMatch = privateFunc.note?.lowercase()?.contains(searchLower) == true
-
-                    if (nameMatch || tagsMatch || noteMatch) {
-                        privateFunc.author = AuthorInfo(name = "[我的私有库]") // 标记
-                        tempMatches.add(privateFunc)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            e.printStackTrace()
-        }
-
-        withContext(Dispatchers.Main) {
-            localAndPrivateLibraries.addAll(tempMatches)
         }
     }
 }

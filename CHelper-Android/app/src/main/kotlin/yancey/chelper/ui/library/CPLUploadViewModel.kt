@@ -31,7 +31,6 @@ import com.hjq.toast.Toaster
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.data.LibraryFunction
@@ -50,28 +49,40 @@ class CPLUploadViewModel : ViewModel() {
     var useV2 by mutableStateOf(false)
     var editId by mutableIntStateOf(-1)
     var editUuid by mutableStateOf("")
-    private var initializedCloudDraftKey: String? = null
+    var isCloudDraftReady by mutableStateOf(false)
+        private set
 
-    fun ensureCloudDraftLoaded(json: String?, id: Int) {
-        if (json.isNullOrEmpty() || id <= 0) return
-        val key = "$id:${json.hashCode()}"
-        if (initializedCloudDraftKey == key) return
-        initializedCloudDraftKey = key
-        loadFromCloudJson(json, id)
-    }
+    var cloudDraftError by mutableStateOf<String?>(null)
+        private set
 
-    fun loadFromCloudJson(json: String?, id: Int) {
-        if (json.isNullOrEmpty() || id <= 0) return
-        this.editId = id
-        try {
-            val lib = Json.decodeFromString<LibraryFunction>(json)
-            this.editUuid = lib.uuid ?: ""
-            loadFromLocal(lib)
-        } catch (e: Exception) {
-            // 云端草稿格式异常时之前完全静默——用户点编辑没反应还以为没生效。
-            // 这里至少 logcat 留底 + 远端上报，便于反查
-            Log.e("CPLUploadViewModel", "解析云端草稿失败", e)
-            MonitorUtil.generateCustomLog(e, "CloudDraftParseError")
+    private var cloudDraftJob: kotlinx.coroutines.Job? = null
+    private var cloudDraftId = -1
+
+    fun ensureCloudDraftLoaded(id: Int) {
+        if (
+            id <= 0 ||
+                (cloudDraftId == id && (isCloudDraftReady || cloudDraftJob?.isActive == true))
+        )
+            return
+        cloudDraftJob?.cancel()
+        cloudDraftId = id
+        editId = id
+        isCloudDraftReady = false
+        cloudDraftError = null
+        cloudDraftJob = viewModelScope.launch {
+            try {
+                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getPrivateFunction(id)
+                val library = response.data
+                if (!response.isSuccess() || library == null) error(response.message ?: "加载云端草稿失败")
+                if (cloudDraftId != id) return@launch
+                editUuid = library.uuid.orEmpty()
+                loadFromLocal(library)
+                isCloudDraftReady = true
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (cloudDraftId == id) cloudDraftError = e.message ?: "加载云端草稿失败"
+            }
         }
     }
 
@@ -93,24 +104,19 @@ class CPLUploadViewModel : ViewModel() {
         }
     }
 
-    /**
-     * 构建完整 MCD 文本（含元数据头 + 函数体），供预览和上传共用
-     */
+    /** 构建完整 MCD 文本（含元数据头 + 函数体），供预览和上传共用 */
     fun buildFullMCD(): String {
         val mcdBuilder = StringBuilder()
         mcdBuilder.append("@name=${name.text}\n")
         mcdBuilder.append("@version=${version.text}\n")
 
-        val tagList = tags.text.toString()
-            .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        val tagList = tags.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
         if (tagList.isNotEmpty()) {
             mcdBuilder.append("@tags=${tagList.joinToString(",")}\n")
         }
 
-        val mcdNote = description.text.toString()
-            .replace("\r\n", " ")
-            .replace('\r', ' ')
-            .replace('\n', ' ')
+        val mcdNote =
+            description.text.toString().replace("\r\n", " ").replace('\r', ' ').replace('\n', ' ')
         mcdBuilder.append("@note=$mcdNote\n")
         if (useV2) {
             mcdBuilder.append("@mcd_version=2\n")
@@ -135,18 +141,19 @@ class CPLUploadViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val finalContent = buildFullMCD()
-                val tagList = tags.text.toString()
-                    .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                val tagList =
+                    tags.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
                 if (editId > 0) {
-                    val request = CommandLabUserService.UpdateLibraryRequest().apply {
-                        this.name = this@CPLUploadViewModel.name.text.toString()
-                        this.version =
-                            this@CPLUploadViewModel.version.text.toString().ifEmpty { "1.0.0" }
-                        this.note = this@CPLUploadViewModel.description.text.toString()
-                        this.tags = tagList
-                        this.content = finalContent
-                    }
+                    val request =
+                        CommandLabUserService.UpdateLibraryRequest().apply {
+                            this.name = this@CPLUploadViewModel.name.text.toString()
+                            this.version =
+                                this@CPLUploadViewModel.version.text.toString().ifEmpty { "1.0.0" }
+                            this.note = this@CPLUploadViewModel.description.text.toString()
+                            this.tags = tagList
+                            this.content = finalContent
+                        }
                     val result =
                         ServiceManager.COMMAND_LAB_USER_SERVICE.updateLibrary(editId, request)
                     withContext(Dispatchers.Main) {
@@ -163,10 +170,11 @@ class CPLUploadViewModel : ViewModel() {
                     }
                 } else {
                     // 上传固定为私有草稿
-                    val request = CommandLabUserService.UploadLibraryRequest().apply {
-                        this.content = finalContent
-                        this.isPublish = false
-                    }
+                    val request =
+                        CommandLabUserService.UploadLibraryRequest().apply {
+                            this.content = finalContent
+                            this.isPublish = false
+                        }
                     val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadLibrary(request)
                     withContext(Dispatchers.Main) {
                         isLoading = false

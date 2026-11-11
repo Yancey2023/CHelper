@@ -28,11 +28,11 @@ import androidx.lifecycle.viewModelScope
 import com.hjq.device.compat.DeviceOs
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
+import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import yancey.chelper.BuildConfig
 import yancey.chelper.android.util.PolicyGrantManager
@@ -42,7 +42,6 @@ import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.chelper.data.Announcement
 import yancey.chelper.network.chelper.data.VersionInfo
 import yancey.chelper.network.library.util.CommandLabWebSso
-import java.io.File
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var policyGrantState by mutableStateOf(PolicyGrantManager.State.NOT_READ)
@@ -50,7 +49,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var latestVersionInfo by mutableStateOf<VersionInfo?>(null)
     var isShowPermissionRequestWindow by mutableStateOf(false)
     var isShowXiaomiClipboardPermissionTips by mutableStateOf(false)
-    val isShowPolicyGrantDialog get() = policyGrantState != PolicyGrantManager.State.AGREE
+    val isShowPolicyGrantDialog
+        get() = policyGrantState != PolicyGrantManager.State.AGREE
+
     var isShowAnnouncementDialog by mutableStateOf(false)
     var isShowUpdateNotificationsDialog by mutableStateOf(false)
     var isShowCommandLabVersionDialog by mutableStateOf(false)
@@ -61,10 +62,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private var isNeedToShowXiaomiClipboardPermissionTips: Boolean? = null
     private val skipXiaomiClipboardPermissionTipsFile: File =
         application.dataDir.resolve(SKIP_XIAOMI_CLIPBOARD_PERMISSION_TIPS_FILENAME)
-    private val skipAnnouncementFile: File =
-        application.dataDir.resolve(SKIP_ANNOUNCEMENT_FILENAME)
-    private val skipVersionFile: File =
-        application.dataDir.resolve(SKIP_VERSION_FILENAME)
+    private val skipAnnouncementFile: File = application.dataDir.resolve(SKIP_ANNOUNCEMENT_FILENAME)
+    private val skipVersionFile: File = application.dataDir.resolve(SKIP_VERSION_FILENAME)
 
     init {
         this.policyGrantState = PolicyGrantManager.INSTANCE.state
@@ -86,9 +85,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         isFloatingWindowFontAlphaSync: Boolean,
         floatingWindowManager: FloatingWindowManager?,
     ) {
-        if (!XXPermissions.isGrantedPermission(
+        if (
+            !XXPermissions.isGrantedPermission(
                 context,
-                PermissionLists.getSystemAlertWindowPermission()
+                PermissionLists.getSystemAlertWindowPermission(),
             )
         ) {
             isShowPermissionRequestWindow = true
@@ -98,7 +98,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             if (isNeedToShowXiaomiClipboardPermissionTips == null) {
                 isNeedToShowXiaomiClipboardPermissionTips =
                     !skipXiaomiClipboardPermissionTipsFile.exists() &&
-                            (DeviceOs.isHyperOs() || DeviceOs.isMiui())
+                        (DeviceOs.isHyperOs() || DeviceOs.isMiui())
             }
             if (isNeedToShowXiaomiClipboardPermissionTips!!) {
                 isShowXiaomiClipboardPermissionTips = true
@@ -119,9 +119,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         try {
             skipXiaomiClipboardPermissionTipsFile.parentFile?.mkdirs()
             skipXiaomiClipboardPermissionTipsFile.outputStream().use { it.write("".toByteArray()) }
-        } catch (_: Exception) {
-
-        }
+        } catch (_: Exception) {}
     }
 
     fun stopFloatingWindow(floatingWindowManager: FloatingWindowManager?) {
@@ -152,18 +150,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         isShow = it.isEnable ?: false
                         if (isShow) {
                             try {
-                                val ignoreAnnouncement = withContext(Dispatchers.IO) {
-                                    return@withContext skipAnnouncementFile.inputStream()
-                                        .bufferedReader()
-                                        .use { it.readText() }
-                                }
+                                val ignoreAnnouncement =
+                                    withContext(Dispatchers.IO) {
+                                        return@withContext skipAnnouncementFile
+                                            .inputStream()
+                                            .bufferedReader()
+                                            .use { it.readText() }
+                                    }
                                 val announcementHashCode = announcement.hashCode().toString()
                                 if (announcementHashCode == ignoreAnnouncement) {
                                     isShow = false
                                 }
-                            } catch (_: Exception) {
-
-                            }
+                            } catch (_: Exception) {}
                         }
                     }
                     if (isShow) {
@@ -172,9 +170,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         checkUpdate()
                     }
                 }
-            } catch (_: Exception) {
-
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -182,12 +178,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    skipAnnouncementFile.outputStream()
+                    skipAnnouncementFile
+                        .outputStream()
                         .write(announcement.hashCode().toString().toByteArray())
                 }
-            } catch (_: Exception) {
-
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -197,10 +192,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             isAuthorizingWebSso = true
             try {
-                val result = withContext(Dispatchers.IO) {
-                    CommandLabWebSso.resolveBrowserUrl(url)
-                }
-                result.onSuccess { pendingAnnouncementUrl = it }
+                val result =
+                    withContext(Dispatchers.IO) {
+                        CommandLabWebSso.resolveBrowserUrl(url)
+                    }
+                result
+                    .onSuccess { pendingAnnouncementUrl = it }
                     .onFailure { announcementLinkMessage = it.message ?: "无法打开链接" }
             } catch (e: CancellationException) {
                 throw e
@@ -211,34 +208,28 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkUpdate() {
-        if (!runBlocking { settingsDataStore.isEnableUpdateNotifications().first() }) {
-            return
-        }
         viewModelScope.launch {
+            if (!settingsDataStore.isEnableUpdateNotifications().first()) return@launch
             try {
                 ServiceManager.CHELPER_SERVICE.getLatestVersionInfo().let { it ->
                     latestVersionInfo = it
                     var isShow = it.versionName != BuildConfig.VERSION_NAME
                     if (isShow) {
                         try {
-                            val ignoreVersion = withContext(Dispatchers.IO) {
-                                skipVersionFile.bufferedReader()
-                                    .use { it.readText() }
-                            }
+                            val ignoreVersion =
+                                withContext(Dispatchers.IO) {
+                                    skipVersionFile.bufferedReader().use { it.readText() }
+                                }
                             if (it.versionName == ignoreVersion) {
                                 isShow = false
                             }
-                        } catch (_: Exception) {
-
-                        }
+                        } catch (_: Exception) {}
                     }
                     if (isShow) {
                         isShowUpdateNotificationsDialog = true
                     }
                 }
-            } catch (_: Exception) {
-
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -247,13 +238,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 latestVersionInfo?.versionName?.let {
                     withContext(Dispatchers.IO) {
-                        skipVersionFile.outputStream()
-                            .write(it.toByteArray())
+                        skipVersionFile.outputStream().write(it.toByteArray())
                     }
                 }
-            } catch (_: Exception) {
-
-            }
+            } catch (_: Exception) {}
         }
     }
 

@@ -74,7 +74,7 @@ class LocalLibraryListViewModel : ViewModel() {
                 // 先把缓存灌进 UI，让短时间回访（切 tab、详情返回）零等待
                 CloudLibraryCache.getLibraries(uid)?.let { cached ->
                     myCloudLibraries.clear()
-                    myCloudLibraries.addAll(cached)
+                    myCloudLibraries.addAll(cached.filter { it.id != null }.distinctBy { it.id })
                     // 命中缓存就当作"已经把第一页加载完"，后续滚动再分页
                     cloudLibrariesPage = 1
                     cloudLibrariesHasMore = false
@@ -98,9 +98,8 @@ class LocalLibraryListViewModel : ViewModel() {
     }
 
     /**
-     * 右上角"账户菜单 → 退出登录"用的快捷出口。
-     * 实际清除登录信息后立刻 refreshUserState，让"我的库"页面在原地切回未登录视图，
-     * 不再让用户为了登出多跳一次 CPLUserScreen
+     * 右上角"账户菜单 → 退出登录"用的快捷出口。 实际清除登录信息后立刻 refreshUserState，让"我的库"页面在原地切回未登录视图， 不再让用户为了登出多跳一次
+     * CPLUserScreen
      */
     fun logout() {
         LoginUtil.logout()
@@ -109,10 +108,7 @@ class LocalLibraryListViewModel : ViewModel() {
         refreshUserState()
     }
 
-    /**
-     * 拉取自身的公开资料，主要为了拿 userTitle（称号）。
-     * 登录返回里没带这个字段，需要单独查一次。
-     */
+    /** 拉取自身的公开资料，主要为了拿 userTitle（称号）。 登录返回里没带这个字段，需要单独查一次。 */
     private fun loadUserProfile(forceRefresh: Boolean = false) {
         val uid = currentUser?.id ?: return
         if (!forceRefresh && CloudLibraryCache.getProfile(uid) != null) return
@@ -131,9 +127,7 @@ class LocalLibraryListViewModel : ViewModel() {
         }
     }
 
-    /**
-     * 拉取私有库容量配额，给"我的云端库"下方的容量条用。
-     */
+    /** 拉取私有库容量配额，给"我的云端库"下方的容量条用。 */
     private fun loadQuota(forceRefresh: Boolean = false) {
         val uid = currentUser?.id ?: return
         if (!forceRefresh && CloudLibraryCache.getQuota(uid) != null) return
@@ -157,7 +151,9 @@ class LocalLibraryListViewModel : ViewModel() {
         if (!isLoggedIn) return
         val uid = currentUser?.id
         // refresh=true 是"重置到第一页"，但如果缓存还热，就完全跳过这次拉取
-        if (refresh && uid != null && !forceRefresh && CloudLibraryCache.getLibraries(uid) != null) {
+        if (
+            refresh && uid != null && !forceRefresh && CloudLibraryCache.getLibraries(uid) != null
+        ) {
             return
         }
         if (refresh) {
@@ -170,19 +166,25 @@ class LocalLibraryListViewModel : ViewModel() {
         isCloudLibrariesLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getMyLibraries(
-                    pageNum = cloudLibrariesPage
-                )
+                val response =
+                    ServiceManager.COMMAND_LAB_USER_SERVICE.getMyLibraries(
+                        pageNum = cloudLibrariesPage
+                    )
                 withContext(Dispatchers.Main) {
                     isCloudLibrariesLoading = false
                     if (response.isSuccess()) {
                         val data = response.data
                         if (data != null && !data.functions.isNullOrEmpty()) {
-                            val existingIds = myCloudLibraries.mapNotNull { it.id }.toSet()
-                            data.functions!!.filterNotNull()
-                                .filter { it.id != null && it.id !in existingIds }
+                            val existingIds = myCloudLibraries.mapNotNull { it.id }.toMutableSet()
+                            data.functions!!
+                                .filterNotNull()
+                                .filter { it.id?.let(existingIds::add) == true }
                                 .forEach { myCloudLibraries.add(it) }
-                            if (data.currentPage != null && data.totalCount != null && data.perPage != null) {
+                            if (
+                                data.currentPage != null &&
+                                    data.totalCount != null &&
+                                    data.perPage != null
+                            ) {
                                 val totalPages =
                                     (data.totalCount!! + data.perPage!! - 1) / data.perPage!!
                                 cloudLibrariesHasMore = data.currentPage!! < totalPages
@@ -209,7 +211,7 @@ class LocalLibraryListViewModel : ViewModel() {
     fun uploadToCloud(
         library: LibraryFunction,
         localEntryId: String,
-        localDataStore: LocalCommandLabDataStore? = null
+        localDataStore: LocalCommandLabDataStore? = null,
     ) {
         if (!isLoggedIn) {
             Toaster.show("请先登录")
@@ -219,10 +221,11 @@ class LocalLibraryListViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val mcdContent = buildFullMCD(library)
-                val request = CommandLabUserService.UploadLibraryRequest().apply {
-                    content = mcdContent
-                    isPublish = false
-                }
+                val request =
+                    CommandLabUserService.UploadLibraryRequest().apply {
+                        content = mcdContent
+                        isPublish = false
+                    }
                 val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadLibrary(request)
                 withContext(Dispatchers.Main) {
                     uploadingLocalEntryId = null
@@ -236,7 +239,7 @@ class LocalLibraryListViewModel : ViewModel() {
                                 localDataStore.markLocalLibrarySynced(
                                     localEntryId = localEntryId,
                                     uuid = assignedUuid,
-                                    syncedLibrary = library
+                                    syncedLibrary = library,
                                 )
                             }
                         }

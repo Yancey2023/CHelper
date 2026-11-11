@@ -18,225 +18,167 @@
 
 package yancey.chelper.ui.library
 
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.network.ServiceManager
+import yancey.chelper.data.NetworkPublicLibraryRepository
+import yancey.chelper.data.PublicLibraryRepository
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.network.library.util.LoginUtil
 
-class PublicLibraryListViewModel : ViewModel() {
-    var libraries: SnapshotStateList<LibraryFunction> = mutableStateListOf()
+internal data class PublicLibraryListUiState(
+    val libraries: List<LibraryFunction> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val actionMessage: String? = null,
+    val currentPage: Int = 0,
+    val totalPages: Int = 1,
+    val hasMore: Boolean = true,
+    val isRecommendMode: Boolean = false,
+    val initialized: Boolean = false,
+    val retryFromStart: Boolean = true,
+)
 
-    var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
-    var actionMessage by mutableStateOf<String?>(null)
-    var currentPage by mutableIntStateOf(1)
-    var totalPages by mutableIntStateOf(1)
-    var hasMore by mutableStateOf(true)
-    private var forceRefresh = false
-    var isRecommendMode by mutableStateOf(false)
-    var currentLoadedMode: Boolean? = null
+internal class PublicLibraryListViewModel(
+    private val repository: PublicLibraryRepository = NetworkPublicLibraryRepository(),
+    private val requestScope: CoroutineScope? = null,
+    initialState: PublicLibraryListUiState = PublicLibraryListUiState(),
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(initialState)
+    val uiState = _uiState.asStateFlow()
+    private val scope
+        get() = requestScope ?: viewModelScope
 
-    // 缓存两种模式下的数据状态
-    private val recommendCache = mutableListOf<LibraryFunction>()
-    private val latestCache = mutableListOf<LibraryFunction>()
-    private var recommendCurrentPage = 1
-    private var latestCurrentPage = 1
-    private var recommendTotalPages = 1
-    private var latestTotalPages = 1
-    private var recommendHasMore = true
-    private var latestHasMore = true
+    private val caches = mutableMapOf<Boolean, PublicLibraryListUiState>()
+    private var requestJob: Job? = null
+    private var requestVersion = 0L
+    private var unreadChecked = false
+    private val favoriteRequests = mutableSetOf<Int>()
 
-    private var searchJob: Job? = null
+    fun initialize(recommended: Boolean) {
+        if (!_uiState.value.initialized && requestJob == null) switchMode(recommended)
+    }
 
     fun switchMode(isRecommend: Boolean) {
-        Log.d(
-            "CPL_Tab",
-            "switchMode called: isRecommend=$isRecommend, currentLoadedMode=$currentLoadedMode, isRecommendMode=$isRecommendMode"
-        )
-        // 保存当前模式的状态
-        saveCurrentState()
-
-        isRecommendMode = isRecommend
-        currentLoadedMode = isRecommend
-        val cache = if (isRecommend) recommendCache else latestCache
-        val page = if (isRecommend) recommendCurrentPage else latestCurrentPage
-        val total = if (isRecommend) recommendTotalPages else latestTotalPages
-        val more = if (isRecommend) recommendHasMore else latestHasMore
-
-        Log.d(
-            "CPL_Tab",
-            "cache size: ${cache.size}, recommendCache: ${recommendCache.size}, latestCache: ${latestCache.size}"
-        )
-        if (cache.isNotEmpty()) {
-            // 使用缓存数据
-            Log.d("CPL_Tab", "Using cached data, libraries count: ${cache.size}")
-            libraries.clear()
-            libraries.addAll(cache)
-            currentPage = page
-            totalPages = total
-            hasMore = more
-        } else {
-            // 缓存为空，先取消正在进行的加载，再刷新
-            // 否则 isLoading=true 会拦住 refresh -> loadFunctions
-            Log.d("CPL_Tab", "Cache empty, cancelling current job and calling refresh")
-            searchJob?.cancel()
-            isLoading = false
-            refresh(isRecommend = isRecommend)
-        }
+        ++requestVersion
+        requestJob?.cancel()
+        val previous = _uiState.value
+        if (previous.initialized)
+            caches[previous.isRecommendMode] =
+                previous.copy(isLoading = false, actionMessage = null)
+        _uiState.value =
+            caches[isRecommend] ?: PublicLibraryListUiState(isRecommendMode = isRecommend)
+        if (!_uiState.value.initialized) load(reset = true)
     }
 
-    private fun saveCurrentState() {
-        if (currentLoadedMode == null) return
-        val isCurrentRecommend = currentLoadedMode == true
-        val cache = if (isCurrentRecommend) recommendCache else latestCache
-        cache.clear()
-        cache.addAll(libraries)
+    fun refresh() = load(reset = true)
 
-        if (isCurrentRecommend) {
-            recommendCurrentPage = currentPage
-            recommendTotalPages = totalPages
-            recommendHasMore = hasMore
-        } else {
-            latestCurrentPage = currentPage
-            latestTotalPages = totalPages
-            latestHasMore = hasMore
-        }
+    fun retry() = load(reset = _uiState.value.retryFromStart)
+
+    fun loadMore() {
+        val state = _uiState.value
+        if (!state.isLoading && state.hasMore && state.initialized) load(reset = false)
     }
 
-    fun loadFunctions(
-        search: String? = null,
-        resetPage: Boolean = true,
-        isRecommend: Boolean = false
-    ) {
-        Log.d(
-            "CPL_Tab",
-            "loadFunctions: search=$search, resetPage=$resetPage, isRecommend=$isRecommend, isLoading=$isLoading, libraries.size=${libraries.size}, forceRefresh=$forceRefresh"
-        )
-        if (isLoading) {
-            Log.d("CPL_Tab", "loadFunctions blocked: isLoading=true")
-            return
-        }
-        // 如果已经有数据且不是用户手动刷新，跳过重复拉取
-        if (resetPage && libraries.isNotEmpty() && !forceRefresh) {
-            Log.d(
-                "CPL_Tab",
-                "loadFunctions blocked: already has data and not force refresh"
-            )
-            return
-        }
-        forceRefresh = false
-
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-
-            if (resetPage) {
-                currentPage = 1
-                libraries.clear()
-            }
-
+    private fun load(reset: Boolean) {
+        val before = _uiState.value
+        if (before.isLoading && !reset) return
+        val version = ++requestVersion
+        requestJob?.cancel()
+        val mode = before.isRecommendMode
+        val page = if (reset) 1 else before.currentPage + 1
+        _uiState.value = before.copy(isLoading = true, errorMessage = null)
+        requestJob = scope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    if (isRecommend && search.isNullOrBlank()) {
-                        // 推荐接口本身就是随机抽样，不传 pageNum/pageSize；
-                        // loadMore 等同于"再洗一批"追加，避免分页带来的重复
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getRecommendedLibrary(limit = 15)
-                    } else {
-                        ServiceManager.COMMAND_LAB_PUBLIC_SERVICE.getFunctions(
-                            pageNum = currentPage,
-                            pageSize = 20,
-                            keyword = search?.takeIf { it.isNotBlank() }
-                        )
-                    }
-                }
-
-                if (response.isSuccess() && response.data != null) {
-                    val data = response.data!!
-                    val functions = data.functions?.filterNotNull() ?: emptyList()
-                    // 推荐接口随机抽样，loadMore 拉来的新批次很可能与已有项 id 重复；
-                    // 不去重 LazyColumn 会撞 key 抛 IllegalArgumentException 闪退。
-                    // 同时兜底单次响应内自带重复的情况。
-                    val seenIds = libraries.mapNotNullTo(HashSet()) { it.id }
-                    val deduped = functions.filter { fn ->
-                        val id = fn.id ?: return@filter true
-                        seenIds.add(id)
-                    }
-                    libraries.addAll(deduped)
-
-                    val total = data.totalCount ?: 0
-                    val size = data.perPage ?: 20
-                    // Calculate total pages: ceil(total / size)
-                    totalPages = if (size > 0) (total + size - 1) / size else 1
-
-                    // 推荐模式以"去重后还能添加"作为继续加载的依据：
-                    // 若某次洗出来全是已见过的项，说明库存基本耗尽，停止 loadMore
-                    hasMore = if (isRecommend) {
-                        deduped.isNotEmpty()
-                    } else {
-                        currentPage < totalPages
-                    }
-                } else {
-                    errorMessage = response.message ?: "加载失败"
-                }
+                val response = repository.load(page, mode)
+                if (version != requestVersion) return@launch
+                val existing = if (reset) emptyList() else _uiState.value.libraries
+                val seen = existing.mapNotNullTo(HashSet()) { it.id }
+                val added = response.libraries.filter { it.id?.let(seen::add) ?: true }
+                _uiState.value =
+                    _uiState.value.copy(
+                        libraries = existing + added,
+                        currentPage = page,
+                        totalPages = response.totalPages,
+                        hasMore = if (mode) added.isNotEmpty() else page < response.totalPages,
+                        initialized = true,
+                    )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                errorMessage = "网络错误: ${e.message}"
+                if (version == requestVersion) {
+                    _uiState.value =
+                        _uiState.value.copy(
+                            errorMessage = e.message ?: "网络错误",
+                            initialized = true,
+                            retryFromStart = reset,
+                        )
+                }
             } finally {
-                isLoading = false
+                // An old request must not clear the new mode's loading state or publish its error.
+                if (version == requestVersion) {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
             }
         }
     }
 
-    fun loadMore(isRecommend: Boolean = false) {
-        if (!hasMore || isLoading) return
-        // 推荐接口不分页，直接再洗一批追加；普通列表才推进页码
-        if (!isRecommend) {
-            currentPage++
-        }
-        loadFunctions(null, resetPage = false, isRecommend = isRecommend)
+    fun consumeActionMessage() {
+        _uiState.value = _uiState.value.copy(actionMessage = null)
     }
 
-    fun refresh(isRecommend: Boolean = false) {
-        Log.d("CPL_Tab", "refresh called: isRecommend=$isRecommend")
-        forceRefresh = true
-        loadFunctions(null, resetPage = true, isRecommend = isRecommend)
+    fun checkUnreadMessages() {
+        if (unreadChecked) return
+        unreadChecked = true
+        scope.launch {
+            try {
+                val count = repository.unreadCount()
+                if (count > 0)
+                    _uiState.value =
+                        _uiState.value.copy(actionMessage = "您有 $count 条未读站内信，可前往用户中心查看")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // A notification failure must not block browsing the library.
+            }
+        }
     }
 
     fun toggleFavorite(library: LibraryFunction) {
-        if (!LoginUtil.isLoggedIn || LoginUtil.currentUser?.isGuest == true) {
-            actionMessage = "请先登录正式账号使用收藏夹"
+        if (!repository.canFavorite()) {
+            _uiState.value = _uiState.value.copy(actionMessage = "请先登录正式账号使用收藏夹")
             return
         }
         val id = library.id ?: return
-        viewModelScope.launch {
+        if (!favoriteRequests.add(id)) return
+        scope.launch {
             try {
-                val result = withContext(Dispatchers.IO) {
-                    ServiceManager.COMMAND_LAB_USER_SERVICE.toggleFavorite(id)
-                }
-                if (result.isSuccess() && result.data != null) {
-                    val favorited = result.data!!.isFavorited == true
-                    val index = libraries.indexOfFirst { it.id == id }
-                    if (index >= 0) libraries[index] =
-                        libraries[index].copy(isFavorited = favorited)
-                    actionMessage =
-                        result.message ?: if (favorited) "已加入收藏夹" else "已取消收藏"
-                } else {
-                    actionMessage = result.message ?: "收藏操作失败"
-                }
+                val result = repository.toggleFavorite(id)
+                fun PublicLibraryListUiState.updated() =
+                    copy(
+                        libraries =
+                            libraries.map {
+                                if (it.id == id) it.copy(isFavorited = result.favorited) else it
+                            }
+                    )
+                caches.replaceAll { _, cached -> cached.updated() }
+                _uiState.value =
+                    _uiState.value
+                        .updated()
+                        .copy(
+                            actionMessage =
+                                result.message ?: if (result.favorited) "已加入收藏夹" else "已取消收藏"
+                        )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                actionMessage = "网络错误: ${e.message}"
+                _uiState.value = _uiState.value.copy(actionMessage = e.message ?: "收藏操作失败")
+            } finally {
+                favoriteRequests.remove(id)
             }
         }
     }

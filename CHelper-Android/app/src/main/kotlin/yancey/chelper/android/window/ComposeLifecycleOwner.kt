@@ -35,10 +35,11 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 
 /**
- * copy form: https://github.com/Petterpx/FloatingX/blob/main/floatingx_compose/src/main/java/com/petterp/floatingx/compose/FxComposeLifecycleOwner.kt
+ * copy form:
+ * https://github.com/Petterpx/FloatingX/blob/main/floatingx_compose/src/main/java/com/petterp/floatingx/compose/FxComposeLifecycleOwner.kt
  */
-class ComposeLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner,
-    OnBackPressedDispatcherOwner {
+class ComposeLifecycleOwner :
+    LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, OnBackPressedDispatcherOwner {
 
     private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
@@ -47,41 +48,58 @@ class ComposeLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateReg
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
+
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateRegistryController.savedStateRegistry
+
     override val viewModelStore: ViewModelStore
         get() = store
 
     fun onCreate() {
+        if (lifecycleRegistry.currentState != Lifecycle.State.INITIALIZED) return
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
     fun onStart() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        onCreate()
+        if (lifecycleRegistry.currentState == Lifecycle.State.CREATED)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
 
     fun onResume() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        onStart()
+        if (lifecycleRegistry.currentState == Lifecycle.State.STARTED)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
     fun onPause() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        if (lifecycleRegistry.currentState == Lifecycle.State.RESUMED)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     }
 
     fun onStop() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        onPause()
+        if (lifecycleRegistry.currentState == Lifecycle.State.STARTED)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     }
 
+    /** Hide suspends STARTED collectors while retaining composition state and ViewModels. */
+    fun hide() = onStop()
+
+    fun show() = onResume()
+
     fun onDestroy() {
+        if (lifecycleRegistry.currentState == Lifecycle.State.DESTROYED) return
+        onCreate()
+        onStop()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         store.clear()
     }
 
     /**
-     * Compose uses the Window's decor view to locate the
-     * Lifecycle/ViewModel/SavedStateRegistry owners.
-     * Therefore, we need to set this class as the "owner" for the decor view.
+     * Compose uses the Window's decor view to locate the Lifecycle/ViewModel/SavedStateRegistry
+     * owners. Therefore, we need to set this class as the "owner" for the decor view.
      */
     fun attachToDecorView(decorView: View?) {
         decorView?.let {

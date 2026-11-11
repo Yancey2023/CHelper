@@ -23,33 +23,33 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import java.io.InputStream
+import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import java.io.InputStream
-import java.io.OutputStream
 
 /*
  * RawJSON 生成器的偏好与草稿持久化。
  * 对应网页版的 localStorage：复制格式偏好、自动保存开关、编辑草稿、模拟器 mock 值。
  * 草稿直接存生成器自己的段结构 JSON（draft 字段），跟最终 rawtext 输出无关。
  */
-private val Context.rawtextDataStore: DataStore<RawtextPreferences> by dataStore(
-    fileName = "rawtext_studio.json",
-    serializer = RawtextPreferencesSerializer
-)
+private val Context.rawtextDataStore: DataStore<RawtextPreferences> by
+    dataStore(
+        fileName = "rawtext_studio.json",
+        serializer = RawtextPreferencesSerializer,
+    )
 
 @Serializable
 data class RawtextPreferences(
-    val copyFormat: String? = null,         // "formatted" / "compressed"，null 表示还没问过
-    val autoSavePrompted: Boolean = false,   // 是否已经弹过"开启动态保存"询问
+    val copyFormat: String? = null, // "formatted" / "compressed"，null 表示还没问过
+    val autoSavePrompted: Boolean = false, // 是否已经弹过"开启动态保存"询问
     val autoSaveEnabled: Boolean = false,
-    val draft: String? = null,               // 段结构序列化
-    val mockSettings: String? = null,        // 模拟器 mock 值序列化
+    val draft: String? = null, // 段结构序列化
+    val mockSettings: String? = null, // 模拟器 mock 值序列化
 )
 
 object RawtextPreferencesSerializer : Serializer<RawtextPreferences> {
@@ -71,27 +71,24 @@ object RawtextPreferencesSerializer : Serializer<RawtextPreferences> {
     }
 }
 
-class RawtextDataStore(private val context: Context) {
+internal interface RawtextRepository {
+    val edits: RawtextEditTracker
 
-    fun preferences(): Flow<RawtextPreferences> = context.rawtextDataStore.data
+    fun preferences(): Flow<RawtextPreferences>
 
-    fun copyFormat(): Flow<String?> = context.rawtextDataStore.data.map { it.copyFormat }
+    suspend fun savePreferences(preferences: RawtextPreferences, token: RawtextEditToken)
+}
 
-    suspend fun setCopyFormat(format: String) {
-        context.rawtextDataStore.updateData { it.copy(copyFormat = format) }
-    }
+// Every wrapper points at the same DataStore and shares the ordering of user edits.
+private val rawtextEdits = RawtextEditTracker()
 
-    suspend fun setAutoSave(prompted: Boolean, enabled: Boolean) {
-        context.rawtextDataStore.updateData {
-            it.copy(autoSavePrompted = prompted, autoSaveEnabled = enabled)
-        }
-    }
+internal class RawtextDataStore(private val context: Context) : RawtextRepository {
+    override val edits
+        get() = rawtextEdits
 
-    suspend fun saveDraft(draft: String?) {
-        context.rawtextDataStore.updateData { it.copy(draft = draft) }
-    }
+    override fun preferences(): Flow<RawtextPreferences> = context.rawtextDataStore.data
 
-    suspend fun saveMockSettings(mock: String) {
-        context.rawtextDataStore.updateData { it.copy(mockSettings = mock) }
+    override suspend fun savePreferences(preferences: RawtextPreferences, token: RawtextEditToken) {
+        context.rawtextDataStore.updateData { current -> edits.merge(current, preferences, token) }
     }
 }

@@ -25,6 +25,7 @@ import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -64,7 +65,7 @@ interface CommandLabUserService {
     @Serializable
     class GuestAuthRequest(
         var fingerprint: String? = null,
-        @SerialName("auth_code") var authCode: String? = null
+        @SerialName("auth_code") var authCode: String? = null,
     )
 
     /**
@@ -113,7 +114,7 @@ interface CommandLabUserService {
         var type: Int? = null,
         var email: String? = null,
         var phone: String? = null,
-        var lang: String? = "zh-CN"
+        var lang: String? = "zh-CN",
     ) {
         companion object {
             /** 注册类型验证码 */
@@ -129,7 +130,7 @@ interface CommandLabUserService {
 
     /**
      * 发送验证码
-     * 
+     *
      * 调用此接口前需要先完成人机验证以获取 special_code
      *
      * @param request 包含目标邮箱/手机以及验证会话信息的请求体
@@ -157,7 +158,7 @@ interface CommandLabUserService {
         var phone: String? = null,
         var nickname: String? = null,
         var password: String? = null,
-        @SerialName("android_id") var androidId: String? = null
+        @SerialName("android_id") var androidId: String? = null,
     )
 
     /**
@@ -166,8 +167,7 @@ interface CommandLabUserService {
      * @param request 包含验证码和用户注册信息的请求体
      * @return 包含系统分配信息等注册结果的 JSON 响应
      */
-    @POST("register")
-    suspend fun register(@Body request: RegisterRequest): BaseResult<JsonElement?>
+    @POST("register") suspend fun register(@Body request: RegisterRequest): BaseResult<JsonElement?>
 
     // 登录相关
 
@@ -180,12 +180,10 @@ interface CommandLabUserService {
     @Serializable
     class LoginRequest(
         var account: String? = null,
-        var password: String? = null
+        var password: String? = null,
     )
 
-    /**
-     * 用户详细信息的数据模型
-     */
+    /** 用户详细信息的数据模型 */
     @Serializable
     class User(
         var id: Int? = null,
@@ -211,7 +209,7 @@ interface CommandLabUserService {
     class LoginResponse(
         @SerialName("user_id") var userId: Int? = null,
         var token: String? = null,
-        var user: User? = null
+        var user: User? = null,
     )
 
     /**
@@ -223,25 +221,15 @@ interface CommandLabUserService {
     @POST("register/login")
     suspend fun login(@Body request: LoginRequest): BaseResult<LoginResponse?>
 
-    @Serializable
-    class WebSsoAuthorizeRequest(
-        var next: String? = null,
-    )
+    @Serializable class WebSsoAuthorizeRequest(var next: String? = null)
 
-    @Serializable
-    class WebSsoAuthorizeResponse(
-        @SerialName("web_url") var webUrl: String? = null,
-    )
+    @Serializable class WebSsoAuthorizeResponse(@SerialName("web_url") var webUrl: String? = null)
 
-    /**
-     * 为正式账号签发一次性网页登录地址。
-     * Authorization 与 X-Client 由 AuthInterceptor 统一添加。
-     */
+    /** 为正式账号签发一次性网页登录地址。 Authorization 与 X-Client 由 AuthInterceptor 统一添加。 */
     @POST("auth/chelper/web-sso/authorize")
     suspend fun authorizeWebSso(
-        @Body request: WebSsoAuthorizeRequest,
+        @Body request: WebSsoAuthorizeRequest
     ): BaseResult<WebSsoAuthorizeResponse?>
-
 
     // Avatar
 
@@ -251,9 +239,7 @@ interface CommandLabUserService {
      * @property avatarUrl 上传成功后获取的图片 URL
      */
     @Serializable
-    class UploadAvatarResponse(
-        @SerialName("avatar_url") var avatarUrl: String? = null
-    )
+    class UploadAvatarResponse(@SerialName("avatar_url") var avatarUrl: String? = null)
 
     /**
      * 上传用户头像文件
@@ -263,10 +249,7 @@ interface CommandLabUserService {
      */
     @Multipart
     @POST("avatar")
-    suspend fun uploadAvatar(
-        @Part file: MultipartBody.Part
-    ): BaseResult<UploadAvatarResponse?>
-
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): BaseResult<UploadAvatarResponse?>
 
     // Library Management
 
@@ -279,7 +262,7 @@ interface CommandLabUserService {
     @Serializable
     class UploadLibraryRequest(
         var content: String? = null,
-        @SerialName("is_publish") var isPublish: Boolean = false
+        @SerialName("is_publish") var isPublish: Boolean = false,
     )
 
     /**
@@ -287,10 +270,7 @@ interface CommandLabUserService {
      *
      * @property uuid 新建命令库分配的唯一 UUID
      */
-    @Serializable
-    class UploadLibraryResponse(
-        var uuid: String? = null
-    )
+    @Serializable class UploadLibraryResponse(var uuid: String? = null)
 
     /**
      * 上传新建命令库（保存至个人云端草稿）
@@ -299,7 +279,10 @@ interface CommandLabUserService {
      * @return 返回包含新分配 UUID 的响应结果
      */
     @POST("library/upload")
-    suspend fun uploadLibrary(@Body request: UploadLibraryRequest): BaseResult<UploadLibraryResponse?>
+    suspend fun uploadLibrary(
+        @Body request: UploadLibraryRequest,
+        @Header("Authorization") authorization: String? = null,
+    ): BaseResult<UploadLibraryResponse?>
 
     /**
      * 编辑更新命令库的请求体数据模型
@@ -316,7 +299,7 @@ interface CommandLabUserService {
         var content: String? = null,
         var note: String? = null,
         var tags: List<String>? = null,
-        var version: String? = null
+        var version: String? = null,
     )
 
     /**
@@ -329,7 +312,8 @@ interface CommandLabUserService {
     @PUT("library/{id}")
     suspend fun updateLibrary(
         @Path("id") id: Int,
-        @Body request: UpdateLibraryRequest
+        @Body request: UpdateLibraryRequest,
+        @Header("Authorization") authorization: String? = null,
     ): BaseResult<JsonElement?>
 
     /**
@@ -342,7 +326,7 @@ interface CommandLabUserService {
     @PUT("users/{id}")
     suspend fun updateProfile(
         @Path("id") id: Int,
-        @Body request: UpdateProfileRequest
+        @Body request: UpdateProfileRequest,
     ): BaseResult<JsonElement?>
 
     /**
@@ -358,7 +342,8 @@ interface CommandLabUserService {
     suspend fun getMyLibraries(
         @Query("type") type: Int = 1,
         @Query("page_num") pageNum: Int = 1,
-        @Query("page_size") pageSize: Int = 100
+        @Query("page_size") pageSize: Int = 100,
+        @Header("Authorization") authorization: String? = null,
     ): BaseResult<CommandLabPublicService.GetFunctionsResponse?>
 
     /** 获取当前账号在网页端与移动端共用的云端收藏夹。 */
@@ -367,7 +352,7 @@ interface CommandLabUserService {
     suspend fun getFavoriteLibraries(
         @Query("type") type: Int = 6,
         @Query("page_num") pageNum: Int = 1,
-        @Query("page_size") pageSize: Int = 100
+        @Query("page_size") pageSize: Int = 100,
     ): BaseResult<CommandLabPublicService.GetFunctionsResponse?>
 
     /**
@@ -378,9 +363,7 @@ interface CommandLabUserService {
      */
     @Headers("Cache-Control: no-cache")
     @GET("library/detail/{id}")
-    suspend fun getPrivateFunction(
-        @Path("id") id: Int
-    ): BaseResult<LibraryFunction?>
+    suspend fun getPrivateFunction(@Path("id") id: Int): BaseResult<LibraryFunction?>
 
     /**
      * 将私有库发布至公开市场
@@ -394,7 +377,7 @@ interface CommandLabUserService {
     @POST("library/{id}/release")
     suspend fun releaseToPublic(
         @Path("id") id: Int,
-        @Body body: Map<String, String>
+        @Body body: Map<String, String>,
     ): BaseResult<JsonElement?>
 
     /**
@@ -404,9 +387,7 @@ interface CommandLabUserService {
      * @return 指示同步结果的响应
      */
     @POST("library/{id}/sync")
-    suspend fun syncToPublic(
-        @Path("id") id: Int
-    ): BaseResult<JsonElement?>
+    suspend fun syncToPublic(@Path("id") id: Int): BaseResult<JsonElement?>
 
     /**
      * 删除私有库
@@ -414,26 +395,19 @@ interface CommandLabUserService {
      * @param id 目标命令库的 ID
      * @return 指示删除结果的响应
      */
-    @DELETE("library/{id}")
-    suspend fun deleteLibrary(
-        @Path("id") id: Int
-    ): BaseResult<JsonElement?>
+    @DELETE("library/{id}") suspend fun deleteLibrary(@Path("id") id: Int): BaseResult<JsonElement?>
 
     @Serializable
     class FavoriteLibraryResponse(
         @SerialName("is_favorited") var isFavorited: Boolean? = null,
-        var uuid: String? = null
+        var uuid: String? = null,
     )
 
     /** 收藏或取消收藏公开命令库。后端按 UUID 绑定，多端共享。 */
     @POST("library/{id}/favorite")
-    suspend fun toggleFavorite(
-        @Path("id") id: Int
-    ): BaseResult<FavoriteLibraryResponse?>
+    suspend fun toggleFavorite(@Path("id") id: Int): BaseResult<FavoriteLibraryResponse?>
 
-    /**
-     * CHelper 分享链接响应。仅安卓客户端可创建，落地页为 `/s/{code}`。
-     */
+    /** CHelper 分享链接响应。仅安卓客户端可创建，落地页为 `/s/{code}`。 */
     @Serializable
     class LibraryShareResponse(
         var code: String? = null,
@@ -444,17 +418,14 @@ interface CommandLabUserService {
         @SerialName("sharer_nickname") var sharerNickname: String? = null,
         @SerialName("import_to_local") var importToLocal: Boolean? = null,
         @SerialName("expires_at") var expiresAt: Long? = null,
-        @SerialName("download_url") var downloadUrl: String? = null
+        @SerialName("download_url") var downloadUrl: String? = null,
     )
 
-    /**
-     * 生成公开库分享链接。默认 `import_to_local=0`，接收端只打开云端详情。
-     * 需正式登录；游客不可用；后端会校验 X-Client。
-     */
+    /** 生成公开库分享链接。默认 `import_to_local=0`，接收端只打开云端详情。 需正式登录；游客不可用；后端会校验 X-Client。 */
     @POST("library/{id}/share")
     suspend fun createLibraryShare(
         @Path("id") id: Int,
-        @Query("import_to_local") importToLocal: Boolean = false
+        @Query("import_to_local") importToLocal: Boolean = false,
     ): BaseResult<LibraryShareResponse?>
 
     // Quota
@@ -468,7 +439,7 @@ interface CommandLabUserService {
     @Serializable
     class QuotaResponse(
         var used: Int? = null,
-        var limit: Int? = null
+        var limit: Int? = null,
     )
 
     /**
@@ -476,21 +447,18 @@ interface CommandLabUserService {
      *
      * @return 包含存储配额数据的响应结果
      */
-    @GET("library/quota")
-    suspend fun getQuota(): BaseResult<QuotaResponse?>
+    @GET("library/quota") suspend fun getQuota(): BaseResult<QuotaResponse?>
 
     // Activity
 
-    @GET("activity/config")
-    suspend fun getActivityConfig(): BaseResult<ActivityConfig?>
+    @GET("activity/config") suspend fun getActivityConfig(): BaseResult<ActivityConfig?>
 
-    @GET("activity/me")
-    suspend fun getMyActivity(): BaseResult<ActivitySummary?>
+    @GET("activity/me") suspend fun getMyActivity(): BaseResult<ActivitySummary?>
 
     @GET("activity/ledger")
     suspend fun getActivityLedger(
         @Query("cursor") cursor: Int? = null,
-        @Query("limit") limit: Int = 20
+        @Query("limit") limit: Int = 20,
     ): BaseResult<ActivityLedgerPage?>
 
     @GET("activity/redemptions")
@@ -499,46 +467,31 @@ interface CommandLabUserService {
     @POST("activity/redeem/{productId}")
     suspend fun redeemActivityProduct(
         @Path("productId") productId: String,
-        @Body request: RedeemActivityRequest
+        @Body request: RedeemActivityRequest,
     ): BaseResult<RedeemActivityResponse?>
 
-    @GET("activity/tiers")
-    suspend fun getMyTierDetails(): BaseResult<TierDetails?>
+    @GET("activity/tiers") suspend fun getMyTierDetails(): BaseResult<TierDetails?>
 
     // Message
 
-    /**
-     * 获取我的站内信收件箱
-     */
+    /** 获取我的站内信收件箱 */
     @Headers("Cache-Control: no-cache")
     @GET("message/")
     suspend fun getMessages(
         @Query("page") page: Int = 1,
         @Query("page_size") pageSize: Int = 20,
-        @Query("unread_only") unreadOnly: Boolean = false
+        @Query("unread_only") unreadOnly: Boolean = false,
     ): BaseResult<MessageListResponse?>
 
-    /**
-     * 获取未读站内信数量
-     */
-    @GET("message/unread-count")
-    suspend fun getUnreadCount(): BaseResult<UnreadCountResponse?>
+    /** 获取未读站内信数量 */
+    @GET("message/unread-count") suspend fun getUnreadCount(): BaseResult<UnreadCountResponse?>
 
-    /**
-     * 将某条站内信标记为已读
-     */
+    /** 将某条站内信标记为已读 */
     @PUT("message/{id}/read")
-    suspend fun markMessageRead(
-        @Path("id") id: Int
-    ): BaseResult<JsonElement?>
+    suspend fun markMessageRead(@Path("id") id: Int): BaseResult<JsonElement?>
 
-    /**
-     * 软删除（隐藏）一条站内信
-     */
-    @DELETE("message/{id}")
-    suspend fun deleteMessage(
-        @Path("id") id: Int
-    ): BaseResult<JsonElement?>
+    /** 软删除（隐藏）一条站内信 */
+    @DELETE("message/{id}") suspend fun deleteMessage(@Path("id") id: Int): BaseResult<JsonElement?>
 
     // Report
 
@@ -553,12 +506,9 @@ interface CommandLabUserService {
     class ReportRequest(
         @SerialName("target_type") var targetType: String? = null,
         @SerialName("target_id") var targetId: String? = null,
-        var reason: String? = null
+        var reason: String? = null,
     )
 
-    /**
-     * 提交举报。后端去重：同一用户对同一目标 pending 状态下不重复入库。
-     */
-    @POST("report")
-    suspend fun submitReport(@Body request: ReportRequest): BaseResult<JsonElement?>
+    /** 提交举报。后端去重：同一用户对同一目标 pending 状态下不重复入库。 */
+    @POST("report") suspend fun submitReport(@Body request: ReportRequest): BaseResult<JsonElement?>
 }

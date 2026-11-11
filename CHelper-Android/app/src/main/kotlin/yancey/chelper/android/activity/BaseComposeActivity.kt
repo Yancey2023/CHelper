@@ -24,18 +24,18 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
@@ -44,6 +44,7 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.launch
+import yancey.chelper.android.startupState
 import yancey.chelper.data.BackgroundStore
 import yancey.chelper.data.SettingsDataStore
 import yancey.chelper.ui.common.CHelperTheme
@@ -52,54 +53,72 @@ abstract class BaseComposeActivity : ComponentActivity() {
 
     protected var settingsDataStore = SettingsDataStore(this)
     protected var theme by mutableStateOf(CHelperTheme.Theme.Light)
+    private var startupReady by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 在首帧渲染前同步应用一次主题设置，避免启动时先渲染亮色再动画切换到夜间
-        applyTheme(settingsDataStore.themeIdBlocking())
+        super.onCreate(savedInstanceState)
+        // Keep the launch window until asynchronous settings/background loading finishes.
+        val firstFrame =
+            object : ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    if (!startupReady) return false
+                    window.decorView.viewTreeObserver.removeOnPreDrawListener(this)
+                    return true
+                }
+            }
+        window.decorView.viewTreeObserver.addOnPreDrawListener(firstFrame)
         lifecycleScope.launch {
-            settingsDataStore.themeId().collect { themeId ->
-                applyTheme(themeId)
+            startupState.settings.collect { settings ->
+                if (settings != null) {
+                    applyTheme(settings.themeId ?: "MODE_NIGHT_FOLLOW_SYSTEM")
+                    startupReady = true
+                }
             }
         }
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.auto(
-                Color.argb(0xe6, 0xFF, 0xFF, 0xFF),
-                Color.argb(0x80, 0x1b, 0x1b, 0x1b)
-            ) {
-                theme == CHelperTheme.Theme.Dark
-            }
-        )
-        super.onCreate(savedInstanceState)
     }
 
     private fun isSystemDarkMode(): Boolean =
-        (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        (application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
 
     private fun applyTheme(themeId: String) {
         val isDarkBefore =
-            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
         when (themeId) {
-            "MODE_NIGHT_NO" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            "MODE_NIGHT_YES" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            "MODE_NIGHT_NO" ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            "MODE_NIGHT_YES" ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            else ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
         theme = CHelperTheme.themeOf(themeId, isSystemDarkMode())
         val isDarkMode = theme == CHelperTheme.Theme.Dark
+        // The first theme arrives asynchronously; always apply both bar styles from that theme.
+        enableEdgeToEdge(
+            statusBarStyle =
+                SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { isDarkMode },
+            navigationBarStyle =
+                SystemBarStyle.auto(
+                    Color.argb(0xe6, 0xFF, 0xFF, 0xFF),
+                    Color.argb(0x80, 0x1b, 0x1b, 0x1b),
+                ) {
+                    isDarkMode
+                },
+        )
         if (isDarkBefore != isDarkMode) {
-            WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !isDarkMode
-                isAppearanceLightNavigationBars = !isDarkMode
-            }
             resources.configuration.uiMode =
-                if (isDarkMode) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    if (isDarkMode) Configuration.UI_MODE_NIGHT_YES
+                    else Configuration.UI_MODE_NIGHT_NO
         }
     }
 
     protected fun setContent(parent: CompositionContext? = null, content: @Composable () -> Unit) {
         val existingComposeView =
-            window.decorView.findViewById<ViewGroup>(android.R.id.content)
-                .getChildAt(0) as? ComposeView
+            window.decorView.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+                as? ComposeView
 
         if (existingComposeView != null) {
             with(existingComposeView) {
@@ -107,7 +126,7 @@ abstract class BaseComposeActivity : ComponentActivity() {
                     importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
                 }
                 setParentCompositionContext(parent)
-                setContent(content)
+                setContent { ThemedContent(content) }
             }
         } else {
             ComposeView(this).apply {
@@ -115,21 +134,22 @@ abstract class BaseComposeActivity : ComponentActivity() {
                     importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
                 }
                 setParentCompositionContext(parent)
-                setContent {
-                    val backgroundBitmap =
-                        BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsState(
-                            initial = null
-                        )
-                    CHelperTheme(theme, backgroundBitmap.value) {
-                        content()
-                    }
-                }
+                setContent { ThemedContent(content) }
                 setOwners()
                 setContentView(this, DefaultActivityContentLayoutParams)
             }
         }
     }
 
+    @Composable
+    private fun ThemedContent(content: @Composable () -> Unit) {
+        if (!startupReady) return
+        val background by
+            BackgroundStore.INSTANCE.backgroundBitmapFlow.collectAsStateWithLifecycle(
+                initialValue = BackgroundStore.INSTANCE.backgroundBitmap
+            )
+        CHelperTheme(theme, background) { content() }
+    }
 }
 
 private val DefaultActivityContentLayoutParams =

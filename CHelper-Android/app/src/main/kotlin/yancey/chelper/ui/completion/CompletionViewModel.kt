@@ -19,310 +19,198 @@
 package yancey.chelper.ui.completion
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.hjq.toast.Toaster
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import yancey.chelper.android.util.MonitorUtil
-import yancey.chelper.core.CHelperCore
-import yancey.chelper.core.CommandContext
 import yancey.chelper.core.ErrorReason
-import yancey.chelper.core.SelectedString
 import yancey.chelper.core.Suggestion
+import yancey.chelper.data.CommandDraft
+import yancey.chelper.data.CommandDraftStore
 import yancey.chelper.data.CopyHistoryDataStore
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.DataInputStream
-import java.io.DataOutputStream
-import java.io.EOFException
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import kotlin.math.max
-import kotlin.math.min
 
-class CompletionViewModel(application: Application) : AndroidViewModel(application) {
+class CompletionViewModel
+@JvmOverloads
+constructor(
+    application: Application,
+    private val savedState: SavedStateHandle = SavedStateHandle(),
+) : AndroidViewModel(application) {
     private val appContext = application.applicationContext
     var isShowMenu by mutableStateOf(false)
-    var isCommandEditorMode by mutableStateOf(false)
-    var command by mutableStateOf(TextFieldState())
-    var structure by mutableStateOf<String?>(null)
-    var paramHint by mutableStateOf<String?>(null)
-    var errorReasons by mutableStateOf<Array<ErrorReason>?>(null)
-    var suggestionsSize by mutableIntStateOf(0)
-    var suggestionsUpdateTimes by mutableIntStateOf(0)
-    var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
-    var nodeCount by mutableIntStateOf(0)
-    var core: CHelperCore? = null
-
-    /**
-     * 当前命令文本对应的命令上下文，文本内容改变时重新创建
-     */
-    var context: CommandContext? = null
+    var isCommandEditorMode by mutableStateOf(savedState["editorMode"] ?: false)
         private set
 
-    /**
-     * 当前补全提示列表对应的光标位置
-     * 补全提示是按光标位置计算的，点击补全提示时需要用同一个位置
-     */
-    private var suggestionIndex = 0
+    var command by mutableStateOf(TextFieldState())
+        private set
 
-    /**
-     * 当前命令上下文对应的文本内容，用于避免文本不变时重复解析
-     */
-    private var contextText: String? = null
-    var lastInput: SelectedString = SelectedString("", 0, 0)
-    var syntaxHighlightMaxLength = 20000
-    private val copyHistoryDataStore = CopyHistoryDataStore(appContext)
-    private val file: File = appContext.filesDir.resolve("cache").resolve("lastInput.dat")
-    private var isResumed = false
+    var structure by mutableStateOf<String?>(null)
+        private set
 
-    fun resumeText() {
-        if (isResumed) {
-            return
-        }
-        isResumed = true
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    file.readCachedCommand()
-                }?.let { command = it }
-            } catch (_: IOException) {
+    var paramHint by mutableStateOf<String?>(null)
+        private set
 
-            }
-        }
-    }
+    var errorReasons by mutableStateOf<Array<ErrorReason>?>(null)
+        private set
 
-    /**
-     * 获取当前补全提示列表中的其中一个补全提示
-     *
-     * @param which 第几个补全提示，从0开始
-     */
-    fun getSuggestion(which: Int): Suggestion? {
-        return context?.getSuggestion(suggestionIndex, which)
-    }
+    var suggestionsSize by mutableIntStateOf(0)
+        private set
 
-    fun onSelectionChanged(
-        isCheckingBySelection: Boolean,
-        isSyntaxHighlight: Boolean,
-        isShowErrorReason: Boolean
-    ) {
-        val core = core ?: return
-        val selectedString = SelectedString(
-            command.text.toString(),
-            min(command.selection.start, command.selection.end),
-            max(command.selection.start, command.selection.end)
+    var suggestionsUpdateTimes by mutableIntStateOf(0)
+        private set
+
+    var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
+        private set
+
+    var nodeCount by mutableIntStateOf(0)
+        private set
+
+    private val session = CommandSession(load = { NativeCommandEngine.load(appContext.assets, it) })
+    private val history = CopyHistoryDataStore(appContext)
+    private val drafts =
+        CommandDraftController(
+            CommandDraftStore(appContext),
+            CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+            ::currentDraft,
+            { draft -> command = TextFieldState(draft.text, TextRange(draft.start, draft.end)) },
         )
-        val isSyntaxHighlight =
-            isSyntaxHighlight && command.text.length < syntaxHighlightMaxLength
-        val isUpdateErrorReason = isShowErrorReason || isSyntaxHighlight
-        if (selectedString.text.isEmpty()) {
-            // 输入内容为空
-            lastInput = selectedString
-            // 显示欢迎词
-            structure = "欢迎使用CHelper"
-            // 显示作者信息
-            paramHint = "作者：Yancey"
-            // 更新错误原因
-            if (isUpdateErrorReason) {
-                errorReasons = null
-            }
-            // 清除语法高亮
+    private var analysisJob: Job? = null
+    private var revision = 0L
+    private var publishedRevision = -1L
+    private var publishedInput: Pair<String, Int>? = null
+    private var checkingSelection = true
+    private var lastRequest: CommandAnalysisRequest? = null
+
+    init {
+        viewModelScope.launch {
+            snapshotFlow { currentDraft() }.collect { draft -> drafts.changed(draft) }
+        }
+    }
+
+    fun setEditorMode(enabled: Boolean) {
+        isCommandEditorMode = enabled
+        savedState["editorMode"] = enabled
+    }
+
+    fun setDraftSaving(enabled: Boolean) = drafts.setEnabled(enabled)
+
+    private fun currentDraft() =
+        CommandDraft(
+            command.text.toString(),
+            command.selection.start,
+            command.selection.end,
+        )
+
+    fun flushDraft() = drafts.flush()
+
+    fun analyze(
+        branch: String,
+        checkingBySelection: Boolean,
+        highlight: Boolean,
+        showErrors: Boolean,
+        highlightMaxLength: Int,
+    ) {
+        checkingSelection = checkingBySelection
+        val text = command.text.toString()
+        val index = if (checkingBySelection) command.selection.min else text.length
+        val next =
+            CommandAnalysisRequest(
+                0,
+                branch,
+                text,
+                index,
+                highlight && text.length < highlightMaxLength,
+                showErrors || highlight && text.length < highlightMaxLength,
+            )
+        if (next == lastRequest) return
+        val previous = lastRequest
+        lastRequest = next
+        val request = next.copy(revision = ++revision)
+        publishedRevision = -1L
+        publishedInput = null
+        suggestionsSize = 0
+        if (previous?.text != next.text || previous?.branch != next.branch) {
             syntaxHighlightTokens = null
-            // 重新解析命令
-            refreshContext(selectedString.text)
-            nodeCount = 0
-            // 更新补全提示
-            suggestionIndex = 0
-            suggestionsSize = context?.getSuggestionsSize(0) ?: 0
-            suggestionsUpdateTimes++
-            return
+            errorReasons = null
         }
-        if (selectedString.text == lastInput.text) {
-            if (selectedString.selectionStart == lastInput.selectionStart) {
-                return
-            }
-            lastInput = selectedString
-            // 只有光标改变了
-            // 如果关闭了"根据光标位置提供补全提示"，就什么都不做
-            if (!isCheckingBySelection) {
-                return
-            }
-            // 文本内容不变，无需重新解析，直接用新的光标位置查询
-            suggestionIndex = selectedString.selectionStart
-        } else {
-            lastInput = selectedString
-            // 文本内容改变了，需要重新解析命令
-            // 如果关闭了"根据光标位置提供补全提示"，就把光标位置当成在文本最后面
-            suggestionIndex = if (isCheckingBySelection) {
-                selectedString.selectionStart
-            } else {
-                selectedString.text.length
-            }
-            refreshContext(selectedString.text)
-            // 更新颜色
-            syntaxHighlightTokens = if (isSyntaxHighlight) {
-                context?.syntaxToken
-            } else {
-                null
-            }
-            // 更新命令语法结构
-            structure = context?.structure
-            nodeCount = context?.nodeCount ?: 0
-            // 更新错误原因
-            if (isUpdateErrorReason) {
-                errorReasons = context?.errorReasons
+        if (!next.highlight) syntaxHighlightTokens = null
+        if (!next.errors) errorReasons = null
+        analysisJob?.cancel()
+        analysisJob = viewModelScope.launch {
+            try {
+                val result = session.analyze(request)
+                if (
+                    revision != request.revision ||
+                        currentInput() != (request.text to request.index)
+                )
+                    return@launch
+                structure = result.structure
+                paramHint = result.hint
+                errorReasons = result.errors
+                syntaxHighlightTokens = result.tokens
+                nodeCount = result.nodeCount
+                suggestionsSize = result.suggestionCount
+                publishedRevision = request.revision
+                publishedInput = request.text to request.index
+                suggestionsUpdateTimes++
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (revision != request.revision) return@launch
+                lastRequest = null
+                structure = "命令解析失败"
+                paramHint = e.message
+                nodeCount = 0
+                Log.w("CompletionViewModel", "Unable to analyze command", e)
+                MonitorUtil.generateCustomLog(e, "CommandAnalysisException")
             }
         }
-        // 更新命令参数介绍
-        paramHint = context?.getParamHint(suggestionIndex)
-        // 更新补全提示列表
-        suggestionsSize = context?.getSuggestionsSize(suggestionIndex) ?: 0
-        suggestionsUpdateTimes++
+    }
+
+    suspend fun getSuggestion(which: Int): Suggestion? =
+        session.suggestion(publishedRevision, which)
+
+    private fun currentInput(): Pair<String, Int> {
+        val text = command.text.toString()
+        return text to if (checkingSelection) command.selection.min else text.length
     }
 
     fun onItemClick(which: Int) {
-        val result = context?.applySuggestion(suggestionIndex, which) ?: return
-        command.edit {
-            replace(0, length, result.text)
-            selection = TextRange(
-                result.selection,
-                result.selection
-            )
-        }
-    }
-
-    /**
-     * 文本内容改变时重新解析命令，生成新的命令上下文
-     * 文本内容不变时不会重复解析
-     */
-    private fun refreshContext(text: String) {
-        if (context != null && contextText == text) {
-            return
-        }
-        context?.close()
-        context = try {
-            core?.createContext(text)
-        } catch (throwable: Throwable) {
-            Log.w("CompletionViewModel", "fail to create CommandContext", throwable)
-            null
-        }
-        contextText = if (context != null) text else null
-    }
-
-    fun refreshCHelperCore(
-        context: Context,
-        cpackBranch: String,
-        isCheckingBySelection: Boolean,
-        isSyntaxHighlight: Boolean,
-        isShowErrorReason: Boolean
-    ) {
-        if (cpackBranch.isEmpty()) {
-            this.context?.close()
-            this.context = null
-            contextText = null
-            core?.close()
-            core = null
-            nodeCount = 0
-            return
-        }
-        var cpackPath: String? = null
-        for (filename in context.assets.list("cpack") ?: return) {
-            if (filename.startsWith(cpackBranch)) {
-                cpackPath = "cpack/$filename"
-            }
-        }
-        if (cpackPath == null) {
-            return
-        }
-        core.let {
-            if (it == null || it.path != cpackPath) {
-                var newCore: CHelperCore? = null
-                try {
-                    newCore = CHelperCore.fromAssets(context.assets, cpackPath)
-                } catch (throwable: Throwable) {
-                    Toaster.show("资源包加载失败")
-                    Log.w("CompletionViewModel", "fail to load resource pack", throwable)
-                    MonitorUtil.generateCustomLog(throwable, "LoadResourcePackException")
-                }
-                if (newCore != null) {
-                    this.context?.close()
-                    this.context = null
-                    contextText = null
-                    it?.close()
-                    core = newCore
-                    lastInput = SelectedString("", 0, 0)
-                    onSelectionChanged(isCheckingBySelection, isSyntaxHighlight, isShowErrorReason)
-                }
+        val expected = publishedRevision
+        val before = currentDraft()
+        if (publishedInput != currentInput()) return
+        viewModelScope.launch {
+            val result = session.apply(expected, which) ?: return@launch
+            if (expected < 0 || expected != publishedRevision || currentDraft() != before)
+                return@launch
+            command.edit {
+                replace(0, length, result.text)
+                selection = TextRange(result.selection)
             }
         }
     }
 
     fun onCopy(content: String) {
-        viewModelScope.launch {
-            copyHistoryDataStore.add(content)
-        }
+        viewModelScope.launch { history.add(content) }
     }
 
     override fun onCleared() {
+        drafts.finish()
+        session.close()
         super.onCleared()
-        context?.close()
-        context = null
-        contextText = null
-        core?.close()
-        // 保存上次的输入内容
-        try {
-            file.writeCachedCommand(command)
-        } catch (_: IOException) {
-
-        }
-    }
-
-    private fun File.readCachedCommand(): TextFieldState? {
-        if (!exists()) {
-            return null
-        }
-        return try {
-            DataInputStream(BufferedInputStream(inputStream())).use { dataInputStream ->
-                val text = dataInputStream.readUTF()
-                val start = dataInputStream.readInt()
-                val end = dataInputStream.readInt()
-                TextFieldState(text, TextRange(start, end))
-            }
-        } catch (_: EOFException) {
-            delete()
-            null
-        } catch (_: IOException) {
-            delete()
-            null
-        }
-    }
-
-    private fun File.writeCachedCommand(command: TextFieldState) {
-        parentFile?.mkdirs()
-        val tempFile = resolveSibling("$name.tmp")
-        DataOutputStream(BufferedOutputStream(FileOutputStream(tempFile))).use { dataOutputStream ->
-            dataOutputStream.writeUTF(command.text.toString())
-            dataOutputStream.writeInt(command.selection.start)
-            dataOutputStream.writeInt(command.selection.end)
-        }
-        if (exists() && !delete()) {
-            tempFile.delete()
-            throw IOException("Failed to replace cached command file: $absolutePath")
-        }
-        if (!tempFile.renameTo(this)) {
-            tempFile.delete()
-            throw IOException("Failed to move cached command file into place: $absolutePath")
-        }
     }
 }

@@ -37,10 +37,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import yancey.chelper.R
 import yancey.chelper.ui.ShowTextScreenKey
 import yancey.chelper.ui.common.CHelperTheme
@@ -53,24 +49,23 @@ fun NameAndContent(
     name: String,
     modifier: Modifier = Modifier,
     description: String? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 20.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = name)
             if (description != null) {
                 Text(
                     text = description,
-                    style = TextStyle(
-                        color = CHelperTheme.colors.textSecondary,
-                        fontSize = 14.sp,
-                    )
+                    style =
+                        TextStyle(
+                            color = CHelperTheme.colors.textSecondary,
+                            fontSize = 14.sp,
+                        ),
                 )
             }
         }
@@ -83,12 +78,12 @@ fun NameAndAction(
     name: String,
     description: String? = null,
     @DrawableRes iconId: Int = R.drawable.chevron_right,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     NameAndContent(
         name = name,
         description = description,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(onClick = onClick),
     ) {
         Icon(iconId, Modifier.size(24.dp), name)
     }
@@ -100,9 +95,7 @@ fun NameAndValue(name: String, value: String) {
         SelectionContainer {
             Text(
                 text = value,
-                style = TextStyle(
-                    color = CHelperTheme.colors.textSecondary
-                ),
+                style = TextStyle(color = CHelperTheme.colors.textSecondary),
             )
         }
     }
@@ -121,16 +114,10 @@ fun NameAndAsset(
     navController: NavHostController,
     name: String,
     assetsPath: String,
-    coroutineScope: CoroutineScope
 ) {
     val context = LocalContext.current
     NameAndAction(name) {
-        coroutineScope.launch {
-            val content = withContext(Dispatchers.IO) {
-                context.assets.open(assetsPath).bufferedReader().use { it.readText() }
-            }
-            navController.navigate(ShowTextScreenKey(name, content))
-        }
+        navController.navigate(ShowTextScreenKey(name, assetsPath))
     }
 }
 
@@ -138,7 +125,7 @@ fun NameAndAsset(
 fun CollectionName(name: String) {
     Text(
         text = name,
-        modifier = Modifier.padding(horizontal = 25.dp, vertical = 15.dp)
+        modifier = Modifier.padding(horizontal = 25.dp, vertical = 15.dp),
     )
 }
 
@@ -147,13 +134,13 @@ fun SettingsItem(
     name: String,
     description: String?,
     checked: Boolean?,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     NameAndContent(name = name, description = description) {
         if (checked != null) {
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
             )
         }
     }

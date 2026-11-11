@@ -37,7 +37,7 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * 表示作者信息的数据模型
- * 
+ *
  * @property id 作者的用户 ID
  * @property name 作者的名称
  * @property tier 作者的等级或段位
@@ -47,7 +47,7 @@ data class AuthorInfo(
     var id: Int? = null,
     var name: String? = null,
     var tier: Int? = null,
-    @SerialName("user_title") var userTitle: String? = null
+    @SerialName("user_title") var userTitle: String? = null,
 )
 
 /**
@@ -78,7 +78,9 @@ data class LibraryFunction(
     var note: String? = null,
     var tags: List<String>? = null,
     var version: String? = null,
-    @Serializable(with = LenientStringSerializer::class) @SerialName("create_time") var createdAt: String? = null,
+    @Serializable(with = LenientStringSerializer::class)
+    @SerialName("create_time")
+    var createdAt: String? = null,
     var preview: String? = null,
     @SerialName("like_count") var likeCount: Int? = null,
     @SerialName("is_liked") var isLiked: Boolean? = null,
@@ -105,7 +107,10 @@ data class LibraryFunction(
     /** 纯本地稳定标识；列表过滤、排序或删除其他条目后仍能准确定位。 */
     @SerialName("local_entry_id") var localEntryId: String? = null,
     /** 纯本地语法版本标记，避免只存正文时丢失 MCD V2 状态。 */
-    @SerialName("local_is_v2") var localIsV2: Boolean? = null
+    @SerialName("local_is_v2") var localIsV2: Boolean? = null,
+    @SerialName("local_sync_owner_id") var localSyncOwnerId: Int? = null,
+    @SerialName("local_sync_revision") var localSyncRevision: String? = null,
+    @SerialName("local_sync_error") var localSyncError: String? = null,
 ) {
     /**
      * 获取作者的展示名称，主要用于向后兼容
@@ -117,13 +122,10 @@ data class LibraryFunction(
 }
 
 /**
- * 兼容新旧两种 author JSON 格式的序列化器
- * JsonObject { id, name, tier, user_title } → AuthorInfo(id, name, tier, userTitle)
- * 纯字符串 "xxx" → AuthorInfo(name = "xxx")
- * null → null
+ * 兼容新旧两种 author JSON 格式的序列化器 JsonObject { id, name, tier, user_title } → AuthorInfo(id, name, tier,
+ * userTitle) 纯字符串 "xxx" → AuthorInfo(name = "xxx") null → null
  *
- * 序列化阶段始终按对象写出，避免 #36 那种把 AuthorInfo 退化成 name 字符串
- * 导致 round-trip 丢字段、上传/编辑流程数据残缺的情况。
+ * 序列化阶段始终按对象写出，避免 #36 那种把 AuthorInfo 退化成 name 字符串 导致 round-trip 丢字段、上传/编辑流程数据残缺的情况。
  */
 object AuthorSerializer : KSerializer<AuthorInfo?> {
     private val delegate = AuthorInfo.serializer().nullable
@@ -139,11 +141,12 @@ object AuthorSerializer : KSerializer<AuthorInfo?> {
                     id = jsonElement["id"]?.jsonPrimitive?.intOrNull,
                     name = jsonElement["name"]?.jsonPrimitive?.content,
                     tier = jsonElement["tier"]?.jsonPrimitive?.intOrNull,
-                    userTitle = jsonElement["user_title"]?.jsonPrimitive?.contentOrNull
+                    userTitle = jsonElement["user_title"]?.jsonPrimitive?.contentOrNull,
                 )
             }
             // 旧版 API 直接返回字符串作者名
-            jsonElement.jsonPrimitive.isString -> AuthorInfo(name = jsonElement.jsonPrimitive.content)
+            jsonElement.jsonPrimitive.isString ->
+                AuthorInfo(name = jsonElement.jsonPrimitive.content)
             else -> null
         }
     }
@@ -153,9 +156,7 @@ object AuthorSerializer : KSerializer<AuthorInfo?> {
     }
 }
 
-/**
- * 宽松的字符串序列化器，允许接收数字或布尔并转换为字符串
- */
+/** 宽松的字符串序列化器，允许接收数字或布尔并转换为字符串 */
 object LenientStringSerializer : KSerializer<String?> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("LenientString")
 

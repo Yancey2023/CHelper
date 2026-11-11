@@ -43,7 +43,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
@@ -81,15 +81,18 @@ import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextField
 
 @Composable
-fun LibrarySearchScreen(
+internal fun LibrarySearchScreen(
     initialKeyword: String? = null,
     viewModel: LibrarySearchViewModel = viewModel(),
-    navController: NavHostController
+    navController: NavHostController,
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunctions by localCommandLabDataStore.localLibraryFunctions()
-        .collectAsState(initial = null)
+    val localLibraryFunctions by
+        localCommandLabDataStore
+            .localLibraryFunctions()
+            .collectAsStateWithLifecycle(initialValue = null)
 
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -108,107 +111,145 @@ fun LibrarySearchScreen(
         }
     }
 
-    // 滑动加载更多公开库
-    val shouldLoadMore = remember {
-        derivedStateOf {
-            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            val totalItems = listState.layoutInfo.totalItemsCount
-            lastVisibleItem >= totalItems - 3 && !viewModel.isLoading && viewModel.hasMore
-        }
-    }
-    LaunchedEffect(shouldLoadMore) {
-        snapshotFlow { shouldLoadMore.value }
-            .collect { if (it) viewModel.loadMore(localLibraryFunctions) }
+    LaunchedEffect(localLibraryFunctions) { viewModel.refreshLocal(localLibraryFunctions) }
+    LaunchedEffect(viewModel) {
+        snapshotFlow { viewModel.keyword.text.toString() }
+            .collect {
+                if (it.isBlank()) viewModel.search(localLibraryFunctions)
+            }
     }
 
-    RootViewWithHeaderAndCopyright(
-        title = "搜索命令库"
-    ) {
+    // 滑动加载更多公开库
+    val shouldLoadMore =
+        remember(listState, state) {
+            derivedStateOf {
+                val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                val totalItems = listState.layoutInfo.totalItemsCount
+                lastVisibleItem >= totalItems - 3 &&
+                    !state.publicLoading &&
+                    state.hasMore &&
+                    state.publicError == null
+            }
+        }
+    LaunchedEffect(shouldLoadMore) {
+        snapshotFlow { shouldLoadMore.value }.collect { if (it) viewModel.loadMore() }
+    }
+
+    RootViewWithHeaderAndCopyright(title = "搜索命令库") {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(Modifier.height(10.dp))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextField(
                     state = viewModel.keyword,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { focusState ->
-                            if (isFocusedBefore && !focusState.isFocused) {
-                                viewModel.search(localLibraryFunctions)
-                            }
-                            isFocusedBefore = focusState.isFocused
-                        },
+                    modifier =
+                        Modifier.weight(1f)
+                            .height(40.dp)
+                            .focusRequester(focusRequester)
+                            .onFocusChanged { focusState ->
+                                if (isFocusedBefore && !focusState.isFocused) {
+                                    viewModel.search(localLibraryFunctions)
+                                }
+                                isFocusedBefore = focusState.isFocused
+                            },
                     contentAlignment = Alignment.CenterStart,
                     hint = "搜索命令库或标签...",
                     horizontalPadding = 20.dp,
                     verticalPadding = 0.dp,
                     clipCornerSize = 20.dp,
-                    lineLimits = TextFieldLineLimits.SingleLine
+                    lineLimits = TextFieldLineLimits.SingleLine,
                 )
                 Spacer(Modifier.width(10.dp))
                 // 使用文字代替不存在的搜索按钮
                 Text(
                     text = "搜索",
-                    style = TextStyle(
-                        color = CHelperTheme.colors.mainColor,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier
-                        .clickable {
-                            focusManager.clearFocus()
-                            viewModel.search(localLibraryFunctions)
-                        }
-                        .padding(5.dp)
+                    style =
+                        TextStyle(
+                            color = CHelperTheme.colors.mainColor,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    modifier =
+                        Modifier.clickable {
+                                focusManager.clearFocus()
+                                viewModel.search(localLibraryFunctions)
+                            }
+                            .padding(5.dp),
                 )
             }
             Spacer(Modifier.height(10.dp))
 
+            state.privateError?.let { error ->
+                Text(
+                    text = "私有库：$error，点击重试",
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clickable { viewModel.retryPrivate() }
+                            .padding(15.dp),
+                )
+            }
+            state.publicError?.let { error ->
+                Text(
+                    text = "公开库：$error，点击重试",
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clickable { viewModel.retryPublic() }
+                            .padding(15.dp),
+                )
+            }
             Box(modifier = Modifier.weight(1f)) {
-                if (viewModel.isLoading && viewModel.localAndPrivateLibraries.isEmpty() && viewModel.publicLibraries.isEmpty()) {
+                if (
+                    state.isLoading &&
+                        state.localAndPrivateLibraries.isEmpty() &&
+                        state.publicLibraries.isEmpty()
+                ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             "搜索中...",
-                            style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary),
                         )
                     }
-                } else if (!viewModel.isLoading && viewModel.localAndPrivateLibraries.isEmpty() && viewModel.publicLibraries.isEmpty() && viewModel.keyword.text.isNotBlank()) {
+                } else if (
+                    !state.isLoading &&
+                        state.privateError == null &&
+                        state.publicError == null &&
+                        state.localAndPrivateLibraries.isEmpty() &&
+                        state.publicLibraries.isEmpty() &&
+                        viewModel.keyword.text.isNotBlank()
+                ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             "未找到相关匹配项",
-                            style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary),
                         )
                     }
                 } else {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         // Section 1: 本地与私有
-                        if (viewModel.localAndPrivateLibraries.isNotEmpty()) {
+                        if (state.localAndPrivateLibraries.isNotEmpty()) {
                             item {
                                 Text(
                                     text = "我的本地与云端私有",
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    modifier = Modifier.padding(
-                                        bottom = 5.dp,
-                                        start = 15.dp,
-                                        end = 15.dp
-                                    )
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    modifier =
+                                        Modifier.padding(
+                                            bottom = 5.dp,
+                                            start = 15.dp,
+                                            end = 15.dp,
+                                        ),
                                 )
                             }
-                            itemsIndexed(viewModel.localAndPrivateLibraries) { _, lib ->
+                            itemsIndexed(state.localAndPrivateLibraries) { _, lib ->
                                 SearchLibraryItem(
                                     library = lib,
                                     isPrivateOrLocal = true,
@@ -217,7 +258,9 @@ fun LibrarySearchScreen(
                                         if (lib.authorName == "[本地包]") {
                                             lib.localEntryId?.let { localEntryId ->
                                                 navController.navigate(
-                                                    LocalLibraryShowScreenKey(localEntryId = localEntryId)
+                                                    LocalLibraryShowScreenKey(
+                                                        localEntryId = localEntryId
+                                                    )
                                                 )
                                             }
                                         } else {
@@ -225,36 +268,38 @@ fun LibrarySearchScreen(
                                                 navController.navigate(
                                                     PublicLibraryShowScreenKey(
                                                         id = id,
-                                                        isPrivate = true
+                                                        isPrivate = true,
                                                     )
                                                 )
                                             }
                                         }
-                                    }
+                                    },
                                 )
                             }
                             item { Spacer(Modifier.height(10.dp)) }
                         }
 
                         // Section 2: 公开市场
-                        if (viewModel.publicLibraries.isNotEmpty()) {
+                        if (state.publicLibraries.isNotEmpty()) {
                             item {
                                 Text(
                                     text = "公共市场搜索结果",
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    modifier = Modifier.padding(
-                                        bottom = 5.dp,
-                                        start = 15.dp,
-                                        end = 15.dp
-                                    )
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    modifier =
+                                        Modifier.padding(
+                                            bottom = 5.dp,
+                                            start = 15.dp,
+                                            end = 15.dp,
+                                        ),
                                 )
                             }
 
-                            itemsIndexed(viewModel.publicLibraries) { _, library ->
+                            itemsIndexed(state.publicLibraries) { _, library ->
                                 SearchLibraryItem(
                                     library = library,
                                     isPrivateOrLocal = false,
@@ -263,26 +308,29 @@ fun LibrarySearchScreen(
                                             navController.navigate(
                                                 PublicLibraryShowScreenKey(
                                                     id = id,
-                                                    isPrivate = false
+                                                    isPrivate = false,
                                                 )
                                             )
                                         }
-                                    }
+                                    },
                                 )
                             }
                         }
 
-                        if (viewModel.isLoading && (viewModel.localAndPrivateLibraries.isNotEmpty() || viewModel.publicLibraries.isNotEmpty())) {
+                        if (
+                            state.isLoading &&
+                                (state.localAndPrivateLibraries.isNotEmpty() ||
+                                    state.publicLibraries.isNotEmpty())
+                        ) {
                             item {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         "加载更多...",
-                                        style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                                        style =
+                                            TextStyle(color = CHelperTheme.colors.textSecondary),
                                     )
                                 }
                             }
@@ -299,65 +347,71 @@ fun LibrarySearchScreen(
 private fun SearchLibraryItem(
     library: LibraryFunction,
     isPrivateOrLocal: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f) else CHelperTheme.colors.backgroundComponent)
-            .run {
-                if (isFeatured) this.border(
-                    1.dp,
-                    CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
-                    RoundedCornerShape(10.dp)
-                ) else this
-            }
-            .clickable(onClick = onClick)
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 15.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(
+                    if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f)
+                    else CHelperTheme.colors.backgroundComponent
+                )
+                .run {
+                    if (isFeatured)
+                        this.border(
+                            1.dp,
+                            CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
+                            RoundedCornerShape(10.dp),
+                        )
+                    else this
+                }
+                .clickable(onClick = onClick)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(14.dp, 12.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f).padding(14.dp, 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = library.name ?: "未命名",
                         modifier = Modifier.weight(1f, fill = false),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = CHelperTheme.colors.textMain
-                        ),
-                        maxLines = 1
+                        style =
+                            TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = CHelperTheme.colors.textMain,
+                            ),
+                        maxLines = 1,
                     )
-                    library.version?.takeIf { it.isNotBlank() }?.let { ver ->
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = "v$ver",
-                            style = TextStyle(
-                                fontSize = 11.sp,
-                                color = CHelperTheme.colors.textSecondary
+                    library.version
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { ver ->
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "v$ver",
+                                style =
+                                    TextStyle(
+                                        fontSize = 11.sp,
+                                        color = CHelperTheme.colors.textSecondary,
+                                    ),
                             )
-                        )
-                    }
+                        }
                     if (isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
                         Spacer(Modifier.width(8.dp))
                         Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(CHelperTheme.colors.mainColor.copy(alpha = 0.2f))
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(4.dp))
+                                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.2f))
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = library.authorName!!,
-                                style = TextStyle(
-                                    fontSize = 10.sp,
-                                    color = CHelperTheme.colors.mainColor
-                                )
+                                style =
+                                    TextStyle(
+                                        fontSize = 10.sp,
+                                        color = CHelperTheme.colors.mainColor,
+                                    ),
                             )
                         }
                     }
@@ -369,45 +423,47 @@ private fun SearchLibraryItem(
                         AsyncImage(
                             model = "https://abyssous.site/avatar/${author.id}",
                             contentDescription = "Avatar",
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(CHelperTheme.colors.backgroundComponent),
+                            modifier =
+                                Modifier.size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(CHelperTheme.colors.backgroundComponent),
                             contentScale = ContentScale.Crop,
                             placeholder = painterResource(id = R.drawable.ic_user),
-                            error = painterResource(id = R.drawable.ic_user)
+                            error = painterResource(id = R.drawable.ic_user),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = author.name ?: "Unknown",
-                            style = TextStyle(
-                                color = CHelperTheme.colors.textSecondary,
-                                fontSize = 12.sp
-                            )
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
                         )
                         if ((author.tier ?: 0) >= 2) {
                             Spacer(Modifier.width(4.dp))
                             Image(
                                 painter = painterResource(R.drawable.ic_verified_advanced),
                                 contentDescription = "Advanced",
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(12.dp),
                             )
                         } else if ((author.tier ?: 0) >= 1) {
                             Spacer(Modifier.width(4.dp))
                             Image(
                                 painter = painterResource(R.drawable.ic_verified_normal),
                                 contentDescription = "Normal",
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(12.dp),
                             )
                         }
                         Spacer(Modifier.width(10.dp))
                     } else if (!isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
                         Text(
                             text = "作者: ${library.authorName}",
-                            style = TextStyle(
-                                color = CHelperTheme.colors.textSecondary,
-                                fontSize = 12.sp
-                            )
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
                         )
                         Spacer(Modifier.width(10.dp))
                     }
@@ -418,15 +474,16 @@ private fun SearchLibraryItem(
                                 painter = painterResource(R.drawable.ic_heart),
                                 contentDescription = null,
                                 modifier = Modifier.size(12.dp),
-                                colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary)
+                                colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary),
                             )
                             Spacer(Modifier.width(2.dp))
                             Text(
                                 text = "$likes",
-                                style = TextStyle(
-                                    color = CHelperTheme.colors.textSecondary,
-                                    fontSize = 12.sp
-                                )
+                                style =
+                                    TextStyle(
+                                        color = CHelperTheme.colors.textSecondary,
+                                        fontSize = 12.sp,
+                                    ),
                             )
                         }
                     }
@@ -435,44 +492,44 @@ private fun SearchLibraryItem(
                 if (!library.tags.isNullOrEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(
-                            6.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(
-                            6.dp
-                        )
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         library.tags!!.take(3).forEach { tag ->
                             Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(CHelperTheme.colors.background)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                        .background(CHelperTheme.colors.background)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = tag,
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 11.sp
-                                    )
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 11.sp,
+                                        ),
                                 )
                             }
                         }
                     }
                 }
 
-                library.note?.takeIf { it.isNotBlank() }?.let { note ->
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = note.replace("\n", " "),
-                        style = TextStyle(
-                            color = CHelperTheme.colors.textSecondary,
-                            fontSize = 12.sp
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                library.note
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { note ->
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = note.replace("\n", " "),
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
             }
         }
     }

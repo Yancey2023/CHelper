@@ -47,7 +47,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +67,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.hjq.permissions.XXPermissions
@@ -77,7 +77,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import yancey.chelper.R
 import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.data.LocalCommandLabDataStore
@@ -114,7 +113,7 @@ fun PublicLibraryShowScreen(
     isPrivate: Boolean = false,
     navController: NavHostController? = null,
     importToLocal: Boolean = false,
-    viewModel: PublicLibraryShowViewModel = viewModel()
+    viewModel: PublicLibraryShowViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -122,10 +121,12 @@ fun PublicLibraryShowScreen(
     // 读取设置
     val settingsDataStore = remember(context) { SettingsDataStore(context) }
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val ambiguousLineDefault = settingsDataStore.ambiguousLineDefault()
-        .collectAsState(initial = "comment")
-    val isHideMetadataPreview = settingsDataStore.isHideMetadataPreview()
-        .collectAsState(initial = false)
+    val ambiguousLineDefault =
+        settingsDataStore
+            .ambiguousLineDefault()
+            .collectAsStateWithLifecycle(initialValue = "comment")
+    val isHideMetadataPreview =
+        settingsDataStore.isHideMetadataPreview().collectAsStateWithLifecycle(initialValue = false)
 
     // 对话框状态
     var showMainMenu by remember { mutableStateOf(false) }
@@ -136,15 +137,17 @@ fun PublicLibraryShowScreen(
     var showReportDialog by remember { mutableStateOf(false) }
     var showLocalImportConfirmDialog by remember { mutableStateOf(false) }
     var showLoongFlowPermissionDialog by remember { mutableStateOf(false) }
-    var localImportPromptHandled by remember(id, isPrivate, importToLocal) {
-        mutableStateOf(false)
-    }
+    var localImportPromptHandled by
+        remember(id, isPrivate, importToLocal) {
+            mutableStateOf(false)
+        }
 
     fun openLoongFlowImport() {
         if (viewModel.library.id == null) return
-        if (XXPermissions.isGrantedPermission(
+        if (
+            XXPermissions.isGrantedPermission(
                 context,
-                PermissionLists.getSystemAlertWindowPermission()
+                PermissionLists.getSystemAlertWindowPermission(),
             )
         ) {
             if (!LoongFlowWindowManager.INSTANCE.showImport(context, viewModel.library)) {
@@ -180,13 +183,14 @@ fun PublicLibraryShowScreen(
         importToLocal,
         viewModel.isLoading,
         viewModel.errorMessage,
-        viewModel.library.id
+        viewModel.library.id,
     ) {
-        if (importToLocal &&
-            !localImportPromptHandled &&
-            !viewModel.isLoading &&
-            viewModel.errorMessage == null &&
-            viewModel.library.id == id
+        if (
+            importToLocal &&
+                !localImportPromptHandled &&
+                !viewModel.isLoading &&
+                viewModel.errorMessage == null &&
+                viewModel.library.id == id
         ) {
             localImportPromptHandled = true
             showLocalImportConfirmDialog = true
@@ -199,20 +203,20 @@ fun PublicLibraryShowScreen(
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.actionMessage = null
         }
-        onDispose { }
+        onDispose {}
     }
 
     // 分享链接生成后：复制到剪贴板并拉起系统分享面板
     DisposableEffect(viewModel.pendingShareUrl) {
         viewModel.pendingShareUrl?.let { url ->
             viewModel.pendingShareUrl = null
-            val clipboard =
-                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("CHelper Share", url))
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, url)
-            }
+            val shareIntent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, url)
+                }
             runCatching {
                 context.startActivity(
                     Intent.createChooser(shareIntent, "分享命令库")
@@ -221,7 +225,7 @@ fun PublicLibraryShowScreen(
             }
             Toaster.show("分享链接已复制")
         }
-        onDispose { }
+        onDispose {}
     }
 
     // 删除成功后安全返回上一页——在 Composition 上下文中执行 popBackStack 避免时序崩溃
@@ -230,7 +234,7 @@ fun PublicLibraryShowScreen(
             viewModel.deleteSuccess = false
             navController?.popBackStack()
         }
-        onDispose { }
+        onDispose {}
     }
 
     // Release 成功后跳转到新公有版详情页
@@ -244,7 +248,7 @@ fun PublicLibraryShowScreen(
                 }
             }
         }
-        onDispose { }
+        onDispose {}
     }
 
     RootViewWithHeaderAndCopyright(
@@ -252,47 +256,44 @@ fun PublicLibraryShowScreen(
         headerRight = {
             Row {
                 // 仅公开云端库可分享；私有库/未加载完成不展示入口
-                if (viewModel.library.id != null && !isPrivate && viewModel.library.isPublish != false) {
+                if (
+                    viewModel.library.id != null &&
+                        !isPrivate &&
+                        viewModel.library.isPublish != false
+                ) {
                     Icon(
                         id = R.drawable.share,
-                        modifier = Modifier
-                            .clickable { shareCurrentLibrary() }
-                            .padding(5.dp)
-                            .size(24.dp),
-                        contentDescription = "分享"
+                        modifier =
+                            Modifier.clickable { shareCurrentLibrary() }.padding(5.dp).size(24.dp),
+                        contentDescription = "分享",
                     )
                 }
                 if (viewModel.library.id != null) {
                     Icon(
                         id = R.drawable.loong_flow_import,
-                        modifier = Modifier
-                            .clickable { openLoongFlowImport() }
-                            .padding(5.dp)
-                            .size(24.dp),
-                        contentDescription = "游龙导入"
+                        modifier =
+                            Modifier.clickable { openLoongFlowImport() }.padding(5.dp).size(24.dp),
+                        contentDescription = "游龙导入",
                     )
                 }
                 Icon(
                     id = R.drawable.more,
-                    modifier = Modifier
-                        .clickable { showMainMenu = true }
-                        .padding(5.dp)
-                        .size(24.dp),
-                    contentDescription = "菜单"
+                    modifier = Modifier.clickable { showMainMenu = true }.padding(5.dp).size(24.dp),
+                    contentDescription = "菜单",
                 )
             }
-        }
+        },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 viewModel.isLoading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "加载中...",
-                            style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary),
                         )
                     }
                 }
@@ -300,96 +301,103 @@ fun PublicLibraryShowScreen(
                 viewModel.errorMessage != null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = viewModel.errorMessage ?: "加载失败",
-                                style = TextStyle(color = CHelperTheme.colors.textSecondary)
+                                style = TextStyle(color = CHelperTheme.colors.textSecondary),
                             )
                             Spacer(Modifier.height(10.dp))
                             Text(
                                 text = "点击重试",
-                                modifier = Modifier.clickable {
-                                    viewModel.loadFunction(
-                                        id,
-                                        isPrivate
-                                    )
-                                },
-                                style = TextStyle(color = CHelperTheme.colors.mainColor)
+                                modifier =
+                                    Modifier.clickable {
+                                        viewModel.loadFunction(
+                                            id,
+                                            isPrivate,
+                                        )
+                                    },
+                                style = TextStyle(color = CHelperTheme.colors.mainColor),
                             )
                         }
                     }
                 }
 
                 else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 10.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxSize().padding(vertical = 10.dp)) {
                         // 元信息卡片
                         @OptIn(ExperimentalLayoutApi::class)
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 15.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(color = CHelperTheme.colors.backgroundComponent)
-                                .padding(15.dp)
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 15.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(color = CHelperTheme.colors.backgroundComponent)
+                                    .padding(15.dp)
                         ) {
                             // 作者
                             viewModel.library.authorName?.let { author ->
                                 val authorId = viewModel.library.author?.id
                                 Row(
-                                    modifier = Modifier
-                                        .padding(bottom = 4.dp)
-                                        .then(
-                                            if (authorId != null) Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .clickable {
-                                                    navController?.navigate(UserProfileScreenKey(id = authorId))
-                                                }
-                                            else Modifier
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    modifier =
+                                        Modifier.padding(bottom = 4.dp)
+                                            .then(
+                                                if (authorId != null)
+                                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                                        .clickable {
+                                                            navController?.navigate(
+                                                                UserProfileScreenKey(id = authorId)
+                                                            )
+                                                        }
+                                                else Modifier
+                                            ),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = "作者  ",
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 13.sp
-                                        )
+                                        style =
+                                            TextStyle(
+                                                color = CHelperTheme.colors.textSecondary,
+                                                fontSize = 13.sp,
+                                            ),
                                     )
                                     Text(
                                         text = author,
-                                        style = TextStyle(
-                                            color = if (authorId != null) CHelperTheme.colors.mainColor else CHelperTheme.colors.textMain,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        style =
+                                            TextStyle(
+                                                color =
+                                                    if (authorId != null)
+                                                        CHelperTheme.colors.mainColor
+                                                    else CHelperTheme.colors.textMain,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            ),
                                     )
                                     // 作者专属头衔徽章
-                                    viewModel.library.author?.userTitle?.takeIf { it.isNotBlank() }
+                                    viewModel.library.author
+                                        ?.userTitle
+                                        ?.takeIf { it.isNotBlank() }
                                         ?.let { title ->
                                             Spacer(Modifier.width(6.dp))
                                             Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(
-                                                        CHelperTheme.colors.mainColor.copy(
-                                                            alpha = 0.12f
+                                                modifier =
+                                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                                        .background(
+                                                            CHelperTheme.colors.mainColor.copy(
+                                                                alpha = 0.12f
+                                                            )
                                                         )
-                                                    )
-                                                    .padding(horizontal = 6.dp, vertical = 1.dp)
+                                                        .padding(horizontal = 6.dp, vertical = 1.dp)
                                             ) {
                                                 Text(
                                                     text = title,
-                                                    style = TextStyle(
-                                                        fontSize = 10.sp,
-                                                        color = CHelperTheme.colors.mainColor,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
+                                                    style =
+                                                        TextStyle(
+                                                            fontSize = 10.sp,
+                                                            color = CHelperTheme.colors.mainColor,
+                                                            fontWeight = FontWeight.Medium,
+                                                        ),
                                                 )
                                             }
                                         }
@@ -397,231 +405,260 @@ fun PublicLibraryShowScreen(
                                     if (authorId != null) {
                                         Spacer(Modifier.width(4.dp))
                                         Image(
-                                            painter = painterResource(id = R.drawable.external_link),
+                                            painter =
+                                                painterResource(id = R.drawable.external_link),
                                             contentDescription = "进入主页",
                                             modifier = Modifier.size(12.dp),
-                                            colorFilter = ColorFilter.tint(CHelperTheme.colors.mainColor)
+                                            colorFilter =
+                                                ColorFilter.tint(CHelperTheme.colors.mainColor),
                                         )
                                     }
                                 }
                             }
                             // 版本
-                            viewModel.library.version?.takeIf { it.isNotBlank() }?.let { ver ->
-                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
-                                    Text(
-                                        text = "版本  ",
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 13.sp
+                            viewModel.library.version
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { ver ->
+                                    Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                        Text(
+                                            text = "版本  ",
+                                            style =
+                                                TextStyle(
+                                                    color = CHelperTheme.colors.textSecondary,
+                                                    fontSize = 13.sp,
+                                                ),
                                         )
-                                    )
-                                    Text(
-                                        text = ver,
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textMain,
-                                            fontSize = 13.sp
+                                        Text(
+                                            text = ver,
+                                            style =
+                                                TextStyle(
+                                                    color = CHelperTheme.colors.textMain,
+                                                    fontSize = 13.sp,
+                                                ),
                                         )
-                                    )
+                                    }
                                 }
-                            }
                             // 标签
-                            viewModel.library.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
-                                Row(modifier = Modifier.padding(bottom = 4.dp)) {
-                                    Text(
-                                        text = "标签  ",
-                                        style = TextStyle(
-                                            color = CHelperTheme.colors.textSecondary,
-                                            fontSize = 13.sp
-                                        ),
-                                        modifier = Modifier.padding(top = 2.dp)
-                                    )
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        tags.forEach { tag ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(CHelperTheme.colors.background)
-                                                    .clickable {
-                                                        navController?.navigate(
-                                                            LibrarySearchScreenKey(
-                                                                tag
+                            viewModel.library.tags
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { tags ->
+                                    Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                        Text(
+                                            text = "标签  ",
+                                            style =
+                                                TextStyle(
+                                                    color = CHelperTheme.colors.textSecondary,
+                                                    fontSize = 13.sp,
+                                                ),
+                                            modifier = Modifier.padding(top = 2.dp),
+                                        )
+                                        FlowRow(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            tags.forEach { tag ->
+                                                Box(
+                                                    modifier =
+                                                        Modifier.clip(RoundedCornerShape(4.dp))
+                                                            .background(
+                                                                CHelperTheme.colors.background
                                                             )
-                                                        )
-                                                    }
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                                            ) {
-                                                Text(
-                                                    text = tag,
-                                                    style = TextStyle(
-                                                        color = CHelperTheme.colors.mainColor,
-                                                        fontSize = 12.sp
+                                                            .clickable {
+                                                                navController?.navigate(
+                                                                    LibrarySearchScreenKey(tag)
+                                                                )
+                                                            }
+                                                            .padding(
+                                                                horizontal = 6.dp,
+                                                                vertical = 2.dp,
+                                                            )
+                                                ) {
+                                                    Text(
+                                                        text = tag,
+                                                        style =
+                                                            TextStyle(
+                                                                color =
+                                                                    CHelperTheme.colors.mainColor,
+                                                                fontSize = 12.sp,
+                                                            ),
                                                     )
-                                                )
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 // 点赞按钮 — 可交互
                                 Row(
-                                    modifier = Modifier
-                                        .padding(top = 4.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                            viewModel.library.id?.let { viewModel.toggleLike(it) }
-                                        }
-                                        .padding(vertical = 4.dp, horizontal = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    modifier =
+                                        Modifier.padding(top = 4.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                viewModel.library.id?.let {
+                                                    viewModel.toggleLike(it)
+                                                }
+                                            }
+                                            .padding(vertical = 4.dp, horizontal = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     val isLiked = viewModel.isLiked
                                     Image(
-                                        painter = painterResource(
-                                            if (isLiked) R.drawable.heart_filled else R.drawable.heart
-                                        ),
+                                        painter =
+                                            painterResource(
+                                                if (isLiked) R.drawable.heart_filled
+                                                else R.drawable.heart
+                                            ),
                                         contentDescription = "点赞",
                                         modifier = Modifier.size(16.dp),
-                                        colorFilter = ColorFilter.tint(
-                                            if (isLiked) CHelperTheme.colors.mainColor
-                                            else CHelperTheme.colors.textSecondary
-                                        )
+                                        colorFilter =
+                                            ColorFilter.tint(
+                                                if (isLiked) CHelperTheme.colors.mainColor
+                                                else CHelperTheme.colors.textSecondary
+                                            ),
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = "${viewModel.likeCount}",
-                                        style = TextStyle(
-                                            color = if (isLiked) CHelperTheme.colors.mainColor
-                                            else CHelperTheme.colors.textSecondary,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        style =
+                                            TextStyle(
+                                                color =
+                                                    if (isLiked) CHelperTheme.colors.mainColor
+                                                    else CHelperTheme.colors.textSecondary,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            ),
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = if (isLiked) "已赞" else "点赞",
-                                        style = TextStyle(
-                                            color = if (isLiked) CHelperTheme.colors.mainColor
-                                            else CHelperTheme.colors.textSecondary,
-                                            fontSize = 12.sp
-                                        )
+                                        style =
+                                            TextStyle(
+                                                color =
+                                                    if (isLiked) CHelperTheme.colors.mainColor
+                                                    else CHelperTheme.colors.textSecondary,
+                                                fontSize = 12.sp,
+                                            ),
                                     )
                                 }
                                 if (!isPrivate) {
                                     Spacer(Modifier.width(14.dp))
                                     val isFavorited = viewModel.isFavorited
                                     Row(
-                                        modifier = Modifier
-                                            .padding(top = 4.dp)
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .clickable {
-                                                viewModel.library.id?.let {
-                                                    viewModel.toggleFavorite(
-                                                        it
-                                                    )
+                                        modifier =
+                                            Modifier.padding(top = 4.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .clickable {
+                                                    viewModel.library.id?.let {
+                                                        viewModel.toggleFavorite(it)
+                                                    }
                                                 }
-                                            }
-                                            .padding(vertical = 4.dp, horizontal = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                                .padding(vertical = 4.dp, horizontal = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Image(
-                                            painter = painterResource(
-                                                if (isFavorited) R.drawable.bookmark_filled else R.drawable.bookmark
-                                            ),
+                                            painter =
+                                                painterResource(
+                                                    if (isFavorited) R.drawable.bookmark_filled
+                                                    else R.drawable.bookmark
+                                                ),
                                             contentDescription = "收藏",
                                             modifier = Modifier.size(16.dp),
-                                            colorFilter = ColorFilter.tint(
-                                                if (isFavorited) CHelperTheme.colors.mainColor
-                                                else CHelperTheme.colors.textSecondary
-                                            )
+                                            colorFilter =
+                                                ColorFilter.tint(
+                                                    if (isFavorited) CHelperTheme.colors.mainColor
+                                                    else CHelperTheme.colors.textSecondary
+                                                ),
                                         )
                                         Spacer(Modifier.width(4.dp))
                                         Text(
                                             text = if (isFavorited) "已收藏" else "收藏",
-                                            style = TextStyle(
-                                                color = if (isFavorited) CHelperTheme.colors.mainColor
-                                                else CHelperTheme.colors.textSecondary,
-                                                fontSize = 12.sp
-                                            )
+                                            style =
+                                                TextStyle(
+                                                    color =
+                                                        if (isFavorited)
+                                                            CHelperTheme.colors.mainColor
+                                                        else CHelperTheme.colors.textSecondary,
+                                                    fontSize = 12.sp,
+                                                ),
                                         )
                                     }
                                 }
                             }
                             // 备注
-                            viewModel.library.note?.takeIf { it.isNotBlank() }?.let { note ->
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = note,
-                                    style = TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 12.sp
+                            viewModel.library.note
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { note ->
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = note,
+                                        style =
+                                            TextStyle(
+                                                color = CHelperTheme.colors.textSecondary,
+                                                fontSize = 12.sp,
+                                            ),
                                     )
-                                )
-                            }
+                                }
                         }
 
                         Spacer(Modifier.height(10.dp))
 
                         // 视图切换指示条
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 15.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 15.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = if (viewModel.showRawSource) "MCD 源码" else "可视化预览",
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    color = CHelperTheme.colors.textSecondary
-                                )
+                                style =
+                                    TextStyle(
+                                        fontSize = 12.sp,
+                                        color = CHelperTheme.colors.textSecondary,
+                                    ),
                             )
                             Spacer(Modifier.weight(1f))
                             Text(
                                 text = if (viewModel.showRawSource) "切换到可视化" else "切换到源码",
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .clickable {
-                                        viewModel.showRawSource = !viewModel.showRawSource
-                                    }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = CHelperTheme.colors.mainColor
-                                )
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                        .clickable {
+                                            viewModel.showRawSource = !viewModel.showRawSource
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                style =
+                                    TextStyle(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = CHelperTheme.colors.mainColor,
+                                    ),
                             )
                         }
 
                         Spacer(Modifier.height(4.dp))
 
                         // 内容区：可视化 / 原始源码
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        ) {
+                        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                             if (viewModel.showRawSource) {
                                 // 原始源码视图
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 15.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(CHelperTheme.colors.backgroundComponent)
-                                        .padding(12.dp)
-                                        .verticalScroll(rememberScrollState())
-                                        .horizontalScroll(rememberScrollState())
+                                    modifier =
+                                        Modifier.fillMaxSize()
+                                            .padding(horizontal = 15.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(CHelperTheme.colors.backgroundComponent)
+                                            .padding(12.dp)
+                                            .verticalScroll(rememberScrollState())
+                                            .horizontalScroll(rememberScrollState())
                                 ) {
                                     Text(
                                         text = viewModel.library.content ?: "",
-                                        style = TextStyle(
-                                            fontSize = 12.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = CHelperTheme.colors.textMain
-                                        )
+                                        style =
+                                            TextStyle(
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = CHelperTheme.colors.textMain,
+                                            ),
                                     )
                                 }
                             } else {
@@ -629,15 +666,15 @@ fun PublicLibraryShowScreen(
                                 // MCDContentView 已不再自带 LazyColumn，这里包一层 verticalScroll
                                 // 让长命令库内容能继续滚动
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(horizontal = 15.dp)
+                                    modifier =
+                                        Modifier.fillMaxSize()
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 15.dp)
                                 ) {
                                     MCDContentView(
                                         content = viewModel.library.content,
                                         ambiguousDefault = ambiguousLineDefault.value,
-                                        showMetadata = !isHideMetadataPreview.value
+                                        showMetadata = !isHideMetadataPreview.value,
                                     )
                                 }
                             }
@@ -663,7 +700,8 @@ fun PublicLibraryShowScreen(
             // 公有库才显示举报：私有库是用户自己的，没必要给自己的库做举报入口
             if (!isPrivate) add("举报" to "report")
             add("关闭" to "close")
-        }.toTypedArray()
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showMainMenu = false },
             data = menuItems,
@@ -675,10 +713,10 @@ fun PublicLibraryShowScreen(
                     "copy_all" -> {
                         viewModel.library.content?.let { mcd ->
                             val clip =
-                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                context.getSystemService(Context.CLIPBOARD_SERVICE)
+                                    as ClipboardManager
                             clip.setPrimaryClip(ClipData.newPlainText("MCD", mcd))
-                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "已复制全部 MCD 源码", Toast.LENGTH_SHORT).show()
                         }
                     }
 
@@ -686,7 +724,7 @@ fun PublicLibraryShowScreen(
 
                     "report" -> showReportDialog = true
                 }
-            }
+            },
         )
     }
 
@@ -703,7 +741,8 @@ fun PublicLibraryShowScreen(
             add("编辑" to "edit")
             add("删除私有库" to "delete")
             add("◂ 返回" to "back")
-        }.toTypedArray()
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showManageMenu = false },
             data = manageItems,
@@ -718,29 +757,23 @@ fun PublicLibraryShowScreen(
                         }
                     }
 
-                    "view_public" -> navController?.navigate(
-                        PublicLibraryShowScreenKey(
-                            id = id,
-                            isPrivate = false
+                    "view_public" ->
+                        navController?.navigate(
+                            PublicLibraryShowScreenKey(
+                                id = id,
+                                isPrivate = false,
+                            )
                         )
-                    )
 
                     "sync" -> viewModel.library.id?.let { viewModel.syncToPublic(it) }
                     "edit" -> {
-                        val libJson =
-                            Json.encodeToString(LibraryFunction.serializer(), viewModel.library)
-                        navController?.navigate(
-                            CPLUploadScreenKey(
-                                editLibraryId = id,
-                                editLibraryJson = libJson
-                            )
-                        )
+                        navController?.navigate(CPLUploadScreenKey(editLibraryId = id))
                     }
 
                     "delete" -> showDeleteConfirmDialog = true
                     "back" -> showMainMenu = true
                 }
-            }
+            },
         )
     }
 
@@ -755,35 +788,37 @@ fun PublicLibraryShowScreen(
                     }
                 }
                 showDeleteConfirmDialog = false
-            }
+            },
         )
     }
 
     if (showLocalImportConfirmDialog) {
         MenuDialog(
             onDismissRequest = { showLocalImportConfirmDialog = false },
-            data = arrayOf(
-                "导入到本地库" to "confirm",
-                "仅查看云端详情" to "cancel"
-            ),
+            data =
+                arrayOf(
+                    "导入到本地库" to "confirm",
+                    "仅查看云端详情" to "cancel",
+                ),
             onChoose = { action ->
                 showLocalImportConfirmDialog = false
                 if (action != "confirm") return@MenuDialog
                 coroutineScope.launch {
                     val imported = viewModel.library.toLocalImportedCopy()
-                    val (localEntryId, alreadyExists) = withContext(Dispatchers.IO) {
-                        val existing = localCommandLabDataStore.localLibraryFunctions()
-                            .first()
-                            .firstOrNull { it.hasSameLocalContent(imported) }
-                        if (existing != null) {
-                            requireNotNull(existing.localEntryId) to true
-                        } else {
-                            localCommandLabDataStore.addLocalLibraryFunction(imported) to false
+                    val (localEntryId, alreadyExists) =
+                        withContext(Dispatchers.IO) {
+                            val existing =
+                                localCommandLabDataStore
+                                    .localLibraryFunctions()
+                                    .first()
+                                    .firstOrNull { it.hasSameLocalContent(imported) }
+                            if (existing != null) {
+                                requireNotNull(existing.localEntryId) to true
+                            } else {
+                                localCommandLabDataStore.addLocalLibraryFunction(imported) to false
+                            }
                         }
-                    }
-                    Toaster.show(
-                        if (alreadyExists) "本地库已有相同内容，已打开" else "已导入本地库"
-                    )
+                    Toaster.show(if (alreadyExists) "本地库已有相同内容，已打开" else "已导入本地库")
                     navController?.navigate(
                         LocalLibraryShowScreenKey(localEntryId = localEntryId)
                     ) {
@@ -791,7 +826,7 @@ fun PublicLibraryShowScreen(
                         launchSingleTop = true
                     }
                 }
-            }
+            },
         )
     }
 
@@ -814,7 +849,7 @@ fun PublicLibraryShowScreen(
                         )
                     }
             },
-            onCancel = { showLoongFlowPermissionDialog = false }
+            onCancel = { showLoongFlowPermissionDialog = false },
         )
     }
 
@@ -825,35 +860,37 @@ fun PublicLibraryShowScreen(
             onDismissRequest = { showCaptchaDialog = false },
             onSuccess = { specialCode ->
                 viewModel.library.id?.let { viewModel.releaseToPublic(it, specialCode) }
-            }
+            },
         )
     }
 
     // 逐行复制对话框
     if (showLineCopyDialog) {
-        val commands = remember(viewModel.library, ambiguousLineDefault.value) {
-            // 逐行复制只要结构，别走高亮路径拖慢弹窗
-            val parsed = parseMCDStructure(viewModel.library.content, ambiguousLineDefault.value)
-            parsed.chains.flatMap { chain ->
-                chain.items.mapNotNull { item ->
-                    when (item) {
-                        is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
-                        is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
-                        is ChainItem.Comment -> null
+        val commands =
+            remember(viewModel.library, ambiguousLineDefault.value) {
+                // 逐行复制只要结构，别走高亮路径拖慢弹窗
+                val parsed =
+                    parseMCDStructure(viewModel.library.content, ambiguousLineDefault.value)
+                parsed.chains.flatMap { chain ->
+                    chain.items.mapNotNull { item ->
+                        when (item) {
+                            is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
+                            is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
+                            is ChainItem.Comment -> null
+                        }
                     }
                 }
             }
-        }
         if (commands.isEmpty()) {
             DisposableEffect(Unit) {
                 Toast.makeText(context, "没有可复制的命令", Toast.LENGTH_SHORT).show()
                 showLineCopyDialog = false
-                onDispose { }
+                onDispose {}
             }
         } else {
             LineCopyDialog(
                 commands = commands,
-                onDismiss = { showLineCopyDialog = false }
+                onDismiss = { showLineCopyDialog = false },
             )
         }
     }
@@ -874,37 +911,31 @@ fun PublicLibraryShowScreen(
                 }
                 coroutineScope.launch {
                     try {
-                        val request = CommandLabUserService
-                            .ReportRequest().apply {
+                        val request =
+                            CommandLabUserService.ReportRequest().apply {
                                 targetType = "library"
                                 targetId = targetUuid
                                 this.reason = reason
                             }
                         val resp =
                             withContext(Dispatchers.IO) {
-                                ServiceManager.COMMAND_LAB_USER_SERVICE
-                                    .submitReport(request)
+                                ServiceManager.COMMAND_LAB_USER_SERVICE.submitReport(request)
                             }
-                        Toaster.show(
-                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
-                        )
+                        Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
                     } catch (e: Exception) {
                         Toaster.show("网络错误: ${e.message}")
                     }
                 }
-            }
+            },
         )
     }
 }
 
-/**
- * 逐行复制对话框：逐条展示命令并自动复制到剪贴板
- * 用户点击下一条前进并复制下一条，点击完成关闭
- */
+/** 逐行复制对话框：逐条展示命令并自动复制到剪贴板 用户点击下一条前进并复制下一条，点击完成关闭 */
 @Composable
 fun LineCopyDialog(
     commands: List<String>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
@@ -913,103 +944,92 @@ fun LineCopyDialog(
     // 自动复制当前命令
     LaunchedEffect(currentIndex) {
         if (currentIndex < commands.size) {
-            clipboard.setClipEntry(
-                ClipEntry(ClipData.newPlainText(null, commands[currentIndex]))
-            )
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(null, commands[currentIndex])))
             Toast.makeText(
-                context,
-                "已复制 (${currentIndex + 1}/${commands.size})",
-                Toast.LENGTH_SHORT
-            ).show()
+                    context,
+                    "已复制 (${currentIndex + 1}/${commands.size})",
+                    Toast.LENGTH_SHORT,
+                )
+                .show()
         }
     }
 
     CustomDialog(onDismissRequest = onDismiss) {
-        DialogContainer(
-            backgroundNoTranslate = true
-        ) {
-            Column(modifier = Modifier)
-            {
+        DialogContainer(backgroundNoTranslate = true) {
+            Column(modifier = Modifier) {
                 // 标题
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp, 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(0.dp, 10.dp),
                     text = "逐行复制 (${currentIndex + 1}/${commands.size})",
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                        ),
                 )
                 // 当前命令预览
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp, 8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(CHelperTheme.colors.backgroundComponent)
-                        .padding(12.dp)
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(16.dp, 8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(12.dp)
                 ) {
                     Text(
                         text = if (currentIndex < commands.size) commands[currentIndex] else "",
-                        style = TextStyle(
-                            color = CHelperTheme.colors.textMain,
-                            fontSize = 14.sp
-                        )
+                        style =
+                            TextStyle(
+                                color = CHelperTheme.colors.textMain,
+                                fontSize = 14.sp,
+                            ),
                     )
                 }
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp, 4.dp, 0.dp, 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(0.dp, 4.dp, 0.dp, 8.dp),
                     text = "已自动复制到剪贴板",
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        color = CHelperTheme.colors.textSecondary
-                    )
+                    style =
+                        TextStyle(
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            color = CHelperTheme.colors.textSecondary,
+                        ),
                 )
                 Divider(0.dp)
                 // 底部按钮行
                 Row(Modifier.height(45.dp)) {
-                    Box(
-                        Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .clickable { onDismiss() }
-                    ) {
+                    Box(Modifier.fillMaxHeight().weight(1f).clickable { onDismiss() }) {
                         Text(
                             modifier = Modifier.align(Alignment.Center),
                             text = "关闭",
-                            style = TextStyle(
-                                fontSize = 20.sp,
-                                color = CHelperTheme.colors.mainColor,
-                                textAlign = TextAlign.Center
-                            )
+                            style =
+                                TextStyle(
+                                    fontSize = 20.sp,
+                                    color = CHelperTheme.colors.mainColor,
+                                    textAlign = TextAlign.Center,
+                                ),
                         )
                     }
                     DividerVertical(0.dp)
                     Box(
-                        Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .clickable {
-                                if (currentIndex < commands.size - 1) {
-                                    currentIndex++
-                                } else {
-                                    onDismiss()
-                                }
+                        Modifier.fillMaxHeight().weight(1f).clickable {
+                            if (currentIndex < commands.size - 1) {
+                                currentIndex++
+                            } else {
+                                onDismiss()
                             }
+                        }
                     ) {
                         Text(
                             modifier = Modifier.align(Alignment.Center),
                             text = if (currentIndex < commands.size - 1) "下一条 ▸" else "全部完成 ✓",
-                            style = TextStyle(
-                                fontSize = 20.sp,
-                                color = CHelperTheme.colors.mainColor,
-                                textAlign = TextAlign.Center
-                            )
+                            style =
+                                TextStyle(
+                                    fontSize = 20.sp,
+                                    color = CHelperTheme.colors.mainColor,
+                                    textAlign = TextAlign.Center,
+                                ),
                         )
                     }
                 }
@@ -1022,18 +1042,19 @@ fun LineCopyDialog(
 @Composable
 fun PublicLibraryShowScreenLightThemePreview() {
     val viewModel: PublicLibraryShowViewModel = viewModel()
-    viewModel.library = LibraryFunction().apply {
-        name = "Test Library"
-        author = AuthorInfo(name = "Test Author")
-        note = "This is a test description"
-        likeCount = 42
-        content = buildString {
-            for (i in 1..10) {
-                append("# Command${i * 2 - 1}\n")
-                append("Description${i * 2}\n")
+    viewModel.library =
+        LibraryFunction().apply {
+            name = "Test Library"
+            author = AuthorInfo(name = "Test Author")
+            note = "This is a test description"
+            likeCount = 42
+            content = buildString {
+                for (i in 1..10) {
+                    append("# Command${i * 2 - 1}\n")
+                    append("Description${i * 2}\n")
+                }
             }
         }
-    }
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
         PublicLibraryShowScreen(id = 1, viewModel = viewModel)
     }
@@ -1043,18 +1064,19 @@ fun PublicLibraryShowScreenLightThemePreview() {
 @Composable
 fun PublicLibraryShowScreenDarkThemePreview() {
     val viewModel: PublicLibraryShowViewModel = viewModel()
-    viewModel.library = LibraryFunction().apply {
-        name = "Test Library"
-        author = AuthorInfo(name = "Test Author")
-        note = "This is a test description"
-        likeCount = 42
-        content = buildString {
-            for (i in 1..10) {
-                append("# Command${i * 2 - 1}\n")
-                append("Description${i * 2}\n")
+    viewModel.library =
+        LibraryFunction().apply {
+            name = "Test Library"
+            author = AuthorInfo(name = "Test Author")
+            note = "This is a test description"
+            likeCount = 42
+            content = buildString {
+                for (i in 1..10) {
+                    append("# Command${i * 2 - 1}\n")
+                    append("Description${i * 2}\n")
+                }
             }
         }
-    }
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
         PublicLibraryShowScreen(id = 1, viewModel = viewModel)
     }

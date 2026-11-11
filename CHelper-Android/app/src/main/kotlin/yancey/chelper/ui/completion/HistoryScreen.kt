@@ -34,7 +34,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hjq.toast.Toaster
 import kotlinx.coroutines.launch
 import yancey.chelper.R
@@ -62,55 +62,51 @@ import yancey.chelper.ui.common.widget.Text
 fun HistoryScreen(history: List<String>?) {
     val coroutineScope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
-    RootViewWithHeaderAndCopyright(
-        title = stringResource(R.string.layout_favorite_history)
-    ) {
+    RootViewWithHeaderAndCopyright(title = stringResource(R.string.layout_favorite_history)) {
         Column {
             Spacer(Modifier.height(10.dp))
             history?.let { history ->
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(15.dp, 0.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(color = CHelperTheme.colors.backgroundComponent)
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .padding(15.dp, 0.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(color = CHelperTheme.colors.backgroundComponent)
                 ) {
                     items(history) {
                         Row(
-                            modifier = Modifier
-                                .padding(20.dp, 10.dp)
-                                .defaultMinSize(minHeight = 24.dp)
+                            modifier =
+                                Modifier.padding(20.dp, 10.dp).defaultMinSize(minHeight = 24.dp)
                         ) {
                             Text(
                                 text = it,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.CenterVertically)
-                                    .weight(1f),
-                                style = TextStyle(
-                                    color = CHelperTheme.colors.mainColor,
-                                )
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .align(Alignment.CenterVertically)
+                                        .weight(1f),
+                                style = TextStyle(color = CHelperTheme.colors.mainColor),
                             )
                             Icon(
                                 id = R.drawable.copy,
-                                contentDescription = stringResource(R.string.common_icon_copy_content_description),
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .clickable {
-                                        coroutineScope.launch {
-                                            clipboard.setClipEntry(
-                                                ClipEntry(
-                                                    ClipData.newPlainText(
-                                                        null,
-                                                        it
+                                contentDescription =
+                                    stringResource(R.string.common_icon_copy_content_description),
+                                modifier =
+                                    Modifier.align(Alignment.CenterVertically)
+                                        .clickable {
+                                            coroutineScope.launch {
+                                                clipboard.setClipEntry(
+                                                    ClipEntry(
+                                                        ClipData.newPlainText(
+                                                            null,
+                                                            it,
+                                                        )
                                                     )
                                                 )
-                                            )
-                                            Toaster.show("已复制")
+                                                Toaster.show("已复制")
+                                            }
                                         }
-                                    }
-                                    .padding(start = 5.dp)
-                                    .size(24.dp)
+                                        .padding(start = 5.dp)
+                                        .size(24.dp),
                             )
                         }
                         Divider(padding = 0.dp)
@@ -125,18 +121,21 @@ fun HistoryScreen(history: List<String>?) {
 fun HistoryScreen() {
     val context = LocalContext.current
     val copyHistoryDataStore = remember { CopyHistoryDataStore(context) }
-    val history by copyHistoryDataStore.history().collectAsState(initial = null)
+    val history by copyHistoryDataStore.history().collectAsStateWithLifecycle(initialValue = null)
     HistoryScreen(history)
 }
 
 @Preview
 @Composable
 fun HistoryScreenLightThemePreview() {
-    val history = mutableListOf<String>().apply {
-        for (i in 0..100) {
-            add("Command $i")
-        }
-    }.toList()
+    val history =
+        mutableListOf<String>()
+            .apply {
+                for (i in 0..100) {
+                    add("Command $i")
+                }
+            }
+            .toList()
     CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
         HistoryScreen(history = history)
     }
@@ -145,11 +144,14 @@ fun HistoryScreenLightThemePreview() {
 @Preview
 @Composable
 fun HistoryScreenDarkThemePreview() {
-    val history = mutableListOf<String>().apply {
-        for (i in 0..100) {
-            add("Command $i")
-        }
-    }.toList()
+    val history =
+        mutableListOf<String>()
+            .apply {
+                for (i in 0..100) {
+                    add("Command $i")
+                }
+            }
+            .toList()
     CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
         HistoryScreen(history = history)
     }

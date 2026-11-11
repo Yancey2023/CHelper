@@ -19,6 +19,8 @@
 package yancey.chelper.network
 
 import android.content.Context
+import java.io.File
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json
 import okhttp3.Cache
 import okhttp3.MediaType.Companion.toMediaType
@@ -36,8 +38,6 @@ import yancey.chelper.network.library.service.CaptchaService
 import yancey.chelper.network.library.service.CommandLabPublicService
 import yancey.chelper.network.library.service.CommandLabUserService
 import yancey.chelper.network.library.util.WafHelper
-import java.io.File
-import java.util.concurrent.TimeUnit
 
 object ServiceManager {
     lateinit var CLIENT: OkHttpClient
@@ -57,37 +57,43 @@ object ServiceManager {
             encodeDefaults = true
             ignoreUnknownKeys = true
         }
-        val builder = OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
-            .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
-            .addInterceptor(BrotliInterceptor)
-            .addInterceptor(RateLimitInterceptor(2))
-            .addInterceptor(WafInterceptor())
-            .addInterceptor(AuthInterceptor.INSTANCE)
+        val builder =
+            OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                .cache(Cache(File(context.cacheDir, "http_cache"), 10 * 1024 * 1024))
+                .addInterceptor(BrotliInterceptor)
+                .addInterceptor(RateLimitInterceptor(2))
+                .addInterceptor(WafInterceptor())
+                .addInterceptor(AuthInterceptor.INSTANCE)
         if (BuildConfig.DEBUG) {
-            builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+            builder.addInterceptor(
+                HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BASIC
+                    redactHeader("Authorization")
+                    redactHeader("Cookie")
+                    redactHeader("Set-Cookie")
+                }
+            )
         }
         CLIENT = builder.build()
-        CHELPER_RETROFIT = Retrofit.Builder()
-            .baseUrl("https://www.yanceymc.cn/api/chelper/")
-            .client(CLIENT)
-            .addConverterFactory(
-                json.asConverterFactory(
-                    "application/json; charset=utf-8".toMediaType()
+        CHELPER_RETROFIT =
+            Retrofit.Builder()
+                .baseUrl("https://www.yanceymc.cn/api/chelper/")
+                .client(CLIENT)
+                .addConverterFactory(
+                    json.asConverterFactory("application/json; charset=utf-8".toMediaType())
                 )
-            )
-            .build()
-        COMMAND_LAB_RETROFIT = Retrofit.Builder()
-            .baseUrl(LAB_BASE_URL)
-            .client(CLIENT)
-            .addConverterFactory(
-                json.asConverterFactory(
-                    "application/json; charset=utf-8".toMediaType()
+                .build()
+        COMMAND_LAB_RETROFIT =
+            Retrofit.Builder()
+                .baseUrl(LAB_BASE_URL)
+                .client(CLIENT)
+                .addConverterFactory(
+                    json.asConverterFactory("application/json; charset=utf-8".toMediaType())
                 )
-            )
-            .build()
+                .build()
         CHELPER_SERVICE = CHELPER_RETROFIT.create(CHelperService::class.java)
         COMMAND_LAB_PUBLIC_SERVICE =
             COMMAND_LAB_RETROFIT.create(CommandLabPublicService::class.java)

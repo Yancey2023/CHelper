@@ -18,28 +18,43 @@
 
 package yancey.chelper.network.library.util
 
+import android.content.Context
+import java.io.IOException
+import java.util.function.Consumer
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import yancey.chelper.data.EncryptedCredentialStore
 import yancey.chelper.network.ServiceManager
 import yancey.chelper.network.library.service.CommandLabUserService
 import yancey.chelper.network.library.service.CommandLabUserService.LoginRequest
-import java.io.File
-import java.io.IOException
-import java.util.function.Consumer
 
 /**
  * 登录工具类
- * 
+ *
  * 管理用户登录状态和 JWT 令牌
  */
 object LoginUtil {
-    private var file: File? = null
+    private var storage: EncryptedCredentialStore? = null
+    private val stateLock = Any()
+    private val refreshMutex = Mutex()
+    private var generation = 0L
+    private val _accountId = MutableStateFlow<Int?>(null)
+    val accountId = _accountId.asStateFlow()
 
     /** 当前登录用户信息 */
+    @Volatile
     var currentUser: CommandLabUserService.User? = null
         private set
 
     /** 当前登录令牌 */
+    @Volatile
     var currentToken: String? = null
         private set
 
@@ -50,134 +65,135 @@ object LoginUtil {
     private var savedMail: String? = null
     private var savedPassword: String? = null
 
-    /**
-     * 本地持久化的用户数据
-     */
+    /** 本地持久化的用户数据 */
     @Serializable
     private class SavedUserData(
         var mail: String? = null,
         var password: String? = null,
         var token: String? = null,
         var lastLoginTimestamp: Long? = null,
-        var user: CommandLabUserService.User? = null
+        var user: CommandLabUserService.User? = null,
     )
 
-    /**
-     * 初始化登录工具，从本地文件恢复登录状态
-     */
-    fun init(file: File, onError: Consumer<Throwable?>) {
-        this.file = file
-        if (file.exists()) {
-            try {
-                val savedData =
-                    Json.decodeFromString<SavedUserData>(file.readBytes().decodeToString())
-                savedMail = savedData.mail
-                savedPassword = savedData.password
-                currentToken = savedData.token
-                lastLoginTimestamp = savedData.lastLoginTimestamp
-                currentUser = savedData.user
-            } catch (throwable: Throwable) {
-                onError.accept(throwable)
+    /** 初始化登录工具，从本地文件恢复登录状态 */
+    fun init(context: Context, onError: Consumer<Throwable?>) {
+        try {
+            storage = EncryptedCredentialStore(context)
+            storage?.read()?.let { content ->
+                val savedData = Json.decodeFromString<SavedUserData>(content)
+                synchronized(stateLock) {
+                    savedMail = savedData.mail
+                    savedPassword = savedData.password
+                    currentToken = savedData.token
+                    lastLoginTimestamp = savedData.lastLoginTimestamp
+                    currentUser = savedData.user
+                    _accountId.value = currentUser?.takeUnless { it.isGuest == true }?.id
+                }
             }
+        } catch (e: Exception) {
+            onError.accept(e)
         }
     }
 
-    /**
-     * 检查是否已登录
-     */
+    /** 检查是否已登录 */
     val isLoggedIn: Boolean
         get() = currentToken != null && currentUser != null
 
     /**
      * 获取 JWT 令牌
-     * 
+     *
      * 如果令牌过期（超过 600 秒），会自动重新登录获取新令牌
      */
     @Throws(IOException::class)
-    suspend fun getToken(): String? {
-        if (savedMail == null || savedPassword == null) {
-            return null
+    suspend fun getToken(): String? = refreshMutex.withLock {
+        val snapshot =
+            synchronized(stateLock) {
+                if (
+                    currentToken != null &&
+                        lastLoginTimestamp != null &&
+                        System.currentTimeMillis() - lastLoginTimestamp!! < 600000
+                )
+                    return@withLock currentToken
+                val mail = savedMail ?: return@withLock null
+                val password = savedPassword ?: return@withLock null
+                Triple(generation, mail, password)
+            }
+        val response =
+            ServiceManager.COMMAND_LAB_USER_SERVICE.login(
+                LoginRequest(account = snapshot.second, password = snapshot.third)
+            )
+        val data = response.data
+        if (!response.isSuccess() || data == null) return@withLock null
+        withContext(Dispatchers.IO) {
+            synchronized(stateLock) {
+                if (generation != snapshot.first) return@synchronized null
+                installSession(snapshot.second, snapshot.third, data)
+                currentToken
+            }
         }
-
-        // 令牌在 600 秒内有效，直接返回
-        if (currentToken != null && lastLoginTimestamp != null
-            && System.currentTimeMillis() - lastLoginTimestamp!! < 600000
-        ) {
-            return currentToken
-        }
-
-        // 重新登录获取新令牌
-        val request = LoginRequest().apply {
-            account = savedMail
-            password = savedPassword
-        }
-        val response = ServiceManager.COMMAND_LAB_USER_SERVICE.login(request)
-
-        if (response.isSuccess() && response.data != null) {
-            val data = response.data!!
-            currentToken = data.token
-            currentUser = data.user
-            lastLoginTimestamp = System.currentTimeMillis()
-            saveToFile()
-            return currentToken
-        }
-
-        return null
     }
 
-    /**
-     * 执行登录
-     */
+    suspend fun tokenForUser(ownerId: Int): String? {
+        if (synchronized(stateLock) { currentUser?.id != ownerId }) return null
+        val token = getToken()
+        return synchronized(stateLock) {
+            token?.takeIf { currentUser?.id == ownerId && currentToken == it }
+        }
+    }
+
+    /** 执行登录 */
     suspend fun login(mail: String, password: String): Result<CommandLabUserService.LoginResponse> {
+        val version = synchronized(stateLock) { ++generation }
         return try {
-            val response = ServiceManager.COMMAND_LAB_USER_SERVICE.login(
-                LoginRequest(
-                    account = mail,
-                    password = password,
+            val response =
+                ServiceManager.COMMAND_LAB_USER_SERVICE.login(
+                    LoginRequest(account = mail, password = password)
                 )
-            )
-            if (response.isSuccess() && response.data != null) {
-                val data = response.data!!
-                savedMail = mail
-                savedPassword = password
-                currentToken = data.token
-                currentUser = data.user
-                lastLoginTimestamp = System.currentTimeMillis()
-                saveToFile()
+            val data = response.data
+            if (response.isSuccess() && data != null) {
+                withContext(Dispatchers.IO) {
+                    synchronized(stateLock) {
+                        check(generation == version) { "登录请求已失效" }
+                        installSession(mail, password, data)
+                    }
+                }
                 Result.success(data)
-            } else {
-                Result.failure(Exception(response.message ?: "登录失败"))
-            }
+            } else Result.failure(Exception(response.message ?: "登录失败"))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    /**
-     * 登出
-     */
-    fun logout() {
-        savedMail = null
-        savedPassword = null
-        currentToken = null
-        currentUser = null
-        lastLoginTimestamp = null
-        file?.delete()
-    }
-
-    /**
-     * 保存登录状态到本地文件
-     */
-    @Throws(IOException::class)
-    private fun saveToFile() {
-        file?.parentFile?.mkdirs()
-        val savedData = SavedUserData().apply {
-            mail = savedMail
-            password = savedPassword
-            token = currentToken
-            lastLoginTimestamp = this@LoginUtil.lastLoginTimestamp
-            user = currentUser
+    /** 登出 */
+    fun logout() =
+        synchronized(stateLock) {
+            generation++
+            savedMail = null
+            savedPassword = null
+            currentToken = null
+            currentUser = null
+            _accountId.value = null
+            lastLoginTimestamp = null
+            storage?.clear()
         }
-        file?.outputStream()?.use { it.write(Json.encodeToString(savedData).toByteArray()) }
+
+    /** 保存登录状态到本地文件 */
+    @Throws(IOException::class)
+    private fun installSession(
+        mail: String,
+        password: String,
+        response: CommandLabUserService.LoginResponse,
+    ) {
+        val timestamp = System.currentTimeMillis()
+        val savedData = SavedUserData(mail, password, response.token, timestamp, response.user)
+        storage?.write(Json.encodeToString(savedData))
+        savedMail = mail
+        savedPassword = password
+        currentToken = response.token
+        currentUser = response.user
+        lastLoginTimestamp = timestamp
+        _accountId.value = currentUser?.takeUnless { it.isGuest == true }?.id
     }
 }

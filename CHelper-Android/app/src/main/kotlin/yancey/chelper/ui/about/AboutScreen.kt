@@ -47,16 +47,12 @@ import yancey.chelper.ui.common.widget.Divider
 fun AboutScreen(navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     RootViewWithHeaderAndCopyright(stringResource(R.string.layout_about_title)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Spacer(Modifier.height(15.dp))
             Collection {
                 NameAndValue(
                     stringResource(R.string.layout_about_current_version),
-                    BuildConfig.VERSION_NAME
+                    BuildConfig.VERSION_NAME,
                 )
                 Divider()
                 NameAndValue(stringResource(R.string.layout_about_author), "Yancey")
@@ -67,12 +63,12 @@ fun AboutScreen(navController: NavHostController) {
                 Divider()
                 NameAndLink(
                     stringResource(R.string.layout_about_bilibili),
-                    "https://space.bilibili.com/470179011".toUri()
+                    "https://space.bilibili.com/470179011".toUri(),
                 )
                 Divider()
                 NameAndLink(
                     stringResource(R.string.layout_about_source_code),
-                    "https://github.com/Yancey2023/CHelper".toUri()
+                    "https://github.com/Yancey2023/CHelper".toUri(),
                 )
             }
             Spacer(Modifier.height(15.dp))
@@ -81,36 +77,33 @@ fun AboutScreen(navController: NavHostController) {
                     navController,
                     stringResource(R.string.layout_about_release_note),
                     "about/release_note.txt",
-                    coroutineScope,
                 )
                 Divider()
                 NameAndLink(
                     stringResource(R.string.layout_about_latest_release_note),
-                    "https://www.yanceymc.cn/chelper_doc/chelper-release-notes".toUri()
+                    "https://www.yanceymc.cn/chelper_doc/chelper-release-notes".toUri(),
                 )
                 Divider()
                 NameAndLink(
                     stringResource(R.string.layout_about_issue),
-                    "https://www.yanceymc.cn/gitea/Yancey/CHelper/issues".toUri()
+                    "https://www.yanceymc.cn/gitea/Yancey/CHelper/issues".toUri(),
                 )
                 Divider()
                 NameAndLink(
                     stringResource(R.string.layout_about_donate),
-                    "https://www.yanceymc.cn/chelper_doc/donate".toUri()
+                    "https://www.yanceymc.cn/chelper_doc/donate".toUri(),
                 )
                 Divider()
                 NameAndAsset(
                     navController,
                     stringResource(R.string.layout_about_privacy_policy),
                     "about/privacy_policy.txt",
-                    coroutineScope,
                 )
                 Divider()
                 NameAndAsset(
                     navController,
                     stringResource(R.string.layout_about_open_source_terms),
                     "about/open_source_terms.txt",
-                    coroutineScope,
                 )
             }
         }
@@ -122,7 +115,7 @@ fun AboutScreen(navController: NavHostController) {
 fun AboutScreenLightThemePreview() {
     CHelperTheme(
         theme = CHelperTheme.Theme.Light,
-        backgroundBitmap = null
+        backgroundBitmap = null,
     ) {
         AboutScreen(rememberNavController())
     }

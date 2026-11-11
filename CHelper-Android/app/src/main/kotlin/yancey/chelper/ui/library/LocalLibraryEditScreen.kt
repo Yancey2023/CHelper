@@ -19,6 +19,7 @@
 package yancey.chelper.ui.library
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -41,7 +42,6 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -57,21 +57,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hjq.toast.Toaster
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.R
+import yancey.chelper.android.work.LibrarySyncScheduler
 import yancey.chelper.data.LocalCommandLabDataStore
-import yancey.chelper.network.ServiceManager
+import yancey.chelper.data.prepareAutoSync
 import yancey.chelper.network.library.data.LibraryFunction
-import yancey.chelper.network.library.service.CommandLabUserService
-import yancey.chelper.network.library.util.CloudLibraryCache
 import yancey.chelper.network.library.util.LoginUtil
 import yancey.chelper.ui.common.CHelperTheme
 import yancey.chelper.ui.common.dialog.IsConfirmDialog
@@ -83,23 +84,23 @@ import yancey.chelper.ui.common.widget.Icon
 import yancey.chelper.ui.common.widget.Switch
 import yancey.chelper.ui.common.widget.Text
 import yancey.chelper.ui.common.widget.TextField
-import java.util.UUID
 
 @SuppressLint("UseKtx")
 @Composable
 fun LocalLibraryEditScreen(
     viewModel: LocalLibraryEditViewModel = viewModel(),
     localEntryId: String? = null,
-    id: Int? = null
+    id: Int? = null,
 ) {
     val context = LocalContext.current
     val localCommandLabDataStore = remember(context) { LocalCommandLabDataStore(context) }
-    val localLibraryFunction by if (localEntryId != null) {
-        localCommandLabDataStore.localLibraryFunction(localEntryId)
-    } else {
-        localCommandLabDataStore.localLibraryFunction(id)
-    }
-        .collectAsState(initial = null)
+    val localLibraryFunction by
+        if (localEntryId != null) {
+                localCommandLabDataStore.localLibraryFunction(localEntryId)
+            } else {
+                localCommandLabDataStore.localLibraryFunction(id)
+            }
+            .collectAsStateWithLifecycle(initialValue = null)
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     viewModel.ensureEditingTarget(localEntryId, id, localLibraryFunction)
 
@@ -119,7 +120,7 @@ fun LocalLibraryEditScreen(
                 if (viewModel.isDirty) {
                     localCommandLabDataStore.saveLocalLibraryEditDraft(
                         viewModel.draftKey,
-                        viewModel.toDraft(snapshot)
+                        viewModel.toDraft(snapshot),
                     )
                 } else {
                     localCommandLabDataStore.clearLocalLibraryEditDraft(viewModel.draftKey)
@@ -144,69 +145,64 @@ fun LocalLibraryEditScreen(
     }
 
     RootViewWithHeaderAndCopyright(
-        title = when (viewModel.mode) {
-            EditMode.ADD -> stringResource(R.string.layout_library_edit_title_add)
-            EditMode.UPDATE -> stringResource(R.string.layout_library_edit_title_edit)
-        },
-        onBack = ::requestExit
+        title =
+            when (viewModel.mode) {
+                EditMode.ADD -> stringResource(R.string.layout_library_edit_title_add)
+                EditMode.UPDATE -> stringResource(R.string.layout_library_edit_title_edit)
+            },
+        onBack = ::requestExit,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             // 可滚动主体
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(CHelperTheme.colors.backgroundComponent)
-                        .padding(16.dp)
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(16.dp)
                 ) {
                     Text(
                         text = "版本信息",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CHelperTheme.colors.textMain
-                        )
+                        style =
+                            TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CHelperTheme.colors.textMain,
+                            ),
                     )
                     Spacer(Modifier.height(14.dp))
                     TextField(
                         state = viewModel.name,
                         hint = stringResource(R.string.upload_field_name),
                         modifier = Modifier.fillMaxWidth(),
-                        lineLimits = TextFieldLineLimits.SingleLine
+                        lineLimits = TextFieldLineLimits.SingleLine,
                     )
                     Spacer(Modifier.height(10.dp))
                     TextField(
                         state = viewModel.description,
                         hint = stringResource(R.string.upload_field_description),
                         modifier = Modifier.fillMaxWidth(),
-                        lineLimits = TextFieldLineLimits.SingleLine
+                        lineLimits = TextFieldLineLimits.SingleLine,
                     )
                     Spacer(Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         TextField(
                             state = viewModel.version,
                             hint = stringResource(R.string.upload_field_version),
                             modifier = Modifier.weight(1f),
-                            lineLimits = TextFieldLineLimits.SingleLine
+                            lineLimits = TextFieldLineLimits.SingleLine,
                         )
                         TextField(
                             state = viewModel.tags,
                             hint = stringResource(R.string.upload_field_tags),
                             modifier = Modifier.weight(1f),
-                            lineLimits = TextFieldLineLimits.SingleLine
+                            lineLimits = TextFieldLineLimits.SingleLine,
                         )
                     }
                 }
@@ -214,81 +210,86 @@ fun LocalLibraryEditScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(CHelperTheme.colors.backgroundComponent)
-                        .padding(16.dp)
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CHelperTheme.colors.backgroundComponent)
+                            .padding(16.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = "命令区",
-                            style = TextStyle(
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = CHelperTheme.colors.textMain
-                            )
+                            style =
+                                TextStyle(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = CHelperTheme.colors.textMain,
+                                ),
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.1f))
-                                    .clickable { viewModel.isShowTemplateDialog = true }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(6.dp))
+                                        .background(
+                                            CHelperTheme.colors.mainColor.copy(alpha = 0.1f)
+                                        )
+                                        .clickable { viewModel.isShowTemplateDialog = true }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
                             ) {
                                 Text(
                                     text = "示例模板",
-                                    style = TextStyle(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = CHelperTheme.colors.mainColor
-                                    )
+                                    style =
+                                        TextStyle(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = CHelperTheme.colors.mainColor,
+                                        ),
                                 )
                             }
                             // V2 才有低代码状态补全。
-                            if (viewModel.useV2) Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFFE65100).copy(alpha = 0.1f))
-                                    .clickable { viewModel.isShowLowCodeHelper = true }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                            ) {
-                                Icon(
-                                    id = R.drawable.pencil,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    text = "标记辅助",
-                                    style = TextStyle(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFFE65100)
+                            if (viewModel.useV2)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier =
+                                        Modifier.clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0xFFE65100).copy(alpha = 0.1f))
+                                            .clickable { viewModel.isShowLowCodeHelper = true }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                ) {
+                                    Icon(
+                                        id = R.drawable.pencil,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
                                     )
-                                )
-                            }
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = "标记辅助",
+                                        style =
+                                            TextStyle(
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFFE65100),
+                                            ),
+                                    )
+                                }
                         }
                     }
                     Spacer(Modifier.height(12.dp))
 
                     TextField(
                         state = viewModel.commands,
-                        hint = stringResource(
-                            if (viewModel.useV2) R.string.upload_field_commands_v2
-                            else R.string.upload_field_commands_v1
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(350.dp),
-                        contentAlignment = Alignment.TopStart
+                        hint =
+                            stringResource(
+                                if (viewModel.useV2) R.string.upload_field_commands_v2
+                                else R.string.upload_field_commands_v1
+                            ),
+                        modifier = Modifier.fillMaxWidth().height(350.dp),
+                        contentAlignment = Alignment.TopStart,
                     )
 
                     Spacer(Modifier.height(14.dp))
@@ -296,44 +297,47 @@ fun LocalLibraryEditScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .clickable {
-                                    val intent = Intent(
-                                        Intent.ACTION_VIEW,
-                                        "https://abyssous.site/wiki".toUri()
-                                    )
-                                    context.startActivity(intent)
-                                }
-                                .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(6.dp))
+                                    .clickable {
+                                        val intent =
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                "https://abyssous.site/wiki".toUri(),
+                                            )
+                                        context.startActivity(intent)
+                                    }
+                                    .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 id = R.drawable.book,
                                 contentDescription = stringResource(R.string.upload_wiki_link),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
                                 text = stringResource(R.string.upload_wiki_link),
-                                style = TextStyle(
-                                    fontSize = 13.sp,
-                                    color = CHelperTheme.colors.mainColor,
-                                    fontWeight = FontWeight.Medium
-                                )
+                                style =
+                                    TextStyle(
+                                        fontSize = 13.sp,
+                                        color = CHelperTheme.colors.mainColor,
+                                        fontWeight = FontWeight.Medium,
+                                    ),
                             )
                         }
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "启用 V2 语法",
-                                style = TextStyle(
-                                    fontSize = 13.sp,
-                                    color = CHelperTheme.colors.textSecondary
-                                )
+                                style =
+                                    TextStyle(
+                                        fontSize = 13.sp,
+                                        color = CHelperTheme.colors.textSecondary,
+                                    ),
                             )
                             Spacer(Modifier.width(8.dp))
                             Switch(
@@ -346,7 +350,7 @@ fun LocalLibraryEditScreen(
                                     } else {
                                         viewModel.useV2 = newValue
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -358,17 +362,18 @@ fun LocalLibraryEditScreen(
                     name = "自动生成 UUID 并同步",
                     description = "保存时自动生成 UUID，并将本地库同步到云端",
                     checked = viewModel.autoSync,
-                    onCheckedChange = { viewModel.autoSync = it }
+                    onCheckedChange = { viewModel.autoSync = it },
                 )
 
                 Spacer(Modifier.height(16.dp))
             }
 
-            val saveLabel = when {
-                viewModel.isSyncing -> "同步中…"
-                viewModel.autoSync -> "保存并同步到云端"
-                else -> stringResource(R.string.layout_library_edit_save)
-            }
+            val saveLabel =
+                when {
+                    viewModel.isSyncing -> "同步中…"
+                    viewModel.autoSync -> "保存并同步到云端"
+                    else -> stringResource(R.string.layout_library_edit_save)
+                }
 
             Button(
                 text = saveLabel,
@@ -384,10 +389,11 @@ fun LocalLibraryEditScreen(
                         editingId = id,
                         existingLibrary = localLibraryFunction,
                         localDataStore = localCommandLabDataStore,
-                        onDone = viewModel::approveExit
+                        context = context,
+                        onDone = viewModel::approveExit,
                     )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             if (viewModel.mode == EditMode.UPDATE) {
                 Spacer(Modifier.height(10.dp))
@@ -414,7 +420,7 @@ fun LocalLibraryEditScreen(
                     viewModel.markSaved()
                     viewModel.approveExit()
                 }
-            }
+            },
         )
     }
 
@@ -426,7 +432,7 @@ fun LocalLibraryEditScreen(
                 viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
                 viewModel.isShowLowCodeHelper = false
                 Toaster.show("已应用！")
-            }
+            },
         )
     }
 
@@ -434,12 +440,14 @@ fun LocalLibraryEditScreen(
         val templates = viewModel.availableTemplates()
         MenuDialog(
             onDismissRequest = { viewModel.isShowTemplateDialog = false },
-            data = templates.mapIndexed { index, template -> template.label to index.toString() }
-                .plus("关闭" to "close")
-                .toTypedArray(),
+            data =
+                templates
+                    .mapIndexed { index, template -> template.label to index.toString() }
+                    .plus("关闭" to "close")
+                    .toTypedArray(),
             onChoose = { value ->
                 value.toIntOrNull()?.let { index -> viewModel.applyTemplate(templates[index]) }
-            }
+            },
         )
     }
 
@@ -455,11 +463,11 @@ fun LocalLibraryEditScreen(
                 viewModel.viewModelScope.launch {
                     localCommandLabDataStore.saveLocalLibraryEditDraft(
                         viewModel.draftKey,
-                        viewModel.toDraft()
+                        viewModel.toDraft(),
                     )
                     viewModel.approveExit()
                 }
-            }
+            },
         )
     }
 
@@ -472,119 +480,75 @@ fun LocalLibraryEditScreen(
             onConfirm = {
                 viewModel.useV2 = false
                 viewModel.isShowV2DowngradeConfirm = false
-            }
+            },
         )
     }
 }
 
-/**
- * 保存本地库，可选附加云端同步。
- */
+/** 保存本地库，可选附加云端同步。 */
 private fun saveLocalLibrary(
     viewModel: LocalLibraryEditViewModel,
     editingLocalEntryId: String?,
     editingId: Int?,
     existingLibrary: LibraryFunction?,
     localDataStore: LocalCommandLabDataStore,
-    onDone: () -> Unit
+    context: Context,
+    onDone: () -> Unit,
 ) {
+    viewModel.isSyncing = true
     viewModel.viewModelScope.launch {
-        val newLibrary = viewModel.buildLocalLibrary(existingLibrary, editingLocalEntryId)
-
-        // 先写本地
-        val savedLocalEntryId: String = when (viewModel.mode) {
-            EditMode.ADD -> {
-                localDataStore.addLocalLibraryFunction(newLibrary)
-            }
-
-            EditMode.UPDATE -> {
-                val targetId = editingLocalEntryId ?: existingLibrary?.localEntryId
-                if (targetId != null) {
-                    localDataStore.updateLocalLibraryFunction(targetId, newLibrary)
-                    targetId
-                } else {
-                    localDataStore.updateLocalLibraryFunction(requireNotNull(editingId), newLibrary)
-                    requireNotNull(newLibrary.localEntryId)
-                }
-            }
-        }
-        viewModel.markSaved()
-        localDataStore.clearLocalLibraryEditDraft(viewModel.draftKey)
-
-        if (!viewModel.autoSync) {
-            onDone()
-            return@launch
-        }
-
-        // 进入云端同步分支
-        if (!LoginUtil.isLoggedIn) {
-            Toaster.show("尚未登录，已仅保存到本地")
-            onDone()
-            return@launch
-        }
-
-        viewModel.isSyncing = true
         try {
-            // 给还没绑的本地库提前生成一个 uuid
-            val fallbackUuid = newLibrary.uuid?.takeIf { it.isNotEmpty() }
-                ?: UUID.randomUUID().toString()
-            val mcd = viewModel.buildFullMCD(existingLibrary, fallbackUuid)
-
-            val syncSucceeded: Boolean = withContext(Dispatchers.IO) {
-                if (newLibrary.id != null) {
-                    // 已绑云端 id update
-                    val req = CommandLabUserService.UpdateLibraryRequest().apply {
-                        this.name = newLibrary.name
-                        this.version = newLibrary.version?.ifEmpty { "1.0.0" } ?: "1.0.0"
-                        this.note = newLibrary.note
-                        this.tags = newLibrary.tags ?: emptyList()
-                        this.content = mcd
+            val ownerId = LoginUtil.accountId.value
+            val library =
+                viewModel
+                    .buildLocalLibrary(existingLibrary, editingLocalEntryId)
+                    .prepareAutoSync(ownerId)
+            val entryId =
+                when (viewModel.mode) {
+                    EditMode.ADD -> localDataStore.addLocalLibraryFunction(library)
+                    EditMode.UPDATE -> {
+                        val target = editingLocalEntryId ?: existingLibrary?.localEntryId
+                        if (target != null) {
+                            check(localDataStore.updateLocalLibraryFunction(target, library)) {
+                                "命令库已被删除"
+                            }
+                            target
+                        } else {
+                            localDataStore.updateLocalLibraryFunction(
+                                requireNotNull(editingId),
+                                library,
+                            )
+                            requireNotNull(library.localEntryId)
+                        }
                     }
-                    val result =
-                        ServiceManager.COMMAND_LAB_USER_SERVICE.updateLibrary(newLibrary.id!!, req)
-                    result.isSuccess()
-                } else {
-                    // 没云端 id upload，让后端建一条草稿；后端会回 uuid
-                    val req = CommandLabUserService.UploadLibraryRequest().apply {
-                        content = mcd
-                        isPublish = false
-                    }
-                    val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadLibrary(req)
-                    if (result.isSuccess()) {
-                        val assignedUuid = result.data?.uuid?.takeIf { it.isNotEmpty() }
-                            ?: fallbackUuid
-                        // 把云端分配的 uuid 写回本地。这次不知道云端 id（upload 没返回），
-                        // 下次进"我的库" → loadCloudLibraries 回来时会按 uuid 比对补齐
-                        localDataStore.markLocalLibrarySynced(
-                            localEntryId = savedLocalEntryId,
-                            uuid = assignedUuid,
-                            syncedLibrary = newLibrary
+                }
+            viewModel.markSaved()
+            localDataStore.clearLocalLibraryEditDraft(viewModel.draftKey)
+            val revision = library.localSyncRevision
+            if (ownerId != null && revision != null) {
+                try {
+                    withContext(NonCancellable) {
+                        LibrarySyncScheduler.enqueue(
+                            context.applicationContext,
+                            ownerId,
+                            entryId,
+                            revision,
                         )
-                        true
-                    } else {
-                        false
                     }
+                    Toaster.show("已保存到本地，将自动同步到云端")
+                } catch (e: Exception) {
+                    Toaster.show("已保留本地同步任务，稍后重试")
                 }
+            } else if (viewModel.autoSync) {
+                Toaster.show("尚未登录正式账号，已保存到本地")
             }
-
-            if (syncSucceeded) {
-                // update 路径：清掉本地未同步标记
-                if (newLibrary.id != null) {
-                    localDataStore.markLocalLibrarySynced(
-                        localEntryId = savedLocalEntryId,
-                        syncedLibrary = newLibrary
-                    )
-                }
-                CloudLibraryCache.invalidateLibraries()
-                Toaster.show("已同步到云端")
-            } else {
-                Toaster.show("云端同步失败，已保留本地副本")
-            }
+            onDone()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Toaster.show("云端同步异常：${e.message}")
+            Toaster.show("保存失败：${e.message}")
         } finally {
             viewModel.isSyncing = false
-            onDone()
         }
     }
 }
