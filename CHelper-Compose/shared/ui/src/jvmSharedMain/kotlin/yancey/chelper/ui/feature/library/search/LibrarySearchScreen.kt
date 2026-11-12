@@ -1,0 +1,516 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package yancey.chelper.ui.feature.library.search
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
+import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.resources.*
+import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
+import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextField
+import yancey.chelper.ui.navigation.LocalLibraryShowScreenKey
+import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
+import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+
+@Composable
+fun LibrarySearchScreen(
+    initialKeyword: String? = null,
+    viewModel: LibrarySearchViewModel = viewModel { LibrarySearchViewModel() },
+    navController: NavHostController,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val localCommandLabDataStore = remember(context) { context.libraries }
+    val localLibraryFunctions by
+        localCommandLabDataStore
+            .localLibraryFunctions()
+            .collectAsStateWithLifecycle(initialValue = null)
+
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val listState = rememberLazyListState()
+    var isFocusedBefore by remember { mutableStateOf(false) }
+
+    // 初始带关键字搜索
+    LaunchedEffect(initialKeyword) {
+        viewModel.setInitialKeyword(initialKeyword)
+        if (!initialKeyword.isNullOrBlank()) {
+            viewModel.search(localLibraryFunctions)
+        } else {
+            // 延迟一帧再请求焦点，避免输入框尚未附着时请求失败导致无光标
+            delay(16)
+            focusRequester.requestFocus()
+        }
+    }
+
+    LaunchedEffect(localLibraryFunctions) { viewModel.refreshLocal(localLibraryFunctions) }
+    LaunchedEffect(viewModel) {
+        snapshotFlow { viewModel.keyword.text.toString() }
+            .collect { if (it.isBlank()) viewModel.search(localLibraryFunctions) }
+    }
+
+    // 滑动加载更多公开库
+    val shouldLoadMore =
+        remember(listState, state) {
+            derivedStateOf {
+                val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                val totalItems = listState.layoutInfo.totalItemsCount
+                lastVisibleItem >= totalItems - 3 &&
+                    !state.publicLoading &&
+                    state.hasMore &&
+                    state.publicError == null
+            }
+        }
+    LaunchedEffect(shouldLoadMore) {
+        snapshotFlow { shouldLoadMore.value }.collect { if (it) viewModel.loadMore() }
+    }
+
+    RootViewWithHeaderAndCopyright(title = "搜索命令库") {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextField(
+                    state = viewModel.keyword,
+                    modifier =
+                        Modifier.weight(1f)
+                            .height(40.dp)
+                            .focusRequester(focusRequester)
+                            .onFocusChanged { focusState ->
+                                if (isFocusedBefore && !focusState.isFocused) {
+                                    viewModel.search(localLibraryFunctions)
+                                }
+                                isFocusedBefore = focusState.isFocused
+                            },
+                    contentAlignment = Alignment.CenterStart,
+                    hint = "搜索命令库或标签...",
+                    horizontalPadding = 20.dp,
+                    verticalPadding = 0.dp,
+                    clipCornerSize = 20.dp,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                )
+                Spacer(Modifier.width(10.dp))
+                // 使用文字代替不存在的搜索按钮
+                Text(
+                    text = "搜索",
+                    style =
+                        TextStyle(
+                            color = CHelperTheme.colors.mainColor,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    modifier =
+                        Modifier.clickable {
+                                focusManager.clearFocus()
+                                viewModel.search(localLibraryFunctions)
+                            }
+                            .padding(5.dp),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+
+            state.privateError?.let { error ->
+                Text(
+                    text = "私有库：$error，点击重试",
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clickable { viewModel.retryPrivate() }
+                            .padding(15.dp),
+                )
+            }
+            state.publicError?.let { error ->
+                Text(
+                    text = "公开库：$error，点击重试",
+                    modifier =
+                        Modifier.fillMaxWidth().clickable { viewModel.retryPublic() }.padding(15.dp),
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                if (
+                    state.isLoading &&
+                        state.localAndPrivateLibraries.isEmpty() &&
+                        state.publicLibraries.isEmpty()
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("搜索中...", style = TextStyle(color = CHelperTheme.colors.textSecondary))
+                    }
+                } else if (
+                    !state.isLoading &&
+                        state.privateError == null &&
+                        state.publicError == null &&
+                        state.localAndPrivateLibraries.isEmpty() &&
+                        state.publicLibraries.isEmpty() &&
+                        viewModel.keyword.text.isNotBlank()
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "未找到相关匹配项",
+                            style = TextStyle(color = CHelperTheme.colors.textSecondary),
+                        )
+                    }
+                } else {
+                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                        // Section 1: 本地与私有
+                        if (state.localAndPrivateLibraries.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "我的本地与云端私有",
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    modifier =
+                                        Modifier.padding(bottom = 5.dp, start = 15.dp, end = 15.dp),
+                                )
+                            }
+                            itemsIndexed(state.localAndPrivateLibraries) { _, lib ->
+                                SearchLibraryItem(
+                                    library = lib,
+                                    isPrivateOrLocal = true,
+                                    onClick = {
+                                        // 根据标识判断是本地包还是私有库
+                                        if (lib.authorName == "[本地包]") {
+                                            lib.localEntryId?.let { localEntryId ->
+                                                navController.navigate(
+                                                    LocalLibraryShowScreenKey(
+                                                        localEntryId = localEntryId
+                                                    )
+                                                )
+                                            }
+                                        } else {
+                                            lib.id?.let { id ->
+                                                navController.navigate(
+                                                    PublicLibraryShowScreenKey(
+                                                        id = id,
+                                                        isPrivate = true,
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    },
+                                )
+                            }
+                            item { Spacer(Modifier.height(10.dp)) }
+                        }
+
+                        // Section 2: 公开市场
+                        if (state.publicLibraries.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "公共市场搜索结果",
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    modifier =
+                                        Modifier.padding(bottom = 5.dp, start = 15.dp, end = 15.dp),
+                                )
+                            }
+
+                            itemsIndexed(state.publicLibraries) { _, library ->
+                                SearchLibraryItem(
+                                    library = library,
+                                    isPrivateOrLocal = false,
+                                    onClick = {
+                                        library.id?.let { id ->
+                                            navController.navigate(
+                                                PublicLibraryShowScreenKey(
+                                                    id = id,
+                                                    isPrivate = false,
+                                                )
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        }
+
+                        if (
+                            state.isLoading &&
+                                (state.localAndPrivateLibraries.isNotEmpty() ||
+                                    state.publicLibraries.isNotEmpty())
+                        ) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        "加载更多...",
+                                        style = TextStyle(color = CHelperTheme.colors.textSecondary),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SearchLibraryItem(
+    library: LibraryFunction,
+    isPrivateOrLocal: Boolean,
+    onClick: () -> Unit,
+) {
+    val isFeatured = (library.likeCount ?: 0) >= 10 || (library.author?.tier ?: 0) >= 2
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 15.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(
+                    if (isFeatured) CHelperTheme.colors.mainColor.copy(alpha = 0.08f)
+                    else CHelperTheme.colors.backgroundComponent
+                )
+                .run {
+                    if (isFeatured)
+                        this.border(
+                            1.dp,
+                            CHelperTheme.colors.mainColor.copy(alpha = 0.3f),
+                            RoundedCornerShape(10.dp),
+                        )
+                    else this
+                }
+                .clickable(onClick = onClick)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f).padding(14.dp, 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = library.name ?: "未命名",
+                        modifier = Modifier.weight(1f, fill = false),
+                        style =
+                            TextStyle(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = CHelperTheme.colors.textMain,
+                            ),
+                        maxLines = 1,
+                    )
+                    library.version
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { ver ->
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "v$ver",
+                                style =
+                                    TextStyle(
+                                        fontSize = 11.sp,
+                                        color = CHelperTheme.colors.textSecondary,
+                                    ),
+                            )
+                        }
+                    if (isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(4.dp))
+                                    .background(CHelperTheme.colors.mainColor.copy(alpha = 0.2f))
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = library.authorName!!,
+                                style =
+                                    TextStyle(
+                                        fontSize = 10.sp,
+                                        color = CHelperTheme.colors.mainColor,
+                                    ),
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!isPrivateOrLocal && library.author != null) {
+                        val author = library.author!!
+                        AsyncImage(
+                            model = "https://abyssous.site/avatar/${author.id}",
+                            contentDescription = "Avatar",
+                            modifier =
+                                Modifier.size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(CHelperTheme.colors.backgroundComponent),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(resource = Res.drawable.ic_user),
+                            error = painterResource(resource = Res.drawable.ic_user),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = author.name ?: "Unknown",
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                        )
+                        if ((author.tier ?: 0) >= 2) {
+                            Spacer(Modifier.width(4.dp))
+                            Image(
+                                painter = painterResource(Res.drawable.ic_verified_advanced),
+                                contentDescription = "Advanced",
+                                modifier = Modifier.size(12.dp),
+                            )
+                        } else if ((author.tier ?: 0) >= 1) {
+                            Spacer(Modifier.width(4.dp))
+                            Image(
+                                painter = painterResource(Res.drawable.ic_verified_normal),
+                                contentDescription = "Normal",
+                                modifier = Modifier.size(12.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    } else if (!isPrivateOrLocal && !library.authorName.isNullOrBlank()) {
+                        Text(
+                            text = "作者: ${library.authorName}",
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
+
+                    library.likeCount?.let { likes ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(Res.drawable.ic_heart),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary),
+                            )
+                            Spacer(Modifier.width(2.dp))
+                            Text(
+                                text = "$likes",
+                                style =
+                                    TextStyle(
+                                        color = CHelperTheme.colors.textSecondary,
+                                        fontSize = 12.sp,
+                                    ),
+                            )
+                        }
+                    }
+                }
+
+                if (!library.tags.isNullOrEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        library.tags!!.take(3).forEach { tag ->
+                            Box(
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(4.dp))
+                                        .background(CHelperTheme.colors.background)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style =
+                                        TextStyle(
+                                            color = CHelperTheme.colors.textSecondary,
+                                            fontSize = 11.sp,
+                                        ),
+                                )
+                            }
+                        }
+                    }
+                }
+
+                library.note
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { note ->
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = note.replace("\n", " "),
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+            }
+        }
+    }
+}

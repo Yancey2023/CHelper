@@ -1,10 +1,10 @@
-# CHelper 安卓接口 / Java 接口文档
+# CHelper Compose / JVM 接口文档
 
-如果有不明白的地方，可以直接参考[CHelper 安卓版](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Android)的内核对接方式。
+如果有不明白的地方，可以直接参考[CHelper 安卓版](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Compose)的内核对接方式。
 
 ## 编译内核（可选）
 
-在[CHelper 内核文档](./core.md)中已经包含了内核的编译步骤，你甚至可以根据需求定制化内核再进行编译。如果嫌麻烦或者实在不会编译，你也可以直接使用[编译好的内核](https://raw.githubusercontent.com/Yancey2023/CHelper/refs/heads/master/CHelper-Android/app/libs/arm64-v8a/libCHelperAndroid.so)。
+在[CHelper 内核文档](./core.md)中已经包含了内核的编译步骤，你甚至可以根据需求定制化内核再进行编译。如果嫌麻烦或者实在不会编译，你也可以直接使用[编译好的内核](https://raw.githubusercontent.com/Yancey2023/CHelper/refs/heads/master/CHelper-Compose/apps/android/libs/arm64-v8a/libCHelperAndroid.so)。
 
 在`build.gradle.kts`中添加以下内容：
 
@@ -18,11 +18,11 @@ sourceSets.all {
 
 ## 资源包生成（可选）
 
-通过运行代码可以读取 json 文件生成更加利于程序读写的二进制文件资源包。如果嫌麻烦或者不会生成，你也可以直接使用[生成好的资源包](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Android/app/src/main/assets/cpack)。
+通过运行代码可以读取 json 文件生成更加利于程序读写的二进制文件资源包。如果嫌麻烦或者不会生成，你也可以直接使用[生成好的资源包](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Compose/resources/cpack)。
 
 ## 与 java 代码交互
 
-你可以直接使用 CHelper-Android 项目的内核交互相关代码：<https://github.com/Yancey2023/CHelper/tree/master/CHelper-Android/app/src/main/kotlin/yancey/chelper/core>
+Android 和 Windows 共享同一份 JVM 内核绑定：<https://github.com/Yancey2023/CHelper/tree/master/CHelper-Compose/shared/native/src/main/kotlin/yancey/chelper/core>。Android 从 assets 加载资源包，Windows 从文件加载资源包。项目构建和打包方式见 [CHelper-Compose README](https://github.com/Yancey2023/CHelper/tree/master/CHelper-Compose)。
 
 内核本身不保存任何文本和光标状态，所有的命令相关功能都在`CommandContext`上执行。通过`createContext(command)`把命令文本解析成AST生成独立的命令上下文，然后在没有可变状态的`CommandContext`上执行各种只读操作：
 

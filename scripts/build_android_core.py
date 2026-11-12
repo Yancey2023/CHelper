@@ -105,7 +105,13 @@ def build_android_core(toolchain_dir: str):
     shutil.copyfile(
         f"{so_file}.striped",
         os.path.join(
-            ".", "CHelper-Android", "app", "libs", "arm64-v8a", "libCHelperAndroid.so"
+            ".",
+            "CHelper-Compose",
+            "apps",
+            "android",
+            "libs",
+            "arm64-v8a",
+            "libCHelperAndroid.so",
         ),
     )
 

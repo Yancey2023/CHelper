@@ -7,7 +7,7 @@ I want to make a command helper for Minecraft Bedrock Edition, so here is CHelpe
 |               project                |                                   description                                    |
 | :----------------------------------: | :------------------------------------------------------------------------------: |
 |    [CHelper-Core](./CHelper-Core)    |               CHelper-Core is the core of CHelper, written in c++                |
-| [CHelper-Android](./CHelper-Android) |                CHelper-Android is the Android version of the app                 |
+| [CHelper-Compose](./CHelper-Compose) | Kotlin / Compose Multiplatform application for Android and Windows |
 |     [CHelper-Web](./CHelper-Web)     |                    CHelper-Web is the web version of the app                     |
 |      [CHelper-Qt](./CHelper-Qt)      | maintain in [CHelper-Core](./CHelper-Core) for development and debugging purpose |
 
@@ -41,7 +41,7 @@ execute as @a at @s positioned ~ ~-1 ~ if block ~ ~-1 ~ stone["stone_type"="gran
 
 CHelper-Web: <https://yancey2023.github.io/CHelper/>
 
-CHelper-Web lacks some function. To experience more complete functions, please use [CHelper-Android](./CHelper-Android).
+CHelper-Web lacks some function. To experience more complete functions, please use [CHelper-Compose](./CHelper-Compose).
 
 ## Plan
 
@@ -63,7 +63,7 @@ see: <https://www.yanceymc.cn/chelper_doc/>
 
 ## Third-party
 
-The following lists the main libraries, assets, and development tools used by each module. Versions are declared in [CMake](./CHelper-Core/CMakeLists.txt), the [Android version catalog](./CHelper-Android/gradle/libs.versions.toml), and the [pnpm workspace catalog](./pnpm-workspace.yaml). Each project retains its own license.
+The following lists the main libraries, assets, and development tools used by each module. Versions are declared in [CMake](./CHelper-Core/CMakeLists.txt), the [Android version catalog](./CHelper-Compose/gradle/libs.versions.toml), and the [pnpm workspace catalog](./pnpm-workspace.yaml). Each project retains its own license.
 
 ### CHelper-Core
 
@@ -78,7 +78,9 @@ The following lists the main libraries, assets, and development tools used by ea
 
 Native tests and benchmarks additionally use [GoogleTest](https://github.com/google/googletest) ([BSD-3-Clause](https://github.com/google/googletest/blob/HEAD/LICENSE)). The optional desktop debugging application uses [Qt](https://www.qt.io/) ([LGPL-3.0 / GPL-3.0 / commercial licensing](https://doc.qt.io/qt/licensing.html)). These development dependencies are not part of the Android or WASM builds.
 
-### CHelper-Android
+### CHelper-Compose
+
+The Compose client shares the original Android screens, navigation, ViewModels, DataStore repositories, network client and account flows with Windows. The application hosts supply system integrations; JNI bindings and command sessions remain in the JVM core module. See the [client build guide](./CHelper-Compose/README.md) for architecture, supported features and packaging.
 
 The Android application includes CHelper-Core and its runtime libraries above, together with the following libraries and assets. Kotlin, Coroutines, Okio, and Brotli include runtime dependencies brought in by the application libraries.
 
@@ -102,7 +104,7 @@ The Android application includes CHelper-Core and its runtime libraries above, t
 
 Local unit tests additionally use [JUnit 4](https://github.com/junit-team/junit4) ([EPL-1.0](https://github.com/junit-team/junit4/blob/HEAD/LICENSE-junit.txt)); instrumentation tests use AndroidX Test. JUnit's EPL-1.0 notice is also retained in the Android application's open source terms.
 
-The application displays its bundled notices from [open_source_terms.txt](./CHelper-Android/app/src/main/assets/about/open_source_terms.txt). Release and beta builds also use the vendor-provided [UMeng SDKs](https://www.umeng.com/); their terms and the application's [privacy policy](./CHelper-Android/app/src/main/assets/about/privacy_policy.txt) apply separately.
+The application displays its bundled notices from [open_source_terms.txt](./CHelper-Compose/resources/about/open_source_terms.txt). Release and beta builds also use the vendor-provided [UMeng SDKs](https://www.umeng.com/); their terms and the application's [privacy policy](./CHelper-Compose/resources/about/privacy_policy.txt) apply separately.
 
 ### CHelper-Web and CHelper-Doc
 

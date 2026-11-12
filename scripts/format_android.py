@@ -4,8 +4,19 @@ import argparse
 from pathlib import Path
 import re
 import subprocess
+import time
 
 HEADER = re.compile(rb"\A/\*\*.*?\*/\s*", re.DOTALL)
+
+
+def retry_file_operation(action):
+    for attempt in range(5):
+        try:
+            return action()
+        except OSError:
+            if attempt == 4:
+                raise
+            time.sleep(0.05)
 
 
 def main():
@@ -30,12 +41,21 @@ def main():
             check=True,
         )
     finally:
+        failures = []
         for path, header in headers.items():
-            content = path.read_bytes()
-            match = HEADER.match(content)
-            if match is None:
-                raise RuntimeError(f"Formatter removed the license header: {path}")
-            path.write_bytes(header + content[match.end() :])
+            try:
+                content = retry_file_operation(path.read_bytes)
+                match = HEADER.match(content)
+                if match is None:
+                    raise RuntimeError(f"Formatter removed the license header: {path}")
+                restored = header + content[match.end() :]
+                retry_file_operation(lambda: path.write_bytes(restored))
+            except Exception as error:
+                failures.append(f"{path}: {error}")
+        if failures:
+            raise RuntimeError(
+                "Unable to restore license headers:\n" + "\n".join(failures)
+            )
 
 
 if __name__ == "__main__":

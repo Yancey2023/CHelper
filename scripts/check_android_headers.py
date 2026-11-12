@@ -19,7 +19,7 @@ def check_headers(root: Path) -> list[Path]:
 
 
 if __name__ == "__main__":
-    source = Path(__file__).resolve().parents[1] / "CHelper-Android/app/src"
+    source = Path(__file__).resolve().parents[1] / "CHelper-Compose"
     failures = check_headers(source)
     for failure in failures:
         print(f"License header was reflowed: {failure}")
