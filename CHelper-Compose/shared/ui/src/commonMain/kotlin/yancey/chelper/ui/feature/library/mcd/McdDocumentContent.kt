@@ -48,6 +48,7 @@ import yancey.chelper.domain.library.ParsedMCD
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.text.SyntaxTheme as Theme
+import yancey.chelper.ui.designsystem.text.highlightCommand as textHighlightCommand
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 
@@ -379,4 +380,4 @@ private fun Badge(text: String, color: Color) {
 }
 
 fun highlightCommand(command: String, tokens: IntArray?, isDark: Boolean): AnnotatedString =
-    yancey.chelper.ui.designsystem.text.highlightCommand(command, tokens, isDark)
+    textHighlightCommand(command, tokens, isDark)

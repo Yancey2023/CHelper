@@ -36,6 +36,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -75,10 +76,12 @@ import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextField
 import yancey.chelper.ui.feature.library.components.LibraryVersionFields
 import yancey.chelper.ui.feature.library.components.LowCodeV2HelperDialog
+import yancey.chelper.ui.platform.AppBackHandler as BackHandler
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.ClientServices
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.LocalAppBackAction
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
-import yancey.chelper.ui.platform.PlatformBackHandler as BackHandler
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun LocalLibraryEditScreen(
@@ -87,8 +90,9 @@ fun LocalLibraryEditScreen(
     id: Int? = null,
 ) {
     val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
     val localCommandLabDataStore = remember(context) { context.libraries }
-    androidx.compose.runtime.SideEffect {
+    SideEffect {
         context.session.register(localCommandLabDataStore) {
             if (viewModel.draftRestored && viewModel.isDirty && !viewModel.exitApproved)
                 localCommandLabDataStore.saveLocalLibraryEditDraft(
@@ -104,14 +108,14 @@ fun LocalLibraryEditScreen(
                 localCommandLabDataStore.localLibraryFunction(id)
             }
             .collectAsStateWithLifecycle(initialValue = null)
-    val onBackPressedDispatcher = yancey.chelper.ui.platform.LocalAppBackAction.current
+    val onBackPressedDispatcher = LocalAppBackAction.current
     viewModel.ensureEditingTarget(localEntryId, id, localLibraryFunction)
 
     LaunchedEffect(viewModel.isInitialized, viewModel.draftKey) {
         if (!viewModel.isInitialized || viewModel.draftRestored) return@LaunchedEffect
         val draft = localCommandLabDataStore.localLibraryEditDraft(viewModel.draftKey).first()
         viewModel.restoreDraft(draft)
-        if (draft != null) Toaster.show("已恢复上次编辑草稿")
+        if (draft != null) ClientMessages.show("已恢复上次编辑草稿")
     }
 
     LaunchedEffect(viewModel.draftRestored, viewModel.draftKey) {
@@ -135,7 +139,7 @@ fun LocalLibraryEditScreen(
 
     fun requestExit() {
         when {
-            viewModel.isSyncing -> Toaster.show("正在同步，请稍候")
+            viewModel.isSyncing -> ClientMessages.show("正在同步，请稍候")
             viewModel.isDirty -> viewModel.isShowExitConfirm = true
             else -> onBackPressedDispatcher()
         }
@@ -260,9 +264,7 @@ fun LocalLibraryEditScreen(
                         Row(
                             modifier =
                                 Modifier.clip(RoundedCornerShape(6.dp))
-                                    .clickable {
-                                        context.platform.openUrl("https://abyssous.site/wiki")
-                                    }
+                                    .clickable { openUrl("https://abyssous.site/wiki") }
                                     .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -333,7 +335,7 @@ fun LocalLibraryEditScreen(
                 onClick = {
                     if (viewModel.isSyncing) return@Button
                     viewModel.validationError()?.let { error ->
-                        Toaster.show(error)
+                        ClientMessages.show(error)
                         return@Button
                     }
                     saveLocalLibrary(
@@ -384,7 +386,7 @@ fun LocalLibraryEditScreen(
             onApply = { newContent ->
                 viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
                 viewModel.isShowLowCodeHelper = false
-                Toaster.show("已应用！")
+                ClientMessages.show("已应用！")
             },
         )
     }
@@ -483,34 +485,20 @@ private fun saveLocalLibrary(
                     withContext(NonCancellable) {
                         context.platform.enqueueSync(entryId, ownerId, revision)
                     }
-                    Toaster.show("已保存到本地，将自动同步到云端")
+                    ClientMessages.show("已保存到本地，将自动同步到云端")
                 } catch (e: Exception) {
-                    Toaster.show("已保留本地同步任务，稍后重试")
+                    ClientMessages.show("已保留本地同步任务，稍后重试")
                 }
             } else if (viewModel.autoSync) {
-                Toaster.show("尚未登录正式账号，已保存到本地")
+                ClientMessages.show("尚未登录正式账号，已保存到本地")
             }
             onDone()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Toaster.show("保存失败：${e.message}")
+            ClientMessages.show("保存失败：${e.message}")
         } finally {
             viewModel.isSyncing = false
         }
-    }
-}
-
-@Composable
-fun LocalLibraryEditScreenScreenLightThemePreview() {
-    CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        LocalLibraryEditScreen()
-    }
-}
-
-@Composable
-fun LocalLibraryEditScreenDarkThemePreview() {
-    CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        LocalLibraryEditScreen()
     }
 }

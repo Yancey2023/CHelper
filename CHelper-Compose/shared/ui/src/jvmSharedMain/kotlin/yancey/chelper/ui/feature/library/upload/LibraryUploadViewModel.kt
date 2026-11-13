@@ -26,7 +26,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.data.library.document.localBody
@@ -37,7 +39,7 @@ import yancey.chelper.data.remote.cache.CloudLibraryCache
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.ui.platform.ClientDiagnostics as MonitorUtil
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 
 class LibraryUploadViewModel : ViewModel() {
 
@@ -57,7 +59,7 @@ class LibraryUploadViewModel : ViewModel() {
     var cloudDraftError by mutableStateOf<String?>(null)
         private set
 
-    private var cloudDraftJob: kotlinx.coroutines.Job? = null
+    private var cloudDraftJob: Job? = null
     private var cloudDraftId = -1
 
     fun ensureCloudDraftLoaded(id: Int) {
@@ -82,7 +84,7 @@ class LibraryUploadViewModel : ViewModel() {
                     editUuid = library.uuid.orEmpty()
                     loadFromLocal(library)
                     isCloudDraftReady = true
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     if (cloudDraftId == id) cloudDraftError = e.message ?: "加载云端草稿失败"
@@ -103,7 +105,7 @@ class LibraryUploadViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("LibraryUploadViewModel", "加载本地内容失败", e)
                 MonitorUtil.generateCustomLog(e, "LoadLocalLibraryError")
-                Toaster.show("加载内容失败: ${e.message}")
+                ClientMessages.show("加载内容失败: ${e.message}")
             }
         }
     }
@@ -137,7 +139,7 @@ class LibraryUploadViewModel : ViewModel() {
 
     fun upload(specialCode: String?, onSuccess: () -> Unit) {
         if (name.text.isBlank() || commands.text.isBlank()) {
-            Toaster.show("名称和内容不能为空")
+            ClientMessages.show("名称和内容不能为空")
             return
         }
 
@@ -168,10 +170,10 @@ class LibraryUploadViewModel : ViewModel() {
                             // 云端库内容变了：把"我的云端库"缓存清掉，
                             // 用户返回 LocalLibraryListScreen 时会重新拉一次，看到刚改完的数据
                             CloudLibraryCache.invalidateLibraries()
-                            Toaster.show("更新成功")
+                            ClientMessages.show("更新成功")
                             onSuccess()
                         } else {
-                            Toaster.show(result.message ?: "更新失败")
+                            ClientMessages.show(result.message ?: "更新失败")
                         }
                     }
                 } else {
@@ -187,10 +189,10 @@ class LibraryUploadViewModel : ViewModel() {
                         if (result.isSuccess()) {
                             // 同上：新建一条云端库也属于列表变更
                             CloudLibraryCache.invalidateLibraries()
-                            Toaster.show("上传成功")
+                            ClientMessages.show("上传成功")
                             onSuccess()
                         } else {
-                            Toaster.show(result.message ?: "上传失败")
+                            ClientMessages.show(result.message ?: "上传失败")
                         }
                     }
                 }
@@ -198,7 +200,7 @@ class LibraryUploadViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     Log.e("LibraryUploadViewModel", "上传命令库失败", e)
                     MonitorUtil.generateCustomLog(e, "UploadLibraryError")
-                    Toaster.show("网络错误: ${e.message}")
+                    ClientMessages.show("网络错误: ${e.message}")
                 }
             } finally {
                 withContext(Dispatchers.Main) { isLoading = false }

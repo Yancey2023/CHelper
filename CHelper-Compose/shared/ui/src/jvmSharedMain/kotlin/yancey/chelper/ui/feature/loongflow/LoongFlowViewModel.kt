@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CancellationException
 import yancey.chelper.data.mcd.serializeBlocksToMCDv2
 import yancey.chelper.domain.library.BlockType
 import yancey.chelper.domain.library.ChainItem
@@ -211,7 +212,7 @@ class LoongFlowViewModel(
         val text =
             try {
                 readClipboard()?.trim()
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
                 null

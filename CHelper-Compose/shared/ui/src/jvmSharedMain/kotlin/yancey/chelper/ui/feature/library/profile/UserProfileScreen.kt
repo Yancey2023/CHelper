@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,9 +78,10 @@ import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.text.formatUnixTime
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
 import yancey.chelper.ui.platform.rememberImagePicker
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun UserProfileScreen(
@@ -88,7 +90,7 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = viewModel { UserProfileViewModel() },
 ) {
     val context = LocalContext.current
-    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     // 仅在浏览他人主页时启用举报入口；自己看自己的页面不显示
     var showReportDialog by remember { mutableStateOf(false) }
@@ -119,11 +121,11 @@ fun UserProfileScreen(
 
     DisposableEffect(viewModel.updateSuccessMessage, viewModel.updateErrorMessage) {
         viewModel.updateSuccessMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.clearUpdateMessages()
         }
         viewModel.updateErrorMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.clearUpdateMessages()
         }
         onDispose {}
@@ -478,9 +480,11 @@ fun UserProfileScreen(
                             withContext(Dispatchers.IO) {
                                 ServiceManager.COMMAND_LAB_USER_SERVICE.submitReport(request)
                             }
-                        Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
+                        ClientMessages.show(
+                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
+                        )
                     } catch (e: Exception) {
-                        Toaster.show("网络错误: ${e.message}")
+                        ClientMessages.show("网络错误: ${e.message}")
                     }
                 }
             },
@@ -490,7 +494,7 @@ fun UserProfileScreen(
 
 @Composable
 private fun ProfileHeader(user: UserProfileData) {
-    val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -608,7 +612,7 @@ private fun ProfileHeader(user: UserProfileData) {
                 modifier =
                     Modifier.clickable {
                         try {
-                            context.platform.openUrl(user.homepage!!)
+                            openUrl(user.homepage!!)
                         } catch (_: Exception) {}
                     },
                 verticalAlignment = Alignment.CenterVertically,

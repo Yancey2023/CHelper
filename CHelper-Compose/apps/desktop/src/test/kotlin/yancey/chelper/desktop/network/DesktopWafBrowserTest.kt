@@ -8,7 +8,9 @@ import okhttp3.Request
 import org.junit.Assert.*
 import org.junit.Test
 import yancey.chelper.data.remote.ServiceManager
+import yancey.chelper.data.remote.interceptor.AuthInterceptor
 import yancey.chelper.data.remote.interceptor.WafInterceptor
+import yancey.chelper.data.remote.waf.WafHelper
 
 class DesktopWafBrowserTest {
     @Test
@@ -35,7 +37,7 @@ class DesktopWafBrowserTest {
         val client =
             OkHttpClient.Builder()
                 .addInterceptor(WafInterceptor())
-                .addInterceptor(yancey.chelper.data.remote.interceptor.AuthInterceptor.INSTANCE)
+                .addInterceptor(AuthInterceptor.INSTANCE)
                 .build()
         try {
             ServiceManager.LAB_BASE_URL = url
@@ -54,7 +56,7 @@ class DesktopWafBrowserTest {
             )
         } finally {
             ServiceManager.LAB_BASE_URL = previous
-            yancey.chelper.data.remote.waf.WafHelper.install({ null }, { it?.invoke(false) })
+            WafHelper.install({ null }, { it?.invoke(false) })
             server.stop(0)
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()

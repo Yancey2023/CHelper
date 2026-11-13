@@ -28,7 +28,9 @@ import yancey.chelper.data.library.document.localBody
 import yancey.chelper.data.library.document.localLibraryEditDraftKey
 import yancey.chelper.data.library.document.usesLocalMcdV2
 import yancey.chelper.data.local.library.LocalLibraryEditDraft
+import yancey.chelper.domain.library.LibraryEntry
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.domain.library.validateLibraryEntry
 
 enum class EditMode {
     ADD,
@@ -221,8 +223,8 @@ class LocalLibraryEditViewModel : ViewModel() {
     }
 
     fun validationError(): String? =
-        yancey.chelper.domain.library.validateLibraryEntry(
-            yancey.chelper.domain.library.LibraryEntry(
+        validateLibraryEntry(
+            LibraryEntry(
                 name = name.text.toString(),
                 version = version.text.toString(),
                 note = description.text.toString(),

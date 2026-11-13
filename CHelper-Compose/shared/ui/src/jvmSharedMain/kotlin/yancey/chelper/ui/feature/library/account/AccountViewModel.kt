@@ -41,7 +41,7 @@ import yancey.chelper.data.remote.library.model.UpdateProfileRequest
 import yancey.chelper.data.remote.library.model.UserProfileData
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 
 class AccountViewModel : ViewModel() {
 
@@ -134,7 +134,7 @@ class AccountViewModel : ViewModel() {
         val uid =
             currentUser?.id
                 ?: run {
-                    Toaster.show("尚未登录")
+                    ClientMessages.show("尚未登录")
                     return
                 }
         isUpdatingProfile = true
@@ -150,7 +150,7 @@ class AccountViewModel : ViewModel() {
                 val res = ServiceManager.COMMAND_LAB_USER_SERVICE.updateProfile(uid, req)
                 withContext(Dispatchers.Main) {
                     if (res.status == 0) {
-                        Toaster.show("资料已更新")
+                        ClientMessages.show("资料已更新")
                         currentUser?.let { u ->
                             if (!req.nickname.isNullOrBlank()) u.nickname = req.nickname
                             if (!req.avatarUrl.isNullOrBlank()) u.gravatarUrl = req.avatarUrl
@@ -163,11 +163,11 @@ class AccountViewModel : ViewModel() {
                         CloudLibraryCache.invalidateAll()
                         onComplete()
                     } else {
-                        Toaster.show("更新失败: ${res.message ?: "未知错误"}")
+                        ClientMessages.show("更新失败: ${res.message ?: "未知错误"}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
             } finally {
                 withContext(Dispatchers.Main) { isUpdatingProfile = false }
             }
@@ -176,7 +176,7 @@ class AccountViewModel : ViewModel() {
 
     fun login() {
         if (loginAccount.text.isBlank() || loginPassword.text.isBlank()) {
-            Toaster.show("请输入账号和密码")
+            ClientMessages.show("请输入账号和密码")
             return
         }
         isLoading = true
@@ -186,14 +186,14 @@ class AccountViewModel : ViewModel() {
             withContext(Dispatchers.Main) {
                 isLoading = false
                 if (result.isSuccess) {
-                    Toaster.show("登录成功")
+                    ClientMessages.show("登录成功")
                     // Try migrate guest data if any
                     if (GuestAuthUtil.getFingerprint() != null) {
                         migrateGuestData()
                     }
                     refreshUserState()
                 } else {
-                    Toaster.show("登录失败: ${result.exceptionOrNull()?.message}")
+                    ClientMessages.show("登录失败: ${result.exceptionOrNull()?.message}")
                 }
             }
         }
@@ -223,7 +223,7 @@ class AccountViewModel : ViewModel() {
 
     fun sendVerifyCode(specialCode: String) {
         if (registerAccount.text.isBlank()) {
-            Toaster.show("请输入邮箱或手机号")
+            ClientMessages.show("请输入邮箱或手机号")
             return
         }
         isLoading = true
@@ -244,13 +244,13 @@ class AccountViewModel : ViewModel() {
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE.sendCode(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccess()) {
-                        Toaster.show("验证码已发送")
+                        ClientMessages.show("验证码已发送")
                     } else {
-                        Toaster.show("发送失败: ${response.message}")
+                        ClientMessages.show("发送失败: ${response.message}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
             } finally {
                 withContext(Dispatchers.Main) {
                     isLoading = false
@@ -266,7 +266,7 @@ class AccountViewModel : ViewModel() {
                 registerCode.text.isBlank() ||
                 registerPassword.text.isBlank()
         ) {
-            Toaster.show("请补全注册信息")
+            ClientMessages.show("请补全注册信息")
             return
         }
 
@@ -292,15 +292,15 @@ class AccountViewModel : ViewModel() {
                 val response = ServiceManager.COMMAND_LAB_USER_SERVICE.register(request)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccess()) {
-                        Toaster.show("注册成功，请登录")
+                        ClientMessages.show("注册成功，请登录")
                         currentTab = UserTab.LOGIN
                         loginAccount.setTextAndPlaceCursorAtEnd(registerAccount.text.toString())
                     } else {
-                        Toaster.show("注册失败: ${response.message}")
+                        ClientMessages.show("注册失败: ${response.message}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
             } finally {
                 withContext(Dispatchers.Main) {
                     isLoading = false
@@ -367,13 +367,13 @@ class AccountViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     if (result.isSuccess()) {
                         myLibraries.removeAll { it.id == id }
-                        Toaster.show("删除成功")
+                        ClientMessages.show("删除成功")
                     } else {
-                        Toaster.show("删除失败: ${result.message}")
+                        ClientMessages.show("删除失败: ${result.message}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
             }
         }
     }
@@ -396,7 +396,7 @@ class AccountViewModel : ViewModel() {
                 val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadAvatar(part)
                 withContext(Dispatchers.Main) {
                     if (result.isSuccess() == true) {
-                        Toaster.show("头像上传成功")
+                        ClientMessages.show("头像上传成功")
                         val newUrl = result.data?.avatarUrl
                         if (newUrl != null) {
                             currentUser?.gravatarUrl = newUrl
@@ -408,11 +408,11 @@ class AccountViewModel : ViewModel() {
                         loadUserProfile()
                         CloudLibraryCache.invalidateAll()
                     } else {
-                        Toaster.show("上传头像失败: ${result.message ?: "未知错误"}")
+                        ClientMessages.show("上传头像失败: ${result.message ?: "未知错误"}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("上传网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("上传网络错误: ${e.message}") }
             } finally {
                 withContext(Dispatchers.Main) { isUploadingAvatar = false }
             }

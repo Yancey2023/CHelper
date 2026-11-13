@@ -21,23 +21,15 @@ package yancey.chelper.ui.feature.command.history
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
 import yancey.chelper.ui.feature.command.HistoryContent
-import yancey.chelper.ui.platform.ClientToast as Toaster
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
 fun HistoryScreen(history: List<String>?) {
-    val scope = rememberCoroutineScope()
-    val clipboard = yancey.chelper.ui.platform.LocalClientServices.current.platform
-    HistoryContent(history) { text ->
-        scope.launch {
-            clipboard.copyText(text)
-            Toaster.show("已复制")
-        }
-    }
+    val copy = rememberCopyText()
+    HistoryContent(history, onCopy = copy)
 }
 
 @Composable

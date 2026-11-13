@@ -40,8 +40,8 @@ import yancey.chelper.domain.library.parseMCDStructure
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.platform.ClientServices
-import yancey.chelper.ui.platform.ClientToast as Toaster
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberCopyText
 
 /** 首屏先组合这么多行，尽快出 UI */
 private const val MCD_INITIAL_VISIBLE_ITEMS = 40
@@ -217,11 +217,6 @@ private suspend fun applyMcdHighlightItemsAsync(
 
 // Compose 渲染
 
-private fun copyToClipboard(context: ClientServices, text: String) {
-    context.platform.copyText(text)
-    Toaster.show("已复制")
-}
-
 @Composable
 fun MCDContentView(
     content: String?,
@@ -230,6 +225,7 @@ fun MCDContentView(
     showMetadata: Boolean = true,
 ) {
     val context = LocalContext.current
+    val copy = rememberCopyText()
     val settingsDataStore = remember(context) { context.settings }
     val cpackBranch by
         settingsDataStore
@@ -316,9 +312,7 @@ fun MCDContentView(
     val visibleRows =
         remember(allRows, visibleCount) { allRows.take(visibleCount.coerceIn(0, allRows.size)) }
 
-    MCDRowsContent(visibleRows, highlightRevision, modifier, batch = false) { text ->
-        copyToClipboard(context, text)
-    }
+    MCDRowsContent(visibleRows, highlightRevision, modifier, batch = false, onCopy = copy)
 }
 
 object MCDHighlightCoreCache {

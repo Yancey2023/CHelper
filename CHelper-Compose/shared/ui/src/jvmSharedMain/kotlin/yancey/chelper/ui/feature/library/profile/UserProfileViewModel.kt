@@ -36,7 +36,7 @@ import yancey.chelper.data.remote.cache.CloudLibraryCache
 import yancey.chelper.data.remote.library.model.UpdateProfileRequest
 import yancey.chelper.data.remote.library.model.UserProfileData
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 
 class UserProfileViewModel : ViewModel() {
     var userProfile by mutableStateOf<UserProfileData?>(null)
@@ -322,16 +322,16 @@ class UserProfileViewModel : ViewModel() {
                 val result = ServiceManager.COMMAND_LAB_USER_SERVICE.uploadAvatar(part)
                 withContext(Dispatchers.Main) {
                     if (result.isSuccess()) {
-                        Toaster.show("头像上传成功")
+                        ClientMessages.show("头像上传成功")
                         // 拉一次 profile 把 avatarUrl 同步过来——对话框预览就跟着换了
                         loadProfile(viewUserId)
                         CloudLibraryCache.invalidateAll()
                     } else {
-                        Toaster.show("上传头像失败: ${result.message ?: "未知错误"}")
+                        ClientMessages.show("上传头像失败: ${result.message ?: "未知错误"}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("上传网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("上传网络错误: ${e.message}") }
             } finally {
                 withContext(Dispatchers.Main) { isUploadingAvatar = false }
             }

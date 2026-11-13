@@ -2,20 +2,18 @@ package yancey.chelper.desktop.window
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.domain.settings.Settings
 import yancey.chelper.resources.Res
 import yancey.chelper.resources.ic_loong_flow_bubble
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -23,12 +21,9 @@ import yancey.chelper.ui.feature.loongflow.LoongFlowMiniPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowMode
 import yancey.chelper.ui.feature.loongflow.LoongFlowPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowViewModel
-import yancey.chelper.ui.platform.AppBackDispatcher
+import yancey.chelper.ui.platform.ClientInteractionHost
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.ClientServices
-import yancey.chelper.ui.platform.ClientToast
-import yancey.chelper.ui.platform.ClientToastOverlay
-import yancey.chelper.ui.platform.LocalAppBackAction
-import yancey.chelper.ui.platform.LocalAppBackDispatcher
 import yancey.chelper.ui.platform.LocalClientServices
 
 /** A native window session; command selection, editing and serialization use the shared model. */
@@ -83,7 +78,7 @@ internal class DesktopLoongFlow(
 internal fun ApplicationScope.DesktopLoongFlowWindow(
     host: DesktopLoongFlow,
     services: ClientServices,
-    settings: yancey.chelper.domain.settings.Settings,
+    settings: Settings,
 ) {
     val model = host.model ?: return
     key(model) {
@@ -98,10 +93,10 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
         LaunchedEffect(host.minimized, mini, expanded) {
             state.size =
                 when {
-                    mini -> androidx.compose.ui.unit.DpSize(318.dp, 88.dp)
-                    host.minimized -> androidx.compose.ui.unit.DpSize(48.dp, 48.dp)
-                    expanded -> androidx.compose.ui.unit.DpSize(560.dp, 720.dp)
-                    else -> androidx.compose.ui.unit.DpSize(400.dp, 600.dp)
+                    mini -> DpSize(318.dp, 88.dp)
+                    host.minimized -> DpSize(48.dp, 48.dp)
+                    expanded -> DpSize(560.dp, 720.dp)
+                    else -> DpSize(400.dp, 600.dp)
                 }
         }
         Window(
@@ -114,9 +109,6 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
             alwaysOnTop = true,
             focusable = !host.minimized,
         ) {
-            val back = remember { AppBackDispatcher() }
-            val focus = remember { FocusRequester() }
-            LaunchedEffect(host.minimized) { if (!host.minimized) focus.requestFocus() }
             val move: (Float, Float) -> Unit = { x, y ->
                 window.setLocation(window.x + x.toInt(), window.y + y.toInt())
             }
@@ -127,18 +119,10 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
                 ),
                 backgroundBitmap = null,
             ) {
-                CompositionLocalProvider(
-                    LocalClientServices provides services,
-                    LocalAppBackDispatcher provides back,
-                    LocalAppBackAction provides host::requestClose,
-                ) {
-                    Box(
-                        Modifier.fillMaxSize().focusRequester(focus).focusable().onPreviewKeyEvent {
-                            if (it.key == Key.Escape && it.type == KeyEventType.KeyDown) {
-                                back.back(host::requestClose)
-                                true
-                            } else false
-                        }
+                CompositionLocalProvider(LocalClientServices provides services) {
+                    ClientInteractionHost(
+                        onBack = host::requestClose,
+                        showMessages = !host.minimized,
                     ) {
                         when {
                             mini ->
@@ -146,7 +130,7 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
                                     model,
                                     { host.minimized = false },
                                     host::dismiss,
-                                    ClientToast::show,
+                                    ClientMessages::show,
                                     move,
                                 )
                             host.minimized ->
@@ -177,7 +161,6 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
                                     closeRequest = host.closeRequest,
                                 )
                         }
-                        if (!host.minimized) ClientToastOverlay()
                     }
                 }
             }

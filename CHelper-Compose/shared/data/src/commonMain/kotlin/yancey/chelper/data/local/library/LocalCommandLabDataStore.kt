@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class)
 
 package yancey.chelper.data.local.library
 
@@ -24,6 +24,8 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.okio.OkioSerializer
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -307,9 +309,7 @@ class LocalCommandLabDataStore(
     private fun uniqueLocalEntryId(candidate: String?, usedIds: MutableSet<String>): String {
         val validCandidate = candidate?.takeIf { it.isNotBlank() && it !in usedIds }
         val assigned =
-            validCandidate
-                ?: generateSequence { kotlin.uuid.Uuid.random().toString() }
-                    .first { it !in usedIds }
+            validCandidate ?: generateSequence { Uuid.random().toString() }.first { it !in usedIds }
         usedIds += assigned
         return assigned
     }
@@ -347,8 +347,7 @@ class LocalLibraryStableIdMigration : DataMigration<LocalLibraryData> {
                 val existing = function.localEntryId?.takeIf { it.isNotBlank() && it !in usedIds }
                 val assigned =
                     existing
-                        ?: generateSequence { kotlin.uuid.Uuid.random().toString() }
-                            .first { it !in usedIds }
+                        ?: generateSequence { Uuid.random().toString() }.first { it !in usedIds }
                 usedIds += assigned
                 function.copy(localEntryId = assigned)
             }

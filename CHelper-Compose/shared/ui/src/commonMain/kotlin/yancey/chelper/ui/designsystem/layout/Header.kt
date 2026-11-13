@@ -19,7 +19,6 @@
 package yancey.chelper.ui.designsystem.layout
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,10 +35,9 @@ import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.widget.Icon
+import yancey.chelper.ui.designsystem.widget.IconButton
 import yancey.chelper.ui.designsystem.widget.Text
-import yancey.chelper.ui.platform.LocalAppBackAction
-import yancey.chelper.ui.platform.LocalAppBackDispatcher
-import yancey.chelper.ui.platform.LocalPlatformHeaderBackAction
+import yancey.chelper.ui.platform.LocalAppBackRequest
 
 @Composable
 fun Header(
@@ -48,9 +46,7 @@ fun Header(
     onBack: (() -> Unit)? = null,
     right: @Composable () -> Unit = {},
 ) {
-    val defaultBack = LocalAppBackAction.current
-    val backDispatcher = LocalAppBackDispatcher.current
-    val platformBack = LocalPlatformHeaderBackAction.current
+    val requestBack = LocalAppBackRequest.current
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -60,22 +56,14 @@ fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBack) {
-            Icon(
-                id = Res.drawable.chevron_left,
-                modifier =
-                    Modifier.clickable(
-                            onClick = {
-                                // 优先使用自定义 onBack（用于 tab 模式下显式返回上一级路由），
-                                // 否则走系统返回派发，行为和原来一致
-                                if (onBack != null) onBack()
-                                else if (platformBack != null) platformBack()
-                                else backDispatcher.back(defaultBack)
-                            }
-                        )
-                        .padding(5.dp)
-                        .size(24.dp),
-                contentDescription = stringResource(Res.string.common_icon_back_content_description),
-            )
+            IconButton(onClick = onBack ?: requestBack) {
+                Icon(
+                    id = Res.drawable.chevron_left,
+                    modifier = Modifier.size(24.dp),
+                    contentDescription =
+                        stringResource(Res.string.common_icon_back_content_description),
+                )
+            }
         } else {
             Spacer(modifier = Modifier.size(5.dp))
         }

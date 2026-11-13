@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import yancey.chelper.desktop.ui.NavigationTestInput
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.feature.loongflow.LoongFlowMiniPanel
@@ -16,9 +17,11 @@ import yancey.chelper.ui.feature.loongflow.LoongFlowMode
 import yancey.chelper.ui.feature.loongflow.LoongFlowPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowViewModel
 import yancey.chelper.ui.feature.loongflow.importMiniState
+import yancey.chelper.ui.platform.ClientInteractionHost
 
 class DesktopLoongFlowTest {
     @get:Rule val compose = createComposeRule()
+    private val navigation = NavigationTestInput()
 
     @Test
     fun windowsUsesTheOriginalExportWizardAndItsCloseConfirmation() {
@@ -29,15 +32,19 @@ class DesktopLoongFlowTest {
         compose.setContent {
             CHelperTheme(CHelperTheme.Theme.Light, null) {
                 Box(Modifier.requiredSize(400.dp, 600.dp)) {
-                    LoongFlowPanel(
-                        model.mode,
-                        null,
-                        model,
-                        onMinimize = { host.minimized = true },
-                        onDismiss = host::dismiss,
-                        closeRequest = host.closeRequest,
-                        onMessage = {},
-                    )
+                    navigation.Content {
+                        ClientInteractionHost {
+                            LoongFlowPanel(
+                                model.mode,
+                                null,
+                                model,
+                                onMinimize = { host.minimized = true },
+                                onDismiss = host::dismiss,
+                                closeRequest = host.closeRequest,
+                                onMessage = {},
+                            )
+                        }
+                    }
                 }
             }
         }

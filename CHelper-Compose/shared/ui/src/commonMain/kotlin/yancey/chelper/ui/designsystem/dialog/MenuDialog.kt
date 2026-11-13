@@ -18,21 +18,14 @@
 
 package yancey.chelper.ui.designsystem.dialog
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import yancey.chelper.ui.designsystem.widget.Divider
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
 
 @Composable
 fun MenuDialog(
@@ -40,28 +33,23 @@ fun MenuDialog(
     onChoose: (String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    CustomDialog(onDismissRequest = onDismissRequest) {
-        DialogContainer(cornerSize = 20.dp, backgroundNoTranslate = true) {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                for ((index, pair) in data.withIndex()) {
-                    if (index != 0) {
-                        Divider(0.dp)
-                    }
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth().height(45.dp).clickable {
-                                onDismissRequest.invoke()
-                                onChoose(pair.second)
-                            }
+    AppAlertDialog(
+        onDismissRequest = onDismissRequest,
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                data.forEach { pair ->
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            onDismissRequest()
+                            onChoose(pair.second)
+                        },
                     ) {
-                        Text(
-                            text = pair.first,
-                            modifier = Modifier.align(alignment = Alignment.Center),
-                            style = TextStyle(textAlign = TextAlign.Center),
-                        )
+                        Text(pair.first)
                     }
                 }
             }
-        }
-    }
+        },
+        confirmButton = {},
+    )
 }

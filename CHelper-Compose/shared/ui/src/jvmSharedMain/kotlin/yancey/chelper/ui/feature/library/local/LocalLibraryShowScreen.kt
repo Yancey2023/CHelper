@@ -26,19 +26,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import yancey.chelper.data.library.document.toFullLocalMcd
-import yancey.chelper.domain.library.AuthorInfo
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.feature.library.components.LibraryDetailContent
 import yancey.chelper.ui.feature.library.mcd.MCDContentView
 import yancey.chelper.ui.navigation.LibraryEditScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
 fun LocalLibraryShowScreen(library: LibraryFunction?, onEdit: (() -> Unit)? = null) {
     val context = LocalContext.current
+    val copy = rememberCopyText()
     val settingsDataStore = remember(context) { context.settings }
     val ambiguousDefault by
         settingsDataStore
@@ -57,7 +57,7 @@ fun LocalLibraryShowScreen(library: LibraryFunction?, onEdit: (() -> Unit)? = nu
         if (context.platform.loongFlowPermissionGranted()) {
             val shown =
                 context.platform.showLoongFlow(currentLibrary.copy(content = resolvedSource))
-            if (!shown) Toaster.show("游龙窗口打开失败")
+            if (!shown) ClientMessages.show("游龙窗口打开失败")
         } else {
             showPermissionDialog = true
         }
@@ -72,11 +72,8 @@ fun LocalLibraryShowScreen(library: LibraryFunction?, onEdit: (() -> Unit)? = nu
         onLoongFlow =
             if (context.platform.supportsLoongFlow && library != null) ::openLoongFlowImport
             else null,
-        onCopy = { text ->
-            context.platform.copyText(text)
-            Toaster.show("已复制")
-        },
-        onMessage = { Toaster.show(it) },
+        onCopy = copy,
+        onMessage = { ClientMessages.show(it) },
     ) { content, ambiguous, metadata ->
         MCDContentView(content, ambiguousDefault = ambiguous, showMetadata = metadata)
     }
@@ -88,7 +85,7 @@ fun LocalLibraryShowScreen(library: LibraryFunction?, onEdit: (() -> Unit)? = nu
             confirmText = "打开设置",
             onConfirm = {
                 context.platform.requestLoongFlowPermission { granted ->
-                    Toaster.show(if (granted) "悬浮窗权限获取成功" else "悬浮窗权限获取失败")
+                    ClientMessages.show(if (granted) "悬浮窗权限获取成功" else "悬浮窗权限获取失败")
                 }
             },
         )
@@ -117,42 +114,4 @@ fun LocalLibraryShowScreen(
                 { navController?.navigate(LibraryEditScreenKey(localEntryId = targetId)) }
             },
     )
-}
-
-@Composable
-fun LibraryShowScreenLightThemePreview() {
-    val library =
-        LibraryFunction().apply {
-            name = "Library"
-            author = AuthorInfo(name = "Author")
-            content = buildString {
-                appendLine("@name=TestLibrary")
-                appendLine("@version=1.0.0")
-                appendLine("# This is a comment")
-                appendLine("/say Hello")
-                appendLine("/tp @s 0 0 0")
-            }
-        }
-    CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        LocalLibraryShowScreen(library = library)
-    }
-}
-
-@Composable
-fun LibraryShowScreenDarkThemePreview() {
-    val library =
-        LibraryFunction().apply {
-            name = "Library"
-            author = AuthorInfo(name = "Author")
-            content = buildString {
-                appendLine("@name=TestLibrary")
-                appendLine("@version=1.0.0")
-                appendLine("# This is a comment")
-                appendLine("/say Hello")
-                appendLine("/tp @s 0 0 0")
-            }
-        }
-    CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        LocalLibraryShowScreen(library = library)
-    }
 }

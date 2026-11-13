@@ -2,6 +2,7 @@ package yancey.chelper.data.startup
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import org.junit.Assert.*
 import org.junit.Test
 import yancey.chelper.domain.settings.Settings
@@ -13,11 +14,10 @@ class StartupReadinessTest {
         val preparation = CompletableDeferred<Unit>()
         var prepared = false
         try {
-            val settings =
-                kotlinx.coroutines.flow.flow {
-                    assertTrue(prepared)
-                    emit(Settings(themeId = "MODE_NIGHT_YES"))
-                }
+            val settings = flow {
+                assertTrue(prepared)
+                emit(Settings(themeId = "MODE_NIGHT_YES"))
+            }
             val startup =
                 StartupState(settings, {}, scope) {
                     preparation.await()

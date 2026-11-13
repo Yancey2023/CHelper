@@ -1,6 +1,7 @@
 package yancey.chelper.desktop.storage
 
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -80,7 +81,7 @@ class DesktopLegacyMigrationTest {
             try {
                 repo.save(write)
                 fail("The invalid parent must fail")
-            } catch (_: java.io.IOException) {}
+            } catch (_: IOException) {}
             assertTrue(blocked.delete())
             assertTrue(blocked.mkdir())
             repo.save(write)

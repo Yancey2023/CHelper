@@ -18,15 +18,10 @@
 
 package yancey.chelper.ui.designsystem.dialog
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,18 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.widget.Divider
-import yancey.chelper.ui.designsystem.widget.DividerVertical
-import yancey.chelper.ui.designsystem.widget.Switch
+import yancey.chelper.ui.designsystem.widget.Checkbox
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
 
 @Composable
 fun PolicyGrantDialog(
@@ -54,69 +43,32 @@ fun PolicyGrantDialog(
     onConfirm: () -> Unit = {},
 ) {
     var isAgree by remember { mutableStateOf(false) }
-    CustomDialog(onDismissRequest = {}) {
-        DialogContainer(backgroundNoTranslate = true) {
+    AppAlertDialog(
+        onDismissRequest = {},
+        properties = AppDialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        title = { Text(stringResource(Res.string.dialog_policy_grant_title)) },
+        text = {
             Column {
                 Text(
-                    modifier = Modifier.fillMaxWidth().padding(0.dp, 10.dp),
-                    text = stringResource(Res.string.dialog_policy_grant_title),
-                    style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center),
+                    content,
+                    Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 )
-                Text(
-                    modifier =
-                        Modifier.padding(20.dp, 10.dp)
-                            .fillMaxWidth()
-                            .defaultMinSize(Dp.Infinity, 40.dp),
-                    text = content,
-                    style = TextStyle(textAlign = TextAlign.Center),
-                )
-                Row(modifier = Modifier.padding(20.dp, 5.dp).fillMaxWidth()) {
-                    Switch(
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        checked = isAgree,
-                        onCheckedChange = { isAgree = !isAgree },
-                    )
-                    Text(
-                        modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically),
-                        text = stringResource(Res.string.dialog_policy_grant_confirm_read),
-                    )
-                }
-                Divider(0.dp)
-                Row(Modifier.height(45.dp)) {
-                    Box(Modifier.fillMaxHeight().weight(1f).clickable { readPolicy() }) {
-                        Text(
-                            modifier = Modifier.align(Alignment.Center),
-                            text =
-                                stringResource(Res.string.dialog_policy_grant_read_privacy_policy),
-                            style =
-                                TextStyle(
-                                    fontSize = 18.sp,
-                                    color = CHelperTheme.colors.mainColor,
-                                    textAlign = TextAlign.Center,
-                                ),
-                        )
-                    }
-                    DividerVertical(0.dp)
-                    Box(
-                        Modifier.fillMaxHeight().weight(1f).clickable {
-                            if (isAgree) {
-                                onConfirm()
-                            }
-                        }
-                    ) {
-                        Text(
-                            modifier = Modifier.align(Alignment.Center),
-                            text = stringResource(Res.string.dialog_is_confirm_confirm),
-                            style =
-                                TextStyle(
-                                    fontSize = 18.sp,
-                                    color = CHelperTheme.colors.mainColor,
-                                    textAlign = TextAlign.Center,
-                                ),
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = isAgree, onCheckedChange = { isAgree = it })
+                    Text(stringResource(Res.string.dialog_policy_grant_confirm_read))
                 }
             }
-        }
-    }
+        },
+        dismissButton = {
+            TextButton(onClick = readPolicy) {
+                Text(stringResource(Res.string.dialog_policy_grant_read_privacy_policy))
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = isAgree, onClick = onConfirm) {
+                Text(stringResource(Res.string.dialog_is_confirm_confirm))
+            }
+        },
+        containerColor = CHelperTheme.colors.backgroundComponentNoTranslate,
+    )
 }

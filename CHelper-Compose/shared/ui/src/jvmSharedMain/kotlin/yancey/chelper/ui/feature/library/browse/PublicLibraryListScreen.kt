@@ -29,13 +29,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.map
 import yancey.chelper.data.library.document.toLibraryEntry
-import yancey.chelper.domain.library.AuthorInfo
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.navigation.FavoriteLibraryListScreenKey
 import yancey.chelper.ui.navigation.LibrarySearchScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
 
 @Composable
@@ -58,7 +56,7 @@ fun PublicLibraryListScreen(
 
     LaunchedEffect(state.actionMessage) {
         state.actionMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.consumeActionMessage()
         }
     }
@@ -103,39 +101,4 @@ private fun PublicLibraryItem(
     onFavorite: () -> Unit = {},
 ) {
     PublicLibraryCard(modifier, library.toLibraryEntry(), onClick, onTagClick, onFavorite)
-}
-
-@Composable
-fun PublicLibraryListScreenLightThemePreview() {
-    PublicLibraryListPreview(CHelperTheme.Theme.Light)
-}
-
-@Composable
-fun PublicLibraryListScreenDarkThemePreview() {
-    PublicLibraryListPreview(CHelperTheme.Theme.Dark)
-}
-
-@Composable
-private fun PublicLibraryListPreview(theme: CHelperTheme.Theme) {
-    val viewModel = remember {
-        PublicLibraryListViewModel(
-            initialState =
-                PublicLibraryListUiState(
-                    initialized = true,
-                    libraries =
-                        (0..10).map { i ->
-                            LibraryFunction().apply {
-                                id = i
-                                name = "Library $i"
-                                author = AuthorInfo(name = "Author $i")
-                                note = "Description for library $i"
-                                likeCount = i * 10
-                            }
-                        },
-                )
-        )
-    }
-    CHelperTheme(theme = theme, backgroundBitmap = null) {
-        PublicLibraryListScreen(viewModel = viewModel)
-    }
 }

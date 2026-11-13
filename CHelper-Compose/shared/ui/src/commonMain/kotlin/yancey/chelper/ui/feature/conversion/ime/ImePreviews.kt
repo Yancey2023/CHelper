@@ -1,10 +1,8 @@
-package yancey.chelper.android.ui.ime
+package yancey.chelper.ui.feature.conversion.ime
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.feature.conversion.ime.ImeGuideContent
-import yancey.chelper.ui.feature.conversion.ime.Old2NewIMEScreen
 
 @Preview
 @Composable

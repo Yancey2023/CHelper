@@ -19,12 +19,14 @@
 package yancey.chelper.data.local.migration
 
 import androidx.datastore.core.DataMigration
+import java.io.File
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 import yancey.chelper.domain.settings.Settings
 
 class SettingsMigrationToV74(
-    private val legacyDirectory: java.io.File,
-    private val destination: java.io.File? = null,
+    private val legacyDirectory: File,
+    private val destination: File? = null,
 ) : DataMigration<Settings> {
     private var imported = false
 
@@ -88,7 +90,7 @@ class SettingsMigrationToV74(
                         (oldSettings["publicLibraryHomeRecommend"] as? JsonPrimitive)?.booleanOrNull,
                 )
                 .also { imported = true }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             currentData

@@ -24,12 +24,12 @@ kotlin {
             implementation(libs.multiplatform.lifecycle.runtime.compose)
             implementation(libs.compose.multiplatform.runtime)
             implementation(libs.compose.multiplatform.foundation)
-            implementation(libs.compose.multiplatform.material3)
             implementation(libs.compose.multiplatform.ui)
+            implementation(libs.compose.multiplatform.ui.tooling.preview)
+            api(libs.navigation.event.compose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
         }
-        androidMain.dependencies { implementation(libs.activity.compose) }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)

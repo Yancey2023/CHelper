@@ -32,6 +32,7 @@ import kotlinx.serialization.json.Json
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 import yancey.chelper.data.remote.library.service.CommandLabUserService.LoginRequest
+import yancey.chelper.domain.auth.CredentialStore
 
 /**
  * 登录工具类
@@ -39,7 +40,7 @@ import yancey.chelper.data.remote.library.service.CommandLabUserService.LoginReq
  * 管理用户登录状态和 JWT 令牌
  */
 object LoginUtil {
-    private var storage: yancey.chelper.domain.auth.CredentialStore? = null
+    private var storage: CredentialStore? = null
     private val stateLock = Any()
     private val refreshMutex = Mutex()
     private var generation = 0L
@@ -74,10 +75,7 @@ object LoginUtil {
     )
 
     /** 初始化登录工具，从本地文件恢复登录状态 */
-    fun init(
-        credentialStore: yancey.chelper.domain.auth.CredentialStore,
-        onError: Consumer<Throwable?>,
-    ) {
+    fun init(credentialStore: CredentialStore, onError: Consumer<Throwable?>) {
         try {
             storage = credentialStore
             storage?.read()?.let { content ->

@@ -1,4 +1,5 @@
 CHelper 是一个我的世界命令助手，包含了：
+
 - CHelper-Core - 命令的语法分析、补全提示、语法高亮等核心 IDE 功能，使用 c++
 - CHelper-Compose - 接入 CHelper-Core 的 Kotlin / Compose Multiplatform 应用，支持 Android 和 Windows；apps/android、apps/desktop 负责平台入口和依赖组装；shared/domain 定义业务模型、仓库接口和同步规则，shared/data 实现共享存储、网络和文档编解码，shared/native 实现 JNI 绑定和命令引擎，shared/ui 提供复用的功能界面、ViewModel、设计组件和导航；build-logic 维护统一构建约定，resources 保存两端共用资产。模块依赖和包归属由 scripts/check_compose_architecture.py 检查，结构说明见 CHelper-Compose/docs/architecture.md。
 - CHelper-Web - 接入了 CHelper-Core 的网页应用，同时包含了更多实用功能，使用 pnpm + vite + vue + typescript
@@ -7,6 +8,16 @@ CHelper 是一个我的世界命令助手，包含了：
 - scripts - 一些 python 脚本
 
 你必须：
+
 1. 使用 gradle 和 pnpm 等包管理器要提权运行，避免遇到权限问题
 2. 完成改动后，使用 fmt 等相关工具进行代码格式化
 3. 理清楚项目层级，注重项目的可维护性
+4. Kotlin 源码和 Gradle Kotlin DSL 必须通过 import 引入类型、注解、顶层函数和属性，禁止在声明、类型签名或表达式中直接写完整包名。名称冲突使用 `import ... as ...` 别名，不用全限定名绕过；同样适用于测试和文件级注解。package/import 声明以及确实需要类名的字符串（如 JNI、反射、主类配置）保留原值，不把变量成员访问或嵌套类型访问当成包名清理。
+
+CHelper-Compose 的 UI 约束（用户明确要求）：
+
+- 不使用 Material 或 Material 3，包括 `androidx.compose.material.*`、`androidx.compose.material3.*`、对应的主题、控件、图标与 Gradle 依赖。不得把现有自定义控件换成 Material，也不要通过别名或包装间接引入。桌面 compose.desktop.currentOs 聚合依赖默认带入的 Material 也须显式排除，并检查解析依赖和分发包。
+- Compose 官方能力优先指 Runtime、UI、Foundation、Animation、Navigation 等基础能力；保留项目自己的设计系统、视觉风格和共享控件，Android 与 Windows 复用同一套 UI。
+- 弹窗使用共享 `AppDialog` / `AppDialogHost` 在当前 Compose 宿主内绘制。系统悬浮窗不能依赖 Activity Dialog 的窗口条件；不使用创建额外系统窗口的 Dialog、AlertDialog 或 BasicAlertDialog，也不通过 windowType 适配来替代自定义弹窗。保留遮罩拦截、嵌套返回、禁止关闭和焦点隔离、恢复能力。
+- 保留 Android 的 Toaster，在 Application 启动时初始化，并通过共享 `ClientMessages` 入口提供反馈。它承担不依赖 Compose Host 的消息呈现及 Android Toast 兼容处理；不要擅自用 Snackbar、自制界面消息或系统 Toast 替换，也不要只因“官方能力优先”或“跨平台”而删除。Windows 使用共享的非 Material 消息组件。
+- 移除或替换已有库前，先查明调用场景、线程与生命周期要求、平台兼容职责，并验证替代行为；不要仅凭编译通过认定替换等价。相关 UI 约束由 `scripts/check_compose_architecture.py` 检查，变更时同步维护说明。

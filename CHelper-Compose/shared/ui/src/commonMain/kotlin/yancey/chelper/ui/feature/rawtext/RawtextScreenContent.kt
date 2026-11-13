@@ -49,6 +49,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,24 +73,25 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.domain.rawtext.RawtextSegmentType
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialogProperties
+import yancey.chelper.ui.designsystem.dialog.AppAlertDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.widget.Icon
+import yancey.chelper.ui.designsystem.widget.IconButton
 import yancey.chelper.ui.designsystem.widget.Switch
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
+import yancey.chelper.ui.platform.LocalWideLayout
 
 @Composable
 fun RawtextScreenContent(
@@ -137,7 +139,7 @@ fun RawtextScreenContent(
     onCopyByPreference: () -> Unit,
     onPasteFromClipboard: ((String) -> Unit) -> Unit,
 ) {
-    val isLandscape = yancey.chelper.ui.platform.LocalWideLayout.current
+    val isLandscape = LocalWideLayout.current
 
     var decodeDialogVisible by remember { mutableStateOf(false) }
     var clearDialogVisible by remember { mutableStateOf(false) }
@@ -442,16 +444,9 @@ private fun HeaderIconButton(
     contentDescription: String,
     onClick: () -> Unit,
 ) {
-    Icon(
-        id = id,
-        contentDescription = contentDescription,
-        modifier =
-            Modifier.padding(start = 8.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onClick)
-                .padding(6.dp)
-                .size(22.dp),
-    )
+    IconButton(onClick = onClick) {
+        Icon(id = id, modifier = Modifier.size(22.dp), contentDescription = contentDescription)
+    }
 }
 
 @Composable
@@ -486,40 +481,28 @@ private fun RawtextHeaderMenu(
     onSettings: () -> Unit,
     onAbout: () -> Unit,
 ) {
-    if (!expanded) return
-    // 锚在顶栏菜单按钮右下角的下拉菜单，对齐网页版的右上角菜单
-    Popup(
-        alignment = Alignment.TopEnd,
-        offset = IntOffset(0, 90),
-        onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true),
-    ) {
-        Column(
-            modifier =
-                Modifier.widthIn(min = 168.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(CHelperTheme.colors.backgroundComponentNoTranslate)
-                    .padding(vertical = 6.dp)
-        ) {
-            RawtextMenuItem("解析 JSON", Color(0xFF3367D6), onDecode)
-            RawtextMenuItem("模拟器", Color(0xFF00796B), onSimulator)
-            RawtextMenuItem("清空内容", Color(0xFFD84315), onClear)
-            RawtextMenuItem("设置", CHelperTheme.colors.textMain, onSettings)
-            RawtextMenuItem("关于", CHelperTheme.colors.textMain, onAbout)
-        }
+    if (expanded) {
+        AppAlertDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {},
+            text = {
+                Column {
+                    RawtextMenuItem("解析 JSON", Color(0xFF3367D6), onDecode)
+                    RawtextMenuItem("模拟器", Color(0xFF00796B), onSimulator)
+                    RawtextMenuItem("清空内容", Color(0xFFD84315), onClear)
+                    RawtextMenuItem("设置", CHelperTheme.colors.textMain, onSettings)
+                    RawtextMenuItem("关于", CHelperTheme.colors.textMain, onAbout)
+                }
+            },
+        )
     }
 }
 
 @Composable
 private fun RawtextMenuItem(text: String, color: Color, onClick: () -> Unit) {
-    Text(
-        text = text,
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
-        style = TextStyle(color = color, fontSize = 15.sp),
-    )
+    TextButton(onClick, Modifier.fillMaxWidth()) {
+        Text(text, style = TextStyle(color = color, fontSize = 15.sp))
+    }
 }
 
 /**
@@ -538,9 +521,6 @@ private fun InlineEditorPanel(
     onAddFeature: (RawtextSegmentType) -> Unit,
     onEditSegment: (Long) -> Unit,
 ) {
-    // 焦点请求器，按段 id 缓存，用于换行/退格后把光标移到目标段
-    val focusRequesters = remember { mutableMapOf<Long, FocusRequester>() }
-
     SectionCard(title = "编辑内容", subtitle = "标签之间可直接输入；行首退格删除；回车换行。") {
         Column(
             modifier =
@@ -565,38 +545,32 @@ private fun InlineEditorPanel(
                         Box(Modifier.height(26.dp))
                     }
                     line.forEach { segment ->
-                        val index = segments.indexOf(segment)
-                        if (segment.type == RawtextSegmentType.Text) {
-                            val requester =
-                                focusRequesters.getOrPut(segment.id) { createFocusRequester() }
-                            InlineTextField(
-                                segment = segment,
-                                isActive = activeTextSegmentId == segment.id,
-                                focusRequester = requester,
-                                onValueChange = { onUpdateTextSegment(segment.id, it) },
-                                onFocus = { onUpdateActiveTextSegmentId(segment.id) },
-                                onBackspaceAtStart = { onBackspaceAtStart(segment.id) },
-                            )
-                        } else {
-                            InlineFeatureChip(
-                                segment = segment,
-                                canMoveUp = index > 0,
-                                canMoveDown = index < segments.lastIndex,
-                                onEdit = { onEditSegment(segment.id) },
-                                onMoveUp = { onMoveSegment(segment.id, -1) },
-                                onMoveDown = { onMoveSegment(segment.id, 1) },
-                                onRemove = { onRemoveSegment(segment.id) },
-                            )
+                        key(segment.id) {
+                            val index = segments.indexOf(segment)
+                            if (segment.type == RawtextSegmentType.Text) {
+                                InlineTextField(
+                                    segment = segment,
+                                    isActive = activeTextSegmentId == segment.id,
+                                    focusRequestKey = segments.size,
+                                    onValueChange = { onUpdateTextSegment(segment.id, it) },
+                                    onFocus = { onUpdateActiveTextSegmentId(segment.id) },
+                                    onBackspaceAtStart = { onBackspaceAtStart(segment.id) },
+                                )
+                            } else {
+                                InlineFeatureChip(
+                                    segment = segment,
+                                    canMoveUp = index > 0,
+                                    canMoveDown = index < segments.lastIndex,
+                                    onEdit = { onEditSegment(segment.id) },
+                                    onMoveUp = { onMoveSegment(segment.id, -1) },
+                                    onMoveDown = { onMoveSegment(segment.id, 1) },
+                                    onRemove = { onRemoveSegment(segment.id) },
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-
-        // 换行/退格后，把焦点移到 ViewModel 标记的活动文本段
-        LaunchedEffect(activeTextSegmentId, segments.size) {
-            val target = activeTextSegmentId ?: return@LaunchedEffect
-            focusRequesters[target]?.let { runCatching { it.requestFocus() } }
         }
 
         Spacer(Modifier.height(12.dp))
@@ -645,18 +619,19 @@ private fun splitIntoLines(segments: List<RawtextSegment>): List<List<RawtextSeg
     return lines
 }
 
-/** Workaround for @RememberInComposition warning when creating FocusRequesters dynamically. */
-private fun createFocusRequester(): FocusRequester = FocusRequester()
-
 @Composable
 private fun InlineTextField(
     segment: RawtextSegment,
     isActive: Boolean,
-    focusRequester: FocusRequester,
+    focusRequestKey: Int,
     onValueChange: (TextFieldValue) -> Unit,
     onFocus: () -> Unit,
     onBackspaceAtStart: () -> Boolean,
 ) {
+    val focusRequester = remember(segment.id) { FocusRequester() }
+    LaunchedEffect(segment.id, isActive, focusRequestKey) {
+        if (isActive) focusRequester.requestFocus()
+    }
     BasicTextField(
         value = segment.textValue,
         onValueChange = onValueChange,
@@ -783,7 +758,7 @@ private fun ChipActionDialog(
     onRemove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    CustomDialog(onDismissRequest = onDismiss) {
+    AppDialog(onDismissRequest = onDismiss) {
         DialogContainer(
             modifier = Modifier.widthIn(max = 320.dp),
             backgroundNoTranslate = true,
@@ -1170,9 +1145,9 @@ private fun SimpleFeatureEditDialog(
     var translateWithJson by remember(segment.id) { mutableStateOf(segment.translateWithJson) }
     var selectorEditorVisible by remember { mutableStateOf(false) }
 
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.92f).heightIn(max = 520.dp),
@@ -1268,9 +1243,9 @@ private fun RawtextDecodeDialog(
     onDismiss: () -> Unit,
 ) {
     var input by remember { mutableStateOf("") }
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.92f).heightIn(max = 560.dp),
@@ -1339,9 +1314,9 @@ private fun RawtextSimulatorDialog(
     onPersistMockSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.92f).heightIn(max = 650.dp),
@@ -1387,9 +1362,9 @@ private fun RawtextSettingsDialog(
     onSetAutoSave: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.9f),
@@ -1447,7 +1422,7 @@ private fun RawtextSettingsDialog(
 
 @Composable
 private fun RawtextAboutDialog(onDismiss: () -> Unit) {
-    CustomDialog(onDismissRequest = onDismiss) {
+    AppDialog(onDismissRequest = onDismiss) {
         DialogContainer(
             modifier = Modifier.widthIn(max = 360.dp),
             backgroundNoTranslate = true,
@@ -1481,7 +1456,7 @@ private fun RawtextAboutDialog(onDismiss: () -> Unit) {
 
 @Composable
 private fun AutoSavePromptDialog(onChoose: (Boolean) -> Unit) {
-    CustomDialog(onDismissRequest = { onChoose(false) }) {
+    AppDialog(onDismissRequest = { onChoose(false) }) {
         DialogContainer(
             modifier = Modifier.widthIn(max = 340.dp),
             backgroundNoTranslate = true,

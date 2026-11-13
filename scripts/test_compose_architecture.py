@@ -16,10 +16,20 @@ class ArchitectureChecksTest(unittest.TestCase):
         self.patch = patch.object(architecture, "ROOT", self.root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
+        catalog = self.root / "gradle/libs.versions.toml"
+        catalog.parent.mkdir()
+        catalog.write_text(
+            '[versions]\ntoaster = "15.2"\n\n[libraries]\n'
+            'toaster = { module = "com.github.getActivity:Toaster", version.ref = "toaster" }\n',
+            encoding="utf-8",
+        )
         for module in architecture.DEPENDENCIES:
             directory = self.root / module
             directory.mkdir(parents=True)
-            (directory / "build.gradle.kts").write_text("plugins {}\n")
+            build = "plugins {}\n"
+            if module == "apps/android":
+                build += "dependencies { implementation(libs.toaster) }\n"
+            (directory / "build.gradle.kts").write_text(build, encoding="utf-8")
 
     def source(self, module, package, name="Example", body="", directory=None):
         directory = directory or package.replace(".", "/")
@@ -74,6 +84,27 @@ class ArchitectureChecksTest(unittest.TestCase):
     def test_rejects_new_business_classes_in_jni_namespace(self):
         self.source("shared/native", "yancey.chelper.core", "FeatureRepository")
         self.assert_rejected("only ABI types belong to the JNI package")
+
+    def test_rejects_material_dependency_hidden_behind_an_alias(self):
+        catalog = self.root / "gradle/libs.versions.toml"
+        with catalog.open("a", encoding="utf-8") as target:
+            target.write(
+                'widgets = { module = "org.jetbrains.compose.material3:material3", version = "1" }\n'
+            )
+        self.assert_rejected("Material / Material 3 dependencies are forbidden")
+
+    def test_accepts_explicit_exclusion_of_desktop_material(self):
+        build = self.root / "apps/desktop/build.gradle.kts"
+        build.write_text(
+            'configurations.configureEach { exclude(group = "org.jetbrains.compose.material") }\n',
+            encoding="utf-8",
+        )
+        self.assertEqual([], architecture.check_architecture())
+
+    def test_rejects_removing_android_toaster(self):
+        build = self.root / "apps/android/build.gradle.kts"
+        build.write_text("plugins {}\n", encoding="utf-8")
+        self.assert_rejected("retain Toaster")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ on:
       - "scripts/check_android_headers.py"
       - "scripts/check_compose_architecture.py"
       - "scripts/test_compose_architecture.py"
+      - "scripts/test_check_compose_architecture.py"
       - "scripts/format_android.py"
       - "scripts/format_compose.py"
       - "scripts/build_desktop_core.py"
@@ -25,6 +26,7 @@ on:
       - "scripts/check_android_headers.py"
       - "scripts/check_compose_architecture.py"
       - "scripts/test_compose_architecture.py"
+      - "scripts/test_check_compose_architecture.py"
       - "scripts/format_android.py"
       - "scripts/format_compose.py"
       - "scripts/build_desktop_core.py"
@@ -46,7 +48,7 @@ jobs:
 
       - name: Check Compose architecture boundaries
         run: |
-          python3 scripts/test_compose_architecture.py
+          python3 -m unittest discover -s scripts -p "test*compose_architecture.py"
           python3 scripts/check_compose_architecture.py
 
       - name: Set up JDK 27

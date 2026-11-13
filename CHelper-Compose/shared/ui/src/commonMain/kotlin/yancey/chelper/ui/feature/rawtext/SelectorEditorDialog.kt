@@ -46,8 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialogProperties
+import yancey.chelper.ui.designsystem.dialog.AppDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.widget.Text
 
@@ -121,9 +121,9 @@ fun SelectorEditorDialog(
         scores.addAll(ScoreCondition.parseValue(p.params["scores"] ?: ""))
     }
 
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.94f).heightIn(max = 680.dp),

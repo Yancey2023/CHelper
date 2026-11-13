@@ -38,7 +38,7 @@ import yancey.chelper.data.remote.library.model.UserProfileData
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.LocalLibrarySort
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 
 class LocalLibraryListViewModel : ViewModel() {
     var keyword by mutableStateOf(TextFieldState())
@@ -214,7 +214,7 @@ class LocalLibraryListViewModel : ViewModel() {
         localDataStore: LocalCommandLabDataStore? = null,
     ) {
         if (!isLoggedIn) {
-            Toaster.show("请先登录")
+            ClientMessages.show("请先登录")
             return
         }
         uploadingLocalEntryId = localEntryId
@@ -230,7 +230,7 @@ class LocalLibraryListViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     uploadingLocalEntryId = null
                     if (result.isSuccess()) {
-                        Toaster.show("上传成功")
+                        ClientMessages.show("上传成功")
                         // 上传成功：把后端分配的 uuid 写回本地副本，并清掉未同步标记
                         // 之后用户在本地再编辑才会把 flag 变回 true，符合预期的同步语义
                         val assignedUuid = result.data?.uuid
@@ -247,13 +247,13 @@ class LocalLibraryListViewModel : ViewModel() {
                         CloudLibraryCache.invalidateLibraries()
                         loadCloudLibraries(refresh = true, forceRefresh = true)
                     } else {
-                        Toaster.show(result.message ?: "上传失败")
+                        ClientMessages.show(result.message ?: "上传失败")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     uploadingLocalEntryId = null
-                    Toaster.show("网络错误: ${e.message}")
+                    ClientMessages.show("网络错误: ${e.message}")
                 }
             }
         }
@@ -271,13 +271,13 @@ class LocalLibraryListViewModel : ViewModel() {
                         if (uid != null) {
                             CloudLibraryCache.setLibraries(uid, myCloudLibraries.toList())
                         }
-                        Toaster.show("删除成功")
+                        ClientMessages.show("删除成功")
                     } else {
-                        Toaster.show("删除失败: ${result.message}")
+                        ClientMessages.show("删除失败: ${result.message}")
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { Toaster.show("网络错误: ${e.message}") }
+                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
             }
         }
     }

@@ -1,6 +1,7 @@
 package yancey.chelper.ui.feature.rawtext
 
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModelStore
 import kotlin.coroutines.CoroutineContext
@@ -303,10 +304,7 @@ class RawtextViewModelTest {
             b.updateTextSegment(b.segments.first().id, TextFieldValue("new text"))
             b.flushDraft()
             b.awaitDraftSaved()
-            a.updateTextSegment(
-                a.segments.first().id,
-                TextFieldValue("old text", androidx.compose.ui.text.TextRange(2)),
-            )
+            a.updateTextSegment(a.segments.first().id, TextFieldValue("old text", TextRange(2)))
             a.flushDraft()
             a.awaitDraftSaved()
             assertTrue(repo.stored.draft!!.contains("new text"))

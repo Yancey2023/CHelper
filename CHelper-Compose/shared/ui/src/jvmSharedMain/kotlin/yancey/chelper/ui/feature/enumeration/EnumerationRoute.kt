@@ -22,11 +22,12 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import yancey.chelper.nativecore.enumeration.JvmEnumerationRepository
+import yancey.chelper.ui.platform.rememberTextClipboard
 
 @Composable
 fun EnumerationScreen() {
     val model = viewModel { EnumerationViewModel(JvmEnumerationRepository()) }
-    val clipboard = yancey.chelper.ui.platform.LocalClientServices.current.platform
+    val clipboard = rememberTextClipboard()
     val scope = rememberCoroutineScope()
     EnumerationContent(model) { text -> scope.launch { clipboard.copyText(text) } }
 }

@@ -23,6 +23,7 @@ import java.security.MessageDigest
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
+import kotlin.io.encoding.Base64
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 
@@ -77,7 +78,7 @@ object GuestAuthUtil {
         if (privateKey != null) return
 
         try {
-            val keyBytes = kotlin.io.encoding.Base64.decode(PRIVATE_KEY_BASE64)
+            val keyBytes = Base64.decode(PRIVATE_KEY_BASE64)
             val keySpec = PKCS8EncodedKeySpec(keyBytes)
             val keyFactory = KeyFactory.getInstance(KEY_ALGORITHM)
             privateKey = keyFactory.generatePrivate(keySpec)
@@ -104,7 +105,7 @@ object GuestAuthUtil {
             signature.update(fingerprint.toByteArray(Charsets.UTF_8))
             val signatureBytes = signature.sign()
 
-            kotlin.io.encoding.Base64.encode(signatureBytes)
+            Base64.encode(signatureBytes)
         } catch (e: Exception) {
             e.printStackTrace()
             null

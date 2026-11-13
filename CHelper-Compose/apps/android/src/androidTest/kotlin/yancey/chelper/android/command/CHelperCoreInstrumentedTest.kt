@@ -2,6 +2,7 @@ package yancey.chelper.android.command
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import java.util.concurrent.ConcurrentLinkedQueue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -183,7 +184,7 @@ class CHelperCoreInstrumentedTest {
             // 再用多个线程同时创建并读取CommandContext，共享同一个内核
             val threadCount = 4
             val rounds = 4
-            val failures = java.util.concurrent.ConcurrentLinkedQueue<String>()
+            val failures = ConcurrentLinkedQueue<String>()
             val threads =
                 (0 until threadCount).map {
                     Thread {

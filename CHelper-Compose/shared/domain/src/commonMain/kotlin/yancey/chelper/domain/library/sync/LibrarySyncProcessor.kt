@@ -1,7 +1,8 @@
-@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class)
 
 package yancey.chelper.domain.library.sync
 
+import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import yancey.chelper.domain.library.LibraryFunction

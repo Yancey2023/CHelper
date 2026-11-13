@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import yancey.chelper.domain.library.BlockType
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.feature.library.mcd.darkColor
 import yancey.chelper.ui.feature.library.mcd.lightColor
 
@@ -195,19 +196,17 @@ fun LoongFlowMiniPanel(
 
 @Composable
 private fun MiniAction(text: String, color: Color, enabled: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier.padding(start = 5.dp)
-            .size(47.dp, 24.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(color.copy(alpha = if (enabled) 0.13f else 0.06f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+    TextButton(
+        modifier = Modifier.padding(start = 5.dp),
+        enabled = enabled,
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
     ) {
         Text(
             text,
             style =
                 TextStyle(
-                    color = color.copy(alpha = if (enabled) 1f else 0.45f),
+                    color = if (enabled) color else color.copy(alpha = 0.45f),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                 ),

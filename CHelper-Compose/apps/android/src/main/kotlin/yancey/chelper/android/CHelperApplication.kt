@@ -21,7 +21,9 @@ package yancey.chelper.android
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -31,7 +33,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import yancey.chelper.BuildConfig
+import yancey.chelper.android.network.AndroidWafHelper
 import yancey.chelper.android.storage.BackgroundStore
+import yancey.chelper.android.storage.EncryptedCredentialStore
 import yancey.chelper.android.storage.clientDataStores
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.window.LoongFlowWindowManager
@@ -41,6 +47,7 @@ import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.policy.PolicyGrantManager
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.startup.StartupState
+import yancey.chelper.ui.platform.ClientMessages
 
 class CHelperApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -49,6 +56,15 @@ class CHelperApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Toast feedback must also work before a Compose host exists or after it closes.
+        Toaster.init(this)
+        Toaster.setGravity(
+            Gravity.BOTTOM,
+            0,
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics)
+                .toInt(),
+        )
+        ClientMessages.setPlatformPresenter { Toaster.show(it) }
         BackgroundStore.init(
             dataDir.resolve("theme"),
             maxOf(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels)
@@ -58,11 +74,7 @@ class CHelperApplication : Application() {
         startup =
             StartupState(
                 this.clientDataStores().settings.settings(),
-                {
-                    kotlinx.coroutines.withContext(Dispatchers.IO) {
-                        BackgroundStore.INSTANCE.load()
-                    }
-                },
+                { withContext(Dispatchers.IO) { BackgroundStore.INSTANCE.load() } },
                 applicationScope,
             ) {
                 credentialsReady.await()
@@ -75,24 +87,14 @@ class CHelperApplication : Application() {
         )
         // 用于数据分析和性能监控的第三方库初始化，依赖于 PolicyGrantManager
         MonitorUtil.init(this)
-        // Toast初始化
-        Toaster.init(this)
-        Toaster.setGravity(
-            Gravity.BOTTOM,
-            0,
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics)
-                .toInt(),
-        )
         // 游龙悬浮窗单例初始化
         LoongFlowWindowManager.init(this)
         // 网络服务初始化
-        ServiceManager.init(cacheDir, yancey.chelper.BuildConfig.DEBUG)
-        yancey.chelper.android.network.AndroidWafHelper.init(this)
+        ServiceManager.init(cacheDir, BuildConfig.DEBUG)
+        AndroidWafHelper.init(this)
         applicationScope.launch(Dispatchers.IO) {
             try {
-                LoginUtil.init(
-                    yancey.chelper.android.storage.EncryptedCredentialStore(this@CHelperApplication)
-                ) { throwable ->
+                LoginUtil.init(EncryptedCredentialStore(this@CHelperApplication)) { throwable ->
                     Log.e("LoginUtil", "Unable to restore protected session", throwable)
                     MonitorUtil.generateCustomLog(throwable, "ReadUserException")
                 }
@@ -103,10 +105,7 @@ class CHelperApplication : Application() {
         LibrarySyncScheduler.observe(this, applicationScope)
         // 访客认证初始化（用于自动访客登录）
         GuestAuthUtil.init(
-            android.provider.Settings.Secure.getString(
-                contentResolver,
-                android.provider.Settings.Secure.ANDROID_ID,
-            ) ?: "unknown"
+            Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
         )
 
         // 悬浮窗前台服务通知渠道
@@ -132,5 +131,5 @@ class CHelperApplication : Application() {
     }
 }
 
-val android.content.Context.startupState: StartupState
+val Context.startupState: StartupState
     get() = (applicationContext as CHelperApplication).startup

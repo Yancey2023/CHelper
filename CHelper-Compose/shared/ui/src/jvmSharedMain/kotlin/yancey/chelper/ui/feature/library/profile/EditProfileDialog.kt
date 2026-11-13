@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,12 +50,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.data.remote.library.model.UserProfileData
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.widget.Button
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextField
@@ -86,7 +87,7 @@ fun EditProfileDialog(
 
     val isLocked = (user.tier ?: 0) < 1
 
-    Dialog(onDismissRequest = onDismiss) {
+    AppDialog(onDismissRequest = onDismiss) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
@@ -185,7 +186,7 @@ fun EditProfileDialog(
             TextField(
                 state = nicknameState,
                 hint = "请输入昵称",
-                modifier = Modifier.fillMaxWidth().height(45.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -221,7 +222,7 @@ fun EditProfileDialog(
                 TextField(
                     state = avatarUrlState,
                     hint = "http(s)://... 也可以接外链头像",
-                    modifier = Modifier.fillMaxWidth().height(45.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -234,7 +235,7 @@ fun EditProfileDialog(
                 TextField(
                     state = homepageState,
                     hint = "个人主页链接",
-                    modifier = Modifier.fillMaxWidth().height(45.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -247,7 +248,7 @@ fun EditProfileDialog(
                 TextField(
                     state = signatureState,
                     hint = "个性签名",
-                    modifier = Modifier.fillMaxWidth().height(45.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }

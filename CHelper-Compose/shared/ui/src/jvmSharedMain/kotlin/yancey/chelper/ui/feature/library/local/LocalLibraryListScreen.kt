@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -64,6 +65,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.data.library.decodeLocalLibraryImport
@@ -90,8 +92,9 @@ import yancey.chelper.ui.navigation.LocalLibraryShowScreenKey
 import yancey.chelper.ui.navigation.MessageScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
 import yancey.chelper.ui.navigation.UserProfileScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberTextClipboard
 
 @Composable
 fun LocalLibraryListScreen(
@@ -105,7 +108,7 @@ fun LocalLibraryListScreen(
         localCommandLabDataStore
             .localLibraryFunctions()
             .collectAsStateWithLifecycle(initialValue = null)
-    val clipboard = context.platform
+    val clipboard = rememberTextClipboard()
     val searchQuery = viewModel.keyword.text.toString()
     val filteredLibraries by
         produceState(
@@ -205,7 +208,8 @@ fun LocalLibraryListScreen(
             Spacer(Modifier.height(10.dp))
             TextField(
                 state = viewModel.keyword,
-                modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 15.dp),
+                modifier =
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 15.dp),
                 contentAlignment = Alignment.CenterStart,
                 hint = stringResource(Res.string.layout_library_list_search_hint),
                 horizontalPadding = 20.dp,
@@ -515,7 +519,7 @@ fun LocalLibraryListScreen(
                             localCommandLabDataStore.addLocalLibraryFunction(
                                 library.toLocalDuplicate()
                             )
-                            Toaster.show("已创建本地副本")
+                            ClientMessages.show("已创建本地副本")
                         }
                     }
 
@@ -524,7 +528,7 @@ fun LocalLibraryListScreen(
                         val output = Json.encodeToString(LibraryFunction.serializer(), library)
                         viewModel.viewModelScope.launch {
                             clipboard.copyText(output)
-                            Toaster.show("已复制到剪切板")
+                            ClientMessages.show("已复制到剪切板")
                         }
                     }
 
@@ -550,7 +554,7 @@ fun LocalLibraryListScreen(
                 showDeleteConfirmId = null
                 viewModel.viewModelScope.launch {
                     localCommandLabDataStore.removeLocalLibraryFunction(idToDelete)
-                    Toaster.show("已删除")
+                    ClientMessages.show("已删除")
                 }
             },
         )
@@ -569,9 +573,9 @@ fun LocalLibraryListScreen(
                             try {
                                 val libraries = decodeLocalLibraryImport(text)
                                 localCommandLabDataStore.addLocalLibraryFunctions(libraries)
-                                Toaster.show("已导入 ${libraries.size} 个命令库")
+                                ClientMessages.show("已导入 ${libraries.size} 个命令库")
                             } catch (_: Exception) {
-                                Toaster.show("导入失败")
+                                ClientMessages.show("导入失败")
                             }
                         }
                     }
@@ -590,7 +594,7 @@ fun LocalLibraryListScreen(
             onConfirm = {
                 viewModel.viewModelScope.launch {
                     clipboard.copyText(output)
-                    Toaster.show("已复制")
+                    ClientMessages.show("已复制")
                 }
             },
         )
@@ -642,7 +646,7 @@ fun LocalLibraryListScreen(
                         val output = Json.encodeToString(selected)
                         viewModel.viewModelScope.launch {
                             clipboard.copyText(output)
-                            Toaster.show("已导出 ${selected.size} 个命令库")
+                            ClientMessages.show("已导出 ${selected.size} 个命令库")
                         }
                     }
 
@@ -679,7 +683,7 @@ fun LocalLibraryListScreen(
                 showBatchDeleteConfirm = false
                 viewModel.viewModelScope.launch {
                     val count = localCommandLabDataStore.removeLocalLibraryFunctions(ids)
-                    Toaster.show("已删除 $count 个命令库")
+                    ClientMessages.show("已删除 $count 个命令库")
                 }
             },
         )
@@ -708,7 +712,7 @@ fun LocalLibraryListScreen(
             confirmText = "退出",
             onConfirm = {
                 viewModel.logout()
-                Toaster.show("已退出登录")
+                ClientMessages.show("已退出登录")
             },
         )
     }
@@ -1004,11 +1008,7 @@ private fun LoginHintCard(navController: NavHostController) {
 }
 
 @Composable
-private fun QuickActionButton(
-    icon: org.jetbrains.compose.resources.DrawableResource,
-    label: String,
-    onClick: () -> Unit,
-) {
+private fun QuickActionButton(icon: DrawableResource, label: String, onClick: () -> Unit) {
     Column(
         modifier =
             Modifier.clip(RoundedCornerShape(8.dp))
@@ -1022,21 +1022,5 @@ private fun QuickActionButton(
             text = label,
             style = TextStyle(fontSize = 11.sp, color = CHelperTheme.colors.textSecondary),
         )
-    }
-}
-
-@Composable
-fun LocalLibraryListScreenLightThemePreview() {
-    val viewModel = remember { LocalLibraryListViewModel() }
-    CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        LocalLibraryListScreen(viewModel = viewModel)
-    }
-}
-
-@Composable
-fun LocalLibraryListScreenDarkThemePreview() {
-    val viewModel = remember { LocalLibraryListViewModel() }
-    CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        LocalLibraryListScreen(viewModel = viewModel)
     }
 }

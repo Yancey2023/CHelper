@@ -143,9 +143,12 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.foundation)
-    debugImplementation(libs.compose.ui.tooling)
+    // Material is used by tooling's parameterized-preview launcher, not our parameterless previews.
+    debugImplementation(libs.compose.ui.tooling) {
+        exclude(group = "androidx.compose.material")
+        exclude(group = "androidx.compose.material3")
+    }
     // https://github.com/coil-kt/coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
@@ -181,6 +184,8 @@ dependencies {
     // https://github.com/junit-team/junit4
     testImplementation(libs.junit)
     // https://github.com/androidx/androidx
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)

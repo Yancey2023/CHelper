@@ -21,7 +21,6 @@ package yancey.chelper.android.activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,8 +30,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.hjq.toast.Toaster
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,12 +43,13 @@ import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.ui.navigation.CommandLabDeepLink
 import yancey.chelper.ui.navigation.CommandLabDeepLinkParser
 import yancey.chelper.ui.navigation.openCommandLabDeepLink
+import yancey.chelper.ui.platform.ClientMessages
 
 /** 首页 */
 class HomeActivity : BaseComposeActivity() {
     private lateinit var floatingWindowManager: FloatingWindowManager
     private var backgroundJob: Job? = null
-    private lateinit var onBackPressedCallback: OnBackPressedCallback
+    private var isSavingBackground by mutableStateOf(false)
     private lateinit var photoPicker: ActivityResultLauncher<PickVisualMediaRequest>
     private var isShowSavingBackgroundDialog = mutableStateOf(false)
     private var pendingDeepLink by mutableStateOf<CommandLabDeepLink?>(null)
@@ -56,15 +57,6 @@ class HomeActivity : BaseComposeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         floatingWindowManager = FloatingWindowManager(application)
-        onBackPressedCallback =
-            object : OnBackPressedCallback(false) {
-                override fun handleOnBackPressed() {
-                    if (backgroundJob != null && backgroundJob!!.isActive) {
-                        isShowSavingBackgroundDialog.value = true
-                    }
-                }
-            }
-        onBackPressedDispatcher.addCallback(onBackPressedCallback)
         photoPicker =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) {
                 setBackground(it)
@@ -86,6 +78,7 @@ class HomeActivity : BaseComposeActivity() {
                 chooseBackground = this::chooseBackground,
                 restoreBackground = this::restoreBackground,
                 isShowSavingBackgroundDialog = isShowSavingBackgroundDialog,
+                isSavingBackground = isSavingBackground,
                 shutdown = this::finishAffinity,
             )
         }
@@ -125,17 +118,17 @@ class HomeActivity : BaseComposeActivity() {
         backgroundJob?.cancel()
         backgroundJob =
             lifecycleScope.launch {
-                onBackPressedCallback.isEnabled = true
+                isSavingBackground = true
                 try {
                     action()
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Toaster.show(e.message ?: "背景设置失败")
+                    ClientMessages.show(e.message ?: "背景设置失败")
                     MonitorUtil.generateCustomLog(e, "BackgroundChangeException")
                 } finally {
-                    if (kotlinx.coroutines.currentCoroutineContext().isActive) {
-                        onBackPressedCallback.isEnabled = false
+                    if (currentCoroutineContext().isActive) {
+                        isSavingBackground = false
                         isShowSavingBackgroundDialog.value = false
                     }
                 }

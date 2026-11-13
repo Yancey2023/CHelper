@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import java.util.Locale
 import yancey.chelper.data.remote.library.model.ActivityLedgerItem
 import yancey.chelper.data.remote.library.model.ActivityRule
 import yancey.chelper.data.remote.library.model.RewardProduct
@@ -59,7 +61,7 @@ import yancey.chelper.data.remote.library.model.TierGrant
 import yancey.chelper.data.remote.library.model.TierSummary
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
@@ -70,7 +72,7 @@ import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextField
 import yancey.chelper.ui.navigation.LeaderboardScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 
 @Composable
 fun ActivityCenterScreen(
@@ -85,7 +87,7 @@ fun ActivityCenterScreen(
     LaunchedEffect(Unit) { viewModel.load() }
     DisposableEffect(viewModel.actionMessage) {
         viewModel.actionMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.actionMessage = null
         }
         onDispose {}
@@ -201,7 +203,7 @@ private fun ActivityOverview(viewModel: ActivityCenterViewModel, navController: 
     val summary = viewModel.summary
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(15.dp),
+        contentPadding = PaddingValues(15.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
@@ -299,7 +301,7 @@ private fun ActivityStore(viewModel: ActivityCenterViewModel, onRedeem: (RewardP
     val baseTier = viewModel.tierDetails?.baseTier ?: viewModel.summary?.tier?.baseTier ?: 0
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(15.dp),
+        contentPadding = PaddingValues(15.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
@@ -468,7 +470,7 @@ private fun RedemptionCard(item: RewardRedemption) {
 private fun ActivityLedger(viewModel: ActivityCenterViewModel) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(15.dp),
+        contentPadding = PaddingValues(15.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
@@ -555,7 +557,7 @@ private fun ActivityTier(details: TierDetails?) {
     }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(15.dp),
+        contentPadding = PaddingValues(15.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
@@ -683,7 +685,7 @@ private fun FulfillmentDialog(
     onConfirm: (String) -> Unit,
 ) {
     val info = rememberTextFieldState()
-    CustomDialog(onDismissRequest = onDismiss) {
+    AppDialog(onDismissRequest = onDismiss) {
         DialogContainer(backgroundNoTranslate = true) {
             Column {
                 Text(
@@ -714,7 +716,7 @@ private fun FulfillmentDialog(
                     DividerVertical(0.dp)
                     DialogAction("确认兑换", Modifier.weight(1f)) {
                         val value = info.text.toString().trim()
-                        if (value.isBlank()) Toaster.show("请填写收货信息") else onConfirm(value)
+                        if (value.isBlank()) ClientMessages.show("请填写收货信息") else onConfirm(value)
                     }
                 }
             }
@@ -780,7 +782,7 @@ private fun formatPoints(value: Double?): String {
     val number = value ?: 0.0
     val whole = number.toLong()
     return if (number == whole.toDouble()) whole.toString()
-    else String.format(java.util.Locale.US, "%.2f", number).trimEnd('0').trimEnd('.')
+    else String.format(Locale.US, "%.2f", number).trimEnd('0').trimEnd('.')
 }
 
 private fun tierStatusText(status: String?): String =

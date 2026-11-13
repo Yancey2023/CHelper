@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,11 +47,12 @@ import yancey.chelper.ui.designsystem.widget.Button
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextField
+import yancey.chelper.ui.platform.LocalWideLayout
 
 @Composable
 fun EnumerationScreenTimes(viewModel: EnumerationViewModel) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(30.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).heightIn(min = 56.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = stringResource(Res.string.layout_enumeration_times_label))
@@ -91,7 +93,8 @@ fun EnumerationScreenVariable(modifier: Modifier = Modifier, viewModel: Enumerat
             itemsIndexed(viewModel.variableList) { index, variable ->
                 Spacer(modifier = Modifier.height(15.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(30.dp),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = 15.dp).heightIn(min = 56.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextField(
@@ -146,7 +149,7 @@ fun EnumerationScreenButton(modifier: Modifier = Modifier, viewModel: Enumeratio
 @Composable
 fun EnumerationContent(viewModel: EnumerationViewModel, onCopy: (String) -> Unit) {
     RootViewWithHeaderAndCopyright(stringResource(Res.string.layout_enumeration_title)) {
-        if (!yancey.chelper.ui.platform.LocalWideLayout.current) {
+        if (!LocalWideLayout.current) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Spacer(Modifier.height(15.dp))
                 TextField(

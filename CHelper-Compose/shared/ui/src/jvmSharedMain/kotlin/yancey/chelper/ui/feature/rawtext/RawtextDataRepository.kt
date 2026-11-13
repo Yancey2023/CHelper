@@ -18,6 +18,7 @@
 
 package yancey.chelper.ui.feature.rawtext
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -66,7 +67,7 @@ object RawtextDataRepository {
             json.parseToJsonElement(text).jsonObject.entries.map { (id, value) ->
                 NamedEntry(id, value.jsonPrimitive.contentOrNull ?: id)
             }
-        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+        } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
             emptyList()

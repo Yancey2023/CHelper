@@ -39,6 +39,7 @@ import yancey.chelper.core.ErrorReason
 import yancey.chelper.core.Suggestion
 import yancey.chelper.data.logging.ClientLog as Log
 import yancey.chelper.domain.command.CommandDraft
+import yancey.chelper.domain.command.CommandDraftRepository
 import yancey.chelper.nativecore.command.CommandAnalysisRequest
 import yancey.chelper.nativecore.command.CommandSession
 import yancey.chelper.nativecore.command.NativeCommandEngine
@@ -49,7 +50,7 @@ class CompletionViewModel
 @JvmOverloads
 constructor(
     services: ClientServices,
-    draftRepository: yancey.chelper.domain.command.CommandDraftRepository,
+    draftRepository: CommandDraftRepository,
     private val savedState: SavedStateHandle = SavedStateHandle(),
 ) : ViewModel() {
     var isShowMenu by mutableStateOf(false)

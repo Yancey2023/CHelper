@@ -30,14 +30,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.OutputTransformation
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,7 +56,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -68,11 +66,14 @@ import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.CaptchaDialog
 import yancey.chelper.ui.designsystem.dialog.MenuDialog
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.widget.Button
 import yancey.chelper.ui.designsystem.widget.Icon
+import yancey.chelper.ui.designsystem.widget.IconButton
+import yancey.chelper.ui.designsystem.widget.SecureTextField
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextFieldWithIcon
 import yancey.chelper.ui.feature.library.profile.EditProfileDialog
@@ -156,7 +157,7 @@ fun AccountScreen(
         val profile = viewModel.userProfile
         if (profile == null) {
             // 拉取中——用一个极简的对话框占位，避免空白卡顿让用户疑惑
-            Dialog(onDismissRequest = { showEditProfileDialog = false }) {
+            AppDialog(onDismissRequest = { showEditProfileDialog = false }) {
                 Box(
                     modifier =
                         Modifier.clip(RoundedCornerShape(16.dp))
@@ -655,34 +656,30 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.loginAccount,
                         hint = "用户邮箱 / 账号",
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    TextFieldWithIcon(
+                    SecureTextField(
                         state = viewModel.loginPassword,
                         hint = "密码",
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        lineLimits = TextFieldLineLimits.SingleLine,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
+                        visible = isLoginPasswordVisible,
                         trailingIcon = {
-                            Icon(
-                                id =
-                                    if (isLoginPasswordVisible) Res.drawable.eye
-                                    else Res.drawable.eye_off,
-                                modifier =
-                                    Modifier.size(48.dp)
-                                        .clickable {
-                                            isLoginPasswordVisible = !isLoginPasswordVisible
-                                        }
-                                        .padding(14.dp),
-                                contentDescription = "显示/隐藏密码",
-                            )
+                            IconButton(
+                                onClick = { isLoginPasswordVisible = !isLoginPasswordVisible }
+                            ) {
+                                Icon(
+                                    id =
+                                        if (isLoginPasswordVisible) Res.drawable.eye
+                                        else Res.drawable.eye_off,
+                                    modifier = Modifier.size(20.dp),
+                                    contentDescription =
+                                        if (isLoginPasswordVisible) "隐藏密码" else "显示密码",
+                                )
+                            }
                         },
-                        outputTransformation =
-                            if (isLoginPasswordVisible) null
-                            else
-                                OutputTransformation { replace(0, length, "\u2022".repeat(length)) },
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
@@ -697,7 +694,7 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.registerAccount,
                         hint = "电子邮箱 / 手机号",
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         leadingIcon = { Icon(Res.drawable.ic_mail, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -705,7 +702,7 @@ fun LoginRegisterView(
                         TextFieldWithIcon(
                             state = viewModel.registerCode,
                             hint = "验证码",
-                            modifier = Modifier.weight(1f).height(50.dp),
+                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
                             leadingIcon = { Icon(Res.drawable.ic_key, Modifier.size(20.dp)) },
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -728,34 +725,30 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.registerNickname,
                         hint = "用户昵称",
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    TextFieldWithIcon(
+                    SecureTextField(
                         state = viewModel.registerPassword,
                         hint = "设置密码",
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        lineLimits = TextFieldLineLimits.SingleLine,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                         leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
+                        visible = isRegisterPasswordVisible,
                         trailingIcon = {
-                            Icon(
-                                id =
-                                    if (isRegisterPasswordVisible) Res.drawable.eye
-                                    else Res.drawable.eye_off,
-                                modifier =
-                                    Modifier.size(48.dp)
-                                        .clickable {
-                                            isRegisterPasswordVisible = !isRegisterPasswordVisible
-                                        }
-                                        .padding(14.dp),
-                                contentDescription = "显示/隐藏密码",
-                            )
+                            IconButton(
+                                onClick = { isRegisterPasswordVisible = !isRegisterPasswordVisible }
+                            ) {
+                                Icon(
+                                    id =
+                                        if (isRegisterPasswordVisible) Res.drawable.eye
+                                        else Res.drawable.eye_off,
+                                    modifier = Modifier.size(20.dp),
+                                    contentDescription =
+                                        if (isRegisterPasswordVisible) "隐藏密码" else "显示密码",
+                                )
+                            }
                         },
-                        outputTransformation =
-                            if (isRegisterPasswordVisible) null
-                            else
-                                OutputTransformation { replace(0, length, "\u2022".repeat(length)) },
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(

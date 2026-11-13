@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.*
 import org.jetbrains.compose.resources.*
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.widget.Divider
 import yancey.chelper.ui.designsystem.widget.DividerVertical
@@ -34,7 +34,7 @@ fun LineCopyContent(commands: List<String>, onDismiss: () -> Unit, onCopy: (Stri
         }
     }
 
-    CustomDialog(onDismissRequest = onDismiss) {
+    AppDialog(onDismissRequest = onDismiss) {
         DialogContainer(backgroundNoTranslate = true) {
             Column(modifier = Modifier) {
                 // 标题

@@ -9,11 +9,13 @@ import androidx.compose.ui.window.rememberWindowState
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
+import yancey.chelper.data.startup.StartupState
 import yancey.chelper.desktop.di.DesktopContainer
 import yancey.chelper.desktop.instance.DesktopInstance
 import yancey.chelper.desktop.instance.desktopDataDirectory
@@ -33,7 +35,7 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun runApplication(directory: java.io.File, instance: DesktopInstance) =
+private fun runApplication(directory: File, instance: DesktopInstance) =
     application(exitProcessOnExit = false) {
         val container = remember { DesktopContainer(directory) }
         val session = container.dependencies.services.session
@@ -50,7 +52,7 @@ private fun runApplication(directory: java.io.File, instance: DesktopInstance) =
         val scope = rememberCoroutineScope()
         val startup =
             remember(container) {
-                yancey.chelper.data.startup.StartupState(
+                StartupState(
                     settingsFlow = container.stores.settings.settings(),
                     loadBackground = {
                         try {
@@ -129,13 +131,10 @@ private fun runApplication(directory: java.io.File, instance: DesktopInstance) =
                             onClose = ::close,
                             openRequest = openRequest,
                             initialSettings = requireNotNull(startupSettings),
+                            closing = closing,
                         )
                     else -> BasicText("正在加载 CHelper…")
                 }
-                if (closing)
-                    androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
-                        BasicText("正在保存并退出…")
-                    }
                 failure?.let { BasicText(it) }
             }
         }

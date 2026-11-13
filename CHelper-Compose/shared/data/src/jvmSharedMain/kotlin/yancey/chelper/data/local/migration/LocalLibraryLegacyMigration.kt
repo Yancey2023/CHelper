@@ -19,13 +19,15 @@
 package yancey.chelper.data.local.migration
 
 import androidx.datastore.core.DataMigration
+import java.io.File
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 import yancey.chelper.data.local.library.LocalLibraryData
 import yancey.chelper.domain.library.LibraryFunction
 
 class LocalLibraryDataMigrationToV75(
-    private val legacyDirectory: java.io.File,
-    private val destination: java.io.File? = null,
+    private val legacyDirectory: File,
+    private val destination: File? = null,
 ) : DataMigration<LocalLibraryData> {
     private var imported = false
 
@@ -40,7 +42,7 @@ class LocalLibraryDataMigrationToV75(
             val oldFunctions =
                 Json.decodeFromString<List<LibraryFunction>>(oldFile.readBytes().decodeToString())
             LocalLibraryData(functions = oldFunctions).also { imported = true }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             currentData

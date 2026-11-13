@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -40,11 +42,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.core.Suggestion
+import yancey.chelper.domain.command.CommandProblem
+import yancey.chelper.domain.command.CommandResult
+import yancey.chelper.domain.command.CommandSuggestion
 import yancey.chelper.resources.*
 import yancey.chelper.ui.navigation.HistoryScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryListScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryListScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.LocalClientServices
+import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
 private fun rememberSuggestion(viewModel: CompletionViewModel, index: Int): Suggestion? {
@@ -63,10 +69,11 @@ fun CompletionScreen(
     hideView: () -> Unit = {},
     isScreenVisible: Boolean = true,
 ) {
-    val context = yancey.chelper.ui.platform.LocalClientServices.current
+    val context = LocalClientServices.current
+    val copy = rememberCopyText()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val windowSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val density = androidx.compose.ui.platform.LocalDensity.current
+    val windowSize = LocalWindowInfo.current.containerSize
+    val density = LocalDensity.current
     val commandEditorHeight =
         with(density) { (windowSize.height.toDp() / 3).coerceIn(120.dp, 220.dp) }
     val settingsDataStore = remember(context) { context.settings }
@@ -152,22 +159,18 @@ fun CompletionScreen(
     var errorRange by remember { mutableStateOf<CommandErrorSelection?>(null) }
     CompletionContent(
         state =
-            yancey.chelper.domain.command.CommandResult(
+            CommandResult(
                 structure = viewModel.structure.orEmpty(),
                 hint = viewModel.paramHint.orEmpty(),
                 problems =
                     viewModel.errorReasons.orEmpty().map {
-                        yancey.chelper.domain.command.CommandProblem(
-                            it.errorReason.orEmpty(),
-                            it.start,
-                            it.end,
-                        )
+                        CommandProblem(it.errorReason.orEmpty(), it.start, it.end)
                     },
             ),
         suggestionCount = viewModel.suggestionsSize,
         suggestionAt = { index ->
             rememberSuggestion(viewModel, index)?.let {
-                yancey.chelper.domain.command.CommandSuggestion(it.name.orEmpty(), it.description)
+                CommandSuggestion(it.name.orEmpty(), it.description)
             }
         },
         showMenu = viewModel.isShowMenu,
@@ -205,22 +208,29 @@ fun CompletionScreen(
                 CompletionAction.DismissHint -> isCommandEditorHintVisible = false
                 CompletionAction.Copy -> {
                     viewModel.onCopy(viewModel.command.text.toString())
-                    viewModel.viewModelScope.launch {
-                        context.platform.copyText(viewModel.command.text.toString())
-                        Toaster.show("已复制")
-                    }
+                    copy(viewModel.command.text.toString())
                     if (isHideWindowWhenCopying) hideView()
                 }
             }
         },
     ) { modifier ->
-        context.platform.CommandEditor(viewModel, modifier, errorRange)
+        ComposeCommandEditor(
+            command = viewModel.command,
+            editorMode = viewModel.isCommandEditorMode,
+            tokens = viewModel.syntaxHighlightTokens,
+            errors =
+                viewModel.errorReasons.orEmpty().map {
+                    CommandProblem(it.errorReason.orEmpty(), it.start, it.end)
+                },
+            modifier = modifier,
+            errorSelection = errorRange,
+        )
     }
 }
 
 @Composable
 fun rememberCompletionViewModel(): CompletionViewModel {
-    val services = yancey.chelper.ui.platform.LocalClientServices.current
+    val services = LocalClientServices.current
     return viewModel {
         CompletionViewModel(services, services.commandDrafts, createSavedStateHandle())
     }

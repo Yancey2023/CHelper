@@ -1,5 +1,6 @@
 package yancey.chelper.desktop.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +18,7 @@ import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.feature.command.CommandErrorSelection
 import yancey.chelper.ui.feature.command.ComposeCommandEditor
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 class ComposeCommandEditorTest {
     @get:Rule val compose = createComposeRule()
 

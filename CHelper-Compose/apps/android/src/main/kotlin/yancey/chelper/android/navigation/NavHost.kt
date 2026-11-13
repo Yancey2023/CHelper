@@ -23,14 +23,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import yancey.chelper.android.command.OldCommandConverter
@@ -51,7 +47,10 @@ import yancey.chelper.ui.navigation.ClientScreenBindings
 import yancey.chelper.ui.navigation.CompletionScreenKey
 import yancey.chelper.ui.navigation.HomeScreenKey
 import yancey.chelper.ui.navigation.clientScreens
+import yancey.chelper.ui.platform.AppBackHandler
+import yancey.chelper.ui.platform.ClientInteractionHost
 import yancey.chelper.ui.platform.LocalAppBackAction
+import yancey.chelper.ui.platform.LocalClientServices
 import yancey.chelper.ui.platform.LocalWideLayout
 
 private data class NavigationEnvironment(
@@ -62,6 +61,9 @@ private data class NavigationEnvironment(
     val hideView: () -> Unit = {},
     val chooseBackground: () -> Unit = {},
     val restoreBackground: () -> Unit = {},
+    val isSavingBackground: Boolean = false,
+    val showSavingBackground: () -> Unit = {},
+    val savingDialog: @Composable () -> Unit = {},
 )
 
 @Composable
@@ -71,6 +73,7 @@ fun NavHost(
     chooseBackground: () -> Unit,
     restoreBackground: () -> Unit,
     isShowSavingBackgroundDialog: MutableState<Boolean> = mutableStateOf(false),
+    isSavingBackground: Boolean = false,
     shutdown: () -> Unit,
 ) {
     CHelperNavigation(
@@ -81,14 +84,18 @@ fun NavHost(
             shutdown = shutdown,
             chooseBackground = chooseBackground,
             restoreBackground = restoreBackground,
+            isSavingBackground = isSavingBackground,
+            showSavingBackground = { isShowSavingBackgroundDialog.value = true },
+            savingDialog = {
+                if (isShowSavingBackgroundDialog.value) {
+                    IsConfirmDialog(
+                        onDismissRequest = { isShowSavingBackgroundDialog.value = false },
+                        content = "背景图片正在保存中，请稍候",
+                    )
+                }
+            },
         ),
     )
-    if (isShowSavingBackgroundDialog.value) {
-        IsConfirmDialog(
-            onDismissRequest = { isShowSavingBackgroundDialog.value = false },
-            content = "背景图片正在保存中，请稍候",
-        )
-    }
 }
 
 @Composable
@@ -116,73 +123,64 @@ private fun CHelperNavigation(
     start: Any,
     environment: NavigationEnvironment,
 ) {
-    val keyboard = LocalSoftwareKeyboardController.current
-    val focus = LocalFocusManager.current
-    val backDispatcher = remember { yancey.chelper.ui.platform.AppBackDispatcher() }
-    val systemBack =
-        androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    DisposableEffect(navController, focus, keyboard) {
-        val listener =
-            NavController.OnDestinationChangedListener { _, _, _ ->
-                focus.clearFocus()
-                keyboard?.hide()
-            }
-        navController.addOnDestinationChangedListener(listener)
-        onDispose { navController.removeOnDestinationChangedListener(listener) }
-    }
-    BoxWithConstraints {
-        CompositionLocalProvider(
-            yancey.chelper.ui.platform.LocalClientServices provides
-                rememberAndroidClientServices(environment.floatingWindowManager),
-            LocalAppBackAction provides { navController.popBackStack() },
-            yancey.chelper.ui.platform.LocalAppBackDispatcher provides backDispatcher,
-            yancey.chelper.ui.platform.LocalPlatformHeaderBackAction provides
-                {
-                    systemBack?.onBackPressed() ?: navController.popBackStack()
-                    Unit
-                },
-            LocalWideLayout provides (maxWidth > maxHeight),
-        ) {
-            NavHost(
-                navController = navController,
-                startDestination = start,
-                enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
-                exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
-                popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) },
+    ClientInteractionHost(
+        onBack = if (environment.isFloatingWindow) environment.hideView else null
+    ) {
+        BoxWithConstraints {
+            CompositionLocalProvider(
+                LocalClientServices provides
+                    rememberAndroidClientServices(environment.floatingWindowManager),
+                LocalAppBackAction provides { navController.popBackStack() },
+                LocalWideLayout provides (maxWidth > maxHeight),
             ) {
-                clientScreens(
-                    navController,
-                    ClientScreenBindings(
-                        home = { HomeScreen(navController = it) },
-                        completion = {
-                            CompletionScreen(
-                                navController = it,
-                                shutdown = environment.shutdown,
-                                hideView = environment.hideView,
-                                isScreenVisible = environment.isWindowVisible,
-                            )
-                        },
-                        history = { HistoryScreen() },
-                        settings = {
-                            SettingsScreen(
-                                environment.chooseBackground,
-                                environment.restoreBackground,
-                            )
-                        },
-                        old2new = {
-                            val context = LocalContext.current
-                            val converter = remember(context) { OldCommandConverter(context) }
-                            Old2NewScreen(old2new = converter::convert)
-                        },
-                        imeGuide = { Old2NewIMEGuideScreen() },
-                        enumeration = { EnumerationScreen() },
-                        rawtext = { RawtextScreen() },
-                        about = { AboutScreen(it) },
-                        asset = { title, path -> AssetTextScreen(title = title, assetPath = path) },
-                    ),
-                    environment.isFloatingWindow,
+                NavHost(
+                    navController = navController,
+                    startDestination = start,
+                    enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+                    exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
+                    popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+                    popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) },
+                ) {
+                    clientScreens(
+                        navController,
+                        ClientScreenBindings(
+                            home = { HomeScreen(navController = it) },
+                            completion = {
+                                CompletionScreen(
+                                    navController = it,
+                                    shutdown = environment.shutdown,
+                                    hideView = environment.hideView,
+                                    isScreenVisible = environment.isWindowVisible,
+                                )
+                            },
+                            history = { HistoryScreen() },
+                            settings = {
+                                SettingsScreen(
+                                    environment.chooseBackground,
+                                    environment.restoreBackground,
+                                )
+                            },
+                            old2new = {
+                                val context = LocalContext.current
+                                val converter = remember(context) { OldCommandConverter(context) }
+                                Old2NewScreen(old2new = converter::convert)
+                            },
+                            imeGuide = { Old2NewIMEGuideScreen() },
+                            enumeration = { EnumerationScreen() },
+                            rawtext = { RawtextScreen() },
+                            about = { AboutScreen(it) },
+                            asset = { title, path ->
+                                AssetTextScreen(title = title, assetPath = path)
+                            },
+                        ),
+                        environment.isFloatingWindow,
+                    )
+                }
+                AppBackHandler(
+                    enabled = environment.isSavingBackground,
+                    onBack = environment.showSavingBackground,
                 )
+                environment.savingDialog()
             }
         }
     }

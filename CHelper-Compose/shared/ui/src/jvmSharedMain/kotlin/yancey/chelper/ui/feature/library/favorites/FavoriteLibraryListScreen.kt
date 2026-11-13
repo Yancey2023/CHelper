@@ -48,14 +48,15 @@ import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
+import yancey.chelper.ui.platform.LocalClientServices
 
 @Composable
 fun FavoriteLibraryListScreen(
     navController: NavHostController,
     viewModel: FavoriteLibraryListViewModel = viewModel { FavoriteLibraryListViewModel() },
 ) {
-    val context = yancey.chelper.ui.platform.LocalClientServices.current
+    val context = LocalClientServices.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var menuIndex by remember { mutableIntStateOf(-1) }
 
@@ -69,7 +70,7 @@ fun FavoriteLibraryListScreen(
     }
     DisposableEffect(viewModel.actionMessage) {
         viewModel.actionMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.actionMessage = null
         }
         onDispose {}

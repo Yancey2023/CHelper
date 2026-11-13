@@ -10,7 +10,10 @@
 package yancey.chelper.android.window
 
 import android.app.Application
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Handler
@@ -24,7 +27,6 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -39,9 +41,12 @@ import yancey.chelper.android.startupState
 import yancey.chelper.android.storage.clientDataStores
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.feature.loongflow.LoongFlowMiniPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowMode
 import yancey.chelper.ui.feature.loongflow.LoongFlowPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowViewModel
+import yancey.chelper.ui.platform.ClientInteractionHost
+import yancey.chelper.ui.platform.ClientMessages
 
 /** 游龙悬浮窗管理器 */
 class LoongFlowWindowManager(private val application: Application) {
@@ -116,13 +121,9 @@ class LoongFlowWindowManager(private val application: Application) {
     }
 
     private fun createViewModel(): LoongFlowViewModel {
-        val clipboard =
-            application.getSystemService(Context.CLIPBOARD_SERVICE)
-                as android.content.ClipboardManager
+        val clipboard = application.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         return LoongFlowViewModel(
-            copyText = {
-                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("CHelper", it))
-            },
+            copyText = { clipboard.setPrimaryClip(ClipData.newPlainText("CHelper", it)) },
             readClipboard = {
                 val clip = clipboard.primaryClip
                 if (clip != null && clip.itemCount > 0)
@@ -131,14 +132,14 @@ class LoongFlowWindowManager(private val application: Application) {
             },
             shareText = { text ->
                 application.startActivity(
-                    android.content.Intent.createChooser(
-                            android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
-                                putExtra(android.content.Intent.EXTRA_TEXT, text)
+                                putExtra(Intent.EXTRA_TEXT, text)
                             },
                             "分享 MCD",
                         )
-                        .apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) }
+                        .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
                 )
             },
         )
@@ -336,12 +337,7 @@ class LoongFlowWindowManager(private val application: Application) {
                                 setPanelInputActive(false, hideKeyboard = true)
                                 return true
                             }
-                            val backDispatcher = composeLifecycleOwner?.onBackPressedDispatcher
-                            if (backDispatcher?.hasEnabledCallbacks() == true) {
-                                backDispatcher.onBackPressed()
-                            } else {
-                                dismiss()
-                            }
+                            composeLifecycleOwner?.back()
                             return true
                         }
                         return super.dispatchKeyEvent(event)
@@ -371,23 +367,23 @@ class LoongFlowWindowManager(private val application: Application) {
                             isSystemDarkMode(),
                         )
                     CHelperTheme(initialTheme, backgroundBitmap = null) {
-                        LoongFlowPanel(
-                            mode = mode,
-                            library = library,
-                            viewModel = vm,
-                            isEnableImportMiniIcon = isEnableImportMiniIcon,
-                            onMinimize = { minimizeToBubble() },
-                            onDismiss = { dismiss() },
-                            onToggleSize = { toggleSize() },
-                            onRequestInputFocus = {
-                                setPanelInputActive(true, hideKeyboard = false)
-                            },
-                            onMove = { dx, dy -> movePanel(dx, dy) },
-                            onDragEnd = { checkEdgeMinimize() },
-                            onMessage = {
-                                Toast.makeText(application, it, Toast.LENGTH_SHORT).show()
-                            },
-                        )
+                        ClientInteractionHost {
+                            LoongFlowPanel(
+                                mode = mode,
+                                library = library,
+                                viewModel = vm,
+                                isEnableImportMiniIcon = isEnableImportMiniIcon,
+                                onMinimize = { minimizeToBubble() },
+                                onDismiss = { dismiss() },
+                                onToggleSize = { toggleSize() },
+                                onRequestInputFocus = {
+                                    setPanelInputActive(true, hideKeyboard = false)
+                                },
+                                onMove = { dx, dy -> movePanel(dx, dy) },
+                                onDragEnd = { checkEdgeMinimize() },
+                                onMessage = ClientMessages::show,
+                            )
+                        }
                     }
                 }
             }
@@ -567,12 +563,14 @@ class LoongFlowWindowManager(private val application: Application) {
                     ),
                     backgroundBitmap = null,
                 ) {
-                    yancey.chelper.ui.feature.loongflow.LoongFlowMiniPanel(
-                        model = vm,
-                        onExpand = ::expandFromBubble,
-                        onDismiss = ::dismiss,
-                        onMessage = { Toast.makeText(application, it, Toast.LENGTH_SHORT).show() },
-                    )
+                    ClientInteractionHost {
+                        LoongFlowMiniPanel(
+                            model = vm,
+                            onExpand = ::expandFromBubble,
+                            onDismiss = ::dismiss,
+                            onMessage = ClientMessages::show,
+                        )
+                    }
                 }
             }
         }

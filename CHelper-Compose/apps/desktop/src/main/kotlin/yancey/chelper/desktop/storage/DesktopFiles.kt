@@ -1,6 +1,7 @@
 package yancey.chelper.desktop.storage
 
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -10,7 +11,7 @@ internal fun atomicWrite(file: File, bytes: ByteArray) {
     file.parentFile.mkdirs()
     val temporary = Files.createTempFile(file.parentFile.toPath(), file.name, ".tmp")
     try {
-        java.io.FileOutputStream(temporary.toFile()).use {
+        FileOutputStream(temporary.toFile()).use {
             it.write(bytes)
             it.fd.sync()
         }

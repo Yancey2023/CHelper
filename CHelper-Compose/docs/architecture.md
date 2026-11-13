@@ -18,19 +18,19 @@ CHelper-Compose/
 
 共享代码已经复用，但仍有以下结构问题：
 
-| 迁移后的问题 | 本次处理 |
-| --- | --- |
-| 入口与共享库在根目录平铺，`shared` 一词同时像总称和 UI 模块名 | 平台入口归入 `apps`，可复用模块归入 `shared` |
-| `domain` 下仍有 `ui.rawtext`、`core.Theme` | 文档快照归入 `domain.rawtext`，语法配色归入 `ui.designsystem.text` |
-| 命令草稿与实际仓库契约留在数据实现中 | 模型、仓库接口和编辑版本规则归入 `domain.command` |
-| 命令库模型被放在 `network.library.data`，业务层依赖网络包名 | 业务聚合和兼容序列化模型归入 `domain.library`，网络响应 DTO 留在 `data.remote` |
-| 同步规则与网络调用混放 | 同步状态转换和处理器归入 `domain.library.sync`，远端实现留在 `data.library.sync` |
-| 数据模块中有 `ui.library` 包，UI 中又有转发类型别名和包装函数 | 本地文档工具归入 `data.library`，调用方直接使用真正的声明 |
-| 所有命令库页面都在一个大包中，存在 `CPLUser/CPLUpload` 命名 | 按账号、浏览、本地库、上传、收藏、消息等流程分包，使用 `Account/LibraryUpload` 命名 |
-| Android 适配器散落在 `data/network/ui/core` 包中 | 统一归入 `yancey.chelper.android`，再按存储、网络、导航、UI 等能力分组 |
-| Windows 宿主全部挤在一个包内 | 按 `di/platform/storage/instance/network/sync/window` 分组 |
-| 模块重复维护 SDK、JVM 版本和共用源码映射 | 统一由 `build-logic` 的约定插件维护 |
-| 保留了旧桌面工作台未被生产代码使用的仓库接口及测试替身 | 删除未使用抽象，只将旧磁盘 DTO 放在 `data.migration.desktop` |
+| 迁移后的问题                                                  | 本次处理                                                                            |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 入口与共享库在根目录平铺，`shared` 一词同时像总称和 UI 模块名 | 平台入口归入 `apps`，可复用模块归入 `shared`                                        |
+| `domain` 下仍有 `ui.rawtext`、`core.Theme`                    | 文档快照归入 `domain.rawtext`，语法配色归入 `ui.designsystem.text`                  |
+| 命令草稿与实际仓库契约留在数据实现中                          | 模型、仓库接口和编辑版本规则归入 `domain.command`                                   |
+| 命令库模型被放在 `network.library.data`，业务层依赖网络包名   | 业务聚合和兼容序列化模型归入 `domain.library`，网络响应 DTO 留在 `data.remote`      |
+| 同步规则与网络调用混放                                        | 同步状态转换和处理器归入 `domain.library.sync`，远端实现留在 `data.library.sync`    |
+| 数据模块中有 `ui.library` 包，UI 中又有转发类型别名和包装函数 | 本地文档工具归入 `data.library`，调用方直接使用真正的声明                           |
+| 所有命令库页面都在一个大包中，存在 `CPLUser/CPLUpload` 命名   | 按账号、浏览、本地库、上传、收藏、消息等流程分包，使用 `Account/LibraryUpload` 命名 |
+| Android 适配器散落在 `data/network/ui/core` 包中              | 统一归入 `yancey.chelper.android`，再按存储、网络、导航、UI 等能力分组              |
+| Windows 宿主全部挤在一个包内                                  | 按 `di/platform/storage/instance/network/sync/window` 分组                          |
+| 模块重复维护 SDK、JVM 版本和共用源码映射                      | 统一由 `build-logic` 的约定插件维护                                                 |
+| 保留了旧桌面工作台未被生产代码使用的仓库接口及测试替身        | 删除未使用抽象，只将旧磁盘 DTO 放在 `data.migration.desktop`                        |
 
 现在仍为六个业务模块；目录分组和包拆分直接表达职责，不为每个页面增加 Gradle 模块。
 
@@ -100,6 +100,14 @@ flowchart TD
 `domain` 不依赖 Compose、Android、Java IO、数据实现或 JNI。`data` 不依赖 UI 或原生引擎。`native` 不依赖 UI 或数据实现。`ui/commonMain` 仅依赖可多平台编译的模型与组件；需要原 Java / Retrofit / JNI API 的集成代码放在同模块的共用 JVM 源码目录中。
 
 Android / Windows 的系统适配分别放在宿主内；共享模块不得引用宿主包。普通功能界面、IME 指引内容与撤回按钮、编辑逻辑、数据格式与同步规则只保留一份实现。平台宿主通过 `ClientServices` 和 `ClientPlatform` 组装实际能力。
+
+共享交互入口位于 `ui/commonMain/platform`。每个 Activity / Window / 浮窗内容根使用 `ClientInteractionHost` 接入宿主的 Navigation Event dispatcher；标题栏通过官方 `DirectNavigationEventInput` 请求返回，功能页用 `NavigationBackHandler` 的薄封装注册业务守卫。Escape 交给 Compose Window 默认处理，不在生产根节点拦截按键或强制恢复焦点。`LocalAppBackAction` 仅供确认离开后的直接导航。Android 系统浮窗保留原生按键转发和 ViewTree owner 适配。
+
+弹窗统一由共享 `AppDialogHost` 绘制在当前 Compose 宿主内，不创建系统 Dialog 窗口。`AppDialog` 保留调用点的 CompositionLocal 与内容状态，支持嵌套、返回优先级、遮罩拦截和焦点恢复；`AppAlertDialog` 复用同一个宿主和自有 Foundation 内容控件。Android 普通页面、系统浮窗和 Desktop 共用该实现，不再维护 Dialog windowType 适配。
+
+外部网页通过官方 LocalUriHandler 打开；界面剪贴板通过 LocalClipboard 挂起 API 读写，仅保留 Android/JVM 纯文本 ClipEntry 转换。ClientPlatform 不再提供 URL、命令编辑器或普通剪贴板入口。ClientMessages 是共享反馈入口：Android 在 Application 初始化时安装 Toaster 呈现器；Desktop 使用共享 Foundation 消息组件，支持瞬时事件、生命周期取消、手动关闭、live region 和可访问性超时。不同时向两端呈现机制发送同一消息。保留原因见[采用记录](official-compose.md#toaster-保留依据)。
+
+普通控件使用项目自己的主题与 Foundation 设计组件，禁止 Material / Material 3 组件和依赖。普通输入和安全密码输入分别使用 BasicTextField 与 BasicSecureTextField，共用装饰器；命令编辑保留领域规则、语法样式和错误范围。所有预览使用统一注解和纯 Content，放在 commonMain，不创建真实仓库或业务 ViewModel。详细约束见[Compose 基础能力采用记录](official-compose.md)和根目录 AGENTS.md。
 
 `yancey.chelper.core` 是唯一保留的历史命名空间例外：C++ 使用 JNI 类名和字段签名访问 `CHelperCore`、`CommandContext`、`ClickSuggestionResult`、`ErrorReason`、`SelectedString`、`Suggestion`。其余原生实现均放在 `nativecore`，不能继续向 ABI 包添加业务实现。
 

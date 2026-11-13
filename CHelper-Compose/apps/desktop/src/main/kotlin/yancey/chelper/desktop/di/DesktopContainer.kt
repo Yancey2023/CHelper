@@ -2,10 +2,15 @@ package yancey.chelper.desktop.di
 
 import java.io.Closeable
 import java.io.File
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import yancey.chelper.core.CHelperCore
+import yancey.chelper.data.auth.GuestAuthUtil
+import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.local.ClientDataStores
+import yancey.chelper.data.policy.PolicyGrantManager
+import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.desktop.instance.desktopDataDirectory
 import yancey.chelper.desktop.network.DesktopWafBrowser
 import yancey.chelper.desktop.platform.DesktopClientPlatform
@@ -18,6 +23,7 @@ import yancey.chelper.desktop.sync.DesktopLibrarySync
 import yancey.chelper.domain.assets.AssetRepository
 import yancey.chelper.nativecore.loader.NativeLibrary
 import yancey.chelper.ui.app.AppDependencies
+import yancey.chelper.ui.platform.ClientServices
 
 /** Windows composition root. Implementations are wired here and never looked up by the UI. */
 class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
@@ -34,7 +40,7 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
     private val browserVerification =
         DesktopWafBrowser(
             File(directory, "cache/browser-verification"),
-            yancey.chelper.data.remote.ServiceManager.LAB_BASE_URL,
+            ServiceManager.LAB_BASE_URL,
         )
     private val platform = DesktopClientPlatform(sync::enqueue)
     internal val loongFlow
@@ -42,7 +48,7 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
 
     val dependencies =
         AppDependencies(
-            yancey.chelper.ui.platform.ClientServices(
+            ClientServices(
                 settings = stores.settings,
                 libraries = stores.libraries,
                 favorites = stores.favorites,
@@ -93,20 +99,18 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
                 nativeFailure = e
             }
             try {
-                yancey.chelper.data.remote.ServiceManager.init(File(directory, "cache"), false)
+                ServiceManager.init(File(directory, "cache"), false)
                 browserVerification.install()
                 var authError: Throwable? = null
-                yancey.chelper.data.auth.LoginUtil.init(
-                    DesktopCredentialStore(File(directory, "session.enc"))
-                ) {
+                LoginUtil.init(DesktopCredentialStore(File(directory, "session.enc"))) {
                     authError = it
                 }
                 authError?.let { issue = "登录状态恢复失败：${it.message}" }
                 val device = File(directory, "installation-id")
                 if (!device.exists())
-                    atomicWrite(device, java.util.UUID.randomUUID().toString().encodeToByteArray())
-                yancey.chelper.data.auth.GuestAuthUtil.init(device.readText())
-                yancey.chelper.data.policy.PolicyGrantManager.init(
+                    atomicWrite(device, UUID.randomUUID().toString().encodeToByteArray())
+                GuestAuthUtil.init(device.readText())
+                PolicyGrantManager.init(
                     files.text("about/privacy_policy.txt"),
                     File(directory, "privacy_policy_lastread.txt"),
                 )

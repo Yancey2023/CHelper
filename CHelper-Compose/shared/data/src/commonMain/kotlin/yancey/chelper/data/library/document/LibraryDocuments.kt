@@ -2,6 +2,7 @@ package yancey.chelper.data.library.document
 
 import kotlinx.serialization.json.Json
 import yancey.chelper.data.library.decodeLocalLibraryImport
+import yancey.chelper.domain.library.AuthorInfo
 import yancey.chelper.domain.library.LibraryAuthor
 import yancey.chelper.domain.library.LibraryEntry
 import yancey.chelper.domain.library.LibraryFunction
@@ -31,7 +32,7 @@ fun LibraryEntry.toLibraryFunction() =
         version = version,
         tags = tags,
         localIsV2 = isV2,
-        author = author?.let { yancey.chelper.domain.library.AuthorInfo(it.id, it.name, it.tier) },
+        author = author?.let { AuthorInfo(it.id, it.name, it.tier) },
     )
 
 object McdLibraryDocuments {

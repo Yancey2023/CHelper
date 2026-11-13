@@ -19,9 +19,6 @@
 package yancey.chelper.android.window
 
 import android.view.View
-import androidx.activity.OnBackPressedDispatcher
-import androidx.activity.OnBackPressedDispatcherOwner
-import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -29,6 +26,10 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.navigationevent.DirectNavigationEventInput
+import androidx.navigationevent.NavigationEventDispatcher
+import androidx.navigationevent.NavigationEventDispatcherOwner
+import androidx.navigationevent.setViewTreeNavigationEventDispatcherOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
@@ -39,12 +40,19 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
  * https://github.com/Petterpx/FloatingX/blob/main/floatingx_compose/src/main/java/com/petterp/floatingx/compose/FxComposeLifecycleOwner.kt
  */
 class ComposeLifecycleOwner :
-    LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, OnBackPressedDispatcherOwner {
+    LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, NavigationEventDispatcherOwner {
 
     private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(this)
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     private val store = ViewModelStore()
-    override val onBackPressedDispatcher = OnBackPressedDispatcher()
+    override val navigationEventDispatcher = NavigationEventDispatcher().apply { isEnabled = false }
+    private val backInput = DirectNavigationEventInput().also(navigationEventDispatcher::addInput)
+
+    fun back() {
+        if (lifecycleRegistry.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            backInput.backCompleted()
+        }
+    }
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
@@ -62,9 +70,11 @@ class ComposeLifecycleOwner :
     }
 
     fun onStart() {
+        if (lifecycleRegistry.currentState == Lifecycle.State.DESTROYED) return
         onCreate()
         if (lifecycleRegistry.currentState == Lifecycle.State.CREATED)
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        navigationEventDispatcher.isEnabled = true
     }
 
     fun onResume() {
@@ -79,7 +89,9 @@ class ComposeLifecycleOwner :
     }
 
     fun onStop() {
+        if (lifecycleRegistry.currentState == Lifecycle.State.DESTROYED) return
         onPause()
+        navigationEventDispatcher.isEnabled = false
         if (lifecycleRegistry.currentState == Lifecycle.State.STARTED)
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     }
@@ -94,6 +106,7 @@ class ComposeLifecycleOwner :
         onCreate()
         onStop()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        navigationEventDispatcher.dispose()
         store.clear()
     }
 
@@ -106,7 +119,7 @@ class ComposeLifecycleOwner :
             it.setViewTreeLifecycleOwner(this)
             it.setViewTreeViewModelStoreOwner(this)
             it.setViewTreeSavedStateRegistryOwner(this)
-            it.setViewTreeOnBackPressedDispatcherOwner(this)
+            it.setViewTreeNavigationEventDispatcherOwner(this)
         } ?: return
     }
 
@@ -115,7 +128,7 @@ class ComposeLifecycleOwner :
             it.setViewTreeLifecycleOwner(null)
             it.setViewTreeViewModelStoreOwner(null)
             it.setViewTreeSavedStateRegistryOwner(null)
-            it.setTag(androidx.activity.R.id.view_tree_on_back_pressed_dispatcher_owner, null)
+            it.setViewTreeNavigationEventDispatcherOwner(null)
         } ?: return
     }
 }

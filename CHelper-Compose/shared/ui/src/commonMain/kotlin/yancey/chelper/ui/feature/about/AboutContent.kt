@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.layout.Collection
+import yancey.chelper.ui.designsystem.layout.NameAndAction
 import yancey.chelper.ui.designsystem.layout.NameAndValue
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.widget.Divider
@@ -106,12 +107,10 @@ fun AboutContent(version: String, openUrl: (String) -> Unit, openAsset: (String,
 
 @Composable
 private fun AboutLink(name: String, url: String, open: (String) -> Unit) {
-    yancey.chelper.ui.designsystem.layout.NameAndAction(name, iconId = Res.drawable.external_link) {
-        open(url)
-    }
+    NameAndAction(name, iconId = Res.drawable.external_link) { open(url) }
 }
 
 @Composable
 private fun AboutAsset(name: String, path: String, open: (String, String) -> Unit) {
-    yancey.chelper.ui.designsystem.layout.NameAndAction(name) { open(name, path) }
+    NameAndAction(name) { open(name, path) }
 }

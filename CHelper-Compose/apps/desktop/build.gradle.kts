@@ -9,6 +9,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// The desktop aggregate includes Material by default; this app's UI uses Foundation only.
+configurations.configureEach {
+    exclude(group = "org.jetbrains.compose.material")
+    exclude(group = "org.jetbrains.compose.material3")
+}
+
 dependencies {
     implementation(libs.jna.platform)
     implementation(project(":shared:domain"))
@@ -20,7 +26,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.multiplatform.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
-    testImplementation(compose.desktop.uiTestJUnit4)
+    testImplementation(libs.multiplatform.navigation.compose)
+    testImplementation(libs.compose.multiplatform.ui.test.junit4)
 }
 
 val bundledResources = layout.buildDirectory.dir("generated/resources")

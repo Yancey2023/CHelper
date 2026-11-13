@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,8 @@ import yancey.chelper.resources.ic_loong_flow_bubble
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.platform.AppBackHandler
+import yancey.chelper.ui.platform.ClientMessages
 
 /**
  * 游龙面板的顶层布局
@@ -68,7 +71,7 @@ fun LoongFlowPanel(
     onRequestInputFocus: () -> Unit = {},
     onMove: (Float, Float) -> Unit = { _, _ -> },
     onDragEnd: () -> Unit = {},
-    onMessage: (String) -> Unit = yancey.chelper.ui.platform.ClientToast::show,
+    onMessage: (String) -> Unit = ClientMessages::show,
     closeRequest: Long = 0,
 ) {
     var exportCloseConfirmVisible by remember { mutableStateOf(false) }
@@ -80,7 +83,9 @@ fun LoongFlowPanel(
         }
     }
 
-    androidx.compose.runtime.LaunchedEffect(closeRequest) { if (closeRequest > 0) requestDismiss() }
+    AppBackHandler(onBack = requestDismiss)
+
+    LaunchedEffect(closeRequest) { if (closeRequest > 0) requestDismiss() }
 
     // Toast 消息反馈
     DisposableEffect(viewModel.toastMessage) {

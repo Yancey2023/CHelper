@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -100,7 +101,7 @@ fun LibraryTabs(
 
 @Composable
 private fun BottomNavItem(
-    iconRes: org.jetbrains.compose.resources.DrawableResource,
+    iconRes: DrawableResource,
     title: String,
     isSelected: Boolean,
     onClick: () -> Unit,

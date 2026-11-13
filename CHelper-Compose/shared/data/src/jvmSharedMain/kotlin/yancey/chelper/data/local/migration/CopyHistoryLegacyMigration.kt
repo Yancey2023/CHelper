@@ -19,13 +19,15 @@
 package yancey.chelper.data.local.migration
 
 import androidx.datastore.core.DataMigration
+import java.io.File
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 import yancey.chelper.data.local.history.COPY_HISTORY_MAX_SIZE
 import yancey.chelper.data.local.history.CopyHistoryData
 
 class CopyHistoryDataMigrationToV75(
-    private val legacyDirectory: java.io.File,
-    private val destination: java.io.File? = null,
+    private val legacyDirectory: File,
+    private val destination: File? = null,
 ) : DataMigration<CopyHistoryData> {
     private var imported = false
 
@@ -41,7 +43,7 @@ class CopyHistoryDataMigrationToV75(
             CopyHistoryData(history = oldHistoryList.take(COPY_HISTORY_MAX_SIZE)).also {
                 imported = true
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             currentData

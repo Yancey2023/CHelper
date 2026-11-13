@@ -61,19 +61,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import yancey.chelper.data.remote.library.model.SiteMessage
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.dialog.annotateHttpLinks
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.text.formatUnixTime
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun MessageScreen(viewModel: MessageViewModel = viewModel { MessageViewModel() }) {
     val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -87,7 +89,7 @@ fun MessageScreen(viewModel: MessageViewModel = viewModel { MessageViewModel() }
     DisposableEffect(viewModel.pendingBrowserUrl) {
         viewModel.pendingBrowserUrl?.let { url ->
             viewModel.pendingBrowserUrl = null
-            runCatching { context.platform.openUrl(url) }.onFailure { Toaster.show("无法打开链接") }
+            openUrl(url)
         }
         onDispose {}
     }
@@ -95,7 +97,7 @@ fun MessageScreen(viewModel: MessageViewModel = viewModel { MessageViewModel() }
     DisposableEffect(viewModel.linkMessage) {
         viewModel.linkMessage?.let { message ->
             viewModel.linkMessage = null
-            Toaster.show(message)
+            ClientMessages.show(message)
         }
         onDispose {}
     }
@@ -364,7 +366,7 @@ private fun MessageDetailDialog(
         remember(message.content, linkColor, onLinkClick) {
             annotateHttpLinks(message.content ?: "无内容", linkColor, onLinkClick)
         }
-    CustomDialog(
+    AppDialog(
         onDismissRequest = {
             onRead()
             onDismiss()

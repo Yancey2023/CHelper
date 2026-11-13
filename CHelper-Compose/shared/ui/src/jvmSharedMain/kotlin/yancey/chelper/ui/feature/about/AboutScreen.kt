@@ -21,14 +21,13 @@ package yancey.chelper.ui.feature.about
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import yancey.chelper.ui.navigation.ShowTextScreenKey
+import yancey.chelper.ui.platform.LocalClientServices
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun AboutScreen(navController: NavHostController) {
-    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-    AboutContent(
-        yancey.chelper.ui.platform.LocalClientServices.current.versionName,
-        uriHandler::openUri,
-    ) { title, path ->
-        navController.navigate(yancey.chelper.ui.navigation.ShowTextScreenKey(title, path))
+    val openUrl = rememberOpenUrl()
+    AboutContent(LocalClientServices.current.versionName, openUrl) { title, path ->
+        navController.navigate(ShowTextScreenKey(title, path))
     }
 }

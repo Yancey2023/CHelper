@@ -20,13 +20,11 @@ package yancey.chelper.android.activity
 
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent as setComposeContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
@@ -34,15 +32,8 @@ import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.setViewTreeViewModelStoreOwner
-import androidx.savedstate.findViewTreeSavedStateRegistryOwner
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.launch
 import yancey.chelper.android.startupState
 import yancey.chelper.android.storage.BackgroundStore
@@ -116,29 +107,7 @@ abstract class BaseComposeActivity : ComponentActivity() {
     }
 
     protected fun setContent(parent: CompositionContext? = null, content: @Composable () -> Unit) {
-        val existingComposeView =
-            window.decorView.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
-                as? ComposeView
-
-        if (existingComposeView != null) {
-            with(existingComposeView) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
-                }
-                setParentCompositionContext(parent)
-                setContent { ThemedContent(content) }
-            }
-        } else {
-            ComposeView(this).apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
-                }
-                setParentCompositionContext(parent)
-                setContent { ThemedContent(content) }
-                setOwners()
-                setContentView(this, DefaultActivityContentLayoutParams)
-            }
-        }
+        setComposeContent(parent) { ThemedContent(content) }
     }
 
     @Composable
@@ -149,22 +118,5 @@ abstract class BaseComposeActivity : ComponentActivity() {
                 initialValue = BackgroundStore.INSTANCE.backgroundBitmap
             )
         CHelperTheme(theme, background) { content() }
-    }
-}
-
-private val DefaultActivityContentLayoutParams =
-    ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-
-private fun ComponentActivity.setOwners() {
-    val decorView = window.decorView
-
-    if (decorView.findViewTreeLifecycleOwner() == null) {
-        decorView.setViewTreeLifecycleOwner(this)
-    }
-    if (decorView.findViewTreeViewModelStoreOwner() == null) {
-        decorView.setViewTreeViewModelStoreOwner(this)
-    }
-    if (decorView.findViewTreeSavedStateRegistryOwner() == null) {
-        decorView.setViewTreeSavedStateRegistryOwner(this)
     }
 }

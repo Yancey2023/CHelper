@@ -42,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import com.hjq.toast.Toaster
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -52,8 +51,9 @@ import kotlinx.coroutines.withContext
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.model.CaptchaStatusResponse
 import yancey.chelper.data.remote.library.model.CaptchaTokenRequest
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialogProperties
+import yancey.chelper.ui.designsystem.dialog.AppDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
+import yancey.chelper.ui.platform.ClientMessages
 
 @Composable
 fun AndroidCaptchaDialog(
@@ -61,9 +61,9 @@ fun AndroidCaptchaDialog(
     onDismissRequest: () -> Unit,
     onSuccess: (String) -> Unit,
 ) {
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismissRequest,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         CaptchaDialogContent(action, onDismissRequest, onSuccess)
     }
@@ -93,7 +93,7 @@ private fun CaptchaDialogContent(
     fun handleFailure(message: String) {
         if (isCompleted) return
         isCompleted = true
-        Toaster.show(message)
+        ClientMessages.show(message)
         onDismissRequest()
     }
 

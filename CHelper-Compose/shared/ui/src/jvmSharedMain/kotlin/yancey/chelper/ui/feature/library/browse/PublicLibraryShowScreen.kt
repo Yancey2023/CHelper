@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,9 +68,7 @@ import yancey.chelper.data.library.hasSameLocalContent
 import yancey.chelper.data.library.toLocalImportedCopy
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.service.CommandLabUserService
-import yancey.chelper.domain.library.AuthorInfo
 import yancey.chelper.domain.library.ChainItem
-import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.parseMCDStructure
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -87,8 +86,9 @@ import yancey.chelper.ui.navigation.LibraryUploadScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryShowScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryShowScreenKey
 import yancey.chelper.ui.navigation.UserProfileScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
 fun PublicLibraryShowScreen(
@@ -99,7 +99,8 @@ fun PublicLibraryShowScreen(
     viewModel: PublicLibraryShowViewModel = viewModel { PublicLibraryShowViewModel() },
 ) {
     val context = LocalContext.current
-    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val copyAll = rememberCopyText("已复制全部 MCD 源码")
+    val coroutineScope = rememberCoroutineScope()
 
     // 读取设置
     val settingsDataStore = remember(context) { context.settings }
@@ -126,7 +127,7 @@ fun PublicLibraryShowScreen(
         if (viewModel.library.id == null) return
         if (context.platform.loongFlowPermissionGranted()) {
             if (!context.platform.showLoongFlow(viewModel.library)) {
-                Toaster.show("游龙窗口打开失败")
+                ClientMessages.show("游龙窗口打开失败")
             }
         } else {
             showLoongFlowPermissionDialog = true
@@ -136,15 +137,15 @@ fun PublicLibraryShowScreen(
     fun shareCurrentLibrary() {
         val libraryId = viewModel.library.id ?: return
         if (!LoginUtil.isLoggedIn || LoginUtil.currentUser?.isGuest == true) {
-            Toaster.show("请先登录正式账号再分享")
+            ClientMessages.show("请先登录正式账号再分享")
             return
         }
         if (isPrivate || viewModel.library.isPublish == false) {
-            Toaster.show("仅公开库可生成分享链接")
+            ClientMessages.show("仅公开库可生成分享链接")
             return
         }
         if (viewModel.isSharing) {
-            Toaster.show("正在生成分享链接…")
+            ClientMessages.show("正在生成分享链接…")
             return
         }
         // 外链默认只打开云端库，不自动导入本地
@@ -175,7 +176,7 @@ fun PublicLibraryShowScreen(
     // 操作结果反馈
     DisposableEffect(viewModel.actionMessage) {
         viewModel.actionMessage?.let {
-            Toaster.show(it)
+            ClientMessages.show(it)
             viewModel.actionMessage = null
         }
         onDispose {}
@@ -186,7 +187,7 @@ fun PublicLibraryShowScreen(
         viewModel.pendingShareUrl?.let { url ->
             viewModel.pendingShareUrl = null
             context.platform.shareText(url)
-            Toaster.show("分享链接已复制")
+            ClientMessages.show("分享链接已复制")
         }
         onDispose {}
     }
@@ -639,7 +640,7 @@ fun PublicLibraryShowScreen(
         }
     }
 
-    // 所有dialog必须在RootView后声明，因为CustomDialog是纯Box覆盖层而非真popup
+    // 所有dialog必须在RootView后声明，因为AppDialog是纯Box覆盖层而非真popup
     // Compose中后声明的节点z-order更高，放前面会被RootView压住导致点击穿透不到dialog
 
     // 主菜单对话框
@@ -666,10 +667,7 @@ fun PublicLibraryShowScreen(
                     "favorite" -> viewModel.library.id?.let { viewModel.toggleFavorite(it) }
                     "line_copy" -> showLineCopyDialog = true
                     "copy_all" -> {
-                        viewModel.library.content?.let { mcd ->
-                            context.platform.copyText(mcd)
-                            Toaster.show("已复制全部 MCD 源码")
-                        }
+                        viewModel.library.content?.let { mcd -> copyAll(mcd) }
                     }
 
                     "toggle_view" -> viewModel.showRawSource = !viewModel.showRawSource
@@ -762,7 +760,7 @@ fun PublicLibraryShowScreen(
                                 localCommandLabDataStore.addLocalLibraryFunction(imported) to false
                             }
                         }
-                    Toaster.show(if (alreadyExists) "本地库已有相同内容，已打开" else "已导入本地库")
+                    ClientMessages.show(if (alreadyExists) "本地库已有相同内容，已打开" else "已导入本地库")
                     navController?.navigate(
                         LocalLibraryShowScreenKey(localEntryId = localEntryId)
                     ) {
@@ -782,7 +780,7 @@ fun PublicLibraryShowScreen(
             onConfirm = {
                 showLoongFlowPermissionDialog = false
                 context.platform.requestLoongFlowPermission { granted ->
-                    Toaster.show(
+                    ClientMessages.show(
                         if (granted) {
                             "悬浮窗权限获取成功，请再次点击游龙导入"
                         } else {
@@ -825,7 +823,7 @@ fun PublicLibraryShowScreen(
             }
         if (commands.isEmpty()) {
             DisposableEffect(Unit) {
-                Toaster.show("没有可复制的命令")
+                ClientMessages.show("没有可复制的命令")
                 showLineCopyDialog = false
                 onDispose {}
             }
@@ -845,7 +843,7 @@ fun PublicLibraryShowScreen(
             targetDescription = targetName,
             onConfirm = { reason ->
                 if (targetUuid.isNullOrBlank()) {
-                    Toaster.show("无法定位举报目标")
+                    ClientMessages.show("无法定位举报目标")
                     return@ReportDialog
                 }
                 coroutineScope.launch {
@@ -860,9 +858,11 @@ fun PublicLibraryShowScreen(
                             withContext(Dispatchers.IO) {
                                 ServiceManager.COMMAND_LAB_USER_SERVICE.submitReport(request)
                             }
-                        Toaster.show(resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败")
+                        ClientMessages.show(
+                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
+                        )
                     } catch (e: Exception) {
-                        Toaster.show("网络错误: ${e.message}")
+                        ClientMessages.show("网络错误: ${e.message}")
                     }
                 }
             },
@@ -873,51 +873,6 @@ fun PublicLibraryShowScreen(
 /** 逐行复制对话框：逐条展示命令并自动复制到剪贴板 用户点击下一条前进并复制下一条，点击完成关闭 */
 @Composable
 fun LineCopyDialog(commands: List<String>, onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    LineCopyContent(commands, onDismiss) { text ->
-        context.platform.copyText(text)
-        Toaster.show("已复制")
-    }
-}
-
-@Composable
-fun PublicLibraryShowScreenLightThemePreview() {
-    val viewModel: PublicLibraryShowViewModel = viewModel { PublicLibraryShowViewModel() }
-    viewModel.library =
-        LibraryFunction().apply {
-            name = "Test Library"
-            author = AuthorInfo(name = "Test Author")
-            note = "This is a test description"
-            likeCount = 42
-            content = buildString {
-                for (i in 1..10) {
-                    append("# Command${i * 2 - 1}\n")
-                    append("Description${i * 2}\n")
-                }
-            }
-        }
-    CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) {
-        PublicLibraryShowScreen(id = 1, viewModel = viewModel)
-    }
-}
-
-@Composable
-fun PublicLibraryShowScreenDarkThemePreview() {
-    val viewModel: PublicLibraryShowViewModel = viewModel { PublicLibraryShowViewModel() }
-    viewModel.library =
-        LibraryFunction().apply {
-            name = "Test Library"
-            author = AuthorInfo(name = "Test Author")
-            note = "This is a test description"
-            likeCount = 42
-            content = buildString {
-                for (i in 1..10) {
-                    append("# Command${i * 2 - 1}\n")
-                    append("Description${i * 2}\n")
-                }
-            }
-        }
-    CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) {
-        PublicLibraryShowScreen(id = 1, viewModel = viewModel)
-    }
+    val copy = rememberCopyText()
+    LineCopyContent(commands, onDismiss, onCopy = copy)
 }

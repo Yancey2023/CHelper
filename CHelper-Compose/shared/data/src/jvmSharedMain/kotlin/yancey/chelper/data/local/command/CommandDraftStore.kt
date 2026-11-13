@@ -2,6 +2,7 @@ package yancey.chelper.data.local.command
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataMigration
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -84,8 +85,7 @@ class LegacyCommandDraftMigration(private val legacy: File, private val destinat
     }
 }
 
-class CommandDraftStore(private val store: androidx.datastore.core.DataStore<CommandDraft?>) :
-    CommandDraftRepository {
+class CommandDraftStore(private val store: DataStore<CommandDraft?>) : CommandDraftRepository {
     override val edits = CommandDraftEdits()
 
     override suspend fun read(): CommandDraft? = store.data.first()

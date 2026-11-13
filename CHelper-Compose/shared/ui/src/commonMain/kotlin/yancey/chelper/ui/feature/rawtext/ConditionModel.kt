@@ -20,6 +20,7 @@ package yancey.chelper.ui.feature.rawtext
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
@@ -118,7 +119,7 @@ data class ConditionEditorState(
             ConditionType.RawJson -> rawJson.ifBlank { "{}" }
         }
 
-    private fun kotlinx.serialization.json.JsonObjectBuilder.applyScoreValue(raw: String) {
+    private fun JsonObjectBuilder.applyScoreValue(raw: String) {
         val v = raw.trim()
         if (v.isEmpty()) return
         when {

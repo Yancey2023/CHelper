@@ -29,7 +29,6 @@ import androidx.navigation.compose.rememberNavController
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.data.policy.PolicyGrantManager
 import yancey.chelper.resources.*
-import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.designsystem.dialog.PolicyGrantDialog
 import yancey.chelper.ui.navigation.AboutScreenKey
@@ -41,9 +40,10 @@ import yancey.chelper.ui.navigation.Old2NewScreenKey
 import yancey.chelper.ui.navigation.RawtextScreenKey
 import yancey.chelper.ui.navigation.SettingsScreenKey
 import yancey.chelper.ui.navigation.ShowTextScreenKey
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.FloatingWindowController as FloatingWindowManager
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun HomeScreen(
@@ -52,6 +52,7 @@ fun HomeScreen(
     floatingWindowManager: FloatingWindowManager? = LocalContext.current.platform.floatingWindow,
 ) {
     val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
     val settingsDataStore = remember(context) { context.settings }
     val isShowPublicLibrary by
         settingsDataStore.isShowPublicLibrary().collectAsStateWithLifecycle(initialValue = false)
@@ -73,7 +74,7 @@ fun HomeScreen(
     DisposableEffect(viewModel.pendingAnnouncementUrl) {
         viewModel.pendingAnnouncementUrl?.let { url ->
             viewModel.pendingAnnouncementUrl = null
-            runCatching { context.platform.openUrl(url) }.onFailure { Toaster.show("无法打开链接") }
+            openUrl(url)
         }
         onDispose {}
     }
@@ -81,7 +82,7 @@ fun HomeScreen(
     DisposableEffect(viewModel.announcementLinkMessage) {
         viewModel.announcementLinkMessage?.let { message ->
             viewModel.announcementLinkMessage = null
-            Toaster.show(message)
+            ClientMessages.show(message)
         }
         onDispose {}
     }
@@ -90,7 +91,7 @@ fun HomeScreen(
         when (action) {
             HomeAction.Completion ->
                 if (viewModel.isUsingFloatingWindow(floatingWindowManager))
-                    Toaster.show("你必须关闭悬浮窗模式才可以进入应用模式")
+                    ClientMessages.show("你必须关闭悬浮窗模式才可以进入应用模式")
                 else navController.navigate(CompletionScreenKey)
             HomeAction.FloatingWindow ->
                 if (viewModel.isUsingFloatingWindow(floatingWindowManager))
@@ -131,9 +132,9 @@ fun HomeScreen(
             onConfirm = {
                 context.platform.requestLoongFlowPermission { granted ->
                     if (granted) {
-                        Toaster.show("悬浮窗权限获取成功")
+                        ClientMessages.show("悬浮窗权限获取成功")
                     } else {
-                        Toaster.show("悬浮窗权限获取失败")
+                        ClientMessages.show("悬浮窗权限获取失败")
                     }
                 }
             },
@@ -226,16 +227,6 @@ fun HomeScreen(
             onCancel = { viewModel.ignoreLatestVersion() },
         )
     }
-}
-
-@Composable
-fun HomeScreenLightThemePreview() {
-    CHelperTheme(theme = CHelperTheme.Theme.Light, backgroundBitmap = null) { HomeScreen() }
-}
-
-@Composable
-fun HomeScreenDarkThemePreview() {
-    CHelperTheme(theme = CHelperTheme.Theme.Dark, backgroundBitmap = null) { HomeScreen() }
 }
 
 @Composable

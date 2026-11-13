@@ -54,8 +54,8 @@ import yancey.chelper.domain.library.LineType
 import yancey.chelper.domain.library.MCDLineResult
 import yancey.chelper.domain.library.validateMCDContent
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialogProperties
+import yancey.chelper.ui.designsystem.dialog.AppDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.widget.Switch
 import yancey.chelper.ui.designsystem.widget.Text
@@ -100,10 +100,10 @@ fun LowCodeV2HelperDialog(rawContent: String, onDismiss: () -> Unit, onApply: (S
         }
     }
 
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
         properties =
-            CustomDialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+            AppDialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
     ) {
         DialogContainer(
             modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight().heightIn(max = 600.dp),

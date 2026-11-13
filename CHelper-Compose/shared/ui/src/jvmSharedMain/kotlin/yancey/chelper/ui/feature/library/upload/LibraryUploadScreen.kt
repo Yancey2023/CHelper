@@ -61,9 +61,9 @@ import yancey.chelper.domain.library.MCDValidationResult
 import yancey.chelper.domain.library.validateMCDContent
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.dialog.AppDialog
+import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.CaptchaDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialog
-import yancey.chelper.ui.designsystem.dialog.CustomDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
@@ -75,9 +75,10 @@ import yancey.chelper.ui.designsystem.widget.TextField
 import yancey.chelper.ui.feature.library.components.LowCodeV2HelperDialog
 import yancey.chelper.ui.feature.library.mcd.MCDContentView
 import yancey.chelper.ui.feature.library.mcd.color
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.AppBackHandler as BackHandler
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
-import yancey.chelper.ui.platform.PlatformBackHandler as BackHandler
+import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun LibraryUploadScreen(
@@ -87,6 +88,7 @@ fun LibraryUploadScreen(
 ) {
     LaunchedEffect(viewModel, editLibraryId) { viewModel.ensureCloudDraftLoaded(editLibraryId) }
     val context = LocalContext.current
+    val openUrl = rememberOpenUrl()
     val localCommandLabDataStore = remember(context) { context.libraries }
     val libraries by
         localCommandLabDataStore
@@ -319,9 +321,7 @@ fun LibraryUploadScreen(
                             Row(
                                 modifier =
                                     Modifier.clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                            context.platform.openUrl("https://abyssous.site/wiki")
-                                        }
+                                        .clickable { openUrl("https://abyssous.site/wiki") }
                                         .padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -382,7 +382,7 @@ fun LibraryUploadScreen(
                         if (!viewModel.isLoading) {
                             val content = viewModel.commands.text.toString()
                             if (viewModel.name.text.isBlank() || content.isBlank()) {
-                                Toaster.show(emptyErrorText)
+                                ClientMessages.show(emptyErrorText)
                                 return@Button
                             }
                             validationResult = validateMCDContent(content)
@@ -412,7 +412,7 @@ fun LibraryUploadScreen(
             onApply = { newContent ->
                 viewModel.commands.setTextAndPlaceCursorAtEnd(newContent)
                 showLowCodeHelper = false
-                Toaster.show("已应用标记！")
+                ClientMessages.show("已应用标记！")
             },
         )
     }
@@ -702,7 +702,7 @@ private fun MCDPreviewScreen(
 // 快速语法帮助
 @Composable
 private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
-    val helpContext = LocalContext.current
+    val openUrl = rememberOpenUrl()
 
     Column(
         modifier =
@@ -764,7 +764,7 @@ private fun QuickSyntaxHelp(modifier: Modifier = Modifier) {
         Row(
             modifier =
                 Modifier.clip(RoundedCornerShape(4.dp))
-                    .clickable { helpContext.platform.openUrl("https://abyssous.site/wiki") }
+                    .clickable { openUrl("https://abyssous.site/wiki") }
                     .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -794,9 +794,9 @@ fun ImportLocalLibraryDialog(
     onDismiss: () -> Unit,
     onSelect: (Int) -> Unit,
 ) {
-    CustomDialog(
+    AppDialog(
         onDismissRequest = onDismiss,
-        properties = CustomDialogProperties(usePlatformDefaultWidth = false),
+        properties = AppDialogProperties(usePlatformDefaultWidth = false),
     ) {
         DialogContainer(backgroundNoTranslate = true) {
             Column(modifier = Modifier.padding(16.dp)) {

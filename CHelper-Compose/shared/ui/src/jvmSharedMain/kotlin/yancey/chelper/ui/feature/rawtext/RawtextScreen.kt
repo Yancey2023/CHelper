@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,8 +34,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
+import yancey.chelper.ui.platform.rememberTextClipboard
 
 @Composable
 fun RawtextScreen(viewModel: RawtextViewModel = rememberRawtextViewModel()) {
@@ -56,13 +58,13 @@ fun RawtextScreen(viewModel: RawtextViewModel = rememberRawtextViewModel()) {
             viewModel.flushDraft()
         }
     }
-    val clipboard = yancey.chelper.ui.platform.LocalClientServices.current.platform
+    val clipboard = rememberTextClipboard()
     val scope = rememberCoroutineScope()
 
     RawtextScreenContent(
         items = entries.first,
         slots = entries.second,
-        onMessage = { Toaster.show(it) },
+        onMessage = { ClientMessages.show(it) },
         segments = viewModel.segments,
         activeTextSegmentId = viewModel.activeTextSegmentId,
         onUpdateActiveTextSegmentId = { viewModel.activeTextSegmentId = it },
@@ -105,13 +107,13 @@ fun RawtextScreen(viewModel: RawtextViewModel = rememberRawtextViewModel()) {
             val compressed = viewModel.copyFormat == "compressed"
             scope.launch {
                 clipboard.copyText(viewModel.copyJson(pretty = !compressed))
-                Toaster.show(if (compressed) "已复制压缩 JSON" else "已复制格式化 JSON")
+                ClientMessages.show(if (compressed) "已复制压缩 JSON" else "已复制格式化 JSON")
             }
         },
         onPasteFromClipboard = { setText ->
             scope.launch {
                 val text = clipboard.clipboardText()
-                if (text.isNullOrBlank()) Toaster.show("剪贴板没有可解析文本") else setText(text)
+                if (text.isNullOrBlank()) ClientMessages.show("剪贴板没有可解析文本") else setText(text)
             }
         },
     )
@@ -119,10 +121,8 @@ fun RawtextScreen(viewModel: RawtextViewModel = rememberRawtextViewModel()) {
 
 @Composable
 private fun rememberRawtextViewModel(): RawtextViewModel {
-    val services = yancey.chelper.ui.platform.LocalClientServices.current
+    val services = LocalContext.current
     val model = viewModel { RawtextViewModel(services.rawtext) }
-    androidx.compose.runtime.SideEffect {
-        services.session.register(services.rawtext, model::flushAndAwait)
-    }
+    SideEffect { services.session.register(services.rawtext, model::flushAndAwait) }
     return model
 }

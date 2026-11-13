@@ -29,6 +29,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -271,7 +272,7 @@ constructor(
                         editRevision != revision || copyFormatEdited || autoSaveEdited || mockEdited
                     )
                         requestSave()
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     draftError = "草稿读取失败，暂时无法恢复上次内容"

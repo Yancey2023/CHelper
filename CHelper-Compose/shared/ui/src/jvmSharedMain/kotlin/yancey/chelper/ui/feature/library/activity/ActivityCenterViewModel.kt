@@ -25,7 +25,9 @@ import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.model.ActivityConfig
 import yancey.chelper.data.remote.library.model.ActivityLedgerItem
+import yancey.chelper.data.remote.library.model.ActivityLedgerPage
 import yancey.chelper.data.remote.library.model.ActivitySummary
+import yancey.chelper.data.remote.library.model.BaseResult
 import yancey.chelper.data.remote.library.model.RedeemActivityRequest
 import yancey.chelper.data.remote.library.model.RewardProduct
 import yancey.chelper.data.remote.library.model.RewardRedemption
@@ -187,16 +189,10 @@ class ActivityCenterViewModel : ViewModel() {
     }
 
     private data class ActivityPayload(
-        val config: yancey.chelper.data.remote.library.model.BaseResult<ActivityConfig?>,
-        val summary: yancey.chelper.data.remote.library.model.BaseResult<ActivitySummary?>,
-        val ledger:
-            yancey.chelper.data.remote.library.model.BaseResult<
-                yancey.chelper.data.remote.library.model.ActivityLedgerPage?
-            >,
-        val redemptions:
-            yancey.chelper.data.remote.library.model.BaseResult<
-                yancey.chelper.data.remote.library.model.RewardRedemptions?
-            >,
-        val tiers: yancey.chelper.data.remote.library.model.BaseResult<TierDetails?>,
+        val config: BaseResult<ActivityConfig?>,
+        val summary: BaseResult<ActivitySummary?>,
+        val ledger: BaseResult<ActivityLedgerPage?>,
+        val redemptions: BaseResult<RewardRedemptions?>,
+        val tiers: BaseResult<TierDetails?>,
     )
 }

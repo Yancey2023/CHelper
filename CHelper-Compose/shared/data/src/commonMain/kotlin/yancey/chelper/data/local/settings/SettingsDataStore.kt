@@ -27,6 +27,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okio.BufferedSink
 import okio.BufferedSource
+import yancey.chelper.domain.settings.AppSettingsRepository
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.domain.settings.withDefaults
 
@@ -46,8 +47,7 @@ object SettingsSerializer : OkioSerializer<Settings> {
     }
 }
 
-class SettingsDataStore(private val store: DataStore<Settings>) :
-    yancey.chelper.domain.settings.AppSettingsRepository {
+class SettingsDataStore(private val store: DataStore<Settings>) : AppSettingsRepository {
     override val state: Flow<Settings>
         get() = settings()
 

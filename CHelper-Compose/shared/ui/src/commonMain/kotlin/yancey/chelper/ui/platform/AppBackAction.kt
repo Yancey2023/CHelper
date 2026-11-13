@@ -1,34 +1,21 @@
 package yancey.chelper.ui.platform
 
 import androidx.compose.runtime.*
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 
+/** Navigation after a screen has approved leaving; bypasses its own exit guard. */
 val LocalAppBackAction = staticCompositionLocalOf<() -> Unit> { {} }
-val LocalPlatformHeaderBackAction = staticCompositionLocalOf<(() -> Unit)?> { null }
+/** User-initiated back, dispatched through the same chain as the system back event. */
+val LocalAppBackRequest = staticCompositionLocalOf<() -> Unit> { {} }
 val LocalWideLayout = staticCompositionLocalOf { false }
 
-class AppBackDispatcher {
-    private val handlers = mutableListOf<() -> Unit>()
-
-    fun register(handler: () -> Unit): () -> Unit {
-        handlers += handler
-        return { handlers.remove(handler) }
-    }
-
-    fun back(fallback: () -> Unit) {
-        handlers.lastOrNull()?.invoke() ?: fallback()
-    }
-}
-
-val LocalAppBackDispatcher = staticCompositionLocalOf { AppBackDispatcher() }
-
 @Composable
-internal fun RegisterAppBackHandler(enabled: Boolean, onBack: () -> Unit) {
-    val dispatcher = LocalAppBackDispatcher.current
-    val action by rememberUpdatedState(onBack)
-    DisposableEffect(dispatcher, enabled) {
-        val remove = if (enabled) dispatcher.register { action() } else ({})
-        onDispose { remove() }
-    }
+fun AppBackHandler(enabled: Boolean = true, onBack: () -> Unit) {
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = enabled,
+        onBackCompleted = onBack,
+    )
 }
-
-@Composable expect fun PlatformBackHandler(enabled: Boolean = true, onBack: () -> Unit)

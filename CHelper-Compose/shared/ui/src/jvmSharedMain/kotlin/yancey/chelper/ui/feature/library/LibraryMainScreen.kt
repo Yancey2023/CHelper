@@ -2,6 +2,7 @@ package yancey.chelper.ui.feature.library
 
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.CancellationException
 import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.ui.feature.library.browse.PublicLibraryListScreen
 import yancey.chelper.ui.feature.library.components.LibraryTabs
@@ -14,7 +15,7 @@ fun LibraryMainScreen(navController: NavHostController, isFloatingWindow: Boolea
         try {
             val response = ServiceManager.COMMAND_LAB_USER_SERVICE.getUnreadCount()
             if (response.status == 0) unread = response.data?.count ?: 0
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {}
     }

@@ -22,6 +22,10 @@ CHelper-Compose/
 
 [结构对比、模块依赖与代码归属规则](docs/architecture.md)记录了原 Android 单模块、首次跨平台迁移和本次目录重构之间的变化。
 
+[平台差异盘点与迁移调研](docs/platform-differences.md)列出了当前宿主实现、可交给框架或库的能力、迁移限制和建议顺序。
+
+[官方 Compose 能力采用记录](docs/official-compose.md)说明组件替换范围、保留的业务逻辑与必要系统适配。
+
 ## 构建与检查
 
 需要完整 JDK、Android SDK 37；JVM 字节码目标为 17。本机验证使用 JDK 25。Windows JNI 构建还需要 Visual Studio C++ Build Tools、CMake、Ninja 和 Python。按仓库要求，Gradle 必须在提升权限的终端运行。

@@ -1,6 +1,9 @@
 package yancey.chelper.data.local
 
 import androidx.datastore.core.DataMigration
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.core.okio.OkioSerializer
 import java.io.Closeable
 import java.io.File
 import kotlinx.coroutines.*
@@ -28,6 +31,7 @@ import yancey.chelper.data.local.migration.SettingsMigrationToV74
 import yancey.chelper.data.local.migration.originalLibraryDraftKey
 import yancey.chelper.data.local.settings.SettingsDataStore
 import yancey.chelper.data.local.settings.SettingsSerializer
+import yancey.chelper.data.migration.desktop.LegacyCommandWorkspace
 import yancey.chelper.domain.command.CommandDraft
 import yancey.chelper.domain.library.LibraryEntry
 import yancey.chelper.domain.library.LibraryFunction
@@ -47,7 +51,7 @@ class ClientDataStores(
 
     private fun <T> store(
         name: String,
-        serializer: androidx.datastore.core.okio.OkioSerializer<T>,
+        serializer: OkioSerializer<T>,
         migrations: List<DataMigration<T>> = emptyList(),
     ) = createDataStore(File(directory, name).absolutePath.toPath(), serializer, scope, migrations)
 
@@ -158,10 +162,9 @@ class ClientDataStores(
         FavoriteLibraryDataStore(store("favorite_library.json", FavoriteLibrarySerializer))
     val commandDrafts =
         CommandDraftStore(
-            androidx.datastore.core.DataStoreFactory.create(
+            DataStoreFactory.create(
                 serializer = CommandDraftSerializer,
-                corruptionHandler =
-                    androidx.datastore.core.handlers.ReplaceFileCorruptionHandler { null },
+                corruptionHandler = ReplaceFileCorruptionHandler { null },
                 migrations =
                     listOfNotNull(
                         legacyCommandDraftFile?.let {
@@ -172,11 +175,7 @@ class ClientDataStores(
                             if (current != null || !old.exists()) current
                             else {
                                 val draft =
-                                    json.decodeFromString<
-                                        yancey.chelper.data.migration.desktop.LegacyCommandWorkspace
-                                    >(
-                                        old.readText()
-                                    )
+                                    json.decodeFromString<LegacyCommandWorkspace>(old.readText())
                                 CommandDraft(draft.command, draft.selection, draft.selection)
                                     .clamped()
                             }

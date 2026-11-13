@@ -28,6 +28,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okio.BufferedSink
 import okio.BufferedSource
+import yancey.chelper.domain.history.CopyHistoryRepository
 
 const val COPY_HISTORY_MAX_SIZE = 1000
 
@@ -49,8 +50,7 @@ object CopyHistorySerializer : OkioSerializer<CopyHistoryData> {
     }
 }
 
-class CopyHistoryDataStore(private val store: DataStore<CopyHistoryData>) :
-    yancey.chelper.domain.history.CopyHistoryRepository {
+class CopyHistoryDataStore(private val store: DataStore<CopyHistoryData>) : CopyHistoryRepository {
     override fun observe() = history()
 
     override suspend fun record(text: String) = add(text)

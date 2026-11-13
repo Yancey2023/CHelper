@@ -25,15 +25,17 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import yancey.chelper.ui.platform.ClientToast as Toaster
+import yancey.chelper.ui.platform.ClientMessages
+import yancey.chelper.ui.platform.LocalClientServices
+import yancey.chelper.ui.platform.rememberTextClipboard
 
 @Composable
 fun Old2NewScreen(
     viewModel: Old2NewViewModel = viewModel { Old2NewViewModel() },
     old2new: suspend (String) -> String,
 ) {
-    val clipboard = yancey.chelper.ui.platform.LocalClientServices.current.platform
-    val context = yancey.chelper.ui.platform.LocalClientServices.current
+    val clipboard = rememberTextClipboard()
+    val context = LocalClientServices.current
     Old2NewContent(
         oldCommand = viewModel.oldCommand,
         newCommand = viewModel.newCommand,
@@ -48,7 +50,7 @@ fun Old2NewScreen(
         onCopy = {
             viewModel.viewModelScope.launch {
                 clipboard.copyText(viewModel.newCommand)
-                Toaster.show("已复制")
+                ClientMessages.show("已复制")
             }
         },
     )
