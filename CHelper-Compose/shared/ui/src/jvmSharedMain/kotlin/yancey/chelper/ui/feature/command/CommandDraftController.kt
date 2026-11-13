@@ -130,9 +130,22 @@ class CommandDraftController(
     suspend fun flushAndAwait() {
         if (!enabled) return
         restoreJob?.join()
-        flush()
-        saveJob?.join()
+        if (finished) {
+            saveJob?.join()
+            // The editor's scope is already released. Retry in the closing caller's scope,
+            // keeping the original revision so an older editor cannot replace a newer draft.
+            if (restored) pending?.let { save(it) }
+        } else {
+            flush()
+            saveJob?.join()
+        }
         check(pending == null) { "命令草稿保存失败" }
+    }
+
+    private suspend fun save(request: CommandDraftWrite) {
+        repository.save(request)
+        accepted = request.draft
+        if (pending == request) pending = null
     }
 
     private fun savePending(immediately: Boolean = false) {
@@ -142,9 +155,7 @@ class CommandDraftController(
             scope.launch {
                 if (!immediately) delay(delayMillis)
                 try {
-                    repository.save(request)
-                    accepted = request.draft
-                    if (pending == request) pending = null
+                    save(request)
                 } catch (error: IOException) {
                     Log.w("CommandDraft", "Unable to save command draft", error)
                 }

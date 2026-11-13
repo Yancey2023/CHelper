@@ -8,6 +8,7 @@ import yancey.chelper.domain.command.CommandDraft
 import yancey.chelper.domain.command.CommandDraftEdits
 import yancey.chelper.domain.command.CommandDraftRepository
 import yancey.chelper.domain.command.CommandDraftWrite
+import yancey.chelper.ui.app.AppSession
 
 class CommandDraftControllerTest {
     private class Repository : CommandDraftRepository {
@@ -139,6 +140,87 @@ class CommandDraftControllerTest {
             saveBarrier()
             stored = edits.merge(stored, write)
             writes.add(write)
+        }
+    }
+
+    @Test
+    fun `session close retries a failed final write after the editor scope is released`() =
+        runBlocking {
+            val repo = SharedRepository()
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            var value = CommandDraft("", 0, 0)
+            val controller = CommandDraftController(repo, scope, { value }, { value = it }, 60_000)
+            val session = AppSession()
+            session.register(repo, controller::flushAndAwait)
+            try {
+                controller.setEnabled(true)
+                value = CommandDraft("say latest", 2, 7)
+                controller.changed(value)
+                repo.saveBarrier = { throw IOException("temporarily unavailable") }
+                controller.finish()
+                assertFalse(scope.isActive)
+                assertTrue(runCatching { session.flush() }.exceptionOrNull() is IOException)
+                assertTrue(repo.writes.isEmpty())
+
+                repo.saveBarrier = {}
+                session.flush()
+                session.flush()
+                assertEquals(value, repo.stored)
+                assertEquals(1, repo.writes.size)
+                assertFalse(scope.isActive)
+            } finally {
+                controller.finish()
+                scope.cancel()
+            }
+        }
+
+    @Test
+    fun `retrying a finished editor cannot overwrite a newer shared draft`() = runBlocking {
+        val repo = SharedRepository()
+        val aScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val bScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        var a = CommandDraft("", 0, 0)
+        var b = a
+        val first = CommandDraftController(repo, aScope, { a }, { a = it }, 60_000)
+        val second = CommandDraftController(repo, bScope, { b }, { b = it }, 60_000)
+        try {
+            first.setEnabled(true)
+            second.setEnabled(true)
+            a = CommandDraft("older", 1, 4)
+            first.changed(a)
+            repo.saveBarrier = { throw IOException("temporarily unavailable") }
+            first.finish()
+            repo.saveBarrier = {}
+            b = CommandDraft("latest", 2, 6)
+            second.changed(b)
+            second.flushAndAwait()
+            first.flushAndAwait()
+            assertEquals(b, repo.stored)
+        } finally {
+            first.finish()
+            second.finish()
+            aScope.cancel()
+            bScope.cancel()
+        }
+    }
+
+    @Test
+    fun `close retry after a failed restore cannot overwrite an unread draft`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val repo = Repository()
+        var value = CommandDraft("", 0, 0)
+        val controller = CommandDraftController(repo, scope, { value }, { value = it }, 60_000)
+        try {
+            controller.setEnabled(true)
+            value = CommandDraft("typed", 1, 5)
+            controller.changed(value)
+            repo.loaded.completeExceptionally(IOException("read failed"))
+            controller.finish()
+            assertTrue(runCatching { controller.flushAndAwait() }.isFailure)
+            assertTrue(repo.saved.isEmpty())
+            assertFalse(scope.isActive)
+        } finally {
+            scope.cancel()
         }
     }
 

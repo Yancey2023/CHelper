@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.multiplatform.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.multiplatform.navigation.compose)
     testImplementation(libs.compose.multiplatform.ui.test.junit4)
 }
