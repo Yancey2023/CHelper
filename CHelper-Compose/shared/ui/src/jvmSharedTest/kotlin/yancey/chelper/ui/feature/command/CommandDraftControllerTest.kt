@@ -133,13 +133,46 @@ class CommandDraftControllerTest {
         var stored: CommandDraft? = CommandDraft("old", 3, 3)
         val writes = mutableListOf<CommandDraftWrite>()
         var saveBarrier: suspend () -> Unit = {}
+        var readBarrier: suspend () -> Unit = {}
 
-        override suspend fun read() = stored
+        override suspend fun read(): CommandDraft? {
+            readBarrier()
+            return stored
+        }
 
         override suspend fun save(write: CommandDraftWrite) {
             saveBarrier()
             stored = edits.merge(stored, write)
             writes.add(write)
+        }
+    }
+
+    @Test
+    fun `failed initial read can retry on close without replacing newer text`() = runBlocking {
+        for (newer in listOf(false, true)) {
+            val repo = SharedRepository()
+            repo.readBarrier = { throw IOException("read unavailable") }
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            var value = CommandDraft("", 0, 0)
+            val controller = CommandDraftController(repo, scope, { value }, { value = it }, 60_000)
+            try {
+                controller.setEnabled(true)
+                value = CommandDraft("typed", 1, 4)
+                controller.changed(value)
+                controller.finish()
+                assertTrue(
+                    runCatching { controller.flushAndAwait() }.exceptionOrNull() is IOException
+                )
+                assertEquals("old", repo.stored?.text)
+                repo.readBarrier = {}
+                val expected = if (newer) CommandDraft("newer", 2, 5) else value
+                if (newer) repo.save(CommandDraftWrite(expected, repo.edits.claimText(), true))
+                controller.flushAndAwait()
+                assertEquals(expected, repo.stored)
+                assertFalse(scope.isActive)
+            } finally {
+                scope.cancel()
+            }
         }
     }
 

@@ -42,15 +42,17 @@ fun Old2NewScreen(
         isConverting = viewModel.isConverting,
         onPaste = {
             viewModel.viewModelScope.launch {
-                clipboard.clipboardText()?.let {
-                    viewModel.oldCommand.setTextAndPlaceCursorAtEnd(it.toString())
+                clipboard.withFeedback {
+                    clipboardText()?.let { viewModel.oldCommand.setTextAndPlaceCursorAtEnd(it) }
                 }
             }
         },
         onCopy = {
             viewModel.viewModelScope.launch {
-                clipboard.copyText(viewModel.newCommand)
-                ClientMessages.show("已复制")
+                clipboard.withFeedback {
+                    copyText(viewModel.newCommand)
+                    ClientMessages.show("已复制")
+                }
             }
         },
     )

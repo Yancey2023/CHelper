@@ -149,17 +149,40 @@ class LoongFlowViewModel(
         importStep = 1
         currentCopyIndex = 0
         isImportComplete = false
-        copyCurrentCommand()
+        if (!tryCopyCurrentCommand()) {
+            importStep = 0
+            return false
+        }
         return true
     }
 
     /** 复制当前命令到剪贴板 */
     fun copyCurrentCommand() {
+        tryCopyCurrentCommand()
+    }
+
+    private fun clipboardAction(action: () -> Unit, message: String? = null): Boolean {
+        return try {
+            action()
+            if (message != null) toastMessage = message
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            toastMessage = "剪贴板或分享操作失败，请稍后重试"
+            false
+        }
+    }
+
+    private fun tryCopyCurrentCommand(): Boolean {
         val cmds = selectedCommands
         if (currentCopyIndex < cmds.size) {
-            copyText(cmds[currentCopyIndex].command)
-            toastMessage = "已复制 (${currentCopyIndex + 1}/${cmds.size})"
+            return clipboardAction(
+                { copyText(cmds[currentCopyIndex].command) },
+                "已复制 (${currentCopyIndex + 1}/${cmds.size})",
+            )
         }
+        return false
     }
 
     /** 前进到下一条命令，返回 true 表示还有下一条 */
@@ -167,7 +190,7 @@ class LoongFlowViewModel(
         val cmds = selectedCommands
         if (currentCopyIndex < cmds.size - 1) {
             currentCopyIndex++
-            copyCurrentCommand()
+            if (!tryCopyCurrentCommand()) currentCopyIndex--
             return true
         } else {
             isImportComplete = true
@@ -179,12 +202,12 @@ class LoongFlowViewModel(
     fun prevCommand() {
         if (isImportComplete) {
             isImportComplete = false
-            copyCurrentCommand()
+            if (!tryCopyCurrentCommand()) isImportComplete = true
             return
         }
         if (currentCopyIndex > 0) {
             currentCopyIndex--
-            copyCurrentCommand()
+            if (!tryCopyCurrentCommand()) currentCopyIndex++
         }
     }
 
@@ -288,12 +311,13 @@ class LoongFlowViewModel(
 
     /** 复制导出的 MCD 文本到剪贴板 */
     fun copyExportText() {
-        copyText(exportMcdText)
-        toastMessage = "已复制 MCD 全文"
+        clipboardAction({ copyText(exportMcdText) }, "已复制 MCD 全文")
     }
 
     /** 通过系统分享 Intent 分享 MCD 文本 */
-    fun shareExportText() = shareText(exportMcdText)
+    fun shareExportText() {
+        clipboardAction({ shareText(exportMcdText) })
+    }
 
     /** 重置当前编辑方块到默认空白状态 */
     private fun resetCurrentBlock() {

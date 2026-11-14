@@ -51,6 +51,8 @@ fun SettingsContent(
     onChange: ((Settings) -> Settings) -> Unit,
     floatingWindowSettings: Boolean = true,
     loongFlowSettings: Boolean = floatingWindowSettings,
+    error: String? = null,
+    onRetry: () -> Unit = {},
 ) {
     var isShowResumeBackgroundDialog by remember { mutableStateOf(false) }
     var isShowChooseThemeDialog by remember { mutableStateOf(false) }
@@ -84,6 +86,9 @@ fun SettingsContent(
     val ambiguousLineDefault = settings.ambiguousLineDefault ?: "comment"
     RootViewWithHeaderAndCopyright(stringResource(Res.string.layout_settings_title)) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            if (error != null) {
+                Collection { NameAndAction("设置保存或读取失败，点击重试", error, onClick = onRetry) }
+            }
             CollectionName(stringResource(Res.string.layout_settings_application_update))
             Collection {
                 SettingsItem(

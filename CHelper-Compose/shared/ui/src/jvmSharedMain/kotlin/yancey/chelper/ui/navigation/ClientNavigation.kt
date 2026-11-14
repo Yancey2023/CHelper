@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import yancey.chelper.ui.app.PersistedEditor
 import yancey.chelper.ui.feature.library.LibraryMainScreen
 import yancey.chelper.ui.feature.library.account.AccountScreen
 import yancey.chelper.ui.feature.library.activity.ActivityCenterScreen
@@ -18,6 +19,7 @@ import yancey.chelper.ui.feature.library.profile.UserProfileScreen
 import yancey.chelper.ui.feature.library.score.LeaderboardScreen
 import yancey.chelper.ui.feature.library.search.LibrarySearchScreen
 import yancey.chelper.ui.feature.library.upload.LibraryUploadScreen
+import yancey.chelper.ui.platform.LocalClientServices
 
 /** Hosts supply native integrations; ordinary routes and feature screens are shared. */
 class ClientScreenBindings(
@@ -39,9 +41,18 @@ fun NavGraphBuilder.clientScreens(
     isFloatingWindow: Boolean = false,
 ) {
     composable<HomeScreenKey> { bindings.home(navController) }
-    composable<CompletionScreenKey> { bindings.completion(navController) }
+    composable<CompletionScreenKey> {
+        val services = LocalClientServices.current
+        PersistedEditor(services.session, services.commandDrafts) {
+            bindings.completion(navController)
+        }
+    }
     composable<HistoryScreenKey> { bindings.history() }
-    if (!isFloatingWindow) composable<SettingsScreenKey> { bindings.settings() }
+    if (!isFloatingWindow)
+        composable<SettingsScreenKey> {
+            val services = LocalClientServices.current
+            PersistedEditor(services.session, services.settings) { bindings.settings() }
+        }
     composable<Old2NewScreenKey> { bindings.old2new() }
     composable<Old2NewIMEGuideScreenKey> { bindings.imeGuide() }
     composable<EnumerationScreenKey> { bindings.enumeration() }
@@ -56,12 +67,18 @@ fun NavGraphBuilder.clientScreens(
     }
     composable<LibraryEditScreenKey> { navBackStackEntry ->
         val localLibraryEdit: LibraryEditScreenKey = navBackStackEntry.toRoute()
-        LocalLibraryEditScreen(
-            localEntryId = localLibraryEdit.localEntryId,
-            id = localLibraryEdit.id,
-        )
+        val services = LocalClientServices.current
+        PersistedEditor(services.session, services.libraries) {
+            LocalLibraryEditScreen(
+                localEntryId = localLibraryEdit.localEntryId,
+                id = localLibraryEdit.id,
+            )
+        }
     }
-    composable<RawtextScreenKey> { bindings.rawtext() }
+    composable<RawtextScreenKey> {
+        val services = LocalClientServices.current
+        PersistedEditor(services.session, services.rawtext) { bindings.rawtext() }
+    }
     composable<AboutScreenKey> { bindings.about(navController) }
     composable<ShowTextScreenKey> { navBackStackEntry ->
         val showText: ShowTextScreenKey = navBackStackEntry.toRoute()

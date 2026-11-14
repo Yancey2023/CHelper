@@ -106,14 +106,18 @@ fun RawtextScreen(viewModel: RawtextViewModel = rememberRawtextViewModel()) {
         onCopyByPreference = {
             val compressed = viewModel.copyFormat == "compressed"
             scope.launch {
-                clipboard.copyText(viewModel.copyJson(pretty = !compressed))
-                ClientMessages.show(if (compressed) "已复制压缩 JSON" else "已复制格式化 JSON")
+                clipboard.withFeedback {
+                    copyText(viewModel.copyJson(pretty = !compressed))
+                    ClientMessages.show(if (compressed) "已复制压缩 JSON" else "已复制格式化 JSON")
+                }
             }
         },
         onPasteFromClipboard = { setText ->
             scope.launch {
-                val text = clipboard.clipboardText()
-                if (text.isNullOrBlank()) ClientMessages.show("剪贴板没有可解析文本") else setText(text)
+                clipboard.withFeedback {
+                    val text = clipboardText()
+                    if (text.isNullOrBlank()) ClientMessages.show("剪贴板没有可解析文本") else setText(text)
+                }
             }
         },
     )

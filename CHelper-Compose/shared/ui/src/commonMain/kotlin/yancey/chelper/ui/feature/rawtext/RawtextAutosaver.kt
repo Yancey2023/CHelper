@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -83,15 +84,7 @@ internal class RawtextAutosaver(
             scope.launch {
                 try {
                     if (!immediately) delay(delayMillis)
-                    val preferences = withContext(worker) { snapshot.encode() }
-                    writes.withLock {
-                        currentCoroutineContext().ensureActive()
-                        if (revision == request) repository.savePreferences(preferences, token)
-                    }
-                    if (revision == request) {
-                        savedToken = token
-                        onError(null)
-                    }
+                    save(snapshot, token, request)
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (failure: Exception) {
@@ -102,6 +95,36 @@ internal class RawtextAutosaver(
 
     suspend fun awaitIdle() {
         job?.join()
+    }
+
+    private suspend fun save(
+        snapshot: RawtextPersistenceSnapshot,
+        token: RawtextEditToken,
+        request: Long,
+    ) {
+        val preferences = withContext(worker) { snapshot.encode() }
+        writes.withLock {
+            currentCoroutineContext().ensureActive()
+            if (revision == request) repository.savePreferences(preferences, token)
+        }
+        if (revision == request) {
+            savedToken = token
+            onError(null)
+        }
+    }
+
+    /** The closing caller can retry after the editor's private scope has been released. */
+    suspend fun flush(snapshot: RawtextPersistenceSnapshot, token: RawtextEditToken) {
+        job?.cancelAndJoin()
+        if (token.revisions.isEmpty() || token == savedToken) return
+        try {
+            save(snapshot, token, ++revision)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            onError("草稿保存失败，请稍后重试")
+            throw failure
+        }
     }
 
     // The final flush outlives ViewModel cancellation and then releases its private scope.

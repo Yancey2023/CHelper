@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -186,8 +187,14 @@ fun PublicLibraryShowScreen(
     DisposableEffect(viewModel.pendingShareUrl) {
         viewModel.pendingShareUrl?.let { url ->
             viewModel.pendingShareUrl = null
-            context.platform.shareText(url)
-            ClientMessages.show("分享链接已复制")
+            try {
+                context.platform.shareText(url)
+                ClientMessages.show("分享链接已复制")
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                ClientMessages.show("分享失败，请稍后重试")
+            }
         }
         onDispose {}
     }

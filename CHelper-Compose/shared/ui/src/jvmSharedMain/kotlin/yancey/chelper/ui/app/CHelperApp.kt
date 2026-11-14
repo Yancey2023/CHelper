@@ -9,14 +9,17 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.domain.settings.withDefaults
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.dialog.AppAlertDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.feature.about.AboutScreen
 import yancey.chelper.ui.feature.command.CompletionScreen
 import yancey.chelper.ui.feature.command.history.HistoryScreen
@@ -60,16 +63,38 @@ fun CHelperApp(
             else -> isSystemInDarkTheme()
         }
     val nav = rememberNavController()
-    LaunchedEffect(openRequest) {
-        openRequest?.let {
-            nav.currentBackStackEntryFlow.first()
-            services.session.flush()
-            nav.openCommandLabDeepLink(it.second)
-        }
+    var openFailure by remember { mutableStateOf<String?>(null) }
+    var openRetry by remember { mutableIntStateOf(0) }
+    var completedOpen by remember { mutableStateOf<Long?>(null) }
+    var opening by remember { mutableStateOf(false) }
+    fun cancelOpen() {
+        completedOpen = openRequest?.first
+        openFailure = null
+    }
+    LaunchedEffect(openRequest, openRetry, closing) {
+        openFailure = null
+        if (!closing)
+            openRequest
+                ?.takeUnless { it.first == completedOpen }
+                ?.let {
+                    opening = true
+                    try {
+                        nav.currentBackStackEntryFlow.first()
+                        services.session.flush()
+                        nav.openCommandLabDeepLink(it.second)
+                        completedOpen = it.first
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (failure: Exception) {
+                        openFailure = failure.message ?: "保存当前内容失败"
+                    } finally {
+                        opening = false
+                    }
+                }
     }
     CHelperTheme(if (dark) CHelperTheme.Theme.Dark else CHelperTheme.Theme.Light, background) {
         ClientInteractionHost {
-            if (closing) {
+            if (closing || opening) {
                 AppDialog(
                     onDismissRequest = {},
                     properties =
@@ -78,7 +103,11 @@ fun CHelperApp(
                             dismissOnClickOutside = false,
                         ),
                 ) {
-                    DialogContainer { Box(Modifier.padding(24.dp)) { Text("正在保存并退出…") } }
+                    DialogContainer {
+                        Box(Modifier.padding(24.dp)) {
+                            Text(if (closing) "正在保存并退出…" else "正在保存并打开链接…")
+                        }
+                    }
                 }
             }
             BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -114,6 +143,15 @@ fun CHelperApp(
                         )
                     }
                 }
+            }
+            openFailure?.let { message ->
+                AppAlertDialog(
+                    onDismissRequest = ::cancelOpen,
+                    title = { Text("暂时无法打开链接") },
+                    text = { Text("当前内容保存失败，已保留当前页面。\n$message") },
+                    confirmButton = { TextButton(onClick = { openRetry++ }) { Text("重试") } },
+                    dismissButton = { TextButton(onClick = ::cancelOpen) { Text("取消") } },
+                )
             }
         }
     }

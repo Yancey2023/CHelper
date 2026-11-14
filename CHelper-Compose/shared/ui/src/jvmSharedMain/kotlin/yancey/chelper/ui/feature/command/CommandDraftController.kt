@@ -5,6 +5,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import yancey.chelper.data.logging.ClientLog as Log
@@ -32,6 +33,7 @@ class CommandDraftController(
     private var accepted: CommandDraft? = null
     private var textRevision = repository.edits.currentRevision()
     private var pending: CommandDraftWrite? = null
+    private var restoreBefore = current()
 
     fun setEnabled(value: Boolean) {
         if (finished || enabled == value) return
@@ -53,32 +55,12 @@ class CommandDraftController(
         capture(current())
         if (contentEdited && pending == null) queueText(current())
         val before = current()
+        restoreBefore = before
         if (pending == null) textRevision = repository.edits.currentRevision()
         restoreJob =
             scope.launch {
                 try {
-                    val saved = repository.read()
-                    if (!enabled || generation != version) return@launch
-                    capture(current())
-                    if (pending == null) textRevision = repository.edits.currentRevision()
-                    if (
-                        pending == null &&
-                            !contentEdited &&
-                            current() == before &&
-                            before.text.isEmpty() &&
-                            saved != null
-                    ) {
-                        restore(saved)
-                        observed = saved
-                    }
-                    accepted = saved
-                    if (
-                        pending == null &&
-                            current() != saved &&
-                            (contentEdited || current().text.isNotEmpty())
-                    )
-                        queueDifference(current(), saved)
-                    restored = true
+                    if (!restoreDraft(version)) return@launch
                     savePending(immediately = finished || flushAfterRestore)
                 } catch (cancelled: CancellationException) {
                     throw cancelled
@@ -88,6 +70,28 @@ class CommandDraftController(
                     if (generation == version && finished) releaseAfterSave()
                 }
             }
+    }
+
+    private suspend fun restoreDraft(version: Long): Boolean {
+        val saved = repository.read()
+        if (!enabled || generation != version) return false
+        capture(current())
+        if (pending == null) textRevision = repository.edits.currentRevision()
+        if (
+            pending == null &&
+                !contentEdited &&
+                current() == restoreBefore &&
+                restoreBefore.text.isEmpty() &&
+                saved != null
+        ) {
+            restore(saved)
+            observed = saved
+        }
+        accepted = saved
+        if (pending == null && current() != saved && (contentEdited || current().text.isNotEmpty()))
+            queueDifference(current(), saved)
+        restored = true
+        return true
     }
 
     fun changed(draft: CommandDraft) {
@@ -130,15 +134,13 @@ class CommandDraftController(
     suspend fun flushAndAwait() {
         if (!enabled) return
         restoreJob?.join()
-        if (finished) {
-            saveJob?.join()
-            // The editor's scope is already released. Retry in the closing caller's scope,
-            // keeping the original revision so an older editor cannot replace a newer draft.
-            if (restored) pending?.let { save(it) }
-        } else {
-            flush()
-            saveJob?.join()
-        }
+        if (!enabled) return
+        saveJob?.cancelAndJoin()
+        // Retry reads and writes in the caller's scope, even after the editor is released.
+        // A failed read must never authorize a write over an unread draft.
+        if (!restored) restoreDraft(generation)
+        if (!finished) capture(current())
+        pending?.let { save(it) }
         check(pending == null) { "命令草稿保存失败" }
     }
 

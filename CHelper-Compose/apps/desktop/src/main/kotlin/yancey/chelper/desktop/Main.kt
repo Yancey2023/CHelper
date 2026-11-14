@@ -71,6 +71,7 @@ private fun runApplication(directory: File, instance: DesktopInstance) =
         val ready = startupSettings != null
         fun close() {
             if (closing) return
+            if (container.loongFlow.requestApplicationExit(::close)) return
             val flush = session.prepareClose()
             closing = true
             scope.launch {

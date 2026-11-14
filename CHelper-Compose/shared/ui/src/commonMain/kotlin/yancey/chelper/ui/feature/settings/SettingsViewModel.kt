@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import yancey.chelper.domain.settings.AppSettingsRepository
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.domain.settings.withDefaults
@@ -19,31 +22,25 @@ class SettingsViewModel(private val repository: AppSettingsRepository) : ViewMod
     val state = mutable.asStateFlow()
     private val failures = MutableStateFlow<String?>(null)
     val error = failures.asStateFlow()
-    private val edits = Channel<(Settings) -> Settings>(Channel.UNLIMITED)
-    private val pending = MutableStateFlow(0)
+    private val edits = ArrayDeque<(Settings) -> Settings>()
+    private val signals = Channel<Unit>(Channel.CONFLATED)
+    private val writes = Mutex()
+    private var readFailure: String? = null
+    private var writeFailure: String? = null
+    private var reader: Job? = null
+    private var closed = false
     private val persistence = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     init {
-        viewModelScope.launch {
-            try {
-                repository.state.collect { mutable.value = it.withDefaults() }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                failures.value = e.message ?: "设置读取失败"
-            }
-        }
+        observe()
         persistence.launch {
-            for (edit in edits) {
+            for (signal in signals) {
                 try {
-                    repository.update(edit)
-                    failures.value = null
+                    savePending()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    failures.value = e.message ?: "设置保存失败"
-                } finally {
-                    pending.value--
+                    // Keep the failed edit and all later edits in order for a caller retry.
                 }
             }
             persistence.cancel()
@@ -51,16 +48,69 @@ class SettingsViewModel(private val repository: AppSettingsRepository) : ViewMod
     }
 
     fun update(transform: (Settings) -> Settings) {
-        pending.value++
-        if (!edits.trySend(transform).isSuccess) pending.value--
+        if (closed) return
+        edits.addLast(transform)
+        signals.trySend(Unit)
     }
 
+    fun retry() {
+        if (closed) return
+        if (reader?.isActive != true) observe()
+        signals.trySend(Unit)
+    }
+
+    private fun observe() {
+        reader =
+            viewModelScope.launch {
+                try {
+                    repository.state.collect {
+                        mutable.value = it.withDefaults()
+                        readFailure = null
+                        publishFailure()
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    readFailure = e.message ?: "设置读取失败"
+                    publishFailure()
+                }
+            }
+    }
+
+    private fun publishFailure() {
+        failures.value = writeFailure ?: readFailure
+    }
+
+    private suspend fun savePending() =
+        writes.withLock {
+            try {
+                while (edits.isNotEmpty()) {
+                    repository.update(edits.first())
+                    edits.removeFirst()
+                }
+                writeFailure = null
+                publishFailure()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                writeFailure = e.message ?: "设置保存失败"
+                publishFailure()
+                throw e
+            }
+        }
+
     suspend fun awaitSaved() {
-        pending.first { it == 0 }
-        check(failures.value == null) { failures.value.orEmpty() }
+        savePending()
+        if (readFailure != null) {
+            mutable.value = repository.state.first().withDefaults()
+            readFailure = null
+            publishFailure()
+            if (!closed) retry()
+        }
     }
 
     override fun onCleared() {
-        edits.close()
+        closed = true
+        signals.close()
     }
 }

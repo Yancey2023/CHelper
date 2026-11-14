@@ -29,5 +29,5 @@ fun EnumerationScreen() {
     val model = viewModel { EnumerationViewModel(JvmEnumerationRepository()) }
     val clipboard = rememberTextClipboard()
     val scope = rememberCoroutineScope()
-    EnumerationContent(model) { text -> scope.launch { clipboard.copyText(text) } }
+    EnumerationContent(model) { text -> scope.launch { clipboard.withFeedback { copyText(text) } } }
 }

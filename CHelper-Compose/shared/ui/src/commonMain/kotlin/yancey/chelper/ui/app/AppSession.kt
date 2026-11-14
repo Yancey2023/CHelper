@@ -17,4 +17,8 @@ class AppSession {
     suspend fun flush() {
         prepareClose().invoke()
     }
+
+    suspend fun flush(owner: Any) {
+        flushes[owner]?.invoke()
+    }
 }

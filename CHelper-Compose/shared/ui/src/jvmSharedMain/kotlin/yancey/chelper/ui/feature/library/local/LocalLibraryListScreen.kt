@@ -60,6 +60,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -527,8 +528,10 @@ fun LocalLibraryListScreen(
                         // 导出单个库到剪切板
                         val output = Json.encodeToString(LibraryFunction.serializer(), library)
                         viewModel.viewModelScope.launch {
-                            clipboard.copyText(output)
-                            ClientMessages.show("已复制到剪切板")
+                            clipboard.withFeedback {
+                                copyText(output)
+                                ClientMessages.show("已复制到剪切板")
+                            }
                         }
                     }
 
@@ -568,14 +571,18 @@ fun LocalLibraryListScreen(
             confirmText = "导入",
             onConfirm = {
                 viewModel.viewModelScope.launch {
-                    clipboard.clipboardText()?.let { text ->
-                        run {
-                            try {
-                                val libraries = decodeLocalLibraryImport(text)
-                                localCommandLabDataStore.addLocalLibraryFunctions(libraries)
-                                ClientMessages.show("已导入 ${libraries.size} 个命令库")
-                            } catch (_: Exception) {
-                                ClientMessages.show("导入失败")
+                    clipboard.withFeedback {
+                        clipboardText()?.let { text ->
+                            run {
+                                try {
+                                    val libraries = decodeLocalLibraryImport(text)
+                                    localCommandLabDataStore.addLocalLibraryFunctions(libraries)
+                                    ClientMessages.show("已导入 ${libraries.size} 个命令库")
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (_: Exception) {
+                                    ClientMessages.show("导入失败")
+                                }
                             }
                         }
                     }
@@ -593,8 +600,10 @@ fun LocalLibraryListScreen(
             confirmText = "复制",
             onConfirm = {
                 viewModel.viewModelScope.launch {
-                    clipboard.copyText(output)
-                    ClientMessages.show("已复制")
+                    clipboard.withFeedback {
+                        copyText(output)
+                        ClientMessages.show("已复制")
+                    }
                 }
             },
         )
@@ -645,8 +654,10 @@ fun LocalLibraryListScreen(
                             }
                         val output = Json.encodeToString(selected)
                         viewModel.viewModelScope.launch {
-                            clipboard.copyText(output)
-                            ClientMessages.show("已导出 ${selected.size} 个命令库")
+                            clipboard.withFeedback {
+                                copyText(output)
+                                ClientMessages.show("已导出 ${selected.size} 个命令库")
+                            }
                         }
                     }
 

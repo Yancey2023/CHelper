@@ -4,7 +4,11 @@ import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.net.Proxy
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -130,27 +134,66 @@ internal class DesktopWafBrowser(
                 }
             } finally {
                 withContext(NonCancellable) {
-                    val children = process?.descendants()?.use { it.toList() }.orEmpty()
+                    val children =
+                        process?.descendants()?.use { it.toList() }.orEmpty().toMutableSet()
                     runCatching { withTimeout(1000) { connection?.command("Browser.close") } }
                     connection?.close()
                     process?.let {
+                        it.descendants().use { current -> current.forEach(children::add) }
                         if (!it.waitFor(1, TimeUnit.SECONDS)) {
-                            it.descendants().use { children ->
-                                children.forEach { child -> child.destroy() }
-                            }
+                            children
+                                .filter { child -> child.isAlive }
+                                .forEach { child -> child.destroy() }
                             it.destroyForcibly().waitFor(1, TimeUnit.SECONDS)
                         }
                     }
-                    children.filter { it.isAlive }.forEach { it.destroy() }
-                    // This directory is the fresh profile created above, not a personal Edge
-                    // profile.
-                    repeat(20) {
-                        if (!profile.exists() || profile.deleteRecursively()) return@withContext
-                        delay(100)
-                    }
+                    // Edge's root may exit before its utility processes. Await their termination
+                    // before deleting the temporary profile, including after a cancelled refresh.
+                    children.filter { it.isAlive }.forEach { it.destroyForcibly() }
+                    withTimeoutOrNull(2000) { while (children.any { it.isAlive }) delay(25) }
+                    deleteProfile(profile)
                 }
             }
         }
+
+    private suspend fun deleteProfile(profile: File) {
+        // The fresh profile belongs directly to our verification cache, never a personal profile.
+        val path = profile.toPath().toAbsolutePath().normalize()
+        check(path.parent == directory.toPath().toAbsolutePath().normalize())
+        var failure: IOException? = null
+        repeat(50) {
+            try {
+                if (!Files.exists(path)) return
+                Files.walkFileTree(
+                    path,
+                    object : SimpleFileVisitor<Path>() {
+                        override fun visitFile(
+                            file: Path,
+                            attrs: BasicFileAttributes,
+                        ): FileVisitResult {
+                            Files.deleteIfExists(file)
+                            return FileVisitResult.CONTINUE
+                        }
+
+                        override fun postVisitDirectory(
+                            dir: Path,
+                            error: IOException?,
+                        ): FileVisitResult {
+                            if (error != null) throw error
+                            Files.deleteIfExists(dir)
+                            return FileVisitResult.CONTINUE
+                        }
+                    },
+                )
+                return
+            } catch (error: IOException) {
+                failure = error
+                // Windows may retain file handles briefly after a process has terminated.
+                delay(100)
+            }
+        }
+        throw IOException("Unable to remove temporary browser profile", failure)
+    }
 
     override fun close() {
         runBlocking { job.cancelAndJoin() }

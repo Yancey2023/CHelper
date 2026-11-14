@@ -44,8 +44,9 @@ import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.Res
 import yancey.chelper.resources.ic_loong_flow_bubble
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
+import yancey.chelper.ui.designsystem.dialog.AppAlertDialog
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.platform.AppBackHandler
 import yancey.chelper.ui.platform.ClientMessages
 
@@ -73,6 +74,7 @@ fun LoongFlowPanel(
     onDragEnd: () -> Unit = {},
     onMessage: (String) -> Unit = ClientMessages::show,
     closeRequest: Long = 0,
+    onCloseCancelled: () -> Unit = {},
 ) {
     var exportCloseConfirmVisible by remember { mutableStateOf(false) }
     val requestDismiss = {
@@ -274,12 +276,25 @@ fun LoongFlowPanel(
     }
 
     if (exportCloseConfirmVisible) {
-        IsConfirmDialog(
-            onDismissRequest = { exportCloseConfirmVisible = false },
-            title = "关闭游龙导出？",
-            content = "当前导出进度不会自动保存，确认要关闭吗？",
-            confirmText = "关闭",
-            onConfirm = onDismiss,
+        val cancel = {
+            exportCloseConfirmVisible = false
+            onCloseCancelled()
+        }
+        AppAlertDialog(
+            onDismissRequest = cancel,
+            title = { Text("关闭游龙导出？") },
+            text = { Text("当前导出进度不会自动保存，确认要关闭吗？") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        exportCloseConfirmVisible = false
+                        onDismiss()
+                    }
+                ) {
+                    Text("关闭")
+                }
+            },
+            dismissButton = { TextButton(onClick = cancel) { Text("取消") } },
         )
     }
 }

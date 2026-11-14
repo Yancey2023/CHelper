@@ -11,6 +11,32 @@ import yancey.chelper.domain.library.parseMCDStructure
 
 class LoongFlowViewModelTest {
     @Test
+    fun clipboardFailureDoesNotAdvanceImportOrReportSuccess() {
+        var busy = true
+        val copied = mutableListOf<String>()
+        val model =
+            LoongFlowViewModel(
+                { text ->
+                    check(!busy) { "clipboard busy" }
+                    copied.add(text)
+                },
+                { null },
+            )
+        model.initImport(LibraryFunction(content = "say one\nsay two"))
+        assertFalse(model.startImportCopy())
+        assertEquals(0, model.importStep)
+        busy = false
+        assertTrue(model.startImportCopy())
+        busy = true
+        assertTrue(model.nextCommand())
+        assertEquals(0, model.currentCopyIndex)
+        assertTrue(model.toastMessage.orEmpty().contains("失败"))
+        busy = false
+        assertTrue(model.nextCommand())
+        assertEquals(listOf("say one", "say two"), copied)
+    }
+
+    @Test
     fun selectedCommandsCopyInOrderAndCanResumeFromCompletion() {
         val copied = mutableListOf<String>()
         val model = LoongFlowViewModel(copied::add, { null })

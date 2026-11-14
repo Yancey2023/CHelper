@@ -13,6 +13,48 @@ import yancey.chelper.domain.rawtext.RawtextPreferences
 class RawtextViewModelTest {
     private val savedDraft = """[{"type":"Text","text":"saved draft"}]"""
 
+    @Test
+    fun `final save retries in the closing caller after a write failure`() = runBlocking {
+        withEditor { vm, repo ->
+            val owners = ViewModelStore()
+            owners.put("editor", vm)
+            vm.updateTextSegment(vm.segments.first().id, TextFieldValue("latest"))
+            repo.write = { error("disk unavailable") }
+            owners.clear()
+            assertTrue(runCatching { vm.flushAndAwait() }.isFailure)
+            repo.write = { repo.saved.add(it) }
+            vm.flushAndAwait()
+            vm.flushAndAwait()
+            assertTrue(repo.stored.draft.orEmpty().contains("latest"))
+            assertNull(vm.draftError)
+            assertEquals(1, repo.saved.size)
+        }
+    }
+
+    @Test
+    fun `a failed initial read retries without restoring over edited text`() = runBlocking {
+        val repo = RecordingRawtextRepository()
+        repo.initial = flow { error("read unavailable") }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val owners = ViewModelStore()
+        val vm = RawtextViewModel(repo, scope, Dispatchers.Unconfined, 60_000)
+        owners.put("editor", vm)
+        try {
+            vm.updateTextSegment(vm.segments.first().id, TextFieldValue("new text"))
+            owners.clear()
+            assertTrue(runCatching { vm.flushAndAwait() }.isFailure)
+            assertTrue(repo.saved.isEmpty())
+            repo.initial = flow { emit(repo.stored.copy(draft = savedDraft)) }
+            vm.flushAndAwait()
+            assertEquals("new text", vm.segments.first().textValue.text)
+            assertTrue(repo.stored.draft.orEmpty().contains("new text"))
+            assertNull(vm.draftError)
+        } finally {
+            owners.clear()
+            scope.cancel()
+        }
+    }
+
     private suspend fun withEditor(
         block: suspend (RawtextViewModel, RecordingRawtextRepository) -> Unit
     ) {

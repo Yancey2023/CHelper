@@ -38,6 +38,7 @@ fun SettingsScreen(chooseBackground: () -> Unit, restoreBackground: () -> Unit) 
     val model = viewModel { SettingsViewModel(repository) }
     SideEffect { context.session.register(context.settings, model::awaitSaved) }
     val settings by model.state.collectAsStateWithLifecycle()
+    val error by model.error.collectAsStateWithLifecycle()
     var packs by remember { mutableStateOf(emptyArray<Pair<String, String>>()) }
     LaunchedEffect(context) {
         packs = withContext(Dispatchers.IO) { resourcePackOptions(context.packFilenames) }
@@ -50,5 +51,7 @@ fun SettingsScreen(chooseBackground: () -> Unit, restoreBackground: () -> Unit) 
         model::update,
         floatingWindowSettings = context.platform.floatingWindow != null,
         loongFlowSettings = context.platform.supportsLoongFlow,
+        error = error,
+        onRetry = model::retry,
     )
 }

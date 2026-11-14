@@ -14,6 +14,19 @@ internal constructor(private val clipboard: Clipboard, private val read: (ClipEn
     }
 
     suspend fun clipboardText(): String? = clipboard.getClipEntry()?.let(read)
+
+    suspend fun withFeedback(
+        failureMessage: String = "剪贴板访问失败，请稍后重试",
+        action: suspend TextClipboard.() -> Unit,
+    ) {
+        try {
+            action()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            ClientMessages.show(failureMessage)
+        }
+    }
 }
 
 @Composable
@@ -30,13 +43,9 @@ fun rememberCopyText(message: String = "已复制"): (String) -> Unit {
     return remember(clipboard, scope, message) {
         { text ->
             scope.launch {
-                try {
-                    clipboard.copyText(text)
+                clipboard.withFeedback("复制失败") {
+                    copyText(text)
                     ClientMessages.show(message)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    ClientMessages.show("复制失败")
                 }
             }
         }

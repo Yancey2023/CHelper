@@ -73,9 +73,9 @@ class WafInterceptor : Interceptor {
                 latch.countDown()
             }
 
-            // 最多等待 15 秒
+            // Includes the browser challenge and bounded cleanup of its temporary Windows profile.
             try {
-                latch.await(20, TimeUnit.SECONDS)
+                latch.await(30, TimeUnit.SECONDS)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
                 throw IOException("浏览器验证被中断", e)

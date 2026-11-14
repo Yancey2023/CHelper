@@ -42,6 +42,8 @@ internal class DesktopLoongFlow(
     var closeRequest by mutableLongStateOf(0L)
         private set
 
+    private var exitAfterDismiss: (() -> Unit)? = null
+
     fun openImport(library: LibraryFunction) {
         open(
             LoongFlowViewModel(copyText, readClipboard, shareText).also { it.initImport(library) },
@@ -54,6 +56,7 @@ internal class DesktopLoongFlow(
     }
 
     private fun open(value: LoongFlowViewModel, source: LibraryFunction?) {
+        cancelClose()
         model = value
         library = source
         minimized = false
@@ -65,11 +68,25 @@ internal class DesktopLoongFlow(
         closeRequest++
     }
 
+    fun requestApplicationExit(onConfirmed: () -> Unit): Boolean {
+        if (model?.mode != LoongFlowMode.EXPORT) return false
+        exitAfterDismiss = onConfirmed
+        requestClose()
+        return true
+    }
+
+    fun cancelClose() {
+        exitAfterDismiss = null
+    }
+
     fun dismiss() {
+        val exit = exitAfterDismiss
+        exitAfterDismiss = null
         model = null
         library = null
         minimized = false
         closeRequest = 0
+        exit?.invoke()
     }
 }
 
@@ -109,6 +126,12 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
             alwaysOnTop = true,
             focusable = !host.minimized,
         ) {
+            LaunchedEffect(host.closeRequest) {
+                if (host.closeRequest > 0) {
+                    window.toFront()
+                    window.requestFocus()
+                }
+            }
             val move: (Float, Float) -> Unit = { x, y ->
                 window.setLocation(window.x + x.toInt(), window.y + y.toInt())
             }
@@ -159,6 +182,7 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
                                     onRequestInputFocus = { window.requestFocus() },
                                     onMove = move,
                                     closeRequest = host.closeRequest,
+                                    onCloseCancelled = host::cancelClose,
                                 )
                         }
                     }

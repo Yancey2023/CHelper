@@ -50,8 +50,14 @@ class DesktopWafBrowserTest {
                 }
             }
             assertTrue(
-                "Unreleased browser files: " +
-                    directory.walkTopDown().map { it.relativeTo(directory).path }.joinToString(),
+                "Unreleased browser files in ${directory.absolutePath}: " +
+                    directory
+                        .walkTopDown()
+                        .map { file ->
+                            file.relativeTo(directory).path +
+                                (if (file.isFile) " writable=${file.canWrite()}" else "")
+                        }
+                        .joinToString(),
                 directory.listFiles().orEmpty().isEmpty(),
             )
         } finally {

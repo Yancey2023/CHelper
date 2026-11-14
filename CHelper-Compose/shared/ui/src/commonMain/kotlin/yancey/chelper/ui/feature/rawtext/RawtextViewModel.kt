@@ -203,6 +203,8 @@ constructor(
     private var restored = false
     private var restoration: Job? = null
     private var restoreCompleted = false
+    private lateinit var restoreBefore: RawtextDocumentSnapshot
+    private var restoreRevision = 0L
     private var cleared = false
 
     init {
@@ -225,53 +227,13 @@ constructor(
 
     /** 启动时读偏好：复制格式、自动保存开关、草稿、mock 值。 首次进入（autoSavePrompted == false）会触发一次"开启动态保存？"询问。 */
     private fun restorePreferences() {
-        val before = documentSnapshot()
-        val revision = editRevision
+        restoreBefore = documentSnapshot()
+        restoreRevision = editRevision
         restoration =
             persistenceScope.launch {
                 try {
-                    val prefs = dataStore.preferences().first()
-                    val decoded =
-                        withContext(worker) {
-                            val draft =
-                                if (prefs.autoSaveEnabled && !prefs.draft.isNullOrBlank())
-                                    runCatching {
-                                            draftJson.decodeFromString<
-                                                List<RawtextSegmentSnapshot>
-                                            >(
-                                                requireNotNull(prefs.draft)
-                                            )
-                                        }
-                                        .getOrNull()
-                                else null
-                            val mock =
-                                prefs.mockSettings?.let {
-                                    runCatching {
-                                            draftJson.decodeFromString<RawtextMockSnapshot>(it)
-                                        }
-                                        .getOrNull()
-                                }
-                            draft to mock
-                        }
-                    if (!copyFormatEdited) copyFormat = prefs.copyFormat ?: "formatted"
-                    if (!autoSaveEdited) {
-                        autoSaveEnabled = prefs.autoSaveEnabled
-                        autoSavePrompted = prefs.autoSavePrompted
-                        showAutoSavePrompt = !prefs.autoSavePrompted
-                    }
-                    val mockEdited = RawtextField.MOCK in pendingEdits.revisions
-                    if (!mockEdited) decoded.second?.let { applyMock(it) }
-                    if (
-                        autoSaveEnabled &&
-                            editRevision == revision &&
-                            documentSnapshot().segments == before.segments
-                    )
-                        decoded.first?.let { applyDraft(it) }
-                    restored = true
-                    if (
-                        editRevision != revision || copyFormatEdited || autoSaveEdited || mockEdited
-                    )
-                        requestSave()
+                    restorePreferencesNow()
+                    if (pendingEdits.revisions.isNotEmpty()) requestSave()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -281,6 +243,46 @@ constructor(
                     if (cleared) finishPersistence()
                 }
             }
+    }
+
+    private suspend fun restorePreferencesNow() {
+        val before = restoreBefore
+        val revision = restoreRevision
+        val prefs = dataStore.preferences().first()
+        val decoded =
+            withContext(worker) {
+                val draft =
+                    if (prefs.autoSaveEnabled && !prefs.draft.isNullOrBlank())
+                        runCatching {
+                                draftJson.decodeFromString<List<RawtextSegmentSnapshot>>(
+                                    requireNotNull(prefs.draft)
+                                )
+                            }
+                            .getOrNull()
+                    else null
+                val mock =
+                    prefs.mockSettings?.let {
+                        runCatching { draftJson.decodeFromString<RawtextMockSnapshot>(it) }
+                            .getOrNull()
+                    }
+                draft to mock
+            }
+        if (!copyFormatEdited) copyFormat = prefs.copyFormat ?: "formatted"
+        if (!autoSaveEdited) {
+            autoSaveEnabled = prefs.autoSaveEnabled
+            autoSavePrompted = prefs.autoSavePrompted
+            showAutoSavePrompt = !prefs.autoSavePrompted
+        }
+        val mockEdited = RawtextField.MOCK in pendingEdits.revisions
+        if (!mockEdited) decoded.second?.let { applyMock(it) }
+        if (
+            autoSaveEnabled &&
+                editRevision == revision &&
+                documentSnapshot().segments == before.segments
+        )
+            decoded.first?.let { applyDraft(it) }
+        restored = true
+        draftError = null
     }
 
     fun updateCopyFormat(format: String) {
@@ -307,8 +309,7 @@ constructor(
 
     private fun onContentChanged() {
         editRevision++
-        if (autoSaveEnabled || !restoreCompleted)
-            pendingEdits += dataStore.edits.claim(RawtextField.DRAFT)
+        if (autoSaveEnabled || !restored) pendingEdits += dataStore.edits.claim(RawtextField.DRAFT)
         if (autoSaveEnabled) requestSave()
     }
 
@@ -327,8 +328,8 @@ constructor(
 
     suspend fun flushAndAwait() {
         restoration?.join()
-        flushDraft()
-        awaitDraftSaved()
+        if (!restored) restorePreferencesNow()
+        saver?.flush(persistenceSnapshot(), pendingEdits)
         check(draftError == null) { draftError.orEmpty() }
     }
 
