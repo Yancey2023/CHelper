@@ -12,9 +12,9 @@ CHelper-Compose/
 ├── shared/
 │   ├── domain/         # 业务模型、仓库接口、编辑版本与同步规则
 │   ├── data/           # DataStore、迁移、文档编解码、网络与认证实现
-│   ├── native/         # JNI ABI、命令会话与枚举引擎
 │   └── ui/             # app / navigation / platform / designsystem / feature
-├── build-logic/         # Kotlin、Android 和共用 JVM 源码的构建约定
+├── platform/jvm/       # JNI ABI 与适配、Crunch、OkHttp 引擎（两宿主复用）
+├── build-logic/        # Kotlin / Android 构建约定
 ├── resources/          # 内核资源包、文档、Rawtext 索引
 ├── docs/architecture.md
 └── gradle/libs.versions.toml
@@ -33,7 +33,7 @@ CHelper-Compose/
 ```powershell
 cd CHelper-Compose
 .\gradlew.bat :apps:android:testDebugUnitTest :apps:android:lintDebug
-.\gradlew.bat :shared:domain:jvmTest :shared:data:jvmTest :shared:ui:jvmTest :shared:native:test :apps:desktop:test
+.\gradlew.bat :shared:domain:jvmTest :shared:data:jvmTest :shared:ui:jvmTest :platform:jvm:test :apps:desktop:test
 .\gradlew.bat :shared:domain:testAndroidHostTest :shared:data:testAndroidHostTest :shared:ui:testAndroidHostTest
 .\gradlew.bat :apps:android:assembleDebug
 # 没有原正式签名密钥时，仅验证 Release / R8，生成未签名 APK
@@ -55,9 +55,9 @@ python scripts/check_windows_installer.py CHelper-Compose/apps/desktop/build/com
 
 ## 运行与兼容
 
-Android 应用 ID 仍为 `yancey.chelper`，入口组件、JNI 类名和原数据文件路径保持兼容。根目录的签名配置继续使用，并兼容迁移前的相对密钥路径。七项持久化存储由同一个 `ClientDataStores` 创建：设置、复制历史、收藏、本地命令库、命令库编辑草稿、命令输入草稿和 Rawtext。Android 适配器只提供旧目录和应用级实例；Windows 使用同一仓库集合，数据默认位于 `%LOCALAPPDATA%/CHelper`。
+Android 应用 ID 仍为 `yancey.chelper`，入口组件、JNI 类名和原数据文件路径保持兼容。根目录的签名配置继续使用，并兼容迁移前的相对密钥路径。共享生产代码位于 commonMain，测试位于 commonTest；公共实现不依赖 JVM API。七项持久化存储由同一个 `ClientDataStores` 创建：设置、复制历史、收藏、本地命令库、命令库编辑草稿、命令输入草稿和 Rawtext。Android 适配器只提供旧目录和应用级实例；Windows 使用同一仓库集合，数据默认位于 `%LOCALAPPDATA%/CHelper`。
 
-旧 Android 和旧桌面数据由共享迁移器读取。解析失败时保留源文件；已有新存储时避免重复导入旧文档。凭据分别使用 Android Keystore 和 Windows DPAPI 保护。后台同步复用同一领域规则：Android 由 WorkManager 调度，Windows 在应用存活期间观察队列并重试。关闭窗口前等待编辑器、设置和背景写入完成。
+旧 Android 和旧桌面数据由共享迁移器读取。解析失败时保留源文件；已有新存储时避免重复导入旧文档。凭据分别使用 Android Keystore 和 Windows DPAPI 保护。网络使用应用级 NetworkServices 实例，认证和业务客户端分离，共享限流与 WAF 状态；JSON、日志、CDP 通信使用 Ktor 官方插件，底层保留两端共用的 OkHttp 引擎。后台同步复用同一领域规则：Android 由 WorkManager 调度，Windows 在应用存活期间观察队列并重试。关闭窗口前等待编辑器、设置和背景写入完成。
 
 `shared/ui` 包含原首页、命令编辑、历史、转换、枚举、Rawtext、设置、账号、个人资料、公有库、私有库、本地库、编辑上传、搜索收藏、消息活动和游龙界面。Android / Windows 均使用共享游龙面板和迷你面板。Android 原生命令编辑器、悬浮窗、输入法与系统权限保留在 Android 宿主；Windows 在相同命令页中使用共享 Compose 编辑器。
 

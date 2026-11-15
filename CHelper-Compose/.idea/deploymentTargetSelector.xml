@@ -2,7 +2,7 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
-      <SelectionState runConfigName="app">
+      <SelectionState runConfigName="apps.android">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-04-18T01:41:42.171138800Z">
           <Target type="DEFAULT_BOOT">

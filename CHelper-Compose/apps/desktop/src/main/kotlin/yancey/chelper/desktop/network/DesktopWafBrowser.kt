@@ -1,73 +1,67 @@
 package yancey.chelper.desktop.network
 
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.http.Url
+import io.ktor.websocket.*
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
+import java.lang.ProcessHandle
 import java.net.Proxy
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
-import okhttp3.*
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import yancey.chelper.data.remote.waf.WafHelper
-import yancey.chelper.ui.platform.ClientDiagnostics
+import yancey.chelper.domain.auth.BrowserVerification
+import yancey.chelper.domain.auth.BrowserVerifier
+import yancey.chelper.nativecore.network.jvmHttpEngine
 
 /** Runs the site's JS challenge in an isolated Edge profile, never the user's browser profile. */
 internal class DesktopWafBrowser(
     private val directory: File,
     private val targetUrl: String,
     private val executable: () -> File = ::findEdge,
-) : Closeable {
+) : Closeable, BrowserVerifier {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(job + Dispatchers.IO)
     private val mutex = Mutex()
-    private val client =
-        OkHttpClient.Builder().proxy(Proxy.NO_PROXY).callTimeout(3, TimeUnit.SECONDS).build()
-    @Volatile private var cookie: String? = null
-    @Volatile private var userAgent: String? = null
-    private var generation = 0
+    private val engine = jvmHttpEngine(directory, cacheEnabled = false) { it.proxy(Proxy.NO_PROXY) }
+    private val client = HttpClient(engine) { install(WebSockets) }
+    private var cookie: String? = null
+    private var userAgent: String? = null
 
-    fun install() = WafHelper.install({ cookie }, ::refresh, { userAgent })
-
-    fun refresh(callback: ((Boolean) -> Unit)? = null) {
-        val previous = synchronized(this) { generation }
-        scope.launch {
-            val success =
-                try {
-                    mutex.withLock {
-                        if (synchronized(this@DesktopWafBrowser) { generation } != previous) true
-                        else {
-                            verify()
-                            synchronized(this@DesktopWafBrowser) { generation++ }
-                            true
-                        }
-                    }
-                } catch (e: CancellationException) {
-                    callback?.invoke(false)
-                    throw e
-                } catch (e: Exception) {
-                    ClientDiagnostics.generateCustomLog(e, "BrowserVerification")
-                    false
+    override suspend fun verify(): BrowserVerification? {
+        val operation =
+            scope.async {
+                mutex.withLock {
+                    verifyChallenge()
+                    BrowserVerification(requireNotNull(cookie), requireNotNull(userAgent))
                 }
-            callback?.invoke(success)
+            }
+        return try {
+            operation.await()
+        } finally {
+            withContext(NonCancellable) { operation.cancelAndJoin() }
         }
     }
 
-    private suspend fun verify() =
+    private suspend fun verifyChallenge() =
         withTimeout(17_000) {
             check(directory.isDirectory || directory.mkdirs()) { "无法创建浏览器验证目录" }
             val profile = Files.createTempDirectory(directory.toPath(), "waf-edge-").toFile()
             var process: Process? = null
             var connection: DevToolsConnection? = null
+            val browserProcesses = mutableSetOf<ProcessHandle>()
             try {
                 process =
                     ProcessBuilder(
@@ -84,24 +78,34 @@ internal class DesktopWafBrowser(
                         .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                         .redirectError(ProcessBuilder.Redirect.DISCARD)
                         .start()
-                val activePort = File(profile, "DevToolsActivePort")
                 var endpoint: String? = null
                 while (endpoint == null) {
                     ensureActive()
-                    if (activePort.isFile) {
-                        val lines = activePort.readLines()
-                        val port = lines.firstOrNull()?.toIntOrNull()
-                        val path = lines.getOrNull(1)
-                        if (port in 1..65535 && path?.startsWith("/devtools/browser/") == true)
-                            endpoint = "ws://127.0.0.1:$port$path"
+                    process.descendants().use { children ->
+                        children.forEach(browserProcesses::add)
                     }
+                    endpoint = browserEndpoint(profile)
                     if (endpoint == null) {
-                        check(process.isAlive) { "Microsoft Edge 无法启动浏览器验证" }
+                        // Recent Edge versions hand startup to a child and exit the launcher with
+                        // 0.
+                        check(process.isAlive || process.exitValue() == 0) {
+                            "Microsoft Edge 无法启动浏览器验证"
+                        }
                         delay(100)
                     }
                 }
                 connection = DevToolsConnection(client, endpoint)
                 connection.opened.await()
+                // CDP identifies the processes in this isolated profile even after launcher exit.
+                connection
+                    .command("SystemInfo.getProcessInfo")["processInfo"]
+                    ?.jsonArray
+                    .orEmpty()
+                    .forEach { info ->
+                        info.jsonObject["id"]?.jsonPrimitive?.longOrNull?.let { id ->
+                            ProcessHandle.of(id).orElse(null)?.let(browserProcesses::add)
+                        }
+                    }
                 val agent =
                     connection.command("Browser.getVersion")["userAgent"]?.jsonPrimitive?.content
                 while (true) {
@@ -112,7 +116,7 @@ internal class DesktopWafBrowser(
                             val value = element.jsonObject
                             val domain =
                                 value["domain"]?.jsonPrimitive?.content.orEmpty().removePrefix(".")
-                            domain == targetUrl.toHttpUrl().host &&
+                            domain == Url(targetUrl).host &&
                                 value["name"]?.jsonPrimitive?.content.orEmpty().let {
                                     it.startsWith("EO_Bot_") || it.startsWith("__tst_")
                                 }
@@ -134,8 +138,45 @@ internal class DesktopWafBrowser(
                 }
             } finally {
                 withContext(NonCancellable) {
+                    // Cancellation can precede DevTools readiness after the launcher hands off.
+                    val launched = process
+                    if (connection == null && launched != null) {
+                        runCatching {
+                            withTimeout(5000) {
+                                var endpoint = browserEndpoint(profile)
+                                while (endpoint == null) {
+                                    if (!launched.isAlive && launched.exitValue() != 0)
+                                        return@withTimeout
+                                    delay(50)
+                                    endpoint = browserEndpoint(profile)
+                                }
+                                val cleanupConnection = DevToolsConnection(client, endpoint)
+                                connection = cleanupConnection
+                                cleanupConnection.opened.await()
+                            }
+                        }
+                    }
                     val children =
-                        process?.descendants()?.use { it.toList() }.orEmpty().toMutableSet()
+                        process
+                            ?.descendants()
+                            ?.use { it.toList() }
+                            .orEmpty()
+                            .toMutableSet()
+                            .apply { addAll(browserProcesses) }
+                    runCatching {
+                        withTimeout(1000) {
+                            connection
+                                ?.command("SystemInfo.getProcessInfo")
+                                ?.get("processInfo")
+                                ?.jsonArray
+                                .orEmpty()
+                                .forEach { info ->
+                                    info.jsonObject["id"]?.jsonPrimitive?.longOrNull?.let { id ->
+                                        ProcessHandle.of(id).orElse(null)?.let(children::add)
+                                    }
+                                }
+                        }
+                    }
                     runCatching { withTimeout(1000) { connection?.command("Browser.close") } }
                     connection?.close()
                     process?.let {
@@ -155,6 +196,17 @@ internal class DesktopWafBrowser(
                 }
             }
         }
+
+    private fun browserEndpoint(profile: File): String? {
+        val activePort = File(profile, "DevToolsActivePort")
+        if (!activePort.isFile) return null
+        val lines = activePort.readLines()
+        val port = lines.firstOrNull()?.toIntOrNull()
+        val path = lines.getOrNull(1)
+        return if (port in 1..65535 && path?.startsWith("/devtools/browser/") == true)
+            "ws://127.0.0.1:$port$path"
+        else null
+    }
 
     private suspend fun deleteProfile(profile: File) {
         // The fresh profile belongs directly to our verification cache, never a personal profile.
@@ -197,79 +249,84 @@ internal class DesktopWafBrowser(
 
     override fun close() {
         runBlocking { job.cancelAndJoin() }
-        client.dispatcher.executorService.shutdown()
-        client.connectionPool.evictAll()
+        client.close()
+        engine.close()
     }
 
-    private class DevToolsConnection(client: OkHttpClient, endpoint: String) : Closeable {
+    private class DevToolsConnection(client: HttpClient, endpoint: String) : Closeable {
         val opened = CompletableDeferred<Unit>()
+        private val job = SupervisorJob()
+        private val scope = CoroutineScope(job + Dispatchers.IO)
         private val ids = AtomicInteger()
-        private val pending = ConcurrentHashMap<Int, CompletableDeferred<JsonObject>>()
-        private val socket =
-            client.newWebSocket(
-                Request.Builder().url(endpoint).build(),
-                object : WebSocketListener() {
-                    override fun onOpen(webSocket: WebSocket, response: Response) {
-                        opened.complete(Unit)
-                    }
+        private val mutex = Mutex()
+        private val pending = mutableMapOf<Int, CompletableDeferred<JsonObject>>()
+        private val session = CompletableDeferred<DefaultClientWebSocketSession>()
 
-                    override fun onMessage(webSocket: WebSocket, text: String) {
-                        runCatching {
-                            val message = Json.parseToJsonElement(text).jsonObject
-                            val id = message["id"]?.jsonPrimitive?.intOrNull ?: return
-                            val result = pending.remove(id) ?: return
-                            if (message["error"] != null)
-                                result.completeExceptionally(IOException("浏览器验证协议调用失败"))
-                            else
-                                result.complete(
-                                    message["result"]?.jsonObject ?: JsonObject(emptyMap())
-                                )
-                        }
+        init {
+            scope.launch {
+                try {
+                    val socket = client.webSocketSession(endpoint)
+                    session.complete(socket)
+                    opened.complete(Unit)
+                    for (frame in socket.incoming) {
+                        if (frame !is Frame.Text) continue
+                        val message = Json.parseToJsonElement(frame.readText()).jsonObject
+                        val id = message["id"]?.jsonPrimitive?.intOrNull ?: continue
+                        val result = mutex.withLock { pending.remove(id) } ?: continue
+                        if (message["error"] != null)
+                            result.completeExceptionally(IOException("浏览器验证协议调用失败"))
+                        else
+                            result.complete(message["result"]?.jsonObject ?: JsonObject(emptyMap()))
                     }
-
-                    override fun onFailure(
-                        webSocket: WebSocket,
-                        t: Throwable,
-                        response: Response?,
-                    ) {
-                        fail(t)
-                    }
-
-                    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    fail(e)
+                } finally {
+                    withContext(NonCancellable) {
                         fail(IOException("验证浏览器已关闭"))
+                        if (session.isCompleted && !session.isCancelled)
+                            runCatching { session.await().cancel() }
                     }
+                }
+            }
+        }
 
-                    private fun fail(error: Throwable) {
-                        opened.completeExceptionally(error)
-                        pending.values.forEach { it.completeExceptionally(error) }
-                        pending.clear()
-                    }
-                },
-            )
+        private suspend fun fail(error: Throwable) {
+            opened.completeExceptionally(error)
+            session.completeExceptionally(error)
+            mutex.withLock {
+                pending.values.forEach { it.completeExceptionally(error) }
+                pending.clear()
+            }
+        }
 
         suspend fun command(method: String): JsonObject =
             withTimeout(3000) {
+                opened.await()
                 val id = ids.incrementAndGet()
                 val result = CompletableDeferred<JsonObject>()
-                pending[id] = result
+                mutex.withLock { pending[id] = result }
                 try {
-                    check(
-                        socket.send(
-                            buildJsonObject {
-                                    put("id", id)
-                                    put("method", method)
-                                }
-                                .toString()
+                    session
+                        .await()
+                        .send(
+                            Frame.Text(
+                                buildJsonObject {
+                                        put("id", id)
+                                        put("method", method)
+                                    }
+                                    .toString()
+                            )
                         )
-                    )
                     result.await()
                 } finally {
-                    pending.remove(id)
+                    withContext(NonCancellable) { mutex.withLock { pending.remove(id) } }
                 }
             }
 
         override fun close() {
-            socket.cancel()
+            runBlocking { job.cancelAndJoin() }
         }
     }
 }

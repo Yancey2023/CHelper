@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.test.runTest
 import yancey.chelper.domain.rawtext.RawtextDocumentSnapshot
 import yancey.chelper.domain.rawtext.RawtextEditToken
 import yancey.chelper.domain.rawtext.RawtextEditTracker
@@ -60,30 +61,29 @@ class RawtextAutosaverTest {
     }
 
     @Test
-    fun `burst is coalesced and final flush persists all preferences together`(): Unit =
-        runBlocking {
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
-            val repo = RecordingRawtextRepository()
-            try {
-                val saver =
-                    RawtextAutosaver(scope, repo, Dispatchers.Unconfined, 60_000) {
-                        if (it != null) fail(it)
-                    }
-                saver.submitDraft(repo, snapshot("a"))
-                saver.submitDraft(repo, snapshot("ab"))
-                saver.submitDraft(repo, snapshot("abc"))
-                assertTrue(repo.saved.isEmpty())
-                saver.submitDraft(repo, snapshot("abc"), immediately = true)
-                saver.awaitIdle()
-                assertEquals(1, repo.saved.size)
-                assertEquals(snapshot("abc").encode(), repo.saved.single())
-            } finally {
-                scope.cancel()
-            }
+    fun `burst is coalesced and final flush persists all preferences together`(): Unit = runTest {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val repo = RecordingRawtextRepository()
+        try {
+            val saver =
+                RawtextAutosaver(scope, repo, Dispatchers.Unconfined, 60_000) {
+                    if (it != null) fail(it)
+                }
+            saver.submitDraft(repo, snapshot("a"))
+            saver.submitDraft(repo, snapshot("ab"))
+            saver.submitDraft(repo, snapshot("abc"))
+            assertTrue(repo.saved.isEmpty())
+            saver.submitDraft(repo, snapshot("abc"), immediately = true)
+            saver.awaitIdle()
+            assertEquals(1, repo.saved.size)
+            assertEquals(snapshot("abc").encode(), repo.saved.single())
+        } finally {
+            scope.cancel()
         }
+    }
 
     @Test
-    fun `late non-cancellable write is serialized before the latest write`(): Unit = runBlocking {
+    fun `late non-cancellable write is serialized before the latest write`(): Unit = runTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val repo = RecordingRawtextRepository()
         val release = CompletableDeferred<Unit>()
@@ -110,7 +110,7 @@ class RawtextAutosaverTest {
     }
 
     @Test
-    fun `disabling autosave clears the old draft atomically`(): Unit = runBlocking {
+    fun `disabling autosave clears the old draft atomically`(): Unit = runTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val repo = RecordingRawtextRepository()
         try {
@@ -127,7 +127,7 @@ class RawtextAutosaverTest {
     }
 
     @Test
-    fun `failure is visible and a later retry clears it`(): Unit = runBlocking {
+    fun `failure is visible and a later retry clears it`(): Unit = runTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val repo = RecordingRawtextRepository()
         var error: String? = null
@@ -148,7 +148,7 @@ class RawtextAutosaverTest {
     }
 
     @Test
-    fun `finish seals pending save against late disposal flushes`(): Unit = runBlocking {
+    fun `finish seals pending save against late disposal flushes`(): Unit = runTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val repo = RecordingRawtextRepository()
         val release = CompletableDeferred<Unit>()

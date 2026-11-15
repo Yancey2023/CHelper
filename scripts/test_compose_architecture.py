@@ -43,7 +43,7 @@ class ArchitectureChecksTest(unittest.TestCase):
 
     def test_accepts_owned_packages_and_existing_jni_abi(self):
         self.source("shared/domain", "yancey.chelper.domain.library")
-        self.source("shared/native", "yancey.chelper.core", "CHelperCore")
+        self.source("platform/jvm", "yancey.chelper.core", "CHelperCore")
         self.assertEqual([], architecture.check_architecture())
 
     def test_rejects_packages_owned_by_another_module(self):
@@ -82,7 +82,7 @@ class ArchitectureChecksTest(unittest.TestCase):
         self.assert_rejected("construct stores through ClientDataStores")
 
     def test_rejects_new_business_classes_in_jni_namespace(self):
-        self.source("shared/native", "yancey.chelper.core", "FeatureRepository")
+        self.source("platform/jvm", "yancey.chelper.core", "FeatureRepository")
         self.assert_rejected("only ABI types belong to the JNI package")
 
     def test_rejects_material_dependency_hidden_behind_an_alias(self):
@@ -105,6 +105,42 @@ class ArchitectureChecksTest(unittest.TestCase):
         build = self.root / "apps/android/build.gradle.kts"
         build.write_text("plugins {}\n", encoding="utf-8")
         self.assert_rejected("retain Toaster")
+
+    def test_rejects_java_in_common_tests(self):
+        self.source("shared/data", "yancey.chelper.data", body="import java.io.File")
+        original = self.root / "shared/data/src/commonMain"
+        original.rename(original.with_name("commonTest"))
+        self.assert_rejected("JVM dependency in common code")
+
+    def test_rejects_jvm_shared_directory(self):
+        (self.root / "shared/data/src/jvmSharedTest").mkdir(parents=True)
+        self.assert_rejected("obsolete jvmSharedTest")
+
+    def test_rejects_native_implementation_dependency_from_ui(self):
+        (self.root / "shared/ui/build.gradle.kts").write_text(
+            'dependencies { implementation(project(":platform:jvm")) }'
+        )
+        self.assert_rejected("forbidden dependencies")
+
+    def test_rejects_bypassing_common_with_target_specific_shared_sources(self):
+        self.source("shared/data", "yancey.chelper.data", body="import java.io.File")
+        original = self.root / "shared/data/src/commonMain"
+        original.rename(original.with_name("jvmMain"))
+        self.assert_rejected("shared Kotlin belongs to commonMain/commonTest")
+
+    def test_platform_adapter_cannot_import_data_implementation(self):
+        self.source(
+            "platform/jvm",
+            "yancey.chelper.nativecore",
+            body="import yancey.chelper.data.local.ClientDataStores",
+        )
+        self.assert_rejected("forbidden import")
+
+    def test_network_runtime_cannot_be_reintroduced_as_shared_global_state(self):
+        self.source(
+            "shared/data", "yancey.chelper.data.remote", body="object ServiceManager {}"
+        )
+        self.assert_rejected("application-owned network services")
 
 
 if __name__ == "__main__":

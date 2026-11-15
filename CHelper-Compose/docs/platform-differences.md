@@ -14,7 +14,7 @@
 
 目前有 35 个宿主 Kotlin 源文件：Android 24 个、Windows 11 个，合计 5,193 行；另有 UI 模块中的 4 个平台 actual 文件，共 38 行。统计只读取 Git 跟踪的生产源码，包含注释、入口、预览和构建变体，不含测试与 build 输出。这些行数用于定位维护成本，不能等同于可删除代码量。
 
-七项 DataStore、普通界面、ViewModel、命令库协议、文档编解码、命令草稿和领域同步规则已经共享。Retrofit / OkHttp 与 JNI 命令会话也只有一份实现；`jvmSharedMain` 是两端编译同一物理目录，不代表两套实现。
+七项 DataStore、普通界面、ViewModel、命令库协议、文档编解码、命令草稿和领域同步规则已经共享。Ktor 服务、认证/限流/WAF 策略与命令会话均在 commonMain，网络实例由宿主应用容器持有；JNI、Crunch 和 OkHttp 传输适配集中于 platform/jvm，由两端宿主组装。Windows CDP 使用 Ktor WebSockets，Android 浏览器验证使用挂起接口并在请求结束时清理 WebView。共享测试统一在 commonTest，使用 kotlin.test。
 
 进一步收敛的重点是：命令输入控件、文件/图片入口、背景处理、浏览器承载和少量重复的调度/初始化胶水。Android 系统悬浮窗、输入法服务与 Windows 进程/窗口入口仍需宿主参与。
 
@@ -112,7 +112,7 @@ URL 打开可复用[官方 UriHandler](https://github.com/JetBrains/compose-mult
 ## 不推荐为了“多平台”而替换的内容
 
 - 普通设置、历史、收藏等继续使用已共享的 DataStore，不迁到另一套键值库。
-- Retrofit / OkHttp 和 JNI 会话目前已共用，不仅为换成“KMP”标签而改用另一套 HTTP/FFI。
+- 网络协议与命令会话已迁入 commonMain；Ktor 引擎和 JNI 适配集中于 platform/jvm。替换平台适配时仍须验证缓存、Brotli、认证、WAF 与引擎生命周期行为。
 - 系统悬浮窗、前台服务、Android IME、系统栏和 Activity/Window 入口保留最小系统适配；共享状态、内容和业务流程。
 - 不用移动端权限库承诺支持 Windows，也不用 Activity 内的 Popup 冒充跨应用系统悬浮窗。
 - PlatformTools 的[Clipboard Manager 模块](https://github.com/kdroidFilter/Platform-Tools#-clipboard-manager-module)主要是 JVM Windows/macOS/Linux 的剪贴板监控，不是已核实的 Android＋Windows 通用文本读写替代。

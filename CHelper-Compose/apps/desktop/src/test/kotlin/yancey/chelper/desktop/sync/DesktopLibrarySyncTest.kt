@@ -3,6 +3,7 @@
 package yancey.chelper.desktop.sync
 
 import androidx.datastore.core.DataStore
+import io.ktor.client.engine.mock.MockEngine
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -18,11 +19,10 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.local.library.LocalCommandLabDataStore
 import yancey.chelper.data.local.library.LocalLibraryData
 import yancey.chelper.data.local.library.LocalLibraryEditDraftData
-import yancey.chelper.data.remote.cache.CloudLibraryCache
+import yancey.chelper.data.remote.NetworkServices
 import yancey.chelper.domain.auth.CredentialStore
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.sync.SyncedLibraryIdentity
@@ -49,6 +49,7 @@ class DesktopLibrarySyncTest {
         }
     }
 
+    private val network = NetworkServices({ MockEngine { error("Unexpected request") } })
     private val entry =
         LibraryFunction(
             id = 1,
@@ -66,7 +67,7 @@ class DesktopLibrarySyncTest {
 
     @Before
     fun login() {
-        LoginUtil.init(
+        network.login.init(
             object : CredentialStore {
                 override fun read() = """{"token":"test-token","user":{"id":17,"is_guest":false}}"""
 
@@ -77,14 +78,15 @@ class DesktopLibrarySyncTest {
         ) {
             throw AssertionError(it)
         }
-        assertEquals(17, LoginUtil.accountId.value)
-        CloudLibraryCache.invalidateAll()
+        assertEquals(17, network.login.accountId.value)
+        network.cache.invalidateAll()
     }
 
     @After
     fun logout() {
-        LoginUtil.logout()
-        CloudLibraryCache.invalidateAll()
+        network.login.logout()
+        network.cache.invalidateAll()
+        network.close()
     }
 
     @Test fun `queue observation resumes after a temporary read failure`() = recoverReadFailure(1)
@@ -98,7 +100,8 @@ class DesktopLibrarySyncTest {
         store.failReadOn = collection
         var uploads = 0
         val sync =
-            DesktopLibrarySync(local, StandardTestDispatcher(testScheduler)) { library, _ ->
+            DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { library, _
+                ->
                 uploads++
                 SyncedLibraryIdentity(library.id, library.uuid)
             }
@@ -127,7 +130,8 @@ class DesktopLibrarySyncTest {
         store.failingUpdates = 2
         var uploads = 0
         val sync =
-            DesktopLibrarySync(local, StandardTestDispatcher(testScheduler)) { library, _ ->
+            DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { library, _
+                ->
                 uploads++
                 SyncedLibraryIdentity(library.id, library.uuid)
             }
@@ -150,7 +154,8 @@ class DesktopLibrarySyncTest {
         store.failingUpdates = 1
         var uploads = 0
         val sync =
-            DesktopLibrarySync(local, StandardTestDispatcher(testScheduler)) { library, _ ->
+            DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { library, _
+                ->
                 uploads++
                 if (uploads == 1) throw IOException("offline")
                 SyncedLibraryIdentity(library.id, library.uuid)
@@ -171,16 +176,17 @@ class DesktopLibrarySyncTest {
 
     @Test
     fun `successful sync invalidates the cloud library cache`() = runTest {
-        CloudLibraryCache.setLibraries(17, listOf(entry.copy(name = "old")))
+        network.cache.setLibraries(17, listOf(entry.copy(name = "old")))
         val sync =
-            DesktopLibrarySync(local, StandardTestDispatcher(testScheduler)) { library, _ ->
+            DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { library, _
+                ->
                 SyncedLibraryIdentity(library.id, library.uuid)
             }
         try {
             sync.start()
             runCurrent()
             assertFalse(store.state.value.functions.single().localUnsynced)
-            assertNull(CloudLibraryCache.getLibraries(17))
+            assertNull(network.cache.getLibraries(17))
         } finally {
             sync.close()
         }
@@ -190,7 +196,7 @@ class DesktopLibrarySyncTest {
     fun `closing during upload cancels without acknowledging or scheduling a retry`() = runTest {
         var uploads = 0
         val sync =
-            DesktopLibrarySync(local, StandardTestDispatcher(testScheduler)) { _, _ ->
+            DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { _, _ ->
                 uploads++
                 awaitCancellation()
             }

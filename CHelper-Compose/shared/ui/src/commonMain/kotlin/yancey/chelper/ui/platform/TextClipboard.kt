@@ -8,12 +8,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class TextClipboard
-internal constructor(private val clipboard: Clipboard, private val read: (ClipEntry) -> String?) {
+internal constructor(private val clipboard: Clipboard, private val codec: TextClipCodec) {
     suspend fun copyText(text: String) {
-        clipboard.setClipEntry(textClipEntry(text))
+        clipboard.setClipEntry(codec.create(text))
     }
 
-    suspend fun clipboardText(): String? = clipboard.getClipEntry()?.let(read)
+    suspend fun clipboardText(): String? = clipboard.getClipEntry()?.let(codec::read)
 
     suspend fun withFeedback(
         failureMessage: String = "剪贴板访问失败，请稍后重试",
@@ -30,15 +30,19 @@ internal constructor(private val clipboard: Clipboard, private val read: (ClipEn
 }
 
 @Composable
-fun rememberTextClipboard(): TextClipboard {
+fun rememberTextClipboard(
+    codec: TextClipCodec = LocalClientServices.current.clipboardCodec
+): TextClipboard {
     val clipboard = LocalClipboard.current
-    val read = rememberClipTextReader()
-    return remember(clipboard, read) { TextClipboard(clipboard, read) }
+    return remember(clipboard, codec) { TextClipboard(clipboard, codec) }
 }
 
 @Composable
-fun rememberCopyText(message: String = "已复制"): (String) -> Unit {
-    val clipboard = rememberTextClipboard()
+fun rememberCopyText(
+    message: String = "已复制",
+    codec: TextClipCodec = LocalClientServices.current.clipboardCodec,
+): (String) -> Unit {
+    val clipboard = rememberTextClipboard(codec)
     val scope = rememberCoroutineScope()
     return remember(clipboard, scope, message) {
         { text ->
@@ -52,7 +56,9 @@ fun rememberCopyText(message: String = "已复制"): (String) -> Unit {
     }
 }
 
-// Compose owns clipboard access; only the native payload's plain-text conversion differs.
-internal expect fun textClipEntry(text: String): ClipEntry
+/** Only native payload conversion is platform supplied; Compose still owns all clipboard access. */
+interface TextClipCodec {
+    fun create(text: String): ClipEntry
 
-@Composable internal expect fun rememberClipTextReader(): (ClipEntry) -> String?
+    fun read(entry: ClipEntry): String?
+}

@@ -48,12 +48,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.data.remote.library.model.CaptchaStatusResponse
 import yancey.chelper.data.remote.library.model.CaptchaTokenRequest
 import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.platform.ClientMessages
+import yancey.chelper.ui.platform.LocalClientServices
 
 @Composable
 fun AndroidCaptchaDialog(
@@ -76,6 +76,7 @@ private fun CaptchaDialogContent(
     onDismissRequest: () -> Unit,
     onSuccess: (String) -> Unit,
 ) {
+    val network = LocalClientServices.current.network
     val specialCode = remember { UUID.randomUUID().toString() }
     var webView: WebView? by remember { mutableStateOf(null) }
     // 防止 JS 回调和轮询同时触发导致重复执行
@@ -122,11 +123,10 @@ private fun CaptchaDialogContent(
                     this.specialCode = specialCode
                     this.action = action
                 }
-            val response =
-                withContext(Dispatchers.IO) { ServiceManager.CAPTCHA_SERVICE.requestToken(request) }
+            val response = withContext(Dispatchers.IO) { network.captcha.requestToken(request) }
             if (response.isSuccess() && response.data?.verificationToken != null) {
                 val token = response.data!!.verificationToken
-                val baseUrl = ServiceManager.LAB_BASE_URL.removeSuffix("/")
+                val baseUrl = network.config.labBaseUrl.removeSuffix("/")
                 captchaUrl = "$baseUrl/captcha/verifing?token=$token&callback=androidCallback"
 
                 // 轮询验证状态作为 JS 回调的后备方案
@@ -139,7 +139,7 @@ private fun CaptchaDialogContent(
                         }
                         delay(1500)
                         try {
-                            val status = ServiceManager.CAPTCHA_SERVICE.getStatus(specialCode)
+                            val status = network.captcha.getStatus(specialCode)
                             if (status.isSuccess() && status.data != null) {
                                 if (status.data!!.status == CaptchaStatusResponse.STATUS_VERIFIED) {
                                     val serverCode = status.data!!.specialCode

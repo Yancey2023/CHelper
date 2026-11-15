@@ -296,8 +296,8 @@ fun PublicLibraryContent(
                     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                         itemsIndexed(
                             state.libraries,
-                            key = { _, library ->
-                                library.remoteId ?: System.identityHashCode(library)
+                            key = { index, library ->
+                                library.remoteId ?: library.localId ?: "row:$index"
                             },
                         ) { _, library ->
                             PublicLibraryCard(

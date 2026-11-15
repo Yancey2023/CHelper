@@ -5,6 +5,7 @@ import java.io.IOException
 import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.*
 import org.junit.Test
 import yancey.chelper.data.local.ClientDataStores
@@ -24,14 +25,16 @@ class DesktopLegacyMigrationTest {
         val source = File(directory, "workspace.json").apply { writeText(original) }
         val migration = DesktopLegacyMigration(directory)
         migration.ensure()
-        ClientDataStores(directory).use { stores ->
+        ClientDataStores(directory.toOkioPath()).use { stores ->
             val repo = stores.commandDrafts
             assertEquals("say old", repo.read()?.text)
             repo.save(
                 CommandDraftWrite(CommandDraft("say new", 7, 7), repo.edits.claimText(), true)
             )
         }
-        ClientDataStores(directory).use { assertEquals("say new", it.commandDrafts.read()?.text) }
+        ClientDataStores(directory.toOkioPath()).use {
+            assertEquals("say new", it.commandDrafts.read()?.text)
+        }
         assertEquals(original, File(directory, "workspace.legacy.json").readText())
         val prefs =
             Json.decodeFromString<RawtextPreferences>(
@@ -70,7 +73,7 @@ class DesktopLegacyMigrationTest {
     fun failedWritesCanBeRetriedWithoutLosingTheLatestSnapshot() = runBlocking {
         val directory = Files.createTempDirectory("CHelper-retry-").toFile()
         val blocked = File(directory, "parent").apply { writeText("not a directory") }
-        ClientDataStores(blocked).use { stores ->
+        ClientDataStores(blocked.toOkioPath()).use { stores ->
             val repo = stores.commandDrafts
             val write =
                 CommandDraftWrite(

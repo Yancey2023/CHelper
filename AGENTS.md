@@ -1,7 +1,7 @@
 CHelper 是一个我的世界命令助手，包含了：
 
 - CHelper-Core - 命令的语法分析、补全提示、语法高亮等核心 IDE 功能，使用 c++
-- CHelper-Compose - 接入 CHelper-Core 的 Kotlin / Compose Multiplatform 应用，支持 Android 和 Windows；apps/android、apps/desktop 负责平台入口和依赖组装；shared/domain 定义业务模型、仓库接口和同步规则，shared/data 实现共享存储、网络和文档编解码，shared/native 实现 JNI 绑定和命令引擎，shared/ui 提供复用的功能界面、ViewModel、设计组件和导航；build-logic 维护统一构建约定，resources 保存两端共用资产。模块依赖和包归属由 scripts/check_compose_architecture.py 检查，结构说明见 CHelper-Compose/docs/architecture.md。
+- CHelper-Compose - 接入 CHelper-Core 的 Kotlin / Compose Multiplatform 应用，支持 Android 和 Windows；apps/android、apps/desktop 负责平台入口和依赖组装；shared/domain 定义业务模型、仓库接口和同步规则，shared/data 实现共享存储、网络和文档编解码，platform/jvm 保存两端复用的 JNI、Crunch 与 OkHttp 引擎适配，shared/ui 提供复用的功能界面、ViewModel、设计组件和导航；build-logic 维护统一构建约定，resources 保存两端共用资产。模块依赖和包归属由 scripts/check_compose_architecture.py 检查，结构说明见 CHelper-Compose/docs/architecture.md。
 - CHelper-Web - 接入了 CHelper-Core 的网页应用，同时包含了更多实用功能，使用 pnpm + vite + vue + typescript
 - CHelper-Doc - 用于给大众阅读的项目文档，使用 vitepress
 - CHelper-Resource - 用于 CHelper-Core 读取的资源包，包含了一些 json 文件
@@ -12,7 +12,9 @@ CHelper 是一个我的世界命令助手，包含了：
 1. 使用 gradle 和 pnpm 等包管理器要提权运行，避免遇到权限问题
 2. 完成改动后，使用 fmt 等相关工具进行代码格式化
 3. 理清楚项目层级，注重项目的可维护性
-4. Kotlin 源码和 Gradle Kotlin DSL 必须通过 import 引入类型、注解、顶层函数和属性，禁止在声明、类型签名或表达式中直接写完整包名。名称冲突使用 `import ... as ...` 别名，不用全限定名绕过；同样适用于测试和文件级注解。package/import 声明以及确实需要类名的字符串（如 JNI、反射、主类配置）保留原值，不把变量成员访问或嵌套类型访问当成包名清理。
+4. 共享生产代码使用 commonMain，测试使用 commonTest 与 kotlin.test，禁止重新引入自定义 JVM 共享源码目录或在公共源码中引用 Java、JUnit、Retrofit、OkHttp、JNI 类型；真实平台互操作放在 apps 或 platform/jvm，通过领域接口注入。
+5. 网络服务、账号会话和浏览器验证状态由应用容器持有并注入，不重新引入可变全局 ServiceManager、LoginUtil、GuestAuthUtil 或 WafHelper。优先使用 Ktor 官方序列化、日志和 WebSocket 插件；认证来源隔离、限流、WAF 单次重放和宿主资源清理由项目维护，保留 HTTP/2、Brotli 与有界磁盘缓存。
+6. Kotlin 源码和 Gradle Kotlin DSL 必须通过 import 引入类型、注解、顶层函数和属性，禁止在声明、类型签名或表达式中直接写完整包名。名称冲突使用 `import ... as ...` 别名，不用全限定名绕过；同样适用于测试和文件级注解。package/import 声明以及确实需要类名的字符串（如 JNI、反射、主类配置）保留原值，不把变量成员访问或嵌套类型访问当成包名清理。
 
 CHelper-Compose 的 UI 约束（用户明确要求）：
 

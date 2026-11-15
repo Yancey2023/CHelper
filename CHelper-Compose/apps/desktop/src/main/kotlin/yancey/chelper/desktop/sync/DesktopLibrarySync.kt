@@ -5,11 +5,9 @@ import java.io.IOException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import yancey.chelper.data.auth.LoginUtil
-import yancey.chelper.data.library.sync.NetworkLibrarySync
 import yancey.chelper.data.local.library.LocalCommandLabDataStore
 import yancey.chelper.data.logging.ClientLog as Log
-import yancey.chelper.data.remote.cache.CloudLibraryCache
+import yancey.chelper.data.remote.NetworkServices
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.sync.LibrarySyncOutcome
 import yancey.chelper.domain.library.sync.LibrarySyncProcessor
@@ -19,9 +17,10 @@ import yancey.chelper.domain.library.sync.SyncedLibraryIdentity
 /** WorkManager is Android-only; Windows schedules the original persisted sync processor. */
 internal class DesktopLibrarySync(
     private val local: LocalCommandLabDataStore,
+    private val network: NetworkServices,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val synchronize: suspend (LibraryFunction, Int) -> SyncedLibraryIdentity =
-        NetworkLibrarySync::synchronize,
+        network.sync::synchronize,
 ) : Closeable {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(job + dispatcher)
@@ -29,7 +28,7 @@ internal class DesktopLibrarySync(
 
     fun start() {
         scope.launch {
-            combine(LoginUtil.accountId, local.localLibraryFunctions()) { account, entries ->
+            combine(network.login.accountId, local.localLibraryFunctions()) { account, entries ->
                     account to
                         entries.filter {
                             it.autoSync == true &&
@@ -66,7 +65,7 @@ internal class DesktopLibrarySync(
                             identity.id,
                             identity.uuid,
                         )
-                        CloudLibraryCache.invalidateLibraries()
+                        network.cache.invalidateLibraries()
                     }
 
                     override suspend fun fail(
@@ -77,9 +76,10 @@ internal class DesktopLibrarySync(
                         local.failQueuedSync(localEntryId, revision, message)
                     }
                 }
-            val processor = LibrarySyncProcessor(store, { LoginUtil.accountId.value }, synchronize)
+            val processor =
+                LibrarySyncProcessor(store, { network.login.accountId.value }, synchronize)
             for (signal in signals) {
-                val owner = LoginUtil.accountId.value ?: continue
+                val owner = network.login.accountId.value ?: continue
                 var retry = false
                 try {
                     local

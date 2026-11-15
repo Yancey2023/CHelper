@@ -128,7 +128,7 @@ dependencies {
     implementation(project(":shared:domain"))
     implementation(project(":shared:data"))
     implementation(project(":shared:ui"))
-    implementation(project(":shared:native"))
+    implementation(project(":platform:jvm"))
     // https://github.com/boxbeam/Crunch
     implementation(libs.crunch)
     // https://github.com/androidx/androidx
@@ -151,18 +151,10 @@ dependencies {
     }
     // https://github.com/coil-kt/coil
     implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.network.ktor)
     // https://github.com/Kotlin/kotlinx.serialization
     implementation(libs.kotlinx.serialization.json)
-    // https://github.com/square/okhttp
-    implementation(platform(libs.okhttp.bom))
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.brotli)
-    implementation(libs.logging.interceptor)
     // https://github.com/square/retrofit
-    implementation(platform(libs.retrofit.bom))
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.kotlinx.serialization)
     // https://github.com/getActivity/DeviceCompat
     implementation(libs.devicecompat)
     // https://github.com/getActivity/XXPermissions

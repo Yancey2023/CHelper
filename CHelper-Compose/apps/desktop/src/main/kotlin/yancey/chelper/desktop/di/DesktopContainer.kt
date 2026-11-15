@@ -1,19 +1,23 @@
 package yancey.chelper.desktop.di
 
+import io.ktor.client.engine.HttpClientEngine
 import java.io.Closeable
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import okio.Path.Companion.toOkioPath
 import yancey.chelper.core.CHelperCore
-import yancey.chelper.data.auth.GuestAuthUtil
-import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.local.ClientDataStores
+import yancey.chelper.data.local.NoticeStore
 import yancey.chelper.data.policy.PolicyGrantManager
-import yancey.chelper.data.remote.ServiceManager
+import yancey.chelper.data.remote.NetworkConfig
+import yancey.chelper.data.remote.NetworkServices
 import yancey.chelper.desktop.instance.desktopDataDirectory
 import yancey.chelper.desktop.network.DesktopWafBrowser
 import yancey.chelper.desktop.platform.DesktopClientPlatform
+import yancey.chelper.desktop.platform.DesktopTextClipCodec
 import yancey.chelper.desktop.storage.DesktopAppearance
 import yancey.chelper.desktop.storage.DesktopCredentialStore
 import yancey.chelper.desktop.storage.DesktopFiles
@@ -21,43 +25,62 @@ import yancey.chelper.desktop.storage.DesktopLegacyMigration
 import yancey.chelper.desktop.storage.atomicWrite
 import yancey.chelper.desktop.sync.DesktopLibrarySync
 import yancey.chelper.domain.assets.AssetRepository
+import yancey.chelper.domain.auth.BrowserVerifier
+import yancey.chelper.nativecore.command.NativeCommandEngine
+import yancey.chelper.nativecore.enumeration.JvmEnumerationRepository
 import yancey.chelper.nativecore.loader.NativeLibrary
+import yancey.chelper.nativecore.network.jvmHttpEngine
 import yancey.chelper.ui.app.AppDependencies
 import yancey.chelper.ui.platform.ClientServices
 
 /** Windows composition root. Implementations are wired here and never looked up by the UI. */
-class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
+class DesktopContainer(
+    directory: File = desktopDataDirectory(),
+    networkConfig: NetworkConfig = NetworkConfig(),
+    engineFactory: ((Boolean) -> HttpClientEngine)? = null,
+    verifier: BrowserVerifier? = null,
+) : Closeable {
     private val directory = directory
     private val files = DesktopFiles(directory)
     private val legacy = DesktopLegacyMigration(directory)
-    internal val stores = ClientDataStores(directory)
+    internal val stores = ClientDataStores(directory.toOkioPath())
     val appearance = DesktopAppearance(directory)
     private val packNames by lazy {
         files.text("cpack/index.txt").lineSequence().filter(String::isNotBlank).toList()
     }
     private var nativeFailure: Throwable? = null
-    private val sync = DesktopLibrarySync(stores.libraries)
     private val browserVerification =
-        DesktopWafBrowser(
-            File(directory, "cache/browser-verification"),
-            ServiceManager.LAB_BASE_URL,
+        DesktopWafBrowser(File(directory, "cache/browser-verification"), networkConfig.labBaseUrl)
+    val network =
+        NetworkServices(
+            engineFactory ?: { cached -> jvmHttpEngine(File(directory, "cache"), cached) },
+            networkConfig,
+            verifier ?: browserVerification,
         )
-    private val platform = DesktopClientPlatform(sync::enqueue)
+    private val sync = DesktopLibrarySync(stores.libraries, network)
+    private val platform = DesktopClientPlatform(network, sync::enqueue)
     internal val loongFlow
         get() = platform.loongFlow
 
     val dependencies =
         AppDependencies(
             ClientServices(
+                network = network,
                 settings = stores.settings,
                 libraries = stores.libraries,
                 favorites = stores.favorites,
                 history = stores.history,
                 platform = platform,
-                packFilenames = packNames,
-                openCore = { path ->
-                    checkNative()
-                    CHelperCore.fromFile(files.extract(path).absolutePath)
+                enumeration = JvmEnumerationRepository(),
+                loadCommandEngine = { branch ->
+                    NativeCommandEngine.load(
+                        packNames,
+                        { path ->
+                            checkNative()
+                            CHelperCore.fromFile(files.extract(path).absolutePath)
+                        },
+                        branch,
+                    )
                 },
                 commandDrafts = stores.commandDrafts,
                 rawtext = stores.rawtext,
@@ -65,7 +88,9 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
                     AssetRepository { path -> withContext(Dispatchers.IO) { files.text(path) } },
                 versionName = "26.2.0",
                 versionCode = 87,
-                dataDirectory = directory,
+                clipboardCodec = DesktopTextClipCodec,
+                notices = NoticeStore(directory.toOkioPath()),
+                packFilenames = packNames,
             ),
             convert = { command ->
                 withContext(Dispatchers.Default) {
@@ -99,20 +124,18 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
                 nativeFailure = e
             }
             try {
-                ServiceManager.init(File(directory, "cache"), false)
-                browserVerification.install()
                 var authError: Throwable? = null
-                LoginUtil.init(DesktopCredentialStore(File(directory, "session.enc"))) {
+                network.login.init(DesktopCredentialStore(File(directory, "session.enc"))) {
                     authError = it
                 }
                 authError?.let { issue = "登录状态恢复失败：${it.message}" }
                 val device = File(directory, "installation-id")
                 if (!device.exists())
                     atomicWrite(device, UUID.randomUUID().toString().encodeToByteArray())
-                GuestAuthUtil.init(device.readText())
+                network.guest.init(device.readText())
                 PolicyGrantManager.init(
                     files.text("about/privacy_policy.txt"),
-                    File(directory, "privacy_policy_lastread.txt"),
+                    File(directory, "privacy_policy_lastread.txt").toOkioPath(),
                 )
                 sync.start()
             } catch (e: Exception) {
@@ -130,6 +153,7 @@ class DesktopContainer(directory: File = desktopDataDirectory()) : Closeable {
         sync.close()
         browserVerification.close()
         appearance.close()
-        stores.close()
+        network.close()
+        runBlocking { stores.closeAndJoin() }
     }
 }

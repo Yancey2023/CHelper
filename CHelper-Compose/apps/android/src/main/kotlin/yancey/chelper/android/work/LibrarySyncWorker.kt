@@ -26,11 +26,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import yancey.chelper.android.networkServices
 import yancey.chelper.android.startupState
 import yancey.chelper.android.storage.clientDataStores
-import yancey.chelper.data.auth.LoginUtil
-import yancey.chelper.data.library.sync.NetworkLibrarySync
-import yancey.chelper.data.remote.cache.CloudLibraryCache
 import yancey.chelper.domain.library.sync.LibrarySyncOutcome
 import yancey.chelper.domain.library.sync.LibrarySyncProcessor
 import yancey.chelper.domain.library.sync.LibrarySyncStore
@@ -71,7 +69,7 @@ class LibrarySyncWorker(context: Context, parameters: WorkerParameters) :
                         identity.id,
                         identity.uuid,
                     )
-                    CloudLibraryCache.invalidateLibraries()
+                    applicationContext.networkServices.cache.invalidateLibraries()
                 }
 
                 override suspend fun fail(localEntryId: String, revision: String, message: String) =
@@ -80,8 +78,8 @@ class LibrarySyncWorker(context: Context, parameters: WorkerParameters) :
         return when (
             LibrarySyncProcessor(
                     store,
-                    { LoginUtil.accountId.value },
-                    NetworkLibrarySync::synchronize,
+                    { applicationContext.networkServices.login.accountId.value },
+                    applicationContext.networkServices.sync::synchronize,
                 )
                 .run(entryId, ownerId)
         ) {
@@ -126,7 +124,7 @@ object LibrarySyncScheduler {
         val application = context.applicationContext
         scope.launch {
             application.startupState.settings.first { it != null }
-            LoginUtil.accountId.collectLatest { ownerId ->
+            application.networkServices.login.accountId.collectLatest { ownerId ->
                 enqueueMutex.withLock { enqueuedRevisions.clear() }
                 if (ownerId == null) return@collectLatest
                 application
@@ -157,7 +155,7 @@ object LibrarySyncScheduler {
                     .distinctUntilChanged()
                     .collect { pending ->
                         pending.forEach { (entryId, revision) ->
-                            while (LoginUtil.accountId.value == ownerId) {
+                            while (application.networkServices.login.accountId.value == ownerId) {
                                 try {
                                     enqueue(application, ownerId, entryId, revision)
                                     break

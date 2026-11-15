@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import io.ktor.client.engine.mock.*
+import io.ktor.http.headersOf
 import java.io.File
 import java.nio.file.Files
 import javax.imageio.ImageIO
@@ -24,17 +26,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
-import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Protocol
-import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.jetbrains.compose.resources.painterResource
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import yancey.chelper.data.policy.PolicyGrantManager
-import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.desktop.di.DesktopContainer
 import yancey.chelper.resources.Res
 import yancey.chelper.resources.allDrawableResources
@@ -55,18 +51,12 @@ class SharedAndroidUiTest {
             object : ViewModelStoreOwner {
                 override val viewModelStore = ViewModelStore()
             }
-        val container = DesktopContainer(directory)
-        val session = container.dependencies.services.session
-        val externalOpen = mutableStateOf<Pair<Long, CommandLabDeepLink>?>(null)
-        runBlocking { container.initialize() }
-        PolicyGrantManager.INSTANCE.agree()
-        ServiceManager.init(File(directory, "test-cache"), false) { builder ->
-            builder
-                .interceptors()
-                .add(
-                    0,
-                    Interceptor { chain ->
-                        val path = chain.request().url.encodedPath
+        val container =
+            DesktopContainer(
+                directory,
+                engineFactory = {
+                    MockEngine { request ->
+                        val path = request.url.encodedPath
                         val json =
                             when {
                                 path.endsWith("/library/detail/42") ->
@@ -79,16 +69,15 @@ class SharedAndroidUiTest {
                                 else ->
                                     """{"status":0,"data":{"functions":[],"count":0,"total_count":0,"per_page":20}}"""
                             }
-                        Response.Builder()
-                            .request(chain.request())
-                            .protocol(Protocol.HTTP_1_1)
-                            .code(200)
-                            .message("OK")
-                            .body(json.toResponseBody("application/json".toMediaType()))
-                            .build()
-                    },
-                )
-        }
+                        respond(json, headers = headersOf("Content-Type", "application/json"))
+                    }
+                },
+            )
+        val session = container.dependencies.services.session
+        val externalOpen = mutableStateOf<Pair<Long, CommandLabDeepLink>?>(null)
+        runBlocking { container.initialize() }
+        PolicyGrantManager.INSTANCE.agree()
+
         try {
             compose.setContent {
                 navigation.Content {

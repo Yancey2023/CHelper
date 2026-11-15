@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.Files
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.*
 import org.junit.Test
 import yancey.chelper.data.library.document.localLibraryEditDraftKey
@@ -26,7 +27,7 @@ class DesktopOriginalStoresTest {
                 .writeText(
                     """{"libraries":[{"localId":"stable","name":"old library","body":"say preserved","isV2":false}],"drafts":{"stable":{"name":"draft","body":"say editing","isV2":false}}}"""
                 )
-            ClientDataStores(directory).use {
+            ClientDataStores(directory.toOkioPath()).use {
                 val library = it.libraries.localLibraryFunctions().first().single()
                 assertEquals("stable", library.localEntryId)
                 assertEquals("say preserved", library.content)
@@ -57,7 +58,7 @@ class DesktopOriginalStoresTest {
             )
         try {
             val id =
-                ClientDataStores(directory).use { stores ->
+                ClientDataStores(directory.toOkioPath()).use { stores ->
                     val id =
                         stores.libraries.addLocalLibraryFunction(
                             LibraryFunction(name = "original", content = "say hello")
@@ -83,7 +84,7 @@ class DesktopOriginalStoresTest {
                     )
                     id
                 }
-            ClientDataStores(directory).use { stores ->
+            ClientDataStores(directory.toOkioPath()).use { stores ->
                 assertEquals(
                     id,
                     stores.libraries.localLibraryFunctions().first().single().localEntryId,
@@ -112,7 +113,7 @@ class DesktopOriginalStoresTest {
                     .forEach { assertTrue("Missing store $it", File(directory, it).isFile) }
                 stores.libraries.removeLocalLibraryFunction(id)
             }
-            ClientDataStores(directory).use {
+            ClientDataStores(directory.toOkioPath()).use {
                 assertTrue(it.libraries.localLibraryFunctions().first().isEmpty())
             }
         } finally {
@@ -128,7 +129,7 @@ class DesktopOriginalStoresTest {
                 .writeText(
                     """{"libraries":[],"drafts":{"new":{"name":"draft name","body":"say recovered","isV2":false}}}"""
                 )
-            ClientDataStores(directory).use { stores ->
+            ClientDataStores(directory.toOkioPath()).use { stores ->
                 val editor = LocalLibraryEditViewModel()
                 editor.ensureEditingTarget(null, null, null)
                 editor.restoreDraft(stores.libraries.localLibraryEditDraft(editor.draftKey).first())
@@ -149,7 +150,7 @@ class DesktopOriginalStoresTest {
                 .writeText(
                     """{"drafts":{"new":{"name":"new draft","commands":"say new"},"stable":{"name":"old key"},"local-library:update:stable":{"name":"current draft"}}}"""
                 )
-            ClientDataStores(directory).use { stores ->
+            ClientDataStores(directory.toOkioPath()).use { stores ->
                 assertEquals(
                     "new draft",
                     stores.libraries.localLibraryEditDraft(localLibraryEditDraftKey()).first()?.name,
@@ -175,14 +176,14 @@ class DesktopOriginalStoresTest {
             val original =
                 """[{"name":"one"},{"name":"two","localEntryId":"same"},{"name":"three","localEntryId":"same"}]"""
             File(directory, "libraries.json").writeText(original)
-            ClientDataStores(directory).use { stores ->
+            ClientDataStores(directory.toOkioPath()).use { stores ->
                 val entries = stores.libraries.localLibraryFunctions().first()
                 assertEquals(3, entries.map { it.localEntryId }.toSet().size)
                 stores.libraries.removeLocalLibraryFunctions(
                     entries.mapNotNull { it.localEntryId }.toSet()
                 )
             }
-            ClientDataStores(directory).use {
+            ClientDataStores(directory.toOkioPath()).use {
                 assertTrue(it.libraries.localLibraryFunctions().first().isEmpty())
             }
             assertEquals(original, File(directory, "libraries.json").readText())

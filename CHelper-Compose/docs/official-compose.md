@@ -39,7 +39,7 @@ Android 在 Application 启动时安装平台呈现器。共享功能仅调用 C
 
 ## 保留的系统适配
 
-系统分享、照片/文件选择、WebView、跨应用系统悬浮窗、Android IME Service、后台调度、安全密钥库和 JNI 引擎继续由宿主适配。独立窗口模型在组合树创建前注入的剪贴板回调与分享回退保留宿主 API；普通界面使用 LocalClipboard。已有共享 DataStore 和网络层不因“KMP”标签更换。
+系统分享、照片/文件选择、WebView、跨应用系统悬浮窗、Android IME Service、后台调度、安全密钥库和 JNI 引擎继续由宿主适配。独立窗口模型在组合树创建前注入的剪贴板回调与分享回退保留宿主 API；普通界面使用 LocalClipboard。DataStore 使用共享 OkioStorage；网络协议、认证和 WAF 策略使用 common Ktor，保留宿主传输缓存、Brotli、浏览器验证与凭据保护职责。
 
 ## 验证与防回归
 

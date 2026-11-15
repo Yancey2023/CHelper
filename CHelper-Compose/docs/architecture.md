@@ -54,18 +54,15 @@ CHelper-Compose/
 ├── shared/
 │   ├── domain/src/commonMain/kotlin/yancey/chelper/domain/
 │   │   └── assets/, auth/, command/, enumeration/, history/, library/, rawtext/, settings/
-│   ├── data/src/{commonMain,jvmSharedMain}/kotlin/yancey/chelper/data/
+│   ├── data/src/commonMain/kotlin/yancey/chelper/data/
 │   │   ├── local/          # DataStore 集合、各存储与存储迁移
 │   │   ├── library/        # 文档工具、仓库实现、远端同步
-│   │   ├── remote/         # Retrofit、拦截器、WAF 与响应 DTO
+│   │   ├── remote/         # Ktor 服务、请求策略、WAF 与响应 DTO
 │   │   └── auth/, background/, logging/, mcd/, migration/, policy/, startup/
-│   ├── native/src/main/kotlin/yancey/chelper/
-│   │   ├── core/           # 保留 JNI ABI 的六个类型
-│   │   └── nativecore/     # 命令会话、枚举实现与动态库加载
-│   └── ui/src/{commonMain,jvmSharedMain}/kotlin/yancey/chelper/ui/
+│   └── ui/src/commonMain/kotlin/yancey/chelper/ui/
 │       ├── app/            # 应用根节点、依赖与关闭写入协调
 │       ├── navigation/     # 统一路由图、路由键与分享链接
-│       ├── platform/       # UI 所需宿主能力与 expect/actual
+│       ├── platform/       # UI 所需的宿主能力接口
 │       ├── designsystem/   # 主题、控件、布局、对话框和文本展示
 │       └── feature/
 │           ├── home/, command/, conversion/, enumeration/
@@ -73,6 +70,9 @@ CHelper-Compose/
 │           └── library/
 │               ├── account/, browse/, local/, upload/, favorites/, messages/
 │               └── activity/, profile/, score/, search/, mcd/, components/
+├── platform/jvm/src/{main,test}/kotlin/yancey/chelper/
+│   ├── core/           # 保留 JNI ABI 的六个类型
+│   └── nativecore/     # JNI 适配、Crunch 枚举、动态库和 OkHttp 传输
 ├── build-logic/
 ├── resources/
 └── gradle/
@@ -88,16 +88,15 @@ flowchart TD
     Desktop[apps:desktop] --> UI
     Android --> Data[shared:data]
     Desktop --> Data
-    Android --> Native[shared:native]
+    Android --> Native[platform:jvm]
     Desktop --> Native
     UI --> Data
-    UI --> Native
     UI --> Domain[shared:domain]
     Data --> Domain
     Native --> Domain
 ```
 
-`domain` 不依赖 Compose、Android、Java IO、数据实现或 JNI。`data` 不依赖 UI 或原生引擎。`native` 不依赖 UI 或数据实现。`ui/commonMain` 仅依赖可多平台编译的模型与组件；需要原 Java / Retrofit / JNI API 的集成代码放在同模块的共用 JVM 源码目录中。
+`domain` 不依赖 Compose、Android、Java IO、数据实现或 JNI。`data` 不依赖 UI 或原生引擎。`platform/jvm` 不依赖 UI 或数据实现。domain、data、ui 的共享生产实现全部位于 `commonMain`，测试全部位于 `commonTest`，不引用 Java、JUnit、Retrofit、OkHttp 或 JNI 类型。命令会话、建议惰性读取和生命周期规则属于 domain；JNI 适配器映射为领域结果对象，由宿主注入引擎工厂和枚举仓库。
 
 Android / Windows 的系统适配分别放在宿主内；共享模块不得引用宿主包。普通功能界面、IME 指引内容与撤回按钮、编辑逻辑、数据格式与同步规则只保留一份实现。平台宿主通过 `ClientServices` 和 `ClientPlatform` 组装实际能力。
 
@@ -105,7 +104,7 @@ Android / Windows 的系统适配分别放在宿主内；共享模块不得引�
 
 弹窗统一由共享 `AppDialogHost` 绘制在当前 Compose 宿主内，不创建系统 Dialog 窗口。`AppDialog` 保留调用点的 CompositionLocal 与内容状态，支持嵌套、返回优先级、遮罩拦截和焦点恢复；`AppAlertDialog` 复用同一个宿主和自有 Foundation 内容控件。Android 普通页面、系统浮窗和 Desktop 共用该实现，不再维护 Dialog windowType 适配。
 
-外部网页通过官方 LocalUriHandler 打开；界面剪贴板通过 LocalClipboard 挂起 API 读写，仅保留 Android/JVM 纯文本 ClipEntry 转换。ClientPlatform 不再提供 URL、命令编辑器或普通剪贴板入口。ClientMessages 是共享反馈入口：Android 在 Application 初始化时安装 Toaster 呈现器；Desktop 使用共享 Foundation 消息组件，支持瞬时事件、生命周期取消、手动关闭、live region 和可访问性超时。不同时向两端呈现机制发送同一消息。保留原因见[采用记录](official-compose.md#toaster-保留依据)。
+外部网页通过官方 LocalUriHandler 打开；界面剪贴板通过 LocalClipboard 挂起 API 读写，仅由 Android/Windows 宿主注入纯文本 ClipEntry 编解码器。ClientPlatform 不再提供 URL、命令编辑器或普通剪贴板入口。ClientMessages 是共享反馈入口：Android 在 Application 初始化时安装 Toaster 呈现器；Desktop 使用共享 Foundation 消息组件，支持瞬时事件、生命周期取消、手动关闭、live region 和可访问性超时。不同时向两端呈现机制发送同一消息。保留原因见[采用记录](official-compose.md#toaster-保留依据)。
 
 普通控件使用项目自己的主题与 Foundation 设计组件，禁止 Material / Material 3 组件和依赖。普通输入和安全密码输入分别使用 BasicTextField 与 BasicSecureTextField，共用装饰器；命令编辑保留领域规则、语法样式和错误范围。所有预览使用统一注解和纯 Content，放在 commonMain，不创建真实仓库或业务 ViewModel。详细约束见[Compose 基础能力采用记录](official-compose.md)和根目录 AGENTS.md。
 
@@ -113,15 +112,19 @@ Android / Windows 的系统适配分别放在宿主内；共享模块不得引�
 
 ## 源码集与构建约定
 
-`commonMain/commonTest` 使用标准 KMP 源码集。两端共用的 Java / Retrofit / JNI 集成代码保存在一份 `jvmSharedMain` 目录，JUnit 回归保存在一份 `jvmSharedTest` 目录，分别加入 Android 与 JVM 编译。
+`commonMain/commonTest` 使用标准 KMP 源码集。删除自定义 JVM 共享目录及其重复编译映射。共享测试使用 `kotlin.test`，由标准 `jvmTest` 和 `testAndroidHostTest` 任务执行；协程调度使用 `kotlinx-coroutines-test`，存储测试使用 Okio FakeFileSystem，HTTP 契约测试使用 Ktor MockEngine。真实 JNI、系统窗口、操作系统文件与浏览器集成测试留在对应平台模块。
 
-这里的 `jvmSharedMain` 是物理源码目录，不是额外的 KMP 中间源码集。Kotlin 官方目前[不支持 JVM 与 Android 组成共享中间源码集](https://kotlinlang.org/docs/multiplatform/multiplatform-hierarchy.html)。共用目录映射由 `chelper.jvm-shared` 约定集中维护，依赖仍在 Android / JVM 目标中分别解析，避免在 Android 中误用桌面平台变体。
+构建约定只有两个：`chelper.multiplatform-library` 管理 Android / JVM 目标、SDK、JVM 17 与公共测试；`chelper.jvm-library` 管理平台适配和桌面宿主的 JVM / Java 17 配置。`platform/jvm` 为两个宿主复用一份真实 JVM 适配，不向共享模块暴露 Java 类型。
 
-`build-logic` 使用同一份版本目录，维护三个约定：
+网络通过应用容器持有的 `NetworkServices` 实例组装，并通过 `ClientServices`、仓库构造参数和后台任务入口注入。不可变 `NetworkConfig` 固定服务地址与调试开关；`LoginSession`、`GuestSession`、云端内存缓存和 `BrowserVerificationState` 都属于该应用实例，不使用可变全局注册表。
 
-- `chelper.multiplatform-library`：Android SDK、JVM 17、两端目标、Host Test 和 common test。
-- `chelper.jvm-shared`：共用 JVM 生产与测试目录；在上一个约定上扩展。
-- `chelper.jvm-library`：JNI 模块与桌面宿主使用的 JVM / Java 17 配置。
+认证客户端不调用自动令牌获取；业务客户端通过 `TokenProvider` 优先取正式账号令牌，再取访客令牌。两类客户端共享限流和浏览器验证状态，关闭应用时取消请求并释放各自引擎。Android WebView 在主线程创建、销毁，只更新验证 Cookie；Windows 使用官方 Ktor WebSockets 连接独立 Edge 配置的 CDP，保留启动交接、取消、等待者异常完成和进程清理。
+
+JSON 使用官方 ContentNegotiation 和类型化请求／响应；保留已存在的 text/plain JSON 响应兼容。HTTP 调试日志使用 Ktor Logging 接入现有日志入口，不记录正文，删除 URL 查询与片段，并脱敏认证／Cookie 头。OkHttp 引擎只维护 TLS、HTTP/2、Brotli、超时和 10 MiB 磁盘缓存；缓存仅服务公开资源，认证、私有命令库和 WAF 请求使用 no-store；Windows 上 OkHttp 的读取文件锁可能阻止 304 元数据立即写回，后续请求可再次重验证，但缓存正文仍按 304 正确恢复，不自行绕过文件锁或替换缓存实现；Coil 图片缓存保持独立。
+
+访客签名使用 cryptography-kotlin 的 ECDSA P-256 / SHA-256，保留 PKCS#8 密钥和 DER 签名协议。时间使用 Kotlin Clock / Instant 和 kotlinx.datetime。
+
+七项存储都通过 OkioStorage 读取相同路径和格式；宿主只提供 Okio Path。历史 Java modified UTF-8 草稿由公共兼容解码器读取，包含 NUL 和 UTF-16 代理对；新草稿继续使用原有大端长度和 UTF-8 格式。需要等待关闭时调用 `closeAndJoin()`，公共 `use` 在不可取消的清理阶段等待文件句柄释放。
 
 共享图片和字符串遵循 Compose 标准目录 `shared/ui/src/commonMain/composeResources`。Android 原生资源访问也映射到这份目录。`resources` 只保存内核资源、内置文档和 Rawtext 索引；安装器、原生库输出分别由平台模块维护。
 

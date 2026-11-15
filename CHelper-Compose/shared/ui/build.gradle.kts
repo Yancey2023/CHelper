@@ -1,5 +1,5 @@
 plugins {
-    id("chelper.jvm-shared")
+    id("chelper.multiplatform-library")
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
@@ -7,18 +7,13 @@ plugins {
 
 kotlin {
     sourceSets {
-        listOf(androidMain, jvmMain).forEach { sourceSet ->
-            sourceSet.dependencies {
-                api(project(":shared:data"))
-                implementation(project(":shared:native"))
-                implementation(libs.multiplatform.navigation.compose)
-            }
-        }
-
         commonMain.dependencies {
+            api(project(":shared:data"))
+            implementation(libs.multiplatform.navigation.compose)
+            implementation(libs.kotlinx.datetime)
             api(libs.compose.multiplatform.resources)
             implementation(libs.coil.compose)
-            implementation(libs.coil.network.okhttp)
+            implementation(libs.coil.network.ktor)
             api(project(":shared:domain"))
             implementation(libs.multiplatform.lifecycle.viewmodel.compose)
             implementation(libs.multiplatform.lifecycle.runtime.compose)
@@ -31,6 +26,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
+            implementation(libs.ktor.client.mock)
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
         }

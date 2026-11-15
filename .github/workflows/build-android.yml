@@ -66,7 +66,7 @@ jobs:
 
       - name: Build with Gradle
         working-directory: ${{ github.workspace }}/CHelper-Compose
-        run: ./gradlew :apps:android:testDebugUnitTest :apps:android:assembleRelease :apps:android:lintDebug :shared:domain:jvmTest :shared:domain:testAndroidHostTest :shared:data:jvmTest :shared:data:testAndroidHostTest :shared:ui:jvmTest :shared:ui:testAndroidHostTest :shared:native:test --warning-mode all
+        run: ./gradlew :apps:android:testDebugUnitTest :apps:android:assembleRelease :apps:android:lintDebug :shared:domain:jvmTest :shared:domain:testAndroidHostTest :shared:data:jvmTest :shared:data:testAndroidHostTest :shared:ui:jvmTest :shared:ui:testAndroidHostTest :platform:jvm:test --warning-mode all
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
@@ -90,7 +90,7 @@ jobs:
         run: python -m pip install -r scripts/requirements-build.txt
       - name: Test shared code and package Windows application
         working-directory: CHelper-Compose
-        run: .\gradlew.bat :shared:native:test :shared:domain:jvmTest :shared:data:jvmTest :shared:ui:jvmTest :apps:desktop:test :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe --warning-mode all
+        run: .\gradlew.bat :platform:jvm:test :shared:domain:jvmTest :shared:data:jvmTest :shared:ui:jvmTest :apps:desktop:test :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe --warning-mode all
       - name: Verify Windows share-link protocol registration
         run: python scripts/check_windows_installer.py CHelper-Compose/apps/desktop/build/compose/binaries/main/msi/CHelper-26.2.0.msi
       - name: Upload Windows application

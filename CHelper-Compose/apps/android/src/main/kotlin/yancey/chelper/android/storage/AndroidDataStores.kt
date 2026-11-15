@@ -19,6 +19,7 @@
 package yancey.chelper.android.storage
 
 import android.content.Context
+import okio.Path.Companion.toOkioPath
 import yancey.chelper.data.local.ClientDataStores
 
 private val storesByDirectory = mutableMapOf<String, ClientDataStores>()
@@ -30,9 +31,9 @@ fun Context.clientDataStores(): ClientDataStores {
     val directory = app.filesDir.resolve("datastore")
     return storesByDirectory.getOrPut(directory.absolutePath) {
         ClientDataStores(
-            directory,
-            legacyDirectory = app.dataDir,
-            legacyCommandDraftFile = app.filesDir.resolve("cache/lastInput.dat"),
+            directory.toOkioPath(),
+            legacyDirectory = app.dataDir.toOkioPath(),
+            legacyCommandDraftFile = app.filesDir.resolve("cache/lastInput.dat").toOkioPath(),
         )
     }
 }

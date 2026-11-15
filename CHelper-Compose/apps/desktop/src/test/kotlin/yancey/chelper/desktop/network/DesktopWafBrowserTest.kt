@@ -1,21 +1,27 @@
 package yancey.chelper.desktop.network
 
 import com.sun.net.httpserver.HttpServer
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import java.net.InetSocketAddress
+import java.net.Proxy
 import java.nio.file.Files
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
-import yancey.chelper.data.remote.ServiceManager
-import yancey.chelper.data.remote.interceptor.AuthInterceptor
-import yancey.chelper.data.remote.interceptor.WafInterceptor
-import yancey.chelper.data.remote.waf.WafHelper
+import yancey.chelper.data.remote.NetworkConfig
+import yancey.chelper.data.remote.createNetworkClient
+import yancey.chelper.data.remote.waf.BrowserVerificationState
+import yancey.chelper.nativecore.network.jvmHttpEngine
 
 class DesktopWafBrowserTest {
     @Test
-    fun realBrowserCompletesJavascriptChallengeAndOriginalApiRequestIsRetried() {
+    fun realBrowserCompletesJavascriptChallengeAndOriginalApiRequestIsRetried() = runBlocking {
         val directory = Files.createTempDirectory("CHelper-browser-challenge-").toFile()
+        val cache = Files.createTempDirectory("CHelper-browser-test-cache-").toFile()
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/") { exchange ->
             val verified =
@@ -32,22 +38,20 @@ class DesktopWafBrowserTest {
             exchange.responseBody.use { it.write(body.toByteArray()) }
         }
         server.start()
-        val previous = ServiceManager.LAB_BASE_URL
         val url = "http://127.0.0.1:${server.address.port}/captcha/verify"
+        val browser = DesktopWafBrowser(directory, url)
         val client =
-            OkHttpClient.Builder()
-                .addInterceptor(WafInterceptor())
-                .addInterceptor(AuthInterceptor.INSTANCE)
-                .build()
+            createNetworkClient(
+                jvmHttpEngine(cache, false) { it.proxy(Proxy.NO_PROXY) },
+                NetworkConfig(labBaseUrl = url),
+                browser = BrowserVerificationState(browser),
+            )
         try {
-            ServiceManager.LAB_BASE_URL = url
-            DesktopWafBrowser(directory, url).use {
-                it.install()
-                client.newCall(Request.Builder().url(url).build()).execute().use { response ->
-                    assertEquals("""{"verified":true}""", response.body.string())
-                    assertTrue(response.request.header("User-Agent").orEmpty().contains("Edg"))
-                    assertFalse(response.request.header("Cookie").orEmpty().contains("login="))
-                }
+            browser.use {
+                val response = client.get(url)
+                assertEquals("""{"verified":true}""", response.bodyAsText())
+                assertTrue(response.call.request.headers["User-Agent"].orEmpty().contains("Edg"))
+                assertFalse(response.call.request.headers["Cookie"].orEmpty().contains("login="))
             }
             assertTrue(
                 "Unreleased browser files in ${directory.absolutePath}: " +
@@ -61,11 +65,25 @@ class DesktopWafBrowserTest {
                 directory.listFiles().orEmpty().isEmpty(),
             )
         } finally {
-            ServiceManager.LAB_BASE_URL = previous
-            WafHelper.install({ null }, { it?.invoke(false) })
             server.stop(0)
-            client.dispatcher.executorService.shutdown()
-            client.connectionPool.evictAll()
+            client.close()
+            directory.deleteRecursively()
+            cache.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun cancellingDuringBrowserStartupReleasesTheIsolatedProfile() = runBlocking {
+        val directory = Files.createTempDirectory("CHelper-browser-cancel-").toFile()
+        val browser = DesktopWafBrowser(directory, "http://127.0.0.1:9/")
+        try {
+            val verification = async { runCatching { browser.verify() } }
+            withTimeout(5000) { while (directory.listFiles().orEmpty().isEmpty()) delay(10) }
+            browser.close()
+            assertTrue(verification.await().isFailure)
+            assertTrue(directory.listFiles().orEmpty().isEmpty())
+        } finally {
+            browser.close()
             directory.deleteRecursively()
         }
     }

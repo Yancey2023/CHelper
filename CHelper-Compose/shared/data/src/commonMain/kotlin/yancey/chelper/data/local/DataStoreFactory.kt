@@ -3,6 +3,7 @@ package yancey.chelper.data.local
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.core.okio.OkioSerializer
 import androidx.datastore.core.okio.OkioStorage
 import kotlinx.coroutines.CoroutineScope
@@ -15,9 +16,12 @@ fun <T> createDataStore(
     serializer: OkioSerializer<T>,
     scope: CoroutineScope,
     migrations: List<DataMigration<T>> = emptyList(),
+    fileSystem: FileSystem = FileSystem.SYSTEM,
+    corruptionHandler: ReplaceFileCorruptionHandler<T>? = null,
 ): DataStore<T> =
     DataStoreFactory.create(
-        storage = OkioStorage(FileSystem.SYSTEM, serializer, producePath = { path }),
+        storage = OkioStorage(fileSystem, serializer, producePath = { path }),
         migrations = migrations,
+        corruptionHandler = corruptionHandler,
         scope = scope,
     )

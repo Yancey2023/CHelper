@@ -8,13 +8,14 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.test.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.runTest
 import yancey.chelper.domain.rawtext.RawtextPreferences
 
 class RawtextViewModelTest {
     private val savedDraft = """[{"type":"Text","text":"saved draft"}]"""
 
     @Test
-    fun `final save retries in the closing caller after a write failure`() = runBlocking {
+    fun `final save retries in the closing caller after a write failure`() = runTest {
         withEditor { vm, repo ->
             val owners = ViewModelStore()
             owners.put("editor", vm)
@@ -32,7 +33,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `a failed initial read retries without restoring over edited text`() = runBlocking {
+    fun `a failed initial read retries without restoring over edited text`() = runTest {
         val repo = RecordingRawtextRepository()
         repo.initial = flow { error("read unavailable") }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -72,7 +73,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `keystrokes are debounced but flush and copying include newest input`() = runBlocking {
+    fun `keystrokes are debounced but flush and copying include newest input`() = runTest {
         withEditor { vm, repo ->
             val first = vm.segments.first().id
             vm.updateTextSegment(first, TextFieldValue("a"))
@@ -87,7 +88,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `late preferences cannot replace edits or changed options`() = runBlocking {
+    fun `late preferences cannot replace edits or changed options`() = runTest {
         val repo = RecordingRawtextRepository()
         val prefs = CompletableDeferred<RawtextPreferences>()
         repo.initial = flow { emit(prefs.await()) }
@@ -124,7 +125,7 @@ class RawtextViewModelTest {
 
     @Test
     fun `old draft schema still restores and toggling off during load prevents restore`() =
-        runBlocking {
+        runTest {
             for (disable in listOf(false, true)) {
                 val repo = RecordingRawtextRepository()
                 val prefs = CompletableDeferred<RawtextPreferences>()
@@ -155,7 +156,7 @@ class RawtextViewModelTest {
         }
 
     @Test
-    fun `a captured render snapshot does not track later editor mutations`() = runBlocking {
+    fun `a captured render snapshot does not track later editor mutations`() = runTest {
         withEditor { vm, _ ->
             vm.updateTextSegment(vm.segments.first().id, TextFieldValue("before"))
             val snapshot = vm.documentSnapshot()
@@ -166,7 +167,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `closing before restore completes still saves new edits`() = runBlocking {
+    fun `closing before restore completes still saves new edits`() = runTest {
         val repo = RecordingRawtextRepository()
         val prefs = CompletableDeferred<RawtextPreferences>()
         repo.initial = flow { emit(prefs.await()) }
@@ -195,7 +196,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `failed restore never overwrites an unread saved draft on close`() = runBlocking {
+    fun `failed restore never overwrites an unread saved draft on close`() = runTest {
         val repo = RecordingRawtextRepository()
         repo.initial = flow { throw IllegalStateException("unavailable") }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -214,7 +215,7 @@ class RawtextViewModelTest {
 
     @Test
     fun `render finishing before the next snapshot notification cannot publish stale content`() =
-        runBlocking {
+        runTest {
             val worker = QueuedDispatcher()
             val repo = RecordingRawtextRepository()
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -239,7 +240,7 @@ class RawtextViewModelTest {
         }
 
     @Test
-    fun `unchanged older editor cannot overwrite a newer draft on hide or close`() = runBlocking {
+    fun `unchanged older editor cannot overwrite a newer draft on hide or close`() = runTest {
         val repo = RecordingRawtextRepository()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val oldStore = ViewModelStore()
@@ -271,7 +272,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `delayed older edits cannot win over newer edits from another editor`() = runBlocking {
+    fun `delayed older edits cannot win over newer edits from another editor`() = runTest {
         val repo = RecordingRawtextRepository()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val store = ViewModelStore()
@@ -307,7 +308,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `clearing then disposing a ViewModel does not cancel its final save`() = runBlocking {
+    fun `clearing then disposing a ViewModel does not cancel its final save`() = runTest {
         val repo = RecordingRawtextRepository()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val worker = QueuedDispatcher()
@@ -331,7 +332,7 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `moving a caret in an old editor does not create a new draft write`() = runBlocking {
+    fun `moving a caret in an old editor does not create a new draft write`() = runTest {
         val repo = RecordingRawtextRepository()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val store = ViewModelStore()
@@ -357,33 +358,29 @@ class RawtextViewModelTest {
     }
 
     @Test
-    fun `mock edits returning to initial value still supersede delayed restoration`() =
-        runBlocking {
-            val repo = RecordingRawtextRepository()
-            val preferences = CompletableDeferred<RawtextPreferences>()
-            repo.initial = flow { emit(preferences.await()) }
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
-            val store = ViewModelStore()
-            try {
-                val vm = RawtextViewModel(repo, scope, Dispatchers.Unconfined, 60_000)
-                store.put("vm", vm)
-                vm.mockPlayerP = "Changed"
-                vm.mockPlayerP = "Steve"
-                preferences.complete(
-                    RawtextPreferences(
-                        autoSaveEnabled = true,
-                        mockSettings = """{"p":"From disk"}""",
-                    )
-                )
-                assertEquals("Steve", vm.mockPlayerP)
-                vm.flushDraft()
-                vm.awaitDraftSaved()
-                assertFalse(repo.stored.mockSettings!!.contains("From disk"))
-            } finally {
-                store.clear()
-                scope.cancel()
-            }
+    fun `mock edits returning to initial value still supersede delayed restoration`() = runTest {
+        val repo = RecordingRawtextRepository()
+        val preferences = CompletableDeferred<RawtextPreferences>()
+        repo.initial = flow { emit(preferences.await()) }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        val store = ViewModelStore()
+        try {
+            val vm = RawtextViewModel(repo, scope, Dispatchers.Unconfined, 60_000)
+            store.put("vm", vm)
+            vm.mockPlayerP = "Changed"
+            vm.mockPlayerP = "Steve"
+            preferences.complete(
+                RawtextPreferences(autoSaveEnabled = true, mockSettings = """{"p":"From disk"}""")
+            )
+            assertEquals("Steve", vm.mockPlayerP)
+            vm.flushDraft()
+            vm.awaitDraftSaved()
+            assertFalse(repo.stored.mockSettings!!.contains("From disk"))
+        } finally {
+            store.clear()
+            scope.cancel()
         }
+    }
 
     private class QueuedDispatcher : CoroutineDispatcher() {
         private val queue = ArrayDeque<Runnable>()

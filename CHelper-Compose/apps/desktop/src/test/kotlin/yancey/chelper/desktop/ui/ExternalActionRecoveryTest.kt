@@ -17,19 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import io.ktor.client.engine.mock.*
+import io.ktor.http.headersOf
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.flow.flowOf
-import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Protocol
-import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Path.Companion.toOkioPath
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.rules.TemporaryFolder
 import yancey.chelper.data.policy.PolicyGrantManager
-import yancey.chelper.data.remote.ServiceManager
 import yancey.chelper.desktop.di.DesktopContainer
 import yancey.chelper.domain.rawtext.*
 import yancey.chelper.ui.app.CHelperApp
@@ -56,27 +53,19 @@ class ExternalActionRecoveryTest {
 
     @Before
     fun prepare() {
-        container = DesktopContainer(temporary.root)
-        PolicyGrantManager.init("test policy", File(temporary.root, "policy.txt"))
-        ServiceManager.init(File(temporary.root, "cache"), false) { builder ->
-            builder
-                .interceptors()
-                .add(
-                    0,
-                    Interceptor { chain ->
-                        Response.Builder()
-                            .request(chain.request())
-                            .protocol(Protocol.HTTP_1_1)
-                            .code(200)
-                            .message("OK")
-                            .body(
-                                """{"status":1,"message":"offline test"}"""
-                                    .toResponseBody("application/json".toMediaType())
-                            )
-                            .build()
-                    },
-                )
-        }
+        container =
+            DesktopContainer(
+                temporary.root,
+                engineFactory = {
+                    MockEngine {
+                        respond(
+                            """{"status":1,"message":"offline test"}""",
+                            headers = headersOf("Content-Type", "application/json"),
+                        )
+                    }
+                },
+            )
+        PolicyGrantManager.init("test policy", File(temporary.root, "policy.txt").toOkioPath())
     }
 
     @After

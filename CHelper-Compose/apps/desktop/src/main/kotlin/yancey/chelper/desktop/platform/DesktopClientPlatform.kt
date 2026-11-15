@@ -13,7 +13,7 @@ import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
-import yancey.chelper.data.remote.ServiceManager
+import yancey.chelper.data.remote.NetworkServices
 import yancey.chelper.data.remote.library.model.CaptchaStatusResponse
 import yancey.chelper.data.remote.library.model.CaptchaTokenRequest
 import yancey.chelper.desktop.window.DesktopLoongFlow
@@ -28,7 +28,10 @@ import yancey.chelper.ui.platform.PickedImage
 import yancey.chelper.ui.platform.rememberOpenUrl
 
 /** Native desktop integrations; feature screens and their ViewModels remain shared. */
-internal class DesktopClientPlatform(private val scheduleSync: () -> Unit) : ClientPlatform {
+internal class DesktopClientPlatform(
+    private val network: NetworkServices,
+    private val scheduleSync: () -> Unit,
+) : ClientPlatform {
     internal val loongFlow = DesktopLoongFlow(::copyText, ::clipboardText, ::shareText)
 
     override val homeActions = setOf(HomeAction.LoongFlow)
@@ -93,7 +96,7 @@ internal class DesktopClientPlatform(private val scheduleSync: () -> Unit) : Cli
             try {
                 val code = UUID.randomUUID().toString()
                 val response =
-                    ServiceManager.CAPTCHA_SERVICE.requestToken(
+                    network.captcha.requestToken(
                         CaptchaTokenRequest().apply {
                             specialCode = code
                             this.action = action
@@ -102,12 +105,12 @@ internal class DesktopClientPlatform(private val scheduleSync: () -> Unit) : Cli
                 val token = response.data?.verificationToken
                 check(response.isSuccess() && token != null) { response.message ?: "获取验证凭证失败" }
                 url =
-                    "${ServiceManager.LAB_BASE_URL.removeSuffix("/")}/captcha/verifing?token=$token&callback=androidCallback"
+                    "${network.config.labBaseUrl.removeSuffix("/")}/captcha/verifing?token=$token&callback=androidCallback"
                 openUrl(requireNotNull(url))
                 withTimeout(300_000) {
                     while (isActive) {
                         delay(1500)
-                        val result = ServiceManager.CAPTCHA_SERVICE.getStatus(code)
+                        val result = network.captcha.getStatus(code)
                         if (
                             result.isSuccess() &&
                                 result.data?.status == CaptchaStatusResponse.STATUS_VERIFIED

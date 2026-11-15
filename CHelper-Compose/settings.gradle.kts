@@ -32,6 +32,6 @@ include(
     ":apps:desktop",
     ":shared:domain",
     ":shared:data",
-    ":shared:native",
+    ":platform:jvm",
     ":shared:ui",
 )

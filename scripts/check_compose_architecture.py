@@ -7,15 +7,15 @@ ROOT = Path(__file__).resolve().parents[1] / "CHelper-Compose"
 DEPENDENCIES = {
     "shared/domain": set(),
     "shared/data": {"shared/domain"},
-    "shared/native": {"shared/domain"},
-    "shared/ui": {"shared/domain", "shared/data", "shared/native"},
-    "apps/android": {"shared/domain", "shared/data", "shared/native", "shared/ui"},
-    "apps/desktop": {"shared/domain", "shared/data", "shared/native", "shared/ui"},
+    "platform/jvm": {"shared/domain"},
+    "shared/ui": {"shared/domain", "shared/data"},
+    "apps/android": {"shared/domain", "shared/data", "platform/jvm", "shared/ui"},
+    "apps/desktop": {"shared/domain", "shared/data", "platform/jvm", "shared/ui"},
 }
 OWNERS = {
     "shared/domain": "yancey.chelper.domain",
     "shared/data": "yancey.chelper.data",
-    "shared/native": "yancey.chelper.nativecore",
+    "platform/jvm": "yancey.chelper.nativecore",
     "shared/ui": "yancey.chelper.ui",
     "apps/android": "yancey.chelper.android",
     "apps/desktop": "yancey.chelper.desktop",
@@ -239,8 +239,15 @@ def check_architecture() -> list[str]:
         if unexpected := actual - allowed:
             failures.append(f"{module}: forbidden dependencies {sorted(unexpected)}")
         if "jvmSharedSources" in build or "src/jvmShared" in build:
-            failures.append(f"{module}: JVM source mapping belongs to build-logic")
+            failures.append(
+                f"{module}: custom JVM source mapping is forbidden; use commonMain/commonTest"
+            )
 
+        for obsolete in ("jvmSharedMain", "jvmSharedTest"):
+            if (directory / "src" / obsolete).exists():
+                failures.append(f"{module}: obsolete {obsolete} directory")
+        if module.startswith("shared/") and "chelper.jvm-shared" in build:
+            failures.append(f"{module}: obsolete JVM shared convention")
         for path in (directory / "src").rglob("*.kt"):
             source = path.read_text(encoding="utf-8")
             failures.extend(check_import_style(path, source))
@@ -258,6 +265,13 @@ def check_architecture() -> list[str]:
                 )
             relative = path.relative_to(directory / "src")
             source_set = relative.parts[0]
+            if module.startswith("shared/") and source_set not in (
+                "commonMain",
+                "commonTest",
+            ):
+                failures.append(
+                    f"{path.relative_to(ROOT)}: shared Kotlin belongs to commonMain/commonTest"
+                )
             package_match = re.search(r"^package\s+(\S+)", source, re.MULTILINE)
             if not package_match:
                 failures.append(f"{path.relative_to(ROOT)}: missing package")
@@ -273,17 +287,51 @@ def check_architecture() -> list[str]:
                 failures.append(
                     f"{path.relative_to(ROOT)}: path differs from package {package}"
                 )
-            jni = module == "shared/native" and package == "yancey.chelper.core"
+            jni = module == "platform/jvm" and package == "yancey.chelper.core"
             owner = OWNERS[module]
             if package != owner and not package.startswith(owner + ".") and not jni:
                 failures.append(
                     f"{path.relative_to(ROOT)}: namespace belongs to another module"
                 )
             production = not source_set.lower().endswith("test")
+            if (
+                production
+                and module.startswith("shared/")
+                and re.search(
+                    r"\bobject\s+(?:ServiceManager|LoginUtil|GuestAuthUtil|WafHelper)\b",
+                    kotlin_code(source),
+                )
+            ):
+                failures.append(
+                    f"{path.relative_to(ROOT)}: inject application-owned network services instead of global state"
+                )
             if jni and production and path.stem not in JNI_TYPES:
                 failures.append(
                     f"{path.relative_to(ROOT)}: only ABI types belong to the JNI package"
                 )
+            if source_set in ("commonMain", "commonTest"):
+                imports = re.findall(r"^import\s+([^\s]+)", source, re.MULTILINE)
+                for imported in imports:
+                    if imported.startswith(
+                        (
+                            "java.",
+                            "javax.",
+                            "org.junit.",
+                            "kotlin.jvm.",
+                            "kotlin.concurrent.thread",
+                            "okhttp3.",
+                            "retrofit2.",
+                            "yancey.chelper.core.",
+                            "yancey.chelper.nativecore.",
+                        )
+                    ):
+                        failures.append(
+                            f"{path.relative_to(ROOT)}: JVM dependency in common code: {imported}"
+                        )
+                if re.search(
+                    r"(?<![\w.])(?:System|Thread)\s*\.|\.java\b", kotlin_code(source)
+                ):
+                    failures.append(f"{path.relative_to(ROOT)}: JVM API in common code")
             if not production:
                 continue
 
@@ -308,19 +356,18 @@ def check_architecture() -> list[str]:
                     "yancey.chelper.core.",
                     "yancey.chelper.nativecore.",
                 )
-            elif module in ("shared/native", "shared/ui"):
+            elif module in ("platform/jvm", "shared/ui"):
                 forbidden = (
                     "android.",
                     "yancey.chelper.android.",
                     "yancey.chelper.desktop.",
                 )
-                if module == "shared/ui" and source_set == "androidMain":
-                    forbidden = ("yancey.chelper.android.", "yancey.chelper.desktop.")
+                if module == "platform/jvm":
+                    forbidden += ("yancey.chelper.data.", "yancey.chelper.ui.")
             if source_set == "commonMain":
                 forbidden += ("java.", "javax.")
                 if module == "shared/ui":
                     forbidden += (
-                        "yancey.chelper.data.",
                         "yancey.chelper.core.",
                         "yancey.chelper.nativecore.",
                     )

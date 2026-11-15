@@ -13,16 +13,22 @@ import com.hjq.device.compat.DeviceOs
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import kotlinx.coroutines.*
+import okio.Path.Companion.toOkioPath
 import yancey.chelper.BuildConfig
+import yancey.chelper.android.networkServices
 import yancey.chelper.android.storage.clientDataStores
+import yancey.chelper.android.ui.AndroidTextClipCodec
 import yancey.chelper.android.ui.captcha.AndroidCaptchaDialog
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.window.FloatingWindowManager
 import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.android.work.LibrarySyncScheduler
 import yancey.chelper.core.CHelperCore
+import yancey.chelper.data.local.NoticeStore
 import yancey.chelper.domain.assets.AssetRepository
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.nativecore.command.NativeCommandEngine
+import yancey.chelper.nativecore.enumeration.JvmEnumerationRepository
 import yancey.chelper.ui.feature.home.HomeAction
 import yancey.chelper.ui.platform.ClientDiagnostics
 import yancey.chelper.ui.platform.ClientPlatform
@@ -66,6 +72,7 @@ fun rememberAndroidClientServices(
     return remember(context, floatingWindowManager) {
         val stores = context.clientDataStores()
         ClientServices(
+            context.networkServices,
             stores.settings,
             stores.libraries,
             stores.favorites,
@@ -182,8 +189,14 @@ fun rememberAndroidClientServices(
                     AndroidCaptchaDialog(action, onDismiss, onSuccess)
                 }
             },
-            context.assets.list("cpack").orEmpty().toList(),
-            { path -> CHelperCore.fromAssets(context.assets, path) },
+            { branch ->
+                NativeCommandEngine.load(
+                    context.assets.list("cpack").orEmpty().toList(),
+                    { path -> CHelperCore.fromAssets(context.assets, path) },
+                    branch,
+                )
+            },
+            JvmEnumerationRepository(),
             stores.commandDrafts,
             rawtext = stores.rawtext,
             assets =
@@ -194,7 +207,9 @@ fun rememberAndroidClientServices(
                 },
             versionName = BuildConfig.VERSION_NAME,
             versionCode = BuildConfig.VERSION_CODE,
-            dataDirectory = context.dataDir,
+            clipboardCodec = AndroidTextClipCodec(context),
+            notices = NoticeStore(context.dataDir.toOkioPath()),
+            packFilenames = context.assets.list("cpack").orEmpty().toList(),
         )
     }
 }

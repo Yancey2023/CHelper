@@ -34,23 +34,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.Path.Companion.toOkioPath
 import yancey.chelper.BuildConfig
-import yancey.chelper.android.network.AndroidWafHelper
+import yancey.chelper.android.network.AndroidBrowserVerifier
 import yancey.chelper.android.storage.BackgroundStore
 import yancey.chelper.android.storage.EncryptedCredentialStore
 import yancey.chelper.android.storage.clientDataStores
 import yancey.chelper.android.util.MonitorUtil
 import yancey.chelper.android.window.LoongFlowWindowManager
 import yancey.chelper.android.work.LibrarySyncScheduler
-import yancey.chelper.data.auth.GuestAuthUtil
-import yancey.chelper.data.auth.LoginUtil
 import yancey.chelper.data.policy.PolicyGrantManager
-import yancey.chelper.data.remote.ServiceManager
+import yancey.chelper.data.remote.NetworkConfig
+import yancey.chelper.data.remote.NetworkServices
 import yancey.chelper.data.startup.StartupState
+import yancey.chelper.nativecore.network.jvmHttpEngine
 import yancey.chelper.ui.platform.ClientMessages
 
 class CHelperApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    lateinit var network: NetworkServices
+        private set
+
     lateinit var startup: StartupState
         private set
 
@@ -82,7 +86,7 @@ class CHelperApplication : Application() {
         // 隐私政策管理初始化
         PolicyGrantManager.init(
             assets.open("about/privacy_policy.txt").bufferedReader().use { it.readText() },
-            dataDir.resolve("lastReadContent.txt"),
+            dataDir.resolve("lastReadContent.txt").toOkioPath(),
             MonitorUtil::onAgreePolicyGrant,
         )
         // 用于数据分析和性能监控的第三方库初始化，依赖于 PolicyGrantManager
@@ -90,11 +94,16 @@ class CHelperApplication : Application() {
         // 游龙悬浮窗单例初始化
         LoongFlowWindowManager.init(this)
         // 网络服务初始化
-        ServiceManager.init(cacheDir, BuildConfig.DEBUG)
-        AndroidWafHelper.init(this)
+        val config = NetworkConfig(debug = BuildConfig.DEBUG)
+        network =
+            NetworkServices(
+                { cached -> jvmHttpEngine(cacheDir, cached) },
+                config,
+                AndroidBrowserVerifier(this, config.labBaseUrl),
+            )
         applicationScope.launch(Dispatchers.IO) {
             try {
-                LoginUtil.init(EncryptedCredentialStore(this@CHelperApplication)) { throwable ->
+                network.login.init(EncryptedCredentialStore(this@CHelperApplication)) { throwable ->
                     Log.e("LoginUtil", "Unable to restore protected session", throwable)
                     MonitorUtil.generateCustomLog(throwable, "ReadUserException")
                 }
@@ -104,7 +113,7 @@ class CHelperApplication : Application() {
         }
         LibrarySyncScheduler.observe(this, applicationScope)
         // 访客认证初始化（用于自动访客登录）
-        GuestAuthUtil.init(
+        network.guest.init(
             Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
         )
 
@@ -133,3 +142,6 @@ class CHelperApplication : Application() {
 
 val Context.startupState: StartupState
     get() = (applicationContext as CHelperApplication).startup
+
+val Context.networkServices: NetworkServices
+    get() = (applicationContext as CHelperApplication).network

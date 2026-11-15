@@ -11,7 +11,7 @@ COMPOSE = PROJECT / "CHelper-Compose"
 
 def source_files() -> list[Path]:
     files = set(COMPOSE.glob("*.gradle.kts"))
-    for group in ("apps", "shared"):
+    for group in ("apps", "shared", "platform"):
         for module in (COMPOSE / group).iterdir():
             files.update(module.glob("*.gradle.kts"))
             files.update((module / "src").rglob("*.kt"))

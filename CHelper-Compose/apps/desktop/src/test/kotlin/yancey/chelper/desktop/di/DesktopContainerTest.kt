@@ -9,7 +9,6 @@ import org.junit.Test
 import yancey.chelper.domain.command.CommandDraft
 import yancey.chelper.domain.command.CommandDraftWrite
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.nativecore.command.NativeCommandEngine
 
 class DesktopContainerTest {
     @Test
@@ -33,20 +32,19 @@ class DesktopContainerTest {
         DesktopContainer(root).use { container ->
             container.initialize()
             val services = container.dependencies.services
-            NativeCommandEngine.load(services.packFilenames, services.openCore, "release-vanilla")
-                .use { engine ->
-                    engine.parse("say hello").use { parsed ->
-                        assertTrue(parsed.errors.isNullOrEmpty())
-                        assertEquals(9, parsed.tokens?.size)
-                    }
-                    engine.parse("sa").use { parsed ->
-                        val index =
-                            (0 until parsed.suggestionCount(2)).first {
-                                parsed.suggestion(2, it)?.name?.startsWith("say") == true
-                            }
-                        assertTrue(parsed.apply(2, index)?.text?.startsWith("say") == true)
-                    }
+            services.loadCommandEngine("release-vanilla").use { engine ->
+                engine.parse("say hello").use { parsed ->
+                    assertTrue(parsed.errors.isNullOrEmpty())
+                    assertEquals(9, parsed.tokens?.size)
                 }
+                engine.parse("sa").use { parsed ->
+                    val index =
+                        (0 until parsed.suggestionCount(2)).first {
+                            parsed.suggestion(2, it)?.name?.startsWith("say") == true
+                        }
+                    assertTrue(parsed.apply(2, index)?.text?.startsWith("say") == true)
+                }
+            }
             assertTrue(
                 container.dependencies
                     .convert("execute @a ~ ~ ~ say hello")

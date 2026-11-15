@@ -4,18 +4,32 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/build-logic" name="chelper-build-logic">
+                <projects>
+                  <project path="$PROJECT_DIR$/build-logic" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="jbr-21" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/build-logic" />
+            <option value="$PROJECT_DIR$/apps" />
             <option value="$PROJECT_DIR$/apps/android" />
             <option value="$PROJECT_DIR$/apps/desktop" />
-            <option value="$PROJECT_DIR$/shared/domain" />
+            <option value="$PROJECT_DIR$/build-logic" />
+            <option value="$PROJECT_DIR$/platform" />
+            <option value="$PROJECT_DIR$/platform/jvm" />
+            <option value="$PROJECT_DIR$/shared" />
             <option value="$PROJECT_DIR$/shared/data" />
-            <option value="$PROJECT_DIR$/shared/native" />
+            <option value="$PROJECT_DIR$/shared/domain" />
             <option value="$PROJECT_DIR$/shared/ui" />
           </set>
         </option>

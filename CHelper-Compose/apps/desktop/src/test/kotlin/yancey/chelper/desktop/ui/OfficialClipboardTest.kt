@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import yancey.chelper.desktop.platform.DesktopTextClipCodec
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.widget.Button
 import yancey.chelper.ui.platform.ClientInteractionHost
@@ -49,9 +50,9 @@ class OfficialClipboardTest {
                 CompositionLocalProvider(LocalClipboard provides clipboard) {
                     CHelperTheme(CHelperTheme.Theme.Light, null) {
                         ClientInteractionHost {
-                            val clipboardReader = rememberTextClipboard()
+                            val clipboardReader = rememberTextClipboard(DesktopTextClipCodec)
                             SideEffect { reader = clipboardReader }
-                            val copy = rememberCopyText()
+                            val copy = rememberCopyText(codec = DesktopTextClipCodec)
                             Button("复制") { copy("say 你好🙂") }
                         }
                     }

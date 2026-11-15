@@ -1,0 +1,251 @@
+/**
+ * It is part of CHelper. CHelper is a command helper for Minecraft Bedrock Edition.
+ * Copyright (C) 2026  Akanyi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package yancey.chelper.ui.feature.library.browse
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.data.remote.library.model.BaseResult
+import yancey.chelper.domain.library.LibraryFunction
+
+class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewModel() {
+    var library by mutableStateOf(LibraryFunction())
+    var isLoading by mutableStateOf(false)
+    var errorMessage by mutableStateOf<String?>(null)
+    var actionMessage by mutableStateOf<String?>(null)
+    var isPrivate by mutableStateOf(false)
+
+    // 点赞状态独立于 library 对象，防止点赞触发命令可视化的完整重绘
+    var likeCount by mutableIntStateOf(0)
+    var isLiked by mutableStateOf(false)
+    var isFavorited by mutableStateOf(false)
+
+    /** 删除成功后置 true，由 Screen 层观察此状态来安全执行 popBackStack */
+    var deleteSuccess by mutableStateOf(false)
+
+    /** 当前是否展示原始源码视图（false = 可视化 UI） */
+    var showRawSource by mutableStateOf(false)
+    private var initializedTarget: Pair<Int, Boolean>? = null
+
+    fun ensureLoaded(id: Int, isPrivate: Boolean) {
+        val target = id to isPrivate
+        if (initializedTarget == target) return
+        initializedTarget = target
+        loadFunction(id, isPrivate)
+    }
+
+    fun loadFunction(id: Int, isPrivate: Boolean) {
+        initializedTarget = id to isPrivate
+        this.isPrivate = isPrivate
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+
+            try {
+                val response: BaseResult<LibraryFunction?> =
+                    withContext(Dispatchers.IO) {
+                        if (isPrivate) {
+                            network.user.getPrivateFunction(id)
+                        } else {
+                            network.public.getFunction(id)
+                        }
+                    }
+
+                if (response.isSuccess() && response.data != null) {
+                    library = response.data!!
+                    likeCount = library.likeCount ?: 0
+                    isLiked = library.isLiked == true
+                    isFavorited = library.isFavorited == true
+                } else {
+                    errorMessage = response.message ?: "加载失败"
+                }
+            } catch (e: Exception) {
+                errorMessage = "网络错误: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    /** 切换点赞状态 调 like API 后刷新本地计数 like 接口已赞则不管、未赞则点赞 */
+    fun toggleLike(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) { network.public.like(id) }
+                if (result.isSuccess() && result.data != null) {
+                    val likeData = result.data!!
+                    likeCount = likeData.likeCount ?: likeCount
+                    isLiked = likeData.isLiked == true
+                    val bonus = likeData.dailyFirstLikePoints ?: likeData.pointsAwarded
+                    actionMessage =
+                        if (bonus != null && bonus > 0) {
+                            "点赞成功 · 每日首次点赞 +${formatPoints(bonus)} PTS"
+                        } else {
+                            "已点赞"
+                        }
+                } else {
+                    actionMessage = result.message ?: "操作失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    /** Release 成功后后端返回的公有版 ID，Screen 层观察此值来决定是否导航 */
+    var releasedPublicId by mutableStateOf<Int?>(null)
+
+    fun releaseToPublic(id: Int, specialCode: String = "") {
+        viewModelScope.launch {
+            try {
+                val result =
+                    withContext(Dispatchers.IO) {
+                        network.user.releaseToPublic(id, mapOf("special_code" to specialCode))
+                    }
+                if (result.isSuccess()) {
+                    // 后端自动审核通过时返回 {"public_id": <int>}
+                    val publicId =
+                        (result.data as? JsonObject)?.get("public_id")?.let {
+                            (it as? JsonPrimitive)?.content?.toIntOrNull()
+                        }
+                    releasedPublicId = publicId
+                    actionMessage = result.message ?: "已提交发布申请"
+                } else {
+                    actionMessage = result.message ?: "操作失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    fun syncToPublic(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) { network.user.syncToPublic(id) }
+                actionMessage =
+                    if (result.isSuccess()) {
+                        "已提交同步申请"
+                    } else {
+                        result.message ?: "同步失败"
+                    }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    fun deleteLibrary(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) { network.user.deleteLibrary(id) }
+                if (result.isSuccess()) {
+                    actionMessage = "删除成功"
+                    deleteSuccess = true
+                } else {
+                    actionMessage = result.message ?: "删除失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    fun toggleFavorite(id: Int) {
+        if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
+            actionMessage = "请先登录正式账号使用收藏夹"
+            return
+        }
+        viewModelScope.launch {
+            if (isPrivate) {
+                actionMessage = "私有库不能加入收藏夹"
+                return@launch
+            }
+            try {
+                val result = withContext(Dispatchers.IO) { network.user.toggleFavorite(id) }
+                if (result.isSuccess() && result.data != null) {
+                    isFavorited = result.data!!.isFavorited == true
+                    library = library.copy(isFavorited = isFavorited)
+                    actionMessage = result.message ?: if (isFavorited) "已加入收藏夹" else "已取消收藏"
+                } else {
+                    actionMessage = result.message ?: "收藏操作失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            }
+        }
+    }
+
+    /** 最近一次成功生成的分享链接，由 Screen 复制/拉起系统分享后清空。 */
+    var pendingShareUrl by mutableStateOf<String?>(null)
+    var isSharing by mutableStateOf(false)
+
+    /** 生成云端公开库分享链接。 默认 import_to_local=false：对方从外链进入只看到云端详情，不自动导入本地。 */
+    fun createShareLink(id: Int, importToLocal: Boolean = false) {
+        if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
+            actionMessage = "请先登录正式账号再分享"
+            return
+        }
+        if (isPrivate || library.isPublish == false) {
+            actionMessage = "仅公开库可生成分享链接"
+            return
+        }
+        if (isSharing) return
+        viewModelScope.launch {
+            isSharing = true
+            try {
+                val result =
+                    withContext(Dispatchers.IO) {
+                        network.user.createLibraryShare(id = id, importToLocal = importToLocal)
+                    }
+                if (result.isSuccess()) {
+                    val url = result.data?.shareUrl?.takeIf { it.isNotBlank() }
+                    if (url != null) {
+                        pendingShareUrl = url
+                        actionMessage = result.message ?: "分享链接已生成"
+                    } else {
+                        actionMessage = "分享链接为空"
+                    }
+                } else {
+                    actionMessage = result.message ?: "生成分享链接失败"
+                }
+            } catch (e: Exception) {
+                actionMessage = "网络错误: ${e.message}"
+            } finally {
+                isSharing = false
+            }
+        }
+    }
+
+    companion object {
+        private fun formatPoints(value: Double): String {
+            val whole = value.toLong()
+            return if (value == whole.toDouble()) whole.toString() else value.toString()
+        }
+    }
+}
