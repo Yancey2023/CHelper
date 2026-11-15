@@ -72,7 +72,7 @@ import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.data.library.decodeLocalLibraryImport
 import yancey.chelper.data.library.filterAndSortLocalLibraries
 import yancey.chelper.data.library.toLocalDuplicate
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.LocalLibrarySort
 import yancey.chelper.resources.*
@@ -101,8 +101,11 @@ import yancey.chelper.ui.platform.rememberTextClipboard
 
 @Composable
 fun LocalLibraryListScreen(
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: LocalLibraryListViewModel = viewModel { LocalLibraryListViewModel(networkServices) },
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    viewModel: LocalLibraryListViewModel = viewModel {
+        LocalLibraryListViewModel(accounts, libraries)
+    },
     navController: NavHostController = rememberNavController(),
     isTab: Boolean = false,
 ) {
@@ -491,16 +494,15 @@ fun LocalLibraryListScreen(
     if (showLocalMenuId != null && menuLibrary != null) {
         val library = menuLibrary
         val localEntryId = requireNotNull(library.localEntryId)
-        val menuItems =
-            buildList {
-                    if (viewModel.isLoggedIn) add("上传到云端" to "upload")
-                    add("编辑" to "edit")
-                    add("复制副本" to "duplicate")
-                    add("导出" to "export")
-                    add("删除" to "delete")
-                    add("关闭" to "close")
-                }
-                .toTypedArray()
+        val menuItems = buildList {
+            if (viewModel.isLoggedIn) add("上传到云端" to "upload")
+            add("编辑" to "edit")
+            add("复制副本" to "duplicate")
+            add("导出" to "export")
+            add("删除" to "delete")
+            add("关闭" to "close")
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showLocalMenuId = null },
             data = menuItems,
@@ -618,23 +620,19 @@ fun LocalLibraryListScreen(
                 filteredLibraries.all { it.localEntryId in selectedLocalIds }
         MenuDialog(
             onDismissRequest = { showLocalToolsMenu = false },
-            data =
-                buildList {
-                        add("排序：${viewModel.localSort.label}" to "sort")
-                        if (!isSelectionMode) add("进入批量选择" to "selection_mode")
-                        if (isSelectionMode)
-                            add(
-                                (if (allVisibleSelected) "取消选择当前结果" else "选择当前结果") to
-                                    "toggle_visible"
-                            )
-                        if (isSelectionMode && selectedLocalIds.isNotEmpty()) {
-                            add("导出已选 (${selectedLocalIds.size})" to "export_selected")
-                            add("删除已选 (${selectedLocalIds.size})" to "delete_selected")
-                        }
-                        if (isSelectionMode) add("退出批量选择" to "clear_selection")
-                        add("导出全部本地库" to "export_all")
-                        add("关闭" to "close")
+            data = buildList {
+                    add("排序：${viewModel.localSort.label}" to "sort")
+                    if (!isSelectionMode) add("进入批量选择" to "selection_mode")
+                    if (isSelectionMode)
+                        add((if (allVisibleSelected) "取消选择当前结果" else "选择当前结果") to "toggle_visible")
+                    if (isSelectionMode && selectedLocalIds.isNotEmpty()) {
+                        add("导出已选 (${selectedLocalIds.size})" to "export_selected")
+                        add("删除已选 (${selectedLocalIds.size})" to "delete_selected")
                     }
+                    if (isSelectionMode) add("退出批量选择" to "clear_selection")
+                    add("导出全部本地库" to "export_all")
+                    add("关闭" to "close")
+                }
                     .toTypedArray(),
             onChoose = { action ->
                 when (action) {

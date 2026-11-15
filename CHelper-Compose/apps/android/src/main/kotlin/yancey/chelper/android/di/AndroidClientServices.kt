@@ -72,7 +72,15 @@ fun rememberAndroidClientServices(
     return remember(context, floatingWindowManager) {
         val stores = context.clientDataStores()
         ClientServices(
-            context.networkServices,
+            context.networkServices.accounts,
+            context.networkServices.libraryContent,
+            context.networkServices.activity,
+            context.networkServices.messages,
+            context.networkServices.browserLinks,
+            context.networkServices.appContent,
+            context.networkServices.publicLibraries,
+            context.networkServices.search,
+            context.networkServices.favorites(stores.favorites),
             stores.settings,
             stores.libraries,
             stores.favorites,
@@ -87,36 +95,35 @@ fun rememberAndroidClientServices(
                 override val needsXiaomiClipboardTips
                     get() = DeviceOs.isHyperOs() || DeviceOs.isMiui()
 
-                override val floatingWindow =
-                    floatingWindowManager?.let { manager ->
-                        object : FloatingWindowController {
-                            override val isUsingFloatingWindow
-                                get() = manager.isUsingFloatingWindow
+                override val floatingWindow = floatingWindowManager?.let { manager ->
+                    object : FloatingWindowController {
+                        override val isUsingFloatingWindow
+                            get() = manager.isUsingFloatingWindow
 
-                            override fun startFloatingWindow(
-                                iconSize: Int,
-                                iconAlpha: Float,
-                                screenAlpha: Float,
-                                fontAlphaSync: Boolean,
-                            ) {
-                                manager.startFloatingWindow(
-                                    context,
-                                    iconSize,
-                                    iconAlpha,
-                                    screenAlpha,
-                                    fontAlphaSync,
-                                )
-                            }
+                        override fun startFloatingWindow(
+                            iconSize: Int,
+                            iconAlpha: Float,
+                            screenAlpha: Float,
+                            fontAlphaSync: Boolean,
+                        ) {
+                            manager.startFloatingWindow(
+                                context,
+                                iconSize,
+                                iconAlpha,
+                                screenAlpha,
+                                fontAlphaSync,
+                            )
+                        }
 
-                            override fun stopFloatingWindow() {
-                                manager.stopFloatingWindow()
-                            }
+                        override fun stopFloatingWindow() {
+                            manager.stopFloatingWindow()
+                        }
 
-                            override fun showExport() {
-                                manager.loongFlowManager.showExport(context)
-                            }
+                        override fun showExport() {
+                            manager.loongFlowManager.showExport(context)
                         }
                     }
+                }
 
                 private fun copyText(text: String) {
                     (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)

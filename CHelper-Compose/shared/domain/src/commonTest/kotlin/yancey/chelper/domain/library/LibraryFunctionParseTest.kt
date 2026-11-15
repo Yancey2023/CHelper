@@ -77,11 +77,7 @@ class LibraryFunctionParseTest {
         val encoded =
             Json.encodeToString(
                 LibraryFunction.serializer(),
-                LibraryFunction().apply {
-                    name = "local"
-                    uuid = "u-2"
-                    localUnsynced = true
-                },
+                LibraryFunction(name = "local", uuid = "u-2", localUnsynced = true),
             )
         assertTrue(encoded.contains("\"local_unsynced\":true"), "本地序列化必须把 local_unsynced 写出来才能持久化")
         val round = json.decodeFromString<LibraryFunction>(encoded)

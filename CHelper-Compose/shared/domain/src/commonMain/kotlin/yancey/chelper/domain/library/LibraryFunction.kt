@@ -44,10 +44,10 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 @Serializable
 data class AuthorInfo(
-    var id: Int? = null,
-    var name: String? = null,
-    var tier: Int? = null,
-    @SerialName("user_title") var userTitle: String? = null,
+    val id: Int? = null,
+    val name: String? = null,
+    val tier: Int? = null,
+    @SerialName("user_title") val userTitle: String? = null,
 )
 
 /**
@@ -70,32 +70,32 @@ data class AuthorInfo(
  */
 @Serializable
 data class LibraryFunction(
-    var id: Int? = null,
-    var uuid: String? = null,
-    var name: String? = null,
-    var content: String? = null,
-    @Serializable(with = AuthorSerializer::class) var author: AuthorInfo? = null,
-    var note: String? = null,
-    var tags: List<String>? = null,
-    var version: String? = null,
+    val id: Int? = null,
+    val uuid: String? = null,
+    val name: String? = null,
+    val content: String? = null,
+    @Serializable(with = AuthorSerializer::class) val author: AuthorInfo? = null,
+    val note: String? = null,
+    val tags: List<String>? = null,
+    val version: String? = null,
     @Serializable(with = LenientStringSerializer::class)
     @SerialName("create_time")
-    var createdAt: String? = null,
-    var preview: String? = null,
-    @SerialName("like_count") var likeCount: Int? = null,
-    @SerialName("is_liked") var isLiked: Boolean? = null,
-    @SerialName("is_favorited") var isFavorited: Boolean? = null,
-    @SerialName("has_public_version") var hasPublicVersion: Boolean? = null,
-    @SerialName("is_publish") var isPublish: Boolean? = null,
-    @SerialName("is_owner") var isOwner: Boolean? = null,
-    @SerialName("chain_data") var chainData: JsonElement? = null,
-    @SerialName("auto_sync") var autoSync: Boolean? = false,
+    val createdAt: String? = null,
+    val preview: String? = null,
+    @SerialName("like_count") val likeCount: Int? = null,
+    @SerialName("is_liked") val isLiked: Boolean? = null,
+    @SerialName("is_favorited") val isFavorited: Boolean? = null,
+    @SerialName("has_public_version") val hasPublicVersion: Boolean? = null,
+    @SerialName("is_publish") val isPublish: Boolean? = null,
+    @SerialName("is_owner") val isOwner: Boolean? = null,
+    @SerialName("chain_data") val chainData: JsonElement? = null,
+    @SerialName("auto_sync") val autoSync: Boolean? = false,
     /**
      * 后端下发的"私有库相对公开版本是否未同步"标记。
      * - 仅在私有库列表/详情接口里出现，公开库不带。
      * - 后端为权威：私有库被 update 置 true；release/sync 通过后置 false。
      */
-    @SerialName("has_unsynced_changes") var hasUnsyncedChanges: Boolean? = null,
+    @SerialName("has_unsynced_changes") val hasUnsyncedChanges: Boolean? = null,
     /**
      * 纯本地字段：本地草稿相对云端私有版本是否存在未同步的改动。
      * - 仅在"本地库"场景有意义（即已上传过云端、拿到 uuid 的本地副本）。
@@ -103,14 +103,14 @@ data class LibraryFunction(
      * - 后端 JSON 不会返回这个字段，反序列化默认 false，不会影响远端数据。
      * - 用一个不会和后端冲突的 snake_case 名字，避免未来撞键。
      */
-    @SerialName("local_unsynced") var localUnsynced: Boolean = false,
+    @SerialName("local_unsynced") val localUnsynced: Boolean = false,
     /** 纯本地稳定标识；列表过滤、排序或删除其他条目后仍能准确定位。 */
-    @SerialName("local_entry_id") var localEntryId: String? = null,
+    @SerialName("local_entry_id") val localEntryId: String? = null,
     /** 纯本地语法版本标记，避免只存正文时丢失 MCD V2 状态。 */
-    @SerialName("local_is_v2") var localIsV2: Boolean? = null,
-    @SerialName("local_sync_owner_id") var localSyncOwnerId: Int? = null,
-    @SerialName("local_sync_revision") var localSyncRevision: String? = null,
-    @SerialName("local_sync_error") var localSyncError: String? = null,
+    @SerialName("local_is_v2") val localIsV2: Boolean? = null,
+    @SerialName("local_sync_owner_id") val localSyncOwnerId: Int? = null,
+    @SerialName("local_sync_revision") val localSyncRevision: String? = null,
+    @SerialName("local_sync_error") val localSyncError: String? = null,
 ) {
     /**
      * 获取作者的展示名称，主要用于向后兼容

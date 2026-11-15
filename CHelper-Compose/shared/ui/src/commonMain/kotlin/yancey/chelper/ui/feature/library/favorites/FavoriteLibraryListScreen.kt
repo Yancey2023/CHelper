@@ -40,7 +40,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -55,19 +55,20 @@ import yancey.chelper.ui.platform.LocalClientServices
 @Composable
 fun FavoriteLibraryListScreen(
     navController: NavHostController,
-    networkServices: NetworkServices = LocalClientServices.current.network,
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    favorites: FavoriteCollectionRepository = LocalClientServices.current.cloudFavorites,
     viewModel: FavoriteLibraryListViewModel = viewModel {
-        FavoriteLibraryListViewModel(networkServices)
+        FavoriteLibraryListViewModel(accounts, favorites)
     },
 ) {
     val context = LocalClientServices.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var menuIndex by remember { mutableIntStateOf(-1) }
 
-    LaunchedEffect(Unit) { viewModel.load(context) }
+    LaunchedEffect(Unit) { viewModel.load() }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.load(context, force = true)
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.load(force = true)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -88,7 +89,7 @@ fun FavoriteLibraryListScreen(
             Icon(
                 id = Res.drawable.refresh,
                 contentDescription = "刷新",
-                modifier = Modifier.size(24.dp).clickable { viewModel.load(context, force = true) },
+                modifier = Modifier.size(24.dp).clickable { viewModel.load(force = true) },
             )
         },
     ) {
@@ -106,7 +107,7 @@ fun FavoriteLibraryListScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = "点击重试",
-                        modifier = Modifier.clickable { viewModel.load(context, force = true) },
+                        modifier = Modifier.clickable { viewModel.load(force = true) },
                         style = TextStyle(color = CHelperTheme.colors.mainColor),
                     )
                 }

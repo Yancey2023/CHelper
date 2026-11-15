@@ -18,27 +18,22 @@
 
 package yancey.chelper.ui.feature.library.profile
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.UploadFile
-import yancey.chelper.data.remote.library.model.UpdateProfileRequest
-import yancey.chelper.data.remote.library.model.UserProfileData
-import yancey.chelper.domain.library.LibraryFunction
+import kotlinx.coroutines.*
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.*
 import yancey.chelper.ui.platform.ClientMessages
 
-class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
-    var userProfile by mutableStateOf<UserProfileData?>(null)
+class UserProfileViewModel(
+    private val accounts: AccountRepository,
+    private val libraries: LibraryContentRepository,
+) : ViewModel() {
+    var userProfile by mutableStateOf<UserProfile?>(null)
         private set
 
-    var currentUserId by mutableStateOf<Int?>(null)
+    var currentUserId by mutableStateOf<Int?>(accounts.currentUser?.id)
         private set
 
     var isLoading by mutableStateOf(false)
@@ -71,14 +66,12 @@ class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var viewUserId by mutableStateOf(-1)
+    var viewUserId by mutableIntStateOf(-1)
         private set
 
     var isUpdating by mutableStateOf(false)
         private set
 
-    // 头像上传：跟"编辑资料"对话框内嵌的"从相册选择"按钮联动，
-    // 不再让用户为了换头像跑到账户中心
     var isUploadingAvatar by mutableStateOf(false)
         private set
 
@@ -88,53 +81,77 @@ class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
     var updateSuccessMessage by mutableStateOf<String?>(null)
         private set
 
-    private var initializedProfileId: Int? = null
-
     var quotaUsed by mutableIntStateOf(0)
         private set
 
     var quotaLimit by mutableIntStateOf(0)
         private set
 
+    private var profileJob: Job? = null
+    private var publicJob: Job? = null
+    private var privateJob: Job? = null
+    private var quotaJob: Job? = null
+    private var generation = 0L
+    private var initializedProfileId: Int? = null
+
     init {
-        currentUserId = network.login.currentUser?.id
+        viewModelScope.launch {
+            accounts.state.collect {
+                currentUserId = it.user?.id
+                if (currentUserId != viewUserId) {
+                    privateJob?.cancel()
+                    quotaJob?.cancel()
+                    privateLibraries = emptyList()
+                    quotaUsed = 0
+                    quotaLimit = 0
+                }
+            }
+        }
     }
 
     fun ensureProfileLoaded(id: Int) {
-        if (initializedProfileId == id) return
-        initializedProfileId = id
+        if (initializedProfileId == id && (userProfile != null || isLoading)) return
         loadProfile(id)
     }
 
     fun loadProfile(id: Int) {
         initializedProfileId = id
+        val changed = viewUserId != id
         viewUserId = id
-        if (isLoading) return
+        val version = ++generation
+        profileJob?.cancel()
+        publicJob?.cancel()
+        privateJob?.cancel()
+        quotaJob?.cancel()
+        if (changed) {
+            userProfile = null
+            publicLibraries = emptyList()
+            privateLibraries = emptyList()
+        }
+        publicPageNum = 1
+        privatePageNum = 1
+        hasMorePublic = true
+        hasMorePrivate = true
+        isLoadingPublic = false
+        isLoadingPrivate = false
         isLoading = true
         errorMessage = null
-        viewModelScope.launch {
+        profileJob = viewModelScope.launch {
             try {
-                val res = network.public.getUserProfile(id)
-                if (res.status == 0 && res.data != null) {
-                    userProfile = res.data
-                } else {
-                    errorMessage = res.message ?: "拉取主页失败"
-                }
+                val result = accounts.profile(id, forceRefresh = true)
+                ensureActive()
+                if (version != generation) return@launch
+                if (result.isSuccess()) userProfile = result.data
+                else errorMessage = result.message ?: "拉取主页失败"
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                errorMessage = e.message ?: "网络错误"
+                errorMessage = e.message ?: "加载失败"
             } finally {
-                isLoading = false
+                if (version == generation) isLoading = false
             }
-
-            publicLibraries = emptyList()
-            publicPageNum = 1
-            hasMorePublic = true
             loadPublicLibraries()
-
             if (currentUserId == id) {
-                privateLibraries = emptyList()
-                privatePageNum = 1
-                hasMorePrivate = true
                 loadPrivateLibraries()
                 loadQuota()
             }
@@ -142,110 +159,103 @@ class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
     }
 
     fun refresh() {
-        if (viewUserId != -1) {
-            loadProfile(viewUserId)
-        }
+        if (viewUserId > 0) loadProfile(viewUserId)
     }
 
     fun loadPublicLibraries(loadMore: Boolean = false) {
-        if (isLoadingPublic || (!hasMorePublic && loadMore)) return
+        if (isLoadingPublic || (loadMore && !hasMorePublic)) return
+        val id = viewUserId
+        val version = generation
+        val page = publicPageNum
         isLoadingPublic = true
-        viewModelScope.launch {
+        publicJob = viewModelScope.launch {
             try {
-                val res =
-                    network.public.getFunctions(
-                        pageNum = publicPageNum,
-                        pageSize = 20,
-                        keyword = null,
-                        type = 0,
-                        authorId = viewUserId,
-                    )
-                val responseData = res.data
-                if (res.status == 0 && responseData != null) {
-                    val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
-                    publicLibraries =
-                        if (publicPageNum == 1) {
-                            newLibs
-                        } else {
-                            publicLibraries + newLibs
-                        }
-                    if (newLibs.size < 20) {
-                        hasMorePublic = false
-                    } else {
-                        publicPageNum++
+                val result = libraries.byAuthor(id, page)
+                ensureActive()
+                if (version != generation) return@launch
+                if (!result.isSuccess()) error(result.message ?: "加载失败")
+                val rows = result.data?.functions.orEmpty().filterNotNull()
+                publicLibraries =
+                    ((if (page == 1) emptyList() else publicLibraries) + rows).distinctBy {
+                        it.id ?: it.uuid
                     }
-                }
+                hasMorePublic =
+                    result.data?.totalCount?.let { page.toLong() * 20 < it } ?: (rows.size >= 20)
+                publicPageNum = page + 1
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                // Ignore silent errors for pagination
+                updateErrorMessage = e.message ?: "加载失败"
             } finally {
-                isLoadingPublic = false
+                if (version == generation) isLoadingPublic = false
             }
         }
     }
 
     fun loadPrivateLibraries(loadMore: Boolean = false) {
-        if (isLoadingPrivate || (!hasMorePrivate && loadMore)) return
+        if (currentUserId != viewUserId || isLoadingPrivate || (loadMore && !hasMorePrivate)) return
+        val version = generation
+        val page = privatePageNum
         isLoadingPrivate = true
-        viewModelScope.launch {
+        privateJob = viewModelScope.launch {
             try {
-                val res =
-                    network.user.getMyLibraries(type = 1, pageNum = privatePageNum, pageSize = 20)
-                val responseData = res.data
-                if (res.status == 0 && responseData != null) {
-                    val newLibs = responseData.functions?.filterNotNull() ?: emptyList()
-                    privateLibraries =
-                        if (privatePageNum == 1) {
-                            newLibs
-                        } else {
-                            privateLibraries + newLibs
-                        }
-                    if (newLibs.size < 20) {
-                        hasMorePrivate = false
-                    } else {
-                        privatePageNum++
+                val result = libraries.mine(pageNum = page, pageSize = 20, forceRefresh = page == 1)
+                ensureActive()
+                if (version != generation) return@launch
+                if (!result.isSuccess()) error(result.message ?: "拉取私有云库失败")
+                val rows = result.data?.functions.orEmpty().filterNotNull()
+                privateLibraries =
+                    ((if (page == 1) emptyList() else privateLibraries) + rows).distinctBy {
+                        it.id ?: it.uuid
                     }
-                } else {
-                    updateErrorMessage = res.message ?: "拉取私有云库失败"
-                }
+                hasMorePrivate =
+                    result.data?.totalCount?.let { page.toLong() * 20 < it } ?: (rows.size >= 20)
+                privatePageNum = page + 1
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                updateErrorMessage = e.message ?: "网络错误"
+                updateErrorMessage = e.message ?: "加载失败"
             } finally {
-                isLoadingPrivate = false
+                if (version == generation) isLoadingPrivate = false
             }
         }
     }
 
     private fun loadQuota() {
-        viewModelScope.launch {
+        val version = generation
+        quotaJob = viewModelScope.launch {
             try {
-                val res = network.user.getQuota()
-                val data = res.data
-                if (res.status == 0 && data != null) {
-                    quotaUsed = data.used ?: 0
-                    quotaLimit = data.limit ?: 0
+                val result = libraries.quota(true)
+                ensureActive()
+                if (version == generation && result.isSuccess()) {
+                    quotaUsed = result.data?.used ?: 0
+                    quotaLimit = result.data?.limit ?: 0
                 }
-            } catch (e: Exception) {
-                // Ignore
-            }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {}
         }
     }
 
+    private val deleting = mutableSetOf<Int>()
+
     fun deleteOrUnpublishLibrary(libraryId: Int, isPublic: Boolean) {
+        if (!deleting.add(libraryId)) return
         viewModelScope.launch {
             try {
-                val res = network.user.deleteLibrary(libraryId)
-                if (res.status == 0) {
-                    updateSuccessMessage = if (isPublic) "下架成功" else "删除成功"
-                    if (isPublic) {
-                        publicLibraries = publicLibraries.filter { it.id != libraryId }
-                    } else {
-                        privateLibraries = privateLibraries.filter { it.id != libraryId }
-                    }
-                } else {
-                    updateErrorMessage = res.message ?: "操作失败"
-                }
+                val version = generation
+                val result = libraries.delete(libraryId)
+                if (version != generation) return@launch
+                if (!result.isSuccess()) error(result.message ?: "操作失败")
+                updateSuccessMessage = if (isPublic) "下架成功" else "删除成功"
+                publicLibraries = publicLibraries.filterNot { it.id == libraryId }
+                privateLibraries = privateLibraries.filterNot { it.id == libraryId }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                updateErrorMessage = e.message ?: "网络错误"
+                updateErrorMessage = e.message ?: "操作失败"
+            } finally {
+                deleting.remove(libraryId)
             }
         }
     }
@@ -257,29 +267,30 @@ class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
         signature: String?,
         onComplete: () -> Unit,
     ) {
-        if (isUpdating) return
+        if (isUpdating || isUploadingAvatar) return
+        val id = viewUserId
+        val changes =
+            ProfileChanges(
+                nickname.ifBlank { null },
+                avatarUrl?.ifBlank { null },
+                homepage?.ifBlank { null },
+                signature?.ifBlank { null },
+            )
         isUpdating = true
-        updateErrorMessage = null
-        updateSuccessMessage = null
+        clearUpdateMessages()
         viewModelScope.launch {
             try {
-                val req =
-                    UpdateProfileRequest(
-                        nickname = nickname.ifBlank { null },
-                        avatarUrl = avatarUrl?.ifBlank { null },
-                        homepage = homepage?.ifBlank { null },
-                        signature = signature?.ifBlank { null },
-                    )
-                val res = network.user.updateProfile(viewUserId, req)
-                if (res.status == 0) {
+                val result = accounts.updateProfile(id, changes)
+                if (!result.isSuccess()) error(result.message ?: "更新失败")
+                if (viewUserId == id) {
                     updateSuccessMessage = "资料已更新"
-                    loadProfile(viewUserId) // reload
+                    loadProfile(id)
                     onComplete()
-                } else {
-                    updateErrorMessage = res.message ?: "更新失败"
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                updateErrorMessage = e.message ?: "网络错误"
+                updateErrorMessage = e.message ?: "更新失败"
             } finally {
                 isUpdating = false
             }
@@ -291,39 +302,43 @@ class UserProfileViewModel(private val network: NetworkServices) : ViewModel() {
         updateSuccessMessage = null
     }
 
-    /**
-     * 上传头像。仅自己的主页可以触发，外部 Screen 已经做了 `network.login.currentUser.id == viewUserId` 的判断，这里不再重复鉴权。
-     *
-     * 成功后会重拉自己的 profile 拿新 avatarUrl，并失效云端库缓存 （"我的库"页面顶部卡片在用它）。
-     */
     fun uploadAvatar(bytes: ByteArray, mimeType: String) {
-        if (isUploadingAvatar) return
+        if (isUploadingAvatar || isUpdating) return
+        val id = viewUserId
         isUploadingAvatar = true
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                val ext =
-                    when (mimeType) {
-                        "image/png" -> "png"
-                        "image/webp" -> "webp"
-                        "image/gif" -> "gif"
-                        else -> "jpg"
-                    }
-                val part = UploadFile(bytes, "avatar.$ext", mimeType)
-                val result = network.user.uploadAvatar(part)
-                withContext(Dispatchers.Main) {
-                    if (result.isSuccess()) {
-                        ClientMessages.show("头像上传成功")
-                        // 拉一次 profile 把 avatarUrl 同步过来——对话框预览就跟着换了
-                        loadProfile(viewUserId)
-                        network.cache.invalidateAll()
-                    } else {
-                        ClientMessages.show("上传头像失败: ${result.message ?: "未知错误"}")
-                    }
+                val result = accounts.uploadAvatar(bytes, mimeType)
+                if (!result.isSuccess()) error(result.message ?: "头像上传失败")
+                if (viewUserId == id) {
+                    ClientMessages.show("头像上传成功")
+                    loadProfile(id)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("上传网络错误: ${e.message}") }
+                ClientMessages.show(e.message ?: "头像上传失败")
             } finally {
-                withContext(Dispatchers.Main) { isUploadingAvatar = false }
+                isUploadingAvatar = false
+            }
+        }
+    }
+
+    private var reporting = false
+
+    fun submitReport(report: AbuseReport) {
+        if (reporting) return
+        reporting = true
+        viewModelScope.launch {
+            try {
+                val result = libraries.report(report)
+                ClientMessages.show(result.message ?: if (result.isSuccess()) "举报已提交" else "举报失败")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ClientMessages.show(e.message ?: "举报失败")
+            } finally {
+                reporting = false
             }
         }
     }

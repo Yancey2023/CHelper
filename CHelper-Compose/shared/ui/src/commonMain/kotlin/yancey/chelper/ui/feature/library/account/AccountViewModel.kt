@@ -20,105 +20,140 @@ package yancey.chelper.ui.feature.library.account
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlin.time.Clock
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.UploadFile
-import yancey.chelper.data.remote.library.model.UpdateProfileRequest
-import yancey.chelper.data.remote.library.model.UserProfileData
-import yancey.chelper.data.remote.library.service.CommandLabUserService
-import yancey.chelper.domain.library.LibraryFunction
+import kotlinx.coroutines.*
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.*
 import yancey.chelper.ui.platform.ClientMessages
 
-class AccountViewModel(private val network: NetworkServices) : ViewModel() {
+data class AccountUiState(
+    val user: AccountUser? = null,
+    val guest: Boolean = false,
+    val profile: UserProfile? = null,
+    val libraries: List<LibraryFunction> = emptyList(),
+    val nextPage: Int = 1,
+    val hasMore: Boolean = true,
+    val loading: Boolean = false,
+    val uploadingAvatar: Boolean = false,
+    val updatingProfile: Boolean = false,
+)
 
+class AccountViewModel(
+    private val accounts: AccountRepository,
+    private val libraries: LibraryContentRepository,
+) : ViewModel() {
     enum class UserTab {
         LOGIN,
         REGISTER,
     }
 
     var currentTab by mutableStateOf(UserTab.LOGIN)
-    var isLoading by mutableStateOf(false)
     var isCheckingCaptcha by mutableStateOf(false)
-
-    // Register temporary data
-    // private var tempSpecialCode: String? = null
-
-    // Login Fields
     val loginAccount = TextFieldState()
     val loginPassword = TextFieldState()
-
-    // Register Fields
     val registerAccount = TextFieldState()
     val registerCode = TextFieldState()
     val registerPassword = TextFieldState()
     val registerNickname = TextFieldState()
+    var state by mutableStateOf(AccountUiState())
+        private set
 
-    // User State
-    var currentUser by mutableStateOf<CommandLabUserService.User?>(null)
-    var isGuest by mutableStateOf(false)
-    var isUploadingAvatar by mutableStateOf(false)
+    val currentUser
+        get() = state.user
 
-    // 个人公开资料登录回包没有 signature / homepage / userTitle 这些字段
-    // 编辑面板需要拿这条记录做 form 初值
-    var userProfile by mutableStateOf<UserProfileData?>(null)
-    var isUpdatingProfile by mutableStateOf(false)
+    val isGuest
+        get() = state.guest
 
-    // My Cloud Libraries
-    val myLibraries = mutableStateListOf<LibraryFunction>()
-    var myLibrariesPage by mutableIntStateOf(1)
-    var myLibrariesHasMore by mutableStateOf(true)
+    val userProfile
+        get() = state.profile
+
+    val myLibraries
+        get() = state.libraries
+
+    val myLibrariesPage
+        get() = state.nextPage
+
+    val myLibrariesHasMore
+        get() = state.hasMore
+
+    val isLoading
+        get() = state.loading
+
+    val isUploadingAvatar
+        get() = state.uploadingAvatar
+
+    val isUpdatingProfile
+        get() = state.updatingProfile
+
+    private var listJob: Job? = null
+    private var profileJob: Job? = null
+    private var actionJob: Job? = null
+    private var pageVersion = 0L
+    private var pageLoading = false
+    private var observedRevision = Long.MIN_VALUE
 
     init {
-        refreshUserState()
-    }
-
-    fun refreshUserState() {
-        if (network.login.isLoggedIn) {
-            currentUser = network.login.currentUser
-            isGuest = false
-            loadMyLibraries(true)
-            loadUserProfile()
-        } else if (network.guest.isLoggedIn()) {
-            currentUser = network.guest.guestUser
-            isGuest = true
-            userProfile = null
-        } else {
-            currentUser = null
-            isGuest = false
-            userProfile = null
-        }
-    }
-
-    /** 把自己完整的公开资料拉一份回来——给编辑资料对话框做初值 失败静默，不挡用户继续浏览页面 */
-    fun loadUserProfile() {
-        val uid = currentUser?.id ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val resp = network.public.getUserProfile(uid)
-                if (resp.isSuccess()) {
-                    withContext(Dispatchers.Main) { userProfile = resp.data }
-                }
-            } catch (_: Exception) {
-                // 拉不到就算了，对话框会显示"加载中"，用户可以重试
+        viewModelScope.launch {
+            accounts.state.collect { account ->
+                val changed =
+                    observedRevision != account.revision ||
+                        state.user?.id != (account.user ?: account.guest)?.id
+                observedRevision = account.revision
+                if (changed) {
+                    pageVersion++
+                    listJob?.cancel()
+                    profileJob?.cancel()
+                    pageLoading = false
+                    state =
+                        AccountUiState(
+                            user = account.user ?: account.guest,
+                            guest = account.user == null && account.guest != null,
+                        )
+                    if (account.user != null) {
+                        loadMyLibraries(true)
+                        loadUserProfile()
+                    }
+                } else
+                    state =
+                        state.copy(
+                            user = account.user ?: account.guest,
+                            guest = account.user == null && account.guest != null,
+                        )
             }
         }
     }
 
-    /**
-     * 走 PUT users/{id} uid 固定取 currentUser.id。
-     *
-     * 成功后： 重拉 userProfile，刷新本地副本 把昵称同步回 currentUser 失效云端库缓存——LocalLibraryListScreen 顶上的用户卡片是这份缓存
-     */
+    fun refreshUserState() {
+        val account = accounts.state.value
+        state =
+            state.copy(
+                user = account.user ?: account.guest,
+                guest = account.user == null && account.guest != null,
+            )
+        if (account.user != null) {
+            loadMyLibraries(true)
+            loadUserProfile()
+        }
+    }
+
+    fun loadUserProfile() {
+        val id = accounts.currentUser?.id ?: return
+        profileJob?.cancel()
+        profileJob = viewModelScope.launch {
+            try {
+                val response = accounts.profile(id, forceRefresh = true)
+                currentCoroutineContext().ensureActive()
+                if (accounts.currentUser?.id == id && response.isSuccess())
+                    state = state.copy(profile = response.data)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {}
+        }
+    }
+
     fun updateProfile(
         nickname: String,
         avatarUrl: String?,
@@ -126,286 +161,187 @@ class AccountViewModel(private val network: NetworkServices) : ViewModel() {
         signature: String?,
         onComplete: () -> Unit,
     ) {
-        if (isUpdatingProfile) return
-        val uid =
-            currentUser?.id
-                ?: run {
-                    ClientMessages.show("尚未登录")
-                    return
-                }
-        isUpdatingProfile = true
-        viewModelScope.launch(Dispatchers.IO) {
+        val id = accounts.currentUser?.id ?: return
+        if (state.updatingProfile || state.uploadingAvatar) return
+        val changes =
+            ProfileChanges(
+                nickname.ifBlank { null },
+                avatarUrl?.ifBlank { null },
+                homepage?.ifBlank { null },
+                signature?.ifBlank { null },
+            )
+        state = state.copy(updatingProfile = true)
+        viewModelScope.launch {
             try {
-                val req =
-                    UpdateProfileRequest(
-                        nickname = nickname.ifBlank { null },
-                        avatarUrl = avatarUrl?.ifBlank { null },
-                        homepage = homepage?.ifBlank { null },
-                        signature = signature?.ifBlank { null },
-                    )
-                val res = network.user.updateProfile(uid, req)
-                withContext(Dispatchers.Main) {
-                    if (res.status == 0) {
-                        ClientMessages.show("资料已更新")
-                        currentUser?.let { u ->
-                            if (!req.nickname.isNullOrBlank()) u.nickname = req.nickname
-                            if (!req.avatarUrl.isNullOrBlank()) u.gravatarUrl = req.avatarUrl
-                            // 重组，var by mutableStateOf 的 set 不会因为可变字段内容变化重新发布
-                            val tmp = currentUser
-                            currentUser = null
-                            currentUser = tmp
-                        }
-                        loadUserProfile()
-                        network.cache.invalidateAll()
-                        onComplete()
-                    } else {
-                        ClientMessages.show("更新失败: ${res.message ?: "未知错误"}")
-                    }
-                }
+                val result = accounts.updateProfile(id, changes)
+                currentCoroutineContext().ensureActive()
+                if (result.isSuccess()) {
+                    loadUserProfile()
+                    ClientMessages.show("资料已更新")
+                    onComplete()
+                } else ClientMessages.show(result.message ?: "更新失败")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
+                ClientMessages.show(e.message ?: "更新失败")
             } finally {
-                withContext(Dispatchers.Main) { isUpdatingProfile = false }
+                state = state.copy(updatingProfile = false)
+            }
+        }
+    }
+
+    private fun action(block: suspend () -> Unit) {
+        if (actionJob?.isActive == true) return
+        state = state.copy(loading = true)
+        actionJob = viewModelScope.launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ClientMessages.show(e.message ?: "操作失败")
+            } finally {
+                state = state.copy(loading = false)
+                isCheckingCaptcha = false
             }
         }
     }
 
     fun login() {
-        if (loginAccount.text.isBlank() || loginPassword.text.isBlank()) {
+        val account = loginAccount.text.toString()
+        val password = loginPassword.text.toString()
+        if (account.isBlank() || password.isBlank()) {
             ClientMessages.show("请输入账号和密码")
             return
         }
-        isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
-            val result =
-                network.login.login(loginAccount.text.toString(), loginPassword.text.toString())
-            withContext(Dispatchers.Main) {
-                isLoading = false
-                if (result.isSuccess) {
-                    ClientMessages.show("登录成功")
-                    // Try migrate guest data if any
-                    if (network.guest.getFingerprint() != null) {
-                        migrateGuestData()
-                    }
-                    refreshUserState()
-                } else {
-                    ClientMessages.show("登录失败: ${result.exceptionOrNull()?.message}")
-                }
-            }
-        }
-    }
-
-    private fun migrateGuestData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val fingerprint = network.guest.getFingerprint() ?: return@launch
-                val authCode = network.guest.generateAuthCode(fingerprint) ?: return@launch
-
-                val request =
-                    CommandLabUserService.GuestAuthRequest().apply {
-                        this.fingerprint = fingerprint
-                        this.authCode = authCode
-                    }
-
-                val response = network.user.guestMigrate(request)
-                if (response.isSuccess()) {
-                    network.guest.clearGuestSession()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        action {
+            val result = accounts.login(account, password)
+            currentCoroutineContext().ensureActive()
+            ClientMessages.show(
+                if (result.isSuccess) "登录成功" else "登录失败: ${result.exceptionOrNull()?.message}"
+            )
         }
     }
 
     fun sendVerifyCode(specialCode: String) {
-        if (registerAccount.text.isBlank()) {
+        val account = registerAccount.text.toString()
+        if (account.isBlank()) {
             ClientMessages.show("请输入邮箱或手机号")
             return
         }
-        isLoading = true
-        // Cache special_code for registration (Removed as we now double-verify)
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val request =
-                    CommandLabUserService.SendCodeRequest().apply {
-                        if (registerAccount.text.toString().contains("@")) {
-                            this.email = registerAccount.text.toString()
-                        } else {
-                            this.phone = registerAccount.text.toString()
-                        }
-                        this.specialCode = specialCode
-                        this.type = CommandLabUserService.SendCodeRequest.TYPE_REGISTER
-                    }
-                val response = network.auth.sendCode(request)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccess()) {
-                        ClientMessages.show("验证码已发送")
-                    } else {
-                        ClientMessages.show("发送失败: ${response.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
-            } finally {
-                withContext(Dispatchers.Main) {
-                    isLoading = false
-                    isCheckingCaptcha = false
-                }
-            }
+        action {
+            val result = accounts.sendVerification(account, specialCode)
+            ClientMessages.show(if (result.isSuccess()) "验证码已发送" else result.message ?: "发送失败")
         }
     }
 
     fun register(specialCode: String) {
-        if (
-            registerAccount.text.isBlank() ||
-                registerCode.text.isBlank() ||
-                registerPassword.text.isBlank()
-        ) {
+        val details =
+            Registration(
+                registerAccount.text.toString(),
+                registerPassword.text.toString(),
+                registerNickname.text.toString().ifBlank {
+                    "用户${Clock.System.now().toEpochMilliseconds() % 1000}"
+                },
+                registerCode.text.toString(),
+                specialCode,
+            )
+        if (details.account.isBlank() || details.password.isBlank() || details.code.isBlank()) {
             ClientMessages.show("请补全注册信息")
             return
         }
-
-        isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val request =
-                    CommandLabUserService.RegisterRequest().apply {
-                        if (registerAccount.text.toString().contains("@")) {
-                            this.email = registerAccount.text.toString()
-                        } else {
-                            this.phone = registerAccount.text.toString()
-                        }
-                        this.code = registerCode.text.toString()
-                        this.specialCode = specialCode
-                        this.nickname =
-                            registerNickname.text.toString().takeIf { it.isNotBlank() }
-                                ?: "用户${Clock.System.now().toEpochMilliseconds() % 1000}"
-                        this.password = registerPassword.text.toString()
-                        this.androidId = network.guest.getFingerprint()
-                    }
-
-                val response = network.auth.register(request)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccess()) {
-                        ClientMessages.show("注册成功，请登录")
-                        currentTab = UserTab.LOGIN
-                        loginAccount.setTextAndPlaceCursorAtEnd(registerAccount.text.toString())
-                    } else {
-                        ClientMessages.show("注册失败: ${response.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
-            } finally {
-                withContext(Dispatchers.Main) {
-                    isLoading = false
-                    isCheckingCaptcha = false
-                }
-            }
+        action {
+            val result = accounts.register(details)
+            currentCoroutineContext().ensureActive()
+            if (result.isSuccess()) {
+                ClientMessages.show("注册成功，请登录")
+                currentTab = UserTab.LOGIN
+                loginAccount.setTextAndPlaceCursorAtEnd(details.account)
+            } else ClientMessages.show(result.message ?: "注册失败")
         }
     }
 
     fun loadMyLibraries(refresh: Boolean = false) {
+        if (accounts.currentUser == null) return
         if (refresh) {
-            myLibrariesPage = 1
-            myLibraries.clear()
-            myLibrariesHasMore = true
-        }
-        if (!myLibrariesHasMore) return
-
-        viewModelScope.launch(Dispatchers.IO) {
+            listJob?.cancel()
+            pageLoading = false
+        } else if (pageLoading || !state.hasMore) return
+        val version = ++pageVersion
+        val page = if (refresh) 1 else state.nextPage
+        pageLoading = true
+        listJob = viewModelScope.launch {
             try {
-                val response = network.user.getMyLibraries(pageNum = myLibrariesPage)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccess()) {
-                        val data = response.data
-                        if (data != null && !data.functions.isNullOrEmpty()) {
-                            val existingIds = myLibraries.mapNotNull { it.id }.toSet()
-                            data.functions!!
-                                .filterNotNull()
-                                .filter { it.id != null && it.id !in existingIds }
-                                .forEach { myLibraries.add(it) }
-                            if (
-                                data.currentPage != null &&
-                                    data.totalCount != null &&
-                                    data.perPage != null
-                            ) {
-                                val totalPages =
-                                    (data.totalCount!! + data.perPage!! - 1) / data.perPage!!
-                                myLibrariesHasMore = data.currentPage!! < totalPages
-                                if (myLibrariesHasMore) myLibrariesPage++
-                            }
-                        } else {
-                            myLibrariesHasMore = false
-                        }
-                    }
-                }
+                val response = libraries.mine(pageNum = page, forceRefresh = refresh)
+                currentCoroutineContext().ensureActive()
+                if (version != pageVersion) return@launch
+                if (response.isSuccess()) {
+                    val data = response.data ?: return@launch
+                    val rows = data.functions.orEmpty().filterNotNull()
+                    val size = (data.perPage ?: 100).coerceAtLeast(1)
+                    val more =
+                        data.totalCount?.let { page.toLong() * size < it } ?: (rows.size >= size)
+                    state =
+                        state.copy(
+                            libraries =
+                                ((if (refresh) emptyList() else state.libraries) + rows)
+                                    .distinctBy { it.id ?: it.uuid },
+                            nextPage = page + 1,
+                            hasMore = more,
+                        )
+                } else ClientMessages.show(response.message ?: "加载失败")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                e.printStackTrace()
+                ClientMessages.show(e.message ?: "加载失败")
+            } finally {
+                if (version == pageVersion) pageLoading = false
             }
         }
     }
 
     fun logout() {
-        network.login.logout()
-        network.guest.clearGuestSession()
-        refreshUserState()
+        actionJob?.cancel()
+        accounts.logout()
     }
 
+    private val deleting = mutableSetOf<Int>()
+
     fun deleteLibrary(id: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        if (!deleting.add(id)) return
+        viewModelScope.launch {
             try {
-                val result = network.user.deleteLibrary(id)
-                withContext(Dispatchers.Main) {
-                    if (result.isSuccess()) {
-                        myLibraries.removeAll { it.id == id }
-                        ClientMessages.show("删除成功")
-                    } else {
-                        ClientMessages.show("删除失败: ${result.message}")
-                    }
-                }
+                val result = libraries.delete(id)
+                if (result.isSuccess()) {
+                    state = state.copy(libraries = state.libraries.filterNot { it.id == id })
+                    ClientMessages.show("删除成功")
+                } else ClientMessages.show(result.message ?: "删除失败")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("网络错误: ${e.message}") }
+                ClientMessages.show(e.message ?: "删除失败")
+            } finally {
+                deleting.remove(id)
             }
         }
     }
 
     fun uploadAvatar(bytes: ByteArray, filename: String, mimeType: String) {
-        if (isUploadingAvatar) return
-        isUploadingAvatar = true
-        viewModelScope.launch(Dispatchers.IO) {
+        if (state.uploadingAvatar || state.updatingProfile) return
+        state = state.copy(uploadingAvatar = true)
+        viewModelScope.launch {
             try {
-                val ext =
-                    when (mimeType) {
-                        "image/png" -> "png"
-                        "image/webp" -> "webp"
-                        "image/gif" -> "gif"
-                        else -> "jpg"
-                    }
-                val part = UploadFile(bytes, "avatar.$ext", mimeType)
-                val result = network.user.uploadAvatar(part)
-                withContext(Dispatchers.Main) {
-                    if (result.isSuccess() == true) {
-                        ClientMessages.show("头像上传成功")
-                        val newUrl = result.data?.avatarUrl
-                        if (newUrl != null) {
-                            currentUser?.gravatarUrl = newUrl
-                            val temp = currentUser
-                            currentUser = null
-                            currentUser = temp
-                        }
-                        // 资料和卡片都在用 userProfile / cloud cache，需要一起刷新
-                        loadUserProfile()
-                        network.cache.invalidateAll()
-                    } else {
-                        ClientMessages.show("上传头像失败: ${result.message ?: "未知错误"}")
-                    }
-                }
+                val result = accounts.uploadAvatar(bytes, mimeType)
+                if (result.isSuccess()) {
+                    ClientMessages.show("头像上传成功")
+                    loadUserProfile()
+                } else ClientMessages.show(result.message ?: "头像上传失败")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { ClientMessages.show("上传网络错误: ${e.message}") }
+                ClientMessages.show(e.message ?: "头像上传失败")
             } finally {
-                withContext(Dispatchers.Main) { isUploadingAvatar = false }
+                state = state.copy(uploadingAvatar = false)
             }
         }
     }

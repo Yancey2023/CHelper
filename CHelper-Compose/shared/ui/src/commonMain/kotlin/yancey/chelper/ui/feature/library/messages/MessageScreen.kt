@@ -58,8 +58,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.SiteMessage
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.InboxMessage
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.AppDialog
@@ -76,8 +76,10 @@ import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun MessageScreen(
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: MessageViewModel = viewModel { MessageViewModel(networkServices) },
+    inbox: MessageRepository = LocalClientServices.current.messages,
+    links: BrowserLinkRepository = LocalClientServices.current.browserLinks,
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    viewModel: MessageViewModel = viewModel { MessageViewModel(inbox, links, accounts) },
 ) {
     val context = LocalContext.current
     val openUrl = rememberOpenUrl()
@@ -89,7 +91,7 @@ fun MessageScreen(
         }
     }
 
-    var selectedMessageForAction by remember { mutableStateOf<SiteMessage?>(null) }
+    var selectedMessageForAction by remember { mutableStateOf<InboxMessage?>(null) }
 
     DisposableEffect(viewModel.pendingBrowserUrl) {
         viewModel.pendingBrowserUrl?.let { url ->
@@ -223,7 +225,8 @@ fun MessageScreen(
                                 ) {
                                     Text(
                                         text = "加载中...",
-                                        style = TextStyle(color = CHelperTheme.colors.textSecondary),
+                                        style =
+                                            TextStyle(color = CHelperTheme.colors.textSecondary),
                                     )
                                 }
                             }
@@ -260,7 +263,7 @@ fun MessageScreen(
 }
 
 @Composable
-private fun MessageItem(message: SiteMessage, onRead: () -> Unit, onClickAction: () -> Unit) {
+private fun MessageItem(message: InboxMessage, onRead: () -> Unit, onClickAction: () -> Unit) {
     val isUnread = message.isRead != true
     Column(
         modifier =
@@ -360,7 +363,7 @@ private fun MessageItem(message: SiteMessage, onRead: () -> Unit, onClickAction:
 
 @Composable
 private fun MessageDetailDialog(
-    message: SiteMessage,
+    message: InboxMessage,
     onDismiss: () -> Unit,
     onRead: () -> Unit,
     onDelete: () -> Unit,

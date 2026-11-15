@@ -23,12 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.LeaderboardUser
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.LeaderboardEntry
 
-class LeaderboardViewModel(private val network: NetworkServices) : ViewModel() {
-    var leaderboard by mutableStateOf<List<LeaderboardUser>>(emptyList())
+class LeaderboardViewModel(private val libraries: LibraryContentRepository) : ViewModel() {
+    var leaderboard by mutableStateOf<List<LeaderboardEntry>>(emptyList())
         private set
 
     var isLoading by mutableStateOf(false)
@@ -47,12 +48,14 @@ class LeaderboardViewModel(private val network: NetworkServices) : ViewModel() {
         errorMessage = null
         viewModelScope.launch {
             try {
-                val res = network.public.getLeaderboard()
-                if (res.status == 0 && res.data?.leaderboard != null) {
+                val res = libraries.leaderboard()
+                if (res.isSuccess() && res.data?.leaderboard != null) {
                     leaderboard = res.data!!.leaderboard!!
                 } else {
                     errorMessage = res.message ?: "拉取榜单失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 errorMessage = e.message ?: "网络错误"
             } finally {

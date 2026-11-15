@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
-import yancey.chelper.data.remote.library.model.UserProfileData
+import yancey.chelper.domain.library.model.UserProfile
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.AppDialog
@@ -72,7 +72,7 @@ import yancey.chelper.ui.designsystem.widget.TextField
  */
 @Composable
 fun EditProfileDialog(
-    user: UserProfileData,
+    user: UserProfile,
     isUpdating: Boolean,
     onDismiss: () -> Unit,
     onSave: (nickname: String, avatarUrl: String?, homepage: String?, signature: String?) -> Unit,

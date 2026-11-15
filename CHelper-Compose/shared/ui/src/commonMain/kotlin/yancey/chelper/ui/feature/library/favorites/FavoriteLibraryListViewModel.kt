@@ -10,21 +10,19 @@
 
 package yancey.chelper.ui.feature.library.favorites
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.ui.platform.ClientServices
+import kotlinx.coroutines.*
+import yancey.chelper.domain.library.*
 
-class FavoriteLibraryListViewModel(private val network: NetworkServices) : ViewModel() {
-    val favorites = mutableStateListOf<LibraryFunction>()
+class FavoriteLibraryListViewModel(
+    private val accounts: AccountRepository,
+    private val collection: FavoriteCollectionRepository,
+) : ViewModel() {
+    var favorites by mutableStateOf<List<LibraryFunction>>(emptyList())
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -32,92 +30,76 @@ class FavoriteLibraryListViewModel(private val network: NetworkServices) : ViewM
         private set
 
     var actionMessage by mutableStateOf<String?>(null)
-    private var migrationChecked = false
+    private var loadJob: Job? = null
+    private var version = 0L
+    private var loaded = false
+    private val changing = mutableSetOf<Int>()
 
-    fun load(context: ClientServices, force: Boolean = false) {
-        if (isLoading || (!force && favorites.isNotEmpty())) return
+    init {
         viewModelScope.launch {
-            if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
-                errorMessage = "请先登录账号查看云端收藏夹"
-                favorites.clear()
-                return@launch
-            }
-
-            isLoading = true
-            errorMessage = null
-            try {
-                var remote = fetchFavorites()
-                if (!migrationChecked) {
-                    migrationChecked = true
-                    if (migrateLegacyFavorites(context, remote)) {
-                        remote = fetchFavorites()
-                    }
+            var revision = accounts.state.value.revision
+            accounts.state.collect { account ->
+                if (revision != account.revision) {
+                    revision = account.revision
+                    version++
+                    loadJob?.cancel()
+                    favorites = emptyList()
+                    loaded = false
+                    isLoading = false
+                    load()
                 }
-                favorites.clear()
-                favorites.addAll(remote)
+            }
+        }
+    }
+
+    fun load(force: Boolean = false) {
+        if (!accounts.isLoggedIn) {
+            favorites = emptyList()
+            errorMessage = "请先登录账号查看云端收藏夹"
+            return
+        }
+        if (!force && (isLoading || loaded)) return
+        loadJob?.cancel()
+        val current = ++version
+        isLoading = true
+        errorMessage = null
+        loadJob = viewModelScope.launch {
+            try {
+                val result = collection.load()
+                ensureActive()
+                if (current == version) {
+                    favorites = result.toList()
+                    loaded = true
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 errorMessage = e.message ?: "收藏夹加载失败"
             } finally {
-                isLoading = false
+                if (current == version) isLoading = false
             }
         }
     }
 
     fun removeFavorite(library: LibraryFunction) {
         val id = library.id ?: return
+        if (!changing.add(id)) return
         viewModelScope.launch {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.toggleFavorite(id) }
+                val result = collection.remove(id)
                 if (result.isSuccess() && result.data?.isFavorited == false) {
-                    favorites.removeAll { it.uuid == library.uuid || it.id == id }
+                    favorites = favorites.filterNot {
+                        it.id == id || (library.uuid != null && it.uuid == library.uuid)
+                    }
                     actionMessage = result.message ?: "已取消收藏"
-                } else {
-                    actionMessage = result.message ?: "取消收藏失败"
-                }
+                } else actionMessage = result.message ?: "取消收藏失败"
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                actionMessage = "网络错误: ${e.message}"
+                actionMessage = e.message ?: "取消收藏失败"
+            } finally {
+                changing.remove(id)
             }
         }
     }
-
-    private suspend fun fetchFavorites(): List<LibraryFunction> =
-        withContext(Dispatchers.IO) {
-            val response = network.user.getFavoriteLibraries()
-            if (!response.isSuccess() || response.data == null) {
-                throw IllegalStateException(response.message ?: "收藏夹加载失败")
-            }
-            response.data!!.functions?.filterNotNull().orEmpty()
-        }
-
-    private suspend fun migrateLegacyFavorites(
-        context: ClientServices,
-        remote: List<LibraryFunction>,
-    ): Boolean =
-        withContext(Dispatchers.IO) {
-            val store = context.favorites
-            val legacy = store.pendingServerMigration()
-            if (legacy.isEmpty()) {
-                store.markServerMigrationComplete()
-                return@withContext false
-            }
-
-            val remoteUuids = remote.mapNotNullTo(HashSet()) { it.uuid }
-            val remoteIds = remote.mapNotNullTo(HashSet()) { it.id }
-            var changed = false
-            for (bookmark in legacy) {
-                val alreadyRemote =
-                    bookmark.uuid?.let(remoteUuids::contains) == true ||
-                        bookmark.id?.let(remoteIds::contains) == true
-                if (alreadyRemote) continue
-
-                val id = bookmark.id ?: return@withContext false
-                val result = network.user.toggleFavorite(id)
-                if (!result.isSuccess() || result.data?.isFavorited != true) {
-                    return@withContext false
-                }
-                changed = true
-            }
-            store.markServerMigrationComplete()
-            changed
-        }
 }

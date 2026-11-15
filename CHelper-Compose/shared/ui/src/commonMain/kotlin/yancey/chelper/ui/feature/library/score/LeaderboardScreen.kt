@@ -57,8 +57,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.LeaderboardUser
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.LeaderboardEntry
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
@@ -69,20 +69,20 @@ import yancey.chelper.ui.platform.LocalClientServices
 @Composable
 fun LeaderboardScreen(
     navController: NavHostController?,
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: LeaderboardViewModel = viewModel { LeaderboardViewModel(networkServices) },
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    viewModel: LeaderboardViewModel = viewModel { LeaderboardViewModel(libraries) },
 ) {
     var publishMode by rememberSaveable { mutableStateOf(false) }
     val sortedUsers =
         remember(viewModel.leaderboard, publishMode) {
             if (publishMode) {
                 viewModel.leaderboard.sortedWith(
-                    compareByDescending<LeaderboardUser> { it.totalFunctions ?: 0 }
+                    compareByDescending<LeaderboardEntry> { it.totalFunctions ?: 0 }
                         .thenByDescending { it.totalLikes ?: 0 }
                 )
             } else {
                 viewModel.leaderboard.sortedWith(
-                    compareByDescending<LeaderboardUser> { it.totalLikes ?: 0 }
+                    compareByDescending<LeaderboardEntry> { it.totalLikes ?: 0 }
                         .thenByDescending { it.totalFunctions ?: 0 }
                 )
             }
@@ -239,7 +239,7 @@ private fun LeaderboardModeTab(
 @Composable
 private fun LeaderboardItem(
     rank: Int,
-    user: LeaderboardUser,
+    user: LeaderboardEntry,
     publishMode: Boolean,
     onClick: () -> Unit,
 ) {

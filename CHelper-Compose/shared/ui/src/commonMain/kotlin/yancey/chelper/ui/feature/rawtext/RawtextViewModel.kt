@@ -229,20 +229,19 @@ constructor(
     private fun restorePreferences() {
         restoreBefore = documentSnapshot()
         restoreRevision = editRevision
-        restoration =
-            persistenceScope.launch {
-                try {
-                    restorePreferencesNow()
-                    if (pendingEdits.revisions.isNotEmpty()) requestSave()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    draftError = "草稿读取失败，暂时无法恢复上次内容"
-                } finally {
-                    restoreCompleted = true
-                    if (cleared) finishPersistence()
-                }
+        restoration = persistenceScope.launch {
+            try {
+                restorePreferencesNow()
+                if (pendingEdits.revisions.isNotEmpty()) requestSave()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                draftError = "草稿读取失败，暂时无法恢复上次内容"
+            } finally {
+                restoreCompleted = true
+                if (cleared) finishPersistence()
             }
+        }
     }
 
     private suspend fun restorePreferencesNow() {
@@ -254,10 +253,10 @@ constructor(
                 val draft =
                     if (prefs.autoSaveEnabled && !prefs.draft.isNullOrBlank())
                         runCatching {
-                                draftJson.decodeFromString<List<RawtextSegmentSnapshot>>(
-                                    requireNotNull(prefs.draft)
-                                )
-                            }
+                            draftJson.decodeFromString<List<RawtextSegmentSnapshot>>(
+                                requireNotNull(prefs.draft)
+                            )
+                        }
                             .getOrNull()
                     else null
                 val mock =
@@ -734,6 +733,8 @@ constructor(
     private fun parseJsonElementOrNull(value: String): JsonElement? =
         try {
             parserJson.parseToJsonElement(value)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             null
         }
@@ -747,29 +748,28 @@ constructor(
 
     private fun applyDraft(dtos: List<RawtextSegmentSnapshot>) {
         if (dtos.isEmpty()) return
-        val restoredSegments =
-            dtos.map { dto ->
-                val type =
-                    runCatching { RawtextSegmentType.valueOf(dto.type) }
-                        .getOrDefault(RawtextSegmentType.Text)
-                when (type) {
-                    RawtextSegmentType.Text ->
-                        createTextSegment(TextFieldValue(dto.text, TextRange(dto.text.length)))
+        val restoredSegments = dtos.map { dto ->
+            val type = runCatching {
+                RawtextSegmentType.valueOf(dto.type)
+            }.getOrDefault(RawtextSegmentType.Text)
+            when (type) {
+                RawtextSegmentType.Text ->
+                    createTextSegment(TextFieldValue(dto.text, TextRange(dto.text.length)))
 
-                    RawtextSegmentType.LineBreak -> createLineBreakSegment()
-                    else ->
-                        createFeatureSegment(
-                            type = type,
-                            scoreName = dto.scoreName,
-                            scoreObjective = dto.scoreObjective,
-                            selector = dto.selector,
-                            translateKey = dto.translateKey,
-                            translateWithJson = dto.translateWithJson,
-                            conditionJson = dto.conditionJson,
-                            thenJson = dto.thenJson,
-                        )
-                }
+                RawtextSegmentType.LineBreak -> createLineBreakSegment()
+                else ->
+                    createFeatureSegment(
+                        type = type,
+                        scoreName = dto.scoreName,
+                        scoreObjective = dto.scoreObjective,
+                        selector = dto.selector,
+                        translateKey = dto.translateKey,
+                        translateWithJson = dto.translateWithJson,
+                        conditionJson = dto.conditionJson,
+                        thenJson = dto.thenJson,
+                    )
             }
+        }
         segments.clear()
         segments.addAll(restoredSegments)
         normalize()

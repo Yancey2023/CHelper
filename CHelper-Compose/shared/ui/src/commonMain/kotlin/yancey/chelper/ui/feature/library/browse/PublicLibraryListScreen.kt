@@ -29,7 +29,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.map
 import yancey.chelper.data.library.document.toLibraryEntry
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.ui.navigation.FavoriteLibraryListScreenKey
 import yancey.chelper.ui.navigation.LibrarySearchScreenKey
@@ -40,9 +40,9 @@ import yancey.chelper.ui.platform.LocalClientServices
 
 @Composable
 fun PublicLibraryListScreen(
-    network: NetworkServices = LocalClientServices.current.network,
+    repository: PublicLibraryRepository = LocalClientServices.current.publicLibraries,
     viewModel: PublicLibraryListViewModel = viewModel {
-        PublicLibraryListViewModel(network.publicLibraries)
+        PublicLibraryListViewModel(repository)
     },
     navController: NavHostController = rememberNavController(),
     isFloatingWindow: Boolean = false,

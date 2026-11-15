@@ -142,6 +142,22 @@ class ArchitectureChecksTest(unittest.TestCase):
         )
         self.assert_rejected("application-owned network services")
 
+    def test_ui_cannot_import_network_graph_or_transport_dtos(self):
+        self.source(
+            "shared/ui",
+            "yancey.chelper.ui",
+            body="import yancey.chelper.data.remote.NetworkServices",
+        )
+        self.assert_rejected("forbidden import")
+
+    def test_ui_cannot_import_mutable_auth_sessions(self):
+        self.source(
+            "shared/ui",
+            "yancey.chelper.ui",
+            body="import yancey.chelper.data.auth.LoginSession",
+        )
+        self.assert_rejected("forbidden import")
+
 
 if __name__ == "__main__":
     unittest.main()

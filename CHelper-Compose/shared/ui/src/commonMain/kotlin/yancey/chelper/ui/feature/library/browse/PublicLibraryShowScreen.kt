@@ -66,9 +66,9 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.data.library.hasSameLocalContent
 import yancey.chelper.data.library.toLocalImportedCopy
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.service.CommandLabUserService
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.ChainItem
+import yancey.chelper.domain.library.model.AbuseReport
 import yancey.chelper.domain.library.parseMCDStructure
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -97,13 +97,14 @@ fun PublicLibraryShowScreen(
     isPrivate: Boolean = false,
     navController: NavHostController? = null,
     importToLocal: Boolean = false,
-    networkServices: NetworkServices = LocalClientServices.current.network,
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
     viewModel: PublicLibraryShowViewModel = viewModel {
-        PublicLibraryShowViewModel(networkServices)
+        PublicLibraryShowViewModel(accounts, libraries)
     },
 ) {
     val context = LocalContext.current
-    val network = context.network
+    val accounts = context.accounts
     val copyAll = rememberCopyText("已复制全部 MCD 源码")
     val coroutineScope = rememberCoroutineScope()
 
@@ -141,7 +142,7 @@ fun PublicLibraryShowScreen(
 
     fun shareCurrentLibrary() {
         val libraryId = viewModel.library.id ?: return
-        if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
+        if (!accounts.isLoggedIn || accounts.currentUser?.isGuest == true) {
             ClientMessages.show("请先登录正式账号再分享")
             return
         }
@@ -656,19 +657,18 @@ fun PublicLibraryShowScreen(
 
     // 主菜单对话框
     if (showMainMenu) {
-        val menuItems =
-            buildList {
-                    if (isPrivate) add("管理 ▸" to "manage")
-                    // 收藏仅对公有库有意义（跳公有详情）；私有库走本地草稿即可
-                    if (!isPrivate) add((if (viewModel.isFavorited) "取消收藏" else "收藏") to "favorite")
-                    add("逐行复制" to "line_copy")
-                    add("复制全部 MCD 源码" to "copy_all")
-                    add((if (viewModel.showRawSource) "查看可视化" else "查看源码") to "toggle_view")
-                    // 公有库才显示举报：私有库是用户自己的，没必要给自己的库做举报入口
-                    if (!isPrivate) add("举报" to "report")
-                    add("关闭" to "close")
-                }
-                .toTypedArray()
+        val menuItems = buildList {
+            if (isPrivate) add("管理 ▸" to "manage")
+            // 收藏仅对公有库有意义（跳公有详情）；私有库走本地草稿即可
+            if (!isPrivate) add((if (viewModel.isFavorited) "取消收藏" else "收藏") to "favorite")
+            add("逐行复制" to "line_copy")
+            add("复制全部 MCD 源码" to "copy_all")
+            add((if (viewModel.showRawSource) "查看可视化" else "查看源码") to "toggle_view")
+            // 公有库才显示举报：私有库是用户自己的，没必要给自己的库做举报入口
+            if (!isPrivate) add("举报" to "report")
+            add("关闭" to "close")
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showMainMenu = false },
             data = menuItems,
@@ -692,26 +692,25 @@ fun PublicLibraryShowScreen(
     // 管理子菜单对话框
     if (showManageMenu) {
         val hasPublic = viewModel.library.hasPublicVersion == true
-        val manageItems =
-            buildList {
-                    if (hasPublic) {
-                        add("查看公开版本" to "view_public")
-                        add("同步到公开库" to "sync")
-                    } else {
-                        add("发布到公开市场" to "release")
-                    }
-                    add("编辑" to "edit")
-                    add("删除私有库" to "delete")
-                    add("◂ 返回" to "back")
-                }
-                .toTypedArray()
+        val manageItems = buildList {
+            if (hasPublic) {
+                add("查看公开版本" to "view_public")
+                add("同步到公开库" to "sync")
+            } else {
+                add("发布到公开市场" to "release")
+            }
+            add("编辑" to "edit")
+            add("删除私有库" to "delete")
+            add("◂ 返回" to "back")
+        }
+            .toTypedArray()
         MenuDialog(
             onDismissRequest = { showManageMenu = false },
             data = manageItems,
             onChoose = { action ->
                 when (action) {
                     "release" -> {
-                        val user = network.login.currentUser
+                        val user = accounts.currentUser
                         if (user != null && (user.tier ?: 0) >= 2) {
                             viewModel.library.id?.let { viewModel.releaseToPublic(it, "") }
                         } else {
@@ -857,23 +856,7 @@ fun PublicLibraryShowScreen(
                     ClientMessages.show("无法定位举报目标")
                     return@ReportDialog
                 }
-                coroutineScope.launch {
-                    try {
-                        val request =
-                            CommandLabUserService.ReportRequest().apply {
-                                targetType = "library"
-                                targetId = targetUuid
-                                this.reason = reason
-                            }
-                        val resp =
-                            withContext(Dispatchers.IO) { network.user.submitReport(request) }
-                        ClientMessages.show(
-                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
-                        )
-                    } catch (e: Exception) {
-                        ClientMessages.show("网络错误: ${e.message}")
-                    }
-                }
+                viewModel.submitReport(AbuseReport("library", targetUuid, reason))
             },
         )
     }

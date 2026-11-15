@@ -10,12 +10,12 @@ import yancey.chelper.ui.platform.LocalClientServices
 
 @Composable
 fun LibraryMainScreen(navController: NavHostController, isFloatingWindow: Boolean = false) {
-    val network = LocalClientServices.current.network
+    val inbox = LocalClientServices.current.messages
     var unread by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         try {
-            val response = network.user.getUnreadCount()
-            if (response.status == 0) unread = response.data?.count ?: 0
+            val response = inbox.unreadCount()
+            if (response.isSuccess()) unread = response.data?.count ?: 0
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {}

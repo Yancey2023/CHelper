@@ -65,7 +65,15 @@ class DesktopContainer(
     val dependencies =
         AppDependencies(
             ClientServices(
-                network = network,
+                accounts = network.accounts,
+                libraryContent = network.libraryContent,
+                activity = network.activity,
+                messages = network.messages,
+                browserLinks = network.browserLinks,
+                appContent = network.appContent,
+                publicLibraries = network.publicLibraries,
+                search = network.search,
+                cloudFavorites = network.favorites(stores.favorites),
                 settings = stores.settings,
                 libraries = stores.libraries,
                 favorites = stores.favorites,

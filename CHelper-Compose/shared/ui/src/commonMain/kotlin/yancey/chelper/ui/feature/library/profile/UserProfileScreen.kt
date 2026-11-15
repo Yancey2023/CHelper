@@ -62,14 +62,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.compose.resources.painterResource
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.UserProfileData
-import yancey.chelper.data.remote.library.service.CommandLabUserService
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.domain.library.model.AbuseReport
+import yancey.chelper.domain.library.model.UserProfile
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.IsConfirmDialog
@@ -88,11 +86,12 @@ import yancey.chelper.ui.platform.rememberOpenUrl
 fun UserProfileScreen(
     paramId: Int,
     navController: NavHostController?,
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: UserProfileViewModel = viewModel { UserProfileViewModel(networkServices) },
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    viewModel: UserProfileViewModel = viewModel { UserProfileViewModel(accounts, libraries) },
 ) {
     val context = LocalContext.current
-    val network = context.network
+    val accounts = context.accounts
     val coroutineScope = rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     // 仅在浏览他人主页时启用举报入口；自己看自己的页面不显示
@@ -388,7 +387,9 @@ fun UserProfileScreen(
                                 isOwner = true,
                                 isPrivate = true,
                                 onUnpublish = null,
-                                onDelete = { func.id?.let { actionDialogTarget = Pair(it, false) } },
+                                onDelete = {
+                                    func.id?.let { actionDialogTarget = Pair(it, false) }
+                                },
                             ) {
                                 func.id?.let {
                                     navController?.navigate(
@@ -422,7 +423,7 @@ fun UserProfileScreen(
 
     if (showEditDialog && viewModel.userProfile != null) {
         val context = LocalContext.current
-        val network = context.network
+        val accounts = context.accounts
         // 自己的主页才会渲染编辑入口（外层已判断），这里复用一个 photoPicker
         // 让"编辑资料"对话框内嵌"从相册选择"按钮可用
         val pickAvatar = rememberImagePicker { image ->
@@ -472,30 +473,14 @@ fun UserProfileScreen(
             targetDescription = target.nickname ?: "用户 #${target.id}",
             onConfirm = { reason ->
                 val uid = target.id ?: return@ReportDialog
-                coroutineScope.launch {
-                    try {
-                        val request =
-                            CommandLabUserService.ReportRequest().apply {
-                                targetType = "user"
-                                targetId = uid.toString()
-                                this.reason = reason
-                            }
-                        val resp =
-                            withContext(Dispatchers.IO) { network.user.submitReport(request) }
-                        ClientMessages.show(
-                            resp.message ?: if (resp.isSuccess()) "举报已提交" else "举报失败"
-                        )
-                    } catch (e: Exception) {
-                        ClientMessages.show("网络错误: ${e.message}")
-                    }
-                }
+                viewModel.submitReport(AbuseReport("user", uid.toString(), reason))
             },
         )
     }
 }
 
 @Composable
-private fun ProfileHeader(user: UserProfileData) {
+private fun ProfileHeader(user: UserProfile) {
     val openUrl = rememberOpenUrl()
     Column(
         modifier =
@@ -615,6 +600,8 @@ private fun ProfileHeader(user: UserProfileData) {
                     Modifier.clickable {
                         try {
                             openUrl(user.homepage!!)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (_: Exception) {}
                     },
                 verticalAlignment = Alignment.CenterVertically,

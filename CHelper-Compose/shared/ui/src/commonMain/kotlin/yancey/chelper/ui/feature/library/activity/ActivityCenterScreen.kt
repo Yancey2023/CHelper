@@ -52,14 +52,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlin.math.abs
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.ActivityLedgerItem
-import yancey.chelper.data.remote.library.model.ActivityRule
-import yancey.chelper.data.remote.library.model.RewardProduct
-import yancey.chelper.data.remote.library.model.RewardRedemption
-import yancey.chelper.data.remote.library.model.TierDetails
-import yancey.chelper.data.remote.library.model.TierGrant
-import yancey.chelper.data.remote.library.model.TierSummary
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.ActivityLedgerItem
+import yancey.chelper.domain.library.model.ActivityRule
+import yancey.chelper.domain.library.model.RewardProduct
+import yancey.chelper.domain.library.model.RewardRedemption
+import yancey.chelper.domain.library.model.TierDetails
+import yancey.chelper.domain.library.model.TierGrant
+import yancey.chelper.domain.library.model.TierSummary
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.AppDialog
@@ -80,8 +80,9 @@ import yancey.chelper.ui.platform.LocalClientServices
 fun ActivityCenterScreen(
     navController: NavHostController,
     initialSection: Int = 0,
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: ActivityCenterViewModel = viewModel { ActivityCenterViewModel(networkServices) },
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    activity: ActivityRepository = LocalClientServices.current.activity,
+    viewModel: ActivityCenterViewModel = viewModel { ActivityCenterViewModel(accounts, activity) },
 ) {
     var selectedSection by rememberSaveable { mutableIntStateOf(initialSection.coerceIn(0, 3)) }
     var confirmProduct by remember { mutableStateOf<RewardProduct?>(null) }

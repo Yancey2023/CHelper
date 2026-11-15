@@ -10,30 +10,17 @@
 
 package yancey.chelper.ui.feature.library.activity
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.ActivityConfig
-import yancey.chelper.data.remote.library.model.ActivityLedgerItem
-import yancey.chelper.data.remote.library.model.ActivityLedgerPage
-import yancey.chelper.data.remote.library.model.ActivitySummary
-import yancey.chelper.data.remote.library.model.BaseResult
-import yancey.chelper.data.remote.library.model.RedeemActivityRequest
-import yancey.chelper.data.remote.library.model.RewardProduct
-import yancey.chelper.data.remote.library.model.RewardRedemption
-import yancey.chelper.data.remote.library.model.RewardRedemptions
-import yancey.chelper.data.remote.library.model.TierDetails
+import kotlinx.coroutines.*
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.*
 
-class ActivityCenterViewModel(private val network: NetworkServices) : ViewModel() {
+class ActivityCenterViewModel(
+    private val accounts: AccountRepository,
+    private val activity: ActivityRepository,
+) : ViewModel() {
     var config by mutableStateOf<ActivityConfig?>(null)
         private set
 
@@ -43,8 +30,12 @@ class ActivityCenterViewModel(private val network: NetworkServices) : ViewModel(
     var tierDetails by mutableStateOf<TierDetails?>(null)
         private set
 
-    val ledger = mutableStateListOf<ActivityLedgerItem>()
-    val redemptions = mutableStateListOf<RewardRedemption>()
+    var ledger by mutableStateOf<List<ActivityLedgerItem>>(emptyList())
+        private set
+
+    var redemptions by mutableStateOf<List<RewardRedemption>>(emptyList())
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -63,51 +54,61 @@ class ActivityCenterViewModel(private val network: NetworkServices) : ViewModel(
 
     private var nextLedgerCursor: Int? = null
     private var initialized = false
+    private var version = 0L
+    private var loadJob: Job? = null
+    private var moreJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            var revision = accounts.state.value.revision
+            accounts.state.collect { account ->
+                if (revision != account.revision) {
+                    revision = account.revision
+                    version++
+                    loadJob?.cancel()
+                    moreJob?.cancel()
+                    config = null
+                    summary = null
+                    tierDetails = null
+                    ledger = emptyList()
+                    redemptions = emptyList()
+                    initialized = false
+                    isLoading = false
+                    isLoadingMore = false
+                    hasMoreLedger = false
+                    if (account.user != null) load()
+                }
+            }
+        }
+    }
 
     fun load(force: Boolean = false) {
-        if (isLoading || (!force && initialized)) return
-        initialized = true
-        viewModelScope.launch {
-            if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
-                errorMessage = "请先登录正式账号使用创作季"
-                return@launch
-            }
-            isLoading = true
-            errorMessage = null
+        if (!accounts.isLoggedIn || accounts.currentUser?.isGuest == true) {
+            errorMessage = "请先登录正式账号使用创作季"
+            return
+        }
+        if (!force && (isLoading || initialized)) return
+        loadJob?.cancel()
+        moreJob?.cancel()
+        val generation = ++version
+        isLoading = true
+        isLoadingMore = false
+        errorMessage = null
+        loadJob = viewModelScope.launch {
             try {
-                val payload =
-                    withContext(Dispatchers.IO) {
-                        coroutineScope {
-                            val configRequest = async { network.user.getActivityConfig() }
-                            val summaryRequest = async { network.user.getMyActivity() }
-                            val ledgerRequest = async { network.user.getActivityLedger() }
-                            val redemptionRequest = async { network.user.getActivityRedemptions() }
-                            val tierRequest = async { network.user.getMyTierDetails() }
-                            ActivityPayload(
-                                configRequest.await(),
-                                summaryRequest.await(),
-                                ledgerRequest.await(),
-                                redemptionRequest.await(),
-                                tierRequest.await(),
-                            )
-                        }
-                    }
-
+                val payload = activity.dashboard()
+                ensureActive()
+                if (generation != version) return@launch
                 config = payload.config.data ?: config
                 summary = payload.summary.data ?: summary
                 tierDetails = payload.tiers.data ?: payload.summary.data?.tier ?: tierDetails
-                payload.ledger.data?.let { page ->
-                    ledger.clear()
-                    ledger.addAll(page.items)
-                    nextLedgerCursor = page.nextCursor
-                    hasMoreLedger = page.hasMore
+                payload.ledger.data?.let {
+                    ledger = it.items.toList()
+                    nextLedgerCursor = it.nextCursor
+                    hasMoreLedger = it.hasMore
                 }
-                payload.redemptions.data?.let { data ->
-                    redemptions.clear()
-                    redemptions.addAll(data.items)
-                }
-
-                errorMessage =
+                payload.redemptions.data?.let { redemptions = it.items.toList() }
+                val failed =
                     listOf(
                             payload.config,
                             payload.summary,
@@ -116,70 +117,60 @@ class ActivityCenterViewModel(private val network: NetworkServices) : ViewModel(
                             payload.tiers,
                         )
                         .firstOrNull { !it.isSuccess() }
-                        ?.message
+                errorMessage = failed?.message ?: if (failed != null) "加载失败" else null
+                initialized = failed == null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                errorMessage = "网络错误: ${e.message}"
+                errorMessage = e.message ?: "加载失败"
             } finally {
-                isLoading = false
+                if (generation == version) isLoading = false
             }
         }
     }
 
     fun loadMoreLedger() {
-        if (isLoadingMore || !hasMoreLedger) return
-        viewModelScope.launch {
-            isLoadingMore = true
+        if (isLoading || isLoadingMore || !hasMoreLedger) return
+        val generation = version
+        val cursor = nextLedgerCursor
+        isLoadingMore = true
+        moreJob = viewModelScope.launch {
             try {
-                val response =
-                    withContext(Dispatchers.IO) { network.user.getActivityLedger(nextLedgerCursor) }
-                if (response.isSuccess() && response.data != null) {
-                    val page = response.data!!
-                    ledger.addAll(page.items)
-                    nextLedgerCursor = page.nextCursor
-                    hasMoreLedger = page.hasMore
-                } else {
-                    actionMessage = response.message ?: "流水加载失败"
+                val response = activity.ledger(cursor)
+                ensureActive()
+                if (generation != version) return@launch
+                if (!response.isSuccess()) error(response.message ?: "流水加载失败")
+                response.data?.let {
+                    ledger = (ledger + it.items).distinctBy { row -> row.id }
+                    nextLedgerCursor = it.nextCursor
+                    hasMoreLedger = it.hasMore
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                actionMessage = "网络错误: ${e.message}"
+                actionMessage = e.message ?: "流水加载失败"
             } finally {
-                isLoadingMore = false
+                if (generation == version) isLoadingMore = false
             }
         }
     }
 
     fun redeem(product: RewardProduct, fulfillmentInfo: String? = null) {
-        val productId = product.id ?: return
+        val id = product.id ?: return
         if (redeemingProductId != null) return
+        redeemingProductId = id
         viewModelScope.launch {
-            redeemingProductId = productId
             try {
-                val response =
-                    withContext(Dispatchers.IO) {
-                        network.user.redeemActivityProduct(
-                            productId,
-                            RedeemActivityRequest(fulfillmentInfo),
-                        )
-                    }
-                if (response.isSuccess()) {
-                    actionMessage = response.message ?: "兑换成功"
-                    load(force = true)
-                } else {
-                    actionMessage = response.message ?: "兑换失败"
-                }
+                val result = activity.redeem(id, fulfillmentInfo)
+                actionMessage = result.message ?: if (result.isSuccess()) "兑换成功" else "兑换失败"
+                if (result.isSuccess()) load(true)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                actionMessage = "网络错误: ${e.message}"
+                actionMessage = e.message ?: "兑换失败"
             } finally {
                 redeemingProductId = null
             }
         }
     }
-
-    private data class ActivityPayload(
-        val config: BaseResult<ActivityConfig?>,
-        val summary: BaseResult<ActivitySummary?>,
-        val ledger: BaseResult<ActivityLedgerPage?>,
-        val redemptions: BaseResult<RewardRedemptions?>,
-        val tiers: BaseResult<TierDetails?>,
-    )
 }

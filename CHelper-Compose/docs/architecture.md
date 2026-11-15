@@ -116,7 +116,11 @@ Android / Windows 的系统适配分别放在宿主内；共享模块不得引�
 
 构建约定只有两个：`chelper.multiplatform-library` 管理 Android / JVM 目标、SDK、JVM 17 与公共测试；`chelper.jvm-library` 管理平台适配和桌面宿主的 JVM / Java 17 配置。`platform/jvm` 为两个宿主复用一份真实 JVM 适配，不向共享模块暴露 Java 类型。
 
-网络通过应用容器持有的 `NetworkServices` 实例组装，并通过 `ClientServices`、仓库构造参数和后台任务入口注入。不可变 `NetworkConfig` 固定服务地址与调试开关；`LoginSession`、`GuestSession`、云端内存缓存和 `BrowserVerificationState` 都属于该应用实例，不使用可变全局注册表。
+网络通过应用容器持有的 `NetworkServices` 实例组装。宿主向 `ClientServices` 注入账号、命令库内容、活动、消息、收藏、网页授权和应用内容等 domain Repository 接口，ViewModel 仅接收实际需要的接口；UI 不引用 `data.remote` / `data.auth` 中的图、服务、会话或 DTO。宿主的验证码和后台同步适配仍可使用网络图。不可变 `NetworkConfig` 固定服务地址与调试开关；会话、缓存和浏览器验证状态属于该应用实例。
+
+Repository 将传输 DTO 映射为不可变业务模型，统一处理缓存、失效、注册参数、头像命名、访客与历史收藏迁移。账号通过 StateFlow 发布不可变快照；资料更新持久化后替换快照，不修改共享 DTO，也不使用“置 null 后恢复”触发刷新。私有操作绑定开始时的账号、会话版本和令牌，切换账号或重新登录后丢弃旧结果，嵌套的迁移请求沿用同一认证归属。
+
+内存缓存保留完整分页元数据，以单调时钟控制 TTL，最多保留 64 项并清理过期条目；失效版本和按键的请求序号检查阻止旧读取回填。上传、更新、删除、发布、同步、账号切换和两端后台同步统一失效 Repository 缓存，不再维护另一份 UI 缓存。ViewModel 在主线程修改状态，保留有效列表直到刷新成功，分页失败重试原页；新目标或刷新取消过时请求，加载标记只由当前请求清理，重复写操作在请求结束前合并。CancellationException 继续向上传播，取消不触发成功回调或错误提示。
 
 认证客户端不调用自动令牌获取；业务客户端通过 `TokenProvider` 优先取正式账号令牌，再取访客令牌。两类客户端共享限流和浏览器验证状态，关闭应用时取消请求并释放各自引擎。Android WebView 在主线程创建、销毁，只更新验证 Cookie；Windows 使用官方 Ktor WebSockets 连接独立 Edge 配置的 CDP，保留启动交接、取消、等待者异常完成和进程清理。
 

@@ -29,13 +29,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yancey.chelper.data.policy.PolicyGrantManager
-import yancey.chelper.data.remote.app.model.Announcement
-import yancey.chelper.data.remote.app.model.VersionInfo
+import yancey.chelper.domain.assets.Announcement
+import yancey.chelper.domain.assets.VersionInfo
 import yancey.chelper.ui.platform.ClientServices
 import yancey.chelper.ui.platform.FloatingWindowController as FloatingWindowManager
 
 class HomeViewModel(private val services: ClientServices) : ViewModel() {
-    private val network = services.network
+    private val appContent = services.appContent
     var policyGrantState by mutableStateOf(PolicyGrantManager.State.NOT_READ)
     var announcement by mutableStateOf<Announcement?>(null)
     var latestVersionInfo by mutableStateOf<VersionInfo?>(null)
@@ -101,6 +101,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
         this.isNeedToShowXiaomiClipboardPermissionTips = false
         try {
             notices.write(SKIP_XIAOMI_CLIPBOARD_PERMISSION_TIPS_FILENAME, "")
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {}
     }
 
@@ -120,7 +122,7 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
         }
         viewModelScope.launch {
             try {
-                network.app.getAnnouncement().let { it ->
+                appContent.announcement().let { it ->
                     announcement = it
                     settingsDataStore.setIsShowPublicLibrary(it.isEnableCommandLab ?: true)
                     it.publicLibraryMinVersion?.let {
@@ -140,6 +142,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
                                 if (announcementHashCode == ignoreAnnouncement) {
                                     isShow = false
                                 }
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
                             } catch (_: Exception) {}
                         }
                     }
@@ -149,6 +153,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
                         checkUpdate()
                     }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {}
         }
     }
@@ -159,6 +165,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
                 withContext(Dispatchers.IO) {
                     notices.write(SKIP_ANNOUNCEMENT_FILENAME, announcement.hashCode().toString())
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {}
         }
     }
@@ -169,7 +177,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
         viewModelScope.launch {
             isAuthorizingWebSso = true
             try {
-                val result = withContext(Dispatchers.IO) { network.webSso.resolveBrowserUrl(url) }
+                val result =
+                    withContext(Dispatchers.IO) { services.browserLinks.resolveBrowserUrl(url) }
                 result
                     .onSuccess { pendingAnnouncementUrl = it }
                     .onFailure { announcementLinkMessage = it.message ?: "无法打开链接" }
@@ -185,7 +194,7 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
         viewModelScope.launch {
             if (!settingsDataStore.isEnableUpdateNotifications().first()) return@launch
             try {
-                network.app.getLatestVersionInfo().let { it ->
+                appContent.latestVersion().let { it ->
                     latestVersionInfo = it
                     var isShow = it.versionName != services.versionName
                     if (isShow) {
@@ -195,12 +204,16 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
                             if (it.versionName == ignoreVersion) {
                                 isShow = false
                             }
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
                         } catch (_: Exception) {}
                     }
                     if (isShow) {
                         isShowUpdateNotificationsDialog = true
                     }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {}
         }
     }
@@ -211,6 +224,8 @@ class HomeViewModel(private val services: ClientServices) : ViewModel() {
                 latestVersionInfo?.versionName?.let {
                     withContext(Dispatchers.IO) { notices.write(SKIP_VERSION_FILENAME, it) }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {}
         }
     }

@@ -70,7 +70,7 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -85,9 +85,10 @@ import yancey.chelper.ui.platform.LocalClientServices
 @Composable
 fun LibrarySearchScreen(
     initialKeyword: String? = null,
-    network: NetworkServices = LocalClientServices.current.network,
+    repository: LibrarySearchRepository = LocalClientServices.current.search,
+    accounts: AccountRepository = LocalClientServices.current.accounts,
     viewModel: LibrarySearchViewModel = viewModel {
-        LibrarySearchViewModel(network.search, accountId = network.login.accountId)
+        LibrarySearchViewModel(repository, accountId = accounts.accountId)
     },
     navController: NavHostController,
 ) {
@@ -197,7 +198,9 @@ fun LibrarySearchScreen(
                 Text(
                     text = "公开库：$error，点击重试",
                     modifier =
-                        Modifier.fillMaxWidth().clickable { viewModel.retryPublic() }.padding(15.dp),
+                        Modifier.fillMaxWidth()
+                            .clickable { viewModel.retryPublic() }
+                            .padding(15.dp),
                 )
             }
             Box(modifier = Modifier.weight(1f)) {
@@ -316,7 +319,8 @@ fun LibrarySearchScreen(
                                 ) {
                                     Text(
                                         "加载更多...",
-                                        style = TextStyle(color = CHelperTheme.colors.textSecondary),
+                                        style =
+                                            TextStyle(color = CHelperTheme.colors.textSecondary),
                                     )
                                 }
                             }

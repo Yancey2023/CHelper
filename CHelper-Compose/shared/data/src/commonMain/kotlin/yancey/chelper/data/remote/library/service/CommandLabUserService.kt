@@ -132,17 +132,17 @@ interface CommandLabUserService : CommandLabAuthService {
 
     /** 用户详细信息的数据模型 */
     @Serializable
-    class User(
-        var id: Int? = null,
-        var email: String? = null,
-        var nickname: String? = null,
-        @SerialName("is_guest") var isGuest: Boolean? = null,
-        @SerialName("is_admin") var isAdmin: Boolean? = null,
-        @SerialName("is_moderator") var isModerator: Boolean? = null,
-        @SerialName("is_verified") var isVerified: Boolean? = null,
-        @SerialName("created_at") var createdAt: String? = null,
-        @SerialName("gravatar_url") var gravatarUrl: String? = null,
-        var tier: Int? = null,
+    data class User(
+        val id: Int? = null,
+        val email: String? = null,
+        val nickname: String? = null,
+        @SerialName("is_guest") val isGuest: Boolean? = null,
+        @SerialName("is_admin") val isAdmin: Boolean? = null,
+        @SerialName("is_moderator") val isModerator: Boolean? = null,
+        @SerialName("is_verified") val isVerified: Boolean? = null,
+        @SerialName("created_at") val createdAt: String? = null,
+        @SerialName("gravatar_url") val gravatarUrl: String? = null,
+        val tier: Int? = null,
     )
 
     /**

@@ -27,20 +27,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import yancey.chelper.data.library.document.localBody
 import yancey.chelper.data.library.document.usesLocalMcdV2
 import yancey.chelper.data.logging.ClientLog as Log
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.service.CommandLabUserService
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.domain.library.model.*
 import yancey.chelper.ui.platform.ClientDiagnostics as MonitorUtil
 import yancey.chelper.ui.platform.ClientMessages
 
-class LibraryUploadViewModel(private val network: NetworkServices) : ViewModel() {
+class LibraryUploadViewModel(private val libraries: LibraryContentRepository) : ViewModel() {
 
     val name = TextFieldState()
     val version = TextFieldState()
@@ -72,23 +71,21 @@ class LibraryUploadViewModel(private val network: NetworkServices) : ViewModel()
         editId = id
         isCloudDraftReady = false
         cloudDraftError = null
-        cloudDraftJob =
-            viewModelScope.launch {
-                try {
-                    val response = network.user.getPrivateFunction(id)
-                    val library = response.data
-                    if (!response.isSuccess() || library == null)
-                        error(response.message ?: "加载云端草稿失败")
-                    if (cloudDraftId != id) return@launch
-                    editUuid = library.uuid.orEmpty()
-                    loadFromLocal(library)
-                    isCloudDraftReady = true
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    if (cloudDraftId == id) cloudDraftError = e.message ?: "加载云端草稿失败"
-                }
+        cloudDraftJob = viewModelScope.launch {
+            try {
+                val response = libraries.detail(id, private = true)
+                val library = response.data
+                if (!response.isSuccess() || library == null) error(response.message ?: "加载云端草稿失败")
+                if (cloudDraftId != id) return@launch
+                editUuid = library.uuid.orEmpty()
+                loadFromLocal(library)
+                isCloudDraftReady = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (cloudDraftId == id) cloudDraftError = e.message ?: "加载云端草稿失败"
             }
+        }
     }
 
     fun loadFromLocal(library: LibraryFunction) {
@@ -101,6 +98,8 @@ class LibraryUploadViewModel(private val network: NetworkServices) : ViewModel()
                 tags.setTextAndPlaceCursorAtEnd(library.tags?.joinToString(",") ?: "")
 
                 commands.setTextAndPlaceCursorAtEnd(library.localBody().trim('\n', '\r'))
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 Log.e("LibraryUploadViewModel", "加载本地内容失败", e)
                 MonitorUtil.generateCustomLog(e, "LoadLocalLibraryError")
@@ -137,71 +136,47 @@ class LibraryUploadViewModel(private val network: NetworkServices) : ViewModel()
     }
 
     fun upload(specialCode: String?, onSuccess: () -> Unit) {
+        if (isLoading) return
         if (name.text.isBlank() || commands.text.isBlank()) {
             ClientMessages.show("名称和内容不能为空")
             return
         }
-
+        val target = editId
+        val content = buildFullMCD()
+        val changes =
+            LibraryChanges(
+                name.text.toString(),
+                content,
+                description.text.toString(),
+                tags.text.toString().split(",").map(String::trim).filter(String::isNotEmpty),
+                version.text.toString().ifEmpty { "1.0.0" },
+            )
         isLoading = true
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                val finalContent = buildFullMCD()
-                val tagList =
-                    tags.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
-                if (editId > 0) {
-                    val request =
-                        CommandLabUserService.UpdateLibraryRequest().apply {
-                            this.name = this@LibraryUploadViewModel.name.text.toString()
-                            this.version =
-                                this@LibraryUploadViewModel.version.text.toString().ifEmpty {
-                                    "1.0.0"
-                                }
-                            this.note = this@LibraryUploadViewModel.description.text.toString()
-                            this.tags = tagList
-                            this.content = finalContent
-                        }
-                    val result = network.user.updateLibrary(editId, request)
-                    withContext(Dispatchers.Main) {
-                        isLoading = false
-                        if (result.isSuccess()) {
-                            // 云端库内容变了：把"我的云端库"缓存清掉，
-                            // 用户返回 LocalLibraryListScreen 时会重新拉一次，看到刚改完的数据
-                            network.cache.invalidateLibraries()
-                            ClientMessages.show("更新成功")
-                            onSuccess()
-                        } else {
-                            ClientMessages.show(result.message ?: "更新失败")
-                        }
+                val succeeded =
+                    if (target > 0) {
+                        val result = libraries.update(target, changes)
+                        if (!result.isSuccess()) error(result.message ?: "更新失败")
+                        true
+                    } else {
+                        val result = libraries.upload(content)
+                        if (!result.isSuccess()) error(result.message ?: "上传失败")
+                        true
                     }
-                } else {
-                    // 上传固定为私有草稿
-                    val request =
-                        CommandLabUserService.UploadLibraryRequest().apply {
-                            this.content = finalContent
-                            this.isPublish = false
-                        }
-                    val result = network.user.uploadLibrary(request)
-                    withContext(Dispatchers.Main) {
-                        isLoading = false
-                        if (result.isSuccess()) {
-                            // 同上：新建一条云端库也属于列表变更
-                            network.cache.invalidateLibraries()
-                            ClientMessages.show("上传成功")
-                            onSuccess()
-                        } else {
-                            ClientMessages.show(result.message ?: "上传失败")
-                        }
-                    }
+                ensureActive()
+                if (succeeded) {
+                    ClientMessages.show(if (target > 0) "更新成功" else "上传成功")
+                    onSuccess()
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("LibraryUploadViewModel", "上传命令库失败", e)
-                    MonitorUtil.generateCustomLog(e, "UploadLibraryError")
-                    ClientMessages.show("网络错误: ${e.message}")
-                }
+                Log.e("LibraryUploadViewModel", "上传命令库失败", e)
+                MonitorUtil.generateCustomLog(e, "UploadLibraryError")
+                ClientMessages.show(e.message ?: "上传失败")
             } finally {
-                withContext(Dispatchers.Main) { isLoading = false }
+                isLoading = false
             }
         }
     }

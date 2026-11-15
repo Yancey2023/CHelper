@@ -370,6 +370,8 @@ def check_architecture() -> list[str]:
                     forbidden += (
                         "yancey.chelper.core.",
                         "yancey.chelper.nativecore.",
+                        "yancey.chelper.data.remote.",
+                        "yancey.chelper.data.auth.",
                     )
             for qualified in re.findall(r"\byancey\.chelper\.(?:\w+\.)+\w+", source):
                 if qualified.startswith(forbidden):

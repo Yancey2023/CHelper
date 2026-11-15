@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
 import yancey.chelper.domain.enumeration.EnumerationRepository
 import yancey.chelper.domain.enumeration.EnumerationVariable
 

@@ -69,7 +69,7 @@ class LibrarySyncWorker(context: Context, parameters: WorkerParameters) :
                         identity.id,
                         identity.uuid,
                     )
-                    applicationContext.networkServices.cache.invalidateLibraries()
+                    applicationContext.networkServices.libraryContent.invalidate()
                 }
 
                 override suspend fun fail(localEntryId: String, revision: String, message: String) =

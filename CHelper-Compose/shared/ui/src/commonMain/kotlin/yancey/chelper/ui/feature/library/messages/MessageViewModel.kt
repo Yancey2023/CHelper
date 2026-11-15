@@ -18,114 +18,135 @@
 
 package yancey.chelper.ui.feature.library.messages
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.SiteMessage
+import kotlinx.coroutines.*
+import yancey.chelper.domain.library.*
+import yancey.chelper.domain.library.model.*
 
-class MessageViewModel(private val network: NetworkServices) : ViewModel() {
-    var messages: SnapshotStateList<SiteMessage> = mutableStateListOf()
+class MessageViewModel(
+    private val inbox: MessageRepository,
+    private val links: BrowserLinkRepository,
+    private val accounts: AccountRepository,
+) : ViewModel() {
+    var messages by mutableStateOf<List<InboxMessage>>(emptyList())
+        private set
+
     var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
-    var currentPage by mutableIntStateOf(1)
-    var totalCount by mutableIntStateOf(0)
-    var hasMore by mutableStateOf(true)
+        private set
 
-    /** 未读小红点计数，可在外部（如用户中心）直接观察 */
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    var currentPage by mutableIntStateOf(1)
+        private set
+
+    var totalCount by mutableIntStateOf(0)
+        private set
+
+    var hasMore by mutableStateOf(true)
+        private set
+
     var unreadCount by mutableIntStateOf(0)
+        private set
 
     var showUnreadOnly by mutableStateOf(false)
     var pendingBrowserUrl by mutableStateOf<String?>(null)
     var linkMessage by mutableStateOf<String?>(null)
     var isResolvingLink by mutableStateOf(false)
+        private set
 
-    private var hasLoaded = false
+    private var loaded = false
+    private var generation = 0L
+    private var loadJob: Job? = null
+    private var unreadJob: Job? = null
+    private val changing = mutableSetOf<Int>()
 
-    fun loadMessages(resetPage: Boolean = true) {
-        if (isLoading) return
-        if (resetPage && hasLoaded && messages.isNotEmpty()) return
-        hasLoaded = true
-
+    init {
         viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-
-            if (resetPage) {
-                currentPage = 1
-                messages.clear()
-            }
-
-            try {
-                val response =
-                    withContext(Dispatchers.IO) {
-                        network.user.getMessages(
-                            page = currentPage,
-                            pageSize = 20,
-                            unreadOnly = showUnreadOnly,
-                        )
-                    }
-
-                if (response.isSuccess() && response.data != null) {
-                    val data = response.data!!
-                    val items = data.messages ?: emptyList()
-                    messages.addAll(items)
-
-                    totalCount = data.total ?: 0
-                    val pageSize = data.pageSize ?: 20
-                    val totalPages = if (pageSize > 0) (totalCount + pageSize - 1) / pageSize else 1
-                    hasMore = currentPage < totalPages
-                } else {
-                    errorMessage = response.message ?: "加载失败"
+            var revision = accounts.state.value.revision
+            accounts.state.collect { account ->
+                if (revision != account.revision) {
+                    revision = account.revision
+                    generation++
+                    loadJob?.cancel()
+                    unreadJob?.cancel()
+                    messages = emptyList()
+                    unreadCount = 0
+                    totalCount = 0
+                    currentPage = 1
+                    loaded = false
+                    hasMore = true
+                    isLoading = false
                 }
-            } catch (e: Exception) {
-                errorMessage = "网络错误: ${e.message}"
-            } finally {
-                isLoading = false
             }
         }
     }
 
-    fun loadMore() {
-        if (!hasMore || isLoading) return
-        currentPage++
-        loadMessages(resetPage = false)
+    fun loadMessages(resetPage: Boolean = true) {
+        if (resetPage && loaded) return
+        if (!resetPage && (isLoading || !hasMore)) return
+        if (resetPage) loadJob?.cancel()
+        val version = ++generation
+        val page = if (resetPage) 1 else currentPage + 1
+        val unreadOnly = showUnreadOnly
+        isLoading = true
+        errorMessage = null
+        loadJob = viewModelScope.launch {
+            try {
+                val result = inbox.load(page, 20, unreadOnly)
+                ensureActive()
+                if (version != generation) return@launch
+                if (!result.isSuccess()) error(result.message ?: "加载失败")
+                val data = result.data ?: error("站内信为空")
+                messages =
+                    ((if (resetPage) emptyList() else messages) + data.messages.orEmpty())
+                        .distinctBy { it.id }
+                totalCount = data.total ?: messages.size
+                val size = (data.pageSize ?: 20).coerceAtLeast(1)
+                hasMore =
+                    data.total?.let { page.toLong() * size < it }
+                        ?: (data.messages.orEmpty().size >= size)
+                currentPage = page
+                loaded = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "加载失败"
+            } finally {
+                if (version == generation) isLoading = false
+            }
+        }
     }
 
+    fun loadMore() = loadMessages(false)
+
     fun refresh() {
-        hasLoaded = false
-        loadMessages(resetPage = true)
+        loaded = false
+        loadMessages(true)
     }
 
     fun refreshUnreadCount() {
-        viewModelScope.launch {
+        unreadJob?.cancel()
+        unreadJob = viewModelScope.launch {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.getUnreadCount() }
-                if (result.isSuccess() && result.data != null) {
-                    unreadCount = result.data!!.count ?: 0
-                }
-            } catch (_: Exception) {
-                // 静默失败，不影响主流程
-            }
+                val result = inbox.unreadCount()
+                ensureActive()
+                if (result.isSuccess()) unreadCount = result.data?.count ?: 0
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {}
         }
     }
 
     fun openMessageLink(url: String) {
         if (isResolvingLink) return
+        isResolvingLink = true
         viewModelScope.launch {
-            isResolvingLink = true
             try {
-                val result = withContext(Dispatchers.IO) { network.webSso.resolveBrowserUrl(url) }
-                result
+                links
+                    .resolveBrowserUrl(url)
                     .onSuccess { pendingBrowserUrl = it }
                     .onFailure { linkMessage = it.message ?: "无法打开链接" }
             } catch (e: CancellationException) {
@@ -137,50 +158,40 @@ class MessageViewModel(private val network: NetworkServices) : ViewModel() {
     }
 
     fun markAsRead(messageId: Int) {
+        if (!changing.add(messageId)) return
         viewModelScope.launch {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.markMessageRead(messageId) }
-                if (result.isSuccess()) {
-                    // 本地同步状态，避免重新拉取整个列表
-                    val idx = messages.indexOfFirst { it.id == messageId }
-                    if (idx >= 0) {
-                        val old = messages[idx]
-                        if (old.isRead != true) {
-                            messages[idx] =
-                                SiteMessage(
-                                    id = old.id,
-                                    title = old.title,
-                                    content = old.content,
-                                    msgType = old.msgType,
-                                    senderId = old.senderId,
-                                    createdAt = old.createdAt,
-                                    isRead = true,
-                                    readAt = old.readAt,
-                                    isGlobal = old.isGlobal,
-                                )
-                            if (unreadCount > 0) unreadCount--
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                // 静默
+                val result = inbox.markRead(messageId)
+                if (!result.isSuccess()) error(result.message ?: "标记已读失败")
+                if (messages.any { it.id == messageId && it.isRead != true })
+                    unreadCount = (unreadCount - 1).coerceAtLeast(0)
+                messages = messages.map { if (it.id == messageId) it.copy(isRead = true) else it }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "操作失败"
+            } finally {
+                changing.remove(messageId)
             }
         }
     }
 
     fun deleteMessage(messageId: Int) {
+        if (!changing.add(messageId)) return
         viewModelScope.launch {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.deleteMessage(messageId) }
-                if (result.isSuccess()) {
-                    val idx = messages.indexOfFirst { it.id == messageId }
-                    if (idx >= 0) {
-                        val wasUnread = messages[idx].isRead != true
-                        messages.removeAt(idx)
-                        if (wasUnread && unreadCount > 0) unreadCount--
-                    }
-                }
-            } catch (_: Exception) {}
+                val result = inbox.delete(messageId)
+                if (!result.isSuccess()) error(result.message ?: "删除失败")
+                if (messages.any { it.id == messageId && it.isRead != true })
+                    unreadCount = (unreadCount - 1).coerceAtLeast(0)
+                messages = messages.filterNot { it.id == messageId }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "操作失败"
+            } finally {
+                changing.remove(messageId)
+            }
         }
     }
 }

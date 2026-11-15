@@ -15,6 +15,7 @@ CHelper 是一个我的世界命令助手，包含了：
 4. 共享生产代码使用 commonMain，测试使用 commonTest 与 kotlin.test，禁止重新引入自定义 JVM 共享源码目录或在公共源码中引用 Java、JUnit、Retrofit、OkHttp、JNI 类型；真实平台互操作放在 apps 或 platform/jvm，通过领域接口注入。
 5. 网络服务、账号会话和浏览器验证状态由应用容器持有并注入，不重新引入可变全局 ServiceManager、LoginUtil、GuestAuthUtil 或 WafHelper。优先使用 Ktor 官方序列化、日志和 WebSocket 插件；认证来源隔离、限流、WAF 单次重放和宿主资源清理由项目维护，保留 HTTP/2、Brotli 与有界磁盘缓存。
 6. Kotlin 源码和 Gradle Kotlin DSL 必须通过 import 引入类型、注解、顶层函数和属性，禁止在声明、类型签名或表达式中直接写完整包名。名称冲突使用 `import ... as ...` 别名，不用全限定名绕过；同样适用于测试和文件级注解。package/import 声明以及确实需要类名的字符串（如 JNI、反射、主类配置）保留原值，不把变量成员访问或嵌套类型访问当成包名清理。
+7. UI 的远端业务通过 domain 定义的职责明确的 Repository 接口访问，不引用 data.remote / data.auth 中的网络图、会话、服务或 DTO。Repository 负责协议映射、认证归属、缓存及失效、访客与旧收藏迁移；返回不可变业务快照。ViewModel 在主线程更新状态，传播 CancellationException，刷新与切换目标时取消过时请求，分页成功后才推进页码，写操作防止重复提交。
 
 CHelper-Compose 的 UI 约束（用户明确要求）：
 

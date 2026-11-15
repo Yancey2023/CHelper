@@ -4,7 +4,10 @@ package yancey.chelper.desktop.sync
 
 import androidx.datastore.core.DataStore
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.headersOf
 import java.io.IOException
+import kotlin.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +52,16 @@ class DesktopLibrarySyncTest {
         }
     }
 
-    private val network = NetworkServices({ MockEngine { error("Unexpected request") } })
+    private var cloudName = "old"
+    private val network =
+        NetworkServices({
+            MockEngine {
+                respond(
+                    """{"status":0,"data":{"list":[{"id":1,"name":"$cloudName"}],"total":1}}""",
+                    headers = headersOf("Content-Type", "application/json"),
+                )
+            }
+        })
     private val entry =
         LibraryFunction(
             id = 1,
@@ -69,7 +81,8 @@ class DesktopLibrarySyncTest {
     fun login() {
         network.login.init(
             object : CredentialStore {
-                override fun read() = """{"token":"test-token","user":{"id":17,"is_guest":false}}"""
+                override fun read() =
+                    """{"token":"test-token","lastLoginTimestamp":${Clock.System.now().toEpochMilliseconds()},"user":{"id":17,"is_guest":false}}"""
 
                 override fun write(content: String) = Unit
 
@@ -79,13 +92,13 @@ class DesktopLibrarySyncTest {
             throw AssertionError(it)
         }
         assertEquals(17, network.login.accountId.value)
-        network.cache.invalidateAll()
+        network.libraryContent.invalidate()
     }
 
     @After
     fun logout() {
         network.login.logout()
-        network.cache.invalidateAll()
+        network.libraryContent.invalidate()
         network.close()
     }
 
@@ -176,7 +189,8 @@ class DesktopLibrarySyncTest {
 
     @Test
     fun `successful sync invalidates the cloud library cache`() = runTest {
-        network.cache.setLibraries(17, listOf(entry.copy(name = "old")))
+        assertEquals("old", network.libraryContent.mine().data?.functions?.single()?.name)
+        cloudName = "new"
         val sync =
             DesktopLibrarySync(local, network, StandardTestDispatcher(testScheduler)) { library, _
                 ->
@@ -186,7 +200,7 @@ class DesktopLibrarySyncTest {
             sync.start()
             runCurrent()
             assertFalse(store.state.value.functions.single().localUnsynced)
-            assertNull(network.cache.getLibraries(17))
+            assertEquals("new", network.libraryContent.mine().data?.functions?.single()?.name)
         } finally {
             sync.close()
         }

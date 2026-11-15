@@ -36,7 +36,9 @@ class NetworkServicesTest {
                     MockEngine { request ->
                         assertEquals(host, request.url.host)
                         respond(
-                            loginResponse("token-$id", id),
+                            if (request.url.encodedPath == "/library/quota")
+                                """{"status":0,"data":{"used":$id,"limit":20}}"""
+                            else loginResponse("token-$id", id),
                             headers = headersOf("Content-Type", "application/json"),
                         )
                     }
@@ -51,13 +53,12 @@ class NetworkServicesTest {
                 assertTrue(two.login.login("two", "password").isSuccess)
                 assertEquals(1, one.login.accountId.value)
                 assertEquals(2, two.login.accountId.value)
-                one.cache.setQuota(17, 1, 20)
-                assertNull(two.cache.getQuota(17))
-                two.cache.setQuota(17, 2, 30)
-                one.login.logout()
+                assertEquals(1, one.libraryContent.quota().data?.used)
+                assertEquals(2, two.libraryContent.quota().data?.used)
+                one.accounts.logout()
                 assertEquals(2, two.login.accountId.value)
-                assertNull(one.cache.getQuota(17))
-                assertEquals(2, two.cache.getQuota(17)?.used)
+                assertFailsWith<IllegalStateException> { one.libraryContent.quota() }
+                assertEquals(2, two.libraryContent.quota().data?.used)
             }
         }
     }

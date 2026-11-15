@@ -55,7 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import org.jetbrains.compose.resources.stringResource
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.library.LineType
 import yancey.chelper.domain.library.MCDValidationResult
@@ -84,8 +84,8 @@ import yancey.chelper.ui.platform.rememberOpenUrl
 
 @Composable
 fun LibraryUploadScreen(
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: LibraryUploadViewModel = viewModel { LibraryUploadViewModel(networkServices) },
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    viewModel: LibraryUploadViewModel = viewModel { LibraryUploadViewModel(libraries) },
     navController: NavHostController,
     editLibraryId: Int = -1,
 ) {
@@ -133,17 +133,16 @@ fun LibraryUploadScreen(
                         .map { it.lineNumber }
                         .toSet()
 
-                val fixedLines =
-                    originalLines.mapIndexed { idx, line ->
-                        if (
-                            (idx + 1) in ambiguousLineNumbers &&
-                                line.trimStart().let { t -> t.isNotEmpty() && !t.startsWith("#") }
-                        ) {
-                            "#$line"
-                        } else {
-                            line
-                        }
+                val fixedLines = originalLines.mapIndexed { idx, line ->
+                    if (
+                        (idx + 1) in ambiguousLineNumbers &&
+                            line.trimStart().let { t -> t.isNotEmpty() && !t.startsWith("#") }
+                    ) {
+                        "#$line"
+                    } else {
+                        line
                     }
+                }
                 val fixedContent = fixedLines.joinToString("\n")
                 viewModel.commands.setTextAndPlaceCursorAtEnd(fixedContent)
                 validationResult = validateMCDContent(fixedContent)

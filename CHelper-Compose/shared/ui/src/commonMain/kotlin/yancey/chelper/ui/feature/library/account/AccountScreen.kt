@@ -63,7 +63,7 @@ import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -88,8 +88,9 @@ import yancey.chelper.ui.platform.rememberImagePicker
 
 @Composable
 fun AccountScreen(
-    networkServices: NetworkServices = LocalClientServices.current.network,
-    viewModel: AccountViewModel = viewModel { AccountViewModel(networkServices) },
+    accounts: AccountRepository = LocalClientServices.current.accounts,
+    libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    viewModel: AccountViewModel = viewModel { AccountViewModel(accounts, libraries) },
     navController: NavHostController = rememberNavController(),
     isTab: Boolean = false,
 ) {

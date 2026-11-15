@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -48,12 +49,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import yancey.chelper.android.networkServices
 import yancey.chelper.data.remote.library.model.CaptchaStatusResponse
 import yancey.chelper.data.remote.library.model.CaptchaTokenRequest
 import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.platform.ClientMessages
-import yancey.chelper.ui.platform.LocalClientServices
 
 @Composable
 fun AndroidCaptchaDialog(
@@ -76,7 +77,7 @@ private fun CaptchaDialogContent(
     onDismissRequest: () -> Unit,
     onSuccess: (String) -> Unit,
 ) {
-    val network = LocalClientServices.current.network
+    val network = LocalContext.current.networkServices
     val specialCode = remember { UUID.randomUUID().toString() }
     var webView: WebView? by remember { mutableStateOf(null) }
     // 防止 JS 回调和轮询同时触发导致重复执行

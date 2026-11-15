@@ -24,16 +24,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import yancey.chelper.data.remote.NetworkServices
-import yancey.chelper.data.remote.library.model.BaseResult
+import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
+import yancey.chelper.domain.library.RepositoryResult
+import yancey.chelper.domain.library.model.*
+import yancey.chelper.ui.platform.ClientMessages
 
-class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewModel() {
+class PublicLibraryShowViewModel(
+    private val accounts: AccountRepository,
+    private val libraries: LibraryContentRepository,
+) : ViewModel() {
     var library by mutableStateOf(LibraryFunction())
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
@@ -50,32 +52,82 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
 
     /** 当前是否展示原始源码视图（false = 可视化 UI） */
     var showRawSource by mutableStateOf(false)
+    private var loadJob: Job? = null
+    private var loadVersion = 0L
+    private val actions = mutableMapOf<String, Job>()
+
+    private fun launchAction(key: String, block: suspend () -> Unit) {
+        if (actions[key]?.isActive == true) return
+        val job =
+            viewModelScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    block()
+                } finally {
+                    actions.remove(key)
+                }
+            }
+        actions[key] = job
+        job.start()
+    }
+
     private var initializedTarget: Pair<Int, Boolean>? = null
+
+    init {
+        viewModelScope.launch {
+            var revision = accounts.state.value.revision
+            accounts.state.collect { account ->
+                if (revision != account.revision) {
+                    revision = account.revision
+                    actions.values.toList().forEach(Job::cancel)
+                    if (isPrivate) {
+                        loadVersion++
+                        loadJob?.cancel()
+                        library = LibraryFunction()
+                        isLoading = false
+                        errorMessage = "账号已切换，请重新加载"
+                    }
+                }
+            }
+        }
+    }
 
     fun ensureLoaded(id: Int, isPrivate: Boolean) {
         val target = id to isPrivate
-        if (initializedTarget == target) return
-        initializedTarget = target
+        if (
+            initializedTarget == target && (isLoading || (errorMessage == null && library.id == id))
+        )
+            return
         loadFunction(id, isPrivate)
     }
 
     fun loadFunction(id: Int, isPrivate: Boolean) {
-        initializedTarget = id to isPrivate
+        val target = id to isPrivate
+        if (initializedTarget != target) {
+            actions.values.toList().forEach(Job::cancel)
+            library = LibraryFunction()
+            deleteSuccess = false
+            pendingShareUrl = null
+            releasedPublicId = null
+        }
+        initializedTarget = target
+        val version = ++loadVersion
+        loadJob?.cancel()
         this.isPrivate = isPrivate
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             isLoading = true
             errorMessage = null
 
             try {
-                val response: BaseResult<LibraryFunction?> =
-                    withContext(Dispatchers.IO) {
-                        if (isPrivate) {
-                            network.user.getPrivateFunction(id)
-                        } else {
-                            network.public.getFunction(id)
-                        }
+                val response: RepositoryResult<LibraryFunction> = run {
+                    if (isPrivate) {
+                        libraries.detail(id, private = true)
+                    } else {
+                        libraries.detail(id)
                     }
+                }
 
+                ensureActive()
+                if (version != loadVersion) return@launch
                 if (response.isSuccess() && response.data != null) {
                     library = response.data!!
                     likeCount = library.likeCount ?: 0
@@ -84,19 +136,21 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
                 } else {
                     errorMessage = response.message ?: "加载失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 errorMessage = "网络错误: ${e.message}"
             } finally {
-                isLoading = false
+                if (version == loadVersion) isLoading = false
             }
         }
     }
 
     /** 切换点赞状态 调 like API 后刷新本地计数 like 接口已赞则不管、未赞则点赞 */
     fun toggleLike(id: Int) {
-        viewModelScope.launch {
+        launchAction("like") {
             try {
-                val result = withContext(Dispatchers.IO) { network.public.like(id) }
+                val result = run { libraries.like(id) }
                 if (result.isSuccess() && result.data != null) {
                     val likeData = result.data!!
                     likeCount = likeData.likeCount ?: likeCount
@@ -111,6 +165,8 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
                 } else {
                     actionMessage = result.message ?: "操作失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             }
@@ -121,23 +177,21 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
     var releasedPublicId by mutableStateOf<Int?>(null)
 
     fun releaseToPublic(id: Int, specialCode: String = "") {
-        viewModelScope.launch {
+        launchAction("publish") {
             try {
-                val result =
-                    withContext(Dispatchers.IO) {
-                        network.user.releaseToPublic(id, mapOf("special_code" to specialCode))
-                    }
+                val result = run {
+                    libraries.publish(id, specialCode)
+                }
                 if (result.isSuccess()) {
                     // 后端自动审核通过时返回 {"public_id": <int>}
-                    val publicId =
-                        (result.data as? JsonObject)?.get("public_id")?.let {
-                            (it as? JsonPrimitive)?.content?.toIntOrNull()
-                        }
+                    val publicId = result.data?.publicId
                     releasedPublicId = publicId
                     actionMessage = result.message ?: "已提交发布申请"
                 } else {
                     actionMessage = result.message ?: "操作失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             }
@@ -145,15 +199,17 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
     }
 
     fun syncToPublic(id: Int) {
-        viewModelScope.launch {
+        launchAction("sync") {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.syncToPublic(id) }
+                val result = run { libraries.syncPublic(id) }
                 actionMessage =
                     if (result.isSuccess()) {
                         "已提交同步申请"
                     } else {
                         result.message ?: "同步失败"
                     }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             }
@@ -161,15 +217,17 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
     }
 
     fun deleteLibrary(id: Int) {
-        viewModelScope.launch {
+        launchAction("delete") {
             try {
-                val result = withContext(Dispatchers.IO) { network.user.deleteLibrary(id) }
+                val result = run { libraries.delete(id) }
                 if (result.isSuccess()) {
                     actionMessage = "删除成功"
                     deleteSuccess = true
                 } else {
                     actionMessage = result.message ?: "删除失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             }
@@ -177,17 +235,17 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
     }
 
     fun toggleFavorite(id: Int) {
-        if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
+        if (!accounts.isLoggedIn || accounts.currentUser?.isGuest == true) {
             actionMessage = "请先登录正式账号使用收藏夹"
             return
         }
-        viewModelScope.launch {
+        launchAction("favorite") {
             if (isPrivate) {
                 actionMessage = "私有库不能加入收藏夹"
-                return@launch
+                return@launchAction
             }
             try {
-                val result = withContext(Dispatchers.IO) { network.user.toggleFavorite(id) }
+                val result = run { libraries.favorite(id) }
                 if (result.isSuccess() && result.data != null) {
                     isFavorited = result.data!!.isFavorited == true
                     library = library.copy(isFavorited = isFavorited)
@@ -195,6 +253,8 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
                 } else {
                     actionMessage = result.message ?: "收藏操作失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             }
@@ -207,7 +267,7 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
 
     /** 生成云端公开库分享链接。 默认 import_to_local=false：对方从外链进入只看到云端详情，不自动导入本地。 */
     fun createShareLink(id: Int, importToLocal: Boolean = false) {
-        if (!network.login.isLoggedIn || network.login.currentUser?.isGuest == true) {
+        if (!accounts.isLoggedIn || accounts.currentUser?.isGuest == true) {
             actionMessage = "请先登录正式账号再分享"
             return
         }
@@ -216,13 +276,12 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
             return
         }
         if (isSharing) return
-        viewModelScope.launch {
+        launchAction("share") {
             isSharing = true
             try {
-                val result =
-                    withContext(Dispatchers.IO) {
-                        network.user.createLibraryShare(id = id, importToLocal = importToLocal)
-                    }
+                val result = run {
+                    libraries.share(id = id, importToLocal = importToLocal)
+                }
                 if (result.isSuccess()) {
                     val url = result.data?.shareUrl?.takeIf { it.isNotBlank() }
                     if (url != null) {
@@ -234,6 +293,8 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
                 } else {
                     actionMessage = result.message ?: "生成分享链接失败"
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (e: Exception) {
                 actionMessage = "网络错误: ${e.message}"
             } finally {
@@ -246,6 +307,19 @@ class PublicLibraryShowViewModel(private val network: NetworkServices) : ViewMod
         private fun formatPoints(value: Double): String {
             val whole = value.toLong()
             return if (value == whole.toDouble()) whole.toString() else value.toString()
+        }
+    }
+
+    fun submitReport(report: AbuseReport) {
+        launchAction("report") {
+            try {
+                val result = libraries.report(report)
+                ClientMessages.show(result.message ?: if (result.isSuccess()) "举报已提交" else "举报失败")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ClientMessages.show(e.message ?: "举报失败")
+            }
         }
     }
 }

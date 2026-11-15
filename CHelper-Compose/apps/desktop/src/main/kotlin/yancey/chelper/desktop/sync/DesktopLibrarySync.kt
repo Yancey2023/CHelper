@@ -65,7 +65,7 @@ internal class DesktopLibrarySync(
                             identity.id,
                             identity.uuid,
                         )
-                        network.cache.invalidateLibraries()
+                        network.libraryContent.invalidate()
                     }
 
                     override suspend fun fail(

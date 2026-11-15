@@ -66,6 +66,7 @@ class GuestSession(private val service: CommandLabAuthService, private val login
             if (generation != version) false
             else {
                 session = data
+                login.guestChanged(data.user)
                 true
             }
         }
@@ -226,6 +227,7 @@ class GuestSession(private val service: CommandLabAuthService, private val login
         synchronized(stateLock) {
             generation++
             session = null
+            login.guestChanged(null)
         }
     }
 }

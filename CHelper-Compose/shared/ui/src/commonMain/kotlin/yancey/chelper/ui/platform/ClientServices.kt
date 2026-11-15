@@ -8,11 +8,12 @@ import yancey.chelper.data.local.history.CopyHistoryDataStore
 import yancey.chelper.data.local.library.FavoriteLibraryDataStore
 import yancey.chelper.data.local.library.LocalCommandLabDataStore
 import yancey.chelper.data.local.settings.SettingsDataStore
-import yancey.chelper.data.remote.NetworkServices
+import yancey.chelper.domain.assets.AppContentRepository
 import yancey.chelper.domain.assets.AssetRepository
 import yancey.chelper.domain.command.CommandDraftRepository
 import yancey.chelper.domain.command.CommandEngine
 import yancey.chelper.domain.enumeration.EnumerationRepository
+import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.rawtext.RawtextRepository
 import yancey.chelper.ui.app.AppSession
@@ -20,7 +21,15 @@ import yancey.chelper.ui.feature.home.HomeAction
 
 /** Shared repositories and system capabilities, assembled once by each platform host. */
 class ClientServices(
-    val network: NetworkServices,
+    val accounts: AccountRepository,
+    val libraryContent: LibraryContentRepository,
+    val activity: ActivityRepository,
+    val messages: MessageRepository,
+    val browserLinks: BrowserLinkRepository,
+    val appContent: AppContentRepository,
+    val publicLibraries: PublicLibraryRepository,
+    val search: LibrarySearchRepository,
+    val cloudFavorites: FavoriteCollectionRepository,
     val settings: SettingsDataStore,
     val libraries: LocalCommandLabDataStore,
     val favorites: FavoriteLibraryDataStore,

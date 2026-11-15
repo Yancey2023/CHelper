@@ -26,16 +26,19 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okio.IOException
+import yancey.chelper.data.library.toDomain
 import yancey.chelper.data.remote.library.service.CommandLabAuthService
 import yancey.chelper.data.remote.library.service.CommandLabUserService
 import yancey.chelper.data.remote.library.service.CommandLabUserService.LoginRequest
 import yancey.chelper.domain.auth.CredentialStore
+import yancey.chelper.domain.library.AccountState
 
 /**
  * 登录工具类
@@ -50,6 +53,44 @@ class LoginSession(
     private val stateLock = SynchronizedObject()
     private val refreshMutex = Mutex()
     private var generation = 0L
+    private val _state = MutableStateFlow(AccountState())
+    val state = _state.asStateFlow()
+
+    internal fun guestChanged(user: CommandLabUserService.User?) {
+        _state.update { it.copy(guest = user?.toDomain()) }
+    }
+
+    private fun publish() {
+        _state.update {
+            it.copy(user = currentUser?.takeIf { isLoggedIn }?.toDomain(), revision = generation)
+        }
+    }
+
+    internal fun updateUser(
+        owner: Int,
+        revision: Long,
+        changes: (CommandLabUserService.User) -> CommandLabUserService.User,
+    ) =
+        synchronized(stateLock) {
+            val user =
+                currentUser?.takeIf { it.id == owner && _state.value.revision == revision }
+                    ?: throw CancellationException("账号已切换，请重新操作")
+            val updated = changes(user)
+            storage?.write(
+                Json.encodeToString(
+                    SavedUserData(
+                        savedMail,
+                        savedPassword,
+                        currentToken,
+                        lastLoginTimestamp,
+                        updated,
+                    )
+                )
+            )
+            currentUser = updated
+            publish()
+        }
+
     private val _accountId = MutableStateFlow<Int?>(null)
     val accountId = _accountId.asStateFlow()
 
@@ -92,7 +133,8 @@ class LoginSession(
                     currentToken = savedData.token
                     lastLoginTimestamp = savedData.lastLoginTimestamp
                     currentUser = savedData.user
-                    _accountId.value = currentUser?.takeUnless { it.isGuest == true }?.id
+                    _accountId.value = currentUser?.takeIf { isLoggedIn && it.isGuest != true }?.id
+                    publish()
                 }
             }
         } catch (e: Exception) {
@@ -102,7 +144,7 @@ class LoginSession(
 
     /** 检查是否已登录 */
     val isLoggedIn: Boolean
-        get() = currentToken != null && currentUser != null
+        get() = !currentToken.isNullOrBlank() && currentUser?.id != null
 
     /**
      * 获取 JWT 令牌
@@ -110,32 +152,31 @@ class LoginSession(
      * 如果令牌过期（超过 600 秒），会自动重新登录获取新令牌
      */
     @Throws(IOException::class)
-    suspend fun getToken(): String? =
-        refreshMutex.withLock {
-            val snapshot =
-                synchronized(stateLock) {
-                    if (
-                        currentToken != null &&
-                            lastLoginTimestamp != null &&
-                            Clock.System.now().toEpochMilliseconds() - lastLoginTimestamp!! < 600000
-                    )
-                        return@withLock currentToken
-                    val mail = savedMail ?: return@withLock null
-                    val password = savedPassword ?: return@withLock null
-                    Triple(generation, mail, password)
-                }
-            val response =
-                service.login(LoginRequest(account = snapshot.second, password = snapshot.third))
-            val data = response.data
-            if (!response.isSuccess() || data == null) return@withLock null
-            withContext(Dispatchers.IO) {
-                synchronized(stateLock) {
-                    if (generation != snapshot.first) return@synchronized null
-                    installSession(snapshot.second, snapshot.third, data)
-                    currentToken
-                }
+    suspend fun getToken(): String? = refreshMutex.withLock {
+        val snapshot =
+            synchronized(stateLock) {
+                if (
+                    currentToken != null &&
+                        lastLoginTimestamp != null &&
+                        Clock.System.now().toEpochMilliseconds() - lastLoginTimestamp!! < 600000
+                )
+                    return@withLock currentToken
+                val mail = savedMail ?: return@withLock null
+                val password = savedPassword ?: return@withLock null
+                Triple(generation, mail, password)
+            }
+        val response =
+            service.login(LoginRequest(account = snapshot.second, password = snapshot.third))
+        val data = response.data
+        if (!response.isSuccess() || data == null) return@withLock null
+        withContext(Dispatchers.IO) {
+            synchronized(stateLock) {
+                if (generation != snapshot.first) return@synchronized null
+                installSession(snapshot.second, snapshot.third, data)
+                currentToken
             }
         }
+    }
 
     suspend fun tokenForUser(ownerId: Int): String? {
         if (synchronized(stateLock) { currentUser?.id != ownerId }) return null
@@ -178,6 +219,7 @@ class LoginSession(
             currentUser = null
             _accountId.value = null
             lastLoginTimestamp = null
+            publish()
             storage?.clear()
         }
 
@@ -197,6 +239,7 @@ class LoginSession(
         currentToken = response.token
         currentUser = response.user
         lastLoginTimestamp = timestamp
-        _accountId.value = currentUser?.takeUnless { it.isGuest == true }?.id
+        _accountId.value = currentUser?.takeIf { isLoggedIn && it.isGuest != true }?.id
+        publish()
     }
 }

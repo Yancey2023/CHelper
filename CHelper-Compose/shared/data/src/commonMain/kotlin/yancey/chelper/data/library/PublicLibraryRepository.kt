@@ -1,18 +1,20 @@
 package yancey.chelper.data.library
 
 import okio.IOException
-import yancey.chelper.data.auth.LoginSession
 import yancey.chelper.data.remote.library.service.CommandLabPublicService
-import yancey.chelper.data.remote.library.service.CommandLabUserService
+import yancey.chelper.domain.library.AccountRepository
+import yancey.chelper.domain.library.LibraryContentRepository
 import yancey.chelper.domain.library.LibraryFavoriteResult
+import yancey.chelper.domain.library.MessageRepository
 import yancey.chelper.domain.library.PublicLibraryPage
 import yancey.chelper.domain.library.PublicLibraryRepository
 
 /** Ktor suspend calls are main-safe; UI code only depends on this data-layer contract. */
 class NetworkPublicLibraryRepository(
     private val public: CommandLabPublicService,
-    private val user: CommandLabUserService,
-    private val login: LoginSession,
+    private val accounts: AccountRepository,
+    private val content: LibraryContentRepository,
+    private val messages: MessageRepository,
 ) : PublicLibraryRepository {
     override suspend fun load(page: Int, recommended: Boolean): PublicLibraryPage {
         val service = public
@@ -29,17 +31,17 @@ class NetworkPublicLibraryRepository(
         )
     }
 
-    override fun canFavorite() = login.isLoggedIn && login.currentUser?.isGuest != true
+    override fun canFavorite() = accounts.isLoggedIn && accounts.currentUser?.isGuest != true
 
     override suspend fun toggleFavorite(id: Int): LibraryFavoriteResult {
-        val response = user.toggleFavorite(id)
+        val response = content.favorite(id)
         val data = response.data
         if (!response.isSuccess() || data == null) throw IOException(response.message ?: "收藏操作失败")
         return LibraryFavoriteResult(data.isFavorited == true, response.message)
     }
 
     override suspend fun unreadCount(): Int {
-        val response = user.getUnreadCount()
+        val response = messages.unreadCount()
         if (!response.isSuccess()) throw IOException(response.message ?: "获取站内信失败")
         return response.data?.count ?: 0
     }

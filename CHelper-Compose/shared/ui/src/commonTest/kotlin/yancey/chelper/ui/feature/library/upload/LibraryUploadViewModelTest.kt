@@ -12,7 +12,7 @@ class LibraryUploadViewModelTest {
     fun `生成 MCD 时 note 换行不会截断元数据头`() =
         NetworkServices({ MockEngine { error("Unexpected request") } }).use { network ->
             val viewModel =
-                LibraryUploadViewModel(network).apply {
+                LibraryUploadViewModel(network.libraryContent).apply {
                     name.setTextAndPlaceCursorAtEnd("示例")
                     version.setTextAndPlaceCursorAtEnd("1.0.0")
                     description.setTextAndPlaceCursorAtEnd("第一行\n第二行")

@@ -89,7 +89,7 @@ fun LocalLibraryEditScreen(
     id: Int? = null,
 ) {
     val context = LocalContext.current
-    val network = context.network
+    val accounts = context.accounts
     val openUrl = rememberOpenUrl()
     val localCommandLabDataStore = remember(context) { context.libraries }
     SideEffect {
@@ -453,7 +453,7 @@ private fun saveLocalLibrary(
     viewModel.isSyncing = true
     viewModel.viewModelScope.launch {
         try {
-            val ownerId = context.network.login.accountId.value
+            val ownerId = context.accounts.accountId.value
             val library =
                 viewModel
                     .buildLocalLibrary(existingLibrary, editingLocalEntryId)
@@ -486,6 +486,8 @@ private fun saveLocalLibrary(
                         context.platform.enqueueSync(entryId, ownerId, revision)
                     }
                     ClientMessages.show("已保存到本地，将自动同步到云端")
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
                 } catch (e: Exception) {
                     ClientMessages.show("已保留本地同步任务，稍后重试")
                 }
