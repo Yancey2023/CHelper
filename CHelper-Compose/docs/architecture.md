@@ -104,7 +104,7 @@ Android / Windows 的系统适配分别放在宿主内；共享模块不得引�
 
 共享交互入口位于 `ui/commonMain/platform`。每个 Activity / Window / 浮窗内容根使用 `ClientInteractionHost` 接入宿主的 Navigation Event dispatcher；标题栏通过官方 `DirectNavigationEventInput` 请求返回，功能页用 `NavigationBackHandler` 的薄封装注册业务守卫。Escape 交给 Compose Window 默认处理，不在生产根节点拦截按键或强制恢复焦点。`LocalAppBackAction` 仅供确认离开后的直接导航。Android 系统浮窗保留原生按键转发和 ViewTree owner 适配。
 
-Android、浮窗和桌面统一使用 `ClientNavHost` 配置页面动画。前进和返回共享 300 ms 缓动时序，返回沿前进的反向平移路径；Navigation 2.10 独立的预测性 pop 回调显式复用普通 pop 动画，避免手势预览与松手后的动画采用不同效果。官方 NavHost 继续负责进度寻址、取消回弹和返回栈提交；真实 NavHost 回归测试检查左右侧手势、相邻页面衔接、缩放与纵向位置、取消恢复，以及提交时的首帧连续性和单次出栈。
+Android、浮窗和桌面统一使用 `ClientNavHost` 配置页面动画。前进和返回共享 300 ms 缓动时序：前景页从右侧滑入，返回时沿原路滑出，底页保持原位；通过 `KeepUntilTransitionsFinished` 保留底页直至覆盖完成，避免中途露出空白。进入动画被返回手势打断时，NavHost 可能复用前进回调，因此偏移求值时按转场两端在当前返回栈中的顺序解析方向；已出栈的条目使用回调的 pop 方向。避免两个页面的独立平移动画在中断后发生时序错位。Navigation 2.10 独立的预测性 pop 回调显式复用普通 pop 动画，官方 NavHost 继续负责进度寻址、取消回弹和返回栈提交。真实 NavHost 回归测试覆盖左右侧手势、进入早中晚三个时点的中断、快速松手和保持手势、已进入过的底页、底页位置稳定、取消恢复，以及提交时的首帧连续性和单次出栈。
 
 弹窗统一由共享 `AppDialogHost` 绘制在当前 Compose 宿主内，不创建系统 Dialog 窗口。`AppDialog` 保留调用点的 CompositionLocal 与内容状态，支持嵌套、返回优先级、遮罩拦截和焦点恢复；`AppAlertDialog` 复用同一个宿主和自有 Foundation 内容控件。Android 普通页面、系统浮窗和 Desktop 共用该实现，不再维护 Dialog windowType 适配。确认、输入、菜单、选择、隐私协议和举报弹窗保留原有 DialogContainer 视觉：原圆角与留白、标题排版、分隔线和底部操作区；视觉内容与宿主的焦点、返回和遮罩逻辑分开维护。
 

@@ -110,7 +110,7 @@ class EditorNavigationTest {
         )
         assertTrue(entering.left.value < 360f)
         val home = compose.onNodeWithTag("home").getUnclippedBoundsInRoot()
-        assertEquals(360f, (entering.left - home.left).value, 1f)
+        assertEquals(0f, home.left.value, 1f)
         compose.mainClock.advanceTimeBy(400)
         compose.onNodeWithTag("editor").assertIsDisplayed()
         val settled = compose.onNodeWithTag("editor").getUnclippedBoundsInRoot()

@@ -21,9 +21,13 @@ import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
-import org.junit.Assert.*
+import kotlin.math.abs
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.Rule
-import org.junit.Test
+import yancey.chelper.ui.navigation.AboutScreenKey
 import yancey.chelper.ui.navigation.ClientNavHost
 import yancey.chelper.ui.navigation.HomeScreenKey
 import yancey.chelper.ui.navigation.SettingsScreenKey
@@ -34,7 +38,7 @@ class PredictiveNavigationTest {
     private lateinit var input: DirectNavigationEventInput
     private lateinit var nav: NavHostController
 
-    private fun openDetail() {
+    private fun openDetail(settle: Boolean = true, nested: Boolean = false) {
         compose.setContent {
             val dispatcher = rememberNavigationEventDispatcherOwner(parent = null)
             val source = remember { DirectNavigationEventInput() }
@@ -58,12 +62,19 @@ class PredictiveNavigationTest {
                 nav = rememberNavController()
                 ClientNavHost(nav, HomeScreenKey, Modifier.size(360.dp, 240.dp)) {
                     composable<HomeScreenKey> { Page("home") }
+                    composable<AboutScreenKey> { Page("about") }
                     composable<SettingsScreenKey> { Page("detail") }
                 }
             }
         }
-        compose.runOnIdle { nav.navigate(SettingsScreenKey) }
         compose.waitForIdle()
+        if (nested) {
+            compose.runOnIdle { nav.navigate(AboutScreenKey) }
+            compose.waitForIdle()
+        }
+        compose.mainClock.autoAdvance = settle
+        compose.runOnIdle { nav.navigate(SettingsScreenKey) }
+        if (settle) compose.waitForIdle()
     }
 
     @Composable
@@ -77,6 +88,128 @@ class PredictiveNavigationTest {
         NavigationEvent(progress = progress, swipeEdge = edge, touchX = 0f, touchY = 100f)
 
     @Test
+    fun cancellingBackDuringEntryKeepsTheBackgroundStillAndRestoresTheDestination() {
+        checkInterruptedEntry(commit = false)
+    }
+
+    @Test
+    fun completingBackDuringEntryKeepsTheBackgroundStillAndPopsOnce() {
+        checkInterruptedEntry(commit = true)
+    }
+
+    @Test
+    fun cancellingBackToAnAlreadyEnteredPageKeepsItStill() {
+        checkInterruptedEntry(commit = false, nested = true)
+    }
+
+    @Test
+    fun completingBackToAnAlreadyEnteredPagePopsOnlyTheForeground() {
+        checkInterruptedEntry(commit = true, nested = true)
+    }
+
+    private fun checkInterruptedEntry(commit: Boolean, nested: Boolean = false) {
+        openDetail(settle = false, nested = nested)
+        val backgroundTag = if (nested) "about" else "home"
+        var first = true
+        for (elapsed in listOf(64L, 144L, 224L)) {
+            for (edge in listOf(NavigationEvent.EDGE_LEFT, NavigationEvent.EDGE_RIGHT)) {
+                if (!first) {
+                    compose.mainClock.autoAdvance = false
+                    compose.runOnIdle { nav.navigate(SettingsScreenKey) }
+                }
+                first = false
+                compose.mainClock.advanceTimeBy(elapsed)
+                val entering = detailLeft()
+                assertTrue(
+                    message = "The gesture must interrupt a moving page",
+                    actual = entering in 171f..529f,
+                )
+                assertBackgroundIsStill(backgroundTag)
+                compose.runOnUiThread { input.backStarted(event(0f, edge)) }
+                compose.mainClock.advanceTimeByFrame()
+                assertTrue(
+                    message = "Starting back must not reset the page",
+                    actual = abs(detailLeft() - entering) < 64f,
+                )
+                assertBackgroundIsStill(backgroundTag)
+                for (progress in listOf(0.02f, 0.05f, 0.1f, 0.15f)) {
+                    compose.runOnUiThread { input.backProgressed(event(progress, edge)) }
+                    compose.mainClock.advanceTimeByFrame()
+                    assertBackgroundIsStill(backgroundTag)
+                }
+                // Cover both a quick release and a held gesture after the entry has settled.
+                val quickRelease = elapsed == 144L
+                if (!quickRelease) compose.mainClock.advanceTimeBy(350)
+                val dragged = detailLeft()
+                assertTrue(
+                    message = "An interrupted return must still slide right",
+                    actual = dragged > 170f,
+                )
+                assertBackgroundIsStill(backgroundTag)
+                compose.runOnUiThread {
+                    if (commit) input.backCompleted() else input.backCancelled()
+                }
+                compose.mainClock.advanceTimeByFrame()
+                val settling = detailLeft()
+                if (commit) {
+                    assertTrue(
+                        message = "Commit must continue from the drag",
+                        actual =
+                            if (quickRelease) abs(settling - dragged) < 64f
+                            else settling >= dragged - 1f,
+                    )
+                } else {
+                    assertTrue(
+                        message = "Cancel must retrace the drag",
+                        actual = settling in 169f..(dragged + 1f),
+                    )
+                }
+                compose.mainClock.autoAdvance = true
+                compose.waitForIdle()
+                compose.runOnIdle {
+                    if (commit) {
+                        if (nested) {
+                            assertTrue(
+                                nav.currentBackStackEntry!!.destination.hasRoute<AboutScreenKey>()
+                            )
+                            assertTrue(
+                                nav.previousBackStackEntry!!.destination.hasRoute<HomeScreenKey>()
+                            )
+                        } else {
+                            assertTrue(
+                                nav.currentBackStackEntry!!.destination.hasRoute<HomeScreenKey>()
+                            )
+                            assertNull(nav.previousBackStackEntry)
+                        }
+                    } else {
+                        assertTrue(
+                            nav.currentBackStackEntry!!.destination.hasRoute<SettingsScreenKey>()
+                        )
+                    }
+                }
+                if (commit) {
+                    compose.onNodeWithTag("detail").assertDoesNotExist()
+                } else {
+                    // Quick cancellation can finish while the interrupted entry is still settling.
+                    assertEquals(170f, detailLeft(), if (quickRelease) 3f else 0.5f)
+                    compose.runOnIdle { input.backCompleted() }
+                    compose.waitForIdle()
+                }
+            }
+        }
+    }
+
+    private fun detailLeft() =
+        compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot().left.value
+
+    private fun assertBackgroundIsStill(backgroundTag: String) {
+        val current = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
+        val previous = compose.onNodeWithTag("$backgroundTag-marker").getUnclippedBoundsInRoot()
+        assertEquals(170f, previous.left.value, 1f)
+        assertEquals(current.top.value, previous.top.value, 0.5f)
+    }
+
+    @Test
     fun bothEdgesSeekTheOriginalReverseSlideAndCancellationRestoresThePage() {
         openDetail()
         val original = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
@@ -88,8 +221,11 @@ class PredictiveNavigationTest {
             compose.waitForIdle()
             val current = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
             val previous = compose.onNodeWithTag("home-marker").getUnclippedBoundsInRoot()
-            assertTrue("Return must reverse the forward page slide", current.left > original.left)
-            assertEquals(360f, (current.left - previous.left).value, 1f)
+            assertTrue(
+                message = "Return must reverse the forward page slide",
+                actual = current.left > original.left,
+            )
+            assertEquals(original.left.value, previous.left.value, 1f)
             assertEquals(
                 (original.right - original.left).value,
                 (current.right - current.left).value,
@@ -109,8 +245,9 @@ class PredictiveNavigationTest {
             compose.mainClock.advanceTimeByFrame()
             val returning = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
             assertTrue(
-                "Cancel must retrace the dragged path",
-                returning.left.value in (original.left.value - 1f)..(current.left.value + 1f),
+                message = "Cancel must retrace the dragged path",
+                actual =
+                    returning.left.value in (original.left.value - 1f)..(current.left.value + 1f),
             )
             assertEquals(original.top.value, returning.top.value, 0.5f)
             compose.mainClock.autoAdvance = true
@@ -140,8 +277,8 @@ class PredictiveNavigationTest {
         compose.mainClock.advanceTimeByFrame()
         val settling = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
         assertTrue(
-            "Commit must not restart the slide",
-            settling.left.value >= dragged.left.value - 1f,
+            message = "Commit must not restart the slide",
+            actual = settling.left.value >= dragged.left.value - 1f,
         )
         assertEquals(dragged.top.value, settling.top.value, 0.5f)
         compose.mainClock.autoAdvance = true
