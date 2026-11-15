@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -186,7 +185,7 @@ fun EditProfileDialog(
             TextField(
                 state = nicknameState,
                 hint = "请输入昵称",
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                modifier = Modifier.fillMaxWidth().height(45.dp),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -222,7 +221,7 @@ fun EditProfileDialog(
                 TextField(
                     state = avatarUrlState,
                     hint = "http(s)://... 也可以接外链头像",
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    modifier = Modifier.fillMaxWidth().height(45.dp),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -235,7 +234,7 @@ fun EditProfileDialog(
                 TextField(
                     state = homepageState,
                     hint = "个人主页链接",
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    modifier = Modifier.fillMaxWidth().height(45.dp),
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -248,7 +247,7 @@ fun EditProfileDialog(
                 TextField(
                     state = signatureState,
                     hint = "个性签名",
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    modifier = Modifier.fillMaxWidth().height(45.dp),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }

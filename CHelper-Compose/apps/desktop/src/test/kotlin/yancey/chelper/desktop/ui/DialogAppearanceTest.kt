@@ -20,6 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import yancey.chelper.domain.library.model.UserProfile
 import yancey.chelper.resources.Res
 import yancey.chelper.resources.chevron_left
 import yancey.chelper.ui.designsystem.CHelperTheme
@@ -29,6 +30,7 @@ import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.IconButton
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextButton
+import yancey.chelper.ui.feature.library.profile.EditProfileDialog
 import yancey.chelper.ui.platform.ClientInteractionHost
 
 class DialogAppearanceTest {
@@ -70,6 +72,13 @@ class DialogAppearanceTest {
                                 "policy" -> PolicyGrantDialog(content = "请阅读并同意隐私政策后继续使用。")
                                 "report" ->
                                     ReportDialog({}, targetDescription = "命令库示例", onConfirm = {})
+                                "profile" ->
+                                    EditProfileDialog(
+                                        user = UserProfile(nickname = "昵称", tier = 1),
+                                        isUpdating = false,
+                                        onDismiss = {},
+                                        onSave = { _, _, _, _ -> },
+                                    )
                             }
                         }
                     }
@@ -88,10 +97,20 @@ class DialogAppearanceTest {
         )
         val directory = File(System.getProperty("chelper.screenshotsDir"))
         directory.mkdirs()
-        for (name in listOf("confirm", "input", "menu", "selection", "policy", "report")) {
+        for (name in
+            listOf("confirm", "input", "menu", "selection", "policy", "profile", "report")) {
             compose.runOnIdle { variant.value = name }
             compose.onAllNodes(isRoot()).assertCountEquals(1)
             compose.onNode(isDialog()).assertIsDisplayed()
+            if (name == "profile") {
+                compose.onAllNodes(hasSetTextAction()).assertCountEquals(4)
+                repeat(4) { index ->
+                    compose
+                        .onAllNodes(hasSetTextAction())[index]
+                        .performScrollTo()
+                        .assertHeightIsEqualTo(45.dp)
+                }
+            }
             ImageIO.write(
                 compose.onNodeWithTag("host").captureToImage().toAwtImage(),
                 "png",

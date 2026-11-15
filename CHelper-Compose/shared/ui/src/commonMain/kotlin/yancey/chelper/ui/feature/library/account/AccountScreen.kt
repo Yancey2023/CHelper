@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -660,14 +659,14 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.loginAccount,
                         hint = "用户邮箱 / 账号",
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     SecureTextField(
                         state = viewModel.loginPassword,
                         hint = "密码",
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
                         visible = isLoginPasswordVisible,
                         trailingIcon = {
@@ -698,7 +697,7 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.registerAccount,
                         hint = "电子邮箱 / 手机号",
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(Res.drawable.ic_mail, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -706,7 +705,7 @@ fun LoginRegisterView(
                         TextFieldWithIcon(
                             state = viewModel.registerCode,
                             hint = "验证码",
-                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+                            modifier = Modifier.weight(1f).height(50.dp),
                             leadingIcon = { Icon(Res.drawable.ic_key, Modifier.size(20.dp)) },
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -729,14 +728,14 @@ fun LoginRegisterView(
                     TextFieldWithIcon(
                         state = viewModel.registerNickname,
                         hint = "用户昵称",
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     SecureTextField(
                         state = viewModel.registerPassword,
                         hint = "设置密码",
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
                         visible = isRegisterPasswordVisible,
                         trailingIcon = {

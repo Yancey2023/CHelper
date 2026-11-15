@@ -22,10 +22,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,14 +52,14 @@ import yancey.chelper.ui.platform.LocalWideLayout
 @Composable
 fun EnumerationScreenTimes(viewModel: EnumerationViewModel) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).heightIn(min = 56.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(30.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = stringResource(Res.string.layout_enumeration_times_label))
         TextField(
             state = viewModel.times,
             contentAlignment = Alignment.CenterStart,
-            modifier = Modifier.fillMaxWidth().padding(start = 15.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 15.dp).fillMaxHeight(),
             verticalPadding = 0.dp,
             lineLimits = TextFieldLineLimits.SingleLine,
         )
@@ -93,13 +93,12 @@ fun EnumerationScreenVariable(modifier: Modifier = Modifier, viewModel: Enumerat
             itemsIndexed(viewModel.variableList) { index, variable ->
                 Spacer(modifier = Modifier.height(15.dp))
                 Row(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(horizontal = 15.dp).heightIn(min = 56.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(30.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextField(
                         state = variable.name,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                         contentAlignment = Alignment.Center,
                         verticalPadding = 0.dp,
                         lineLimits = TextFieldLineLimits.SingleLine,
@@ -107,7 +106,7 @@ fun EnumerationScreenVariable(modifier: Modifier = Modifier, viewModel: Enumerat
                     Spacer(modifier = Modifier.width(15.dp))
                     TextField(
                         state = variable.start,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                         contentAlignment = Alignment.Center,
                         verticalPadding = 0.dp,
                         lineLimits = TextFieldLineLimits.SingleLine,
@@ -115,7 +114,7 @@ fun EnumerationScreenVariable(modifier: Modifier = Modifier, viewModel: Enumerat
                     Spacer(modifier = Modifier.width(15.dp))
                     TextField(
                         state = variable.interval,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                         contentAlignment = Alignment.Center,
                         verticalPadding = 0.dp,
                         lineLimits = TextFieldLineLimits.SingleLine,

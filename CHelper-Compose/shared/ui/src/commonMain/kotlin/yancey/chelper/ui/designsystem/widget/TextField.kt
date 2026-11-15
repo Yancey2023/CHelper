@@ -60,25 +60,27 @@ fun TextField(
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     val colors = CHelperTheme.colors
+    val textStyle =
+        style.copy(
+            color = if (style.color == Color.Unspecified) colors.textMain else style.color,
+            fontSize = if (style.fontSize == TextUnit.Unspecified) 16.sp else style.fontSize,
+            textAlign =
+                if (contentAlignment is BiasAlignment && contentAlignment.horizontalBias == 0f)
+                    TextAlign.Center
+                else TextAlign.Start,
+        )
     BasicTextField(
         state = state,
         modifier = modifier,
         lineLimits = lineLimits,
         outputTransformation = outputTransformation,
-        textStyle =
-            style.copy(
-                color = if (style.color == Color.Unspecified) colors.textMain else style.color,
-                fontSize = if (style.fontSize == TextUnit.Unspecified) 16.sp else style.fontSize,
-                textAlign =
-                    if (contentAlignment is BiasAlignment && contentAlignment.horizontalBias == 0f)
-                        TextAlign.Center
-                    else TextAlign.Start,
-            ),
+        textStyle = textStyle,
         cursorBrush = SolidColor(colors.mainColor),
         decorator = { inner ->
             InputFrame(
                 state.text.isEmpty(),
                 hint,
+                textStyle,
                 horizontalPadding,
                 verticalPadding,
                 clipCornerSize,
@@ -100,17 +102,19 @@ fun SecureTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
+    val textStyle = TextStyle(fontSize = 16.sp, color = CHelperTheme.colors.textMain)
     BasicSecureTextField(
         state = state,
         modifier = modifier,
         textObfuscationMode =
             if (visible) TextObfuscationMode.Visible else TextObfuscationMode.Hidden,
-        textStyle = TextStyle(fontSize = 16.sp, color = CHelperTheme.colors.textMain),
+        textStyle = textStyle,
         cursorBrush = SolidColor(CHelperTheme.colors.mainColor),
         decorator = { inner ->
             InputFrame(
                 state.text.isEmpty(),
                 hint,
+                textStyle,
                 10.dp,
                 10.dp,
                 10.dp,
@@ -127,6 +131,7 @@ fun SecureTextField(
 private fun InputFrame(
     empty: Boolean,
     hint: String?,
+    textStyle: TextStyle,
     horizontalPadding: Dp,
     verticalPadding: Dp,
     corner: Dp,
@@ -135,10 +140,9 @@ private fun InputFrame(
     trailing: (@Composable () -> Unit)?,
     inner: @Composable () -> Unit,
 ) {
-    val inputAlignment =
-        Alignment.Vertical { size, space ->
-            alignment.align(IntSize(0, size), IntSize(0, space), LayoutDirection.Ltr).y
-        }
+    val inputAlignment = Alignment.Vertical { size, space ->
+        alignment.align(IntSize(0, size), IntSize(0, space), LayoutDirection.Ltr).y
+    }
     Row(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(corner))
@@ -150,7 +154,7 @@ private fun InputFrame(
         leading?.invoke()
         Box(Modifier.weight(1f).align(inputAlignment), contentAlignment = alignment) {
             if (empty && hint != null)
-                Text(hint, style = TextStyle(color = CHelperTheme.colors.textHint))
+                Text(hint, style = textStyle.copy(color = CHelperTheme.colors.textHint))
             inner()
         }
         trailing?.invoke()

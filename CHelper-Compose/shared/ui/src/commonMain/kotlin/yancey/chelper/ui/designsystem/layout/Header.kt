@@ -56,7 +56,7 @@ fun Header(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBack) {
-            IconButton(onClick = onBack ?: requestBack) {
+            IconButton(onClick = onBack ?: requestBack, modifier = Modifier.size(34.dp)) {
                 Icon(
                     id = Res.drawable.chevron_left,
                     modifier = Modifier.size(24.dp),

@@ -35,10 +35,7 @@ fun TextFieldWithIconPreview() {
         TextField(
             state = rememberTextFieldState(),
             modifier =
-                Modifier.padding(15.dp)
-                    .width(100.dp)
-                    .heightIn(min = 56.dp)
-                    .padding(horizontal = 15.dp),
+                Modifier.padding(15.dp).width(100.dp).height(40.dp).padding(horizontal = 15.dp),
             contentAlignment = Alignment.CenterStart,
             hint = "Hint",
             clipCornerSize = 20.dp,

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -66,6 +67,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -80,7 +82,6 @@ import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.domain.rawtext.RawtextSegmentType
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
-import yancey.chelper.ui.designsystem.dialog.AppAlertDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialog
 import yancey.chelper.ui.designsystem.dialog.AppDialogProperties
 import yancey.chelper.ui.designsystem.dialog.DialogContainer
@@ -90,7 +91,6 @@ import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.IconButton
 import yancey.chelper.ui.designsystem.widget.Switch
 import yancey.chelper.ui.designsystem.widget.Text
-import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.platform.LocalWideLayout
 
 @Composable
@@ -444,7 +444,7 @@ private fun HeaderIconButton(
     contentDescription: String,
     onClick: () -> Unit,
 ) {
-    IconButton(onClick = onClick) {
+    IconButton(onClick = onClick, modifier = Modifier.padding(start = 8.dp).size(34.dp)) {
         Icon(id = id, modifier = Modifier.size(22.dp), contentDescription = contentDescription)
     }
 }
@@ -482,27 +482,37 @@ private fun RawtextHeaderMenu(
     onAbout: () -> Unit,
 ) {
     if (expanded) {
-        AppAlertDialog(
+        AppDialog(
             onDismissRequest = onDismiss,
-            confirmButton = {},
-            text = {
-                Column {
+            properties = AppDialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            DialogContainer(
+                modifier = Modifier.width(IntrinsicSize.Max).widthIn(min = 168.dp),
+                cornerSize = 14.dp,
+                backgroundNoTranslate = true,
+            ) {
+                Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = 6.dp)) {
                     RawtextMenuItem("解析 JSON", Color(0xFF3367D6), onDecode)
                     RawtextMenuItem("模拟器", Color(0xFF00796B), onSimulator)
                     RawtextMenuItem("清空内容", Color(0xFFD84315), onClear)
                     RawtextMenuItem("设置", CHelperTheme.colors.textMain, onSettings)
                     RawtextMenuItem("关于", CHelperTheme.colors.textMain, onAbout)
                 }
-            },
-        )
+            }
+        }
     }
 }
 
 @Composable
 private fun RawtextMenuItem(text: String, color: Color, onClick: () -> Unit) {
-    TextButton(onClick, Modifier.fillMaxWidth()) {
-        Text(text, style = TextStyle(color = color, fontSize = 15.sp))
-    }
+    Text(
+        text,
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+        style = TextStyle(color = color, fontSize = 15.sp),
+    )
 }
 
 /**

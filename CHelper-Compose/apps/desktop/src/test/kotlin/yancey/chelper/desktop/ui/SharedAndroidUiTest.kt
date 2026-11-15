@@ -108,6 +108,11 @@ class SharedAndroidUiTest {
             compose.onNodeWithText("不用了").clickOnMain()
             compose.onAllNodesWithText("颜色", substring = true)[0].assertExists()
             screenshot("rawtext-android-ui")
+            compose.onNodeWithContentDescription("菜单").assertWidthIsEqualTo(34.dp).clickOnMain()
+            compose.onNodeWithText("解析 JSON").assertWidthIsEqualTo(168.dp)
+            screenshot("rawtext-compact-menu")
+            compose.runOnUiThread { navigation.back() }
+            compose.onNodeWithText("解析 JSON").assertDoesNotExist()
             compose.onNodeWithContentDescription("返回").clickOnMain()
             compose.onNodeWithText("CHelper").assertExists()
 
@@ -144,7 +149,23 @@ class SharedAndroidUiTest {
             compose.onNodeWithText("我的库").clickOnMain()
             compose.onNodeWithText("登录后可管理云端命令库").clickOnMain()
             compose.onNodeWithText("登录", useUnmergedTree = true).assertExists()
+            compose.onAllNodes(hasSetTextAction()).assertCountEquals(2)
+            repeat(2) { index ->
+                compose
+                    .onAllNodes(hasSetTextAction())[index]
+                    .performScrollTo()
+                    .assertHeightIsEqualTo(50.dp)
+            }
             screenshot("account-original-android-ui")
+            compose.onNodeWithText("注册").clickOnMain()
+            compose.onAllNodes(hasSetTextAction()).assertCountEquals(4)
+            repeat(4) { index ->
+                compose
+                    .onAllNodes(hasSetTextAction())[index]
+                    .performScrollTo()
+                    .assertHeightIsEqualTo(50.dp)
+            }
+            screenshot("register-original-android-ui")
             compose.onNodeWithContentDescription("返回").clickOnMain()
             compose.onNodeWithContentDescription("添加").clickOnMain()
             compose.onNodeWithText("版本信息").assertExists()
