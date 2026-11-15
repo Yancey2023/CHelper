@@ -20,7 +20,6 @@ package yancey.chelper.ui.feature.command
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -28,20 +27,15 @@ import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import yancey.chelper.data.logging.ClientLog as Log
 import yancey.chelper.domain.command.CommandAnalysisRequest
 import yancey.chelper.domain.command.CommandDraft
 import yancey.chelper.domain.command.CommandDraftRepository
 import yancey.chelper.domain.command.CommandSession
-import yancey.chelper.domain.command.ErrorReason
-import yancey.chelper.domain.command.Suggestion
 import yancey.chelper.ui.platform.ClientDiagnostics as MonitorUtil
 import yancey.chelper.ui.platform.ClientServices
 
@@ -58,28 +52,36 @@ constructor(
     var command by mutableStateOf(TextFieldState())
         private set
 
-    var structure by mutableStateOf<String?>(null)
-        private set
-
-    var paramHint by mutableStateOf<String?>(null)
-        private set
-
-    var errorReasons by mutableStateOf<Array<ErrorReason>?>(null)
-        private set
-
-    var suggestionsSize by mutableIntStateOf(0)
-        private set
-
-    var suggestionsUpdateTimes by mutableIntStateOf(0)
-        private set
-
-    var syntaxHighlightTokens by mutableStateOf<IntArray?>(null)
-        private set
-
-    var nodeCount by mutableIntStateOf(0)
-        private set
-
     private val session = CommandSession(load = services.loadCommandEngine)
+    private val completion =
+        CommandCompletionController(session, viewModelScope, ::currentInput) { error ->
+            Log.w("CompletionViewModel", "Unable to analyze command", error)
+            MonitorUtil.generateCustomLog(error, "CommandAnalysisException")
+        }
+    val structure
+        get() = if (completion.failure != null) "命令解析失败" else completion.snapshot.analysis.structure
+
+    val paramHint
+        get() = completion.failure ?: completion.snapshot.analysis.hint
+
+    val errorReasons
+        get() = completion.snapshot.analysis.errors
+
+    val suggestionsSize
+        get() = completion.snapshot.analysis.suggestionCount
+
+    val syntaxHighlightTokens
+        get() = completion.snapshot.analysis.tokens
+
+    val nodeCount
+        get() = completion.snapshot.analysis.nodeCount
+
+    val analysisRevision
+        get() = completion.snapshot.revision
+
+    val resultsEnabled
+        get() = completion.resultsEnabled
+
     private val history = services.history
     private val drafts =
         CommandDraftController(
@@ -88,12 +90,7 @@ constructor(
             ::currentDraft,
             { draft -> command = TextFieldState(draft.text, TextRange(draft.start, draft.end)) },
         )
-    private var analysisJob: Job? = null
-    private var revision = 0L
-    private var publishedRevision = -1L
-    private var publishedInput: Pair<String, Int>? = null
     private var checkingSelection = true
-    private var lastRequest: CommandAnalysisRequest? = null
 
     init {
         services.session.register(draftRepository, drafts::flushAndAwait)
@@ -135,68 +132,23 @@ constructor(
                 highlight && text.length < highlightMaxLength,
                 showErrors || highlight && text.length < highlightMaxLength,
             )
-        if (next == lastRequest) return
-        val previous = lastRequest
-        lastRequest = next
-        val request = next.copy(revision = ++revision)
-        publishedRevision = -1L
-        publishedInput = null
-        suggestionsSize = 0
-        if (previous?.text != next.text || previous?.branch != next.branch) {
-            syntaxHighlightTokens = null
-            errorReasons = null
-        }
-        if (!next.highlight) syntaxHighlightTokens = null
-        if (!next.errors) errorReasons = null
-        analysisJob?.cancel()
-        analysisJob =
-            viewModelScope.launch {
-                try {
-                    val result = session.analyze(request)
-                    if (
-                        revision != request.revision ||
-                            currentInput() != (request.text to request.index)
-                    )
-                        return@launch
-                    structure = result.structure
-                    paramHint = result.hint
-                    errorReasons = result.errors
-                    syntaxHighlightTokens = result.tokens
-                    nodeCount = result.nodeCount
-                    suggestionsSize = result.suggestionCount
-                    publishedRevision = request.revision
-                    publishedInput = request.text to request.index
-                    suggestionsUpdateTimes++
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    if (revision != request.revision) return@launch
-                    lastRequest = null
-                    structure = "命令解析失败"
-                    paramHint = e.message
-                    nodeCount = 0
-                    Log.w("CompletionViewModel", "Unable to analyze command", e)
-                    MonitorUtil.generateCustomLog(e, "CommandAnalysisException")
-                }
-            }
+        completion.analyze(next)
     }
 
-    suspend fun getSuggestion(which: Int): Suggestion? =
-        session.suggestion(publishedRevision, which)
+    fun suggestionAt(index: Int) = completion.suggestionAt(index)
+
+    fun showSuggestions(indices: List<Int>) = completion.showSuggestions(indices)
 
     private fun currentInput(): Pair<String, Int> {
         val text = command.text.toString()
         return text to if (checkingSelection) command.selection.min else text.length
     }
 
-    fun onItemClick(which: Int) {
-        val expected = publishedRevision
+    fun onItemClick(which: Int, expectedRevision: Long = analysisRevision) {
         val before = currentDraft()
-        if (publishedInput != currentInput()) return
         viewModelScope.launch {
-            val result = session.apply(expected, which) ?: return@launch
-            if (expected < 0 || expected != publishedRevision || currentDraft() != before)
-                return@launch
+            val result = completion.apply(which, expectedRevision) ?: return@launch
+            if (currentDraft() != before) return@launch
             command.edit {
                 replace(0, length, result.text)
                 selection = TextRange(result.selection)

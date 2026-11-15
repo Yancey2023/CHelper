@@ -4,11 +4,11 @@
     <selectionStates>
       <SelectionState runConfigName="apps.android">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-04-18T01:41:42.171138800Z">
+        <DropdownSelection timestamp="2026-11-15T06:02:33.282230100Z">
           <Target type="DEFAULT_BOOT">
-            <template>
-              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=tokay/34" />
-            </template>
+            <handle>
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-7a3f70be-gCFdCe" />
+            </handle>
           </Target>
         </DropdownSelection>
         <DialogSelection>

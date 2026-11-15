@@ -1,6 +1,5 @@
 package yancey.chelper.ui.app
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -8,7 +7,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.*
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import yancey.chelper.domain.settings.Settings
@@ -29,6 +28,7 @@ import yancey.chelper.ui.feature.enumeration.EnumerationScreen
 import yancey.chelper.ui.feature.home.HomeScreen
 import yancey.chelper.ui.feature.rawtext.RawtextScreen
 import yancey.chelper.ui.feature.settings.SettingsScreen
+import yancey.chelper.ui.navigation.ClientNavHost
 import yancey.chelper.ui.navigation.ClientScreenBindings
 import yancey.chelper.ui.navigation.CommandLabDeepLink
 import yancey.chelper.ui.navigation.HomeScreenKey
@@ -116,13 +116,9 @@ fun CHelperApp(
                     LocalAppBackAction provides { nav.popBackStack() },
                     LocalWideLayout provides (maxWidth > maxHeight),
                 ) {
-                    NavHost(
+                    ClientNavHost(
                         nav,
                         HomeScreenKey,
-                        enterTransition = { slideInHorizontally { it } },
-                        exitTransition = { slideOutHorizontally { -it } },
-                        popEnterTransition = { slideInHorizontally { -it } },
-                        popExitTransition = { slideOutHorizontally { it } },
                     ) {
                         clientScreens(
                             nav,

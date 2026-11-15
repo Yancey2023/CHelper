@@ -18,25 +18,40 @@
 
 package yancey.chelper.ui.designsystem.dialog
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.widget.Divider
+import yancey.chelper.ui.designsystem.widget.DividerVertical
 import yancey.chelper.ui.designsystem.widget.Text
-import yancey.chelper.ui.designsystem.widget.TextButton
 
 @Composable
 fun IsConfirmDialog(
@@ -59,32 +74,66 @@ fun IsConfirmDialog(
                 AnnotatedString(content)
             }
         }
-    AppAlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text(title) },
-        text = { Text(renderedContent, Modifier.verticalScroll(rememberScrollState())) },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                    onCancel()
+    AppDialog(onDismissRequest = onDismissRequest) {
+        DialogContainer(backgroundNoTranslate = true) {
+            Column {
+                Column(modifier = Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(0.dp, 10.dp),
+                        text = title,
+                        style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center),
+                    )
+                    Text(
+                        modifier =
+                            Modifier.padding(20.dp, 10.dp)
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                                .verticalScroll(rememberScrollState()),
+                        text = renderedContent,
+                        style = TextStyle(textAlign = TextAlign.Center),
+                    )
                 }
-            ) {
-                Text(cancelText)
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                    onConfirm()
+                Divider(0.dp)
+                Row(Modifier.height(45.dp)) {
+                    Box(
+                        Modifier.fillMaxHeight().weight(1f).clickable(role = Role.Button) {
+                            onDismissRequest()
+                            onCancel()
+                        }
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = cancelText,
+                            style =
+                                TextStyle(
+                                    fontSize = 18.sp,
+                                    color = CHelperTheme.colors.mainColor,
+                                    textAlign = TextAlign.Center,
+                                ),
+                        )
+                    }
+                    DividerVertical(0.dp)
+                    Box(
+                        Modifier.fillMaxHeight().weight(1f).clickable(role = Role.Button) {
+                            onDismissRequest()
+                            onConfirm()
+                        }
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = confirmText,
+                            style =
+                                TextStyle(
+                                    fontSize = 18.sp,
+                                    color = CHelperTheme.colors.mainColor,
+                                    textAlign = TextAlign.Center,
+                                ),
+                        )
+                    }
                 }
-            ) {
-                Text(confirmText)
             }
-        },
-        containerColor = CHelperTheme.colors.backgroundComponentNoTranslate,
-    )
+        }
+    }
 }
 
 fun annotateHttpLinks(
@@ -92,10 +141,9 @@ fun annotateHttpLinks(
     linkColor: Color,
     onLinkClick: ((String) -> Unit)? = null,
 ): AnnotatedString = buildAnnotatedString {
-    val interactionListener =
-        onLinkClick?.let { callback ->
-            LinkInteractionListener { link -> (link as? LinkAnnotation.Url)?.url?.let(callback) }
-        }
+    val interactionListener = onLinkClick?.let { callback ->
+        LinkInteractionListener { link -> (link as? LinkAnnotation.Url)?.url?.let(callback) }
+    }
     var contentStart = 0
     HTTP_URL_REGEX.findAll(text).forEach { match ->
         val url = match.value.trimEnd('.', ',', ';', ':', '!', ')', ']')

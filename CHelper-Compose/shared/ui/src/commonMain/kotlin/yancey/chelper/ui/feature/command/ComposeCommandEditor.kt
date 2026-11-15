@@ -21,6 +21,7 @@ package yancey.chelper.ui.feature.command
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -29,17 +30,28 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
@@ -65,6 +77,31 @@ fun ComposeCommandEditor(
     val focus = remember { FocusRequester() }
     val dark = CHelperTheme.theme == CHelperTheme.Theme.Dark
     val colors = CHelperTheme.colors
+    val currentTokens = rememberUpdatedState(tokens)
+    val currentErrors = rememberUpdatedState(errors)
+    val currentDark = rememberUpdatedState(dark)
+    val scroll = rememberScrollState()
+    var textLayout by remember { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
+    val inputTransformation = remember {
+        InputTransformation {
+            for (i in length - 1 downTo 0) {
+                if (charAt(i) == '\n' || charAt(i) == '\r') replace(i, i + 1, " ")
+            }
+        }
+    }
+    // BasicTextField keys its internal transformed state on this instance. Styling changes
+    // must invalidate the output through snapshot reads, not replace the active IME session.
+    val outputTransformation = remember {
+        OutputTransformation {
+            val styled =
+                highlightCommand(
+                    asCharSequence().toString(),
+                    currentTokens.value,
+                    currentDark.value,
+                )
+            styled.spanStyles.forEach { addStyle(it.item, it.start, it.end) }
+        }
+    }
     LaunchedEffect(command, errorSelection) {
         errorSelection?.let {
             validCommandSelection(command.text.length, it.start, it.end)?.let { range ->
@@ -79,32 +116,12 @@ fun ComposeCommandEditor(
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
         lineLimits =
             if (editorMode) TextFieldLineLimits.MultiLine() else TextFieldLineLimits.SingleLine,
-        inputTransformation =
-            InputTransformation {
-                for (i in length - 1 downTo 0) {
-                    if (charAt(i) == '\n' || charAt(i) == '\r') replace(i, i + 1, " ")
-                }
-            },
+        inputTransformation = inputTransformation,
         textStyle = TextStyle(color = colors.textMain, fontSize = 16.sp),
         cursorBrush = SolidColor(colors.mainColor),
-        outputTransformation =
-            OutputTransformation {
-                val styled = highlightCommand(asCharSequence().toString(), tokens, dark)
-                styled.spanStyles.forEach { addStyle(it.item, it.start, it.end) }
-                errors.forEach { problem ->
-                    commandUnderlineRange(asCharSequence(), problem.start, problem.end)?.let { range
-                        ->
-                        addStyle(
-                            SpanStyle(
-                                color = colors.textErrorReason,
-                                textDecoration = TextDecoration.Underline,
-                            ),
-                            range.start,
-                            range.end,
-                        )
-                    }
-                }
-            },
+        outputTransformation = outputTransformation,
+        onTextLayout = { textLayout = it },
+        scrollState = scroll,
         decorator = { input ->
             Box(
                 Modifier.fillMaxSize(),
@@ -115,10 +132,65 @@ fun ComposeCommandEditor(
                         stringResource(Res.string.layout_completion_command_hint),
                         style = TextStyle(color = colors.textHint),
                     )
-                input()
+                Box(
+                    Modifier.drawWithContent {
+                        drawContent()
+                        val layout = textLayout?.invoke() ?: return@drawWithContent
+                        val scrollX =
+                            when {
+                                editorMode -> 0f
+                                layoutDirection == LayoutDirection.Rtl ->
+                                    size.width - layout.size.width + scroll.value
+                                else -> -scroll.value.toFloat()
+                            }
+                        val scrollY = if (editorMode) -scroll.value.toFloat() else 0f
+                        clipRect {
+                            translate(scrollX, scrollY) {
+                                drawCommandUnderlines(
+                                    layout,
+                                    currentErrors.value,
+                                    colors.textErrorReason,
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    input()
+                }
             }
         },
     )
+}
+
+/** Draw decorations separately: SpanStyle's foreground also colors the glyphs. */
+private fun DrawScope.drawCommandUnderlines(
+    layout: TextLayoutResult,
+    errors: List<CommandProblem>,
+    color: Color,
+) {
+    val text = layout.layoutInput.text
+    val stroke = 1.dp.toPx()
+    errors.forEach { problem ->
+        val range = commandUnderlineRange(text, problem.start, problem.end) ?: return@forEach
+        // The selection path handles wrapping and disjoint bidirectional text runs.
+        clipPath(layout.getPathForRange(range.start, range.end)) {
+            val firstLine = layout.getLineForOffset(range.start)
+            val lastLine = layout.getLineForOffset(range.end - 1)
+            for (line in firstLine..lastLine) {
+                val y =
+                    minOf(
+                        layout.getLineBaseline(line) + 2.dp.toPx(),
+                        layout.getLineBottom(line) - stroke / 2,
+                    )
+                drawLine(
+                    color,
+                    Offset(layout.getLineLeft(line), y),
+                    Offset(layout.getLineRight(line), y),
+                    strokeWidth = stroke,
+                )
+            }
+        }
+    }
 }
 
 /**

@@ -21,6 +21,7 @@ package yancey.chelper.ui.feature.command
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.*
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.*
 import yancey.chelper.domain.command.CommandProblem
 import yancey.chelper.domain.command.CommandResult
@@ -71,6 +73,7 @@ fun CompletionScreenTopBar(
     errorReasons: List<CommandProblem>?,
     fontSize: TextUnit = TextUnit.Unspecified,
     onErrorClick: (CommandProblem) -> Unit = {},
+    resultsEnabled: Boolean = true,
 ) {
     Column {
         Text(
@@ -102,7 +105,7 @@ fun CompletionScreenTopBar(
                         },
                     modifier =
                         Modifier.fillMaxWidth()
-                            .clickable { onErrorClick(error) }
+                            .clickable(enabled = resultsEnabled) { onErrorClick(error) }
                             .padding(horizontal = 5.dp, vertical = 2.dp),
                     style =
                         TextStyle(color = CHelperTheme.colors.textErrorReason, fontSize = fontSize),
@@ -119,6 +122,8 @@ fun CompletionContent(
     state: CommandResult,
     suggestionCount: Int = state.suggestions.size,
     suggestionAt: @Composable (Int) -> CommandSuggestion? = { state.suggestions.getOrNull(it) },
+    resultsEnabled: Boolean = true,
+    onVisibleSuggestions: (List<Int>) -> Unit = {},
     showMenu: Boolean,
     editorMode: Boolean,
     isCrowded: Boolean = false,
@@ -130,6 +135,18 @@ fun CompletionContent(
     onAction: (CompletionAction) -> Unit,
     editor: @Composable (Modifier) -> Unit,
 ) {
+    val suggestionsState = rememberLazyListState()
+    val reportVisible by rememberUpdatedState(onVisibleSuggestions)
+    LaunchedEffect(suggestionsState, isCrowded) {
+        snapshotFlow {
+            suggestionsState.layoutInfo.visibleItemsInfo.mapNotNull { row ->
+                val index = row.index - if (isCrowded) 1 else 0
+                index.takeIf { it >= 0 }
+            }
+        }
+            .distinctUntilChanged()
+            .collect { reportVisible(it) }
+    }
     RootView {
         Column(
             modifier = Modifier.fillMaxSize().background(CHelperTheme.colors.backgroundComponent)
@@ -141,9 +158,10 @@ fun CompletionContent(
                         state.hint,
                         if (isShowErrorReason) state.problems else null,
                         onErrorClick = onErrorClick,
+                        resultsEnabled = resultsEnabled,
                     )
                 }
-                LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
+                LazyColumn(state = suggestionsState, modifier = Modifier.fillMaxSize().weight(1f)) {
                     items(if (isCrowded) (suggestionCount + 1) else suggestionCount) {
                         suggestionIndex ->
                         if (isCrowded) {
@@ -154,6 +172,7 @@ fun CompletionContent(
                                     if (isShowErrorReason) state.problems else null,
                                     14.sp,
                                     onErrorClick,
+                                    resultsEnabled,
                                 )
                             } else {
                                 val realIndex = suggestionIndex - 1
@@ -168,19 +187,27 @@ fun CompletionContent(
                                 Text(
                                     modifier =
                                         Modifier.fillMaxWidth()
-                                            .clickable(onClick = { onSuggestion(realIndex) })
+                                            .clickable(
+                                                enabled = resultsEnabled && suggestion != null,
+                                                onClick = { onSuggestion(realIndex) },
+                                            )
+                                            .heightIn(min = 32.dp)
                                             .padding(5.dp),
                                     text = suggestionText,
                                     style = TextStyle(fontSize = 14.sp),
                                 )
                             }
                         } else {
+                            val suggestion = suggestionAt(suggestionIndex)
                             Column(
                                 modifier =
-                                    Modifier.clickable(onClick = { onSuggestion(suggestionIndex) })
+                                    Modifier.clickable(
+                                            enabled = resultsEnabled && suggestion != null,
+                                            onClick = { onSuggestion(suggestionIndex) },
+                                        )
+                                        .heightIn(min = 32.dp)
                                         .padding(5.dp)
                             ) {
-                                val suggestion = suggestionAt(suggestionIndex)
                                 suggestion?.name?.let {
                                     Text(
                                         text = it,

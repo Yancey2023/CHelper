@@ -29,6 +29,8 @@ class ArchitectureChecksTest(unittest.TestCase):
             build = "plugins {}\n"
             if module == "apps/android":
                 build += "dependencies { implementation(libs.toaster) }\n"
+            if module == "shared/ui":
+                build += "kotlin { android { androidResources.enable = true } }\n"
             (directory / "build.gradle.kts").write_text(build, encoding="utf-8")
 
     def source(self, module, package, name="Example", body="", directory=None):
@@ -157,6 +159,10 @@ class ArchitectureChecksTest(unittest.TestCase):
             body="import yancey.chelper.data.auth.LoginSession",
         )
         self.assert_rejected("forbidden import")
+
+    def test_ui_must_enable_android_compose_resource_packaging(self):
+        (self.root / "shared/ui/build.gradle.kts").write_text("plugins {}\n")
+        self.assert_rejected("enable Android resource processing")
 
 
 if __name__ == "__main__":

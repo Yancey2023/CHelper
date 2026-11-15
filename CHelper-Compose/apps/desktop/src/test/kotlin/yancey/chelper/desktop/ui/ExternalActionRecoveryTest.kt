@@ -21,6 +21,7 @@ import io.ktor.client.engine.mock.*
 import io.ktor.http.headersOf
 import java.io.File
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import okio.Path.Companion.toOkioPath
 import org.junit.*
@@ -140,6 +141,26 @@ class ExternalActionRecoveryTest {
             compose.onAllNodesWithText("已复制格式化 JSON").fetchSemanticsNodes().isNotEmpty()
         }
         compose.runOnIdle { assertEquals(1, writes) }
+    }
+
+    @Test
+    fun waitingForAnEditorWriteDoesNotShowRecoveryText() {
+        val session = container.dependencies.services.session
+        val repository = container.dependencies.services.settings
+        val saved = CompletableDeferred<Unit>()
+        session.register(repository) { saved.await() }
+        content {
+            CHelperTheme(CHelperTheme.Theme.Light, null) {
+                ClientInteractionHost {
+                    PersistedEditor(session, repository) { Text("编辑器已恢复") }
+                }
+            }
+        }
+        compose.onNodeWithText("正在恢复编辑内容…").assertDoesNotExist()
+        compose.onNodeWithText("编辑器已恢复").assertDoesNotExist()
+        compose.runOnIdle { saved.complete(Unit) }
+        compose.onNodeWithText("编辑器已恢复").assertIsDisplayed()
+        compose.onNodeWithText("正在恢复编辑内容…").assertDoesNotExist()
     }
 
     @Test

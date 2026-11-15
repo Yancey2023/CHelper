@@ -43,22 +43,12 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.domain.command.CommandProblem
 import yancey.chelper.domain.command.CommandResult
-import yancey.chelper.domain.command.CommandSuggestion
-import yancey.chelper.domain.command.Suggestion
 import yancey.chelper.resources.*
 import yancey.chelper.ui.navigation.HistoryScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryListScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryListScreenKey
 import yancey.chelper.ui.platform.LocalClientServices
 import yancey.chelper.ui.platform.rememberCopyText
-
-@Composable
-private fun rememberSuggestion(viewModel: CompletionViewModel, index: Int): Suggestion? {
-    val revision = viewModel.suggestionsUpdateTimes
-    var suggestion by remember(viewModel, revision, index) { mutableStateOf<Suggestion?>(null) }
-    LaunchedEffect(viewModel, revision, index) { suggestion = viewModel.getSuggestion(index) }
-    return suggestion
-}
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -157,6 +147,7 @@ fun CompletionScreen(
             }
     }
     var errorRange by remember { mutableStateOf<CommandErrorSelection?>(null) }
+    val analysisRevision = viewModel.analysisRevision
     CompletionContent(
         state =
             CommandResult(
@@ -168,11 +159,9 @@ fun CompletionScreen(
                     },
             ),
         suggestionCount = viewModel.suggestionsSize,
-        suggestionAt = { index ->
-            rememberSuggestion(viewModel, index)?.let {
-                CommandSuggestion(it.name.orEmpty(), it.description)
-            }
-        },
+        suggestionAt = { index -> viewModel.suggestionAt(index) },
+        resultsEnabled = viewModel.resultsEnabled,
+        onVisibleSuggestions = viewModel::showSuggestions,
         showMenu = viewModel.isShowMenu,
         editorMode = viewModel.isCommandEditorMode,
         isCrowded = isCrowded,
@@ -183,7 +172,7 @@ fun CompletionScreen(
             errorRange =
                 CommandErrorSelection(error.start, error.end, (errorRange?.request ?: 0) + 1)
         },
-        onSuggestion = viewModel::onItemClick,
+        onSuggestion = { index -> viewModel.onItemClick(index, analysisRevision) },
         onAction = { action ->
             when (action) {
                 CompletionAction.Undo -> viewModel.command.undoState.undo()

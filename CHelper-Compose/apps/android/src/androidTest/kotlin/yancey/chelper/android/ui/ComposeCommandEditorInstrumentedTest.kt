@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import yancey.chelper.domain.command.CommandProblem
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.feature.command.CommandErrorSelection
 import yancey.chelper.ui.feature.command.ComposeCommandEditor
@@ -23,6 +27,53 @@ import yancey.chelper.ui.feature.command.ComposeCommandEditor
 @RunWith(AndroidJUnit4::class)
 class ComposeCommandEditorInstrumentedTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun analysisUpdatesKeepTheActiveAndroidInputSession() {
+        val state = TextFieldState("say ")
+        val tokens = mutableStateOf<IntArray?>(null)
+        val errors = mutableStateOf(emptyList<CommandProblem>())
+        var sessions = 0
+        var cancellations = 0
+        val interceptor = PlatformTextInputInterceptor { _, _ ->
+            sessions++
+            try {
+                awaitCancellation()
+            } finally {
+                cancellations++
+            }
+        }
+        compose.setContent {
+            InterceptPlatformTextInput(interceptor) {
+                CHelperTheme(CHelperTheme.Theme.Light, null) {
+                    ComposeCommandEditor(
+                        state,
+                        true,
+                        tokens.value,
+                        errors.value,
+                        Modifier.size(240.dp, 200.dp).testTag("editor"),
+                        null,
+                    )
+                }
+            }
+        }
+        val editor = compose.onNodeWithTag("editor")
+        editor.performClick().assertIsFocused()
+        compose.waitUntil(5000) { sessions > 0 }
+        for (text in listOf("你", "好", "🙂")) {
+            editor.performTextInput(text)
+            compose.runOnIdle {
+                tokens.value = IntArray(state.text.length)
+                errors.value = listOf(CommandProblem("example", 4, state.text.length))
+            }
+            editor.assertIsFocused()
+            compose.runOnIdle {
+                assertEquals(1, sessions)
+                assertEquals(0, cancellations)
+            }
+        }
+        editor.assertTextEquals("say 你好🙂")
+    }
 
     @Test
     fun commandInputKeepsUnicodeUndoAndSingleLineStorageInBothModes() {

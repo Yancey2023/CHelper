@@ -20,12 +20,16 @@ package yancey.chelper.ui.designsystem
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 
@@ -70,6 +74,17 @@ private val LocalTheme = compositionLocalOf { CHelperTheme.Theme.Light }
 private val LocalCHelperColors = compositionLocalOf { LightColorPalette }
 
 private val LocalBackground = compositionLocalOf<ImageBitmap?> { null }
+
+/** Keep the project's buttons and clickable icons free of default press/hover overlays. */
+private object NoIndication : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): Modifier.Node = NoIndicationNode()
+
+    override fun equals(other: Any?) = other === this
+
+    override fun hashCode() = -1
+
+    private class NoIndicationNode : Modifier.Node()
+}
 
 object CHelperTheme {
     val theme: Theme
@@ -190,6 +205,7 @@ fun CHelperTheme(
         LocalCHelperColors provides colors,
         LocalBackground provides backgroundBitmap,
         LocalTextSelectionColors provides textSelectionColors,
+        LocalIndication provides NoIndication,
     ) {
         content()
     }

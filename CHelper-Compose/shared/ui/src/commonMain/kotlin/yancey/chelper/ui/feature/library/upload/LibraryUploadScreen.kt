@@ -459,245 +459,257 @@ private fun MCDPreviewScreen(
     BackHandler { onBack() }
 
     RootViewWithHeaderAndCopyright(title = stringResource(Res.string.upload_preview_title)) {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            // 状态栏
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                if (validationResult.hasErrors) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            id = Res.drawable.alert_triangle,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text =
-                                stringResource(
-                                    Res.string.upload_validation_error,
-                                    validationResult.errorCount,
-                                ),
-                            style =
-                                TextStyle(
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFFD32F2F),
-                                ),
-                        )
-                    }
-                } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            id = Res.drawable.check_circle,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text =
-                                stringResource(
-                                    Res.string.upload_validation_ok,
-                                    validationResult.lines.size,
-                                ),
-                            style =
-                                TextStyle(
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF2E7D32),
-                                ),
-                        )
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.clip(RoundedCornerShape(4.dp))
-                            .clickable { showQuickHelp = !showQuickHelp }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Icon(
-                        id = Res.drawable.help_circle,
-                        contentDescription = stringResource(Res.string.upload_syntax_help),
-                        modifier = Modifier.size(14.dp),
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(Res.string.upload_syntax_help),
-                        style =
-                            TextStyle(
-                                fontSize = 12.sp,
-                                color = CHelperTheme.colors.mainColor,
-                                fontWeight = FontWeight.Medium,
-                            ),
-                    )
-                    Spacer(Modifier.width(2.dp))
-                    Icon(
-                        id =
-                            if (showQuickHelp) Res.drawable.chevron_up
-                            else Res.drawable.chevron_down,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                    )
-                }
-            }
+        MCDContentView(
+            content = fullMCDContent,
+            modifier = Modifier.fillMaxSize(),
+            rowModifier = Modifier.padding(horizontal = 15.dp),
+            header = {
+                Column {
 
-            // 快速帮助（折叠）
-            if (showQuickHelp) {
-                QuickSyntaxHelp(modifier = Modifier.padding(horizontal = 15.dp, vertical = 4.dp))
-            }
-
-            // 错误行汇总，一键修复
-            if (validationResult.hasErrors) {
-                Column(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 15.dp, vertical = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0x15D32F2F))
-                            .padding(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.upload_error_summary),
-                        style = TextStyle(fontSize = 12.sp, color = Color(0xFFD32F2F)),
-                    )
-                    Spacer(Modifier.height(6.dp))
-
-                    validationResult.lines
-                        .filter { it.type == LineType.AMBIGUOUS }
-                        .forEach { line ->
-                            Row(
-                                modifier = Modifier.padding(vertical = 1.dp),
-                                verticalAlignment = Alignment.Top,
-                            ) {
-                                Text(
-                                    text = "L${line.lineNumber}",
-                                    style =
-                                        TextStyle(
-                                            fontSize = 11.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = Color(0xFFD32F2F),
-                                        ),
-                                    modifier = Modifier.width(32.dp),
+                    // 状态栏
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        if (validationResult.hasErrors) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    id = Res.drawable.alert_triangle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
                                 )
+                                Spacer(Modifier.width(4.dp))
                                 Text(
-                                    text = line.rawText,
+                                    text =
+                                        stringResource(
+                                            Res.string.upload_validation_error,
+                                            validationResult.errorCount,
+                                        ),
                                     style =
                                         TextStyle(
-                                            fontSize = 11.sp,
-                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium,
                                             color = Color(0xFFD32F2F),
                                         ),
-                                    maxLines = 1,
+                                )
+                            }
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    id = Res.drawable.check_circle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text =
+                                        stringResource(
+                                            Res.string.upload_validation_ok,
+                                            validationResult.lines.size,
+                                        ),
+                                    style =
+                                        TextStyle(
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF2E7D32),
+                                        ),
+                                )
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(4.dp))
+                                    .clickable { showQuickHelp = !showQuickHelp }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            Icon(
+                                id = Res.drawable.help_circle,
+                                contentDescription = stringResource(Res.string.upload_syntax_help),
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(Res.string.upload_syntax_help),
+                                style =
+                                    TextStyle(
+                                        fontSize = 12.sp,
+                                        color = CHelperTheme.colors.mainColor,
+                                        fontWeight = FontWeight.Medium,
+                                    ),
+                            )
+                            Spacer(Modifier.width(2.dp))
+                            Icon(
+                                id =
+                                    if (showQuickHelp) Res.drawable.chevron_up
+                                    else Res.drawable.chevron_down,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                            )
+                        }
+                    }
+
+                    // 快速帮助（折叠）
+                    if (showQuickHelp) {
+                        QuickSyntaxHelp(
+                            modifier = Modifier.padding(horizontal = 15.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    // 错误行汇总，一键修复
+                    if (validationResult.hasErrors) {
+                        Column(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 15.dp, vertical = 4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0x15D32F2F))
+                                    .padding(12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.upload_error_summary),
+                                style = TextStyle(fontSize = 12.sp, color = Color(0xFFD32F2F)),
+                            )
+                            Spacer(Modifier.height(6.dp))
+
+                            validationResult.lines
+                                .filter { it.type == LineType.AMBIGUOUS }
+                                .forEach { line ->
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 1.dp),
+                                        verticalAlignment = Alignment.Top,
+                                    ) {
+                                        Text(
+                                            text = "L${line.lineNumber}",
+                                            style =
+                                                TextStyle(
+                                                    fontSize = 11.sp,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    color = Color(0xFFD32F2F),
+                                                ),
+                                            modifier = Modifier.width(32.dp),
+                                        )
+                                        Text(
+                                            text = line.rawText,
+                                            style =
+                                                TextStyle(
+                                                    fontSize = 11.sp,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    color = Color(0xFFD32F2F),
+                                                ),
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            Text(
+                                text = stringResource(Res.string.upload_fix_ambiguous),
+                                modifier =
+                                    Modifier.clip(RoundedCornerShape(6.dp))
+                                        .background(CHelperTheme.colors.mainColor)
+                                        .clickable { onFixAmbiguous() }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                style =
+                                    TextStyle(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White,
+                                    ),
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
+            },
+            footer = {
+                Column {
+                    Spacer(Modifier.height(16.dp))
+
+                    // 底部操作栏
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier.weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(CHelperTheme.colors.backgroundComponent)
+                                    .clickable { onBack() }
+                                    .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    id = Res.drawable.chevron_left,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(Res.string.upload_btn_back),
+                                    style =
+                                        TextStyle(
+                                            fontSize = 14.sp,
+                                            color = CHelperTheme.colors.textMain,
+                                        ),
                                 )
                             }
                         }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        text = stringResource(Res.string.upload_fix_ambiguous),
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(6.dp))
-                                .background(CHelperTheme.colors.mainColor)
-                                .clickable { onFixAmbiguous() }
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                        style =
-                            TextStyle(
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White,
-                            ),
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // 渲染预览（含元数据）
-            MCDContentView(
-                content = fullMCDContent,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // 底部操作栏
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(
-                    modifier =
-                        Modifier.weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(CHelperTheme.colors.backgroundComponent)
-                            .clickable { onBack() }
-                            .padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            id = Res.drawable.chevron_left,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(Res.string.upload_btn_back),
-                            style =
-                                TextStyle(fontSize = 14.sp, color = CHelperTheme.colors.textMain),
-                        )
-                    }
-                }
-
-                Box(
-                    modifier =
-                        Modifier.weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (validationResult.hasErrors) Color(0xFFBDBDBD)
-                                else CHelperTheme.colors.mainColor
-                            )
-                            .then(
+                        Box(
+                            modifier =
+                                Modifier.weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (validationResult.hasErrors) Color(0xFFBDBDBD)
+                                        else CHelperTheme.colors.mainColor
+                                    )
+                                    .then(
+                                        if (!validationResult.hasErrors) {
+                                            Modifier.clickable { onConfirmUpload() }
+                                        } else Modifier
+                                    )
+                                    .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text =
+                                        stringResource(
+                                            if (validationResult.hasErrors)
+                                                Res.string.upload_btn_fix_required
+                                            else Res.string.upload_btn_confirm
+                                        ),
+                                    style =
+                                        TextStyle(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color.White,
+                                        ),
+                                )
                                 if (!validationResult.hasErrors) {
-                                    Modifier.clickable { onConfirmUpload() }
-                                } else Modifier
-                            )
-                            .padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text =
-                                stringResource(
-                                    if (validationResult.hasErrors)
-                                        Res.string.upload_btn_fix_required
-                                    else Res.string.upload_btn_confirm
-                                ),
-                            style =
-                                TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.White,
-                                ),
-                        )
-                        if (!validationResult.hasErrors) {
-                            Spacer(Modifier.width(4.dp))
-                            Icon(
-                                id = Res.drawable.chevron_right,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                            )
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        id = Res.drawable.chevron_right,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            Spacer(Modifier.height(20.dp))
-        }
+                    Spacer(Modifier.height(20.dp))
+                }
+            },
+        )
     }
 }
 

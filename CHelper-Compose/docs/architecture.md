@@ -102,19 +102,27 @@ Android / Windows 的系统适配分别放在宿主内；共享模块不得引�
 
 共享交互入口位于 `ui/commonMain/platform`。每个 Activity / Window / 浮窗内容根使用 `ClientInteractionHost` 接入宿主的 Navigation Event dispatcher；标题栏通过官方 `DirectNavigationEventInput` 请求返回，功能页用 `NavigationBackHandler` 的薄封装注册业务守卫。Escape 交给 Compose Window 默认处理，不在生产根节点拦截按键或强制恢复焦点。`LocalAppBackAction` 仅供确认离开后的直接导航。Android 系统浮窗保留原生按键转发和 ViewTree owner 适配。
 
-弹窗统一由共享 `AppDialogHost` 绘制在当前 Compose 宿主内，不创建系统 Dialog 窗口。`AppDialog` 保留调用点的 CompositionLocal 与内容状态，支持嵌套、返回优先级、遮罩拦截和焦点恢复；`AppAlertDialog` 复用同一个宿主和自有 Foundation 内容控件。Android 普通页面、系统浮窗和 Desktop 共用该实现，不再维护 Dialog windowType 适配。
+Android、浮窗和桌面统一使用 `ClientNavHost` 配置页面动画。前进和返回共享 300 ms 缓动时序，返回沿前进的反向平移路径；Navigation 2.10 独立的预测性 pop 回调显式复用普通 pop 动画，避免手势预览与松手后的动画采用不同效果。官方 NavHost 继续负责进度寻址、取消回弹和返回栈提交；真实 NavHost 回归测试检查左右侧手势、相邻页面衔接、缩放与纵向位置、取消恢复，以及提交时的首帧连续性和单次出栈。
+
+弹窗统一由共享 `AppDialogHost` 绘制在当前 Compose 宿主内，不创建系统 Dialog 窗口。`AppDialog` 保留调用点的 CompositionLocal 与内容状态，支持嵌套、返回优先级、遮罩拦截和焦点恢复；`AppAlertDialog` 复用同一个宿主和自有 Foundation 内容控件。Android 普通页面、系统浮窗和 Desktop 共用该实现，不再维护 Dialog windowType 适配。确认、输入、菜单、选择、隐私协议和举报弹窗保留原有 DialogContainer 视觉：原圆角与留白、标题排版、分隔线和底部操作区；视觉内容与宿主的焦点、返回和遮罩逻辑分开维护。
 
 外部网页通过官方 LocalUriHandler 打开；界面剪贴板通过 LocalClipboard 挂起 API 读写，仅由 Android/Windows 宿主注入纯文本 ClipEntry 编解码器。ClientPlatform 不再提供 URL、命令编辑器或普通剪贴板入口。ClientMessages 是共享反馈入口：Android 在 Application 初始化时安装 Toaster 呈现器；Desktop 使用共享 Foundation 消息组件，支持瞬时事件、生命周期取消、手动关闭、live region 和可访问性超时。不同时向两端呈现机制发送同一消息。保留原因见[采用记录](official-compose.md#toaster-保留依据)。
 
-普通控件使用项目自己的主题与 Foundation 设计组件，禁止 Material / Material 3 组件和依赖。普通输入和安全密码输入分别使用 BasicTextField 与 BasicSecureTextField，共用装饰器；命令编辑保留领域规则、语法样式和错误范围。所有预览使用统一注解和纯 Content，放在 commonMain，不创建真实仓库或业务 ViewModel。详细约束见[Compose 基础能力采用记录](official-compose.md)和根目录 AGENTS.md。
+普通控件使用项目自己的主题与 Foundation 设计组件，禁止 Material / Material 3 组件和依赖。CHelperTheme 统一通过 LocalIndication 提供无绘制的 NoIndication，关闭按钮、图标及普通可点击区域的默认按压、悬停和焦点遮罩，不影响点击语义、禁用状态和单选/开关自身的状态动画。普通输入和安全密码输入分别使用 BasicTextField 与 BasicSecureTextField，共用装饰器；命令编辑保留领域规则、语法样式和错误范围。命令编辑器的输入与输出转换器通过 remember 保持实例稳定，token 和主题通过 rememberUpdatedState 供输出转换器读取，输出转换器只应用语法文字颜色；错误下划线根据 TextLayoutResult 的选区路径独立绘制为错误色，跟随折行与滚动裁剪，不覆盖文字颜色，错误范围通过快照状态更新绘制。样式变化只触发显示更新，不重建 BasicTextField 的内部转换状态或 IME 会话。回归测试通过官方 InterceptPlatformTextInput 记录会话启动和取消，同时检查错误下划线更新、中文与 emoji 输入、主题变化、撤销重做和焦点。所有预览使用统一注解和纯 Content，放在 commonMain，不创建真实仓库或业务 ViewModel。详细约束见[Compose 基础能力采用记录](official-compose.md)和根目录 AGENTS.md。
 
 `yancey.chelper.core` 是唯一保留的历史命名空间例外：C++ 使用 JNI 类名和字段签名访问 `CHelperCore`、`CommandContext`、`ClickSuggestionResult`、`ErrorReason`、`SelectedString`、`Suggestion`。其余原生实现均放在 `nativecore`，不能继续向 ABI 包添加业务实现。
+
+设置页使用 Foundation LazyColumn 按单个设置项组合，而不是在进入页时布局整页。SettingsSections 只描述带稳定语义 key 的条目，保留原有分组卡片圆角、分隔线和共享控件；弹窗状态仍属于页面，不随条目回收丢失。
+
+CommandCompletionController 在主线程持有单份 CompletionSnapshot。输入改变时保留上次的结构、说明、错误和建议，新分析及当前视口建议读取完成后一起发布；不先清空建议数量，也不按新 revision 把每行重置为空。CommandSession 在同一串行队列内复制建议值，首批只预取前 32 项，随后按视口及少量相邻项批量惰性读取，缓存不随整个建议集合增长。等待、分析失败或输入已变化时禁用旧结果交互，点击绑定显示时的 revision，过时结果与回填均丢弃。未读取的滚动行保留最小高度，避免零高度条目触发整表布局。
 
 ## 源码集与构建约定
 
 `commonMain/commonTest` 使用标准 KMP 源码集。删除自定义 JVM 共享目录及其重复编译映射。共享测试使用 `kotlin.test`，由标准 `jvmTest` 和 `testAndroidHostTest` 任务执行；协程调度使用 `kotlinx-coroutines-test`，存储测试使用 Okio FakeFileSystem，HTTP 契约测试使用 Ktor MockEngine。真实 JNI、系统窗口、操作系统文件与浏览器集成测试留在对应平台模块。
 
 构建约定只有两个：`chelper.multiplatform-library` 管理 Android / JVM 目标、SDK、JVM 17 与公共测试；`chelper.jvm-library` 管理平台适配和桌面宿主的 JVM / Java 17 配置。`platform/jvm` 为两个宿主复用一份真实 JVM 适配，不向共享模块暴露 Java 类型。
+
+`shared/ui` 的 Android 目标显式启用 `androidResources.enable = true`，让 Compose 插件将资源打包到 APK 的 `assets/composeResources/yancey.chelper.resources/`。Android 宿主的原生 `res` 映射仅服务 Manifest 和宿主 R 引用，不能替代 Compose 的运行时资源路径。`scripts/check_android_resources.py` 对照构建生成的资源逐项检查 APK 中的路径和字节内容，CI 在上传 Release APK 前执行；设备测试实际加载共享 WebP、矢量图片和字符串。
 
 网络通过应用容器持有的 `NetworkServices` 实例组装。宿主向 `ClientServices` 注入账号、命令库内容、活动、消息、收藏、网页授权和应用内容等 domain Repository 接口，ViewModel 仅接收实际需要的接口；UI 不引用 `data.remote` / `data.auth` 中的图、服务、会话或 DTO。宿主的验证码和后台同步适配仍可使用网络图。不可变 `NetworkConfig` 固定服务地址与调试开关；会话、缓存和浏览器验证状态属于该应用实例。
 
@@ -124,7 +132,13 @@ Repository 将传输 DTO 映射为不可变业务模型，统一处理缓存、�
 
 认证客户端不调用自动令牌获取；业务客户端通过 `TokenProvider` 优先取正式账号令牌，再取访客令牌。两类客户端共享限流和浏览器验证状态，关闭应用时取消请求并释放各自引擎。Android WebView 在主线程创建、销毁，只更新验证 Cookie；Windows 使用官方 Ktor WebSockets 连接独立 Edge 配置的 CDP，保留启动交接、取消、等待者异常完成和进程清理。
 
-JSON 使用官方 ContentNegotiation 和类型化请求／响应；保留已存在的 text/plain JSON 响应兼容。HTTP 调试日志使用 Ktor Logging 接入现有日志入口，不记录正文，删除 URL 查询与片段，并脱敏认证／Cookie 头。OkHttp 引擎只维护 TLS、HTTP/2、Brotli、超时和 10 MiB 磁盘缓存；缓存仅服务公开资源，认证、私有命令库和 WAF 请求使用 no-store；Windows 上 OkHttp 的读取文件锁可能阻止 304 元数据立即写回，后续请求可再次重验证，但缓存正文仍按 304 正确恢复，不自行绕过文件锁或替换缓存实现；Coil 图片缓存保持独立。
+JSON 使用官方 ContentNegotiation 和类型化请求／响应；保留已存在的 text/plain JSON 响应兼容。RemoteApi 在 Dispatchers.Default 执行请求及响应转换，避免大命令库的 JSON 编解码阻塞主线程，并保留调用方的取消和认证上下文。HTTP 调试日志使用 Ktor Logging 接入现有日志入口，不记录正文，删除 URL 查询与片段，并脱敏认证／Cookie 头。OkHttp 引擎只维护 TLS、HTTP/2、Brotli、超时和 10 MiB 磁盘缓存；缓存仅服务公开资源，认证、私有命令库和 WAF 请求使用 no-store；Windows 上 OkHttp 的读取文件锁可能阻止 304 元数据立即写回，后续请求可再次重验证，但缓存正文仍按 304 正确恢复，不自行绕过文件锁或替换缓存实现；Coil 图片缓存保持独立。
+
+MCD 预览在 Dispatchers.Default 解析并展平文档，通过共享 Foundation LazyColumn 只组合视口附近的行；高亮由行的 Compose 生命周期驱动，通过 CommandSession 的串行后台队列访问内核，离开视口时取消等待。公有库、本地库和上传预览都提供有界视口，上传说明与确认操作使用同一列表的头尾内容，不能再套无界 verticalScroll 或按帧自动追加整份文档。PersistedEditor 在组合前捕获旧编辑器的保存回调；没有旧编辑器时首帧直接组合页面，有旧编辑器时等待保存完成后再注册新编辑器。正常等待只绘制完整尺寸的页面背景，不能返回空布局，否则 NavHost 会以零宽度计算滑入距离；不展示恢复文字，失败时保留重试和返回对话框。真实 NavHost 回归测试同时检查设置与应用模式在等待保存时的页面尺寸、恢复后的中间帧位移，以及首次进入不等待、不刷新新编辑器自身。
+
+云端命令库详情由 ViewModel 合并网络数据、真实持久化设置和后台文档准备，生成 McdPreview 后才结束加载；页面直接使用 PreparedMCDContentView，不再触发第二轮解析占位。等待数据准备时只显示同一静态骨架；内容就绪后立即用 90 ms Crossfade 一次显示正文，淡入与页面滑入并行，不等待 NavBackStackEntry 恢复 RESUMED，也不设置骨架最短停留时间。普通返回和预测性返回不改变数据就绪状态，不会重新显示骨架。预览设置变化时保留当前正文，后台准备替换文档，不重新进入加载状态；切换库和账号时取消过时的准备任务。错误沿用重试入口，不暴露网络／解析等内部阶段。
+
+云端正文初次显示不与高亮引擎冷启动重叠：正文及 90 ms 淡入保持立即进行，无 token 时使用 Foundation 的 String 文本路径，并且不创建行级高亮任务。仅可选的语法着色等待实际内容淡入和导航动画结束，再经过一个绘制帧后启动；由 Transition 和页面生命周期判断，不使用固定延时延长骨架。启动状态按文档保留，返回预览不清除已显示的颜色，高亮仍只读取视口附近的行。CommandSession.highlight 仅提取 token，不访问结构、参数提示、节点数量和补全列表；内核的补全数量查询会生成列表，不能把编辑器的整套分析用于命令库着色。
 
 访客签名使用 cryptography-kotlin 的 ECDSA P-256 / SHA-256，保留 PKCS#8 密钥和 DER 签名协议。时间使用 Kotlin Clock / Instant 和 kotlinx.datetime。
 

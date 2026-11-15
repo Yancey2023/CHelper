@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.multiplatform.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
     testImplementation(libs.ktor.client.mock)
     testImplementation(platform(libs.okhttp.bom))
     testImplementation(libs.okhttp)

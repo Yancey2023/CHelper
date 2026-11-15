@@ -14,11 +14,14 @@ class AppSession {
         return { pending.forEach { it() } }
     }
 
+    /** Capture the previous writer before the next editor can register its own controller. */
+    fun prepareRestore(owner: Any): (suspend () -> Unit)? = flushes[owner]
+
     suspend fun flush() {
         prepareClose().invoke()
     }
 
     suspend fun flush(owner: Any) {
-        flushes[owner]?.invoke()
+        prepareRestore(owner)?.invoke()
     }
 }

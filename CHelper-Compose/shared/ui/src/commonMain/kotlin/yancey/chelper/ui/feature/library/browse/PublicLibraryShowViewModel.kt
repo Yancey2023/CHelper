@@ -26,18 +26,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import yancey.chelper.data.logging.ClientLog
 import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
-import yancey.chelper.domain.library.RepositoryResult
 import yancey.chelper.domain.library.model.*
+import yancey.chelper.domain.settings.AppSettingsRepository
+import yancey.chelper.domain.settings.Settings
+import yancey.chelper.ui.feature.library.mcd.McdPreview
+import yancey.chelper.ui.feature.library.mcd.prepareMcdPreview
 import yancey.chelper.ui.platform.ClientMessages
 
 class PublicLibraryShowViewModel(
     private val accounts: AccountRepository,
     private val libraries: LibraryContentRepository,
+    private val settings: AppSettingsRepository,
+    private val preparationDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     var library by mutableStateOf(LibraryFunction())
-    var isLoading by mutableStateOf(false)
+    var preview by mutableStateOf<McdPreview?>(null)
+        private set
+
+    var isLoading by mutableStateOf(true)
     var errorMessage by mutableStateOf<String?>(null)
     var actionMessage by mutableStateOf<String?>(null)
     var isPrivate by mutableStateOf(false)
@@ -53,6 +64,8 @@ class PublicLibraryShowViewModel(
     /** 当前是否展示原始源码视图（false = 可视化 UI） */
     var showRawSource by mutableStateOf(false)
     private var loadJob: Job? = null
+    private var previewJob: Job? = null
+    private var latestSettings: Settings? = null
     private var loadVersion = 0L
     private val actions = mutableMapOf<String, Job>()
 
@@ -74,6 +87,15 @@ class PublicLibraryShowViewModel(
 
     init {
         viewModelScope.launch {
+            settings.state
+                .catch { ClientLog.e("LibraryDetail", "Failed to observe preview settings", it) }
+                .collect {
+                    previewJob?.cancel()
+                    latestSettings = it
+                    updatePreview()
+                }
+        }
+        viewModelScope.launch {
             var revision = accounts.state.value.revision
             accounts.state.collect { account ->
                 if (revision != account.revision) {
@@ -82,11 +104,34 @@ class PublicLibraryShowViewModel(
                     if (isPrivate) {
                         loadVersion++
                         loadJob?.cancel()
+                        previewJob?.cancel()
                         library = LibraryFunction()
+                        preview = null
                         isLoading = false
                         errorMessage = "账号已切换，请重新加载"
                     }
                 }
+            }
+        }
+    }
+
+    /** Preference changes replace the prepared document without returning to a loading screen. */
+    private fun updatePreview() {
+        val preferences = latestSettings ?: return
+        val current = preview ?: return
+        if (isLoading || current.matches(preferences)) return
+        previewJob?.cancel()
+        val version = loadVersion
+        val source = library.content
+        previewJob = viewModelScope.launch {
+            try {
+                val document = prepareMcdPreview(source, preferences, preparationDispatcher)
+                ensureActive()
+                if (version == loadVersion && !isLoading) preview = document
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                ClientLog.e("LibraryDetail", "Failed to update preview", error)
             }
         }
     }
@@ -105,6 +150,7 @@ class PublicLibraryShowViewModel(
         if (initializedTarget != target) {
             actions.values.toList().forEach(Job::cancel)
             library = LibraryFunction()
+            preview = null
             deleteSuccess = false
             pendingShareUrl = null
             releasedPublicId = null
@@ -112,36 +158,45 @@ class PublicLibraryShowViewModel(
         initializedTarget = target
         val version = ++loadVersion
         loadJob?.cancel()
+        previewJob?.cancel()
         this.isPrivate = isPrivate
         loadJob = viewModelScope.launch {
             isLoading = true
             errorMessage = null
 
             try {
-                val response: RepositoryResult<LibraryFunction> = run {
-                    if (isPrivate) {
-                        libraries.detail(id, private = true)
+                coroutineScope {
+                    val preferences = async { settings.state.first() }
+                    val response = libraries.detail(id, private = isPrivate)
+                    if (response.isSuccess() && response.data != null) {
+                        val detail = response.data!!
+                        val document =
+                            prepareMcdPreview(
+                                detail.content,
+                                preferences.await(),
+                                preparationDispatcher,
+                            )
+                        ensureActive()
+                        if (version != loadVersion) return@coroutineScope
+                        library = detail
+                        preview = document
+                        likeCount = detail.likeCount ?: 0
+                        isLiked = detail.isLiked == true
+                        isFavorited = detail.isFavorited == true
                     } else {
-                        libraries.detail(id)
+                        preferences.cancel()
+                        errorMessage = response.message ?: "加载失败"
                     }
-                }
-
-                ensureActive()
-                if (version != loadVersion) return@launch
-                if (response.isSuccess() && response.data != null) {
-                    library = response.data!!
-                    likeCount = library.likeCount ?: 0
-                    isLiked = library.isLiked == true
-                    isFavorited = library.isFavorited == true
-                } else {
-                    errorMessage = response.message ?: "加载失败"
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
-                errorMessage = "网络错误: ${e.message}"
+                errorMessage = "加载失败: ${e.message}"
             } finally {
-                if (version == loadVersion) isLoading = false
+                if (version == loadVersion) {
+                    isLoading = false
+                    updatePreview()
+                }
             }
         }
     }

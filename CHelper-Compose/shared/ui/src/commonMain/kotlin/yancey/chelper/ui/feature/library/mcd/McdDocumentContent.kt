@@ -8,7 +8,6 @@
 
 package yancey.chelper.ui.feature.library.mcd
 
-/** 首屏先组合这么多行，尽快出 UI */
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,12 +23,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,7 +80,7 @@ val BlockType.darkColor: Color
             }
         )
 
-/** 展平为可分页渲染的行，方便「先显示前 N 条」而不用 LazyColumn */
+/** Flatten on a worker before passing rows to the viewport-backed list. */
 sealed class MCDRenderRow {
     data class Meta(val items: List<MCDMeta>) : MCDRenderRow()
 
@@ -122,59 +121,68 @@ fun flattenParsedMCD(parsed: ParsedMCD, showMetadata: Boolean): List<MCDRenderRo
 
 val LocalMcdCopy = staticCompositionLocalOf<(String) -> Unit> { {} }
 
+/** Requires a bounded viewport; headers and footers share the same scrolling container. */
 @Composable
 fun MCDRowsContent(
     rows: List<MCDRenderRow>,
-    highlightRevision: Int = 0,
     modifier: Modifier = Modifier,
-    batch: Boolean = true,
+    rowModifier: Modifier = Modifier,
     onCopy: (String) -> Unit,
-) {
-    var visible by remember(rows) { mutableIntStateOf(if (batch) 64 else rows.size) }
-    LaunchedEffect(rows, batch) {
-        while (visible < rows.size) {
-            withFrameNanos {}
-            visible = (visible + 128).coerceAtMost(rows.size)
+    header: @Composable () -> Unit = {},
+    footer: @Composable () -> Unit = {},
+    tokensFor: @Composable (ChainItem) -> IntArray? = { item ->
+        when (item) {
+            is ChainItem.RawCommand -> item.syntaxHighlightTokens
+            is ChainItem.Block -> item.block.syntaxHighlightTokens
+            is ChainItem.Comment -> null
         }
-    }
+    },
+) {
     CompositionLocalProvider(LocalMcdCopy provides onCopy) {
-        Column(modifier = modifier) {
-            rows.take(visible).forEach { row ->
-                when (row) {
-                    is MCDRenderRow.Meta -> {
-                        MetaSection(row.items)
-                        Spacer(Modifier.height(8.dp))
+        LazyColumn(modifier = modifier) {
+            item(contentType = "header") { header() }
+            items(
+                rows.size,
+                contentType = { index ->
+                    when (val row = rows[index]) {
+                        is MCDRenderRow.Meta -> "meta"
+                        is MCDRenderRow.RootComment -> "comment"
+                        is MCDRenderRow.Header -> "chain-header"
+                        is MCDRenderRow.ChainGap -> "gap"
+                        is MCDRenderRow.Item ->
+                            when (row.item) {
+                                is ChainItem.Comment -> "comment"
+                                is ChainItem.RawCommand -> "command"
+                                is ChainItem.Block -> "block"
+                            }
                     }
-
-                    is MCDRenderRow.RootComment -> {
-                        CommentItem(row.text)
-                        Spacer(Modifier.height(4.dp))
-                    }
-
-                    is MCDRenderRow.Header -> {
-                        ChainHeader(row.name)
-                    }
-
-                    is MCDRenderRow.Item -> {
-                        when (val item = row.item) {
-                            is ChainItem.Comment -> CommentItem(item.text)
-                            is ChainItem.RawCommand ->
-                                RawCommandItem(
-                                    item.command,
-                                    item.syntaxHighlightTokens,
-                                    highlightRevision,
-                                )
-
-                            is ChainItem.Block -> BlockItem(item.block, highlightRevision)
+                },
+            ) { index ->
+                Column(rowModifier) {
+                    when (val row = rows[index]) {
+                        is MCDRenderRow.Meta -> {
+                            MetaSection(row.items)
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(4.dp))
-                    }
-
-                    is MCDRenderRow.ChainGap -> {
-                        Spacer(Modifier.height(12.dp))
+                        is MCDRenderRow.RootComment -> {
+                            CommentItem(row.text)
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        is MCDRenderRow.Header -> ChainHeader(row.name)
+                        is MCDRenderRow.Item -> {
+                            when (val item = row.item) {
+                                is ChainItem.Comment -> CommentItem(item.text)
+                                is ChainItem.RawCommand ->
+                                    RawCommandItem(item.command, tokensFor(item))
+                                is ChainItem.Block -> BlockItem(item.block, tokensFor(item))
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        is MCDRenderRow.ChainGap -> Spacer(Modifier.height(12.dp))
                     }
                 }
             }
+            item(contentType = "footer") { footer() }
         }
     }
 }
@@ -259,13 +267,8 @@ private fun ChainHeader(name: String) {
 }
 
 @Composable
-private fun RawCommandItem(command: String, tokens: IntArray?, highlightRevision: Int) {
+private fun RawCommandItem(command: String, tokens: IntArray?) {
     val copy = LocalMcdCopy.current
-    val isDark = CHelperTheme.theme == CHelperTheme.Theme.Dark
-    val highlightedText =
-        remember(command, tokens, isDark, highlightRevision) {
-            highlightCommand(command, tokens, isDark)
-        }
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -274,16 +277,7 @@ private fun RawCommandItem(command: String, tokens: IntArray?, highlightRevision
                 .padding(10.dp, 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = highlightedText,
-            modifier = Modifier.weight(1f),
-            style =
-                TextStyle(
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = CHelperTheme.colors.textMain,
-                ),
-        )
+        CommandText(command, tokens, Modifier.weight(1f))
         Spacer(Modifier.width(8.dp))
         Icon(
             id = Res.drawable.copy,
@@ -295,7 +289,7 @@ private fun RawCommandItem(command: String, tokens: IntArray?, highlightRevision
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BlockItem(block: MCDBlock, highlightRevision: Int) {
+private fun BlockItem(block: MCDBlock, tokens: IntArray?) {
     val copy = LocalMcdCopy.current
     val blockColor =
         if (CHelperTheme.theme == CHelperTheme.Theme.Dark) {
@@ -339,21 +333,7 @@ private fun BlockItem(block: MCDBlock, highlightRevision: Int) {
             modifier = Modifier.fillMaxWidth().padding(10.dp, 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val isDark = CHelperTheme.theme == CHelperTheme.Theme.Dark
-            val highlightedText =
-                remember(block.command, block.syntaxHighlightTokens, isDark, highlightRevision) {
-                    highlightCommand(block.command, block.syntaxHighlightTokens, isDark)
-                }
-            Text(
-                text = highlightedText,
-                modifier = Modifier.weight(1f),
-                style =
-                    TextStyle(
-                        fontSize = 13.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = CHelperTheme.colors.textMain,
-                    ),
-            )
+            CommandText(block.command, tokens, Modifier.weight(1f))
             Spacer(Modifier.width(8.dp))
             Icon(
                 id = Res.drawable.copy,
@@ -361,6 +341,25 @@ private fun BlockItem(block: MCDBlock, highlightRevision: Int) {
                 modifier = Modifier.size(18.dp).clickable { copy(block.command) },
             )
         }
+    }
+}
+
+/** Use Foundation's lighter String text path until real syntax spans are available. */
+@Composable
+private fun CommandText(command: String, tokens: IntArray?, modifier: Modifier) {
+    val style =
+        TextStyle(
+            fontSize = 13.sp,
+            fontFamily = FontFamily.Monospace,
+            color = CHelperTheme.colors.textMain,
+        )
+    if (tokens == null || tokens.isEmpty()) {
+        Text(text = command, modifier = modifier, style = style)
+    } else {
+        val dark = CHelperTheme.theme == CHelperTheme.Theme.Dark
+        val highlighted =
+            remember(command, tokens, dark) { highlightCommand(command, tokens, dark) }
+        Text(text = highlighted, modifier = modifier, style = style)
     }
 }
 

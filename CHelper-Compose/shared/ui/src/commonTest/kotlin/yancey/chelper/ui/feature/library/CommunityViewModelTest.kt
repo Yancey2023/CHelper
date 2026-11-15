@@ -4,18 +4,29 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModelStore
 import kotlin.test.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.model.*
+import yancey.chelper.domain.settings.AppSettingsRepository
+import yancey.chelper.domain.settings.Settings
 import yancey.chelper.ui.feature.library.account.AccountViewModel
 import yancey.chelper.ui.feature.library.browse.PublicLibraryShowViewModel
+import yancey.chelper.ui.feature.library.mcd.MCDRenderRow
 import yancey.chelper.ui.feature.library.messages.MessageViewModel
 import yancey.chelper.ui.feature.library.profile.UserProfileViewModel
 import yancey.chelper.ui.feature.library.upload.LibraryUploadViewModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CommunityViewModelTest {
+    private class Preferences(override val state: Flow<Settings> = flowOf(Settings())) :
+        AppSettingsRepository {
+        override suspend fun update(transform: (Settings) -> Settings) = Unit
+    }
+
     private class Accounts : AccountRepository {
         override val state = MutableStateFlow(AccountState(AccountUser(id = 1, nickname = "old")))
         override val accountId = MutableStateFlow<Int?>(1)
@@ -208,7 +219,7 @@ class CommunityViewModelTest {
             calls++
             result.await()
         }
-        val vm = PublicLibraryShowViewModel(Accounts(), content)
+        val vm = PublicLibraryShowViewModel(Accounts(), content, Preferences())
         store.put("vm", vm)
         vm.toggleFavorite(7)
         vm.toggleFavorite(7)
@@ -218,6 +229,117 @@ class CommunityViewModelTest {
         runCurrent()
         assertTrue(vm.isFavorited)
     }
+
+    @Test
+    fun detailIsPublishedOnlyAfterRealPreferencesAndDocumentPreparation() = testModels { store ->
+        val ready = CompletableDeferred<Unit>()
+        val preferences =
+            Preferences(
+                flow {
+                    ready.await()
+                    emit(
+                        Settings(
+                            ambiguousLineDefault = "command",
+                            isHideMetadataPreview = true,
+                            isEnableMcdHighlight = false,
+                        )
+                    )
+                }
+            )
+        val content =
+            Content().apply {
+                detailCall = {
+                    RepositoryResult(
+                        LibraryFunction(id = it, content = "@name=Example\n含糊文本\nsay hello")
+                    )
+                }
+            }
+        val vm =
+            PublicLibraryShowViewModel(
+                Accounts(),
+                content,
+                preferences,
+                StandardTestDispatcher(testScheduler),
+            )
+        store.put("vm", vm)
+        vm.ensureLoaded(7, false)
+        runCurrent()
+        assertTrue(vm.isLoading)
+        assertNull(vm.library.id)
+        assertNull(vm.preview)
+        ready.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(vm.isLoading)
+        assertEquals(7, vm.library.id)
+        val preview = assertNotNull(vm.preview)
+        assertFalse(preview.highlight)
+        assertFalse(preview.rows.any { it is MCDRenderRow.Meta })
+        assertTrue(
+            preview.rows.any { (it as? MCDRenderRow.Item)?.item == ChainItem.RawCommand("含糊文本") }
+        )
+    }
+
+    @Test
+    fun changingDetailDuringPreparationCannotPublishTheOldDocument() = testModels { store ->
+        val ready = CompletableDeferred<Unit>()
+        val preferences =
+            Preferences(
+                flow {
+                    ready.await()
+                    emit(Settings())
+                }
+            )
+        val vm =
+            PublicLibraryShowViewModel(
+                Accounts(),
+                Content(),
+                preferences,
+                StandardTestDispatcher(testScheduler),
+            )
+        store.put("vm", vm)
+        vm.ensureLoaded(1, false)
+        runCurrent()
+        vm.ensureLoaded(2, false)
+        runCurrent()
+        ready.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(2, vm.library.id)
+        assertNotNull(vm.preview)
+        assertFalse(vm.isLoading)
+    }
+
+    @Test
+    fun changingPreviewPreferencesKeepsReadyContentUntilItsReplacementIsPrepared() =
+        testModels { store ->
+            val preferences = MutableStateFlow(Settings(isHideMetadataPreview = false))
+            val content =
+                Content().apply {
+                    detailCall = {
+                        RepositoryResult(
+                            LibraryFunction(id = it, content = "@name=Example\nsay hello")
+                        )
+                    }
+                }
+            val vm =
+                PublicLibraryShowViewModel(
+                    Accounts(),
+                    content,
+                    Preferences(preferences),
+                    StandardTestDispatcher(testScheduler),
+                )
+            store.put("vm", vm)
+            vm.ensureLoaded(7, false)
+            advanceUntilIdle()
+            val first = assertNotNull(vm.preview)
+            assertTrue(first.rows.any { it is MCDRenderRow.Meta })
+            preferences.value = Settings(isHideMetadataPreview = true)
+            assertSame(first, vm.preview)
+            assertFalse(vm.isLoading)
+            advanceUntilIdle()
+            assertFalse(vm.isLoading)
+            assertFalse(assertNotNull(vm.preview).rows.any { it is MCDRenderRow.Meta })
+            assertEquals(7, vm.library.id)
+        }
 
     @Test
     fun accountUpdatesReplaceSnapshotsAndKeepPreviousValuesUnchanged() = testModels { store ->

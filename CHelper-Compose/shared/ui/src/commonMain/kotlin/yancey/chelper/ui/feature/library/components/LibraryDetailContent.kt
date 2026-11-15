@@ -78,8 +78,6 @@ fun LibraryDetailContent(
             }
         },
     ) {
-        // MCDContentView 现在不再自带 LazyColumn，需要外层提供滚动；
-        // 这里用 verticalScroll 给整个内容区一个垂直滚动通道
         if (showRawSource) {
             Box(
                 modifier =
@@ -94,12 +92,7 @@ fun LibraryDetailContent(
                 Text(text = resolvedSource)
             }
         } else {
-            Column(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 15.dp, vertical = 10.dp)
-            ) {
+            Box(Modifier.fillMaxSize().padding(horizontal = 15.dp, vertical = 10.dp)) {
                 visualContent(resolvedSource, ambiguousDefault, !hideMetadata)
             }
         }
@@ -108,14 +101,13 @@ fun LibraryDetailContent(
     if (showMenu) {
         MenuDialog(
             onDismissRequest = { showMenu = false },
-            data =
-                buildList {
-                        if (onEdit != null) add("编辑" to "edit")
-                        add("逐行复制" to "line_copy")
-                        add("复制全部 MCD 源码" to "copy_all")
-                        add((if (showRawSource) "查看可视化" else "查看源码") to "toggle_view")
-                        add("关闭" to "close")
-                    }
+            data = buildList {
+                    if (onEdit != null) add("编辑" to "edit")
+                    add("逐行复制" to "line_copy")
+                    add("复制全部 MCD 源码" to "copy_all")
+                    add((if (showRawSource) "查看可视化" else "查看源码") to "toggle_view")
+                    add("关闭" to "close")
+                }
                     .toTypedArray(),
             onChoose = { action ->
                 when (action) {

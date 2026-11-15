@@ -50,6 +50,7 @@ data class CommandAnalysis(
     val tokens: IntArray?,
     val nodeCount: Int,
     val suggestionCount: Int,
+    val suggestions: Map<Int, CommandSuggestion?> = emptyMap(),
 )
 
 /** All native access, including lazy suggestion queries and release, uses one serial queue. */
@@ -66,7 +67,28 @@ class CommandSession(
     private var revision = -1L
     private var index = 0
 
-    suspend fun analyze(request: CommandAnalysisRequest): CommandAnalysis =
+    suspend fun analyze(
+        request: CommandAnalysisRequest,
+        suggestionIndices: List<Int> = emptyList(),
+    ): CommandAnalysis = analyze(request, suggestionIndices, includeEditorMetadata = true)
+
+    /**
+     * Document coloring must not generate hints or build native completion lists just to count
+     * them.
+     */
+    suspend fun highlight(branch: String, text: String): IntArray? =
+        analyze(
+                CommandAnalysisRequest(0, branch, text, 0, true, false),
+                emptyList(),
+                includeEditorMetadata = false,
+            )
+            .tokens
+
+    private suspend fun analyze(
+        request: CommandAnalysisRequest,
+        suggestionIndices: List<Int>,
+        includeEditorMetadata: Boolean,
+    ): CommandAnalysis =
         withContext(dispatcher) {
             mutex.withLock {
                 ensureActive()
@@ -95,20 +117,60 @@ class CommandSession(
                 val result =
                     CommandAnalysis(
                         structure =
-                            if (request.text.isEmpty()) "欢迎使用CHelper" else current?.structure,
+                            if (!includeEditorMetadata) null
+                            else if (request.text.isEmpty()) "欢迎使用CHelper" else current?.structure,
                         hint =
-                            if (request.text.isEmpty()) "作者：Yancey"
+                            if (!includeEditorMetadata) null
+                            else if (request.text.isEmpty()) "作者：Yancey"
                             else current?.hint(request.index),
                         errors = if (request.errors) current?.errors else null,
                         tokens = if (request.highlight) current?.tokens else null,
-                        nodeCount = if (request.text.isEmpty()) 0 else current?.nodeCount ?: 0,
-                        suggestionCount = current?.suggestionCount(request.index) ?: 0,
+                        nodeCount =
+                            if (!includeEditorMetadata || request.text.isEmpty()) 0
+                            else current?.nodeCount ?: 0,
+                        suggestionCount =
+                            if (includeEditorMetadata) current?.suggestionCount(request.index) ?: 0
+                            else 0,
+                        suggestions =
+                            if (includeEditorMetadata)
+                                readSuggestions(current, request.index, suggestionIndices)
+                            else emptyMap(),
                     )
                 revision = request.revision
                 index = request.index
                 result
             }
         }
+
+    /** Capture only the viewport's values while holding the same queue as analysis and apply. */
+    suspend fun suggestions(
+        expectedRevision: Long,
+        indices: List<Int>,
+    ): Map<Int, CommandSuggestion?> =
+        withContext(dispatcher) {
+            mutex.withLock {
+                if (closed.load() || expectedRevision < 0 || revision != expectedRevision)
+                    emptyMap()
+                else readSuggestions(parsed, index, indices)
+            }
+        }
+
+    private fun readSuggestions(
+        current: ParsedCommand?,
+        index: Int,
+        indices: List<Int>,
+    ): Map<Int, CommandSuggestion?> {
+        if (current == null || indices.isEmpty()) return emptyMap()
+        val count = current.suggestionCount(index)
+        return indices
+            .distinct()
+            .filter { it in 0 until count }
+            .associateWith { which ->
+                current.suggestion(index, which)?.let {
+                    CommandSuggestion(it.name.orEmpty(), it.description)
+                }
+            }
+    }
 
     suspend fun suggestion(expectedRevision: Long, which: Int): Suggestion? =
         withContext(dispatcher) {

@@ -114,8 +114,13 @@ class SharedAndroidUiTest {
             compose.onNodeWithText("设置").performScrollTo().clickOnMain()
             compose.onNodeWithText("选择主题").assertExists()
             compose.onNodeWithText("悬浮窗图标大小").assertDoesNotExist()
+            compose.onNodeWithTag("settings-list").performScrollToNode(hasText("是否启用小图标模式"))
             compose.onNodeWithText("是否启用小图标模式").assertExists()
+            compose
+                .onNodeWithTag("settings-list")
+                .performScrollToNode(hasText("当前命令分支：正式版-实验性玩法", substring = true))
             compose.onNodeWithText("当前命令分支：正式版-实验性玩法", substring = true).assertExists()
+            compose.onNodeWithTag("settings-list").performScrollToIndex(0)
             screenshot("settings-android-ui")
             compose.onNodeWithText("选择主题").clickOnMain()
             compose.onNodeWithText("深色模式").clickOnMain()

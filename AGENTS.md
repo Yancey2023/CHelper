@@ -21,6 +21,9 @@ CHelper-Compose 的 UI 约束（用户明确要求）：
 
 - 不使用 Material 或 Material 3，包括 `androidx.compose.material.*`、`androidx.compose.material3.*`、对应的主题、控件、图标与 Gradle 依赖。不得把现有自定义控件换成 Material，也不要通过别名或包装间接引入。桌面 compose.desktop.currentOs 聚合依赖默认带入的 Material 也须显式排除，并检查解析依赖和分发包。
 - Compose 官方能力优先指 Runtime、UI、Foundation、Animation、Navigation 等基础能力；保留项目自己的设计系统、视觉风格和共享控件，Android 与 Windows 复用同一套 UI。
+- 命令编辑器的 InputTransformation / OutputTransformation 必须保持实例稳定；动态高亮、错误样式和主题通过 rememberUpdatedState 等快照状态读取更新，不能按文本或 token 重建输出转换器，否则 BasicTextField 会重建内部文本状态并重启 IME 会话。验证时检查输入会话连续性及样式更新，不能只检查焦点还在。
+- 页面切换动画集中在共享 `ClientNavHost`，普通返回与预测性返回使用同一反向路径、时长和缓动。Navigation 2.10 的 `predictivePopEnterTransition` / `predictivePopExitTransition` 必须显式配置，不能只配置普通 pop 动画；手势进度、取消恢复和提交由官方 NavHost 处理，避免手动重复 pop。
+- shared/ui 的 Android 目标必须启用 `androidResources.enable = true`，由 Compose 插件打包共享资源；Android 原生 `res` 目录映射不能替代 Compose assets。发布前用 `scripts/check_android_resources.py` 检查 APK 中的实际资源内容。
 - 弹窗使用共享 `AppDialog` / `AppDialogHost` 在当前 Compose 宿主内绘制。系统悬浮窗不能依赖 Activity Dialog 的窗口条件；不使用创建额外系统窗口的 Dialog、AlertDialog 或 BasicAlertDialog，也不通过 windowType 适配来替代自定义弹窗。保留遮罩拦截、嵌套返回、禁止关闭和焦点隔离、恢复能力。
 - 保留 Android 的 Toaster，在 Application 启动时初始化，并通过共享 `ClientMessages` 入口提供反馈。它承担不依赖 Compose Host 的消息呈现及 Android Toast 兼容处理；不要擅自用 Snackbar、自制界面消息或系统 Toast 替换，也不要只因“官方能力优先”或“跨平台”而删除。Windows 使用共享的非 Material 消息组件。
 - 移除或替换已有库前，先查明调用场景、线程与生命周期要求、平台兼容职责，并验证替代行为；不要仅凭编译通过认定替换等价。相关 UI 约束由 `scripts/check_compose_architecture.py` 检查，变更时同步维护说明。

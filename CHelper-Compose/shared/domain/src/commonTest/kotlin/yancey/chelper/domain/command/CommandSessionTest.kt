@@ -45,6 +45,54 @@ class CommandSessionTest {
         CommandAnalysisRequest(revision, "test", text, index, true, true)
 
     @Test
+    fun `document highlighting never queries editor metadata or builds completion lists`() =
+        runTest {
+            val session =
+                CommandSession(
+                    load = {
+                        object : CommandEngine {
+                            override suspend fun parse(text: String) =
+                                object : ParsedCommand {
+                                    override val tokens = intArrayOf(7, 7, 7)
+                                    override val structure: String?
+                                        get() = error("structure is unnecessary for coloring")
+
+                                    override val errors: Array<ErrorReason>?
+                                        get() = error("errors are unnecessary for coloring")
+
+                                    override val nodeCount: Int
+                                        get() = error("node count is unnecessary for coloring")
+
+                                    override fun hint(index: Int): String? =
+                                        error("hint is unnecessary for coloring")
+
+                                    override fun suggestionCount(index: Int): Int =
+                                        error("must not build a completion list")
+
+                                    override fun suggestion(index: Int, which: Int): Suggestion? =
+                                        error("must not read completion values")
+
+                                    override fun apply(
+                                        index: Int,
+                                        which: Int,
+                                    ): ClickSuggestionResult? = null
+
+                                    override fun close() = Unit
+                                }
+
+                            override fun close() = Unit
+                        }
+                    },
+                    dispatcher = StandardTestDispatcher(testScheduler),
+                )
+            try {
+                assertContentEquals(intArrayOf(7, 7, 7), session.highlight("test", "say"))
+            } finally {
+                session.close()
+            }
+        }
+
+    @Test
     fun `cursor changes reuse the AST and stale suggestion clicks are rejected`() = runTest {
         var parses = 0
         val closed = CompletableDeferred<Unit>()

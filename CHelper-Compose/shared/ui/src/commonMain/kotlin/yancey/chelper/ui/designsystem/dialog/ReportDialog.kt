@@ -18,11 +18,21 @@
 
 package yancey.chelper.ui.designsystem.dialog
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -31,13 +41,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.widget.Divider
+import yancey.chelper.ui.designsystem.widget.DividerVertical
 import yancey.chelper.ui.designsystem.widget.RadioButton
-import yancey.chelper.ui.designsystem.widget.SelectionItem
 import yancey.chelper.ui.designsystem.widget.Text
-import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.designsystem.widget.TextField
 
 /**
@@ -62,49 +80,141 @@ fun ReportDialog(
     var selectedReason by remember { mutableStateOf<String?>(null) }
     val extraNote = rememberTextFieldState()
 
-    AppAlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text(title) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()).selectableGroup()) {
-                targetDescription?.takeIf { it.isNotBlank() }?.let { Text("针对：$it") }
-                presetReasons.forEach { reason ->
-                    SelectionItem(
-                        headlineContent = { Text(reason) },
-                        leadingContent = {
-                            RadioButton(selected = selectedReason == reason, onClick = null)
-                        },
+    AppDialog(onDismissRequest = onDismissRequest) {
+        DialogContainer {
+            Column {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(0.dp, 14.dp),
+                    text = title,
+                    style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center),
+                )
+
+                if (!targetDescription.isNullOrBlank()) {
+                    Text(
                         modifier =
-                            Modifier.fillMaxWidth()
-                                .selectable(
-                                    selected = selectedReason == reason,
-                                    role = Role.RadioButton,
-                                    onClick = { selectedReason = reason },
-                                ),
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        text = "针对：$targetDescription",
+                        style =
+                            TextStyle(
+                                fontSize = 12.sp,
+                                color = CHelperTheme.colors.textSecondary,
+                                textAlign = TextAlign.Center,
+                            ),
                     )
                 }
+
+                // 预设理由竖排，比 FlowRow 在窄屏上更好读
+                Column(
+                    modifier =
+                        Modifier.weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState())
+                            .selectableGroup()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    presetReasons.forEach { reason ->
+                        val isSelected = selectedReason == reason
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(vertical = 2.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        if (isSelected)
+                                            CHelperTheme.colors.mainColor.copy(alpha = 0.12f)
+                                        else Color.Transparent
+                                    )
+                                    .selectable(
+                                        selected = isSelected,
+                                        role = Role.RadioButton,
+                                        onClick = { selectedReason = reason },
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = isSelected, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = reason,
+                                style =
+                                    TextStyle(
+                                        fontSize = 14.sp,
+                                        color = CHelperTheme.colors.textMain,
+                                        fontWeight =
+                                            if (isSelected) FontWeight.Medium
+                                            else FontWeight.Normal,
+                                    ),
+                            )
+                        }
+                    }
+                }
+
+                // 补充说明（可选）
+                Text(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    text = "补充说明（可选）",
+                    style = TextStyle(fontSize = 12.sp, color = CHelperTheme.colors.textSecondary),
+                )
                 TextField(
                     state = extraNote,
-                    hint = "补充说明（可选）",
+                    modifier =
+                        Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                            .fillMaxWidth()
+                            .height(70.dp),
+                    contentAlignment = Alignment.TopStart,
+                    hint = "更多细节有助于管理员判断",
                     lineLimits =
                         TextFieldLineLimits.MultiLine(minHeightInLines = 2, maxHeightInLines = 4),
                 )
+
+                Spacer(Modifier.height(8.dp))
+                Divider(0.dp)
+                Row(Modifier.height(45.dp)) {
+                    Box(
+                        Modifier.fillMaxHeight().weight(1f).clickable(role = Role.Button) {
+                            onDismissRequest()
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "取消",
+                            style =
+                                TextStyle(
+                                    fontSize = 18.sp,
+                                    color = CHelperTheme.colors.textSecondary,
+                                    textAlign = TextAlign.Center,
+                                ),
+                        )
+                    }
+                    DividerVertical(0.dp)
+                    val canSubmit = selectedReason != null
+                    Box(
+                        Modifier.fillMaxHeight().weight(1f).clickable(
+                            enabled = canSubmit,
+                            role = Role.Button,
+                        ) {
+                            val core = selectedReason ?: return@clickable
+                            val note = extraNote.text.toString().trim()
+                            val finalReason = if (note.isNotEmpty()) "$core：$note" else core
+                            onDismissRequest()
+                            onConfirm(finalReason)
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "提交",
+                            style =
+                                TextStyle(
+                                    fontSize = 18.sp,
+                                    color =
+                                        if (canSubmit) CHelperTheme.colors.mainColor
+                                        else CHelperTheme.colors.textSecondary,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Medium,
+                                ),
+                        )
+                    }
+                }
             }
-        },
-        dismissButton = { TextButton(onClick = onDismissRequest) { Text("取消") } },
-        confirmButton = {
-            TextButton(
-                enabled = selectedReason != null,
-                onClick = {
-                    val core = selectedReason ?: return@TextButton
-                    val note = extraNote.text.toString().trim()
-                    onDismissRequest()
-                    onConfirm(if (note.isNotEmpty()) "$core：$note" else core)
-                },
-            ) {
-                Text("提交")
-            }
-        },
-        containerColor = CHelperTheme.colors.backgroundComponentNoTranslate,
-    )
+        }
+    }
 }

@@ -18,8 +18,6 @@
 
 package yancey.chelper.android.navigation
 
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -28,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
 import yancey.chelper.android.command.OldCommandConverter
 import yancey.chelper.android.di.rememberAndroidClientServices
 import yancey.chelper.android.ui.ime.Old2NewIMEGuideScreen
@@ -43,6 +40,7 @@ import yancey.chelper.ui.feature.enumeration.EnumerationScreen
 import yancey.chelper.ui.feature.home.HomeScreen
 import yancey.chelper.ui.feature.rawtext.RawtextScreen
 import yancey.chelper.ui.feature.settings.SettingsScreen
+import yancey.chelper.ui.navigation.ClientNavHost
 import yancey.chelper.ui.navigation.ClientScreenBindings
 import yancey.chelper.ui.navigation.CompletionScreenKey
 import yancey.chelper.ui.navigation.HomeScreenKey
@@ -133,13 +131,9 @@ private fun CHelperNavigation(
                 LocalAppBackAction provides { navController.popBackStack() },
                 LocalWideLayout provides (maxWidth > maxHeight),
             ) {
-                NavHost(
+                ClientNavHost(
                     navController = navController,
                     startDestination = start,
-                    enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
-                    exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
-                    popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-                    popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) },
                 ) {
                     clientScreens(
                         navController,

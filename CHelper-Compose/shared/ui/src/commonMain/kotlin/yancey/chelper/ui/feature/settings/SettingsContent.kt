@@ -18,17 +18,16 @@
 
 package yancey.chelper.ui.feature.settings
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.resources.*
@@ -40,7 +39,6 @@ import yancey.chelper.ui.designsystem.layout.CollectionName
 import yancey.chelper.ui.designsystem.layout.NameAndAction
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.layout.SettingsItem
-import yancey.chelper.ui.designsystem.widget.Divider
 
 @Composable
 fun SettingsContent(
@@ -84,252 +82,324 @@ fun SettingsContent(
     val syntaxHighlightMaxLength = settings.syntaxHighlightMaxLength ?: 4000
     val tagClickBehavior = settings.tagClickBehavior ?: "search"
     val ambiguousLineDefault = settings.ambiguousLineDefault ?: "comment"
+    val currentCpackBranchTranslation =
+        remember(cpackBranch, cpackBranchesWithTranslate) {
+            for (pair in cpackBranchesWithTranslate) {
+                if (cpackBranch == pair.second) {
+                    return@remember pair.first
+                }
+            }
+            return@remember cpackBranch
+        }
     RootViewWithHeaderAndCopyright(stringResource(Res.string.layout_settings_title)) {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        LazyColumn(modifier = Modifier.fillMaxSize().testTag("settings-list")) {
             if (error != null) {
-                Collection { NameAndAction("设置保存或读取失败，点击重试", error, onClick = onRetry) }
+                item(key = "save-error") {
+                    Collection { NameAndAction("设置保存或读取失败，点击重试", error, onClick = onRetry) }
+                }
             }
-            CollectionName(stringResource(Res.string.layout_settings_application_update))
-            Collection {
-                SettingsItem(
-                    name = stringResource(Res.string.layout_settings_is_enable_update_notification),
-                    description =
-                        stringResource(
-                            Res.string.layout_settings_is_enable_update_notification_description
-                        ),
-                    checked = isEnableUpdateNotifications,
-                    onCheckedChange = {
-                        run {
-                            onChange { current -> current.copy(isEnableUpdateNotifications = it) }
-                        }
-                    },
-                )
-            }
-            CollectionName(stringResource(Res.string.layout_settings_theme_settings))
-            Collection {
-                NameAndAction(
-                    name = stringResource(Res.string.layout_settings_choose_background),
-                    description =
-                        stringResource(Res.string.layout_settings_choose_background_description),
-                ) {
-                    chooseBackground()
-                }
-                Divider()
-                NameAndAction(
-                    name = stringResource(Res.string.layout_settings_restore_background),
-                    description =
-                        stringResource(Res.string.layout_settings_restore_background_description),
-                ) {
-                    isShowResumeBackgroundDialog = true
-                }
-                Divider()
-                NameAndAction(
-                    name = stringResource(Res.string.layout_settings_choose_theme),
-                    description =
-                        stringResource(Res.string.layout_settings_choose_theme_description),
-                ) {
-                    isShowChooseThemeDialog = true
-                }
-                if (floatingWindowSettings) {
-                    Divider()
-                    NameAndAction(
-                        name =
-                            stringResource(Res.string.layout_settings_floating_window_icon_alpha),
-                        description =
-                            stringResource(
-                                Res.string.layout_settings_floating_window_icon_alpha_description
-                            ),
-                    ) {
-                        isShowInputFloatingWindowIconAlphaDialog = true
-                    }
-                    Divider()
-                    NameAndAction(
-                        name =
-                            stringResource(Res.string.layout_settings_floating_window_screen_alpha),
-                        description =
-                            stringResource(
-                                Res.string.layout_settings_floating_window_screen_alpha_description
-                            ),
-                    ) {
-                        isShowInputFloatingWindowScreenAlphaDialog = true
-                    }
-                    Divider()
+            settingsSection(
+                "update",
+                title = {
+                    CollectionName(stringResource(Res.string.layout_settings_application_update))
+                },
+            ) {
+                item("notifications") {
                     SettingsItem(
-                        name = "悬浮窗字体是否跟随透明",
-                        description = "开启后字体随窗口一同透明；关闭后仅背景透明，字体保持清晰",
-                        checked = isFloatingWindowFontAlphaSync,
+                        name =
+                            stringResource(
+                                Res.string.layout_settings_is_enable_update_notification
+                            ),
+                        description =
+                            stringResource(
+                                Res.string.layout_settings_is_enable_update_notification_description
+                            ),
+                        checked = isEnableUpdateNotifications,
                         onCheckedChange = {
                             run {
                                 onChange { current ->
-                                    current.copy(isFloatingWindowFontAlphaSync = it)
+                                    current.copy(isEnableUpdateNotifications = it)
                                 }
                             }
                         },
                     )
-                    Divider()
+                }
+            }
+            settingsSection(
+                "theme",
+                title = {
+                    CollectionName(stringResource(Res.string.layout_settings_theme_settings))
+                },
+            ) {
+                item("background") {
                     NameAndAction(
-                        name = stringResource(Res.string.layout_settings_floating_window_icon_size),
+                        name = stringResource(Res.string.layout_settings_choose_background),
                         description =
                             stringResource(
-                                Res.string.layout_settings_floating_window_icon_size_description
+                                Res.string.layout_settings_choose_background_description
                             ),
                     ) {
-                        isShowInputFloatingWindowIconSizeDialog = true
+                        chooseBackground()
+                    }
+                }
+                item("restore-background") {
+                    NameAndAction(
+                        name = stringResource(Res.string.layout_settings_restore_background),
+                        description =
+                            stringResource(
+                                Res.string.layout_settings_restore_background_description
+                            ),
+                    ) {
+                        isShowResumeBackgroundDialog = true
+                    }
+                }
+                item("theme") {
+                    NameAndAction(
+                        name = stringResource(Res.string.layout_settings_choose_theme),
+                        description =
+                            stringResource(Res.string.layout_settings_choose_theme_description),
+                    ) {
+                        isShowChooseThemeDialog = true
+                    }
+                }
+                if (floatingWindowSettings) {
+                    item("icon-alpha") {
+                        NameAndAction(
+                            name =
+                                stringResource(
+                                    Res.string.layout_settings_floating_window_icon_alpha
+                                ),
+                            description =
+                                stringResource(
+                                    Res.string
+                                        .layout_settings_floating_window_icon_alpha_description
+                                ),
+                        ) {
+                            isShowInputFloatingWindowIconAlphaDialog = true
+                        }
+                    }
+                    item("window-alpha") {
+                        NameAndAction(
+                            name =
+                                stringResource(
+                                    Res.string.layout_settings_floating_window_screen_alpha
+                                ),
+                            description =
+                                stringResource(
+                                    Res.string
+                                        .layout_settings_floating_window_screen_alpha_description
+                                ),
+                        ) {
+                            isShowInputFloatingWindowScreenAlphaDialog = true
+                        }
+                    }
+                    item("font-alpha") {
+                        SettingsItem(
+                            name = "悬浮窗字体是否跟随透明",
+                            description = "开启后字体随窗口一同透明；关闭后仅背景透明，字体保持清晰",
+                            checked = isFloatingWindowFontAlphaSync,
+                            onCheckedChange = {
+                                run {
+                                    onChange { current ->
+                                        current.copy(isFloatingWindowFontAlphaSync = it)
+                                    }
+                                }
+                            },
+                        )
+                    }
+                    item("icon-size") {
+                        NameAndAction(
+                            name =
+                                stringResource(
+                                    Res.string.layout_settings_floating_window_icon_size
+                                ),
+                            description =
+                                stringResource(
+                                    Res.string.layout_settings_floating_window_icon_size_description
+                                ),
+                        ) {
+                            isShowInputFloatingWindowIconSizeDialog = true
+                        }
                     }
                 }
             }
-            CollectionName(stringResource(Res.string.layout_settings_completion_settings))
-            Collection {
-                val currentCpackBranchTranslation =
-                    remember(cpackBranch, cpackBranchesWithTranslate) {
-                        for (pair in cpackBranchesWithTranslate) {
-                            if (cpackBranch == pair.second) {
-                                return@remember pair.first
-                            }
-                        }
-                        return@remember cpackBranch
-                    }
-                NameAndAction(
-                    name = stringResource(Res.string.layout_settings_choose_cpack),
-                    description =
-                        stringResource(
-                            Res.string.layout_settings_current_cpack,
-                            currentCpackBranchTranslation
-                                ?: stringResource(Res.string.layout_settings_unknown_branch),
-                        ),
-                ) {
-                    isShowChooseCpackBranchDialog = true
-                }
-                Divider()
-                SettingsItem(
-                    name = stringResource(Res.string.layout_setting_checking_by_selection),
-                    description =
-                        stringResource(Res.string.layout_setting_checking_by_selection_description),
-                    checked = isCheckingBySelection,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isCheckingBySelection = it) } }
-                    },
-                )
-                if (floatingWindowSettings) {
-                    Divider()
-                    SettingsItem(
-                        name =
-                            stringResource(Res.string.layout_setting_is_hide_window_when_copying),
+            settingsSection(
+                "completion",
+                title = {
+                    CollectionName(stringResource(Res.string.layout_settings_completion_settings))
+                },
+            ) {
+                item("resource-pack") {
+                    NameAndAction(
+                        name = stringResource(Res.string.layout_settings_choose_cpack),
                         description =
                             stringResource(
-                                Res.string.layout_setting_is_hide_window_when_copying_description
+                                Res.string.layout_settings_current_cpack,
+                                currentCpackBranchTranslation
+                                    ?: stringResource(Res.string.layout_settings_unknown_branch),
                             ),
-                        checked = isHideWindowWhenCopying,
+                    ) {
+                        isShowChooseCpackBranchDialog = true
+                    }
+                }
+                item("selection-analysis") {
+                    SettingsItem(
+                        name = stringResource(Res.string.layout_setting_checking_by_selection),
+                        description =
+                            stringResource(
+                                Res.string.layout_setting_checking_by_selection_description
+                            ),
+                        checked = isCheckingBySelection,
                         onCheckedChange = {
-                            run {
-                                onChange { current -> current.copy(isHideWindowWhenCopying = it) }
-                            }
+                            run { onChange { current -> current.copy(isCheckingBySelection = it) } }
                         },
                     )
                 }
-                Divider()
-                SettingsItem(
-                    name = stringResource(Res.string.layout_setting_is_saving_when_pausing),
-                    description =
-                        stringResource(
-                            Res.string.layout_setting_is_saving_when_pausing_description
-                        ),
-                    checked = isSavingWhenPausing,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isSavingWhenPausing = it) } }
-                    },
-                )
-                Divider()
-                SettingsItem(
-                    name = stringResource(Res.string.layout_setting_is_crowed),
-                    description = stringResource(Res.string.layout_setting_is_crowed_description),
-                    checked = isCrowded,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isCrowded = it) } }
-                    },
-                )
-                Divider()
-                SettingsItem(
-                    name = stringResource(Res.string.layout_setting_is_show_error_reason),
-                    description =
-                        stringResource(Res.string.layout_setting_is_show_error_reason_description),
-                    checked = isShowErrorReason,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isShowErrorReason = it) } }
-                    },
-                )
-                Divider()
-                SettingsItem(
-                    name = stringResource(Res.string.layout_setting_is_syntax_highlight),
-                    description =
-                        stringResource(Res.string.layout_setting_is_syntax_highlight_description),
-                    checked = isSyntaxHighlight,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isSyntaxHighlight = it) } }
-                    },
-                )
-                Divider()
-                NameAndAction(
-                    name = "高亮自动关闭阈值",
-                    description = "当前限制: ${syntaxHighlightMaxLength ?: 4000} 字符 (为防卡死)",
-                ) {
-                    isShowInputSyntaxHighlightMaxLengthDialog = true
+                if (floatingWindowSettings) {
+                    item("hide-on-copy") {
+                        SettingsItem(
+                            name =
+                                stringResource(
+                                    Res.string.layout_setting_is_hide_window_when_copying
+                                ),
+                            description =
+                                stringResource(
+                                    Res.string
+                                        .layout_setting_is_hide_window_when_copying_description
+                                ),
+                            checked = isHideWindowWhenCopying,
+                            onCheckedChange = {
+                                run {
+                                    onChange { current ->
+                                        current.copy(isHideWindowWhenCopying = it)
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+                item("autosave") {
+                    SettingsItem(
+                        name = stringResource(Res.string.layout_setting_is_saving_when_pausing),
+                        description =
+                            stringResource(
+                                Res.string.layout_setting_is_saving_when_pausing_description
+                            ),
+                        checked = isSavingWhenPausing,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isSavingWhenPausing = it) } }
+                        },
+                    )
+                }
+                item("compact") {
+                    SettingsItem(
+                        name = stringResource(Res.string.layout_setting_is_crowed),
+                        description =
+                            stringResource(Res.string.layout_setting_is_crowed_description),
+                        checked = isCrowded,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isCrowded = it) } }
+                        },
+                    )
+                }
+                item("errors") {
+                    SettingsItem(
+                        name = stringResource(Res.string.layout_setting_is_show_error_reason),
+                        description =
+                            stringResource(
+                                Res.string.layout_setting_is_show_error_reason_description
+                            ),
+                        checked = isShowErrorReason,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isShowErrorReason = it) } }
+                        },
+                    )
+                }
+                item("syntax") {
+                    SettingsItem(
+                        name = stringResource(Res.string.layout_setting_is_syntax_highlight),
+                        description =
+                            stringResource(
+                                Res.string.layout_setting_is_syntax_highlight_description
+                            ),
+                        checked = isSyntaxHighlight,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isSyntaxHighlight = it) } }
+                        },
+                    )
+                }
+                item("highlight-limit") {
+                    NameAndAction(
+                        name = "高亮自动关闭阈值",
+                        description = "当前限制: ${syntaxHighlightMaxLength ?: 4000} 字符 (为防卡死)",
+                    ) {
+                        isShowInputSyntaxHighlightMaxLengthDialog = true
+                    }
                 }
             }
-            CollectionName("命令库设置")
-            Collection {
-                NameAndAction(
-                    name = "命令库默认主页流",
-                    description = "当前: ${if (isPublicLibraryHomeRecommend) "猜你喜欢" else "按时间最新发布"}",
-                ) {
-                    isShowChooseLibraryHomeRecommendDialog = true
+            settingsSection("libraries", title = { CollectionName("命令库设置") }) {
+                item("home-feed") {
+                    NameAndAction(
+                        name = "命令库默认主页流",
+                        description =
+                            "当前: ${if (isPublicLibraryHomeRecommend) "猜你喜欢" else "按时间最新发布"}",
+                    ) {
+                        isShowChooseLibraryHomeRecommendDialog = true
+                    }
                 }
-                Divider()
-                NameAndAction(
-                    name = "Tag 点击行为",
-                    description = "当前: ${if (tagClickBehavior == "search") "搜索该 Tag" else "进入详情页"}",
-                ) {
-                    isShowChooseTagClickDialog = true
+                item("tag-action") {
+                    NameAndAction(
+                        name = "Tag 点击行为",
+                        description =
+                            "当前: ${if (tagClickBehavior == "search") "搜索该 Tag" else "进入详情页"}",
+                    ) {
+                        isShowChooseTagClickDialog = true
+                    }
                 }
-                Divider()
-                NameAndAction(
-                    name = "无法推断行的默认处理",
-                    description = "当前: ${if (ambiguousLineDefault == "comment") "当作注释" else "当作指令"}",
-                ) {
-                    isShowChooseAmbiguousLineDialog = true
+                item("ambiguous-lines") {
+                    NameAndAction(
+                        name = "无法推断行的默认处理",
+                        description =
+                            "当前: ${if (ambiguousLineDefault == "comment") "当作注释" else "当作指令"}",
+                    ) {
+                        isShowChooseAmbiguousLineDialog = true
+                    }
                 }
-                Divider()
-                SettingsItem(
-                    name = "隐藏正文元数据预览",
-                    description = "隐藏 MCD 可视化中 @name、@version 等元信息区",
-                    checked = isHideMetadataPreview,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isHideMetadataPreview = it) } }
-                    },
-                )
-                Divider()
-                SettingsItem(
-                    name = "[实验性] 命令块语法高亮",
-                    description = "支持命令库在 v2 渲染时为命令块附加语法高亮",
-                    checked = isEnableMcdHighlight,
-                    onCheckedChange = {
-                        run { onChange { current -> current.copy(isEnableMcdHighlight = it) } }
-                    },
-                )
+                item("hide-metadata") {
+                    SettingsItem(
+                        name = "隐藏正文元数据预览",
+                        description = "隐藏 MCD 可视化中 @name、@version 等元信息区",
+                        checked = isHideMetadataPreview,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isHideMetadataPreview = it) } }
+                        },
+                    )
+                }
+                item("highlight-blocks") {
+                    SettingsItem(
+                        name = "[实验性] 命令块语法高亮",
+                        description = "支持命令库在 v2 渲染时为命令块附加语法高亮",
+                        checked = isEnableMcdHighlight,
+                        onCheckedChange = {
+                            run { onChange { current -> current.copy(isEnableMcdHighlight = it) } }
+                        },
+                    )
+                }
                 if (loongFlowSettings) {
-                    Divider()
-                    SettingsItem(
-                        name = "是否启用小图标模式",
-                        description = "开启后游龙开始导入会自动收起为命令类型小图标；关闭后保留原大窗口流程",
-                        checked = isEnableLoongFlowImportMiniIcon,
-                        onCheckedChange = {
-                            run {
-                                onChange { current ->
-                                    current.copy(isEnableLoongFlowImportMiniIcon = it)
+                    item("loongflow-icon") {
+                        SettingsItem(
+                            name = "是否启用小图标模式",
+                            description = "开启后游龙开始导入会自动收起为命令类型小图标；关闭后保留原大窗口流程",
+                            checked = isEnableLoongFlowImportMiniIcon,
+                            onCheckedChange = {
+                                run {
+                                    onChange { current ->
+                                        current.copy(isEnableLoongFlowImportMiniIcon = it)
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
             }
         }

@@ -7,6 +7,8 @@ on:
       - ".github/workflows/build-android.yml"
       - "CHelper-Compose/**"
       - "scripts/check_android_headers.py"
+      - "scripts/check_android_resources.py"
+      - "scripts/test_android_resources.py"
       - "scripts/check_compose_architecture.py"
       - "scripts/test_compose_architecture.py"
       - "scripts/test_check_compose_architecture.py"
@@ -24,6 +26,8 @@ on:
       - ".github/workflows/build-android.yml"
       - "CHelper-Compose/**"
       - "scripts/check_android_headers.py"
+      - "scripts/check_android_resources.py"
+      - "scripts/test_android_resources.py"
       - "scripts/check_compose_architecture.py"
       - "scripts/test_compose_architecture.py"
       - "scripts/test_check_compose_architecture.py"
@@ -50,6 +54,7 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p "test*compose_architecture.py"
           python3 scripts/check_compose_architecture.py
+          python3 -m unittest discover -s scripts -p "test_android_resources.py"
 
       - name: Set up JDK 27
         uses: actions/setup-java@v6
@@ -67,6 +72,10 @@ jobs:
       - name: Build with Gradle
         working-directory: ${{ github.workspace }}/CHelper-Compose
         run: ./gradlew :apps:android:testDebugUnitTest :apps:android:assembleRelease :apps:android:lintDebug :shared:domain:jvmTest :shared:domain:testAndroidHostTest :shared:data:jvmTest :shared:data:testAndroidHostTest :shared:ui:jvmTest :shared:ui:testAndroidHostTest :platform:jvm:test --warning-mode all
+
+      - name: Check packaged Compose resources
+        working-directory: ${{ github.workspace }}/CHelper-Compose
+        run: python3 ../scripts/check_android_resources.py apps/android/build/outputs/apk/release/*.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v7

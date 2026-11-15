@@ -18,6 +18,10 @@
 
 package yancey.chelper.ui.feature.library.browse
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,7 +59,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.CancellationException
@@ -69,7 +72,7 @@ import yancey.chelper.data.library.toLocalImportedCopy
 import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.ChainItem
 import yancey.chelper.domain.library.model.AbuseReport
-import yancey.chelper.domain.library.parseMCDStructure
+import yancey.chelper.domain.settings.AppSettingsRepository
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.CaptchaDialog
@@ -80,7 +83,8 @@ import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.feature.library.components.LineCopyContent
-import yancey.chelper.ui.feature.library.mcd.MCDContentView
+import yancey.chelper.ui.feature.library.mcd.MCDRenderRow
+import yancey.chelper.ui.feature.library.mcd.PreparedMCDContentView
 import yancey.chelper.ui.navigation.LibrarySearchScreenKey
 import yancey.chelper.ui.navigation.LibraryUploadScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryShowScreenKey
@@ -92,6 +96,7 @@ import yancey.chelper.ui.platform.LocalClientServices
 import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
+@OptIn(ExperimentalAnimationApi::class)
 fun PublicLibraryShowScreen(
     id: Int,
     isPrivate: Boolean = false,
@@ -99,8 +104,9 @@ fun PublicLibraryShowScreen(
     importToLocal: Boolean = false,
     accounts: AccountRepository = LocalClientServices.current.accounts,
     libraries: LibraryContentRepository = LocalClientServices.current.libraryContent,
+    settings: AppSettingsRepository = LocalClientServices.current.settings,
     viewModel: PublicLibraryShowViewModel = viewModel {
-        PublicLibraryShowViewModel(accounts, libraries)
+        PublicLibraryShowViewModel(accounts, libraries, settings)
     },
 ) {
     val context = LocalContext.current
@@ -109,14 +115,20 @@ fun PublicLibraryShowScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // 读取设置
-    val settingsDataStore = remember(context) { context.settings }
     val localCommandLabDataStore = remember(context) { context.libraries }
-    val ambiguousLineDefault =
-        settingsDataStore
-            .ambiguousLineDefault()
-            .collectAsStateWithLifecycle(initialValue = "comment")
-    val isHideMetadataPreview =
-        settingsDataStore.isHideMetadataPreview().collectAsStateWithLifecycle(initialValue = false)
+    val preview = viewModel.preview
+    val phase =
+        libraryDetailPhase(
+            ready = !viewModel.isLoading && viewModel.library.id == id && preview != null,
+            failed = !viewModel.isLoading && viewModel.errorMessage != null,
+        )
+    val displayed = phase == LibraryDetailPhase.Ready
+    val contentTransition = updateTransition(phase, label = "library-detail")
+    val highlightingStarted =
+        rememberLibraryHighlightingStarted(
+            preview.takeUnless { viewModel.showRawSource },
+            contentTransition,
+        )
 
     // 对话框状态
     var showMainMenu by remember { mutableStateOf(false) }
@@ -158,7 +170,7 @@ fun PublicLibraryShowScreen(
         viewModel.createShareLink(libraryId, importToLocal = false)
     }
 
-    viewModel.ensureLoaded(id, isPrivate)
+    LaunchedEffect(viewModel, id, isPrivate) { viewModel.ensureLoaded(id, isPrivate) }
 
     // 新分享默认不带 local 参数，只展示云端详情；显式 local=1 仍兼容旧导入链接。
     LaunchedEffect(
@@ -228,12 +240,13 @@ fun PublicLibraryShowScreen(
     }
 
     RootViewWithHeaderAndCopyright(
-        title = viewModel.library.name ?: "加载中",
+        title = if (displayed) viewModel.library.name ?: "命令库" else "命令库",
         headerRight = {
             Row {
                 // 仅公开云端库可分享；私有库/未加载完成不展示入口
                 if (
-                    viewModel.library.id != null &&
+                    displayed &&
+                        viewModel.library.id != null &&
                         !isPrivate &&
                         viewModel.library.isPublish != false
                 ) {
@@ -244,7 +257,9 @@ fun PublicLibraryShowScreen(
                         contentDescription = "分享",
                     )
                 }
-                if (viewModel.library.id != null && context.platform.supportsLoongFlow) {
+                if (
+                    displayed && viewModel.library.id != null && context.platform.supportsLoongFlow
+                ) {
                     Icon(
                         id = Res.drawable.loong_flow_import,
                         modifier =
@@ -254,24 +269,23 @@ fun PublicLibraryShowScreen(
                 }
                 Icon(
                     id = Res.drawable.more,
-                    modifier = Modifier.clickable { showMainMenu = true }.padding(5.dp).size(24.dp),
+                    modifier =
+                        Modifier.clickable(enabled = displayed) { showMainMenu = true }
+                            .padding(5.dp)
+                            .size(24.dp),
                     contentDescription = "菜单",
                 )
             }
         },
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            when {
-                viewModel.isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "加载中...",
-                            style = TextStyle(color = CHelperTheme.colors.textSecondary),
-                        )
-                    }
-                }
+        contentTransition.Crossfade(
+            modifier = Modifier.fillMaxSize(),
+            animationSpec = tween(90),
+        ) { state ->
+            when (state) {
+                LibraryDetailPhase.Loading -> LibraryDetailSkeleton()
 
-                viewModel.errorMessage != null -> {
+                LibraryDetailPhase.Error -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
@@ -289,7 +303,7 @@ fun PublicLibraryShowScreen(
                     }
                 }
 
-                else -> {
+                LibraryDetailPhase.Ready -> {
                     Column(modifier = Modifier.fillMaxSize().padding(vertical = 10.dp)) {
                         // 元信息卡片
                         @OptIn(ExperimentalLayoutApi::class)
@@ -629,19 +643,12 @@ fun PublicLibraryShowScreen(
                                     )
                                 }
                             } else {
-                                // MCD 可视化视图
-                                // MCDContentView 已不再自带 LazyColumn，这里包一层 verticalScroll
-                                // 让长命令库内容能继续滚动
-                                Column(
-                                    modifier =
-                                        Modifier.fillMaxSize()
-                                            .verticalScroll(rememberScrollState())
-                                            .padding(horizontal = 15.dp)
-                                ) {
-                                    MCDContentView(
-                                        content = viewModel.library.content,
-                                        ambiguousDefault = ambiguousLineDefault.value,
-                                        showMetadata = !isHideMetadataPreview.value,
+                                preview?.let { document ->
+                                    PreparedMCDContentView(
+                                        preview = document,
+                                        modifier =
+                                            Modifier.fillMaxSize().padding(horizontal = 15.dp),
+                                        highlightingEnabled = highlightingStarted,
                                     )
                                 }
                             }
@@ -817,17 +824,12 @@ fun PublicLibraryShowScreen(
     // 逐行复制对话框
     if (showLineCopyDialog) {
         val commands =
-            remember(viewModel.library, ambiguousLineDefault.value) {
-                // 逐行复制只要结构，别走高亮路径拖慢弹窗
-                val parsed =
-                    parseMCDStructure(viewModel.library.content, ambiguousLineDefault.value)
-                parsed.chains.flatMap { chain ->
-                    chain.items.mapNotNull { item ->
-                        when (item) {
-                            is ChainItem.Block -> item.block.command.takeIf { it.isNotEmpty() }
-                            is ChainItem.RawCommand -> item.command.takeIf { it.isNotEmpty() }
-                            is ChainItem.Comment -> null
-                        }
+            remember(preview) {
+                preview?.rows.orEmpty().mapNotNull { row ->
+                    when (val item = (row as? MCDRenderRow.Item)?.item) {
+                        is ChainItem.Block -> item.block.command.takeIf(String::isNotEmpty)
+                        is ChainItem.RawCommand -> item.command.takeIf(String::isNotEmpty)
+                        else -> null
                     }
                 }
             }

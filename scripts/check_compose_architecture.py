@@ -215,6 +215,12 @@ def check_architecture() -> list[str]:
         directory = ROOT / module
         build = (directory / "build.gradle.kts").read_text(encoding="utf-8")
         failures.extend(check_import_style(directory / "build.gradle.kts", build))
+        if module == "shared/ui" and not re.search(
+            r"\bandroidResources\s*\.\s*enable\s*=\s*true\b", kotlin_code(build)
+        ):
+            failures.append(
+                "shared/ui: enable Android resource processing for Compose assets"
+            )
         # Excluding the desktop aggregate's default Material dependency is intentional.
         policy_build = re.sub(
             r'\bexclude\(\s*group\s*=\s*"(?:androidx|org\.jetbrains)\.compose\.material(?:3)?"\s*\)',

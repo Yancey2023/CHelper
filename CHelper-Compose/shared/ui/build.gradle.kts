@@ -6,6 +6,7 @@ plugins {
 }
 
 kotlin {
+    android { androidResources.enable = true }
     sourceSets {
         commonMain.dependencies {
             api(project(":shared:data"))

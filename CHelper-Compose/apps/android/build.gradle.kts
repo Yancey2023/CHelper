@@ -57,6 +57,8 @@ android {
 
     sourceSets.all { jniLibs.directories.add("libs") }
     sourceSets.getByName("main").assets.directories.add(rootProject.file("resources").path)
+    // Native manifest/host R references also use these assets. Compose packages its own assets
+    // through shared:ui's androidResources support; this AAPT mapping does not replace it.
     sourceSets
         .getByName("main")
         .res
