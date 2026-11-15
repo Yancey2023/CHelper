@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/apps" />
             <option value="$PROJECT_DIR$/apps/android" />
+            <option value="$PROJECT_DIR$/apps/benchmark" />
             <option value="$PROJECT_DIR$/apps/desktop" />
             <option value="$PROJECT_DIR$/build-logic" />
             <option value="$PROJECT_DIR$/platform" />

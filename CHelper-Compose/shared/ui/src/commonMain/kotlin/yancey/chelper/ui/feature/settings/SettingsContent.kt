@@ -20,6 +20,7 @@ package yancey.chelper.ui.feature.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import yancey.chelper.ui.designsystem.layout.CollectionName
 import yancey.chelper.ui.designsystem.layout.NameAndAction
 import yancey.chelper.ui.designsystem.layout.RootViewWithHeaderAndCopyright
 import yancey.chelper.ui.designsystem.layout.SettingsItem
+import yancey.chelper.ui.platform.PerformanceState
 
 @Composable
 fun SettingsContent(
@@ -91,8 +93,10 @@ fun SettingsContent(
             }
             return@remember cpackBranch
         }
+    val listState = rememberLazyListState()
+    PerformanceState("interaction", if (listState.isScrollInProgress) "settings_scroll" else "idle")
     RootViewWithHeaderAndCopyright(stringResource(Res.string.layout_settings_title)) {
-        LazyColumn(modifier = Modifier.fillMaxSize().testTag("settings-list")) {
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().testTag("settings-list")) {
             if (error != null) {
                 item(key = "save-error") {
                     Collection { NameAndAction("设置保存或读取失败，点击重试", error, onClick = onRetry) }

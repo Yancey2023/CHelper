@@ -3,6 +3,7 @@ import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
@@ -15,6 +16,12 @@ android {
 
     defaultConfig {
         applicationId = "yancey.chelper"
+        buildConfigField("boolean", "PERFORMANCE_AUTOMATION", "false")
+        buildConfigField(
+            "boolean",
+            "PERFORMANCE_COLLECTION",
+            providers.gradleProperty("collectFrameMetrics").orElse("false").get(),
+        )
         minSdk = 24
         targetSdk = 37
         versionCode = 87
@@ -41,6 +48,7 @@ android {
             )
         }
         debug {
+            buildConfigField("boolean", "PERFORMANCE_COLLECTION", "true")
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
@@ -55,7 +63,9 @@ android {
         }
     }
 
-    sourceSets.all { jniLibs.directories.add("libs") }
+    sourceSets.all {
+        jniLibs.directories.add("libs")
+    }
     sourceSets.getByName("main").assets.directories.add(rootProject.file("resources").path)
     // Native manifest/host R references also use these assets. Compose packages its own assets
     // through shared:ui's androidResources support; this AAPT mapping does not replace it.
@@ -124,9 +134,47 @@ android {
     }
 }
 
+// Apply after the profile plugin copies release configuration and sources to its variants.
+androidComponents.finalizeDsl { extension ->
+    extension.buildTypes
+        .filter {
+            it.name.startsWith("benchmark") || it.name.startsWith("nonMinified")
+        }
+        .forEach { type ->
+            type.applicationIdSuffix = ".benchmark"
+            type.signingConfig = extension.signingConfigs.getByName("debug")
+            type.buildConfigField("boolean", "PERFORMANCE_AUTOMATION", "true")
+            type.buildConfigField(
+                "boolean",
+                "PERFORMANCE_COLLECTION",
+                providers.gradleProperty("collectFrameMetrics").orElse("false").get(),
+            )
+            extension.sourceSets.getByName(type.name).apply {
+                kotlin.directories.clear()
+                kotlin.directories.addAll(listOf("src/benchmark/kotlin", "src/debug/kotlin"))
+                manifest.srcFile("src/benchmark/AndroidManifest.xml")
+            }
+        }
+}
+
 kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
 
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    saveInSrc = true
+    mergeIntoMain = true
+    filter {
+        exclude("yancey.chelper.android.benchmark.**")
+        exclude("io.ktor.client.engine.mock.**")
+        exclude("androidx.compose.runtime.tracing.**")
+        exclude("androidx.tracing.perfetto.**")
+    }
+}
+
 dependencies {
+    implementation(libs.profileinstaller)
+    implementation(libs.metrics.performance)
+    baselineProfile(project(":apps:benchmark"))
     implementation(project(":shared:domain"))
     implementation(project(":shared:data"))
     implementation(project(":shared:ui"))
@@ -183,4 +231,20 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
+}
+
+// The Baseline Profile plugin creates these configurations after the Android DSL is evaluated.
+configurations.configureEach {
+    if (name.startsWith("benchmark") || name.startsWith("nonMinified")) {
+        exclude(group = "com.umeng.umsdk")
+    }
+    if (
+        name.endsWith("Implementation") &&
+            (name.startsWith("benchmark") || name.startsWith("nonMinified"))
+    ) {
+        dependencies.add(project.dependencies.create(libs.ktor.client.mock.get()))
+        dependencies.add(project.dependencies.create(libs.compose.runtime.tracing.get()))
+        // Load the packaged read-only binary on Android 17 instead of a writable code_cache copy.
+        dependencies.add(project.dependencies.create(libs.tracing.perfetto.binary.get()))
+    }
 }

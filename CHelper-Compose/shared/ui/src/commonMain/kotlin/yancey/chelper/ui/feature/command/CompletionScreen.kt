@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -48,6 +49,7 @@ import yancey.chelper.ui.navigation.HistoryScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryListScreenKey
 import yancey.chelper.ui.navigation.PublicLibraryListScreenKey
 import yancey.chelper.ui.platform.LocalClientServices
+import yancey.chelper.ui.platform.PerformanceState
 import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
@@ -147,6 +149,7 @@ fun CompletionScreen(
             }
     }
     var errorRange by remember { mutableStateOf<CommandErrorSelection?>(null) }
+    PerformanceState("command_analysis", if (viewModel.resultsEnabled) "ready" else "pending")
     val analysisRevision = viewModel.analysisRevision
     CompletionContent(
         state =
@@ -211,7 +214,7 @@ fun CompletionScreen(
                 viewModel.errorReasons.orEmpty().map {
                     CommandProblem(it.errorReason.orEmpty(), it.start, it.end)
                 },
-            modifier = modifier,
+            modifier = modifier.testTag("command-editor"),
             errorSelection = errorRange,
         )
     }

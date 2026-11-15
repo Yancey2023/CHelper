@@ -32,25 +32,27 @@ CHelper-Compose/
 | 模块重复维护 SDK、JVM 版本和共用源码映射                      | 统一由 `build-logic` 的约定插件维护                                                 |
 | 保留了旧桌面工作台未被生产代码使用的仓库接口及测试替身        | 删除未使用抽象，只将旧磁盘 DTO 放在 `data.migration.desktop`                        |
 
-现在仍为六个业务模块；目录分组和包拆分直接表达职责，不为每个页面增加 Gradle 模块。
+现在仍为六个业务模块；另外的 `apps/benchmark` 是 Android 性能测试驱动，不进入产品运行时依赖。目录分组和包拆分直接表达职责，不为每个页面增加 Gradle 模块。性能基线与采集流程见 [performance.md](performance.md)。
 
 ## 当前结构
 
 ```text
 CHelper-Compose/
 ├── apps/
-│   ├── android/src/{main,debug,release,test,androidTest}/kotlin/yancey/chelper/android/
+│   ├── android/src/{main,debug,release,benchmark,test,androidTest}/kotlin/yancey/chelper/android/
 │   │   ├── activity/       # Activity 入口
 │   │   ├── di/             # Android 依赖组装
 │   │   ├── navigation/     # 原生宿主导航包装
 │   │   ├── network/        # WebView 适配
+│   │   ├── performance/    # Activity Window 逐帧诊断，仅显式开启时采集
 │   │   ├── storage/        # 目录、Bitmap、AtomicFile、Keystore
 │   │   ├── ui/             # 原生命令编辑、IME 系统操作、验证码适配
 │   │   └── service/, window/, widget/, work/, util/
-│   └── desktop/src/{main,test}/kotlin/yancey/chelper/desktop/
+│   ├── desktop/src/{main,test}/kotlin/yancey/chelper/desktop/
 │       ├── Main.kt
 │       ├── di/, platform/, storage/, instance/
 │       └── network/, sync/, window/
+│   └── benchmark/src/main/kotlin/yancey/chelper/benchmark/ # 真机性能测试与 Profile 生成
 ├── shared/
 │   ├── domain/src/commonMain/kotlin/yancey/chelper/domain/
 │   │   └── assets/, auth/, command/, enumeration/, history/, library/, rawtext/, settings/

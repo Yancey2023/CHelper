@@ -29,6 +29,7 @@ rootProject.name = "CHelper-Compose"
 
 include(
     ":apps:android",
+    ":apps:benchmark",
     ":apps:desktop",
     ":shared:domain",
     ":shared:data",

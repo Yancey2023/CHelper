@@ -54,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -93,6 +94,7 @@ import yancey.chelper.ui.navigation.UserProfileScreenKey
 import yancey.chelper.ui.platform.ClientMessages
 import yancey.chelper.ui.platform.LocalClientServices as LocalContext
 import yancey.chelper.ui.platform.LocalClientServices
+import yancey.chelper.ui.platform.PerformanceState
 import yancey.chelper.ui.platform.rememberCopyText
 
 @Composable
@@ -122,6 +124,7 @@ fun PublicLibraryShowScreen(
             ready = !viewModel.isLoading && viewModel.library.id == id && preview != null,
             failed = !viewModel.isLoading && viewModel.errorMessage != null,
         )
+    PerformanceState("library_phase", phase.name)
     val displayed = phase == LibraryDetailPhase.Ready
     val contentTransition = updateTransition(phase, label = "library-detail")
     val highlightingStarted =
@@ -129,6 +132,8 @@ fun PublicLibraryShowScreen(
             preview.takeUnless { viewModel.showRawSource },
             contentTransition,
         )
+
+    PerformanceState("library_highlight", if (highlightingStarted) "enabled" else "deferred")
 
     // 对话框状态
     var showMainMenu by remember { mutableStateOf(false) }
@@ -647,7 +652,9 @@ fun PublicLibraryShowScreen(
                                     PreparedMCDContentView(
                                         preview = document,
                                         modifier =
-                                            Modifier.fillMaxSize().padding(horizontal = 15.dp),
+                                            Modifier.fillMaxSize()
+                                                .padding(horizontal = 15.dp)
+                                                .testTag("library-document"),
                                         highlightingEnabled = highlightingStarted,
                                     )
                                 }

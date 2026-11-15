@@ -22,6 +22,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -52,7 +53,7 @@ enum class HomeAction {
 @Composable
 fun HomeContent(platformActions: Set<HomeAction> = emptySet(), onAction: (HomeAction) -> Unit) {
     RootView {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().testTag("home-actions")) {
             Column(
                 modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())
             ) {

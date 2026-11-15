@@ -50,7 +50,7 @@ import yancey.chelper.data.startup.StartupState
 import yancey.chelper.nativecore.network.jvmHttpEngine
 import yancey.chelper.ui.platform.ClientMessages
 
-class CHelperApplication : Application() {
+open class CHelperApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     lateinit var network: NetworkServices
         private set
@@ -94,13 +94,7 @@ class CHelperApplication : Application() {
         // 游龙悬浮窗单例初始化
         LoongFlowWindowManager.init(this)
         // 网络服务初始化
-        val config = NetworkConfig(debug = BuildConfig.DEBUG)
-        network =
-            NetworkServices(
-                { cached -> jvmHttpEngine(cacheDir, cached) },
-                config,
-                AndroidBrowserVerifier(this, config.labBaseUrl),
-            )
+        network = createNetwork()
         applicationScope.launch(Dispatchers.IO) {
             try {
                 network.login.init(EncryptedCredentialStore(this@CHelperApplication)) { throwable ->
@@ -119,6 +113,18 @@ class CHelperApplication : Application() {
 
         // 悬浮窗前台服务通知渠道
         createFloatingWindowNotificationChannel()
+    }
+
+    /**
+     * Benchmark-only Application subclasses replace HTTP transport, keeping the real repositories.
+     */
+    protected open fun createNetwork(): NetworkServices {
+        val config = NetworkConfig(debug = BuildConfig.DEBUG)
+        return NetworkServices(
+            { cached -> jvmHttpEngine(cacheDir, cached) },
+            config,
+            AndroidBrowserVerifier(this, config.labBaseUrl),
+        )
     }
 
     private fun createFloatingWindowNotificationChannel() {

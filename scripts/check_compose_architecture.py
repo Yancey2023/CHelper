@@ -11,6 +11,7 @@ DEPENDENCIES = {
     "shared/ui": {"shared/domain", "shared/data"},
     "apps/android": {"shared/domain", "shared/data", "platform/jvm", "shared/ui"},
     "apps/desktop": {"shared/domain", "shared/data", "platform/jvm", "shared/ui"},
+    "apps/benchmark": set(),
 }
 OWNERS = {
     "shared/domain": "yancey.chelper.domain",
@@ -19,6 +20,7 @@ OWNERS = {
     "shared/ui": "yancey.chelper.ui",
     "apps/android": "yancey.chelper.android",
     "apps/desktop": "yancey.chelper.desktop",
+    "apps/benchmark": "yancey.chelper.benchmark",
 }
 JNI_TYPES = {
     "CHelperCore",
@@ -238,9 +240,18 @@ def check_architecture() -> list[str]:
             failures.append(
                 "apps/android: retain Toaster; shared feedback must not replace its platform compatibility"
             )
+        runtime_build = (
+            re.sub(
+                r'\bbaselineProfile\s*\(\s*project\s*\(\s*":apps:benchmark"\s*\)\s*\)',
+                "",
+                build,
+            )
+            if module == "apps/android"
+            else build
+        )
         actual = {
             dependency.replace(":", "/")
-            for dependency in re.findall(r'project\(":([^"\)]+)"\)', build)
+            for dependency in re.findall(r'project\(":([^"\)]+)"\)', runtime_build)
         }
         if unexpected := actual - allowed:
             failures.append(f"{module}: forbidden dependencies {sorted(unexpected)}")
