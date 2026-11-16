@@ -3,10 +3,12 @@ package yancey.chelper.desktop.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
@@ -14,6 +16,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.*
@@ -28,6 +31,50 @@ import yancey.chelper.ui.feature.command.ComposeCommandEditor
 @OptIn(ExperimentalFoundationApi::class)
 class ComposeCommandEditorTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun longSingleLineHighlightingCoversVisibleBidiRunsInBothLayoutDirections() {
+        val text = "say " + "abc ".repeat(300) + "אבג123مرحبا " + "xyz ".repeat(300)
+        val command = TextFieldState(text, TextRange.Zero)
+        val direction = mutableStateOf(LayoutDirection.Ltr)
+        val tokens = IntArray(text.length) { it / 3 % 8 }
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides direction.value) {
+                CHelperTheme(CHelperTheme.Theme.Light, null) {
+                    ComposeCommandEditor(
+                        command,
+                        false,
+                        tokens,
+                        emptyList(),
+                        Modifier.size(240.dp, 72.dp).testTag("editor"),
+                        null,
+                    )
+                }
+            }
+        }
+        val editor = compose.onNodeWithTag("editor")
+        editor.performClick()
+        for (layoutDirection in listOf(LayoutDirection.Ltr, LayoutDirection.Rtl)) {
+            compose.runOnIdle { direction.value = layoutDirection }
+            for (offset in listOf(0, 1205, 1212, text.length)) {
+                compose.runOnIdle { command.edit { selection = TextRange(offset) } }
+                val layout = textLayout(editor)
+                val start = (offset - 20).coerceAtLeast(0)
+                val end = (offset + 20).coerceAtMost(text.length)
+                assertEquals(
+                    highlightCommand(text, tokens, false).subSequence(start, end),
+                    layout.layoutInput.text.subSequence(start, end),
+                )
+                val spans = layout.layoutInput.text.spanStyles
+                // Visually adjacent bidi runs can be far apart in logical UTF-16 order.
+                if (layoutDirection == LayoutDirection.Ltr)
+                    assertTrue(
+                        "Long lines must keep a bounded set of color spans",
+                        spans.size < 500,
+                    )
+            }
+        }
+    }
 
     @Test
     fun typingAndAnalysisUpdatesKeepTheSameInputSession() {

@@ -5,6 +5,15 @@ import kotlin.test.*
 
 class CommandEditorRangesTest {
     @Test
+    fun longCommandHighlightingUsesStableChunksWithOverscan() {
+        assertEquals(TextRange(0, 512), commandHighlightRange(10000, TextRange(0, 30)))
+        assertEquals(TextRange(0, 512), commandHighlightRange(10000, TextRange(10, 40)))
+        assertEquals(TextRange(4864, 5632), commandHighlightRange(10000, TextRange(5200, 5240)))
+        assertEquals(TextRange(9728, 10000), commandHighlightRange(10000, TextRange(10000)))
+        assertEquals(TextRange(0, 0), commandHighlightRange(0, TextRange.Zero))
+    }
+
+    @Test
     fun invalidErrorNavigationPreservesTheCurrentSelection() {
         assertNull(validCommandSelection(6, -1, 4))
         assertNull(validCommandSelection(6, 2, 100))

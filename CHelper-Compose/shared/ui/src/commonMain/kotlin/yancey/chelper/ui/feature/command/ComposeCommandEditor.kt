@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -47,10 +48,13 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,6 +86,65 @@ fun ComposeCommandEditor(
     val currentDark = rememberUpdatedState(dark)
     val scroll = rememberScrollState()
     var textLayout by remember { mutableStateOf<(() -> TextLayoutResult?)?>(null) }
+    var viewport by remember { mutableStateOf(IntSize.Zero) }
+    var highlightRange by remember { mutableStateOf(TextRange.Zero) }
+    val highlightViewport = remember { CommandHighlightViewport() }
+    val viewportMeasurer = rememberTextMeasurer(cacheSize = 1)
+    val currentEditorMode = rememberUpdatedState(editorMode)
+    LaunchedEffect(command, scroll) {
+        snapshotFlow {
+            val layout = textLayout?.invoke()
+            if (
+                currentEditorMode.value ||
+                    command.text.length <= COMMAND_HIGHLIGHT_CHUNK_SIZE * 4 ||
+                    currentTokens.value == null ||
+                    layout == null ||
+                    viewport.width == 0
+            )
+                TextRange.Zero
+            else {
+                // Hit-testing a styled Android line also scans its spans repeatedly. Colors
+                // do not affect geometry, so cache an unstyled layout for viewport queries.
+                val input = layout.layoutInput
+                val hitLayout =
+                    viewportMeasurer.measure(
+                        text = input.text.text,
+                        style = input.style,
+                        overflow = input.overflow,
+                        softWrap = input.softWrap,
+                        maxLines = input.maxLines,
+                        constraints = input.constraints,
+                        layoutDirection = input.layoutDirection,
+                        density = input.density,
+                        fontFamilyResolver = input.fontFamilyResolver,
+                    )
+                val left =
+                    if (layout.layoutInput.layoutDirection == LayoutDirection.Rtl)
+                        layout.size.width - viewport.width - scroll.value.toFloat()
+                    else scroll.value.toFloat()
+                val visible =
+                    highlightViewport.range(
+                        hitLayout,
+                        left - viewport.width,
+                        left + viewport.width * 2f,
+                    )
+                val retained = highlightRange
+                val margin = COMMAND_HIGHLIGHT_CHUNK_SIZE / 2
+                val retainedStart = if (retained.start == 0) 0 else retained.start + margin
+                val retainedEnd =
+                    if (retained.end >= command.text.length) command.text.length
+                    else retained.end - margin
+                if (
+                    !retained.collapsed &&
+                        visible.min >= retainedStart &&
+                        visible.max <= retainedEnd
+                )
+                    retained
+                else commandHighlightRange(command.text.length, visible)
+            }
+        }
+            .collect { highlightRange = it }
+    }
     val inputTransformation = remember {
         InputTransformation {
             for (i in length - 1 downTo 0) {
@@ -93,11 +156,21 @@ fun ComposeCommandEditor(
     // must invalidate the output through snapshot reads, not replace the active IME session.
     val outputTransformation = remember {
         OutputTransformation {
+            // Android's TextLine scans the line's CharacterStyles for each color run.
+            // Bound that work for a long horizontal line, including its first layout.
+            val range =
+                if (currentEditorMode.value || length <= COMMAND_HIGHLIGHT_CHUNK_SIZE * 4)
+                    TextRange(0, length)
+                else if (highlightRange.collapsed)
+                    commandHighlightRange(length, TextRange(selection.end))
+                else highlightRange
             val styled =
                 highlightCommand(
                     asCharSequence().toString(),
                     currentTokens.value,
                     currentDark.value,
+                    range.start,
+                    range.end,
                 )
             styled.spanStyles.forEach { addStyle(it.item, it.start, it.end) }
         }
@@ -112,7 +185,10 @@ fun ComposeCommandEditor(
     }
     BasicTextField(
         state = command,
-        modifier = modifier.padding(if (editorMode) 8.dp else 0.dp).focusRequester(focus),
+        modifier =
+            modifier.padding(if (editorMode) 8.dp else 0.dp).focusRequester(focus).onSizeChanged {
+                viewport = it
+            },
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
         lineLimits =
             if (editorMode) TextFieldLineLimits.MultiLine() else TextFieldLineLimits.SingleLine,
@@ -159,6 +235,18 @@ fun ComposeCommandEditor(
                 }
             }
         },
+    )
+}
+
+private const val COMMAND_HIGHLIGHT_CHUNK_SIZE = 256
+
+/** Quantize with overscan so ordinary horizontal scrolling does not restyle every pixel. */
+internal fun commandHighlightRange(length: Int, visible: TextRange): TextRange {
+    val start = (visible.min / COMMAND_HIGHLIGHT_CHUNK_SIZE - 1).coerceAtLeast(0)
+    val end = visible.max / COMMAND_HIGHLIGHT_CHUNK_SIZE + 2
+    return TextRange(
+        (start * COMMAND_HIGHLIGHT_CHUNK_SIZE).coerceIn(0, length),
+        (end.toLong() * COMMAND_HIGHLIGHT_CHUNK_SIZE).coerceIn(0, length.toLong()).toInt(),
     )
 }
 
