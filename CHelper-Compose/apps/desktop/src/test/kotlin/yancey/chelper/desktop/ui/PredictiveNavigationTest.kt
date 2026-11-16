@@ -88,22 +88,22 @@ class PredictiveNavigationTest {
         NavigationEvent(progress = progress, swipeEdge = edge, touchX = 0f, touchY = 100f)
 
     @Test
-    fun cancellingBackDuringEntryKeepsTheBackgroundStillAndRestoresTheDestination() {
+    fun cancellingBackDuringEntryKeepsBothPagesTogetherAndRestoresTheDestination() {
         checkInterruptedEntry(commit = false)
     }
 
     @Test
-    fun completingBackDuringEntryKeepsTheBackgroundStillAndPopsOnce() {
+    fun completingBackDuringEntryKeepsBothPagesTogetherAndPopsOnce() {
         checkInterruptedEntry(commit = true)
     }
 
     @Test
-    fun cancellingBackToAnAlreadyEnteredPageKeepsItStill() {
+    fun cancellingBackToAnAlreadyEnteredPageKeepsTheSlidesTogether() {
         checkInterruptedEntry(commit = false, nested = true)
     }
 
     @Test
-    fun completingBackToAnAlreadyEnteredPagePopsOnlyTheForeground() {
+    fun completingBackToAnAlreadyEnteredPagePopsOnlyOnce() {
         checkInterruptedEntry(commit = true, nested = true)
     }
 
@@ -124,18 +124,18 @@ class PredictiveNavigationTest {
                     message = "The gesture must interrupt a moving page",
                     actual = entering in 171f..529f,
                 )
-                assertBackgroundIsStill(backgroundTag)
+                assertPagesAreAdjacent(backgroundTag)
                 compose.runOnUiThread { input.backStarted(event(0f, edge)) }
                 compose.mainClock.advanceTimeByFrame()
                 assertTrue(
                     message = "Starting back must not reset the page",
                     actual = abs(detailLeft() - entering) < 64f,
                 )
-                assertBackgroundIsStill(backgroundTag)
+                assertPagesAreAdjacent(backgroundTag)
                 for (progress in listOf(0.02f, 0.05f, 0.1f, 0.15f)) {
                     compose.runOnUiThread { input.backProgressed(event(progress, edge)) }
                     compose.mainClock.advanceTimeByFrame()
-                    assertBackgroundIsStill(backgroundTag)
+                    assertPagesAreAdjacent(backgroundTag)
                 }
                 // Cover both a quick release and a held gesture after the entry has settled.
                 val quickRelease = elapsed == 144L
@@ -145,12 +145,13 @@ class PredictiveNavigationTest {
                     message = "An interrupted return must still slide right",
                     actual = dragged > 170f,
                 )
-                assertBackgroundIsStill(backgroundTag)
+                assertPagesAreAdjacent(backgroundTag)
                 compose.runOnUiThread {
                     if (commit) input.backCompleted() else input.backCancelled()
                 }
                 compose.mainClock.advanceTimeByFrame()
                 val settling = detailLeft()
+                assertPagesAreAdjacent(backgroundTag)
                 if (commit) {
                     assertTrue(
                         message = "Commit must continue from the drag",
@@ -202,10 +203,10 @@ class PredictiveNavigationTest {
     private fun detailLeft() =
         compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot().left.value
 
-    private fun assertBackgroundIsStill(backgroundTag: String) {
+    private fun assertPagesAreAdjacent(backgroundTag: String) {
         val current = compose.onNodeWithTag("detail-marker").getUnclippedBoundsInRoot()
         val previous = compose.onNodeWithTag("$backgroundTag-marker").getUnclippedBoundsInRoot()
-        assertEquals(170f, previous.left.value, 1f)
+        assertEquals(360f, (current.left - previous.left).value, 1f)
         assertEquals(current.top.value, previous.top.value, 0.5f)
     }
 
@@ -225,7 +226,7 @@ class PredictiveNavigationTest {
                 message = "Return must reverse the forward page slide",
                 actual = current.left > original.left,
             )
-            assertEquals(original.left.value, previous.left.value, 1f)
+            assertEquals(360f, (current.left - previous.left).value, 1f)
             assertEquals(
                 (original.right - original.left).value,
                 (current.right - current.left).value,

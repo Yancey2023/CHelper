@@ -19,14 +19,23 @@
 package yancey.chelper.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -45,6 +54,14 @@ fun ClientNavHost(
     builder: NavGraphBuilder.() -> Unit,
 ) {
     val entry by navController.currentBackStackEntryAsState()
+    // Starting predictive back also moves settled entries to STARTED. Keep the last RESUMED
+    // identity so that only a genuine entry interruption selects the recovery spring.
+    val settledEntry = remember(navController) { mutableStateOf<String?>(null) }
+    entry?.let { current ->
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME, lifecycleOwner = current) {
+            settledEntry.value = current.id
+        }
+    }
     val screen =
         entry
             ?.destination
@@ -57,20 +74,29 @@ fun ClientNavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
-        // Moving only the foreground avoids independent slide clocks diverging on interruption.
-        enterTransition = { pageEnter(navController, isPop = false) },
-        exitTransition = { pageExit(navController, isPop = false) },
-        popEnterTransition = { pageEnter(navController, isPop = true) },
-        popExitTransition = { pageExit(navController, isPop = true) },
+        enterTransition = { pageEnter(navController, settledEntry, isPop = false) },
+        exitTransition = { pageExit(navController, settledEntry, isPop = false) },
+        popEnterTransition = { pageEnter(navController, settledEntry, isPop = true) },
+        popExitTransition = { pageExit(navController, settledEntry, isPop = true) },
         // Navigation 2.10 has independent predictive defaults. Keep seeking and settling on
         // the same reverse path instead of switching between its defaults and our page slides.
-        predictivePopEnterTransition = { _ -> pageEnter(navController, isPop = true) },
-        predictivePopExitTransition = { _ -> pageExit(navController, isPop = true) },
+        predictivePopEnterTransition = { _ ->
+            pageEnter(navController, settledEntry, isPop = true)
+        },
+        predictivePopExitTransition = { _ -> pageExit(navController, settledEntry, isPop = true) },
         builder = builder,
     )
 }
 
 private val pageAnimation = tween<IntOffset>(durationMillis = 300)
+
+// Compose uses this spring for PostExit -> Visible, regardless of the supplied enter spec.
+// Match it on the other page when reversing an unfinished push to keep both slides together.
+private val interruptedReturnAnimation =
+    spring<IntOffset>(
+        stiffness = Spring.StiffnessMediumLow,
+        visibilityThreshold = IntOffset.VisibilityThreshold,
+    )
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.isReturning(
     navController: NavHostController,
@@ -82,17 +108,29 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.isReturning(
     return if (initialIndex >= 0 && targetIndex >= 0) targetIndex < initialIndex else isPop
 }
 
-// An interrupted enter can reuse forward callbacks for a reverse segment. Read its direction
-// when offsets are resolved, including transitions retained for the page underneath.
+// An interrupted enter can reuse forward callbacks for a reverse segment.
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.pageEnter(
     navController: NavHostController,
+    settledEntry: State<String?>,
     isPop: Boolean,
-) = slideInHorizontally(pageAnimation) { if (isReturning(navController, isPop)) 0 else it }
+): EnterTransition {
+    val returning = isReturning(navController, isPop)
+    val direction = if (returning) -1 else 1
+    val interrupted = returning && initialState.id != settledEntry.value
+    return slideInHorizontally(if (interrupted) interruptedReturnAnimation else pageAnimation) {
+        it * direction
+    }
+}
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.pageExit(
     navController: NavHostController,
+    settledEntry: State<String?>,
     isPop: Boolean,
-) =
-    slideOutHorizontally(pageAnimation) { if (isReturning(navController, isPop)) it else 0 } +
-        // Keep the stationary background composed until the entering page covers it completely.
-        ExitTransition.KeepUntilTransitionsFinished
+): ExitTransition {
+    val returning = isReturning(navController, isPop)
+    val direction = if (returning) 1 else -1
+    val interrupted = returning && initialState.id != settledEntry.value
+    return slideOutHorizontally(if (interrupted) interruptedReturnAnimation else pageAnimation) {
+        it * direction
+    }
+}
