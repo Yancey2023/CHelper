@@ -122,6 +122,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
   body {
     @apply bg-background text-foreground;
     @apply font-sans;
