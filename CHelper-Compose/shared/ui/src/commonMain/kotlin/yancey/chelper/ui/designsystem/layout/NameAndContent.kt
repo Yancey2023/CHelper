@@ -69,12 +69,13 @@ fun NameAndAction(
     name: String,
     description: String? = null,
     iconId: DrawableResource = Res.drawable.chevron_right,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     NameAndContent(
         name = name,
         description = description,
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Icon(iconId, Modifier.size(24.dp), name)
     }
@@ -99,9 +100,10 @@ fun SettingsItem(
     name: String,
     description: String?,
     checked: Boolean?,
+    modifier: Modifier = Modifier,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    NameAndContent(name = name, description = description) {
+    NameAndContent(name = name, description = description, modifier = modifier) {
         if (checked != null) {
             Switch(checked = checked, onCheckedChange = onCheckedChange)
         }

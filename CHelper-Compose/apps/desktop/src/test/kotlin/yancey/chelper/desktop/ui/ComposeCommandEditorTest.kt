@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -18,6 +19,9 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.ImageIO
 import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.*
 import org.junit.Rule
@@ -31,6 +35,67 @@ import yancey.chelper.ui.feature.command.ComposeCommandEditor
 @OptIn(ExperimentalFoundationApi::class)
 class ComposeCommandEditorTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun longLeftToRightTextKeepsVisibleGlyphsWhileScrollingAndSelecting() {
+        val text = "say 你好🙂 @e[type=pig] ".repeat(100)
+        val command = TextFieldState(text, TextRange.Zero)
+        val tokens = IntArray(text.length) { if (text[it] in '\uD800'..'\uDFFF') 6 else it % 8 }
+        compose.setContent {
+            CHelperTheme(CHelperTheme.Theme.Light, null) {
+                ComposeCommandEditor(
+                    command,
+                    false,
+                    tokens,
+                    emptyList(),
+                    Modifier.size(240.dp, 72.dp).testTag("editor"),
+                    null,
+                )
+            }
+        }
+        val editor = compose.onNodeWithTag("editor")
+        editor.performClick()
+        for (range in
+            listOf(
+                TextRange.Zero,
+                TextRange(text.length / 2),
+                TextRange(text.length),
+                TextRange(text.length - 10, text.length),
+                TextRange(text.length),
+            )) {
+            compose.runOnIdle { command.edit { selection = range } }
+            val layout = textLayout(editor)
+            val probe = range.end.coerceAtMost(text.lastIndex)
+            assertTrue(layout.layoutInput.text.spanStyles.any { probe in it.start until it.end })
+            val pixels = compose.onRoot().captureToImage().toPixelMap()
+            var colored = 0
+            for (y in 0 until pixels.height) for (x in 0 until pixels.width) {
+                val color = pixels[x, y]
+                if (
+                    maxOf(color.red, color.green, color.blue) -
+                        minOf(color.red, color.green, color.blue) > 0.2f && color.alpha > 0.5f
+                )
+                    colored++
+            }
+            if (colored <= 100) {
+                val bitmap = BufferedImage(pixels.width, pixels.height, BufferedImage.TYPE_INT_ARGB)
+                for (y in 0 until pixels.height) for (x in 0 until pixels.width) bitmap.setRGB(
+                    x,
+                    y,
+                    pixels[x, y].toArgb(),
+                )
+                ImageIO.write(
+                    bitmap,
+                    "png",
+                    File("build/reports/glyph-cache-${range.start}-${range.end}.png"),
+                )
+            }
+            assertTrue(
+                "Visible syntax glyphs must be drawn for $range: $colored colored pixels",
+                colored > 100,
+            )
+        }
+    }
 
     @Test
     fun longSingleLineHighlightingCoversVisibleBidiRunsInBothLayoutDirections() {
@@ -70,7 +135,7 @@ class ComposeCommandEditorTest {
                 if (layoutDirection == LayoutDirection.Ltr)
                     assertTrue(
                         "Long lines must keep a bounded set of color spans",
-                        spans.size < 500,
+                        spans.size < 160,
                     )
             }
         }

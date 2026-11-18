@@ -231,7 +231,7 @@
     <string name="layout_setting_is_show_error_reason">显示命令错误原因</string>
     <string name="layout_setting_is_show_error_reason_description">不显示命令错误原因可以让第一个补全提示的位置比较稳定，方便使用补全提示</string>
     <string name="layout_setting_is_syntax_highlight">语法高亮</string>
-    <string name="layout_setting_is_syntax_highlight_description">使用彩色文本显示命令，目前的代码实现性能较差，对长文本将临时自动关闭语法高亮</string>
+    <string name="layout_setting_is_syntax_highlight_description">使用彩色文本显示命令，超过设置的长度阈值时自动关闭语法高亮</string>
     <!--    use in CPLUploadScreen    -->
     <string name="upload_title">上传指令库</string>
     <string name="upload_title_edit_cloud">编辑云端命令库</string>

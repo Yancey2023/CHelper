@@ -97,6 +97,56 @@ fun MacrobenchmarkScope.library() {
     device.waitForIdle(1_000)
 }
 
+fun MacrobenchmarkScope.prepareLongCommand() {
+    home()
+    val command =
+        "titleraw @a actionbar {\"rawtext\":[" +
+            (1..200).joinToString(",") { "{\"text\":\"benchmark_$it\"}" } +
+            "]}"
+    device.homeText("设置").click()
+    val settings = device.requireTag("settings-list")
+    settings.scrollUntil(Direction.DOWN, Until.hasObject(By.res("setting-syntax-highlight")))
+    val toggle = device.requireTag("setting-syntax-highlight").findObject(By.checkable(true))
+    check(toggle != null && toggle.isChecked) { "Long-command benchmark requires syntax colors" }
+    settings.scrollUntil(Direction.DOWN, Until.hasObject(By.res("setting-highlight-limit")))
+    val limitRow = device.requireTag("setting-highlight-limit")
+    val description =
+        limitRow.text.orEmpty() +
+            limitRow.findObjects(By.textContains("当前限制:")).joinToString { it.text.orEmpty() }
+    val limit = Regex("当前限制: (\\d+) 字符").find(description)?.groupValues?.get(1)?.toIntOrNull()
+    check(limit != null && command.length < limit) {
+        "Long command exceeds the configured highlighting threshold: $limit"
+    }
+    device.pressBack()
+    device.requireTag("home-actions")
+    device.homeText("应用模式").click()
+    val editor = device.requireTag("command-editor")
+    editor.click()
+    editor.text = command
+    // Warm the real command engine and wait for its syntax colors before measuring scrolling.
+    device.waitForIdle(1_000)
+    device.requireTag("command-glyph-cache")
+}
+
+fun MacrobenchmarkScope.scrollLongCommand() {
+    check(device.hasObject(By.descContains("长按进入多行编辑"))) {
+        "Long-command scrolling must measure the single-line editor"
+    }
+    val editor = device.requireTag("command-editor")
+    val bounds = editor.visibleBounds
+    val left = bounds.left + bounds.width() / 10
+    val right = bounds.right - bounds.width() / 10
+    val y = bounds.centerY()
+    repeat(3) {
+        device.swipe(left, y, right, y, 40)
+        device.waitForIdle(1_000)
+    }
+    repeat(3) {
+        device.swipe(right, y, left, y, 40)
+        device.waitForIdle(1_000)
+    }
+}
+
 fun MacrobenchmarkScope.allJourneys() {
     home()
     settings()

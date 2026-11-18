@@ -44,6 +44,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import yancey.chelper.domain.command.CommandProblem
 import yancey.chelper.domain.command.CommandResult
+import yancey.chelper.domain.settings.DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH
 import yancey.chelper.resources.*
 import yancey.chelper.ui.navigation.HistoryScreenKey
 import yancey.chelper.ui.navigation.LocalLibraryListScreenKey
@@ -87,7 +88,7 @@ fun CompletionScreen(
     val syntaxHighlightMaxLength by
         settingsDataStore
             .syntaxHighlightMaxLength()
-            .collectAsStateWithLifecycle(initialValue = 20000)
+            .collectAsStateWithLifecycle(initialValue = DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH)
     var isCommandEditorHintVisible by remember { mutableStateOf(false) }
     var isLifecycleResumed by
         remember(lifecycleOwner) {

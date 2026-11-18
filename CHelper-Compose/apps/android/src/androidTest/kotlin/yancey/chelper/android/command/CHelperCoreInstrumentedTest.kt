@@ -51,6 +51,30 @@ class CHelperCoreInstrumentedTest {
     }
 
     @Test
+    fun longCommandsKeepColorTokensBeyondTheOldLimit() {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val pack =
+            ctx.assets.list("cpack").orEmpty().first {
+                it.startsWith("release-vanilla-") && it.endsWith(".cpack")
+            }
+        val core = CHelperCore.fromAssets(ctx.assets, "cpack/$pack")
+        try {
+            val text =
+                "titleraw @a actionbar {\"rawtext\":[{\"text\":\"" + "x".repeat(40000) + "\"}]}"
+            core.createContext(text).use { context ->
+                val tokens = checkNotNull(context.syntaxToken)
+                assertEquals(text.length, tokens.size)
+                assertTrue(
+                    "The end of a long string must still receive syntax colors",
+                    tokens[text.lastIndexOf('x')] != 0,
+                )
+            }
+        } finally {
+            core.close()
+        }
+    }
+
+    @Test
     fun `输入命令后应当能拿到补全提示和语法结构`() {
         withCore { core ->
             // 输入 "/" 是最常见的触发点：用户敲第一个字符就期待出补全
@@ -179,8 +203,9 @@ class CHelperCoreInstrumentedTest {
                     "tellraw @a {\"rawtext\":[{\"text\":\"aaa\"}]}",
                 )
             // 先串行生成每个命令的标准结构
-            val expected =
-                commands.map { command -> core.createContext(command).use { it.structure } }
+            val expected = commands.map { command ->
+                core.createContext(command).use { it.structure }
+            }
             // 再用多个线程同时创建并读取CommandContext，共享同一个内核
             val threadCount = 4
             val rounds = 4

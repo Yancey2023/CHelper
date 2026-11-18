@@ -12,7 +12,7 @@ class SharedSettingsDefaultsTest {
         assertEquals(Settings(), persisted)
         val effective = persisted.withDefaults()
         assertEquals("release-experiment", effective.cpackBranch)
-        assertEquals(4000, effective.syntaxHighlightMaxLength)
+        assertEquals(400000, effective.syntaxHighlightMaxLength)
         assertEquals(true, effective.isShowErrorReason)
         assertEquals(true, effective.isSyntaxHighlight)
         assertEquals("MODE_NIGHT_FOLLOW_SYSTEM", effective.themeId)

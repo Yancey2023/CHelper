@@ -42,6 +42,7 @@ class SettingsDefaultsTest {
                     s.isHideMetadataPreview,
                     s.isFloatingWindowFontAlphaSync,
                     s.syntaxHighlightMaxLength,
+                    s.syntaxHighlightLimitVersion,
                     s.publicLibraryHomeRecommend,
                     s.isEnableMcdHighlight,
                     s.isEnableLoongFlowImportMiniIcon,

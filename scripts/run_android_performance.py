@@ -108,6 +108,7 @@ def main():
             "coldStartupWithoutProfile",
             "settingsAndScroll",
             "commandInput",
+            "longCommandScroll",
             "libraryRevealAndScroll",
         ),
         help="Run just one measured journey while investigating a hotspot",
@@ -149,7 +150,11 @@ def main():
     metadata = {
         "schema": 1,
         "mode": args.mode,
-        "fixture": "offline-2000-v2",
+        "fixture": (
+            "offline-2000-long-highlight-v1"
+            if args.scenario == "longCommandScroll"
+            else "offline-2000-v2"
+        ),
         "scenario": args.scenario or "all",
         "frameTelemetry": "enabled" if args.collect_frames else "disabled",
         "startedUtc": stamp,
@@ -405,7 +410,7 @@ def main():
                 [("interaction", "FrameBenchmarks#" + args.scenario, 1, True)]
                 if args.scenario
                 else [
-                    ("interaction", "FrameBenchmarks", 3, True),
+                    ("interaction", "FrameBenchmarks", 4, True),
                     ("startup", "PackagedProfileBenchmark", 1, False),
                 ]
             )
@@ -415,7 +420,7 @@ def main():
             runs = [("interaction", "FrameBenchmarks#" + args.scenario, 1, True)]
         else:
             runs = [
-                ("interaction", "FrameBenchmarks", 3, True),
+                ("interaction", "FrameBenchmarks", 4, True),
                 ("startup", "StartupBenchmarks", 1, False),
             ]
         for label, suite, expected, detailed in runs:

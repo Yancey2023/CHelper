@@ -30,6 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
+import yancey.chelper.domain.settings.DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH
+import yancey.chelper.domain.settings.MAX_SYNTAX_HIGHLIGHT_LENGTH
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.dialog.InputStringDialog
@@ -81,7 +83,8 @@ fun SettingsContent(
     val isEnableMcdHighlight = settings.isEnableMcdHighlight ?: true
     val isEnableLoongFlowImportMiniIcon = settings.isEnableLoongFlowImportMiniIcon ?: true
     val isPublicLibraryHomeRecommend = settings.publicLibraryHomeRecommend ?: true
-    val syntaxHighlightMaxLength = settings.syntaxHighlightMaxLength ?: 4000
+    val syntaxHighlightMaxLength =
+        settings.syntaxHighlightMaxLength ?: DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH
     val tagClickBehavior = settings.tagClickBehavior ?: "search"
     val ambiguousLineDefault = settings.ambiguousLineDefault ?: "comment"
     val currentCpackBranchTranslation =
@@ -321,6 +324,7 @@ fun SettingsContent(
                 }
                 item("syntax") {
                     SettingsItem(
+                        modifier = Modifier.testTag("setting-syntax-highlight"),
                         name = stringResource(Res.string.layout_setting_is_syntax_highlight),
                         description =
                             stringResource(
@@ -334,8 +338,9 @@ fun SettingsContent(
                 }
                 item("highlight-limit") {
                     NameAndAction(
+                        modifier = Modifier.testTag("setting-highlight-limit"),
                         name = "高亮自动关闭阈值",
-                        description = "当前限制: ${syntaxHighlightMaxLength ?: 4000} 字符 (为防卡死)",
+                        description = "当前限制: $syntaxHighlightMaxLength 字符",
                     ) {
                         isShowInputSyntaxHighlightMaxLengthDialog = true
                     }
@@ -543,15 +548,15 @@ fun SettingsContent(
             rememberTextFieldState(initialText = syntaxHighlightMaxLength.toString())
         InputStringDialog(
             onDismissRequest = { isShowInputSyntaxHighlightMaxLengthDialog = false },
-            title = "请输入高亮自动关闭阈值 (0-100000)",
+            title = "请输入高亮自动关闭阈值 (0-$MAX_SYNTAX_HIGHLIGHT_LENGTH)",
             textFieldState = textFieldState,
             onConfirm = {
                 try {
                     var integer = textFieldState.text.toString().toInt()
                     if (integer < 0) {
                         integer = 0
-                    } else if (integer > 100000) {
-                        integer = 100000
+                    } else if (integer > MAX_SYNTAX_HIGHLIGHT_LENGTH) {
+                        integer = MAX_SYNTAX_HIGHLIGHT_LENGTH
                     }
                     run { onChange { current -> current.copy(syntaxHighlightMaxLength = integer) } }
                 } catch (_: NumberFormatException) {}

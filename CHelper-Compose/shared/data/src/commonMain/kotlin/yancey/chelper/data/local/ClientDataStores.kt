@@ -29,6 +29,7 @@ import yancey.chelper.data.local.migration.SettingsMigrationToV74
 import yancey.chelper.data.local.migration.originalLibraryDraftKey
 import yancey.chelper.data.local.settings.SettingsDataStore
 import yancey.chelper.data.local.settings.SettingsSerializer
+import yancey.chelper.data.local.settings.SyntaxHighlightLimitMigration
 import yancey.chelper.data.migration.desktop.LegacyCommandWorkspace
 import yancey.chelper.domain.command.CommandDraft
 import yancey.chelper.domain.library.LibraryEntry
@@ -60,7 +61,16 @@ class ClientDataStores(
                 "settings.json",
                 SettingsSerializer,
                 listOf(
-                    SettingsMigrationToV74(legacyDirectory, directory / "settings.json", fileSystem)
+                    SettingsMigrationToV74(
+                        legacyDirectory,
+                        directory / "settings.json",
+                        fileSystem,
+                    ),
+                    SyntaxHighlightLimitMigration(
+                        legacyDirectory / "settings/settings.json",
+                        directory / "settings.json",
+                        fileSystem,
+                    ),
                 ),
             )
         )

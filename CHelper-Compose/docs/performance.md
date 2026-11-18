@@ -27,9 +27,14 @@ python scripts/run_android_performance.py --serial DEVICE_SERIAL --adb C:/Androi
 
 # 对同一已安装 APK 测量未预编译冷启动，不触发安装。
 python scripts/run_android_performance.py --serial DEVICE_SERIAL --adb C:/Android/Sdk/platform-tools/adb.exe --use-installed --mode measure --scenario coldStartupWithoutProfile
+
+# 单独测量长命令完成语法分析后的水平滚动，保留完整帧 JSON 和 Perfetto trace。
+python scripts/run_android_performance.py --serial DEVICE_SERIAL --adb C:/Android/Sdk/platform-tools/adb.exe --allow-install --mode measure --scenario longCommandScroll
 ```
 
-脚本通过指定 serial 的 ADB 更新独立性能变体和运行器，不清除或卸载已有应用；APK SHA256 相同时跳过安装。安装被拒绝就停止，不自动重试。不要用会先卸载应用的 Gradle connected test 安装流程替代它。`measure` 每个场景测量 5 次；设置滚动、命令全文替换、命令库展开及滚动先进行 3 次编译预热，冷启动使用 `CompilationMode.None`。`verify` 的全部四项测试强制要求实际打包的 profile，缺少时必须失败。两种编译模式不能混为同一性能回归基线。`--use-installed` 记录设备上真实 APK 的哈希，适合同一 APK 的编译模式对照。
+脚本通过指定 serial 的 ADB 更新独立性能变体和运行器，不清除或卸载已有应用；APK SHA256 相同时跳过安装。安装被拒绝就停止，不自动重试。不要用会先卸载应用的 Gradle connected test 安装流程替代它。`measure` 每个场景测量 5 次；设置滚动、命令全文替换、长命令水平滚动、命令库展开及滚动先进行 3 次编译预热，冷启动使用 `CompilationMode.None`。`verify` 的全部五项测试强制要求实际打包的 profile，缺少时必须失败。两种编译模式不能混为同一性能回归基线。`--use-installed` 记录设备上真实 APK 的哈希，适合同一 APK 的编译模式对照。
+
+`longCommandScroll` 使用包含 200 个 rawtext 项的真实命令，准备阶段通过设置界面断言语法高亮已启用且命令长度低于自动关闭阈值，再等待语法颜色稳定，再测量三个向右和三个向左的滑动。Android 仪器测试 `CommandEditorRenderingInstrumentedTest` 另提供 19,000 字符的成对软件绘制探针：从真实编辑器取出当前样式，与上一版 768 字符缓冲交替绘制，预热后记录 31 个样本的中位数和 P95。长命令场景使用 `offline-2000-long-highlight-v1` 夹具标识，不能与未验证高亮状态的历史长命令采样比较。该探针用于定位颜色样式成本，不代表整帧耗时或零掉帧；整帧判断使用 Release Macrobenchmark 的原始帧指标。
 
 产物在 `CHelper-Compose/build/performance/<UTC时间>/`：设备与执行条件 `run.json`、安装/测试日志、Macrobenchmark JSON、Perfetto trace 和汇总 `report.json`；逐帧 JSONL 需要另加 `--collect-frames`。默认计时关闭 JankStats 文件采集，避免诊断自身改变测量。仪器测试即使以退出码 0 返回，也必须含预期数量的 JUnit 成功结果；失败保留日志并返回非零。失败的测试产物用于诊断，不得提升为已验证基线。
 

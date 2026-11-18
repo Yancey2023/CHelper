@@ -124,13 +124,13 @@ constructor(
         val text = command.text.toString()
         val index = if (checkingBySelection) command.selection.min else text.length
         val next =
-            CommandAnalysisRequest(
-                0,
+            commandAnalysisRequest(
                 branch,
                 text,
                 index,
-                highlight && text.length < highlightMaxLength,
-                showErrors || highlight && text.length < highlightMaxLength,
+                highlight,
+                showErrors,
+                highlightMaxLength,
             )
         completion.analyze(next)
     }
@@ -165,4 +165,17 @@ constructor(
         session.close()
         super.onCleared()
     }
+}
+
+/** Keep the stored auto-disable threshold separate from the renderer's visible color window. */
+internal fun commandAnalysisRequest(
+    branch: String,
+    text: String,
+    index: Int,
+    highlight: Boolean,
+    showErrors: Boolean,
+    highlightMaxLength: Int,
+): CommandAnalysisRequest {
+    val highlighting = highlight && text.length < highlightMaxLength
+    return CommandAnalysisRequest(0, branch, text, index, highlighting, showErrors || highlighting)
 }

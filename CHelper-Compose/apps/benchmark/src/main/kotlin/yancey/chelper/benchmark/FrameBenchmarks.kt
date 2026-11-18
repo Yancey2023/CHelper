@@ -69,6 +69,17 @@ class FrameBenchmarks {
         )
 
     @Test
+    fun longCommandScroll() =
+        benchmark.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingMetric()),
+            compilationMode = interactionCompilation,
+            iterations = 5,
+            setupBlock = { prepareLongCommand() },
+            measureBlock = { scrollLongCommand() },
+        )
+
+    @Test
     fun libraryRevealAndScroll() =
         benchmark.measureRepeated(
             packageName = TARGET_PACKAGE,

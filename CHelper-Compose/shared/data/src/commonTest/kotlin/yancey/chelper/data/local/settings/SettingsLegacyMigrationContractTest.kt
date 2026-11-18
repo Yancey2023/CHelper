@@ -55,7 +55,8 @@ class SettingsLegacyMigrationContractTest {
         assertEquals(false, s.isCheckingBySelection)
         assertEquals(true, s.isCrowded) // 注意源字段是 isCrowed
         assertEquals("release-vanilla", s.cpackBranch)
-        assertEquals(4000, s.syntaxHighlightMaxLength)
+        assertEquals(400000, s.syntaxHighlightMaxLength)
+        assertEquals(1, s.syntaxHighlightLimitVersion)
     }
 
     @Test

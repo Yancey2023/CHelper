@@ -21,6 +21,9 @@ package yancey.chelper.domain.settings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
+const val DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH = 400_000
+const val MAX_SYNTAX_HIGHLIGHT_LENGTH = 10_000_000
+
 @Serializable
 data class Settings(
     val isEnableUpdateNotifications: Boolean? = null,
@@ -42,6 +45,7 @@ data class Settings(
     val isHideMetadataPreview: Boolean? = null,
     val isFloatingWindowFontAlphaSync: Boolean? = null,
     val syntaxHighlightMaxLength: Int? = null,
+    val syntaxHighlightLimitVersion: Int? = null,
     val publicLibraryHomeRecommend: Boolean? = null,
     val isEnableMcdHighlight: Boolean? = null,
     val isEnableLoongFlowImportMiniIcon: Boolean? = null,
@@ -69,7 +73,7 @@ fun Settings.withDefaults(): Settings =
         isCrowded = isCrowded ?: false,
         isShowErrorReason = isShowErrorReason ?: true,
         isSyntaxHighlight = isSyntaxHighlight ?: true,
-        syntaxHighlightMaxLength = syntaxHighlightMaxLength ?: 4000,
+        syntaxHighlightMaxLength = syntaxHighlightMaxLength ?: DEFAULT_SYNTAX_HIGHLIGHT_MAX_LENGTH,
         cpackBranch = cpackBranch ?: "release-experiment",
         isShowPublicLibrary = isShowPublicLibrary ?: true,
         publicLibraryMinVersion = publicLibraryMinVersion ?: 0,
