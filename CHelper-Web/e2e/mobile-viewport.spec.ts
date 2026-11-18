@@ -17,6 +17,37 @@ async function resizeVisualViewport(page: Page, height: number, offsetTop: numbe
   )
 }
 
+test('raises the input bar before a delayed keyboard resize reaches the page', async ({ page }) => {
+  await page.goto('/')
+  const editor = page.getByRole('textbox', { name: '命令输入' })
+  const footer = page.getByRole('contentinfo')
+  const footerBottom = () => footer.evaluate((element) => element.getBoundingClientRect().bottom)
+
+  await editor.tap()
+  await expect.poll(footerBottom, { timeout: 350 }).toBeLessThan(550)
+  await expect.poll(footerBottom).toBeLessThan(360)
+  await expect(editor).toBeFocused()
+
+  await resizeVisualViewport(page, 350, 0)
+  await expect.poll(footerBottom).toBe(342)
+  await expect(editor).toBeFocused()
+
+  await resizeVisualViewport(page, 600, 0)
+  await expect.poll(footerBottom).toBe(592)
+})
+
+test('restores the input bar when a touch does not open a software keyboard', async ({ page }) => {
+  await page.goto('/')
+  const editor = page.getByRole('textbox', { name: '命令输入' })
+  const footer = page.getByRole('contentinfo')
+  const footerBottom = () => footer.evaluate((element) => element.getBoundingClientRect().bottom)
+
+  await editor.tap()
+  await expect.poll(footerBottom, { timeout: 350 }).toBeLessThan(550)
+  await expect.poll(footerBottom).toBe(592)
+  await expect(editor).toBeFocused()
+})
+
 test('keeps the footer in view during visual-only keyboard resizes', async ({ page }) => {
   await page.goto('/')
   const editor = page.getByRole('textbox', { name: '命令输入' })

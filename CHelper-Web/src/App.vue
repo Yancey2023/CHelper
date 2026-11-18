@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { CircleAlert, Copy } from '@lucide/vue'
-import { useColorMode, useEventListener } from '@vueuse/core'
+import { useColorMode } from '@vueuse/core'
 import { ListboxContent, ListboxRoot, ListboxVirtualizer } from 'reka-ui'
-import {
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowReactive,
-  shallowRef,
-  toRaw,
-  useTemplateRef,
-} from 'vue'
+import { onBeforeUnmount, ref, shallowReactive, shallowRef, toRaw, useTemplateRef } from 'vue'
 import { toast } from 'vue-sonner'
 import { ALL_BRANCH, ALL_BRANCH_CHINESE, DEFAULT_BRANCH, getCore } from '@/core/CPackManager'
 import type { Branch } from '@/core/CPackManager'
@@ -25,27 +17,11 @@ import { Card } from '@/components/ui/card'
 import { ScrollArea, VirtualScrollViewport } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Toaster } from '@/components/ui/sonner'
+import { useEditorViewport } from '@/lib/useEditorViewport'
 import type { EditorValue } from '@/types'
 
 const appFrame = useTemplateRef<HTMLDivElement>('appFrame')
-const visualViewport = window.visualViewport
-
-function updateVisualViewport(): void {
-  const frame = appFrame.value
-  if (!frame || !visualViewport) {
-    return
-  }
-
-  const { height, offsetTop, scale } = visualViewport
-  // 只在浏览器未同步收缩布局视口时补偿，并保留用户的双指缩放。
-  const needsFallback =
-    scale === 1 && height > 0 && height < document.documentElement.clientHeight - 1
-  frame.style.setProperty('--visual-viewport-height', needsFallback ? `${height}px` : '')
-  frame.style.setProperty('--visual-viewport-top', needsFallback ? `${offsetTop}px` : '')
-}
-
-onMounted(updateVisualViewport)
-useEventListener(visualViewport, ['resize', 'scroll'], updateVisualViewport, { passive: true })
+const { onEditorTap, finishKeyboardOpening } = useEditorViewport(appFrame)
 
 const branchOptions = ALL_BRANCH.map((value, index) => ({
   value,
@@ -317,6 +293,8 @@ void loadBranch(DEFAULT_BRANCH)
           :syntax-tokens="syntaxTokens"
           :dark="effectiveTheme === 'dark'"
           @update:modelValue="onEditorValueChanged"
+          @pointerup="onEditorTap"
+          @focusout="finishKeyboardOpening"
         />
         <Button
           type="button"
@@ -353,6 +331,7 @@ void loadBranch(DEFAULT_BRANCH)
   height: 100vh;
   height: 100dvh;
   max-height: var(--visual-viewport-height, none);
+  max-height: min(100dvh, var(--visual-viewport-height, 100dvh));
   grid-template-rows: minmax(0, auto) minmax(0, 1fr) auto;
   gap: var(--component-gap);
   padding: var(--component-gap);
