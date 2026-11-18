@@ -83,7 +83,7 @@ tasks.processResources { dependsOn(prepareResources) }
 val installerResources = layout.buildDirectory.dir("generated/windowsInstaller")
 val prepareWindowsInstaller =
     tasks.register<Exec>("prepareWindowsInstaller") {
-        val javaHome = System.getProperty("java.home")
+        val javaHome = file(System.getProperty("java.home"))
         commandLine(
             "python",
             rootProject.file("../scripts/prepare_windows_installer.py"),
@@ -93,7 +93,7 @@ val prepareWindowsInstaller =
             installerResources.get().asFile,
         )
         inputs.file(rootProject.file("../scripts/prepare_windows_installer.py"))
-        inputs.file(file("$javaHome/jmods/jdk.jpackage.jmod"))
+        inputs.files(javaHome.resolve("bin/jimage.exe"), javaHome.resolve("lib/modules"))
         outputs.dir(installerResources)
     }
 

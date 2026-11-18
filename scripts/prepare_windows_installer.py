@@ -2,14 +2,29 @@
 
 import argparse
 from pathlib import Path
-import zipfile
+import subprocess
+from tempfile import TemporaryDirectory
 
 
 def prepare(java_home: Path, output: Path) -> None:
-    with zipfile.ZipFile(java_home / "jmods/jdk.jpackage.jmod") as archive:
-        source = archive.read(
-            "classes/jdk/jpackage/internal/resources/main.wxs"
-        ).decode("utf-8")
+    template = "jdk/jpackage/internal/resources/main.wxs"
+    # Temurin ships the jpackage resources in the runtime image with no JMODs.
+    with TemporaryDirectory() as extracted:
+        subprocess.run(
+            [
+                java_home / "bin/jimage.exe",
+                "extract",
+                "--dir",
+                extracted,
+                "--include",
+                f"glob:**/{template}",
+                java_home / "lib/modules",
+            ],
+            check=True,
+        )
+        source = (Path(extracted) / "jdk.jpackage" / template).read_text(
+            encoding="utf-8"
+        )
     feature_anchor = '<ComponentGroupRef Id="FileAssociations"/>'
     directory_anchor = '<Directory Id="TARGETDIR" Name="SourceDir"/>'
     if source.count(feature_anchor) != 1 or source.count(directory_anchor) != 1:
