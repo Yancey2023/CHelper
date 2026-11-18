@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import {
+  getRangeOffsets,
   getSelectionOffsets as getDomSelectionOffsets,
   setSelectionOffsets as setDomSelectionOffsets,
 } from './EditorSelection'
-import { createHighlightRuns } from './EditorHighlight'
+import { createCompositionHighlightRuns, createHighlightRuns } from './EditorHighlight'
+import type { EditorComposition } from './EditorHighlight'
 import type { SelectionOffsets } from './EditorSelection'
 import type { EditorValue } from '../types'
 
@@ -20,10 +22,17 @@ const emit = defineEmits<{
 
 const editorRef = ref<HTMLDivElement | null>(null)
 const displayText = ref(props.modelValue.text)
-const isComposing = ref(false)
+const composition = shallowRef<EditorComposition>()
 const scrollLeft = ref(0)
 const highlightRuns = computed(() =>
-  createHighlightRuns(displayText.value, props.syntaxTokens, props.dark),
+  composition.value
+    ? createCompositionHighlightRuns(
+        displayText.value,
+        props.syntaxTokens,
+        composition.value,
+        props.dark,
+      )
+    : createHighlightRuns(displayText.value, props.syntaxTokens, props.dark),
 )
 
 let lastSelection: SelectionOffsets = normalizeSelection(
@@ -103,7 +112,7 @@ function selectionIsInEditor(): boolean {
 }
 
 function onDocumentSelectionChange(): void {
-  if (!selectionIsInEditor()) {
+  if (composition.value || !selectionIsInEditor()) {
     return
   }
   publishEditorValue(getText(), getSelectionOffsets())
@@ -114,22 +123,35 @@ function onBeforeInput(event: InputEvent): void {
   if (event.inputType === 'insertParagraph' || event.inputType === 'insertLineBreak') {
     event.preventDefault()
   }
+
+  const editor = editorRef.value
+  const before = composition.value
+  if (editor && before?.text === getText() && event.inputType === 'insertCompositionText') {
+    // 部分输入法会替换浏览器给出的目标范围，例如重新转换已有文字。
+    const range = event.getTargetRanges?.()[0]
+    const offsets = range && getRangeOffsets(editor, range)
+    if (offsets) {
+      composition.value = { ...before, ...offsets }
+    }
+  }
 }
 
 function onEditorInput(): void {
-  displayText.value = getText()
-  if (!isComposing.value) {
+  if (composition.value) {
+    displayText.value = getText()
+  } else {
     publishEditorValue()
   }
 }
 
 function onCompositionStart(): void {
-  isComposing.value = true
-  displayText.value = getText()
+  const text = getText()
+  composition.value = { text, ...getSelectionOffsets() }
+  displayText.value = text
 }
 
 function onCompositionEnd(): void {
-  isComposing.value = false
+  composition.value = undefined
   publishEditorValue()
 }
 
@@ -180,6 +202,9 @@ watch(
       newValue.text.length,
     )
     lastPublishedValue = { ...newValue }
+    if (newValue.text === composition.value?.text) {
+      return
+    }
     displayText.value = newValue.text
     if (!editor) {
       lastSelection = selection
@@ -204,12 +229,16 @@ watch(
 </script>
 
 <template>
-  <div class="editor-shell" :class="{ composing: isComposing }">
+  <div class="editor-shell" :class="{ composing: composition }">
     <div class="editor-highlight" aria-hidden="true">
       <span class="editor-highlight-content" :style="{ transform: `translateX(${-scrollLeft}px)` }">
-        <span v-for="(run, index) in highlightRuns" :key="index" :style="{ color: run.color }">{{
-          run.text
-        }}</span>
+        <span
+          v-for="(run, index) in highlightRuns"
+          :key="index"
+          :class="{ 'editor-highlight-preedit': run.preedit }"
+          :style="{ color: run.color }"
+          >{{ run.text }}</span
+        >
       </span>
     </div>
     <div
@@ -282,7 +311,11 @@ watch(
 }
 
 .editor-shell.composing .editor-highlight {
-  visibility: hidden;
+  z-index: 2;
+}
+
+.editor-shell.composing .editor-highlight-content > span:not(.editor-highlight-preedit) {
+  background-color: var(--background);
 }
 
 .editor-shell.composing .editor {

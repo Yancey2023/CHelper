@@ -66,27 +66,20 @@ function getTextOffset(root: Node, container: Node, offset: number): number | nu
   return length
 }
 
+export function getRangeOffsets(root: HTMLElement, range: AbstractRange): SelectionOffsets | null {
+  const start = getTextOffset(root, range.startContainer, range.startOffset)
+  const end = getTextOffset(root, range.endContainer, range.endOffset)
+  return start === null || end === null ? null : { start, end }
+}
+
 /** 获取相对于整个编辑器纯文本的完整选区，兼容嵌套 span/text node。 */
 export function getSelectionOffsets(
   root: HTMLElement,
   fallback: SelectionOffsets,
 ): SelectionOffsets {
-  const rootTextLength = getTextLength(root)
-  const fallbackSelection = normalizeSelection(fallback.start, fallback.end, rootTextLength)
   const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0) {
-    return fallbackSelection
-  }
-  const range = selection.getRangeAt(0)
-  if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) {
-    return fallbackSelection
-  }
-  const start = getTextOffset(root, range.startContainer, range.startOffset)
-  const end = getTextOffset(root, range.endContainer, range.endOffset)
-  if (start === null || end === null) {
-    return fallbackSelection
-  }
-  return normalizeSelection(start, end, rootTextLength)
+  const offsets = selection?.rangeCount ? getRangeOffsets(root, selection.getRangeAt(0)) : null
+  return offsets ?? normalizeSelection(fallback.start, fallback.end, getTextLength(root))
 }
 
 interface TextPosition {

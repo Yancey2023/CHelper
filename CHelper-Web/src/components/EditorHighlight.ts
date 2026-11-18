@@ -1,8 +1,14 @@
 import { darkSyntax } from 'virtual:chelper-compose-syntax'
+import type { SelectionOffsets } from './EditorSelection'
 
 export interface HighlightRun {
   text: string
   color: string
+  preedit?: boolean
+}
+
+export interface EditorComposition extends SelectionOffsets {
+  text: string
 }
 
 const lightSyntax: Record<number, string> = {
@@ -37,4 +43,20 @@ export function createHighlightRuns(text: string, tokens: number[], dark = false
     }
   }
   return runs
+}
+
+export function createCompositionHighlightRuns(
+  text: string,
+  tokens: number[],
+  composition: EditorComposition,
+  dark = false,
+): HighlightRun[] {
+  const start = Math.min(composition.start, text.length)
+  // 组字替换原选区，后缀在新文本中的偏移会随预编辑串长度改变。
+  const end = Math.max(start, text.length - (composition.text.length - composition.end))
+  return [
+    ...createHighlightRuns(text.slice(0, start), tokens, dark),
+    { text: text.slice(start, end), color: 'transparent', preedit: true },
+    ...createHighlightRuns(text.slice(end), tokens.slice(composition.end), dark),
+  ]
 }

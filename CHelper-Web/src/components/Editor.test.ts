@@ -127,6 +127,7 @@ describe('Editor', () => {
     wrappers.push(wrapper)
     await wrapper.setProps({ modelValue: textValue })
     const editor = getEditor(wrapper)
+    setSelectionOffsets(editor, 11, 11)
     editor.dispatchEvent(new CompositionEvent('compositionstart'))
     await wrapper.vm.$nextTick()
     editor.textContent = 'hello world命'
@@ -137,10 +138,13 @@ describe('Editor', () => {
     editor.dispatchEvent(
       new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }),
     )
-    await wrapper.setProps({ syntaxTokens: new Array(12).fill(7) })
+    document.dispatchEvent(new Event('selectionchange'))
+    await wrapper.setProps({ modelValue: fullTextValue, syntaxTokens: new Array(11).fill(7) })
 
     expect(editor.innerHTML).toBe(compositionHtml)
     expect(wrapper.get('.editor-shell').classes()).toContain('composing')
+    expect(wrapper.get('.editor-highlight').text()).toBe('hello world命')
+    expect(wrapper.get('.editor-highlight-preedit').text()).toBe('命')
     expect(wrapper.emitted('update:modelValue')?.length ?? 0).toBe(emittedBeforeInput)
 
     editor.dispatchEvent(new CompositionEvent('compositionend'))

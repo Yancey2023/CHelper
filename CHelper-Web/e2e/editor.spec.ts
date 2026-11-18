@@ -57,6 +57,39 @@ async function hasSyntaxHighlight(page: Page): Promise<boolean> {
     .then((count) => count > 0)
 }
 
+test('keeps committed syntax visible around native IME composition', async ({ page, context }) => {
+  await page.goto('/')
+  await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
+  const editor = page.getByRole('textbox', { name: '命令输入' })
+  const highlight = page.locator('.editor-highlight')
+  const command = highlight.getByText('give', { exact: true })
+  const target = highlight.getByText('s', { exact: true })
+  const preedit = highlight.locator('.editor-highlight-preedit')
+  await editor.fill('give @s')
+  await expect(command).toHaveCSS('color', 'rgb(159, 32, 167)')
+  await expect(target).toHaveCSS('color', 'rgb(15, 160, 200)')
+  await setEditorSelection(page, 5, 5)
+
+  const ime = await context.newCDPSession(page)
+  await ime.send('Input.imeSetComposition', { text: 'ni', selectionStart: 2, selectionEnd: 2 })
+  await expect(editor).toHaveText('give ni@s')
+  await expect(highlight).toBeVisible()
+  await expect(preedit).toHaveText('ni')
+  await expect(preedit).toHaveCSS('color', 'rgba(0, 0, 0, 0)')
+  await expect(preedit).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+  await expect(command).toHaveCSS('color', 'rgb(159, 32, 167)')
+  await expect(target).toHaveCSS('color', 'rgb(15, 160, 200)')
+
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await expect(command).toHaveCSS('color', 'rgb(197, 134, 192)')
+  await ime.send('Input.imeSetComposition', { text: 'nin', selectionStart: 3, selectionEnd: 3 })
+  await expect(editor).toHaveText('give nin@s')
+  await expect(preedit).toHaveText('nin')
+  await ime.send('Input.insertText', { text: '您' })
+  await expect(editor).toHaveText('give 您@s')
+  await expect(preedit).toHaveCount(0)
+})
+
 test.describe('contenteditable selection behavior', () => {
   test('Ctrl+A followed immediately by Backspace clears the editor', async ({ page }) => {
     await page.goto('/')
