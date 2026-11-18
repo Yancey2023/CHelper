@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { CircleAlert, Copy } from '@lucide/vue'
-import { useColorMode } from '@vueuse/core'
+import { useColorMode, useEventListener } from '@vueuse/core'
 import { ListboxContent, ListboxRoot, ListboxVirtualizer } from 'reka-ui'
-import { onBeforeUnmount, ref, shallowReactive, shallowRef, toRaw } from 'vue'
+import {
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowReactive,
+  shallowRef,
+  toRaw,
+  useTemplateRef,
+} from 'vue'
 import { toast } from 'vue-sonner'
 import { ALL_BRANCH, ALL_BRANCH_CHINESE, DEFAULT_BRANCH, getCore } from '@/core/CPackManager'
 import type { Branch } from '@/core/CPackManager'
@@ -18,6 +26,26 @@ import { ScrollArea, VirtualScrollViewport } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Toaster } from '@/components/ui/sonner'
 import type { EditorValue } from '@/types'
+
+const appFrame = useTemplateRef<HTMLDivElement>('appFrame')
+const visualViewport = window.visualViewport
+
+function updateVisualViewport(): void {
+  const frame = appFrame.value
+  if (!frame || !visualViewport) {
+    return
+  }
+
+  const { height, offsetTop, scale } = visualViewport
+  // 只在浏览器未同步收缩布局视口时补偿，并保留用户的双指缩放。
+  const needsFallback =
+    scale === 1 && height > 0 && height < document.documentElement.clientHeight - 1
+  frame.style.setProperty('--visual-viewport-height', needsFallback ? `${height}px` : '')
+  frame.style.setProperty('--visual-viewport-top', needsFallback ? `${offsetTop}px` : '')
+}
+
+onMounted(updateVisualViewport)
+useEventListener(visualViewport, ['resize', 'scroll'], updateVisualViewport, { passive: true })
 
 const branchOptions = ALL_BRANCH.map((value, index) => ({
   value,
@@ -217,7 +245,7 @@ void loadBranch(DEFAULT_BRANCH)
 </script>
 
 <template>
-  <div class="app-frame">
+  <div ref="appFrame" class="app-frame">
     <header class="command-info">
       <Card class="gap-0 p-(--card-padding) wrap-break-word whitespace-pre-wrap ring-inset">
         {{ structure }}
@@ -319,11 +347,16 @@ void loadBranch(DEFAULT_BRANCH)
   --component-gap: 0.5rem;
   --card-padding: 0.75rem;
 
+  position: fixed;
+  inset: var(--visual-viewport-top, 0px) 0 auto;
   display: grid;
-  height: calc(var(--vh, 1vh) * 100);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
+  height: 100dvh;
+  max-height: var(--visual-viewport-height, none);
+  grid-template-rows: minmax(0, auto) minmax(0, 1fr) auto;
   gap: var(--component-gap);
   padding: var(--component-gap);
+  overflow: clip;
 }
 
 .command-info,
@@ -333,9 +366,14 @@ void loadBranch(DEFAULT_BRANCH)
   min-width: 0;
 }
 
+.command-info {
+  overflow: clip;
+}
+
 .suggestion-viewport {
   /* 为 shadcn 的 w-2.5 滚动条留出轨道宽度及卡片间距。 */
   padding-inline-end: calc(var(--component-gap) + var(--spacing) * 2.5);
+  overscroll-behavior-y: contain;
 }
 
 .below {
