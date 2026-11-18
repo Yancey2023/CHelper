@@ -25,8 +25,39 @@
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <optional>
+#include <vector>
+
+namespace CHelper {
+
+    class WebCommandContext {
+    public:
+        WebCommandContext(const CHelperCore &core, const char16_t *text)
+            : parsedCommand(core.createContext(text)) {}
+
+        // 补全结果引用上下文持有的资源，必须在 parsedCommand 之前销毁。
+        const std::unique_ptr<const CommandContext> parsedCommand;
+
+        const std::vector<AutoSuggestion::Suggestion> &getSuggestions(size_t cursor) {
+            if (suggestionCursor != cursor) {
+                suggestions = parsedCommand->getSuggestions(cursor);
+                suggestionCursor = cursor;
+            }
+            return suggestions;
+        }
+
+    private:
+        // 仅保留当前光标对应的一批结果，由单线程 Web 接口使用。
+        std::optional<size_t> suggestionCursor;
+        std::vector<AutoSuggestion::Suggestion> suggestions;
+    };
+
+}// namespace CHelper
 
 namespace {
+
+    using CHelper::WebCommandContext;
 
     // 用于向JS返回数据的缓冲区，JS侧是单线程的，可以安全复用
     std::vector<std::uint8_t> buffer;
@@ -192,65 +223,61 @@ EMSCRIPTEN_KEEPALIVE void release(const CHelper::CHelperCore *core) {
     delete core;
 }
 
-// 和CHelperCore不同，CommandContext没有可变状态，
-// 所有操作都由调用方传入位置参数，因此可以把同一个CommandContext
-// 交给多个线程同时读取，也可以创建多个CommandContext并行工作
-
-EMSCRIPTEN_KEEPALIVE CHelper::CommandContext *createCommandContext(const CHelper::CHelperCore *core, const char16_t *command) {
+EMSCRIPTEN_KEEPALIVE WebCommandContext *createCommandContext(const CHelper::CHelperCore *core, const char16_t *command) {
     if (core == nullptr) [[unlikely]] {
         return nullptr;
     }
     try {
-        return core->createContext(command);
+        return new WebCommandContext(*core, command);
     } catch (...) {
         return nullptr;
     }
 }
 
-EMSCRIPTEN_KEEPALIVE void releaseCommandContext(CHelper::CommandContext *context) {
-    CHelper::CHelperCore::deleteContext(context);
+EMSCRIPTEN_KEEPALIVE void releaseCommandContext(WebCommandContext *context) {
+    delete context;
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetCommand(const CHelper::CommandContext *context) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetCommand(const WebCommandContext *context) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    return writeU16String(context->getCommand());
+    return writeU16String(context->parsedCommand->getCommand());
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetStructure(const CHelper::CommandContext *context) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetStructure(const WebCommandContext *context) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    return writeU16String(context->getStructure());
+    return writeU16String(context->parsedCommand->getStructure());
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetParamHint(const CHelper::CommandContext *context, size_t index) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetParamHint(const WebCommandContext *context, size_t index) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    return writeU16String(context->getParamHint(index));
+    return writeU16String(context->parsedCommand->getParamHint(index));
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetErrorReasons(const CHelper::CommandContext *context) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetErrorReasons(const WebCommandContext *context) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    return writeErrorReasons(context->getErrorReasons());
+    return writeErrorReasons(context->parsedCommand->getErrorReasons());
 }
 
-EMSCRIPTEN_KEEPALIVE size_t contextGetSuggestionSize(const CHelper::CommandContext *context, size_t index) {
+EMSCRIPTEN_KEEPALIVE size_t contextGetSuggestionSize(WebCommandContext *context, size_t index) {
     if (context == nullptr) [[unlikely]] {
         return 0;
     }
     return context->getSuggestions(index).size();
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetSuggestion(const CHelper::CommandContext *context, size_t index, size_t which) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetSuggestion(WebCommandContext *context, size_t index, size_t which) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    std::vector<CHelper::AutoSuggestion::Suggestion> suggestions = context->getSuggestions(index);
+    const auto &suggestions = context->getSuggestions(index);
     if (which >= suggestions.size()) {
         return nullptr;
     }
@@ -260,35 +287,35 @@ EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetSuggestion(const CHelper::CommandC
     return buffer.data();
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetAllSuggestions(const CHelper::CommandContext *context, size_t index) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetAllSuggestions(WebCommandContext *context, size_t index) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
     return writeSuggestions(context->getSuggestions(index));
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextApplySuggestion(const CHelper::CommandContext *context, size_t index, size_t which) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextApplySuggestion(WebCommandContext *context, size_t index, size_t which) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    auto result = context->applySuggestion(index, which);
-    if (!result.has_value()) {
+    const auto &suggestions = context->getSuggestions(index);
+    if (which >= suggestions.size()) [[unlikely]] {
         return nullptr;
     }
-    return writeSuggestionClickResult(result.value());
+    return writeSuggestionClickResult(context->parsedCommand->applySuggestion(suggestions[which]));
 }
 
-EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetSyntaxTokens(const CHelper::CommandContext *context) {
+EMSCRIPTEN_KEEPALIVE const uint8_t *contextGetSyntaxTokens(const WebCommandContext *context) {
     if (context == nullptr) [[unlikely]] {
         return nullptr;
     }
-    return writeSyntaxTokens(context->getSyntaxResult().tokenTypes);
+    return writeSyntaxTokens(context->parsedCommand->getSyntaxResult().tokenTypes);
 }
 
-EMSCRIPTEN_KEEPALIVE size_t contextGetNodeCount(const CHelper::CommandContext *context) {
+EMSCRIPTEN_KEEPALIVE size_t contextGetNodeCount(const WebCommandContext *context) {
     if (context == nullptr) [[unlikely]] {
         return 0;
     }
-    return context->getNodeCount();
+    return context->parsedCommand->getNodeCount();
 }
 }

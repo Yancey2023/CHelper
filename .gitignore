@@ -19,8 +19,11 @@ node_modules/
 
 # script
 release.py
-CHelper-Android/gradle/gradle-daemon-jvm.properties
+CHelper-Compose/gradle/gradle-daemon-jvm.properties
 build*/
 
 # resource generator
 cache/
+
+# Build conventions are maintained sources, not generated build output.
+!CHelper-Compose/build-logic/

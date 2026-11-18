@@ -49,6 +49,10 @@ option(CHELPER_BUILD_BENCHMARKS
 option(CHELPER_ENABLE_SANITIZERS
        "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(CHELPER_BUILD_FUZZERS "Build Clang libFuzzer targets" OFF)
+option(CHELPER_BUILD_JNI "Build the desktop JVM native bridge" OFF)
+if(CHELPER_BUILD_JNI AND NOT ANDROID AND NOT EMSCRIPTEN)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 option(CHELPER_ENABLE_RESOURCE_AUDIT
        "Instrument arena allocation requests for scope tests" OFF)
 if(ANDROID OR EMSCRIPTEN)
@@ -250,13 +254,22 @@ target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
 add_library(CHelper::NoFilesystemCore ALIAS CHelperNoFilesystemCore)
 
 if(ANDROID)
-  add_library(CHelperAndroid SHARED src/apps/CHelperAndroid.cpp)
+  add_library(CHelperAndroid SHARED src/apps/CHelperJvm.cpp)
   chelper_configure_target(CHelperAndroid)
   target_compile_definitions(CHelperAndroid PRIVATE CHelperAndroid)
   target_link_libraries(CHelperAndroid PRIVATE CHelper::Core android log)
   target_link_options(CHelperAndroid PRIVATE "-Wl,--exclude-libs,ALL")
   set_target_properties(CHelperAndroid PROPERTIES CXX_VISIBILITY_PRESET hidden
                                                   VISIBILITY_INLINES_HIDDEN ON)
+endif()
+
+if(CHELPER_BUILD_JNI AND NOT ANDROID AND NOT EMSCRIPTEN)
+  find_package(JNI REQUIRED)
+  add_library(CHelperJvm SHARED src/apps/CHelperJvm.cpp)
+  chelper_configure_target(CHelperJvm)
+  target_include_directories(CHelperJvm PRIVATE ${JNI_INCLUDE_DIRS})
+  target_link_libraries(CHelperJvm PRIVATE CHelper::Core)
+  install(TARGETS CHelperJvm RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
 endif()
 
 if(EMSCRIPTEN)

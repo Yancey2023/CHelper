@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { darkSyntax } from 'virtual:chelper-compose-syntax'
 import { createHighlightRuns } from './EditorHighlight'
 
 describe('createHighlightRuns', () => {
@@ -19,6 +20,14 @@ describe('createHighlightRuns', () => {
     expect(createHighlightRuns('abc', [7])).toEqual([
       { text: 'a', color: '#9f20a7' },
       { text: 'bc', color: '#000000' },
+    ])
+  })
+
+  it('uses Compose token colors and the shadcn foreground in dark mode', () => {
+    expect(createHighlightRuns('a b', [7, 0, 11], true)).toEqual([
+      { text: 'a', color: darkSyntax[7] },
+      { text: ' ', color: 'var(--foreground)' },
+      { text: 'b', color: darkSyntax[11] },
     ])
   })
 })

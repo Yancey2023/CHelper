@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="data-jvm">
+    <output-path>$PROJECT_DIR$/shared/data/build/libs</output-path>
+    <root id="archive" name="data-jvm.jar">
+      <element id="module-output" name="CHelper-Compose.shared.data.jvmMain" />
+    </root>
+  </artifact>
+</component>

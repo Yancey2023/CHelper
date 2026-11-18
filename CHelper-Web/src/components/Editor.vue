@@ -11,6 +11,7 @@ import type { EditorValue } from '../types'
 const props = defineProps<{
   modelValue: EditorValue
   syntaxTokens: number[]
+  dark?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +22,9 @@ const editorRef = ref<HTMLDivElement | null>(null)
 const displayText = ref(props.modelValue.text)
 const isComposing = ref(false)
 const scrollLeft = ref(0)
-const highlightRuns = computed(() => createHighlightRuns(displayText.value, props.syntaxTokens))
+const highlightRuns = computed(() =>
+  createHighlightRuns(displayText.value, props.syntaxTokens, props.dark),
+)
 
 let lastSelection: SelectionOffsets = normalizeSelection(
   props.modelValue.selectionStart,
@@ -209,28 +212,33 @@ watch(
         }}</span>
       </span>
     </div>
-    <div ref="editorRef" class="editor" contenteditable="plaintext-only" spellcheck="false"></div>
+    <div
+      ref="editorRef"
+      class="editor"
+      contenteditable="plaintext-only"
+      spellcheck="false"
+      role="textbox"
+      aria-label="命令输入"
+    ></div>
   </div>
 </template>
 
 <style scoped>
 .editor-shell {
   position: relative;
-  margin: 0 5px;
-  width: calc(100vw - 140px);
-  height: auto;
-  color: black;
-  text-align: left;
-  background-color: white;
-  border: 0;
-  border-radius: 5px;
-  outline: 1px solid lightgrey;
+  color: var(--foreground);
+  background-color: var(--background);
+  border-radius: var(--radius);
+  outline: 1px solid var(--input);
+  outline-offset: -1px;
   overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .editor-shell:focus-within {
-  background-color: #ffffff;
-  outline: 2px solid #007bff;
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 .editor,
@@ -238,7 +246,7 @@ watch(
   box-sizing: border-box;
   width: 100%;
   min-height: 38px;
-  padding: 10px;
+  padding: 0.5rem var(--card-padding, 0.75rem);
   white-space: pre;
   word-wrap: normal;
 }
@@ -248,7 +256,7 @@ watch(
   z-index: 1;
   height: auto;
   color: transparent;
-  caret-color: #000000;
+  caret-color: var(--foreground);
   background: transparent;
   border: 0;
   outline: 0;
@@ -278,6 +286,6 @@ watch(
 }
 
 .editor-shell.composing .editor {
-  color: #000000;
+  color: var(--foreground);
 }
 </style>

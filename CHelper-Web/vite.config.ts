@@ -1,11 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vitest/config'
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
+import { composeSyntaxPlugin } from './composeSyntaxPlugin.ts'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [composeSyntaxPlugin(), vue(), tailwindcss()],
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],

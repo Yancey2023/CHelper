@@ -170,6 +170,10 @@ namespace CHelper {
          */
         [[nodiscard]] std::optional<std::pair<std::u16string, size_t>>
         applySuggestion(size_t index, size_t which) const;
+
+        /** 应用从当前上下文取得的补全建议。 */
+        [[nodiscard]] std::pair<std::u16string, size_t>
+        applySuggestion(const AutoSuggestion::Suggestion &suggestion) const;
     };
 
     /**

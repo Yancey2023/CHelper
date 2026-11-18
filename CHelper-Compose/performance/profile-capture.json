@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "generator": "androidx.benchmark.macro.junit4.BaselineProfileRule",
+  "passedJourney": "BaselineProfileGenerator#criticalJourneys",
+  "fixture": "offline-2000-v2",
+  "model": "M098FE",
+  "sdk": 37,
+  "rawFile": "BaselineProfileGenerator_criticalJourneys-baseline-prof.txt",
+  "rawSha256": "a29d52dab83fef2ed37c29f02870b2003d3f831d5133e15435ac9d74a41848b7",
+  "sourceSha256": "af779d6968e523bf0c817b61b2aebad17e04720dcb2d8bf7745ae235d61eb96b",
+  "rules": 30808,
+  "applicationRules": 3891,
+  "startupProfile": "Not generated: independent startup capture returned no rules on this device.",
+  "rawEvidence": "build/performance/profile-manual/raw/",
+  "verification": "build/performance/verified-profile/run.json; all four tests passed with BaselineProfileMode.Require"
+}

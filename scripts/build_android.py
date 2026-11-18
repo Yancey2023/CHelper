@@ -7,23 +7,21 @@ import sys
 def get_gradlew() -> str:
     gradlew = "gradlew.bat" if sys.platform == "win32" else "gradlew"
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "CHelper-Android", gradlew)
+        os.path.join(os.path.dirname(__file__), "..", "CHelper-Compose", gradlew)
     )
 
 
 def build_android_apk():
     gradlew = get_gradlew()
-    android_dir = os.path.abspath(os.path.join(".", "CHelper-Android"))
-    release_note = os.path.join(
-        android_dir, "app", "src", "main", "assets", "about", "release_note.txt"
-    )
+    android_dir = os.path.abspath(os.path.join(".", "CHelper-Compose"))
+    release_note = os.path.join(android_dir, "resources", "about", "release_note.txt")
     changelog = os.path.abspath(os.path.join(".", "CHANGELOG.md"))
     with open(release_note, "rb") as file:
         original_release_note = file.read()
     try:
         shutil.copyfile(changelog, release_note)
         subprocess.run(
-            [gradlew, "assembleRelease"],
+            [gradlew, ":apps:android:assembleRelease"],
             cwd=android_dir,
             check=True,
         )
@@ -39,7 +37,7 @@ if __name__ == "__main__":
             [get_gradlew(), "--version"],
             capture_output=True,
             check=False,
-            cwd=os.path.abspath(os.path.join(".", "CHelper-Android")),
+            cwd=os.path.abspath(os.path.join(".", "CHelper-Compose")),
         ).returncode
         != 0
     ):

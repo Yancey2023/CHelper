@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "conditions": {
+    "mode": "measure",
+    "fixture": "offline-2000-v2",
+    "fingerprint": "Redmi/songyuan/songyuan:17/CP2A.260605.016/OS4.0.7.0.XGNCNXM:user/release-keys",
+    "refreshSettings": {
+      "peak_refresh_rate": "null",
+      "min_refresh_rate": "null"
+    },
+    "frameTelemetry": "disabled",
+    "scenario": "coldStartupWithoutProfile"
+  },
+  "macro": {
+    "environments": [
+      {
+        "artVersion": 370399999,
+        "cores": 8,
+        "cpuLocked": true,
+        "cpuMaxFreqHz": 4608000000,
+        "device": "songyuan",
+        "model": "M098FE",
+        "sdk": 37,
+        "sustainedPerformance": false
+      }
+    ],
+    "metrics": {
+      "yancey.chelper.benchmark.StartupBenchmarks#coldStartupWithoutProfile/frameCount": {
+        "count": 5,
+        "p50": 2.0,
+        "p95": 2.0,
+        "p99": 2.0,
+        "max": 2.0
+      },
+      "yancey.chelper.benchmark.StartupBenchmarks#coldStartupWithoutProfile/timeToFullDisplayMs": {
+        "count": 5,
+        "p50": 195.494531,
+        "p95": 207.15011420000002,
+        "p99": 207.24323084000002,
+        "max": 207.26651
+      },
+      "yancey.chelper.benchmark.StartupBenchmarks#coldStartupWithoutProfile/timeToInitialDisplayMs": {
+        "count": 5,
+        "p50": 195.494531,
+        "p95": 207.15011420000002,
+        "p99": 207.24323084000002,
+        "max": 207.26651
+      },
+      "yancey.chelper.benchmark.StartupBenchmarks#coldStartupWithoutProfile/frameDurationCpuMs": {
+        "count": 9,
+        "p50": 48.918229,
+        "p95": 55.9144162,
+        "p99": 57.91954964,
+        "max": 58.420833
+      },
+      "yancey.chelper.benchmark.StartupBenchmarks#coldStartupWithoutProfile/frameOverrunMs": {
+        "count": 9,
+        "p50": 35.78538,
+        "p95": 43.113727399999995,
+        "p99": 44.581223079999994,
+        "max": 44.948097,
+        "deadlineMisses": 6,
+        "deadlineMissPercent": 66.66666666666667
+      }
+    }
+  },
+  "evidence": {
+    "startedUtc": "20261115T140041078372Z",
+    "revision": "3fca5b8605202e178fdbab56816f6afdf7d0bc25",
+    "dirty": true,
+    "apks": {
+      "yancey.chelper.benchmark": "4c943a4c18ca1d75e75e1eab285ad5f6038688ce7eb0dcef4ffb118727f52bf0",
+      "yancey.chelper.benchmark.test": "0c077fba58907531796c7e8357440e7ade618e1534da5f5a9c978174b73a99ea"
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "conditions": {
+    "mode": "verify",
+    "fixture": "offline-2000-v2",
+    "fingerprint": "Redmi/songyuan/songyuan:17/CP2A.260605.016/OS4.0.7.0.XGNCNXM:user/release-keys",
+    "refreshSettings": {
+      "peak_refresh_rate": "null",
+      "min_refresh_rate": "null"
+    },
+    "frameTelemetry": "disabled",
+    "scenario": "all"
+  },
+  "macro": {
+    "environments": [
+      {
+        "artVersion": 370399999,
+        "cores": 8,
+        "cpuLocked": true,
+        "cpuMaxFreqHz": 4608000000,
+        "device": "songyuan",
+        "model": "M098FE",
+        "sdk": 37,
+        "sustainedPerformance": false
+      }
+    ],
+    "metrics": {
+      "yancey.chelper.benchmark.FrameBenchmarks#settingsAndScroll/frameCount": {
+        "count": 5,
+        "p50": 237.0,
+        "p95": 244.6,
+        "p99": 244.92,
+        "max": 245.0
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#settingsAndScroll/frameDurationCpuMs": {
+        "count": 1196,
+        "p50": 2.2638015,
+        "p95": 3.8792445,
+        "p99": 8.498630649999987,
+        "max": 30.426355
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#settingsAndScroll/frameOverrunMs": {
+        "count": 1196,
+        "p50": -9.7770935,
+        "p95": -8.10874,
+        "p99": -3.7346783000000205,
+        "max": 20.372691,
+        "deadlineMisses": 6,
+        "deadlineMissPercent": 0.5016722408026756
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#libraryRevealAndScroll/frameCount": {
+        "count": 5,
+        "p50": 280.0,
+        "p95": 283.8,
+        "p99": 283.96,
+        "max": 284.0
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#libraryRevealAndScroll/frameDurationCpuMs": {
+        "count": 1398,
+        "p50": 3.0919015,
+        "p95": 6.121708049999999,
+        "p99": 10.423960699999993,
+        "max": 24.014792
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#libraryRevealAndScroll/frameOverrunMs": {
+        "count": 1398,
+        "p50": -8.797087999999999,
+        "p95": -5.699095900000009,
+        "p99": 1.3974939699999864,
+        "max": 12.072122,
+        "deadlineMisses": 17,
+        "deadlineMissPercent": 1.2160228898426324
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#commandInput/frameCount": {
+        "count": 5,
+        "p50": 183.0,
+        "p95": 185.4,
+        "p99": 185.88,
+        "max": 186.0
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#commandInput/frameDurationCpuMs": {
+        "count": 914,
+        "p50": 2.4106509999999997,
+        "p95": 5.719442999999999,
+        "p99": 12.17397878,
+        "max": 18.302969
+      },
+      "yancey.chelper.benchmark.FrameBenchmarks#commandInput/frameOverrunMs": {
+        "count": 914,
+        "p50": -9.7547085,
+        "p95": -5.192268750000011,
+        "p99": 3.324137480000002,
+        "max": 10.036584,
+        "deadlineMisses": 22,
+        "deadlineMissPercent": 2.4070021881838075
+      },
+      "yancey.chelper.benchmark.PackagedProfileBenchmark#coldStartupWithPackagedProfile/frameCount": {
+        "count": 5,
+        "p50": 2.0,
+        "p95": 2.0,
+        "p99": 2.0,
+        "max": 2.0
+      },
+      "yancey.chelper.benchmark.PackagedProfileBenchmark#coldStartupWithPackagedProfile/timeToFullDisplayMs": {
+        "count": 5,
+        "p50": 171.718437,
+        "p95": 179.0519162,
+        "p99": 179.25867444,
+        "max": 179.310364
+      },
+      "yancey.chelper.benchmark.PackagedProfileBenchmark#coldStartupWithPackagedProfile/timeToInitialDisplayMs": {
+        "count": 5,
+        "p50": 171.718437,
+        "p95": 179.0519162,
+        "p99": 179.25867444,
+        "max": 179.310364
+      },
+      "yancey.chelper.benchmark.PackagedProfileBenchmark#coldStartupWithPackagedProfile/frameDurationCpuMs": {
+        "count": 10,
+        "p50": 16.724531,
+        "p95": 36.963617049999996,
+        "p99": 38.701348210000006,
+        "max": 39.135781
+      },
+      "yancey.chelper.benchmark.PackagedProfileBenchmark#coldStartupWithPackagedProfile/frameOverrunMs": {
+        "count": 10,
+        "p50": 8.594769,
+        "p95": 23.539759899999993,
+        "p99": 25.28763838,
+        "max": 25.724608,
+        "deadlineMisses": 6,
+        "deadlineMissPercent": 60.0
+      }
+    }
+  },
+  "evidence": {
+    "startedUtc": "20261115T130726815762Z",
+    "revision": "3fca5b8605202e178fdbab56816f6afdf7d0bc25",
+    "dirty": true,
+    "apks": {
+      "yancey.chelper.benchmark": "4c943a4c18ca1d75e75e1eab285ad5f6038688ce7eb0dcef4ffb118727f52bf0",
+      "yancey.chelper.benchmark.test": "0c077fba58907531796c7e8357440e7ade618e1534da5f5a9c978174b73a99ea"
+    }
+  }
+}
