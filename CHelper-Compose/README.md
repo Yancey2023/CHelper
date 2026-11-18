@@ -63,7 +63,7 @@ Android 应用 ID 仍为 `yancey.chelper`，入口组件、JNI 类名和原数�
 
 验证码使用原 token / 状态轮询协议，Windows 系统浏览器负责渲染。WAF JS 质询由 Android WebView 或 Windows 隔离配置的 Microsoft Edge 执行；Windows 需要已安装 Edge。MSI / EXE 注册 `chelper://commandlab/...` 分享协议，同一数据目录只允许一个写入进程，后续启动将链接转交已有窗口。
 
-测试可通过 `CHELPER_DATA_DIR` 或 `-Dchelper.dataDir=...` 使用隔离目录。JNI 与资源包按内容哈希提取，避免替换仍被进程加载的 DLL。
+测试可通过 `CHELPER_DATA_DIR` 或 `-Dchelper.dataDir=...` 使用隔离目录。JNI 与资源包按内容哈希提取，避免替换仍被进程加载的 DLL。Windows 当前代码页无法表示数据目录路径时，DLL 会提取到默认的 `%LOCALAPPDATA%/CHelper/bundled`，资源包和用户数据仍读写原目录。
 
 ## 第三方声明
 

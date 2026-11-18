@@ -18,6 +18,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import yancey.chelper.desktop.storage.atomicWrite
+import yancey.chelper.desktop.storage.defaultDesktopDataDirectory
 import yancey.chelper.ui.navigation.CommandLabDeepLink
 import yancey.chelper.ui.navigation.CommandLabDeepLinkParser
 
@@ -143,9 +144,5 @@ private constructor(
 }
 
 internal fun desktopDataDirectory() =
-    File(
-        System.getProperty("chelper.dataDir")
-            ?: System.getenv("CHELPER_DATA_DIR")
-            ?: File(System.getenv("LOCALAPPDATA") ?: System.getProperty("user.home"), "CHelper")
-                .path
-    )
+    (System.getProperty("chelper.dataDir") ?: System.getenv("CHELPER_DATA_DIR"))?.let(::File)
+        ?: defaultDesktopDataDirectory()

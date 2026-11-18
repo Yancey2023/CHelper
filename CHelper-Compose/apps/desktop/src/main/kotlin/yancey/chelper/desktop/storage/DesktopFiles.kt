@@ -2,10 +2,15 @@ package yancey.chelper.desktop.storage
 
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.charset.Charset
 import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.FileSystemException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+
+internal fun defaultDesktopDataDirectory() =
+    File(System.getenv("LOCALAPPDATA") ?: System.getProperty("user.home"), "CHelper")
 
 internal fun atomicWrite(file: File, bytes: ByteArray) {
     file.parentFile.mkdirs()
@@ -37,7 +42,9 @@ internal class DesktopFiles(val directory: File) {
         loader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
             ?: error("缺少内置资源：$path")
 
-    fun extract(path: String): File {
+    fun extract(path: String): File = extract(path, directory)
+
+    private fun extract(path: String, targetDirectory: File): File {
         require(!path.contains("..") && !path.startsWith('/'))
         val bytes =
             loader.getResourceAsStream(path)?.use { it.readBytes() } ?: error("缺少内置资源：$path")
@@ -45,8 +52,15 @@ internal class DesktopFiles(val directory: File) {
             MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
                 "%02x".format(it)
             }
-        val destination = File(directory, "bundled/$hash/${File(path).name}")
-        if (!destination.exists()) atomicWrite(destination, bytes)
+        val destination = File(targetDirectory, "bundled/$hash/${File(path).name}")
+        if (!destination.exists()) {
+            try {
+                atomicWrite(destination, bytes)
+            } catch (e: FileSystemException) {
+                // Another process may have installed and loaded the same content-addressed file.
+                if (!destination.isFile) throw e
+            }
+        }
         return destination
     }
 
@@ -57,18 +71,30 @@ internal class DesktopFiles(val directory: File) {
         ) {
             "当前发行包支持 Windows 10/11 x64"
         }
+        // OpenJDK's DLL loader encodes paths using the Windows process code page.
+        val encoding = Charset.forName(System.getProperty("native.encoding")).newEncoder()
+        val targetDirectory =
+            if (encoding.canEncode(directory.canonicalPath)) directory
+            else
+                defaultDesktopDataDirectory().also {
+                    check(encoding.canEncode(it.canonicalPath)) {
+                        "当前 Windows 代码页无法表示内核路径，请选择可表示的数据目录或启用 UTF-8"
+                    }
+                }
         // Load runtime dependencies by absolute path before JNI. Each extraction path is content-
         // addressed so an upgrade never overwrites a DLL held open by another process.
         for (name in
             listOf(
                 "vcruntime140.dll",
                 "vcruntime140_1.dll",
-                "msvcp140_atomic_wait.dll",
                 "msvcp140.dll",
+                "msvcp140_1.dll",
+                "msvcp140_atomic_wait.dll",
             )) {
-            if (loader.getResource("native/windows-x64/$name") != null)
-                System.load(extract("native/windows-x64/$name").absolutePath)
+            val path = "native/windows-x64/$name"
+            if (loader.getResource(path) != null)
+                System.load(extract(path, targetDirectory).canonicalPath)
         }
-        return extract("native/windows-x64/CHelperJvm.dll")
+        return extract("native/windows-x64/CHelperJvm.dll", targetDirectory)
     }
 }
