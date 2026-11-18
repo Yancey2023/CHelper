@@ -515,7 +515,6 @@ export class CHelperCore {
   }
 
   // 把命令文本解析成AST，生成独立的命令上下文
-  // 适用于多线程并行的场景：可以创建任意多个CommandContext并行使用
   createContext(command) {
     return new CommandContext(this._corePtr, command)
   }
@@ -549,9 +548,7 @@ function readSyntaxTokens(ptr) {
 }
 
 // 命令上下文，持有某条命令解析好的AST
-// 和CHelperCore不同，CommandContext没有可变状态，
-// 所有操作都通过参数传入位置，因此可以把同一个CommandContext
-// 交给多个线程同时读取，也可以创建多个CommandContext并行工作
+// 每个上下文在 WASM 中缓存最近一次光标位置的补全结果，供单线程 Web 接口复用。
 export class CommandContext {
   // corePtr 是CHelperCore对应的指针，command 是命令文本
   constructor(corePtr, command) {
@@ -628,7 +625,7 @@ export class CommandContext {
   }
 
   // 把指定位置的其中一个补全提示应用到命令文本
-  // 不会修改自身的状态，同样的操作可以重复执行
+  // 不会修改上下文持有的命令文本，同样的操作可以重复执行
   applySuggestion(index, which) {
     return readClickSuggestionResult(
       wasmModule._contextApplySuggestion(this._contextPtr, index, which),

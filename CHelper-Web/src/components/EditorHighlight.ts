@@ -1,11 +1,11 @@
+import { darkSyntax } from 'virtual:chelper-compose-syntax'
+
 export interface HighlightRun {
   text: string
   color: string
 }
 
-const DEFAULT_COLOR = '#000000'
-
-const TOKEN_COLORS: Record<number, string> = {
+const lightSyntax: Record<number, string> = {
   1: '#4fad63', // boolean
   2: '#4fad63', // float
   3: '#4fad63', // integer
@@ -23,10 +23,12 @@ const TOKEN_COLORS: Record<number, string> = {
 }
 
 /** 将逐字符 token 合并成连续颜色片段，供只读高亮层渲染。 */
-export function createHighlightRuns(text: string, tokens: number[]): HighlightRun[] {
+export function createHighlightRuns(text: string, tokens: number[], dark = false): HighlightRun[] {
+  const colors = dark ? darkSyntax : lightSyntax
+  const defaultColor = dark ? 'var(--foreground)' : '#000000'
   const runs: HighlightRun[] = []
   for (let index = 0; index < text.length; index++) {
-    const color = TOKEN_COLORS[tokens[index]] ?? DEFAULT_COLOR
+    const color = colors[tokens[index]] ?? defaultColor
     const previous = runs[runs.length - 1]
     if (previous?.color === color) {
       previous.text += text[index]

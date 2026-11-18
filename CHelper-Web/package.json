@@ -12,15 +12,26 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "vue": "catalog:"
+    "@fontsource-variable/geist": "catalog:",
+    "@lucide/vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "class-variance-authority": "catalog:",
+    "cn": "catalog:",
+    "reka-ui": "catalog:",
+    "vue": "catalog:",
+    "vue-sonner": "catalog:"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "@vue/test-utils": "catalog:",
     "jsdom": "catalog:",
     "prettier": "catalog:",
+    "shadcn-vue": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",

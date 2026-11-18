@@ -13,32 +13,22 @@ vi.mock('@/core/CPackManager', () => ({
 
 import App from './App.vue'
 
-class ResizeObserverStub {
-  observe(): void {}
-
-  unobserve(): void {}
-
-  disconnect(): void {}
-}
-
 describe('App 内核加载失败提示', () => {
   it('初始加载失败时显示错误提示与重试按钮，不再停留在加载中', async () => {
-    vi.stubGlobal('ResizeObserver', ResizeObserverStub)
     const wrapper = mount(App)
     await flushPromises()
 
-    expect(wrapper.get('.text-structure').text()).toBe('CHelper加载失败')
-    const errorBox = wrapper.get('.text-error-reason')
+    expect(wrapper.text()).toContain('CHelper加载失败')
+    const errorBox = wrapper.get('[role="alert"]')
     expect(errorBox.text()).toContain('CHelper 内核加载失败')
     expect(errorBox.text()).toContain('模拟内核加载失败')
-    expect(errorBox.get('.retry-button').text()).toBe('重试')
+    expect(errorBox.get('button').text()).toBe('重试')
 
     // 点击重试后加载再次失败，错误提示继续显示
-    await wrapper.get('.retry-button').trigger('click')
+    await errorBox.get('button').trigger('click')
     await flushPromises()
-    expect(wrapper.get('.text-error-reason').text()).toContain('模拟内核加载失败')
+    expect(wrapper.get('[role="alert"]').text()).toContain('模拟内核加载失败')
 
     wrapper.unmount()
-    vi.unstubAllGlobals()
   })
 })

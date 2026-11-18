@@ -138,10 +138,13 @@ namespace CHelper {
         if (which >= suggestions.size()) [[unlikely]] {
             return std::nullopt;
         }
-        const AutoSuggestion::Suggestion &suggestion = suggestions[which];
+        return applySuggestion(suggestions[which]);
+    }
+
+    std::pair<std::u16string, size_t> CommandContext::applySuggestion(const AutoSuggestion::Suggestion &suggestion) const {
         std::u16string_view before = astNode.tokens.string();
         if (suggestion.content->name == u" " && (suggestion.start == 0 || before[suggestion.start - 1] == u' ')) {
-            return {{std::u16string(before), suggestion.start}};
+            return {std::u16string(before), suggestion.start};
         }
         std::pair<std::u16string, size_t> result;
         result.first.reserve(before.size() - (suggestion.end - suggestion.start) + suggestion.content->name.size() + 1);

@@ -96,7 +96,7 @@ export async function getCore(branch) {
 
 获取到内核后，即可去调用内核的各种接口了。需要注意的是，在内核要被销毁的时候，记得调用`release()`函数释放内存。
 
-内核本身不保存任何文本和光标状态，所有的命令相关功能都在`CommandContext`上执行。通过`createContext(command)`把命令文本解析成AST生成独立的命令上下文，然后在没有可变状态的`CommandContext`上执行各种只读操作：
+命令相关功能都在 `CommandContext` 上执行。通过 `createContext(command)` 把命令文本解析成 AST，生成独立的命令上下文。
 
 ```js
 const core = await getCore(DEFAULT_BRANCH);
@@ -108,4 +108,4 @@ console.log(context.getSyntaxTokens());
 context.release();
 ```
 
-由于`CommandContext`没有可变状态，同一条命令解析一次后，可以被多个线程同时读取；也可以基于同一个内核为多条命令创建多个`CommandContext`并行工作。对于编辑器场景，文本内容改变时重新`createContext`，光标改变时直接用新的位置查询即可。
+Web 接口在同一个线程上使用。文本改变时调用 `createContext`，光标改变时用新的位置查询。每个上下文在 WASM 内保留最近一个光标位置的补全结果，计数、按索引读取和应用补全共用该结果，上下文释放时一并清理。

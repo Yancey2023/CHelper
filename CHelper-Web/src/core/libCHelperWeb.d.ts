@@ -40,7 +40,7 @@ export class CHelperCore {
   createContext(command: string): CommandContext
 }
 
-/** 命令上下文：持有某条命令解析好的 AST，无可变状态。 */
+/** 命令上下文：持有解析好的 AST，并缓存最近一个光标位置的补全结果。 */
 export class CommandContext {
   constructor(corePtr: number, command: string)
   release(): void

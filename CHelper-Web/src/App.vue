@@ -1,24 +1,46 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { CircleAlert, Copy } from '@lucide/vue'
+import { useColorMode } from '@vueuse/core'
+import { ListboxContent, ListboxRoot, ListboxVirtualizer } from 'reka-ui'
+import { onBeforeUnmount, ref, shallowReactive, shallowRef, toRaw } from 'vue'
+import { toast } from 'vue-sonner'
 import { ALL_BRANCH, ALL_BRANCH_CHINESE, DEFAULT_BRANCH, getCore } from '@/core/CPackManager'
 import type { Branch } from '@/core/CPackManager'
 import type { CHelperCore, CommandContext, Suggestion } from '@/core/libCHelperWeb'
 import Editor from '@/components/Editor.vue'
-import SelectorModal from '@/components/SelectorModal.vue'
+import EditorMenu from '@/components/EditorMenu.vue'
 import IcpFooter from '@/components/IcpFooter.vue'
+import SuggestionOption from '@/components/SuggestionOption.vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { ScrollArea, VirtualScrollViewport } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { Toaster } from '@/components/ui/sonner'
 import type { EditorValue } from '@/types'
 
+const branchOptions = ALL_BRANCH.map((value, index) => ({
+  value,
+  label: ALL_BRANCH_CHINESE[index],
+}))
+const activeBranch = ref<Branch>()
+const { store: theme, state: effectiveTheme } = useColorMode({
+  storageKey: 'chelper-web-theme',
+})
 const structure = ref('CHelper正在加载中，请稍候')
 const paramHint = ref('作者：Yancey')
 const errorReason = ref('')
 // 内核加载失败的提示信息，为空表示没有加载失败；重试按钮加载最近失败的分支
 const loadError = ref('')
 let failedBranch: Branch | undefined
-const suggestions = ref<Suggestion[]>([])
-// 补全提示对应的光标位置，加载更多和点击补全提示时使用
-const suggestionIndex = ref(0)
-const realSuggestionSize = ref(0)
-const isBranchSelectorVisible = ref(false)
+const suggestions = shallowRef<{
+  revision: number
+  cursor: number
+  indices: number[]
+  read: (index: number) => Suggestion | null
+  cachedTitle: (index: number) => string
+}>()
+let suggestionRevision = 0
 const editorValue = ref<EditorValue>({
   text: '',
   selectionStart: 0,
@@ -26,52 +48,47 @@ const editorValue = ref<EditorValue>({
 })
 const syntaxTokens = ref<number[]>([])
 
-const listRef = ref<HTMLElement | null>(null)
-
 // 软件内核与命令上下文不参与模板渲染，不需要是响应式数据
 let core: CHelperCore | undefined
 let context: CommandContext | undefined
-let resizeObserver: ResizeObserver | undefined
+let loadRequest = 0
 
-async function init(): Promise<void> {
-  try {
-    setCore(await getCore(DEFAULT_BRANCH))
-  } catch (error) {
-    // 网络失败、资源包解析失败等都会走到这里，必须给出提示，不能让页面一直停在加载中
-    structure.value = 'CHelper加载失败'
-    reportLoadFailure(DEFAULT_BRANCH, error)
-  }
-}
-
-function reportLoadFailure(branch: Branch, error: unknown): void {
-  console.error(`fail to load cpack (${branch})`, error)
-  failedBranch = branch
-  loadError.value = error instanceof Error ? error.message : String(error)
-}
-
-async function retryLoad(): Promise<void> {
-  const branch = failedBranch ?? DEFAULT_BRANCH
+async function loadBranch(branch: Branch): Promise<void> {
+  const request = ++loadRequest
   loadError.value = ''
-  // 只有当前没有可用内核时才改动顶部状态文字，避免覆盖切换分支失败后仍然可用的界面
   if (core === undefined) {
     structure.value = 'CHelper正在加载中，请稍候'
   }
   try {
-    setCore(await getCore(branch))
+    const newCore = await getCore(branch)
+    if (request !== loadRequest) {
+      newCore.release()
+      return
+    }
+    setCore(newCore)
+    activeBranch.value = branch
   } catch (error) {
+    if (request !== loadRequest) {
+      return
+    }
     if (core === undefined) {
       structure.value = 'CHelper加载失败'
     }
-    reportLoadFailure(branch, error)
+    console.error(`fail to load cpack (${branch})`, error)
+    failedBranch = branch
+    loadError.value = error instanceof Error ? error.message : String(error)
   }
 }
 
+function retryLoad(): Promise<void> {
+  return loadBranch(failedBranch ?? DEFAULT_BRANCH)
+}
+
 function setCore(newCore: CHelperCore): void {
-  releaseContext()
-  core?.release()
+  release()
   core = newCore
-  recreateContext(editorValue.value.text)
-  onEditorValueChanged(editorValue.value)
+  onEditorValueChanged(editorValue.value, true)
+  failedBranch = undefined
 }
 
 function release(): void {
@@ -85,53 +102,71 @@ function releaseContext(): void {
   context = undefined
 }
 
-function recreateContext(text: string): void {
+function recreateContext(text: string): CommandContext | undefined {
   releaseContext()
-  if (core === undefined) {
-    return
-  }
-  context = core.createContext(text)
+  context = core?.createContext(text)
+  return context
 }
 
 function updateSuggestions(): void {
-  if (context === undefined) {
+  const commandContext = context
+  const cursor = editorValue.value.selectionStart
+  const count = commandContext?.getSuggestionSize(cursor) ?? 0
+  if (!commandContext || count === 0) {
+    suggestions.value = undefined
     return
   }
-  // 补全提示是按光标位置计算的，记住这个位置，加载更多和点击补全时都要用同一个位置
-  suggestionIndex.value = editorValue.value.selectionStart
-  realSuggestionSize.value = context.getSuggestionSize(suggestionIndex.value)
-  suggestions.value = []
-  loadMore(Math.floor((listRef.value?.clientHeight ?? 0) / 25))
+
+  const items = shallowReactive(new Map<number, Suggestion | null>())
+  suggestions.value = {
+    revision: ++suggestionRevision,
+    cursor,
+    indices: Array.from({ length: count }, (_, index) => index),
+    read(index) {
+      if (context !== commandContext) {
+        return null
+      }
+      // 行渲染只读取当前需要的记录。缓存变化只通知键盘首字查找。
+      const cached = toRaw(items).get(index)
+      if (cached !== undefined) {
+        return cached
+      }
+      const item = commandContext.getSuggestion(cursor, index)
+      items.set(index, item)
+      return item
+    },
+    cachedTitle: (index) => items.get(index)?.title.toLowerCase() ?? '',
+  }
 }
 
-function onEditorValueChanged(newEditorValue: EditorValue): void {
+function onEditorValueChanged(newEditorValue: EditorValue, refresh = false): void {
   if (newEditorValue.text.length === 0) {
     editorValue.value = newEditorValue
     structure.value = '欢迎使用CHelper'
     paramHint.value = '作者：Yancey'
     errorReason.value = ''
+    syntaxTokens.value = []
     recreateContext(newEditorValue.text)
     updateSuggestions()
     return
   }
-  if (context === undefined) {
+  const textChanged = refresh || editorValue.value.text !== newEditorValue.text
+  if (
+    !textChanged &&
+    editorValue.value.selectionStart === newEditorValue.selectionStart &&
+    editorValue.value.selectionEnd === newEditorValue.selectionEnd
+  ) {
     return
   }
-  if (editorValue.value.text === newEditorValue.text) {
-    if (
-      editorValue.value.selectionStart === newEditorValue.selectionStart &&
-      editorValue.value.selectionEnd === newEditorValue.selectionEnd
-    ) {
-      return
-    }
-    // 只有光标或选区改变，无需重新解析，直接用新的光标位置查询
-    editorValue.value = newEditorValue
-  } else {
-    // 文本内容改变，重新解析命令生成新的命令上下文
-    editorValue.value = newEditorValue
-    recreateContext(newEditorValue.text)
-    structure.value = context.getStructure()
-    const errorReasons = context.getErrorReasons()
+  editorValue.value = newEditorValue
+  // 只有命令文本或资源包改变时才重新解析。
+  const commandContext = textChanged ? recreateContext(newEditorValue.text) : context
+  if (commandContext === undefined) {
+    return
+  }
+  if (textChanged) {
+    structure.value = commandContext.getStructure()
+    const errorReasons = commandContext.getErrorReasons()
     if (errorReasons.length === 0) {
       errorReason.value = ''
     } else if (errorReasons.length === 1) {
@@ -142,38 +177,18 @@ function onEditorValueChanged(newEditorValue: EditorValue): void {
         errorReason.value += `\n${i + 1}. ${errorReasons[i].errorReason}`
       }
     }
-    syntaxTokens.value = context.getSyntaxTokens()
+    syntaxTokens.value = commandContext.getSyntaxTokens()
   }
-  paramHint.value = context.getParamHint(editorValue.value.selectionStart)
+  paramHint.value = commandContext.getParamHint(editorValue.value.selectionStart)
   updateSuggestions()
 }
 
-function loadMore(count: number): void {
-  if (context === undefined) {
-    return
-  }
-  const start = suggestions.value.length
-  const end = Math.min(start + count, realSuggestionSize.value)
-  for (let i = start; i < end; i++) {
-    const suggestion = context.getSuggestion(suggestionIndex.value, i)
-    if (suggestion !== null) {
-      suggestions.value.push(suggestion)
-    }
-  }
-}
-
-function onSuggestionScroll(): void {
-  const list = listRef.value
-  if (list && list.scrollTop + 2 * list.clientHeight >= list.scrollHeight) {
-    loadMore(Math.floor(list.clientHeight / 25))
-  }
-}
-
 function onSuggestionClick(which: number): void {
-  if (context === undefined) {
+  const query = suggestions.value
+  if (!context || !query) {
     return
   }
-  const clickSuggestionResult = context.applySuggestion(editorValue.value.selectionStart, which)
+  const clickSuggestionResult = context.applySuggestion(query.cursor, which)
   if (clickSuggestionResult == null) {
     return
   }
@@ -184,196 +199,148 @@ function onSuggestionClick(which: number): void {
   })
 }
 
-function copy(): void {
-  navigator.clipboard.writeText(editorValue.value.text).catch((reason: unknown) => {
-    window.alert('复制失败：' + String(reason))
-  })
-}
-
-function openBranchSelector(): void {
-  isBranchSelectorVisible.value = true
-}
-
-function closeBranchSelector(): void {
-  isBranchSelectorVisible.value = false
-}
-
-async function onBranchSelect(branch: string): Promise<void> {
+async function copy(): Promise<void> {
   try {
-    setCore(await getCore(branch as Branch))
-  } catch (error) {
-    // 切换分支失败时旧内核仍然可用，只显示提示，不改动顶部状态文字
-    reportLoadFailure(branch as Branch, error)
+    await navigator.clipboard.writeText(editorValue.value.text)
+    toast.dismiss('copy-command')
+  } catch (reason) {
+    toast.error('复制失败', { id: 'copy-command', description: String(reason) })
   }
 }
-
-onMounted(() => {
-  resizeObserver = new ResizeObserver(() => {
-    onSuggestionScroll()
-  })
-  if (listRef.value) {
-    resizeObserver.observe(listRef.value)
-  }
-})
 
 onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
+  loadRequest++
   release()
 })
 
-void init()
+void loadBranch(DEFAULT_BRANCH)
 </script>
 
 <template>
-  <div class="container">
-    <header class="header">
-      <div>
-        <div class="text-structure">{{ structure }}</div>
-        <div class="text-param-hint">{{ paramHint }}</div>
-        <div class="text-error-reason" v-if="errorReason">{{ errorReason }}</div>
-        <div class="text-error-reason" v-if="loadError">
-          <div>CHelper 内核加载失败：{{ loadError }}</div>
-          <div>请检查网络后重试，或在页面右下角切换分支。</div>
-          <button class="button retry-button" @click="retryLoad">重试</button>
-        </div>
-        <div class="line"></div>
-      </div>
+  <div class="app-frame">
+    <header class="command-info">
+      <Card class="gap-0 p-(--card-padding) wrap-break-word whitespace-pre-wrap ring-inset">
+        {{ structure }}
+      </Card>
+      <Card
+        class="gap-0 p-(--card-padding) wrap-break-word whitespace-pre-wrap text-muted-foreground ring-inset"
+      >
+        {{ paramHint }}
+      </Card>
+      <Alert
+        v-if="errorReason"
+        variant="destructive"
+        class="p-(--card-padding) wrap-break-word whitespace-pre-wrap ring-inset"
+      >
+        {{ errorReason }}
+      </Alert>
+      <Alert v-if="loadError" variant="destructive" class="p-(--card-padding) ring-inset">
+        <CircleAlert aria-hidden="true" />
+        <AlertTitle>CHelper 内核加载失败</AlertTitle>
+        <AlertDescription class="wrap-anywhere">
+          <p>{{ loadError }}</p>
+          <p>请检查网络后重试，或在底栏切换分支。</p>
+          <Button type="button" size="sm" variant="outline" class="mt-1 w-fit" @click="retryLoad">
+            重试
+          </Button>
+        </AlertDescription>
+      </Alert>
+      <Separator />
     </header>
-    <main ref="listRef" @scroll="onSuggestionScroll">
-      <div class="div-suggestion" v-for="item in suggestions" @click="onSuggestionClick(item.id)">
-        <div class="text-suggestion-name">{{ item.title }}</div>
-        <div class="text-suggestion-description">{{ item.description }}</div>
-      </div>
+
+    <main class="min-h-0">
+      <ScrollArea v-if="suggestions" :key="suggestions.revision" type="auto" class="h-full">
+        <template #viewport>
+          <ListboxRoot class="h-full">
+            <ListboxContent aria-label="命令补全" as-child>
+              <VirtualScrollViewport class="suggestion-viewport">
+                <ListboxVirtualizer
+                  v-slot="{ option, virtualizer }"
+                  :options="suggestions.indices"
+                  :estimate-size="76"
+                  :overscan="4"
+                  :text-content="suggestions.cachedTitle"
+                >
+                  <SuggestionOption
+                    :index="option"
+                    :suggestion="suggestions.read(option)"
+                    :measure="virtualizer.measureElement"
+                    :class="{ 'pb-(--component-gap)': option < suggestions.indices.length - 1 }"
+                    @apply="onSuggestionClick"
+                  />
+                </ListboxVirtualizer>
+              </VirtualScrollViewport>
+            </ListboxContent>
+          </ListboxRoot>
+        </template>
+      </ScrollArea>
     </main>
-    <footer>
+
+    <footer class="command-footer">
       <div class="below">
-        <button class="button" @click="openBranchSelector">分支</button>
+        <EditorMenu
+          v-model:theme="theme"
+          :branches="branchOptions"
+          :active-branch="activeBranch"
+          @select-branch="loadBranch"
+        />
         <Editor
-          :modelValue="editorValue"
-          :syntaxTokens="syntaxTokens"
+          :model-value="editorValue"
+          :syntax-tokens="syntaxTokens"
+          :dark="effectiveTheme === 'dark'"
           @update:modelValue="onEditorValueChanged"
         />
-        <button class="button" @click="copy">复制</button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          class="h-auto w-[38px] rounded-full"
+          aria-label="复制"
+          title="复制"
+          @click="copy"
+        >
+          <Copy class="size-[18px]" aria-hidden="true" />
+        </Button>
       </div>
       <IcpFooter />
     </footer>
-    <SelectorModal
-      :title="'选择分支'"
-      :data="ALL_BRANCH"
-      :showNames="ALL_BRANCH_CHINESE"
-      :show="isBranchSelectorVisible"
-      @close="closeBranchSelector"
-      @select="onBranchSelect"
-    />
   </div>
+  <Toaster
+    :theme="effectiveTheme"
+    position="top-right"
+    close-button
+    container-aria-label="通知"
+    :toast-options="{ closeButtonAriaLabel: '关闭复制提示' }"
+  />
 </template>
 
 <style scoped>
-.container {
+.app-frame {
+  --component-gap: 0.5rem;
+  --card-padding: 0.75rem;
+
   display: grid;
   height: calc(var(--vh, 1vh) * 100);
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--component-gap);
+  padding: var(--component-gap);
 }
 
-.line {
-  margin: 5px 10px;
-  height: 1px;
-  background: darkgrey;
+.command-info,
+.command-footer {
+  display: grid;
+  gap: var(--component-gap);
+  min-width: 0;
 }
 
-main {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.text-structure {
-  height: auto;
-  padding: 10px;
-  margin: 5px 5px 0 5px;
-  color: #000000;
-  background-color: #f5f7fa;
-  border-radius: 5px;
-  white-space: pre-wrap;
-}
-
-.text-param-hint {
-  height: auto;
-  padding: 10px;
-  margin: 5px 5px 0 5px;
-  color: #666666;
-  background-color: #f5f7fa;
-  border-radius: 5px;
-  white-space: pre-wrap;
-}
-
-.text-error-reason {
-  height: auto;
-  padding: 10px;
-  margin: 5px 5px 0 5px;
-  color: #ff4444;
-  background-color: #f5f7fa;
-  border-radius: 5px;
-  white-space: pre-wrap;
-}
-
-.div-suggestion {
-  height: auto;
-  padding: 5px;
-  margin: 0 5px 5px 5px;
-  background-color: #f5f7fa;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.div-suggestion:hover {
-  background-color: #f5f5f5;
-}
-
-.text-suggestion-name {
-  height: auto;
-  color: #000000;
-  margin: 5px;
-}
-
-.text-suggestion-description {
-  height: auto;
-  color: #666666;
-  margin: 5px;
+.suggestion-viewport {
+  /* 为 shadcn 的 w-2.5 滚动条留出轨道宽度及卡片间距。 */
+  padding-inline-end: calc(var(--component-gap) + var(--spacing) * 2.5);
 }
 
 .below {
   display: grid;
-  left: 20px;
-  width: calc(100vw - 10px);
-  margin: 5px;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-}
-
-.button {
-  padding: 5px;
-  border: 0;
-  width: 50px;
-  height: 100%;
-  color: #f5f7fa;
-  text-align: center;
-  background: #007bff;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.button:hover {
-  background-color: #0070ff;
-}
-
-.retry-button {
-  margin: 5px;
-}
-
-* {
-  font-size: 15px;
-  font-family:
-    Inter, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    '微软雅黑', Arial, sans-serif;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--component-gap);
 }
 </style>
