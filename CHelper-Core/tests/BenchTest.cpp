@@ -17,6 +17,27 @@
  */
 
 #include "BenchHelper.h"
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <glaze/core/read.hpp>
+#include <glaze/core/write.hpp>
+#include <glaze/json/read.hpp>
+#include <glaze/json/write.hpp>
+#include <glaze/msgpack.hpp>
+#include <memory>
+#include <new>
+#include <ratio>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utf8.h>
+#include <utility>
 
 #include <chelper/serialization/SerializationImpl.h>
 #include <gtest/gtest.h>

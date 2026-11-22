@@ -21,7 +21,18 @@
 #include <chelper/CHelperCore.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/serialization/Serialization.h>
+#include <chelper/util/Logging.h>
+#include <chrono>
+#include <cstddef>
+#include <exception>
+#include <filesystem>
+#include <fmt/chrono.h>
+#include <fmt/color.h>
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <utf8.h>
+#include <vector>
 
 namespace CHelper::Test {
 

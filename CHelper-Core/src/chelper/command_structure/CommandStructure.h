@@ -19,6 +19,7 @@
 #pragma once
 
 #include <chelper/parser/ASTNode.h>
+#include <string>
 
 namespace CHelper::CommandStructure {
 

@@ -19,6 +19,9 @@
 #include <chelper/command_structure/CommandStructure.h>
 #include <chelper/command_structure/StructureBuilder.h>
 #include <chelper/node/NodeType.h>
+#include <cstddef>
+#include <limits>
+#include <string>
 
 namespace CHelper::CommandStructure {
 

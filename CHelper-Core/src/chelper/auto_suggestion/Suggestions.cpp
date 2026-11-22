@@ -17,6 +17,10 @@
  */
 
 #include <chelper/auto_suggestion/Suggestions.h>
+#include <cstddef>
+#include <iterator>
+#include <utility>
+#include <vector>
 
 namespace CHelper::AutoSuggestion {
 

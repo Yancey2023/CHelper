@@ -19,7 +19,9 @@
 #pragma once
 
 #include <chelper/parser/ASTNode.h>
-#include <pch.h>
+#include <cstddef>
+#include <optional>
+#include <string>
 
 namespace CHelper::ParameterHint {
 

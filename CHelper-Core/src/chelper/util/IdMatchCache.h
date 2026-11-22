@@ -8,7 +8,11 @@
 
 #include <algorithm>
 #include <chelper/util/HashContainer.h>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <utility>
+#include <xxhash.h>
 
 namespace CHelper {
 

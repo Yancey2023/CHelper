@@ -16,8 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/lexer/TokenReader.h>
 #include <chelper/parser/ErrorReasonFactory.h>
+#include <cstddef>
+#include <memory>
+#include <string_view>
+#include <utility>
 
 namespace CHelper {
 

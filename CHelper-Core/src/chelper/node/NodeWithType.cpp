@@ -19,6 +19,7 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/node/NodeWithType.h>
+#include <memory_resource>
 
 namespace CHelper::Node {
 

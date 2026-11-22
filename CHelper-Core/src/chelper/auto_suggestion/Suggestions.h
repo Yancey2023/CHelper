@@ -21,7 +21,11 @@
 #include <chelper/auto_suggestion/Suggestion.h>
 #include <chelper/util/HashContainer.h>
 #include <concepts>
+#include <cstddef>
 #include <functional>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper::AutoSuggestion {
 

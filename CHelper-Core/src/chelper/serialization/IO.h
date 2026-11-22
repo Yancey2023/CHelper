@@ -19,10 +19,21 @@
 #pragma once
 
 #include <chelper/serialization/BinaryFormat.h>
+#include <chelper/serialization/PmrAdapters.h>
+#include <glaze/json/read.hpp>
+#include <glaze/json/write.hpp>
+#include <glaze/msgpack.hpp>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 
+#ifndef CHELPER_NO_FILESYSTEM
+#include <cstddef>
+#include <filesystem>
 #include <fstream>
+#include <ios>
+#endif
 
-// ================= 通用 I/O 辅助函数（所有文件通过 pch.h 可用） =================
 // 各格式（JSON / MessagePack / 自定义二进制）的读写入口与文件读取；
 // 失败时抛出带定位信息的 std::runtime_error
 namespace CHelper {

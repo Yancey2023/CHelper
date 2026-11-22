@@ -19,7 +19,11 @@
 #pragma once
 
 #include <chelper/parser/TokensView.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <memory_resource>
+#include <string>
 
 namespace CHelper {
 

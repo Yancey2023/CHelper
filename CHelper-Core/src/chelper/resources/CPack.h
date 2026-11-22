@@ -26,7 +26,17 @@
 #include <chelper/resources/id/ItemId.h>
 #include <chelper/util/CPackMemory.h>
 #include <chelper/util/HashContainer.h>
-#include <pch.h>
+#include <memory>
+#include <memory_resource>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <variant>
+#include <vector>
+#ifndef CHELPER_NO_FILESYSTEM
+#include <filesystem>
+#endif
 
 namespace CHelper {
 

@@ -7,6 +7,11 @@
 #include <chelper/parser/Parser.h>
 #include <chelper/serialization/Serialization.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <memory>
+#include <string>
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     if (size == 0 || size > 1024 * 1024) return 0;

@@ -19,7 +19,10 @@
 #pragma once
 
 #include <chelper/CHelperCore.h>
-#include <pch.h>
+#include <cstddef>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 int main(int argc, char **argv);
 

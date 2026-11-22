@@ -20,6 +20,8 @@
 
 #include <exception>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>

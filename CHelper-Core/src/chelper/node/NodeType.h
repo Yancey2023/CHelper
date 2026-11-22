@@ -18,9 +18,22 @@
 
 #pragma once
 
+#include <array>
 #include <chelper/node/CommandNode.h>
 #include <chelper/util/TypeList.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <stdexcept>
+#include <string_view>
+#include <utility>
+
+// 分发层必须完全内联，避免多层实际调用带来的开销和寄存器隔离。
+#if defined(_MSC_VER) && !defined(__clang__)
+#define CHELPER_FORCEINLINE __forceinline
+#else
+#define CHELPER_FORCEINLINE inline __attribute__((always_inline))
+#endif
 
 namespace CHelper {
 
@@ -371,8 +384,8 @@ namespace CHelper {
         //运行时 nodeTypeId -> 具体节点类型的统一分发，替代各模块重复的 switch(NodeTypeId)。
         //onMatch 以 <class NodeType> 模板形参接收 id 对应的节点类型；
         //各分支返回类型必须一致（与手写 switch 的返回约束相同）。
-        //两参版本：id 非法（数据损坏）时 Debug 直接抛异常，Release 走 CHELPER_UNREACHABLE，
-        //与旧 switch 的 default: CHELPER_UNREACHABLE() 行为一致；
+        //两参版本：id 非法（数据损坏）时 Debug 直接抛异常，Release 走 std::unreachable()，
+        //与旧 switch 的 default: std::unreachable() 行为一致；
         //三参版本：id 非法时调用 onMiss，用于反序列化等不可信输入场景。
         namespace detail {
 #define CHELPER_NODE_DISPATCH_CASE(v1) \
@@ -387,7 +400,7 @@ namespace CHelper {
 #if CHelperDebug
                         throw std::runtime_error("invalid nodeTypeId");
 #else
-                        CHELPER_UNREACHABLE();
+                        std::unreachable();
 #endif
                 }
             }
@@ -427,3 +440,5 @@ namespace CHelper {
     }// namespace Node
 
 }// namespace CHelper
+
+#undef CHELPER_FORCEINLINE

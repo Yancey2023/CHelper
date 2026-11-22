@@ -1,7 +1,13 @@
 #include <chelper/CHelperCore.h>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utf8.h>
 
 namespace CHelper {
     class WebCommandContext;

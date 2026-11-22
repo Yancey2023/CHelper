@@ -16,10 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <array>
 #include <chelper/node/NodeType.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <chelper/util/JsonUtil.h>
+#include <cstddef>
+#include <limits>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper::SyntaxHighlight {
 
@@ -260,7 +266,7 @@ namespace CHelper::SyntaxHighlight {
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET3);
                             break;
                         default:
-                            CHELPER_UNREACHABLE();
+                            std::unreachable();
                     }
                     if (depth < brackets.size()) {
                         brackets[depth] = ch;
@@ -287,7 +293,7 @@ namespace CHelper::SyntaxHighlight {
                             syntaxResult.update(token.pos, SyntaxTokenType::BRACKET3);
                             break;
                         default:
-                            CHELPER_UNREACHABLE();
+                            std::unreachable();
                     }
                     if (depth > brackets.size()) overflow.pop_back();
                     --depth;

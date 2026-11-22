@@ -18,9 +18,9 @@
 
 #pragma once
 
-// 自带依赖，不依赖 pch.h 的包含顺序：BinaryFormat.h 会在 pch.h 之前被包含
 #include <algorithm>
 #include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <exception>

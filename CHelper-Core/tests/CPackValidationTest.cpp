@@ -17,10 +17,26 @@
  */
 
 #include "CpackTestHelper.h"
+#include <algorithm>
+#include <array>
 #include <chelper/parser/Parser.h>
 #include <chelper/serialization/IO.h>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <future>
+#include <glaze/core/context.hpp>
 #include <gtest/gtest.h>
+#include <ios>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
 

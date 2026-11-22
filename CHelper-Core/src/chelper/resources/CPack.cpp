@@ -16,9 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
+#include <chelper/util/Logging.h>
+#include <cstddef>
+#include <fmt/xchar.h>
+#include <memory>
+#include <stdexcept>
+#include <string_view>
+#include <type_traits>
+#include <utf8.h>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace CHelper {
 

@@ -1,6 +1,12 @@
 #include <chelper/lexer/Lexer.h>
 #include <chelper/lexer/TokenReader.h>
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <string_view>
+#include <utility>
 
 namespace CHelper::Test {
 

@@ -19,6 +19,11 @@
 #include <chelper/node/CommandNode.h>
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/ErrorReasonFactory.h>
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

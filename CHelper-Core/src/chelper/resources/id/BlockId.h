@@ -21,8 +21,14 @@
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
 #include <chelper/util/HashContainer.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace CHelper {
 

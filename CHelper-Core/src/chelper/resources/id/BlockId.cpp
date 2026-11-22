@@ -16,8 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <array>
 #include <chelper/node/CommandNode.h>
 #include <chelper/resources/id/BlockId.h>
+#include <chelper/util/Utf8.h>
+#include <cstddef>
+#include <cstdint>
+#include <fmt/format.h>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper {
 
@@ -315,7 +330,7 @@ namespace CHelper {
                         "BLOCK_STATE_ENTRY_VALUE_BOOLEAN", u"方块状态键值对的键（布尔值）",
                         NormalId::make(blockPropertyValueDescription.valueName.boolean ? u"true" : u"false", description));
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 
@@ -339,7 +354,7 @@ namespace CHelper {
                     isDefaultValue = item.valueName.integer == defaultValue.integer;
                     break;
                 default:
-                    CHELPER_UNREACHABLE();
+                    std::unreachable();
             }
             bool isInvalid;
             if (valid.has_value()) {
@@ -370,7 +385,7 @@ namespace CHelper {
                         }
                         break;
                     default:
-                        CHELPER_UNREACHABLE();
+                        std::unreachable();
                 }
             } else {
                 isInvalid = false;
@@ -402,7 +417,7 @@ namespace CHelper {
             case PropertyType::BOOLEAN:
                 return XXH3_64bits_withSeed(&value.boolean, sizeof(value.boolean), seed);
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 
@@ -416,7 +431,7 @@ namespace CHelper {
             case PropertyType::BOOLEAN:
                 return left.boolean == right.boolean;
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 

@@ -24,7 +24,15 @@
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/id/NormalId.h>
 #include <chelper/serialization/Serialization.h>
+#include <cstddef>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
 

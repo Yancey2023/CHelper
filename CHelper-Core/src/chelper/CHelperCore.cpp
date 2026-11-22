@@ -18,8 +18,26 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/old2new/Old2New.h>
-#include <chelper/serialization/IO.h>
 #include <chelper/serialization/Serialization.h>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
+
+#ifndef CHELPER_NO_FILESYSTEM
+#include <chelper/serialization/IO.h>
+#include <filesystem>
+#include <fmt/format.h>
+#include <stdexcept>
+#endif
+
+// 保留只用于生成序列化符号、本身永不被调用的函数。
+#if defined(__GNUC__) || defined(__clang__)
+#define CHELPER_USED gnu::used
+#else
+#define CHELPER_USED maybe_unused
+#endif
 
 namespace CHelper {
 

@@ -16,10 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/auto_suggestion/AutoSuggestion.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/util/JsonUtil.h>
 #include <chelper/util/KMPMatcher.h>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper::AutoSuggestion {
 
@@ -544,7 +551,7 @@ namespace CHelper::AutoSuggestion {
                 }
                 return false;
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 

@@ -18,6 +18,9 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
+#include <optional>
+#include <string>
+#include <string_view>
 
 #if CHelperDebug
 #include <chelper/node/NodeType.h>

@@ -3,7 +3,16 @@
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/IO.h>
 #include <chelper/serialization/Serialization.h>
+#include <chrono>
+#include <cstddef>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <system_error>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
     namespace {

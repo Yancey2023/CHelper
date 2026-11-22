@@ -16,7 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/parser/TokensView.h>
+#include <cstddef>
+#include <fmt/format.h>
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 namespace CHelper {
 

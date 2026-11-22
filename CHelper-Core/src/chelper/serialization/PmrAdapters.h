@@ -2,7 +2,15 @@
 #pragma once
 
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <glaze/core/meta.hpp>
+#include <glaze/json/read.hpp>
+#include <glaze/msgpack/read.hpp>
+#include <memory>
+#include <memory_resource>
+#include <optional>
+#include <utility>
 
 namespace glz {
     // JSON nullable reader 的构造扩展点；optional 内的 PMR 容器同样要捕获加载资源。

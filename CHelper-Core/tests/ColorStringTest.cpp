@@ -17,7 +17,17 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <fmt/color.h>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <utf8.h>
+#include <vector>
 
 void testCommand(CHelper::CHelperCore *core, const std::u16string &command) {
     std::unique_ptr<CHelper::CommandContext> context(core->createContext(command));

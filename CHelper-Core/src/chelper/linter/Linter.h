@@ -19,7 +19,8 @@
 #pragma once
 
 #include <chelper/parser/ASTNode.h>
-#include <pch.h>
+#include <memory>
+#include <vector>
 
 namespace CHelper::Linter {
 

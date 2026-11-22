@@ -21,7 +21,10 @@
 #include <chelper/node/NodeWithType.h>
 #include <chelper/resources/id/NamespaceId.h>
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace CHelper {
 

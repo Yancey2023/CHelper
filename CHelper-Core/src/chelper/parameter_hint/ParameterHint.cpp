@@ -18,6 +18,11 @@
 
 #include <chelper/node/NodeType.h>
 #include <chelper/parameter_hint/ParameterHint.h>
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 namespace CHelper::ParameterHint {
 
@@ -111,7 +116,7 @@ namespace CHelper::ParameterHint {
             case ASTNodeMode::OR:
                 return getParameterHint(astNode.getBestNode(), index);
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
     }
 

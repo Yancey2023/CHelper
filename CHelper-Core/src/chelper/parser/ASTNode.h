@@ -18,9 +18,17 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chelper/node/NodeWithType.h>
 #include <chelper/parser/ErrorReasonList.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <memory_resource>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

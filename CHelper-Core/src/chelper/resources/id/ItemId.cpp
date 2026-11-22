@@ -18,6 +18,13 @@
 
 #include <chelper/node/CommandNode.h>
 #include <chelper/resources/id/ItemId.h>
+#include <cstddef>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

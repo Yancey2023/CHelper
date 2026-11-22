@@ -17,6 +17,7 @@
  */
 
 #include <chelper/syntax_highlight/SyntaxResult.h>
+#include <string_view>
 
 namespace CHelper::SyntaxHighlight {
 

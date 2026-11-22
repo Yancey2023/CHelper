@@ -22,8 +22,17 @@
 #include <chelper/lexer/TokenReader.h>
 #include <chelper/util/HashContainer.h>
 #include <concepts>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
-#include <pch.h>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+#ifndef CHELPER_NO_FILESYSTEM
+#include <filesystem>
+#endif
 
 namespace CHelper::Old2New {
 

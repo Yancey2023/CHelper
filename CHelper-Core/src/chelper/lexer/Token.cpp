@@ -17,6 +17,9 @@
  */
 
 #include <chelper/lexer/Token.h>
+#include <cstddef>
+#include <string>
+#include <string_view>
 
 namespace CHelper {
 

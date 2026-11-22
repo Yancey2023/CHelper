@@ -19,6 +19,7 @@
 #pragma once
 
 #include <chelper/parser/ErrorReason.h>
+#include <string_view>
 
 namespace CHelper::Detail::ErrorParameters {
     // 每种 code 的参数布局和格式模板唯一，构造、展示与去重共用这份定义。

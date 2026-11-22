@@ -17,6 +17,9 @@
  */
 
 #include <chelper/resources/id/NamespaceId.h>
+#include <memory>
+#include <string_view>
+#include <utility>
 
 namespace CHelper {
 

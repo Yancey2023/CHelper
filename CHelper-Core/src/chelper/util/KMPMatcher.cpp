@@ -1,4 +1,7 @@
 #include <chelper/util/KMPMatcher.h>
+#include <cstddef>
+#include <string>
+#include <string_view>
 
 namespace CHelper {
 

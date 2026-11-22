@@ -21,9 +21,24 @@
 #include "old2new/Old2New.h"
 #include <chelper/CommandContext.h>
 #include <chelper/resources/CPack.h>
+#include <chelper/util/Logging.h>
 #include <concepts>
+#include <exception>
 #include <functional>
-#include <pch.h>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+#include <chrono>
+#include <fmt/chrono.h>
+#endif
+
+#ifndef CHELPER_NO_FILESYSTEM
+#include <filesystem>
+#endif
 
 namespace CHelper {
 

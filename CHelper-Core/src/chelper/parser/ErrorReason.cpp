@@ -18,6 +18,10 @@
 
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/parser/detail/ErrorReasonParameters.h>
+#include <fmt/xchar.h>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace CHelper {
     namespace ErrorReasonLevel {

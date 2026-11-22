@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <array>
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/old2new/Old2New.h>
@@ -23,7 +24,29 @@
 #include <chelper/serialization/BinaryFormat.h>
 #include <chelper/serialization/IO.h>
 #include <chelper/serialization/SerializationImpl.h>
+#include <chelper/util/Logging.h>
+#include <chelper/util/Utf8.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <exception>
+#include <filesystem>
+#include <functional>
+#include <glaze/core/read.hpp>
+#include <glaze/core/write.hpp>
+#include <glaze/msgpack.hpp>
 #include <gtest/gtest.h>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace std {
 
@@ -90,7 +113,7 @@ namespace CHelper {
                 }
                 break;
             default:
-                CHELPER_UNREACHABLE();
+                std::unreachable();
         }
         if (t1.valid.has_value() != t2.valid.has_value()) {
             return false;
@@ -117,7 +140,7 @@ namespace CHelper {
                         }
                         break;
                     default:
-                        CHELPER_UNREACHABLE();
+                        std::unreachable();
                 }
             }
         }
@@ -156,7 +179,7 @@ namespace CHelper {
                     }
                     break;
                 default:
-                    CHELPER_UNREACHABLE();
+                    std::unreachable();
             }
             if (t1.values[i].description != t2.values[i].description) {
                 return false;

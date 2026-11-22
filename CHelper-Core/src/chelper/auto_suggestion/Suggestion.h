@@ -20,6 +20,9 @@
 
 #include <chelper/parser/TokensView.h>
 #include <chelper/resources/id/NormalId.h>
+#include <cstddef>
+#include <memory>
+#include <xxhash.h>
 
 namespace CHelper {
 

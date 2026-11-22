@@ -22,8 +22,10 @@
 #include <chelper/lexer/LexerResult.h>
 #include <chelper/lexer/Token.h>
 #include <concepts>
+#include <cstddef>
 #include <functional>
-#include <pch.h>
+#include <memory>
+#include <string_view>
 #include <type_traits>
 
 namespace CHelper {

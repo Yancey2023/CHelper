@@ -16,11 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/GrammarValidation.h>
 #include <chelper/node/NodeInitialization.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/resources/CPack.h>
+#include <concepts>
+#include <cstddef>
+#include <fmt/xchar.h>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Node {
 

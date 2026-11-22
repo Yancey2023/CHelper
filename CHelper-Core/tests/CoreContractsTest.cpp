@@ -4,7 +4,18 @@
 #include <chelper/parser/Parser.h>
 #include <chelper/serialization/SerializationImpl.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <memory>
+#include <memory_resource>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
     namespace {

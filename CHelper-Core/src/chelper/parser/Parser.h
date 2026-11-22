@@ -20,7 +20,7 @@
 
 #include <chelper/parser/ASTNode.h>
 #include <chelper/resources/CPack.h>
-#include <pch.h>
+#include <string_view>
 
 namespace CHelper::Parser {
 

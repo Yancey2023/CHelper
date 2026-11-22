@@ -1,5 +1,14 @@
 #include <chelper/node/GrammarValidation.h>
 #include <chelper/util/HashContainer.h>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Node {
     void validateGrammar(const NodeJsonElement &grammar) {

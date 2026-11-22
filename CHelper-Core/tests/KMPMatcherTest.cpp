@@ -17,8 +17,11 @@
  */
 
 #include <chelper/util/KMPMatcher.h>
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <random>
+#include <string>
+#include <string_view>
 
 TEST(KMPMatcher, KMPMatcher) {
     CHelper::KMPMatcher kmpMatcher1(u"");

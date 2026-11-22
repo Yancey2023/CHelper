@@ -20,7 +20,11 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/SerializationImpl.h>
+#include <chelper/util/Logging.h>
+#include <exception>
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
 
 namespace CHelper::Test {
 

@@ -16,9 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/util/JsonUtil.h>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <utf8.h>
 
 namespace CHelper::JsonUtil {
 

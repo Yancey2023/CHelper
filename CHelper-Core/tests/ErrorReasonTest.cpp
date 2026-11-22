@@ -3,9 +3,19 @@
 #include <barrier>
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/parser/ErrorReasonFactory.h>
+#include <cstddef>
+#include <cstdint>
+#include <fmt/xchar.h>
 #include <gtest/gtest.h>
+#include <limits>
+#include <memory>
 #include <memory_resource>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
     class DiagnosticResource final : public std::pmr::memory_resource {

@@ -18,7 +18,10 @@
 
 #pragma once
 
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
 
 namespace CHelper {
 

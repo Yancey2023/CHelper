@@ -23,6 +23,13 @@
 #include <chelper/parameter_hint/ParameterHint.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

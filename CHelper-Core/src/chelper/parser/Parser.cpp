@@ -16,12 +16,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <array>
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/parser/Parser.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/util/JsonUtil.h>
+#include <chelper/util/Logging.h>
+#include <cstddef>
+#include <cstdint>
+#include <fmt/format.h>
+#include <initializer_list>
+#include <limits>
+#include <memory>
+#include <memory_resource>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper::Parser {
 

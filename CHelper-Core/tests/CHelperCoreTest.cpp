@@ -18,7 +18,13 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/Serialization.h>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
 

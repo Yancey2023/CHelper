@@ -23,6 +23,15 @@
 #include <QFile>
 #include <QListWidget>
 #include <QStringListModel>
+#include <cstddef>
+#include <filesystem>
+#include <fmt/xchar.h>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace {
     // 通过字符串视图同时接收普通字符串和pmr字符串，避免额外复制

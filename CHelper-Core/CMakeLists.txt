@@ -156,7 +156,7 @@ function(chelper_fetch_thirdparty name)
 endfunction()
 
 chelper_fetch_thirdparty(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-                         GIT_TAG 12.2.1)
+                         GIT_TAG 12.2.1 SYSTEM)
 chelper_fetch_thirdparty(utfcpp GIT_REPOSITORY
                          https://github.com/nemtrif/utfcpp.git GIT_TAG v5.0.0)
 chelper_fetch_thirdparty(
@@ -180,11 +180,6 @@ if(BUILD_TESTING OR CHELPER_BUILD_BENCHMARKS)
     googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG
     v1.18.0)
 endif()
-
-# Generated paths contain no configuration-specific values.
-set(RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../CHelper-Resource)
-configure_file(ParamDeliver.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/include/ParamDeliver.h @ONLY)
 
 include(cmake/Sources.cmake)
 
@@ -229,12 +224,8 @@ endfunction()
 function(chelper_add_core target)
   add_library(${target} STATIC ${CHELPER_CORE_SOURCE_FILES})
   chelper_configure_target(${target})
-  target_precompile_headers(${target} PRIVATE
-                            ${CMAKE_CURRENT_SOURCE_DIR}/include/pch.h)
-  target_include_directories(
-    ${target}
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-           ${CMAKE_CURRENT_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_compile_definitions(${target} PUBLIC FMT_ENFORCE_COMPILE_STRING)
+  target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(
     ${target} PUBLIC fmt::fmt spdlog::spdlog utf8cpp xxHash::xxhash
                      unordered_dense::unordered_dense glaze::glaze)
@@ -250,7 +241,9 @@ endfunction()
 chelper_add_core(CHelperCore)
 add_library(CHelper::Core ALIAS CHelperCore)
 chelper_add_core(CHelperNoFilesystemCore)
-target_compile_definitions(CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM)
+target_compile_definitions(
+  CHelperNoFilesystemCore PUBLIC CHELPER_NO_FILESYSTEM
+                                 SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_OFF)
 add_library(CHelper::NoFilesystemCore ALIAS CHelperNoFilesystemCore)
 
 if(ANDROID)
@@ -281,14 +274,19 @@ if(EMSCRIPTEN)
 endif()
 
 if(NOT ANDROID AND NOT EMSCRIPTEN)
+  set(RESOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../CHelper-Resource")
   add_executable(CHelperResourceGenerator src/apps/CHelperResourceGenerator.cpp)
   chelper_configure_target(CHelperResourceGenerator)
+  target_compile_definitions(CHelperResourceGenerator
+                             PRIVATE RESOURCE_DIR="${RESOURCE_DIR}")
   target_link_libraries(CHelperResourceGenerator PRIVATE CHelper::Core)
 
   if(BUILD_TESTING)
     add_executable(CHelperTest ${CHELPER_TEST_SOURCE_FILES}
                                src/apps/CHelperWeb.cpp)
     chelper_configure_target(CHelperTest)
+    target_compile_definitions(CHelperTest
+                               PRIVATE RESOURCE_DIR="${RESOURCE_DIR}")
     target_link_libraries(CHelperTest PRIVATE CHelper::Core GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(CHelperTest DISCOVERY_TIMEOUT 30)
@@ -297,12 +295,15 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     add_executable(CHelperBench tests/BenchTest.cpp
                                 tests/LongCommandBenchTest.cpp)
     chelper_configure_target(CHelperBench)
+    target_compile_definitions(CHelperBench
+                               PRIVATE RESOURCE_DIR="${RESOURCE_DIR}")
     target_link_libraries(CHelperBench PRIVATE CHelper::Core GTest::gtest_main)
     add_executable(CHelperLatencyBench tests/BenchTest.cpp
                                        tests/LongCommandBenchTest.cpp)
     chelper_configure_target(CHelperLatencyBench)
-    target_compile_definitions(CHelperLatencyBench
-                               PRIVATE CHELPER_BENCH_TIMING_ONLY=1)
+    target_compile_definitions(
+      CHelperLatencyBench PRIVATE CHELPER_BENCH_TIMING_ONLY=1
+                                  RESOURCE_DIR="${RESOURCE_DIR}")
     target_link_libraries(CHelperLatencyBench PRIVATE CHelper::Core
                                                       GTest::gtest_main)
   endif()
@@ -331,7 +332,9 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
       PROPERTIES AUTOMOC ON
                  AUTORCC ON
                  AUTOUIC ON)
-    target_compile_definitions(CHelperQt PRIVATE QT_NO_KEYWORDS)
+    target_compile_definitions(
+      CHelperQt PRIVATE QT_NO_KEYWORDS
+                        "$<$<CONFIG:Debug>:RESOURCE_DIR=\"${RESOURCE_DIR}\">")
     target_link_libraries(CHelperQt PRIVATE CHelper::Core Qt6::Core Qt6::Gui
                                             Qt6::Widgets)
   endif()

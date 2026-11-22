@@ -24,7 +24,13 @@
 #include <chelper/parser/ASTNode.h>
 #include <chelper/parser/TokensView.h>
 #include <chelper/util/IdMatchCache.h>
-#include <pch.h>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#if CHelperDebug
+#include <chelper/util/Logging.h>
+#endif
 
 namespace CHelper {
 

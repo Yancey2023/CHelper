@@ -19,7 +19,11 @@
 #pragma once
 
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <xxhash.h>
 
 namespace CHelper {
 

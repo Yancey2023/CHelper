@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <initializer_list>
 #include <limits>
 #include <memory>
 #include <memory_resource>
@@ -24,6 +25,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace CHelper {
 

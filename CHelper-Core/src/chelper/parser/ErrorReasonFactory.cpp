@@ -16,11 +16,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/parser/detail/ErrorReasonParameters.h>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <memory>
+#include <memory_resource>
+#include <new>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 
 namespace CHelper {
     namespace Detail {

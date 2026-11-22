@@ -27,14 +27,30 @@
  * adapters directly.
  */
 
+#include <algorithm>
+#include <array>
 #include <chelper/node/CommandNode.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/old2new/Old2New.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/serialization/BinaryFormat.h>
 #include <chelper/serialization/IO.h>
+#include <chelper/util/Utf8.h>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <glaze/containers/ordered_small_map.hpp>
+#include <glaze/json/read.hpp>
+#include <glaze/json/write.hpp>
+#include <glaze/msgpack.hpp>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 // ================= 反序列化上下文 =================
 namespace CHelper {

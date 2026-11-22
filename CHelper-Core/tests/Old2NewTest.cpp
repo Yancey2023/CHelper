@@ -16,7 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <string>
+#include <utf8.h>
+#include <vector>
 
 #include <chelper/old2new/Old2New.h>
 #include <chelper/serialization/Serialization.h>

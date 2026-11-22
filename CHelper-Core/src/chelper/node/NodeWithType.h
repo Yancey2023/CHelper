@@ -19,7 +19,8 @@
 #pragma once
 
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <cstdint>
+#include <vector>
 
 //所有节点类型的唯一登记处：新增节点类型时在列表末尾追加一行，并为其补充 NodeTypeDetail 特化。
 //枚举项顺序即序列化格式中的类型 id（二进制格式直接写出该数值），禁止插入或重排已有项。

@@ -4,12 +4,25 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+#include <algorithm>
+#include <array>
 #include <chelper/CommandContext.h>
 #include <chelper/lexer/Lexer.h>
 #include <chelper/node/CommandNode.h>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/serialization/Serialization.h>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
+#include <memory_resource>
+#include <new>
+#include <optional>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
     namespace {

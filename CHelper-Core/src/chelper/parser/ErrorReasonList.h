@@ -8,7 +8,13 @@
 
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/util/CPackMemory.h>
+#include <cstddef>
 #include <cstdint>
+#include <initializer_list>
+#include <memory>
+#include <memory_resource>
+#include <stdexcept>
+#include <utility>
 
 namespace CHelper {
 

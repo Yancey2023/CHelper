@@ -24,7 +24,21 @@
 #include <chelper/resources/id/ItemId.h>
 #include <chelper/resources/id/NormalId.h>
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <cinttypes>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <initializer_list>
+#include <limits>
+#include <memory>
+#include <memory_resource>
+#include <new>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 
 namespace CHelper {
 

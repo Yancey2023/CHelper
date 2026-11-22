@@ -17,6 +17,9 @@
  */
 
 #include <chelper/lexer/LexerResult.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

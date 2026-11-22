@@ -19,6 +19,12 @@
 #pragma once
 
 #include <chelper/resources/CPack.h>
+#include <memory>
+#include <string>
+#include <string_view>
+#ifndef CHELPER_NO_FILESYSTEM
+#include <filesystem>
+#endif
 
 namespace CHelper::serialization {
 

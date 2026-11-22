@@ -19,7 +19,8 @@
 #pragma once
 
 #include <chelper/lexer/LexerResult.h>
-#include <pch.h>
+#include <memory>
+#include <string_view>
 
 namespace CHelper::Lexer {
 

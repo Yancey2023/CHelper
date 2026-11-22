@@ -4,7 +4,15 @@
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/resources/id/NamespaceId.h>
 #include <chelper/util/IdMatchCache.h>
+#include <cstddef>
+#include <fmt/xchar.h>
 #include <gtest/gtest.h>
+#include <initializer_list>
+#include <memory>
+#include <string_view>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper::Test {
 

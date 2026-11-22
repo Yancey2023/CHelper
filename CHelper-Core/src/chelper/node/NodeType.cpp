@@ -16,7 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <array>
 #include <chelper/node/NodeType.h>
+#include <cstddef>
+#include <optional>
+#include <string_view>
+#include <utility>
 
 namespace CHelper::Node {
 

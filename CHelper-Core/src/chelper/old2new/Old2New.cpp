@@ -16,10 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <charconv>
 #include <chelper/node/CommandNode.h>
 #include <chelper/old2new/Old2New.h>
-
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Old2New {
 

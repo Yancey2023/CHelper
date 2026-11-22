@@ -17,6 +17,9 @@
  */
 
 #include <chelper/resources/id/NormalId.h>
+#include <memory>
+#include <string_view>
+#include <xxhash.h>
 
 namespace CHelper {
 

@@ -22,7 +22,14 @@
 #include <chelper/parser/ASTNode.h>
 #include <chelper/resources/CPack.h>
 #include <chelper/syntax_highlight/SyntaxResult.h>
-#include <pch.h>
+#include <cstddef>
+#include <memory>
+#include <memory_resource>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

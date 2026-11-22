@@ -19,6 +19,10 @@
 #pragma once
 
 #include <chelper/parser/ErrorReason.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string_view>
 
 namespace CHelper::ErrorReasons {
     struct Range {

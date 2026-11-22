@@ -18,8 +18,11 @@
 
 #pragma once
 
+#include <chelper/util/CPackMemory.h>
+#include <cstdint>
 #include <memory_resource>
-#include <pch.h>
+#include <optional>
+#include <string>
 
 namespace CHelper {
 

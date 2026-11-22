@@ -16,11 +16,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/linter/Linter.h>
 #include <chelper/node/NodeType.h>
 #include <chelper/parser/ErrorReasonFactory.h>
 #include <chelper/util/IdMatchCache.h>
 #include <chelper/util/JsonUtil.h>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utf8.h>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper::Linter {
 

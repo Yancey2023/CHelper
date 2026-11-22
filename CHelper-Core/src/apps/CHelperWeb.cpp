@@ -17,6 +17,10 @@
  */
 
 #include <chelper/CHelperCore.h>
+#include <cstddef>
+#include <string>
+#include <string_view>
+#include <utility>
 #ifdef __EMSCRIPTEN__
 #include <emscripten/em_macros.h>
 #else

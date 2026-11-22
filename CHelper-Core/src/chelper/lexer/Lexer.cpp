@@ -17,6 +17,13 @@
  */
 
 #include <chelper/lexer/Lexer.h>
+#include <cstddef>
+#include <memory>
+#include <memory_resource>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Lexer {
 

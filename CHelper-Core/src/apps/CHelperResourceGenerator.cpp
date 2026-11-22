@@ -18,6 +18,19 @@
 
 #include "CHelperResourceGenerator.h"
 #include <chelper/parser/Parser.h>
+#include <chelper/util/Logging.h>
+#include <chrono>
+#include <cstddef>
+#include <exception>
+#include <filesystem>
+#include <fmt/chrono.h>
+#include <fmt/color.h>
+#include <fstream>
+#include <ios>
+#include <memory>
+#include <string>
+#include <utf8.h>
+#include <vector>
 
 int main(int argc, char **argv) {
     // testDir();

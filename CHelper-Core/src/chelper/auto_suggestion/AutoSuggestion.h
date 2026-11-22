@@ -20,6 +20,7 @@
 
 #include <chelper/auto_suggestion/Suggestions.h>
 #include <chelper/parser/ASTNode.h>
+#include <cstddef>
 
 namespace CHelper::AutoSuggestion {
 

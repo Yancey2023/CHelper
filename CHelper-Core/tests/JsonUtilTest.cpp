@@ -18,7 +18,15 @@
 
 #include <chelper/parser/ErrorReason.h>
 #include <chelper/util/JsonUtil.h>
+#include <cstddef>
+#include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
 

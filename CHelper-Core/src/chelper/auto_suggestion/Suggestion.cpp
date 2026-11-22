@@ -16,8 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define XXH_STATIC_LINKING_ONLY
+#include <xxhash.h>
+#undef XXH_STATIC_LINKING_ONLY
+
+#include <array>
 #include <chelper/CHelperCore.h>
 #include <chelper/auto_suggestion/Suggestion.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <utility>
 
 namespace CHelper::AutoSuggestion {
 

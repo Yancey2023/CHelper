@@ -20,7 +20,9 @@
 
 #include <chelper/lexer/Token.h>
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <cstddef>
+#include <string>
+#include <vector>
 
 namespace CHelper {
 

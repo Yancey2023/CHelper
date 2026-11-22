@@ -46,7 +46,7 @@ val buildNativeCore =
         commandLine("python", "scripts/build_desktop_core.py")
         inputs.files(
             rootProject.fileTree("../CHelper-Core") {
-                include("src/**", "include/**", "cmake/**", "CMakeLists.txt", "ParamDeliver.h.in")
+                include("src/**", "cmake/**", "CMakeLists.txt")
             }
         )
         inputs.file(rootProject.file("../scripts/build_desktop_core.py"))

@@ -20,6 +20,12 @@
 
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/Serialization.h>
+#include <cstddef>
+#include <filesystem>
+#include <ios>
+#include <ratio>
+#include <string>
+#include <utility>
 
 #include <algorithm>
 #include <atomic>

@@ -18,7 +18,12 @@
 
 #pragma once
 
-#include <pch.h>
+#include <cstddef>
+#include <cstring>
+#include <limits>
+#include <stdexcept>
+#include <string_view>
+
 
 namespace CHelper::CommandStructure {
 

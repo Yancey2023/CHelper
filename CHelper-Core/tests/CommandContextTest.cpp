@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <array>
 #include <barrier>
 #include <chelper/CHelperCore.h>
 #include <chelper/command_structure/CommandStructure.h>
@@ -25,9 +27,20 @@
 #include <chelper/serialization/Serialization.h>
 #include <chelper/syntax_highlight/SyntaxHighlight.h>
 #include <chelper/util/JsonUtil.h>
+#include <cstddef>
+#include <exception>
+#include <filesystem>
 #include <gtest/gtest.h>
+#include <memory>
 #include <mutex>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <type_traits>
+#include <utf8.h>
+#include <utility>
+#include <vector>
 
 namespace CHelper::Test {
 

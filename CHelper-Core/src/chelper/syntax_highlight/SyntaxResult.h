@@ -18,9 +18,14 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chelper/parser/TokensView.h>
-#include <pch.h>
+#include <cstddef>
+#include <cstdint>
 #include <span>
+#include <stdexcept>
+#include <string_view>
+#include <vector>
 
 namespace CHelper::SyntaxHighlight {
 

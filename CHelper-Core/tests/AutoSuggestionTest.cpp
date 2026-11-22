@@ -19,7 +19,17 @@
 #include "CpackTestHelper.h"
 #include <chelper/CHelperCore.h>
 #include <chelper/parser/Parser.h>
+#include <cstddef>
+#include <cstdint>
 #include <gtest/gtest.h>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utf8.h>
+#include <utility>
+#include <vector>
+#include <xxhash.h>
 
 namespace CHelper::Test {
 

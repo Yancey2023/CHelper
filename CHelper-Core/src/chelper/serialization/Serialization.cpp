@@ -16,7 +16,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chelper/serialization/Serialization.h>
+#include <cstddef>
+#include <exception>
+#include <fmt/format.h>
+#include <fstream>
+#include <glaze/core/write.hpp>
+#include <glaze/json/write.hpp>
+#include <ios>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utf8.h>
+#include <utility>
+#include <variant>
+#include <vector>
+#ifndef CHELPER_NO_FILESYSTEM
+#include <filesystem>
+#endif
 
 #include <chelper/serialization/SerializationImpl.h>
 

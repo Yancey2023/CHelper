@@ -20,7 +20,9 @@
 
 #include <chelper/resources/id/NormalId.h>
 #include <chelper/util/CPackMemory.h>
-#include <pch.h>
+#include <memory>
+#include <optional>
+#include <string>
 
 namespace CHelper {
 

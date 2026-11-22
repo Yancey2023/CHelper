@@ -20,13 +20,29 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
-#include <spdlog/sinks/android_sink.h>
 #endif
 #include <chelper/CHelperCore.h>
 #include <chelper/serialization/IO.h>
 #include <chelper/serialization/Serialization.h>
+#include <chelper/util/Logging.h>
+#include <cstddef>
+#include <exception>
+#include <filesystem>
+#include <functional>
 #include <jni.h>
-#include <pch.h>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utf8.h>
+#include <utility>
+#include <vector>
+#ifdef __ANDROID__
+#include <spdlog/sinks/android_sink.h>
+#endif
 
 namespace {
     template<class T>

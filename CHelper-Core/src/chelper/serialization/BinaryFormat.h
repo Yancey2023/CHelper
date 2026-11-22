@@ -18,8 +18,24 @@
 
 #pragma once
 
-#include <chelper/serialization/PmrAdapters.h>
-#include <pch.h>
+#include <algorithm>
+#include <bit>
+#include <cassert>
+#include <chelper/util/CPackMemory.h>
+#include <chelper/util/Utf8.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <glaze/core/common.hpp>
+#include <glaze/core/reflect.hpp>
+#include <glaze/util/dump.hpp>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace CHelper {
 

@@ -1,6 +1,23 @@
-#include "BenchHelper.h"
-#include <gtest/gtest.h>
+#define XXH_STATIC_LINKING_ONLY
 #include <xxhash.h>
+#undef XXH_STATIC_LINKING_ONLY
+
+#include "BenchHelper.h"
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fmt/xchar.h>
+#include <gtest/gtest.h>
+#include <memory>
+#include <optional>
+#include <ratio>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
 #ifdef _WIN32
 #include <Windows.h>
 #include <psapi.h>

@@ -1,6 +1,7 @@
 // Allocation instrumentation is compiled only into dedicated resource audits.
 #pragma once
 
+#include <cstddef>
 #include <memory_resource>
 
 namespace CHelper {

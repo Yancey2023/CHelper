@@ -1,7 +1,14 @@
 #include <chelper/CHelperCore.h>
 #include <chelper/auto_suggestion/Suggestions.h>
 #include <chelper/serialization/Serialization.h>
+#include <cstddef>
+#include <filesystem>
+#include <functional>
 #include <gtest/gtest.h>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace CHelper::Test {
 
