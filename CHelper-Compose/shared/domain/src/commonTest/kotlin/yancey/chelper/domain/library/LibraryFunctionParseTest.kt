@@ -104,6 +104,6 @@ class LibraryFunctionParseTest {
         assertNull(fn.tags)
         val fn2 = json.decodeFromString<LibraryFunction>("""{"name":"x","tags":[]}""")
         assertNotNull(fn2.tags)
-        assertTrue(fn2.tags!!.isEmpty())
+        assertTrue(fn2.tags.isEmpty())
     }
 }

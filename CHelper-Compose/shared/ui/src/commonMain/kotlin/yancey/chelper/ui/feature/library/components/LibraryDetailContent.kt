@@ -67,7 +67,7 @@ fun LibraryDetailContent(
                         id = Res.drawable.loong_flow_import,
                         contentDescription = "游龙导入",
                         modifier =
-                            Modifier.clickable { onLoongFlow?.invoke() }.padding(5.dp).size(24.dp),
+                            Modifier.clickable(onClick = onLoongFlow).padding(5.dp).size(24.dp),
                     )
                 }
                 Icon(

@@ -99,9 +99,9 @@ fun CompletionScreenTopBar(
                 Text(
                     text =
                         if (errorReasons.size == 1) {
-                            "${error.message ?: "未知错误"} · 点此定位"
+                            "${error.message} · 点此定位"
                         } else {
-                            "${index + 1}. ${error.message ?: "未知错误"} · 点此定位"
+                            "${index + 1}. ${error.message} · 点此定位"
                         },
                     modifier =
                         Modifier.fillMaxWidth()
@@ -179,7 +179,7 @@ fun CompletionContent(
                                 val suggestion = suggestionAt(realIndex)
                                 val suggestionText =
                                     suggestion?.let {
-                                        (it.name ?: "") +
+                                        it.name +
                                             (it.description?.let { description ->
                                                 " - $description"
                                             } ?: "")

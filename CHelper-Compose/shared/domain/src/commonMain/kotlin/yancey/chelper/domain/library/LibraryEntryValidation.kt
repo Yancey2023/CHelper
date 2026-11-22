@@ -27,7 +27,7 @@ fun validateLibraryEntry(library: LibraryEntry): String? {
     ) {
         return "名称、版本、描述和标签不能包含换行"
     }
-    val body = library.body.toString()
+    val body = library.body
     if (
         body.contains("###Function###", ignoreCase = true) ||
             body.contains("###End###", ignoreCase = true) ||

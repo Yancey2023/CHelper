@@ -242,8 +242,7 @@ fun SettingsContent(
                         description =
                             stringResource(
                                 Res.string.layout_settings_current_cpack,
-                                currentCpackBranchTranslation
-                                    ?: stringResource(Res.string.layout_settings_unknown_branch),
+                                currentCpackBranchTranslation,
                             ),
                     ) {
                         isShowChooseCpackBranchDialog = true

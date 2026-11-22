@@ -92,13 +92,13 @@ fun PublicLibraryCard(
                 // 标题行 + 版本号
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = library.name ?: "未命名",
+                        text = library.name,
                         modifier = Modifier.weight(1f, fill = false),
                         style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium),
                         maxLines = 1,
                     )
                     library.version
-                        ?.takeIf { it.isNotBlank() }
+                        .takeIf { it.isNotBlank() }
                         ?.let { ver ->
                             Spacer(Modifier.width(6.dp))
                             Text(
@@ -153,27 +153,23 @@ fun PublicLibraryCard(
                             )
                         }
                     }
-                        ?: library.authorName?.let { author ->
-                            Text(
-                                text = author,
-                                style =
-                                    TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 12.sp,
-                                    ),
-                            )
-                        }
+                        ?: Text(
+                            text = library.authorName,
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                        )
                     library.likeCount?.let { likes ->
-                        if (library.authorName != null) {
-                            Text(
-                                text = " · ",
-                                style =
-                                    TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 12.sp,
-                                    ),
-                            )
-                        }
+                        Text(
+                            text = " · ",
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                        )
                         Image(
                             painter =
                                 painterResource(
@@ -203,7 +199,7 @@ fun PublicLibraryCard(
 
                 // 标签
                 library.tags
-                    ?.takeIf { it.isNotEmpty() }
+                    .takeIf { it.isNotEmpty() }
                     ?.let { tags ->
                         FlowRow(
                             modifier = Modifier.padding(top = 6.dp),
@@ -244,7 +240,7 @@ fun PublicLibraryCard(
 
                 // 备注
                 library.note
-                    ?.takeIf { it.isNotBlank() }
+                    .takeIf { it.isNotBlank() }
                     ?.let { note ->
                         Spacer(Modifier.height(4.dp))
                         Text(

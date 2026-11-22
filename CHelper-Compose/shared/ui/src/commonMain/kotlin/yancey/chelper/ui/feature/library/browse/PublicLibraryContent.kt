@@ -266,7 +266,7 @@ fun PublicLibraryContent(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = state.errorMessage ?: "加载失败",
+                                text = state.errorMessage,
                                 style = TextStyle(color = CHelperTheme.colors.textSecondary),
                             )
                             Spacer(Modifier.height(10.dp))

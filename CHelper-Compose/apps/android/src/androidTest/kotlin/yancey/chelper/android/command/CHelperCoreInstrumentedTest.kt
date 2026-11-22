@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.ConcurrentLinkedQueue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume
 import org.junit.Test
@@ -110,7 +111,7 @@ class CHelperCoreInstrumentedTest {
         // 这是防 use-after-free 的最后一道闸，必须保住
         assertEquals(null, context.structure)
         assertEquals(0, context.nodeCount)
-        assertEquals(null, context.errorReasons)
+        assertNull(context.errorReasons)
         assertEquals(0, context.getSuggestionsSize(0))
         // 多次 close 也得幂等，否则会触发 release0 的 double-free
         context.close()
