@@ -7,7 +7,9 @@ plugins {
 
 android {
     namespace = "yancey.chelper.benchmark.test"
-    compileSdk { version = release(37) }
+    compileSdk {
+        version = release(37) { minorApiLevel = 2 }
+    }
     targetProjectPath = ":apps:android"
     experimentalProperties["android.experimental.self-instrumenting"] = true
     defaultConfig {

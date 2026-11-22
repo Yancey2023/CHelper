@@ -156,9 +156,9 @@ function(chelper_fetch_thirdparty name)
 endfunction()
 
 chelper_fetch_thirdparty(fmt GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-                         GIT_TAG 12.2.0)
+                         GIT_TAG 12.2.1)
 chelper_fetch_thirdparty(utfcpp GIT_REPOSITORY
-                         https://github.com/nemtrif/utfcpp.git GIT_TAG v4.2.1)
+                         https://github.com/nemtrif/utfcpp.git GIT_TAG v5.0.0)
 chelper_fetch_thirdparty(
   xxHash
   GIT_REPOSITORY

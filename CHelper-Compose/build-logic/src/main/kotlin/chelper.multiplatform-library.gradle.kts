@@ -8,7 +8,9 @@ plugins {
 kotlin {
     android {
         namespace = "yancey.chelper.${project.name}"
-        compileSdk = 37
+        compileSdk {
+            version = release(37) { minorApiLevel = 2 }
+        }
         minSdk = 24
         withHostTest {}
         compilerOptions.jvmTarget.set(JvmTarget.JVM_17)

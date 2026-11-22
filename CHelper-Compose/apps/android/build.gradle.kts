@@ -13,7 +13,9 @@ plugins {
 android {
     namespace = "yancey.chelper"
     buildToolsVersion = "37.0.0"
-    compileSdk { version = release(37) }
+    compileSdk {
+        version = release(37) { minorApiLevel = 2 }
+    }
 
     defaultConfig {
         applicationId = "yancey.chelper"

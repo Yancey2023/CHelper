@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 
-EMSCRIPTEN_VERSION = "6.0.13"
+EMSCRIPTEN_VERSION = "7.0.0"
 
 
 def ensure_download_emsdk(toolchain_dir: str):
