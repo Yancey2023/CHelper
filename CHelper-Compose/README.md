@@ -42,7 +42,9 @@ cd CHelper-Compose
 .\gradlew.bat :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe
 ```
 
-需要 Maven 镜像时加 `-I ../scripts/maven_mirror.init.gradle`。Android 产物位于 `apps/android/build/outputs/apk`；Windows 产物位于 `apps/desktop/build/compose/binaries`。Windows 首次安装包构建会下载 WiX 工具。
+构建默认使用官方 Google Maven 和 Maven Central。需要为项目依赖指定 Google Maven 镜像时，加 `-PgoogleMavenMirror=https://maven.aliyun.com/repository/google`。需要 Maven Central 镜像时，加 `-I ../scripts/maven_mirror.init.gradle`。
+
+Android 产物位于 `apps/android/build/outputs/apk`，Windows 产物位于 `apps/desktop/build/compose/binaries`。Windows 首次安装包构建会下载 WiX 工具。
 
 从仓库根目录执行结构检查与格式化：
 
