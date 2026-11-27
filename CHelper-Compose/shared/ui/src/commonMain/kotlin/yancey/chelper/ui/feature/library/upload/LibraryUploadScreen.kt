@@ -476,7 +476,7 @@ private fun MCDPreviewScreen(
                         if (validationResult.hasErrors) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    id = Res.drawable.alert_triangle,
+                                    id = Res.drawable.triangle_exclamation_point,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                 )
@@ -498,7 +498,7 @@ private fun MCDPreviewScreen(
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    id = Res.drawable.check_circle,
+                                    id = Res.drawable.circle_check,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                 )
@@ -526,7 +526,7 @@ private fun MCDPreviewScreen(
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
                             Icon(
-                                id = Res.drawable.help_circle,
+                                id = Res.drawable.circle_question_mark,
                                 contentDescription = stringResource(Res.string.upload_syntax_help),
                                 modifier = Modifier.size(14.dp),
                             )

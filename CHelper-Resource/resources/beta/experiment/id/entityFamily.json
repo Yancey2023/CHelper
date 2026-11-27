@@ -3,6 +3,9 @@
     "type": "normal",
     "content": [
         {
+            "name": "actor"
+        },
+        {
             "name": "adult_piglin",
             "description": "成年猪灵"
         },
@@ -31,6 +34,10 @@
             "description": "盔甲匠"
         },
         {
+            "name": "arrow",
+            "description": "箭"
+        },
+        {
             "name": "arthropod",
             "description": "节肢生物"
         },
@@ -54,9 +61,6 @@
         },
         {
             "name": "baby_undead"
-        },
-        {
-            "name": "baby_undead "
         },
         {
             "name": "baby_zombie"
@@ -91,6 +95,9 @@
         {
             "name": "breeze",
             "description": "旋风人"
+        },
+        {
+            "name": "breeze_wind_charge_projectile"
         },
         {
             "name": "butcher",
@@ -145,6 +152,10 @@
             "description": "苦力怕"
         },
         {
+            "name": "cushion",
+            "description": "坐垫"
+        },
+        {
             "name": "dolphin",
             "description": "海豚"
         },
@@ -157,8 +168,20 @@
             "description": "末影龙"
         },
         {
+            "name": "dragon_fireball",
+            "description": "末影龙火球"
+        },
+        {
             "name": "drowned",
             "description": "溺尸"
+        },
+        {
+            "name": "egg",
+            "description": "鸡蛋"
+        },
+        {
+            "name": "ender_pearl",
+            "description": "末影珍珠"
         },
         {
             "name": "enderman",
@@ -177,12 +200,22 @@
             "description": "农民"
         },
         {
+            "name": "fireball",
+            "description": "火球"
+        },
+        {
+            "name": "fireworks_rocket"
+        },
+        {
             "name": "fish",
             "description": "鱼"
         },
         {
             "name": "fisherman",
             "description": "渔夫"
+        },
+        {
+            "name": "fishing_hook"
         },
         {
             "name": "fletcher",
@@ -195,6 +228,10 @@
         {
             "name": "frog",
             "description": "青蛙"
+        },
+        {
+            "name": "frostbite",
+            "description": "冻尸"
         },
         {
             "name": "ghast",
@@ -244,6 +281,10 @@
             "name": "husk_rider"
         },
         {
+            "name": "ice_ball",
+            "description": "冰球"
+        },
+        {
             "name": "illager",
             "description": "灾厄村民"
         },
@@ -272,8 +313,16 @@
             "description": "轻型生物"
         },
         {
+            "name": "lingering_potion",
+            "description": "滞留药水"
+        },
+        {
             "name": "llama",
             "description": "羊驼"
+        },
+        {
+            "name": "llama_spit",
+            "description": "羊驼唾沫"
         },
         {
             "name": "magmacube",
@@ -384,6 +433,10 @@
             "description": "神职人员（牧师）"
         },
         {
+            "name": "projectile",
+            "description": "弹射物"
+        },
+        {
             "name": "pufferfish",
             "description": "河豚"
         },
@@ -412,6 +465,10 @@
             "description": "潜影贝"
         },
         {
+            "name": "shulker_bullet",
+            "description": "潜影弹"
+        },
+        {
             "name": "silverfish",
             "description": "蠹虫"
         },
@@ -428,8 +485,16 @@
             "description": "史莱姆"
         },
         {
+            "name": "small_fireball",
+            "description": "小火球"
+        },
+        {
             "name": "sniffer",
             "description": "嗅探兽"
+        },
+        {
+            "name": "snowball",
+            "description": "雪球"
         },
         {
             "name": "snowgolem",
@@ -438,6 +503,10 @@
         {
             "name": "spider",
             "description": "蜘蛛"
+        },
+        {
+            "name": "splash_potion",
+            "description": "喷溅药水"
         },
         {
             "name": "squid",
@@ -464,8 +533,15 @@
             "description": "幼年炽足兽"
         },
         {
+            "name": "sulfur_cube",
+            "description": "硫方怪"
+        },
+        {
             "name": "tadpole",
             "description": "蝌蚪"
+        },
+        {
+            "name": "thrown_trident"
         },
         {
             "name": "tnt",
@@ -544,8 +620,18 @@
             "description": "凋灵"
         },
         {
+            "name": "wither_skull",
+            "description": "凋灵之首"
+        },
+        {
+            "name": "wither_skull_dangerous"
+        },
+        {
             "name": "wolf",
             "description": "狼"
+        },
+        {
+            "name": "xp_bottle"
         },
         {
             "name": "zoglin",

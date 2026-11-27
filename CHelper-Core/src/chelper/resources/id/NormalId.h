@@ -19,6 +19,7 @@
 #pragma once
 
 #include <chelper/util/CPackMemory.h>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -27,10 +28,23 @@
 
 namespace CHelper {
 
+    enum class SuggestionPreviewKind : uint8_t { NONE,
+                                                 ICON,
+                                                 AUDIO,
+                                                 EASING,
+                                                 DYE_COLOR };
+
+    struct SuggestionPreview {
+        SuggestionPreviewKind kind = SuggestionPreviewKind::NONE;
+        // 借用资源包中的网址或原始 ID，由资源包保证有效期。
+        std::u16string_view value;
+    };
+
     class NormalId {
     public:
         std::pmr::u16string name{CPackMemoryRouter::getAllocationResource()};
         std::optional<std::pmr::u16string> description;
+        const SuggestionPreview *preview = nullptr;
 
     private:
         // 名称匹配只缓存摘要；流式状态属于一次补全请求，不随每个 ID 常驻。

@@ -17,6 +17,7 @@ configurations.configureEach {
 
 dependencies {
     implementation(libs.jna.platform)
+    runtimeOnly(libs.vorbis.spi)
     implementation(libs.ktor.client.websockets)
     implementation(project(":shared:domain"))
     implementation(project(":shared:data"))

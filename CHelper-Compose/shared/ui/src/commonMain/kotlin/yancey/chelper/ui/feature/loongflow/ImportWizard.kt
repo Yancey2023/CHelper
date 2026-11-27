@@ -41,7 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import yancey.chelper.domain.library.BlockType
+import yancey.chelper.resources.Res
+import yancey.chelper.resources.check
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.feature.library.mcd.darkColor
 import yancey.chelper.ui.feature.library.mcd.lightColor
@@ -195,14 +198,10 @@ private fun ImportStepSelect(viewModel: LoongFlowViewModel) {
                         contentAlignment = Alignment.Center,
                     ) {
                         if (isSelected) {
-                            Text(
-                                text = "✓",
-                                style =
-                                    TextStyle(
-                                        fontSize = 10.sp,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                    ),
+                            Icon(
+                                id = Res.drawable.check,
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.White,
                             )
                         }
                     }
@@ -254,14 +253,10 @@ private fun ImportStepCopy(viewModel: LoongFlowViewModel) {
     ) {
         if (viewModel.isImportComplete) {
             // 完成状态
-            Text(
-                text = "✓",
-                style =
-                    TextStyle(
-                        fontSize = 48.sp,
-                        color = CHelperTheme.colors.mainColor,
-                        fontWeight = FontWeight.Bold,
-                    ),
+            Icon(
+                id = Res.drawable.check,
+                modifier = Modifier.size(48.dp),
+                tint = CHelperTheme.colors.mainColor,
             )
             Spacer(Modifier.height(8.dp))
             Text(

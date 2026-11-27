@@ -64,14 +64,14 @@ fun LibraryDetailContent(
             Row {
                 if (onLoongFlow != null) {
                     Icon(
-                        id = Res.drawable.loong_flow_import,
+                        id = Res.drawable.download,
                         contentDescription = "游龙导入",
                         modifier =
                             Modifier.clickable(onClick = onLoongFlow).padding(5.dp).size(24.dp),
                     )
                 }
                 Icon(
-                    id = Res.drawable.more,
+                    id = Res.drawable.ellipsis,
                     contentDescription = "更多操作",
                     modifier = Modifier.clickable { showMenu = true }.padding(5.dp).size(24.dp),
                 )

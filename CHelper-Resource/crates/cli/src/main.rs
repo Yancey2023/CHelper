@@ -3,6 +3,7 @@
 use anyhow::{Context, Result};
 use chelper_core::{
     cache::HttpCache, command_documentation, command_sync, command_wiki, config::Config, pipeline,
+    suggestion_media,
 };
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -32,6 +33,15 @@ enum Command {
         #[arg(value_delimiter = ',')]
         editions: Vec<String>,
         /// 强制刷新缓存（重新解析引用并下载）
+        #[arg(long)]
+        refresh: bool,
+    },
+    /// 从中文 Wiki 自动刷新内置资源包中的补全媒体网址
+    RefreshSuggestionMedia {
+        /// 版本列表（release / beta / netease，缺省为全部）
+        #[arg(value_delimiter = ',')]
+        editions: Vec<String>,
+        /// 强制刷新 HTTP 缓存
         #[arg(long)]
         refresh: bool,
     },
@@ -98,6 +108,15 @@ async fn main() -> Result<()> {
                 editions
             };
             let report = pipeline::generate(&cfg, &editions, refresh).await?;
+            println!("{}", serde_json::to_string_pretty(&report)?);
+        }
+        Command::RefreshSuggestionMedia { editions, refresh } => {
+            let editions = if editions.is_empty() {
+                vec!["release".into(), "beta".into(), "netease".into()]
+            } else {
+                editions
+            };
+            let report = suggestion_media::refresh_bundled(&cfg, &editions, refresh).await?;
             println!("{}", serde_json::to_string_pretty(&report)?);
         }
         Command::CleanCache => {

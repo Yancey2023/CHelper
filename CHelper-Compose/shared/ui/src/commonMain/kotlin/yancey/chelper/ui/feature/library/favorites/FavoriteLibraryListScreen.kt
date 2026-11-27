@@ -87,7 +87,7 @@ fun FavoriteLibraryListScreen(
         onBack = { navController.popBackStack() },
         headerRight = {
             Icon(
-                id = Res.drawable.refresh,
+                id = Res.drawable.refresh_cw,
                 contentDescription = "刷新",
                 modifier = Modifier.size(24.dp).clickable { viewModel.load(force = true) },
             )
@@ -226,7 +226,7 @@ private fun FavoriteItem(library: LibraryFunction, onClick: () -> Unit, onMore: 
         }
         Spacer(Modifier.width(8.dp))
         Icon(
-            id = Res.drawable.more,
+            id = Res.drawable.ellipsis,
             contentDescription = "更多",
             modifier = Modifier.size(22.dp).clickable(onClick = onMore),
         )

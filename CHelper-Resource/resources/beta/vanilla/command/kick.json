@@ -4,7 +4,7 @@
     ],
     "description": "将玩家踢出服务器。",
     "syntax": [
-        "/kick <name: target> [reason: message]"
+        "/kick <name: target> <reason: message>"
     ],
     "node": {
         "<name: target>": {
@@ -16,7 +16,7 @@
             "isWildcard": false,
             "brief": "要踢出的玩家"
         },
-        "[reason: message]": {
+        "<reason: message>": {
             "type": "STRING",
             "description": "指定将显示给被踢出玩家的消息。",
             "canContainSpace": true,

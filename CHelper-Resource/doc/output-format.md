@@ -122,3 +122,16 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 
 类别排除：`ability`、`command`、`blockState`、`lootTool`、`summonableEntity`
 以及未改名前的 `lootTable` 不输出（对齐 chelper.js 的过滤与改名表）。
+
+## 补全媒体
+
+生成器从中文 Minecraft Wiki 自动抓取基岩版图标和音效表，并按各分支的 ID 生成包根目录的
+`suggestion_media.json`。文件按 `block`、`item`、`effect` 和 `sound` 分类，记录
+`https://zh.minecraft.wiki/images/` 下的 PNG、GIF、WebP、Ogg Vorbis 或 WAV 直链。原版 ID 省略
+`minecraft:`，其他命名空间保留完整 ID。`music` 与 `sound` 复用同一份映射。
+常规 `generate` 随版本和 ID 自动生成媒体目录。打包内置快照时，`scripts/build.py` 会先刷新
+其中的媒体网址。也可以运行 `cargo run --release -- refresh-suggestion-media` 单独刷新快照。
+
+单文件 JSON 将目录写入 `suggestionMedia`，二进制包将它追加在现有语法数据之后。
+这部分可省略。缺少映射时仍可使用普通文本补全。`cameraEasing` 的曲线和染料色样由客户端根据 ID 绘制。
+`spring` 展示阻尼振荡的示意曲线。媒体来自[中文 Minecraft Wiki](https://zh.minecraft.wiki/)。

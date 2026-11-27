@@ -94,6 +94,7 @@ namespace {
         jclass errorType = nullptr, suggestionType = nullptr, clickType = nullptr;
         jfieldID errorText = nullptr, errorStart = nullptr, errorEnd = nullptr;
         jfieldID suggestionName = nullptr, suggestionDescription = nullptr;
+        jfieldID suggestionPreviewKind = nullptr, suggestionPreviewValue = nullptr;
         jfieldID clickText = nullptr, clickSelection = nullptr;
         void initialize(JNIEnv *env) {
             const auto load = [&](const char *name, jclass &type) {
@@ -108,6 +109,8 @@ namespace {
             errorEnd = requireJni(env, env->GetFieldID(errorType, "end", "I"));
             suggestionName = requireJni(env, env->GetFieldID(suggestionType, "name", "Ljava/lang/String;"));
             suggestionDescription = requireJni(env, env->GetFieldID(suggestionType, "description", "Ljava/lang/String;"));
+            suggestionPreviewKind = requireJni(env, env->GetFieldID(suggestionType, "previewKind", "I"));
+            suggestionPreviewValue = requireJni(env, env->GetFieldID(suggestionType, "previewValue", "Ljava/lang/String;"));
             clickText = requireJni(env, env->GetFieldID(clickType, "text", "Ljava/lang/String;"));
             clickSelection = requireJni(env, env->GetFieldID(clickType, "selection", "I"));
         }
@@ -210,6 +213,11 @@ jobject suggestion2jobject(JNIEnv *env, jclass suggestionClass, const CHelper::A
     LocalRef<jstring> description(env, suggestion.content->description ? u16string2jstring(env, *suggestion.content->description) : nullptr);
     env->SetObjectField(result.get(), bindings.suggestionName, name.get());
     env->SetObjectField(result.get(), bindings.suggestionDescription, description.get());
+    if (const auto *preview = suggestion.content->preview) {
+        LocalRef<jstring> value(env, u16string2jstring(env, preview->value));
+        env->SetIntField(result.get(), bindings.suggestionPreviewKind, static_cast<jint>(preview->kind));
+        env->SetObjectField(result.get(), bindings.suggestionPreviewValue, value.get());
+    }
     checkJni(env);
     return result.release();
 }

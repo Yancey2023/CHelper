@@ -167,7 +167,7 @@ class CommandSession(
             .filter { it in 0 until count }
             .associateWith { which ->
                 current.suggestion(index, which)?.let {
-                    CommandSuggestion(it.name.orEmpty(), it.description)
+                    CommandSuggestion(it.name.orEmpty(), it.description, it.preview)
                 }
             }
     }

@@ -18,6 +18,7 @@ use crate::sources::wiki::{
     fetch_block_property_descriptions, fetch_gamerule_descriptions, fetch_gamerule_type_value,
     fetch_particle_descriptions, fetch_standardized_translation,
 };
+use crate::suggestion_media;
 use crate::support;
 use crate::translate::{st_priority, CategoryLevels, DataDrivenContext, ResultMaps, Translator};
 use crate::{jfmt::to_string_pretty4, manifest::write_manifest, write_crlf};
@@ -165,6 +166,8 @@ async fn generate_staged(
     let particle_wiki = fetch_particle_descriptions(&http).await?;
     tracing::info!("抓取 Java 版语言文件…");
     let java_lang = fetch_java_lang(&http, &cfg.java_manifest_url).await?;
+    tracing::info!("抓取中文 Wiki 补全媒体网址…");
+    let media_sources = suggestion_media::fetch(cfg, Arc::clone(&http), refresh).await?;
 
     // —— 项目手工数据 ——
     let mut game_mode = load_jsonc_file(&cfg.data_dir.join("game_mode.json"))
@@ -296,7 +299,7 @@ async fn generate_staged(
             )
             .with_context(|| format!("[{edition}/{branch}] 写出 manifest.json 失败"))?;
             let files = files
-                + 1
+                + 2
                 + write_reviewed_commands(
                     &cfg.project_root
                         .join("resources")
@@ -328,6 +331,14 @@ async fn generate_staged(
             });
             report.warnings += warnings.len();
         }
+        suggestion_media::write_for_edition(
+            cfg,
+            &cfg.output_dir.join(edition),
+            edition,
+            &media_sources,
+        )
+        .await
+        .with_context(|| format!("[{edition}] 写出 suggestion_media.json 失败"))?;
         report.editions.push(EditionReport {
             edition: edition.to_string(),
             package_version,

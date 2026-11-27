@@ -32,6 +32,7 @@ namespace CHelper {
             result->name.push_back(u':');
             result->name.append(name);
             result->description = copyPmrU16StringOptional(description);
+            result->preview = preview;
             idWithNamespace = std::move(result);
         }
         return idWithNamespace;

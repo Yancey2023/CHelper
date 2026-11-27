@@ -99,6 +99,7 @@ class DesktopContainer(
                 clipboardCodec = DesktopTextClipCodec,
                 notices = NoticeStore(directory.toOkioPath()),
                 packFilenames = packNames,
+                suggestionAudioPlayer = DesktopSuggestionAudioPlayer(),
             ),
             convert = { command ->
                 withContext(Dispatchers.Default) {

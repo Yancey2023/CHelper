@@ -139,7 +139,7 @@ fun MessageScreen(
                 )
                 Spacer(Modifier.width(10.dp))
                 Icon(
-                    id = Res.drawable.refresh,
+                    id = Res.drawable.refresh_cw,
                     modifier = Modifier.clickable { viewModel.refresh() }.padding(5.dp).size(24.dp),
                     contentDescription = "刷新",
                 )
@@ -198,7 +198,7 @@ fun MessageScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                id = Res.drawable.ic_mail,
+                                id = Res.drawable.mail,
                                 modifier = Modifier.size(48.dp).alpha(0.3f),
                             )
                             Spacer(Modifier.height(12.dp))

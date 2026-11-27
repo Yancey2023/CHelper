@@ -1380,10 +1380,2926 @@
             "name": "chiseled_stonebrick_recipeId"
         },
         {
+            "name": "cushion_dye_0_1"
+        },
+        {
+            "name": "cushion_dye_0_10"
+        },
+        {
+            "name": "cushion_dye_0_11"
+        },
+        {
+            "name": "cushion_dye_0_12"
+        },
+        {
+            "name": "cushion_dye_0_13"
+        },
+        {
+            "name": "cushion_dye_0_14"
+        },
+        {
+            "name": "cushion_dye_0_15"
+        },
+        {
+            "name": "cushion_dye_0_17"
+        },
+        {
+            "name": "cushion_dye_0_18"
+        },
+        {
+            "name": "cushion_dye_0_19"
+        },
+        {
+            "name": "cushion_dye_0_2"
+        },
+        {
+            "name": "cushion_dye_0_3"
+        },
+        {
+            "name": "cushion_dye_0_4"
+        },
+        {
+            "name": "cushion_dye_0_5"
+        },
+        {
+            "name": "cushion_dye_0_6"
+        },
+        {
+            "name": "cushion_dye_0_7"
+        },
+        {
+            "name": "cushion_dye_0_8"
+        },
+        {
+            "name": "cushion_dye_0_9"
+        },
+        {
+            "name": "cushion_dye_10_0"
+        },
+        {
+            "name": "cushion_dye_10_1"
+        },
+        {
+            "name": "cushion_dye_10_11"
+        },
+        {
+            "name": "cushion_dye_10_12"
+        },
+        {
+            "name": "cushion_dye_10_13"
+        },
+        {
+            "name": "cushion_dye_10_14"
+        },
+        {
+            "name": "cushion_dye_10_15"
+        },
+        {
+            "name": "cushion_dye_10_16"
+        },
+        {
+            "name": "cushion_dye_10_17"
+        },
+        {
+            "name": "cushion_dye_10_18"
+        },
+        {
+            "name": "cushion_dye_10_19"
+        },
+        {
+            "name": "cushion_dye_10_2"
+        },
+        {
+            "name": "cushion_dye_10_3"
+        },
+        {
+            "name": "cushion_dye_10_4"
+        },
+        {
+            "name": "cushion_dye_10_5"
+        },
+        {
+            "name": "cushion_dye_10_6"
+        },
+        {
+            "name": "cushion_dye_10_7"
+        },
+        {
+            "name": "cushion_dye_10_8"
+        },
+        {
+            "name": "cushion_dye_10_9"
+        },
+        {
+            "name": "cushion_dye_11_0"
+        },
+        {
+            "name": "cushion_dye_11_1"
+        },
+        {
+            "name": "cushion_dye_11_10"
+        },
+        {
+            "name": "cushion_dye_11_12"
+        },
+        {
+            "name": "cushion_dye_11_13"
+        },
+        {
+            "name": "cushion_dye_11_14"
+        },
+        {
+            "name": "cushion_dye_11_15"
+        },
+        {
+            "name": "cushion_dye_11_16"
+        },
+        {
+            "name": "cushion_dye_11_17"
+        },
+        {
+            "name": "cushion_dye_11_18"
+        },
+        {
+            "name": "cushion_dye_11_19"
+        },
+        {
+            "name": "cushion_dye_11_2"
+        },
+        {
+            "name": "cushion_dye_11_3"
+        },
+        {
+            "name": "cushion_dye_11_4"
+        },
+        {
+            "name": "cushion_dye_11_5"
+        },
+        {
+            "name": "cushion_dye_11_6"
+        },
+        {
+            "name": "cushion_dye_11_7"
+        },
+        {
+            "name": "cushion_dye_11_8"
+        },
+        {
+            "name": "cushion_dye_11_9"
+        },
+        {
+            "name": "cushion_dye_12_0"
+        },
+        {
+            "name": "cushion_dye_12_1"
+        },
+        {
+            "name": "cushion_dye_12_10"
+        },
+        {
+            "name": "cushion_dye_12_11"
+        },
+        {
+            "name": "cushion_dye_12_13"
+        },
+        {
+            "name": "cushion_dye_12_14"
+        },
+        {
+            "name": "cushion_dye_12_15"
+        },
+        {
+            "name": "cushion_dye_12_16"
+        },
+        {
+            "name": "cushion_dye_12_17"
+        },
+        {
+            "name": "cushion_dye_12_18"
+        },
+        {
+            "name": "cushion_dye_12_19"
+        },
+        {
+            "name": "cushion_dye_12_2"
+        },
+        {
+            "name": "cushion_dye_12_3"
+        },
+        {
+            "name": "cushion_dye_12_4"
+        },
+        {
+            "name": "cushion_dye_12_5"
+        },
+        {
+            "name": "cushion_dye_12_6"
+        },
+        {
+            "name": "cushion_dye_12_7"
+        },
+        {
+            "name": "cushion_dye_12_8"
+        },
+        {
+            "name": "cushion_dye_12_9"
+        },
+        {
+            "name": "cushion_dye_13_0"
+        },
+        {
+            "name": "cushion_dye_13_1"
+        },
+        {
+            "name": "cushion_dye_13_10"
+        },
+        {
+            "name": "cushion_dye_13_11"
+        },
+        {
+            "name": "cushion_dye_13_12"
+        },
+        {
+            "name": "cushion_dye_13_14"
+        },
+        {
+            "name": "cushion_dye_13_15"
+        },
+        {
+            "name": "cushion_dye_13_16"
+        },
+        {
+            "name": "cushion_dye_13_17"
+        },
+        {
+            "name": "cushion_dye_13_18"
+        },
+        {
+            "name": "cushion_dye_13_19"
+        },
+        {
+            "name": "cushion_dye_13_2"
+        },
+        {
+            "name": "cushion_dye_13_3"
+        },
+        {
+            "name": "cushion_dye_13_4"
+        },
+        {
+            "name": "cushion_dye_13_5"
+        },
+        {
+            "name": "cushion_dye_13_6"
+        },
+        {
+            "name": "cushion_dye_13_7"
+        },
+        {
+            "name": "cushion_dye_13_8"
+        },
+        {
+            "name": "cushion_dye_13_9"
+        },
+        {
+            "name": "cushion_dye_14_0"
+        },
+        {
+            "name": "cushion_dye_14_1"
+        },
+        {
+            "name": "cushion_dye_14_10"
+        },
+        {
+            "name": "cushion_dye_14_11"
+        },
+        {
+            "name": "cushion_dye_14_12"
+        },
+        {
+            "name": "cushion_dye_14_13"
+        },
+        {
+            "name": "cushion_dye_14_15"
+        },
+        {
+            "name": "cushion_dye_14_16"
+        },
+        {
+            "name": "cushion_dye_14_17"
+        },
+        {
+            "name": "cushion_dye_14_18"
+        },
+        {
+            "name": "cushion_dye_14_19"
+        },
+        {
+            "name": "cushion_dye_14_2"
+        },
+        {
+            "name": "cushion_dye_14_3"
+        },
+        {
+            "name": "cushion_dye_14_4"
+        },
+        {
+            "name": "cushion_dye_14_5"
+        },
+        {
+            "name": "cushion_dye_14_6"
+        },
+        {
+            "name": "cushion_dye_14_7"
+        },
+        {
+            "name": "cushion_dye_14_8"
+        },
+        {
+            "name": "cushion_dye_14_9"
+        },
+        {
+            "name": "cushion_dye_15_0"
+        },
+        {
+            "name": "cushion_dye_15_1"
+        },
+        {
+            "name": "cushion_dye_15_10"
+        },
+        {
+            "name": "cushion_dye_15_11"
+        },
+        {
+            "name": "cushion_dye_15_12"
+        },
+        {
+            "name": "cushion_dye_15_13"
+        },
+        {
+            "name": "cushion_dye_15_14"
+        },
+        {
+            "name": "cushion_dye_15_16"
+        },
+        {
+            "name": "cushion_dye_15_17"
+        },
+        {
+            "name": "cushion_dye_15_18"
+        },
+        {
+            "name": "cushion_dye_15_2"
+        },
+        {
+            "name": "cushion_dye_15_3"
+        },
+        {
+            "name": "cushion_dye_15_4"
+        },
+        {
+            "name": "cushion_dye_15_5"
+        },
+        {
+            "name": "cushion_dye_15_6"
+        },
+        {
+            "name": "cushion_dye_15_7"
+        },
+        {
+            "name": "cushion_dye_15_8"
+        },
+        {
+            "name": "cushion_dye_15_9"
+        },
+        {
+            "name": "cushion_dye_16_1"
+        },
+        {
+            "name": "cushion_dye_16_10"
+        },
+        {
+            "name": "cushion_dye_16_11"
+        },
+        {
+            "name": "cushion_dye_16_12"
+        },
+        {
+            "name": "cushion_dye_16_13"
+        },
+        {
+            "name": "cushion_dye_16_14"
+        },
+        {
+            "name": "cushion_dye_16_15"
+        },
+        {
+            "name": "cushion_dye_16_17"
+        },
+        {
+            "name": "cushion_dye_16_18"
+        },
+        {
+            "name": "cushion_dye_16_19"
+        },
+        {
+            "name": "cushion_dye_16_2"
+        },
+        {
+            "name": "cushion_dye_16_3"
+        },
+        {
+            "name": "cushion_dye_16_4"
+        },
+        {
+            "name": "cushion_dye_16_5"
+        },
+        {
+            "name": "cushion_dye_16_6"
+        },
+        {
+            "name": "cushion_dye_16_7"
+        },
+        {
+            "name": "cushion_dye_16_8"
+        },
+        {
+            "name": "cushion_dye_16_9"
+        },
+        {
+            "name": "cushion_dye_17_0"
+        },
+        {
+            "name": "cushion_dye_17_1"
+        },
+        {
+            "name": "cushion_dye_17_10"
+        },
+        {
+            "name": "cushion_dye_17_11"
+        },
+        {
+            "name": "cushion_dye_17_12"
+        },
+        {
+            "name": "cushion_dye_17_13"
+        },
+        {
+            "name": "cushion_dye_17_14"
+        },
+        {
+            "name": "cushion_dye_17_15"
+        },
+        {
+            "name": "cushion_dye_17_16"
+        },
+        {
+            "name": "cushion_dye_17_18"
+        },
+        {
+            "name": "cushion_dye_17_19"
+        },
+        {
+            "name": "cushion_dye_17_2"
+        },
+        {
+            "name": "cushion_dye_17_4"
+        },
+        {
+            "name": "cushion_dye_17_5"
+        },
+        {
+            "name": "cushion_dye_17_6"
+        },
+        {
+            "name": "cushion_dye_17_7"
+        },
+        {
+            "name": "cushion_dye_17_8"
+        },
+        {
+            "name": "cushion_dye_17_9"
+        },
+        {
+            "name": "cushion_dye_18_0"
+        },
+        {
+            "name": "cushion_dye_18_1"
+        },
+        {
+            "name": "cushion_dye_18_10"
+        },
+        {
+            "name": "cushion_dye_18_11"
+        },
+        {
+            "name": "cushion_dye_18_12"
+        },
+        {
+            "name": "cushion_dye_18_13"
+        },
+        {
+            "name": "cushion_dye_18_14"
+        },
+        {
+            "name": "cushion_dye_18_15"
+        },
+        {
+            "name": "cushion_dye_18_16"
+        },
+        {
+            "name": "cushion_dye_18_17"
+        },
+        {
+            "name": "cushion_dye_18_19"
+        },
+        {
+            "name": "cushion_dye_18_2"
+        },
+        {
+            "name": "cushion_dye_18_3"
+        },
+        {
+            "name": "cushion_dye_18_5"
+        },
+        {
+            "name": "cushion_dye_18_6"
+        },
+        {
+            "name": "cushion_dye_18_7"
+        },
+        {
+            "name": "cushion_dye_18_8"
+        },
+        {
+            "name": "cushion_dye_18_9"
+        },
+        {
+            "name": "cushion_dye_19_0"
+        },
+        {
+            "name": "cushion_dye_19_1"
+        },
+        {
+            "name": "cushion_dye_19_10"
+        },
+        {
+            "name": "cushion_dye_19_11"
+        },
+        {
+            "name": "cushion_dye_19_12"
+        },
+        {
+            "name": "cushion_dye_19_13"
+        },
+        {
+            "name": "cushion_dye_19_14"
+        },
+        {
+            "name": "cushion_dye_19_16"
+        },
+        {
+            "name": "cushion_dye_19_17"
+        },
+        {
+            "name": "cushion_dye_19_18"
+        },
+        {
+            "name": "cushion_dye_19_2"
+        },
+        {
+            "name": "cushion_dye_19_3"
+        },
+        {
+            "name": "cushion_dye_19_4"
+        },
+        {
+            "name": "cushion_dye_19_5"
+        },
+        {
+            "name": "cushion_dye_19_6"
+        },
+        {
+            "name": "cushion_dye_19_7"
+        },
+        {
+            "name": "cushion_dye_19_8"
+        },
+        {
+            "name": "cushion_dye_19_9"
+        },
+        {
+            "name": "cushion_dye_1_0"
+        },
+        {
+            "name": "cushion_dye_1_10"
+        },
+        {
+            "name": "cushion_dye_1_11"
+        },
+        {
+            "name": "cushion_dye_1_12"
+        },
+        {
+            "name": "cushion_dye_1_13"
+        },
+        {
+            "name": "cushion_dye_1_14"
+        },
+        {
+            "name": "cushion_dye_1_15"
+        },
+        {
+            "name": "cushion_dye_1_16"
+        },
+        {
+            "name": "cushion_dye_1_17"
+        },
+        {
+            "name": "cushion_dye_1_18"
+        },
+        {
+            "name": "cushion_dye_1_19"
+        },
+        {
+            "name": "cushion_dye_1_2"
+        },
+        {
+            "name": "cushion_dye_1_3"
+        },
+        {
+            "name": "cushion_dye_1_4"
+        },
+        {
+            "name": "cushion_dye_1_5"
+        },
+        {
+            "name": "cushion_dye_1_6"
+        },
+        {
+            "name": "cushion_dye_1_7"
+        },
+        {
+            "name": "cushion_dye_1_8"
+        },
+        {
+            "name": "cushion_dye_1_9"
+        },
+        {
+            "name": "cushion_dye_2_0"
+        },
+        {
+            "name": "cushion_dye_2_1"
+        },
+        {
+            "name": "cushion_dye_2_10"
+        },
+        {
+            "name": "cushion_dye_2_11"
+        },
+        {
+            "name": "cushion_dye_2_12"
+        },
+        {
+            "name": "cushion_dye_2_13"
+        },
+        {
+            "name": "cushion_dye_2_14"
+        },
+        {
+            "name": "cushion_dye_2_15"
+        },
+        {
+            "name": "cushion_dye_2_16"
+        },
+        {
+            "name": "cushion_dye_2_17"
+        },
+        {
+            "name": "cushion_dye_2_18"
+        },
+        {
+            "name": "cushion_dye_2_19"
+        },
+        {
+            "name": "cushion_dye_2_3"
+        },
+        {
+            "name": "cushion_dye_2_4"
+        },
+        {
+            "name": "cushion_dye_2_5"
+        },
+        {
+            "name": "cushion_dye_2_6"
+        },
+        {
+            "name": "cushion_dye_2_7"
+        },
+        {
+            "name": "cushion_dye_2_8"
+        },
+        {
+            "name": "cushion_dye_2_9"
+        },
+        {
+            "name": "cushion_dye_3_0"
+        },
+        {
+            "name": "cushion_dye_3_1"
+        },
+        {
+            "name": "cushion_dye_3_10"
+        },
+        {
+            "name": "cushion_dye_3_11"
+        },
+        {
+            "name": "cushion_dye_3_12"
+        },
+        {
+            "name": "cushion_dye_3_13"
+        },
+        {
+            "name": "cushion_dye_3_14"
+        },
+        {
+            "name": "cushion_dye_3_15"
+        },
+        {
+            "name": "cushion_dye_3_16"
+        },
+        {
+            "name": "cushion_dye_3_18"
+        },
+        {
+            "name": "cushion_dye_3_19"
+        },
+        {
+            "name": "cushion_dye_3_2"
+        },
+        {
+            "name": "cushion_dye_3_4"
+        },
+        {
+            "name": "cushion_dye_3_5"
+        },
+        {
+            "name": "cushion_dye_3_6"
+        },
+        {
+            "name": "cushion_dye_3_7"
+        },
+        {
+            "name": "cushion_dye_3_8"
+        },
+        {
+            "name": "cushion_dye_3_9"
+        },
+        {
+            "name": "cushion_dye_4_0"
+        },
+        {
+            "name": "cushion_dye_4_1"
+        },
+        {
+            "name": "cushion_dye_4_10"
+        },
+        {
+            "name": "cushion_dye_4_11"
+        },
+        {
+            "name": "cushion_dye_4_12"
+        },
+        {
+            "name": "cushion_dye_4_13"
+        },
+        {
+            "name": "cushion_dye_4_14"
+        },
+        {
+            "name": "cushion_dye_4_15"
+        },
+        {
+            "name": "cushion_dye_4_16"
+        },
+        {
+            "name": "cushion_dye_4_17"
+        },
+        {
+            "name": "cushion_dye_4_19"
+        },
+        {
+            "name": "cushion_dye_4_2"
+        },
+        {
+            "name": "cushion_dye_4_3"
+        },
+        {
+            "name": "cushion_dye_4_5"
+        },
+        {
+            "name": "cushion_dye_4_6"
+        },
+        {
+            "name": "cushion_dye_4_7"
+        },
+        {
+            "name": "cushion_dye_4_8"
+        },
+        {
+            "name": "cushion_dye_4_9"
+        },
+        {
+            "name": "cushion_dye_5_0"
+        },
+        {
+            "name": "cushion_dye_5_1"
+        },
+        {
+            "name": "cushion_dye_5_10"
+        },
+        {
+            "name": "cushion_dye_5_11"
+        },
+        {
+            "name": "cushion_dye_5_12"
+        },
+        {
+            "name": "cushion_dye_5_13"
+        },
+        {
+            "name": "cushion_dye_5_14"
+        },
+        {
+            "name": "cushion_dye_5_15"
+        },
+        {
+            "name": "cushion_dye_5_16"
+        },
+        {
+            "name": "cushion_dye_5_17"
+        },
+        {
+            "name": "cushion_dye_5_18"
+        },
+        {
+            "name": "cushion_dye_5_19"
+        },
+        {
+            "name": "cushion_dye_5_2"
+        },
+        {
+            "name": "cushion_dye_5_3"
+        },
+        {
+            "name": "cushion_dye_5_4"
+        },
+        {
+            "name": "cushion_dye_5_6"
+        },
+        {
+            "name": "cushion_dye_5_7"
+        },
+        {
+            "name": "cushion_dye_5_8"
+        },
+        {
+            "name": "cushion_dye_5_9"
+        },
+        {
+            "name": "cushion_dye_6_0"
+        },
+        {
+            "name": "cushion_dye_6_1"
+        },
+        {
+            "name": "cushion_dye_6_10"
+        },
+        {
+            "name": "cushion_dye_6_11"
+        },
+        {
+            "name": "cushion_dye_6_12"
+        },
+        {
+            "name": "cushion_dye_6_13"
+        },
+        {
+            "name": "cushion_dye_6_14"
+        },
+        {
+            "name": "cushion_dye_6_15"
+        },
+        {
+            "name": "cushion_dye_6_16"
+        },
+        {
+            "name": "cushion_dye_6_17"
+        },
+        {
+            "name": "cushion_dye_6_18"
+        },
+        {
+            "name": "cushion_dye_6_19"
+        },
+        {
+            "name": "cushion_dye_6_2"
+        },
+        {
+            "name": "cushion_dye_6_3"
+        },
+        {
+            "name": "cushion_dye_6_4"
+        },
+        {
+            "name": "cushion_dye_6_5"
+        },
+        {
+            "name": "cushion_dye_6_7"
+        },
+        {
+            "name": "cushion_dye_6_8"
+        },
+        {
+            "name": "cushion_dye_6_9"
+        },
+        {
+            "name": "cushion_dye_7_0"
+        },
+        {
+            "name": "cushion_dye_7_1"
+        },
+        {
+            "name": "cushion_dye_7_10"
+        },
+        {
+            "name": "cushion_dye_7_11"
+        },
+        {
+            "name": "cushion_dye_7_12"
+        },
+        {
+            "name": "cushion_dye_7_13"
+        },
+        {
+            "name": "cushion_dye_7_14"
+        },
+        {
+            "name": "cushion_dye_7_15"
+        },
+        {
+            "name": "cushion_dye_7_16"
+        },
+        {
+            "name": "cushion_dye_7_17"
+        },
+        {
+            "name": "cushion_dye_7_18"
+        },
+        {
+            "name": "cushion_dye_7_19"
+        },
+        {
+            "name": "cushion_dye_7_2"
+        },
+        {
+            "name": "cushion_dye_7_3"
+        },
+        {
+            "name": "cushion_dye_7_4"
+        },
+        {
+            "name": "cushion_dye_7_5"
+        },
+        {
+            "name": "cushion_dye_7_6"
+        },
+        {
+            "name": "cushion_dye_7_8"
+        },
+        {
+            "name": "cushion_dye_7_9"
+        },
+        {
+            "name": "cushion_dye_8_0"
+        },
+        {
+            "name": "cushion_dye_8_1"
+        },
+        {
+            "name": "cushion_dye_8_10"
+        },
+        {
+            "name": "cushion_dye_8_11"
+        },
+        {
+            "name": "cushion_dye_8_12"
+        },
+        {
+            "name": "cushion_dye_8_13"
+        },
+        {
+            "name": "cushion_dye_8_14"
+        },
+        {
+            "name": "cushion_dye_8_15"
+        },
+        {
+            "name": "cushion_dye_8_16"
+        },
+        {
+            "name": "cushion_dye_8_17"
+        },
+        {
+            "name": "cushion_dye_8_18"
+        },
+        {
+            "name": "cushion_dye_8_19"
+        },
+        {
+            "name": "cushion_dye_8_2"
+        },
+        {
+            "name": "cushion_dye_8_3"
+        },
+        {
+            "name": "cushion_dye_8_4"
+        },
+        {
+            "name": "cushion_dye_8_5"
+        },
+        {
+            "name": "cushion_dye_8_6"
+        },
+        {
+            "name": "cushion_dye_8_7"
+        },
+        {
+            "name": "cushion_dye_8_9"
+        },
+        {
+            "name": "cushion_dye_9_0"
+        },
+        {
+            "name": "cushion_dye_9_1"
+        },
+        {
+            "name": "cushion_dye_9_10"
+        },
+        {
+            "name": "cushion_dye_9_11"
+        },
+        {
+            "name": "cushion_dye_9_12"
+        },
+        {
+            "name": "cushion_dye_9_13"
+        },
+        {
+            "name": "cushion_dye_9_14"
+        },
+        {
+            "name": "cushion_dye_9_15"
+        },
+        {
+            "name": "cushion_dye_9_16"
+        },
+        {
+            "name": "cushion_dye_9_17"
+        },
+        {
+            "name": "cushion_dye_9_18"
+        },
+        {
+            "name": "cushion_dye_9_19"
+        },
+        {
+            "name": "cushion_dye_9_2"
+        },
+        {
+            "name": "cushion_dye_9_3"
+        },
+        {
+            "name": "cushion_dye_9_4"
+        },
+        {
+            "name": "cushion_dye_9_5"
+        },
+        {
+            "name": "cushion_dye_9_6"
+        },
+        {
+            "name": "cushion_dye_9_7"
+        },
+        {
+            "name": "cushion_dye_9_8"
+        },
+        {
             "name": "dark_oak_stairs_dark_oak_recipeId"
         },
         {
             "name": "decorated_pot_base_recipeId"
+        },
+        {
+            "name": "dye_wool_slab_0_1"
+        },
+        {
+            "name": "dye_wool_slab_0_10"
+        },
+        {
+            "name": "dye_wool_slab_0_11"
+        },
+        {
+            "name": "dye_wool_slab_0_12"
+        },
+        {
+            "name": "dye_wool_slab_0_13"
+        },
+        {
+            "name": "dye_wool_slab_0_14"
+        },
+        {
+            "name": "dye_wool_slab_0_15"
+        },
+        {
+            "name": "dye_wool_slab_0_2"
+        },
+        {
+            "name": "dye_wool_slab_0_3"
+        },
+        {
+            "name": "dye_wool_slab_0_4"
+        },
+        {
+            "name": "dye_wool_slab_0_5"
+        },
+        {
+            "name": "dye_wool_slab_0_6"
+        },
+        {
+            "name": "dye_wool_slab_0_7"
+        },
+        {
+            "name": "dye_wool_slab_0_8"
+        },
+        {
+            "name": "dye_wool_slab_0_9"
+        },
+        {
+            "name": "dye_wool_slab_10_0"
+        },
+        {
+            "name": "dye_wool_slab_10_1"
+        },
+        {
+            "name": "dye_wool_slab_10_11"
+        },
+        {
+            "name": "dye_wool_slab_10_12"
+        },
+        {
+            "name": "dye_wool_slab_10_13"
+        },
+        {
+            "name": "dye_wool_slab_10_14"
+        },
+        {
+            "name": "dye_wool_slab_10_15"
+        },
+        {
+            "name": "dye_wool_slab_10_2"
+        },
+        {
+            "name": "dye_wool_slab_10_3"
+        },
+        {
+            "name": "dye_wool_slab_10_4"
+        },
+        {
+            "name": "dye_wool_slab_10_5"
+        },
+        {
+            "name": "dye_wool_slab_10_6"
+        },
+        {
+            "name": "dye_wool_slab_10_7"
+        },
+        {
+            "name": "dye_wool_slab_10_8"
+        },
+        {
+            "name": "dye_wool_slab_10_9"
+        },
+        {
+            "name": "dye_wool_slab_11_0"
+        },
+        {
+            "name": "dye_wool_slab_11_1"
+        },
+        {
+            "name": "dye_wool_slab_11_10"
+        },
+        {
+            "name": "dye_wool_slab_11_12"
+        },
+        {
+            "name": "dye_wool_slab_11_13"
+        },
+        {
+            "name": "dye_wool_slab_11_14"
+        },
+        {
+            "name": "dye_wool_slab_11_15"
+        },
+        {
+            "name": "dye_wool_slab_11_2"
+        },
+        {
+            "name": "dye_wool_slab_11_3"
+        },
+        {
+            "name": "dye_wool_slab_11_4"
+        },
+        {
+            "name": "dye_wool_slab_11_5"
+        },
+        {
+            "name": "dye_wool_slab_11_6"
+        },
+        {
+            "name": "dye_wool_slab_11_7"
+        },
+        {
+            "name": "dye_wool_slab_11_8"
+        },
+        {
+            "name": "dye_wool_slab_11_9"
+        },
+        {
+            "name": "dye_wool_slab_12_0"
+        },
+        {
+            "name": "dye_wool_slab_12_1"
+        },
+        {
+            "name": "dye_wool_slab_12_10"
+        },
+        {
+            "name": "dye_wool_slab_12_11"
+        },
+        {
+            "name": "dye_wool_slab_12_13"
+        },
+        {
+            "name": "dye_wool_slab_12_14"
+        },
+        {
+            "name": "dye_wool_slab_12_15"
+        },
+        {
+            "name": "dye_wool_slab_12_2"
+        },
+        {
+            "name": "dye_wool_slab_12_3"
+        },
+        {
+            "name": "dye_wool_slab_12_4"
+        },
+        {
+            "name": "dye_wool_slab_12_5"
+        },
+        {
+            "name": "dye_wool_slab_12_6"
+        },
+        {
+            "name": "dye_wool_slab_12_7"
+        },
+        {
+            "name": "dye_wool_slab_12_8"
+        },
+        {
+            "name": "dye_wool_slab_12_9"
+        },
+        {
+            "name": "dye_wool_slab_13_0"
+        },
+        {
+            "name": "dye_wool_slab_13_1"
+        },
+        {
+            "name": "dye_wool_slab_13_10"
+        },
+        {
+            "name": "dye_wool_slab_13_11"
+        },
+        {
+            "name": "dye_wool_slab_13_12"
+        },
+        {
+            "name": "dye_wool_slab_13_14"
+        },
+        {
+            "name": "dye_wool_slab_13_15"
+        },
+        {
+            "name": "dye_wool_slab_13_2"
+        },
+        {
+            "name": "dye_wool_slab_13_3"
+        },
+        {
+            "name": "dye_wool_slab_13_4"
+        },
+        {
+            "name": "dye_wool_slab_13_5"
+        },
+        {
+            "name": "dye_wool_slab_13_6"
+        },
+        {
+            "name": "dye_wool_slab_13_7"
+        },
+        {
+            "name": "dye_wool_slab_13_8"
+        },
+        {
+            "name": "dye_wool_slab_13_9"
+        },
+        {
+            "name": "dye_wool_slab_14_0"
+        },
+        {
+            "name": "dye_wool_slab_14_1"
+        },
+        {
+            "name": "dye_wool_slab_14_10"
+        },
+        {
+            "name": "dye_wool_slab_14_11"
+        },
+        {
+            "name": "dye_wool_slab_14_12"
+        },
+        {
+            "name": "dye_wool_slab_14_13"
+        },
+        {
+            "name": "dye_wool_slab_14_15"
+        },
+        {
+            "name": "dye_wool_slab_14_2"
+        },
+        {
+            "name": "dye_wool_slab_14_3"
+        },
+        {
+            "name": "dye_wool_slab_14_4"
+        },
+        {
+            "name": "dye_wool_slab_14_5"
+        },
+        {
+            "name": "dye_wool_slab_14_6"
+        },
+        {
+            "name": "dye_wool_slab_14_7"
+        },
+        {
+            "name": "dye_wool_slab_14_8"
+        },
+        {
+            "name": "dye_wool_slab_14_9"
+        },
+        {
+            "name": "dye_wool_slab_15_0"
+        },
+        {
+            "name": "dye_wool_slab_15_1"
+        },
+        {
+            "name": "dye_wool_slab_15_10"
+        },
+        {
+            "name": "dye_wool_slab_15_11"
+        },
+        {
+            "name": "dye_wool_slab_15_12"
+        },
+        {
+            "name": "dye_wool_slab_15_13"
+        },
+        {
+            "name": "dye_wool_slab_15_14"
+        },
+        {
+            "name": "dye_wool_slab_15_2"
+        },
+        {
+            "name": "dye_wool_slab_15_3"
+        },
+        {
+            "name": "dye_wool_slab_15_4"
+        },
+        {
+            "name": "dye_wool_slab_15_5"
+        },
+        {
+            "name": "dye_wool_slab_15_6"
+        },
+        {
+            "name": "dye_wool_slab_15_7"
+        },
+        {
+            "name": "dye_wool_slab_15_8"
+        },
+        {
+            "name": "dye_wool_slab_15_9"
+        },
+        {
+            "name": "dye_wool_slab_16_1"
+        },
+        {
+            "name": "dye_wool_slab_16_10"
+        },
+        {
+            "name": "dye_wool_slab_16_11"
+        },
+        {
+            "name": "dye_wool_slab_16_12"
+        },
+        {
+            "name": "dye_wool_slab_16_13"
+        },
+        {
+            "name": "dye_wool_slab_16_14"
+        },
+        {
+            "name": "dye_wool_slab_16_15"
+        },
+        {
+            "name": "dye_wool_slab_16_2"
+        },
+        {
+            "name": "dye_wool_slab_16_3"
+        },
+        {
+            "name": "dye_wool_slab_16_4"
+        },
+        {
+            "name": "dye_wool_slab_16_5"
+        },
+        {
+            "name": "dye_wool_slab_16_6"
+        },
+        {
+            "name": "dye_wool_slab_16_7"
+        },
+        {
+            "name": "dye_wool_slab_16_8"
+        },
+        {
+            "name": "dye_wool_slab_16_9"
+        },
+        {
+            "name": "dye_wool_slab_17_0"
+        },
+        {
+            "name": "dye_wool_slab_17_1"
+        },
+        {
+            "name": "dye_wool_slab_17_10"
+        },
+        {
+            "name": "dye_wool_slab_17_11"
+        },
+        {
+            "name": "dye_wool_slab_17_12"
+        },
+        {
+            "name": "dye_wool_slab_17_13"
+        },
+        {
+            "name": "dye_wool_slab_17_14"
+        },
+        {
+            "name": "dye_wool_slab_17_15"
+        },
+        {
+            "name": "dye_wool_slab_17_2"
+        },
+        {
+            "name": "dye_wool_slab_17_4"
+        },
+        {
+            "name": "dye_wool_slab_17_5"
+        },
+        {
+            "name": "dye_wool_slab_17_6"
+        },
+        {
+            "name": "dye_wool_slab_17_7"
+        },
+        {
+            "name": "dye_wool_slab_17_8"
+        },
+        {
+            "name": "dye_wool_slab_17_9"
+        },
+        {
+            "name": "dye_wool_slab_18_0"
+        },
+        {
+            "name": "dye_wool_slab_18_1"
+        },
+        {
+            "name": "dye_wool_slab_18_10"
+        },
+        {
+            "name": "dye_wool_slab_18_11"
+        },
+        {
+            "name": "dye_wool_slab_18_12"
+        },
+        {
+            "name": "dye_wool_slab_18_13"
+        },
+        {
+            "name": "dye_wool_slab_18_14"
+        },
+        {
+            "name": "dye_wool_slab_18_15"
+        },
+        {
+            "name": "dye_wool_slab_18_2"
+        },
+        {
+            "name": "dye_wool_slab_18_3"
+        },
+        {
+            "name": "dye_wool_slab_18_5"
+        },
+        {
+            "name": "dye_wool_slab_18_6"
+        },
+        {
+            "name": "dye_wool_slab_18_7"
+        },
+        {
+            "name": "dye_wool_slab_18_8"
+        },
+        {
+            "name": "dye_wool_slab_18_9"
+        },
+        {
+            "name": "dye_wool_slab_19_0"
+        },
+        {
+            "name": "dye_wool_slab_19_1"
+        },
+        {
+            "name": "dye_wool_slab_19_10"
+        },
+        {
+            "name": "dye_wool_slab_19_11"
+        },
+        {
+            "name": "dye_wool_slab_19_12"
+        },
+        {
+            "name": "dye_wool_slab_19_13"
+        },
+        {
+            "name": "dye_wool_slab_19_14"
+        },
+        {
+            "name": "dye_wool_slab_19_2"
+        },
+        {
+            "name": "dye_wool_slab_19_3"
+        },
+        {
+            "name": "dye_wool_slab_19_4"
+        },
+        {
+            "name": "dye_wool_slab_19_5"
+        },
+        {
+            "name": "dye_wool_slab_19_6"
+        },
+        {
+            "name": "dye_wool_slab_19_7"
+        },
+        {
+            "name": "dye_wool_slab_19_8"
+        },
+        {
+            "name": "dye_wool_slab_19_9"
+        },
+        {
+            "name": "dye_wool_slab_1_0"
+        },
+        {
+            "name": "dye_wool_slab_1_10"
+        },
+        {
+            "name": "dye_wool_slab_1_11"
+        },
+        {
+            "name": "dye_wool_slab_1_12"
+        },
+        {
+            "name": "dye_wool_slab_1_13"
+        },
+        {
+            "name": "dye_wool_slab_1_14"
+        },
+        {
+            "name": "dye_wool_slab_1_15"
+        },
+        {
+            "name": "dye_wool_slab_1_2"
+        },
+        {
+            "name": "dye_wool_slab_1_3"
+        },
+        {
+            "name": "dye_wool_slab_1_4"
+        },
+        {
+            "name": "dye_wool_slab_1_5"
+        },
+        {
+            "name": "dye_wool_slab_1_6"
+        },
+        {
+            "name": "dye_wool_slab_1_7"
+        },
+        {
+            "name": "dye_wool_slab_1_8"
+        },
+        {
+            "name": "dye_wool_slab_1_9"
+        },
+        {
+            "name": "dye_wool_slab_2_0"
+        },
+        {
+            "name": "dye_wool_slab_2_1"
+        },
+        {
+            "name": "dye_wool_slab_2_10"
+        },
+        {
+            "name": "dye_wool_slab_2_11"
+        },
+        {
+            "name": "dye_wool_slab_2_12"
+        },
+        {
+            "name": "dye_wool_slab_2_13"
+        },
+        {
+            "name": "dye_wool_slab_2_14"
+        },
+        {
+            "name": "dye_wool_slab_2_15"
+        },
+        {
+            "name": "dye_wool_slab_2_3"
+        },
+        {
+            "name": "dye_wool_slab_2_4"
+        },
+        {
+            "name": "dye_wool_slab_2_5"
+        },
+        {
+            "name": "dye_wool_slab_2_6"
+        },
+        {
+            "name": "dye_wool_slab_2_7"
+        },
+        {
+            "name": "dye_wool_slab_2_8"
+        },
+        {
+            "name": "dye_wool_slab_2_9"
+        },
+        {
+            "name": "dye_wool_slab_3_0"
+        },
+        {
+            "name": "dye_wool_slab_3_1"
+        },
+        {
+            "name": "dye_wool_slab_3_10"
+        },
+        {
+            "name": "dye_wool_slab_3_11"
+        },
+        {
+            "name": "dye_wool_slab_3_12"
+        },
+        {
+            "name": "dye_wool_slab_3_13"
+        },
+        {
+            "name": "dye_wool_slab_3_14"
+        },
+        {
+            "name": "dye_wool_slab_3_15"
+        },
+        {
+            "name": "dye_wool_slab_3_2"
+        },
+        {
+            "name": "dye_wool_slab_3_4"
+        },
+        {
+            "name": "dye_wool_slab_3_5"
+        },
+        {
+            "name": "dye_wool_slab_3_6"
+        },
+        {
+            "name": "dye_wool_slab_3_7"
+        },
+        {
+            "name": "dye_wool_slab_3_8"
+        },
+        {
+            "name": "dye_wool_slab_3_9"
+        },
+        {
+            "name": "dye_wool_slab_4_0"
+        },
+        {
+            "name": "dye_wool_slab_4_1"
+        },
+        {
+            "name": "dye_wool_slab_4_10"
+        },
+        {
+            "name": "dye_wool_slab_4_11"
+        },
+        {
+            "name": "dye_wool_slab_4_12"
+        },
+        {
+            "name": "dye_wool_slab_4_13"
+        },
+        {
+            "name": "dye_wool_slab_4_14"
+        },
+        {
+            "name": "dye_wool_slab_4_15"
+        },
+        {
+            "name": "dye_wool_slab_4_2"
+        },
+        {
+            "name": "dye_wool_slab_4_3"
+        },
+        {
+            "name": "dye_wool_slab_4_5"
+        },
+        {
+            "name": "dye_wool_slab_4_6"
+        },
+        {
+            "name": "dye_wool_slab_4_7"
+        },
+        {
+            "name": "dye_wool_slab_4_8"
+        },
+        {
+            "name": "dye_wool_slab_4_9"
+        },
+        {
+            "name": "dye_wool_slab_5_0"
+        },
+        {
+            "name": "dye_wool_slab_5_1"
+        },
+        {
+            "name": "dye_wool_slab_5_10"
+        },
+        {
+            "name": "dye_wool_slab_5_11"
+        },
+        {
+            "name": "dye_wool_slab_5_12"
+        },
+        {
+            "name": "dye_wool_slab_5_13"
+        },
+        {
+            "name": "dye_wool_slab_5_14"
+        },
+        {
+            "name": "dye_wool_slab_5_15"
+        },
+        {
+            "name": "dye_wool_slab_5_2"
+        },
+        {
+            "name": "dye_wool_slab_5_3"
+        },
+        {
+            "name": "dye_wool_slab_5_4"
+        },
+        {
+            "name": "dye_wool_slab_5_6"
+        },
+        {
+            "name": "dye_wool_slab_5_7"
+        },
+        {
+            "name": "dye_wool_slab_5_8"
+        },
+        {
+            "name": "dye_wool_slab_5_9"
+        },
+        {
+            "name": "dye_wool_slab_6_0"
+        },
+        {
+            "name": "dye_wool_slab_6_1"
+        },
+        {
+            "name": "dye_wool_slab_6_10"
+        },
+        {
+            "name": "dye_wool_slab_6_11"
+        },
+        {
+            "name": "dye_wool_slab_6_12"
+        },
+        {
+            "name": "dye_wool_slab_6_13"
+        },
+        {
+            "name": "dye_wool_slab_6_14"
+        },
+        {
+            "name": "dye_wool_slab_6_15"
+        },
+        {
+            "name": "dye_wool_slab_6_2"
+        },
+        {
+            "name": "dye_wool_slab_6_3"
+        },
+        {
+            "name": "dye_wool_slab_6_4"
+        },
+        {
+            "name": "dye_wool_slab_6_5"
+        },
+        {
+            "name": "dye_wool_slab_6_7"
+        },
+        {
+            "name": "dye_wool_slab_6_8"
+        },
+        {
+            "name": "dye_wool_slab_6_9"
+        },
+        {
+            "name": "dye_wool_slab_7_0"
+        },
+        {
+            "name": "dye_wool_slab_7_1"
+        },
+        {
+            "name": "dye_wool_slab_7_10"
+        },
+        {
+            "name": "dye_wool_slab_7_11"
+        },
+        {
+            "name": "dye_wool_slab_7_12"
+        },
+        {
+            "name": "dye_wool_slab_7_13"
+        },
+        {
+            "name": "dye_wool_slab_7_14"
+        },
+        {
+            "name": "dye_wool_slab_7_15"
+        },
+        {
+            "name": "dye_wool_slab_7_2"
+        },
+        {
+            "name": "dye_wool_slab_7_3"
+        },
+        {
+            "name": "dye_wool_slab_7_4"
+        },
+        {
+            "name": "dye_wool_slab_7_5"
+        },
+        {
+            "name": "dye_wool_slab_7_6"
+        },
+        {
+            "name": "dye_wool_slab_7_8"
+        },
+        {
+            "name": "dye_wool_slab_7_9"
+        },
+        {
+            "name": "dye_wool_slab_8_0"
+        },
+        {
+            "name": "dye_wool_slab_8_1"
+        },
+        {
+            "name": "dye_wool_slab_8_10"
+        },
+        {
+            "name": "dye_wool_slab_8_11"
+        },
+        {
+            "name": "dye_wool_slab_8_12"
+        },
+        {
+            "name": "dye_wool_slab_8_13"
+        },
+        {
+            "name": "dye_wool_slab_8_14"
+        },
+        {
+            "name": "dye_wool_slab_8_15"
+        },
+        {
+            "name": "dye_wool_slab_8_2"
+        },
+        {
+            "name": "dye_wool_slab_8_3"
+        },
+        {
+            "name": "dye_wool_slab_8_4"
+        },
+        {
+            "name": "dye_wool_slab_8_5"
+        },
+        {
+            "name": "dye_wool_slab_8_6"
+        },
+        {
+            "name": "dye_wool_slab_8_7"
+        },
+        {
+            "name": "dye_wool_slab_8_9"
+        },
+        {
+            "name": "dye_wool_slab_9_0"
+        },
+        {
+            "name": "dye_wool_slab_9_1"
+        },
+        {
+            "name": "dye_wool_slab_9_10"
+        },
+        {
+            "name": "dye_wool_slab_9_11"
+        },
+        {
+            "name": "dye_wool_slab_9_12"
+        },
+        {
+            "name": "dye_wool_slab_9_13"
+        },
+        {
+            "name": "dye_wool_slab_9_14"
+        },
+        {
+            "name": "dye_wool_slab_9_15"
+        },
+        {
+            "name": "dye_wool_slab_9_2"
+        },
+        {
+            "name": "dye_wool_slab_9_3"
+        },
+        {
+            "name": "dye_wool_slab_9_4"
+        },
+        {
+            "name": "dye_wool_slab_9_5"
+        },
+        {
+            "name": "dye_wool_slab_9_6"
+        },
+        {
+            "name": "dye_wool_slab_9_7"
+        },
+        {
+            "name": "dye_wool_slab_9_8"
+        },
+        {
+            "name": "dye_wool_stairs_0_1"
+        },
+        {
+            "name": "dye_wool_stairs_0_10"
+        },
+        {
+            "name": "dye_wool_stairs_0_11"
+        },
+        {
+            "name": "dye_wool_stairs_0_12"
+        },
+        {
+            "name": "dye_wool_stairs_0_13"
+        },
+        {
+            "name": "dye_wool_stairs_0_14"
+        },
+        {
+            "name": "dye_wool_stairs_0_15"
+        },
+        {
+            "name": "dye_wool_stairs_0_2"
+        },
+        {
+            "name": "dye_wool_stairs_0_3"
+        },
+        {
+            "name": "dye_wool_stairs_0_4"
+        },
+        {
+            "name": "dye_wool_stairs_0_5"
+        },
+        {
+            "name": "dye_wool_stairs_0_6"
+        },
+        {
+            "name": "dye_wool_stairs_0_7"
+        },
+        {
+            "name": "dye_wool_stairs_0_8"
+        },
+        {
+            "name": "dye_wool_stairs_0_9"
+        },
+        {
+            "name": "dye_wool_stairs_10_0"
+        },
+        {
+            "name": "dye_wool_stairs_10_1"
+        },
+        {
+            "name": "dye_wool_stairs_10_11"
+        },
+        {
+            "name": "dye_wool_stairs_10_12"
+        },
+        {
+            "name": "dye_wool_stairs_10_13"
+        },
+        {
+            "name": "dye_wool_stairs_10_14"
+        },
+        {
+            "name": "dye_wool_stairs_10_15"
+        },
+        {
+            "name": "dye_wool_stairs_10_2"
+        },
+        {
+            "name": "dye_wool_stairs_10_3"
+        },
+        {
+            "name": "dye_wool_stairs_10_4"
+        },
+        {
+            "name": "dye_wool_stairs_10_5"
+        },
+        {
+            "name": "dye_wool_stairs_10_6"
+        },
+        {
+            "name": "dye_wool_stairs_10_7"
+        },
+        {
+            "name": "dye_wool_stairs_10_8"
+        },
+        {
+            "name": "dye_wool_stairs_10_9"
+        },
+        {
+            "name": "dye_wool_stairs_11_0"
+        },
+        {
+            "name": "dye_wool_stairs_11_1"
+        },
+        {
+            "name": "dye_wool_stairs_11_10"
+        },
+        {
+            "name": "dye_wool_stairs_11_12"
+        },
+        {
+            "name": "dye_wool_stairs_11_13"
+        },
+        {
+            "name": "dye_wool_stairs_11_14"
+        },
+        {
+            "name": "dye_wool_stairs_11_15"
+        },
+        {
+            "name": "dye_wool_stairs_11_2"
+        },
+        {
+            "name": "dye_wool_stairs_11_3"
+        },
+        {
+            "name": "dye_wool_stairs_11_4"
+        },
+        {
+            "name": "dye_wool_stairs_11_5"
+        },
+        {
+            "name": "dye_wool_stairs_11_6"
+        },
+        {
+            "name": "dye_wool_stairs_11_7"
+        },
+        {
+            "name": "dye_wool_stairs_11_8"
+        },
+        {
+            "name": "dye_wool_stairs_11_9"
+        },
+        {
+            "name": "dye_wool_stairs_12_0"
+        },
+        {
+            "name": "dye_wool_stairs_12_1"
+        },
+        {
+            "name": "dye_wool_stairs_12_10"
+        },
+        {
+            "name": "dye_wool_stairs_12_11"
+        },
+        {
+            "name": "dye_wool_stairs_12_13"
+        },
+        {
+            "name": "dye_wool_stairs_12_14"
+        },
+        {
+            "name": "dye_wool_stairs_12_15"
+        },
+        {
+            "name": "dye_wool_stairs_12_2"
+        },
+        {
+            "name": "dye_wool_stairs_12_3"
+        },
+        {
+            "name": "dye_wool_stairs_12_4"
+        },
+        {
+            "name": "dye_wool_stairs_12_5"
+        },
+        {
+            "name": "dye_wool_stairs_12_6"
+        },
+        {
+            "name": "dye_wool_stairs_12_7"
+        },
+        {
+            "name": "dye_wool_stairs_12_8"
+        },
+        {
+            "name": "dye_wool_stairs_12_9"
+        },
+        {
+            "name": "dye_wool_stairs_13_0"
+        },
+        {
+            "name": "dye_wool_stairs_13_1"
+        },
+        {
+            "name": "dye_wool_stairs_13_10"
+        },
+        {
+            "name": "dye_wool_stairs_13_11"
+        },
+        {
+            "name": "dye_wool_stairs_13_12"
+        },
+        {
+            "name": "dye_wool_stairs_13_14"
+        },
+        {
+            "name": "dye_wool_stairs_13_15"
+        },
+        {
+            "name": "dye_wool_stairs_13_2"
+        },
+        {
+            "name": "dye_wool_stairs_13_3"
+        },
+        {
+            "name": "dye_wool_stairs_13_4"
+        },
+        {
+            "name": "dye_wool_stairs_13_5"
+        },
+        {
+            "name": "dye_wool_stairs_13_6"
+        },
+        {
+            "name": "dye_wool_stairs_13_7"
+        },
+        {
+            "name": "dye_wool_stairs_13_8"
+        },
+        {
+            "name": "dye_wool_stairs_13_9"
+        },
+        {
+            "name": "dye_wool_stairs_14_0"
+        },
+        {
+            "name": "dye_wool_stairs_14_1"
+        },
+        {
+            "name": "dye_wool_stairs_14_10"
+        },
+        {
+            "name": "dye_wool_stairs_14_11"
+        },
+        {
+            "name": "dye_wool_stairs_14_12"
+        },
+        {
+            "name": "dye_wool_stairs_14_13"
+        },
+        {
+            "name": "dye_wool_stairs_14_15"
+        },
+        {
+            "name": "dye_wool_stairs_14_2"
+        },
+        {
+            "name": "dye_wool_stairs_14_3"
+        },
+        {
+            "name": "dye_wool_stairs_14_4"
+        },
+        {
+            "name": "dye_wool_stairs_14_5"
+        },
+        {
+            "name": "dye_wool_stairs_14_6"
+        },
+        {
+            "name": "dye_wool_stairs_14_7"
+        },
+        {
+            "name": "dye_wool_stairs_14_8"
+        },
+        {
+            "name": "dye_wool_stairs_14_9"
+        },
+        {
+            "name": "dye_wool_stairs_15_0"
+        },
+        {
+            "name": "dye_wool_stairs_15_1"
+        },
+        {
+            "name": "dye_wool_stairs_15_10"
+        },
+        {
+            "name": "dye_wool_stairs_15_11"
+        },
+        {
+            "name": "dye_wool_stairs_15_12"
+        },
+        {
+            "name": "dye_wool_stairs_15_13"
+        },
+        {
+            "name": "dye_wool_stairs_15_14"
+        },
+        {
+            "name": "dye_wool_stairs_15_2"
+        },
+        {
+            "name": "dye_wool_stairs_15_3"
+        },
+        {
+            "name": "dye_wool_stairs_15_4"
+        },
+        {
+            "name": "dye_wool_stairs_15_5"
+        },
+        {
+            "name": "dye_wool_stairs_15_6"
+        },
+        {
+            "name": "dye_wool_stairs_15_7"
+        },
+        {
+            "name": "dye_wool_stairs_15_8"
+        },
+        {
+            "name": "dye_wool_stairs_15_9"
+        },
+        {
+            "name": "dye_wool_stairs_16_1"
+        },
+        {
+            "name": "dye_wool_stairs_16_10"
+        },
+        {
+            "name": "dye_wool_stairs_16_11"
+        },
+        {
+            "name": "dye_wool_stairs_16_12"
+        },
+        {
+            "name": "dye_wool_stairs_16_13"
+        },
+        {
+            "name": "dye_wool_stairs_16_14"
+        },
+        {
+            "name": "dye_wool_stairs_16_15"
+        },
+        {
+            "name": "dye_wool_stairs_16_2"
+        },
+        {
+            "name": "dye_wool_stairs_16_3"
+        },
+        {
+            "name": "dye_wool_stairs_16_4"
+        },
+        {
+            "name": "dye_wool_stairs_16_5"
+        },
+        {
+            "name": "dye_wool_stairs_16_6"
+        },
+        {
+            "name": "dye_wool_stairs_16_7"
+        },
+        {
+            "name": "dye_wool_stairs_16_8"
+        },
+        {
+            "name": "dye_wool_stairs_16_9"
+        },
+        {
+            "name": "dye_wool_stairs_17_0"
+        },
+        {
+            "name": "dye_wool_stairs_17_1"
+        },
+        {
+            "name": "dye_wool_stairs_17_10"
+        },
+        {
+            "name": "dye_wool_stairs_17_11"
+        },
+        {
+            "name": "dye_wool_stairs_17_12"
+        },
+        {
+            "name": "dye_wool_stairs_17_13"
+        },
+        {
+            "name": "dye_wool_stairs_17_14"
+        },
+        {
+            "name": "dye_wool_stairs_17_15"
+        },
+        {
+            "name": "dye_wool_stairs_17_2"
+        },
+        {
+            "name": "dye_wool_stairs_17_4"
+        },
+        {
+            "name": "dye_wool_stairs_17_5"
+        },
+        {
+            "name": "dye_wool_stairs_17_6"
+        },
+        {
+            "name": "dye_wool_stairs_17_7"
+        },
+        {
+            "name": "dye_wool_stairs_17_8"
+        },
+        {
+            "name": "dye_wool_stairs_17_9"
+        },
+        {
+            "name": "dye_wool_stairs_18_0"
+        },
+        {
+            "name": "dye_wool_stairs_18_1"
+        },
+        {
+            "name": "dye_wool_stairs_18_10"
+        },
+        {
+            "name": "dye_wool_stairs_18_11"
+        },
+        {
+            "name": "dye_wool_stairs_18_12"
+        },
+        {
+            "name": "dye_wool_stairs_18_13"
+        },
+        {
+            "name": "dye_wool_stairs_18_14"
+        },
+        {
+            "name": "dye_wool_stairs_18_15"
+        },
+        {
+            "name": "dye_wool_stairs_18_2"
+        },
+        {
+            "name": "dye_wool_stairs_18_3"
+        },
+        {
+            "name": "dye_wool_stairs_18_5"
+        },
+        {
+            "name": "dye_wool_stairs_18_6"
+        },
+        {
+            "name": "dye_wool_stairs_18_7"
+        },
+        {
+            "name": "dye_wool_stairs_18_8"
+        },
+        {
+            "name": "dye_wool_stairs_18_9"
+        },
+        {
+            "name": "dye_wool_stairs_19_0"
+        },
+        {
+            "name": "dye_wool_stairs_19_1"
+        },
+        {
+            "name": "dye_wool_stairs_19_10"
+        },
+        {
+            "name": "dye_wool_stairs_19_11"
+        },
+        {
+            "name": "dye_wool_stairs_19_12"
+        },
+        {
+            "name": "dye_wool_stairs_19_13"
+        },
+        {
+            "name": "dye_wool_stairs_19_14"
+        },
+        {
+            "name": "dye_wool_stairs_19_2"
+        },
+        {
+            "name": "dye_wool_stairs_19_3"
+        },
+        {
+            "name": "dye_wool_stairs_19_4"
+        },
+        {
+            "name": "dye_wool_stairs_19_5"
+        },
+        {
+            "name": "dye_wool_stairs_19_6"
+        },
+        {
+            "name": "dye_wool_stairs_19_7"
+        },
+        {
+            "name": "dye_wool_stairs_19_8"
+        },
+        {
+            "name": "dye_wool_stairs_19_9"
+        },
+        {
+            "name": "dye_wool_stairs_1_0"
+        },
+        {
+            "name": "dye_wool_stairs_1_10"
+        },
+        {
+            "name": "dye_wool_stairs_1_11"
+        },
+        {
+            "name": "dye_wool_stairs_1_12"
+        },
+        {
+            "name": "dye_wool_stairs_1_13"
+        },
+        {
+            "name": "dye_wool_stairs_1_14"
+        },
+        {
+            "name": "dye_wool_stairs_1_15"
+        },
+        {
+            "name": "dye_wool_stairs_1_2"
+        },
+        {
+            "name": "dye_wool_stairs_1_3"
+        },
+        {
+            "name": "dye_wool_stairs_1_4"
+        },
+        {
+            "name": "dye_wool_stairs_1_5"
+        },
+        {
+            "name": "dye_wool_stairs_1_6"
+        },
+        {
+            "name": "dye_wool_stairs_1_7"
+        },
+        {
+            "name": "dye_wool_stairs_1_8"
+        },
+        {
+            "name": "dye_wool_stairs_1_9"
+        },
+        {
+            "name": "dye_wool_stairs_2_0"
+        },
+        {
+            "name": "dye_wool_stairs_2_1"
+        },
+        {
+            "name": "dye_wool_stairs_2_10"
+        },
+        {
+            "name": "dye_wool_stairs_2_11"
+        },
+        {
+            "name": "dye_wool_stairs_2_12"
+        },
+        {
+            "name": "dye_wool_stairs_2_13"
+        },
+        {
+            "name": "dye_wool_stairs_2_14"
+        },
+        {
+            "name": "dye_wool_stairs_2_15"
+        },
+        {
+            "name": "dye_wool_stairs_2_3"
+        },
+        {
+            "name": "dye_wool_stairs_2_4"
+        },
+        {
+            "name": "dye_wool_stairs_2_5"
+        },
+        {
+            "name": "dye_wool_stairs_2_6"
+        },
+        {
+            "name": "dye_wool_stairs_2_7"
+        },
+        {
+            "name": "dye_wool_stairs_2_8"
+        },
+        {
+            "name": "dye_wool_stairs_2_9"
+        },
+        {
+            "name": "dye_wool_stairs_3_0"
+        },
+        {
+            "name": "dye_wool_stairs_3_1"
+        },
+        {
+            "name": "dye_wool_stairs_3_10"
+        },
+        {
+            "name": "dye_wool_stairs_3_11"
+        },
+        {
+            "name": "dye_wool_stairs_3_12"
+        },
+        {
+            "name": "dye_wool_stairs_3_13"
+        },
+        {
+            "name": "dye_wool_stairs_3_14"
+        },
+        {
+            "name": "dye_wool_stairs_3_15"
+        },
+        {
+            "name": "dye_wool_stairs_3_2"
+        },
+        {
+            "name": "dye_wool_stairs_3_4"
+        },
+        {
+            "name": "dye_wool_stairs_3_5"
+        },
+        {
+            "name": "dye_wool_stairs_3_6"
+        },
+        {
+            "name": "dye_wool_stairs_3_7"
+        },
+        {
+            "name": "dye_wool_stairs_3_8"
+        },
+        {
+            "name": "dye_wool_stairs_3_9"
+        },
+        {
+            "name": "dye_wool_stairs_4_0"
+        },
+        {
+            "name": "dye_wool_stairs_4_1"
+        },
+        {
+            "name": "dye_wool_stairs_4_10"
+        },
+        {
+            "name": "dye_wool_stairs_4_11"
+        },
+        {
+            "name": "dye_wool_stairs_4_12"
+        },
+        {
+            "name": "dye_wool_stairs_4_13"
+        },
+        {
+            "name": "dye_wool_stairs_4_14"
+        },
+        {
+            "name": "dye_wool_stairs_4_15"
+        },
+        {
+            "name": "dye_wool_stairs_4_2"
+        },
+        {
+            "name": "dye_wool_stairs_4_3"
+        },
+        {
+            "name": "dye_wool_stairs_4_5"
+        },
+        {
+            "name": "dye_wool_stairs_4_6"
+        },
+        {
+            "name": "dye_wool_stairs_4_7"
+        },
+        {
+            "name": "dye_wool_stairs_4_8"
+        },
+        {
+            "name": "dye_wool_stairs_4_9"
+        },
+        {
+            "name": "dye_wool_stairs_5_0"
+        },
+        {
+            "name": "dye_wool_stairs_5_1"
+        },
+        {
+            "name": "dye_wool_stairs_5_10"
+        },
+        {
+            "name": "dye_wool_stairs_5_11"
+        },
+        {
+            "name": "dye_wool_stairs_5_12"
+        },
+        {
+            "name": "dye_wool_stairs_5_13"
+        },
+        {
+            "name": "dye_wool_stairs_5_14"
+        },
+        {
+            "name": "dye_wool_stairs_5_15"
+        },
+        {
+            "name": "dye_wool_stairs_5_2"
+        },
+        {
+            "name": "dye_wool_stairs_5_3"
+        },
+        {
+            "name": "dye_wool_stairs_5_4"
+        },
+        {
+            "name": "dye_wool_stairs_5_6"
+        },
+        {
+            "name": "dye_wool_stairs_5_7"
+        },
+        {
+            "name": "dye_wool_stairs_5_8"
+        },
+        {
+            "name": "dye_wool_stairs_5_9"
+        },
+        {
+            "name": "dye_wool_stairs_6_0"
+        },
+        {
+            "name": "dye_wool_stairs_6_1"
+        },
+        {
+            "name": "dye_wool_stairs_6_10"
+        },
+        {
+            "name": "dye_wool_stairs_6_11"
+        },
+        {
+            "name": "dye_wool_stairs_6_12"
+        },
+        {
+            "name": "dye_wool_stairs_6_13"
+        },
+        {
+            "name": "dye_wool_stairs_6_14"
+        },
+        {
+            "name": "dye_wool_stairs_6_15"
+        },
+        {
+            "name": "dye_wool_stairs_6_2"
+        },
+        {
+            "name": "dye_wool_stairs_6_3"
+        },
+        {
+            "name": "dye_wool_stairs_6_4"
+        },
+        {
+            "name": "dye_wool_stairs_6_5"
+        },
+        {
+            "name": "dye_wool_stairs_6_7"
+        },
+        {
+            "name": "dye_wool_stairs_6_8"
+        },
+        {
+            "name": "dye_wool_stairs_6_9"
+        },
+        {
+            "name": "dye_wool_stairs_7_0"
+        },
+        {
+            "name": "dye_wool_stairs_7_1"
+        },
+        {
+            "name": "dye_wool_stairs_7_10"
+        },
+        {
+            "name": "dye_wool_stairs_7_11"
+        },
+        {
+            "name": "dye_wool_stairs_7_12"
+        },
+        {
+            "name": "dye_wool_stairs_7_13"
+        },
+        {
+            "name": "dye_wool_stairs_7_14"
+        },
+        {
+            "name": "dye_wool_stairs_7_15"
+        },
+        {
+            "name": "dye_wool_stairs_7_2"
+        },
+        {
+            "name": "dye_wool_stairs_7_3"
+        },
+        {
+            "name": "dye_wool_stairs_7_4"
+        },
+        {
+            "name": "dye_wool_stairs_7_5"
+        },
+        {
+            "name": "dye_wool_stairs_7_6"
+        },
+        {
+            "name": "dye_wool_stairs_7_8"
+        },
+        {
+            "name": "dye_wool_stairs_7_9"
+        },
+        {
+            "name": "dye_wool_stairs_8_0"
+        },
+        {
+            "name": "dye_wool_stairs_8_1"
+        },
+        {
+            "name": "dye_wool_stairs_8_10"
+        },
+        {
+            "name": "dye_wool_stairs_8_11"
+        },
+        {
+            "name": "dye_wool_stairs_8_12"
+        },
+        {
+            "name": "dye_wool_stairs_8_13"
+        },
+        {
+            "name": "dye_wool_stairs_8_14"
+        },
+        {
+            "name": "dye_wool_stairs_8_15"
+        },
+        {
+            "name": "dye_wool_stairs_8_2"
+        },
+        {
+            "name": "dye_wool_stairs_8_3"
+        },
+        {
+            "name": "dye_wool_stairs_8_4"
+        },
+        {
+            "name": "dye_wool_stairs_8_5"
+        },
+        {
+            "name": "dye_wool_stairs_8_6"
+        },
+        {
+            "name": "dye_wool_stairs_8_7"
+        },
+        {
+            "name": "dye_wool_stairs_8_9"
+        },
+        {
+            "name": "dye_wool_stairs_9_0"
+        },
+        {
+            "name": "dye_wool_stairs_9_1"
+        },
+        {
+            "name": "dye_wool_stairs_9_10"
+        },
+        {
+            "name": "dye_wool_stairs_9_11"
+        },
+        {
+            "name": "dye_wool_stairs_9_12"
+        },
+        {
+            "name": "dye_wool_stairs_9_13"
+        },
+        {
+            "name": "dye_wool_stairs_9_14"
+        },
+        {
+            "name": "dye_wool_stairs_9_15"
+        },
+        {
+            "name": "dye_wool_stairs_9_2"
+        },
+        {
+            "name": "dye_wool_stairs_9_3"
+        },
+        {
+            "name": "dye_wool_stairs_9_4"
+        },
+        {
+            "name": "dye_wool_stairs_9_5"
+        },
+        {
+            "name": "dye_wool_stairs_9_6"
+        },
+        {
+            "name": "dye_wool_stairs_9_7"
+        },
+        {
+            "name": "dye_wool_stairs_9_8"
         },
         {
             "name": "harness_color_0"
@@ -2906,6 +5822,18 @@
             "description": "<工作台>墨囊+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>黑色混凝土粉末*8"
         },
         {
+            "name": "minecraft:black_concrete_slab",
+            "description": "<工作台>黑色混凝土*3->黑色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:black_concrete_stairs",
+            "description": "<工作台>黑色混凝土*6->黑色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:black_cushion",
+            "description": "<工作台>黑色羊毛台阶*3->黑色坐垫"
+        },
+        {
             "name": "minecraft:black_dye_from_ink_sac",
             "description": "<工作台>墨囊~>黑色染料"
         },
@@ -2936,6 +5864,14 @@
         {
             "name": "minecraft:black_stained_hardened_clay_from_ink_sac",
             "description": "<工作台>陶瓦*8+墨囊->黑色陶瓦*8"
+        },
+        {
+            "name": "minecraft:black_wool_slab",
+            "description": "<工作台>黑色羊毛*3->黑色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:black_wool_stairs",
+            "description": "<工作台>黑色羊毛*6->黑色羊毛楼梯*4"
         },
         {
             "name": "minecraft:blackstone_slab",
@@ -2986,6 +5922,18 @@
             "description": "<工作台>青金石+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>蓝色混凝土粉末*8"
         },
         {
+            "name": "minecraft:blue_concrete_slab",
+            "description": "<工作台>蓝色混凝土*3->蓝色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:blue_concrete_stairs",
+            "description": "<工作台>蓝色混凝土*6->蓝色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:blue_cushion",
+            "description": "<工作台>蓝色羊毛台阶*3->蓝色坐垫"
+        },
+        {
             "name": "minecraft:blue_dye_from_cornflower",
             "description": "<工作台>矢车菊~>蓝色染料"
         },
@@ -3020,6 +5968,14 @@
         {
             "name": "minecraft:blue_stained_hardened_clay_from_lapis_lazuli",
             "description": "<工作台>陶瓦*8+青金石->蓝色陶瓦*8"
+        },
+        {
+            "name": "minecraft:blue_wool_slab",
+            "description": "<工作台>蓝色羊毛*3->蓝色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:blue_wool_stairs",
+            "description": "<工作台>蓝色羊毛*6->蓝色羊毛楼梯*4"
         },
         {
             "name": "minecraft:boat",
@@ -3102,6 +6058,18 @@
             "description": "<工作台>可可豆+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>棕色混凝土粉末*8"
         },
         {
+            "name": "minecraft:brown_concrete_slab",
+            "description": "<工作台>棕色混凝土*3->棕色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:brown_concrete_stairs",
+            "description": "<工作台>棕色混凝土*6->棕色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:brown_cushion",
+            "description": "<工作台>棕色羊毛台阶*3->棕色坐垫"
+        },
+        {
             "name": "minecraft:brown_dye_from_cocoa_beans",
             "description": "<工作台>可可豆~>棕色染料"
         },
@@ -3128,6 +6096,14 @@
         {
             "name": "minecraft:brown_stained_hardened_clay_from_cocoa_beans",
             "description": "<工作台>陶瓦*8+可可豆->棕色陶瓦*8"
+        },
+        {
+            "name": "minecraft:brown_wool_slab",
+            "description": "<工作台>棕色羊毛*3->棕色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:brown_wool_stairs",
+            "description": "<工作台>棕色羊毛*6->棕色羊毛楼梯*4"
         },
         {
             "name": "minecraft:brush",
@@ -3270,6 +6246,10 @@
             "description": "<工作台>木板*6+木质台阶*3->雕纹书架"
         },
         {
+            "name": "minecraft:chiseled_cinnabar",
+            "description": "<工作台>朱砂台阶*2->雕纹朱砂"
+        },
+        {
             "name": "minecraft:chiseled_deepslate",
             "description": "<工作台>深板岩圆石台阶*2->雕纹深板岩"
         },
@@ -3290,12 +6270,44 @@
             "description": "<工作台>树脂砖台阶*2->雕纹树脂砖块"
         },
         {
+            "name": "minecraft:chiseled_sulfur",
+            "description": "<工作台>硫黄台阶*2->雕纹硫黄"
+        },
+        {
             "name": "minecraft:chiseled_tuff",
             "description": "<工作台>凝灰岩台阶*2->雕纹凝灰岩"
         },
         {
             "name": "minecraft:chiseled_tuff_bricks",
             "description": "<工作台>凝灰岩砖台阶*2->雕纹凝灰岩砖"
+        },
+        {
+            "name": "minecraft:cinnabar_brick_slab",
+            "description": "<工作台>朱砂砖*3->朱砂砖台阶*6"
+        },
+        {
+            "name": "minecraft:cinnabar_brick_stairs",
+            "description": "<工作台>朱砂砖*6->朱砂砖楼梯*4"
+        },
+        {
+            "name": "minecraft:cinnabar_brick_wall",
+            "description": "<工作台>朱砂砖*6->朱砂砖墙*6"
+        },
+        {
+            "name": "minecraft:cinnabar_bricks",
+            "description": "<工作台>磨制朱砂*4->朱砂砖*4"
+        },
+        {
+            "name": "minecraft:cinnabar_slab",
+            "description": "<工作台>朱砂*3->朱砂台阶*6"
+        },
+        {
+            "name": "minecraft:cinnabar_stairs",
+            "description": "<工作台>朱砂*6->朱砂楼梯*4"
+        },
+        {
+            "name": "minecraft:cinnabar_wall",
+            "description": "<工作台>朱砂*6->朱砂墙*6"
         },
         {
             "name": "minecraft:clay",
@@ -3460,6 +6472,14 @@
         {
             "name": "minecraft:copper_trapdoor",
             "description": "<工作台>铜锭*4->铜活板门"
+        },
+        {
+            "name": "minecraft:cracked_deepslate_bricks_furnace",
+            "description": "<熔炉>深板岩砖->裂纹深板岩砖"
+        },
+        {
+            "name": "minecraft:cracked_deepslate_tiles_furnace",
+            "description": "<熔炉>深板岩瓦->裂纹深板岩瓦"
         },
         {
             "name": "minecraft:crafter",
@@ -3662,6 +6682,18 @@
             "description": "<工作台>青色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>青色混凝土粉末*8"
         },
         {
+            "name": "minecraft:cyan_concrete_slab",
+            "description": "<工作台>青色混凝土*3->青色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:cyan_concrete_stairs",
+            "description": "<工作台>青色混凝土*6->青色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:cyan_cushion",
+            "description": "<工作台>青色羊毛台阶*3->青色坐垫"
+        },
+        {
             "name": "minecraft:cyan_dye",
             "description": "<工作台>蓝色染料+绿色染料~>青色染料*2"
         },
@@ -3688,6 +6720,14 @@
         {
             "name": "minecraft:cyan_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+青色染料->青色陶瓦*8"
+        },
+        {
+            "name": "minecraft:cyan_wool_slab",
+            "description": "<工作台>青色羊毛*3->青色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:cyan_wool_stairs",
+            "description": "<工作台>青色羊毛*6->青色羊毛楼梯*4"
         },
         {
             "name": "minecraft:dark_oak_boat",
@@ -3816,6 +6856,10 @@
         {
             "name": "minecraft:deepslate_bricks_from_polished_deepslate_stonecutting",
             "description": "<切石机>磨制深板岩~>深板岩砖"
+        },
+        {
+            "name": "minecraft:deepslate_furnace",
+            "description": "<熔炉>深板岩圆石->深板岩"
         },
         {
             "name": "minecraft:deepslate_tile_slab",
@@ -4082,12 +7126,608 @@
             "description": "<工作台>类圆石方块*8->熔炉"
         },
         {
+            "name": "minecraft:furnace_acacia_leaves",
+            "description": "<熔炉>金合欢树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_acacia_wood",
+            "description": "<已弃用>金合欢木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_ancient_debris",
+            "description": "<熔炉/高炉>远古残骸->下界合金碎片"
+        },
+        {
+            "name": "minecraft:furnace_azalea_leaves",
+            "description": "<熔炉>杜鹃树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_beef",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>生牛肉->牛排"
+        },
+        {
+            "name": "minecraft:furnace_birch_leaves",
+            "description": "<熔炉>白桦树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_birch_wood",
+            "description": "<已弃用>白桦木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_cactus",
+            "description": "<熔炉>仙人掌->绿色染料"
+        },
+        {
+            "name": "minecraft:furnace_chainmail_boots",
+            "description": "<熔炉/高炉>锁链靴子->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_chainmail_chestplate",
+            "description": "<熔炉/高炉>锁链胸甲->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_chainmail_helmet",
+            "description": "<熔炉/高炉>锁链头盔->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_chainmail_leggings",
+            "description": "<熔炉/高炉>锁链护腿->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_cherry_leaves",
+            "description": "<熔炉>樱花树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_chicken",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>鸡->熟鸡肉"
+        },
+        {
+            "name": "minecraft:furnace_chorus_fruit",
+            "description": "<熔炉>紫颂果->爆裂紫颂果"
+        },
+        {
+            "name": "minecraft:furnace_clay",
+            "description": "<熔炉>黏土->陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_clay_ball",
+            "description": "<熔炉>黏土球->红砖"
+        },
+        {
+            "name": "minecraft:furnace_coal_ore",
+            "description": "<熔炉/高炉>煤矿石->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_cobblestone",
+            "description": "<熔炉>圆石->石头"
+        },
+        {
+            "name": "minecraft:furnace_copper",
+            "description": "<熔炉/高炉>粗铜->铜锭"
+        },
+        {
+            "name": "minecraft:furnace_copper_axe",
+            "description": "<熔炉/高炉>铜斧->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_boots",
+            "description": "<熔炉/高炉>铜靴子->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_chestplate",
+            "description": "<熔炉/高炉>铜胸甲->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_helmet",
+            "description": "<熔炉/高炉>铜头盔->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_hoe",
+            "description": "<熔炉/高炉>铜锄->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_leggings",
+            "description": "<熔炉/高炉>铜护腿->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_nautilus_armor",
+            "description": "<熔炉/高炉>铜鹦鹉螺铠->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_ore",
+            "description": "<熔炉/高炉>铜矿石->铜锭"
+        },
+        {
+            "name": "minecraft:furnace_copper_pickaxe",
+            "description": "<熔炉/高炉>铜镐->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_shovel",
+            "description": "<熔炉/高炉>铜锹->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_spear",
+            "description": "<熔炉/高炉>铜矛->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_copper_sword",
+            "description": "<熔炉/高炉>铜剑->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_cracked_nether_bricks",
+            "description": "<熔炉>下界砖块->裂纹下界砖块"
+        },
+        {
+            "name": "minecraft:furnace_cracked_polished_blackstone_bricks",
+            "description": "<熔炉>磨制黑石砖->裂纹磨制黑石砖"
+        },
+        {
+            "name": "minecraft:furnace_dark_oak_leaves",
+            "description": "<熔炉>深色橡树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_dark_oak_wood",
+            "description": "<已弃用>深色橡木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_coal_ore",
+            "description": "<熔炉/高炉>深层煤矿石->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_copper_ore",
+            "description": "<熔炉/高炉>深层铜矿石->铜锭"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_diamond_ore",
+            "description": "<熔炉/高炉>深层钻石矿石->钻石"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_emerald_ore",
+            "description": "<熔炉/高炉>深层绿宝石矿石->绿宝石"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_gold_ore",
+            "description": "<熔炉/高炉>深层金矿石->金锭"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_iron_ore",
+            "description": "<熔炉/高炉>深层铁矿石->铁锭"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_lapis_ore",
+            "description": "<熔炉/高炉>深层青金石矿石->青金石"
+        },
+        {
+            "name": "minecraft:furnace_deepslate_redstone_ore",
+            "description": "<熔炉/高炉>深层红石矿石->红石粉"
+        },
+        {
+            "name": "minecraft:furnace_diamond_ore",
+            "description": "<熔炉/高炉>钻石矿石->钻石"
+        },
+        {
+            "name": "minecraft:furnace_emerald_ore",
+            "description": "<熔炉/高炉>绿宝石矿石->绿宝石"
+        },
+        {
+            "name": "minecraft:furnace_fish",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>鱼->熟鱼"
+        },
+        {
+            "name": "minecraft:furnace_flowering_azalea_leaves",
+            "description": "<熔炉>盛开的杜鹃树叶->枯叶堆"
+        },
+        {
             "name": "minecraft:furnace_from_blackstone",
             "description": "<工作台>黑石*8->熔炉"
         },
         {
             "name": "minecraft:furnace_from_cobbled_deepslate",
             "description": "<工作台>深板岩圆石*8->熔炉"
+        },
+        {
+            "name": "minecraft:furnace_gold",
+            "description": "<熔炉/高炉>粗金->金锭"
+        },
+        {
+            "name": "minecraft:furnace_gold_ore",
+            "description": "<熔炉/高炉>金矿石->金锭"
+        },
+        {
+            "name": "minecraft:furnace_golden_axe",
+            "description": "<熔炉/高炉>金斧->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_boots",
+            "description": "<熔炉/高炉>金靴子->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_chestplate",
+            "description": "<熔炉/高炉>金胸甲->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_helmet",
+            "description": "<熔炉/高炉>金头盔->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_hoe",
+            "description": "<熔炉/高炉>金锄->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_leggings",
+            "description": "<熔炉/高炉>金护腿->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_nautilus_armor",
+            "description": "<熔炉/高炉>金鹦鹉螺铠->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_pickaxe",
+            "description": "<熔炉/高炉>金镐->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_shovel",
+            "description": "<熔炉/高炉>金锹->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_spear",
+            "description": "<熔炉/高炉>金矛->金粒"
+        },
+        {
+            "name": "minecraft:furnace_golden_sword",
+            "description": "<熔炉/高炉>金剑->金粒"
+        },
+        {
+            "name": "minecraft:furnace_horse_armor_copper",
+            "description": "<熔炉/高炉>铜马铠->铜粒"
+        },
+        {
+            "name": "minecraft:furnace_horse_armor_gold",
+            "description": "<熔炉/高炉>金马铠->金粒"
+        },
+        {
+            "name": "minecraft:furnace_horse_armor_iron",
+            "description": "<熔炉/高炉>铁马铠->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron",
+            "description": "<熔炉/高炉>粗铁->铁锭"
+        },
+        {
+            "name": "minecraft:furnace_iron_axe",
+            "description": "<熔炉/高炉>铁斧->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_boots",
+            "description": "<熔炉/高炉>铁靴子->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_chestplate",
+            "description": "<熔炉/高炉>铁胸甲->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_helmet",
+            "description": "<熔炉/高炉>铁头盔->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_hoe",
+            "description": "<熔炉/高炉>铁锄->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_leggings",
+            "description": "<熔炉/高炉>铁护腿->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_nautilus_armor",
+            "description": "<熔炉/高炉>铁鹦鹉螺铠->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_ore",
+            "description": "<熔炉/高炉>铁矿石->铁锭"
+        },
+        {
+            "name": "minecraft:furnace_iron_pickaxe",
+            "description": "<熔炉/高炉>铁镐->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_shovel",
+            "description": "<熔炉/高炉>铁锹->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_spear",
+            "description": "<熔炉/高炉>铁矛->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_iron_sword",
+            "description": "<熔炉/高炉>铁剑->铁粒"
+        },
+        {
+            "name": "minecraft:furnace_jungle_leaves",
+            "description": "<熔炉>丛林树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_jungle_wood",
+            "description": "<已弃用>丛林木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_kelp",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>海带->干海带"
+        },
+        {
+            "name": "minecraft:furnace_lapis_ore",
+            "description": "<熔炉/高炉>青金石矿石->青金石"
+        },
+        {
+            "name": "minecraft:furnace_log",
+            "description": "<熔炉>原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log2_acacia",
+            "description": "<已弃用>金合欢原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log2_dark_oak",
+            "description": "<已弃用>深色橡木原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log_birch",
+            "description": "<已弃用>白桦原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log_jungle",
+            "description": "<已弃用>丛林原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log_mangrove",
+            "description": "<熔炉>红树原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log_oak",
+            "description": "<已弃用>橡木原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_log_spruce",
+            "description": "<已弃用>云杉原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_mangrove_leaves",
+            "description": "<熔炉>红树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_mangrove_wood",
+            "description": "<熔炉>红树木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_mutton_raw",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>生羊肉->熟羊肉"
+        },
+        {
+            "name": "minecraft:furnace_nether_gold_ore",
+            "description": "<熔炉/高炉>下界金矿石->金锭"
+        },
+        {
+            "name": "minecraft:furnace_netherrack",
+            "description": "<熔炉>下界岩->下界砖"
+        },
+        {
+            "name": "minecraft:furnace_oak_leaves",
+            "description": "<熔炉>橡树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_oak_wood",
+            "description": "<已弃用>橡木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_orange_poplar_leaves",
+            "description": "<熔炉>橙色杨树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_pale_oak_leaves",
+            "description": "<熔炉>苍白橡树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_porkchop",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>生猪排->熟猪排"
+        },
+        {
+            "name": "minecraft:furnace_potato",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>马铃薯->烤马铃薯"
+        },
+        {
+            "name": "minecraft:furnace_quartz_block",
+            "description": "<熔炉>石英块->平滑石英块"
+        },
+        {
+            "name": "minecraft:furnace_quartz_ore",
+            "description": "<熔炉/高炉>下界石英矿石->下界石英"
+        },
+        {
+            "name": "minecraft:furnace_rabbit",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>兔子->熟兔肉"
+        },
+        {
+            "name": "minecraft:furnace_red_poplar_leaves",
+            "description": "<熔炉>红色杨树树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_red_sand",
+            "description": "<熔炉>红沙->玻璃"
+        },
+        {
+            "name": "minecraft:furnace_red_sandstone",
+            "description": "<熔炉>红砂岩->平滑红砂岩"
+        },
+        {
+            "name": "minecraft:furnace_redstone_ore",
+            "description": "<熔炉/高炉>红石矿石->红石粉"
+        },
+        {
+            "name": "minecraft:furnace_resin_brick",
+            "description": "<熔炉>树脂团->树脂砖"
+        },
+        {
+            "name": "minecraft:furnace_salmon",
+            "description": "<熔炉/烟熏炉/营火/灵魂营火>鲑鱼->熟鲑鱼"
+        },
+        {
+            "name": "minecraft:furnace_sand",
+            "description": "<熔炉>沙子->玻璃"
+        },
+        {
+            "name": "minecraft:furnace_sandstone",
+            "description": "<熔炉>砂岩->平滑砂岩"
+        },
+        {
+            "name": "minecraft:furnace_sea_pickle",
+            "description": "<熔炉>海泡菜->黄绿色染料"
+        },
+        {
+            "name": "minecraft:furnace_smooth_basalt",
+            "description": "<熔炉>玄武岩->平滑玄武岩"
+        },
+        {
+            "name": "minecraft:furnace_sponge",
+            "description": "<熔炉>湿海绵->海绵"
+        },
+        {
+            "name": "minecraft:furnace_spruce_leaves",
+            "description": "<熔炉>云杉树叶->枯叶堆"
+        },
+        {
+            "name": "minecraft:furnace_spruce_wood",
+            "description": "<已弃用>云杉木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay0",
+            "description": "<熔炉>白色陶瓦->白色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay1",
+            "description": "<熔炉>橙色陶瓦->橙色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay10",
+            "description": "<熔炉>紫色陶瓦->紫色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay11",
+            "description": "<熔炉>蓝色陶瓦->蓝色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay12",
+            "description": "<熔炉>棕色陶瓦->棕色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay13",
+            "description": "<熔炉>绿色陶瓦->绿色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay14",
+            "description": "<熔炉>红色陶瓦->红色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay15",
+            "description": "<熔炉>黑色陶瓦->黑色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay2",
+            "description": "<熔炉>品红色陶瓦->品红色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay3",
+            "description": "<熔炉>淡蓝色陶瓦->淡蓝色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay4",
+            "description": "<熔炉>黄色陶瓦->黄色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay5",
+            "description": "<熔炉>黄绿色陶瓦->黄绿色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay6",
+            "description": "<熔炉>粉红色陶瓦->粉红色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay7",
+            "description": "<熔炉>灰色陶瓦->灰色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay8",
+            "description": "<熔炉>淡灰色陶瓦->淡灰色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stained_hardened_clay9",
+            "description": "<熔炉>青色陶瓦->青色带釉陶瓦"
+        },
+        {
+            "name": "minecraft:furnace_stone",
+            "description": "<熔炉>石头->平滑石头"
+        },
+        {
+            "name": "minecraft:furnace_stone_brick",
+            "description": "<熔炉>石砖->裂纹石砖"
+        },
+        {
+            "name": "minecraft:furnace_stripped_acacia_log",
+            "description": "<熔炉>去皮金合欢原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_acacia_wood",
+            "description": "<已弃用>去皮金合欢木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_birch_log",
+            "description": "<熔炉>去皮白桦原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_birch_wood",
+            "description": "<已弃用>去皮白桦木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_dark_oak_log",
+            "description": "<熔炉>去皮深色橡木原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_dark_oak_wood",
+            "description": "<已弃用>去皮深色橡木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_jungle_log",
+            "description": "<熔炉>去皮丛林原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_jungle_wood",
+            "description": "<已弃用>去皮丛林木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_mangrove_log",
+            "description": "<熔炉>去皮红树原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_mangrove_wood",
+            "description": "<熔炉>去皮红树木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_oak_log",
+            "description": "<熔炉>去皮橡木原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_oak_wood",
+            "description": "<已弃用>去皮橡木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_spruce_log",
+            "description": "<熔炉>去皮云杉原木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_stripped_spruce_wood",
+            "description": "<已弃用>去皮云杉木->煤炭"
+        },
+        {
+            "name": "minecraft:furnace_yellow_poplar_leaves",
+            "description": "<熔炉>黄色杨树树叶->枯叶堆"
         },
         {
             "name": "minecraft:glass_bottle",
@@ -4140,6 +7780,10 @@
         {
             "name": "minecraft:golden_chestplate",
             "description": "<工作台>金锭*8->金胸甲"
+        },
+        {
+            "name": "minecraft:golden_dandelion",
+            "description": "<工作台>金粒*8+蒲公英->金蒲公英"
         },
         {
             "name": "minecraft:golden_helmet",
@@ -4206,6 +7850,18 @@
             "description": "<工作台>灰色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>灰色混凝土粉末*8"
         },
         {
+            "name": "minecraft:gray_concrete_slab",
+            "description": "<工作台>灰色混凝土*3->灰色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:gray_concrete_stairs",
+            "description": "<工作台>灰色混凝土*6->灰色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:gray_cushion",
+            "description": "<工作台>灰色羊毛台阶*3->灰色坐垫"
+        },
+        {
             "name": "minecraft:gray_dye",
             "description": "<工作台>黑色染料+白色染料~>灰色染料*2"
         },
@@ -4242,6 +7898,14 @@
             "description": "<工作台>陶瓦*8+灰色染料->灰色陶瓦*8"
         },
         {
+            "name": "minecraft:gray_wool_slab",
+            "description": "<工作台>灰色羊毛*3->灰色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:gray_wool_stairs",
+            "description": "<工作台>灰色羊毛*6->灰色羊毛楼梯*4"
+        },
+        {
             "name": "minecraft:green_banner",
             "description": "<工作台>绿色羊毛*6+木棍->绿色旗帜"
         },
@@ -4262,6 +7926,18 @@
             "description": "<工作台>绿色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>绿色混凝土粉末*8"
         },
         {
+            "name": "minecraft:green_concrete_slab",
+            "description": "<工作台>绿色混凝土*3->绿色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:green_concrete_stairs",
+            "description": "<工作台>绿色混凝土*6->绿色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:green_cushion",
+            "description": "<工作台>绿色羊毛台阶*3->绿色坐垫"
+        },
+        {
             "name": "minecraft:green_stained_glass",
             "description": "<工作台>玻璃*8+绿色染料->绿色染色玻璃*8"
         },
@@ -4276,6 +7952,14 @@
         {
             "name": "minecraft:green_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+绿色染料->绿色陶瓦*8"
+        },
+        {
+            "name": "minecraft:green_wool_slab",
+            "description": "<工作台>绿色羊毛*3->绿色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:green_wool_stairs",
+            "description": "<工作台>绿色羊毛*6->绿色羊毛楼梯*4"
         },
         {
             "name": "minecraft:grindstone",
@@ -4530,6 +8214,18 @@
             "description": "<工作台>淡蓝色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>淡蓝色混凝土粉末*8"
         },
         {
+            "name": "minecraft:light_blue_concrete_slab",
+            "description": "<工作台>淡蓝色混凝土*3->淡蓝色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:light_blue_concrete_stairs",
+            "description": "<工作台>淡蓝色混凝土*6->淡蓝色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:light_blue_cushion",
+            "description": "<工作台>淡蓝色羊毛台阶*3->淡蓝色坐垫"
+        },
+        {
             "name": "minecraft:light_blue_dye",
             "description": "<工作台>蓝色染料+白色染料~>淡蓝色染料*2"
         },
@@ -4566,6 +8262,14 @@
             "description": "<工作台>陶瓦*8+淡蓝色染料->淡蓝色陶瓦*8"
         },
         {
+            "name": "minecraft:light_blue_wool_slab",
+            "description": "<工作台>淡蓝色羊毛*3->淡蓝色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:light_blue_wool_stairs",
+            "description": "<工作台>淡蓝色羊毛*6->淡蓝色羊毛楼梯*4"
+        },
+        {
             "name": "minecraft:light_gray__carpet_from_white",
             "description": "<工作台>白色地毯*8+淡灰色染料->淡灰色地毯*8"
         },
@@ -4584,6 +8288,18 @@
         {
             "name": "minecraft:light_gray_concrete_powder",
             "description": "<工作台>淡灰色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>淡灰色混凝土粉末*8"
+        },
+        {
+            "name": "minecraft:light_gray_concrete_slab",
+            "description": "<工作台>淡灰色混凝土*3->淡灰色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:light_gray_concrete_stairs",
+            "description": "<工作台>淡灰色混凝土*6->淡灰色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:light_gray_cushion",
+            "description": "<工作台>淡灰色羊毛台阶*3->淡灰色坐垫"
         },
         {
             "name": "minecraft:light_gray_dye",
@@ -4638,6 +8354,14 @@
             "description": "<工作台>陶瓦*8+淡灰色染料->淡灰色陶瓦*8"
         },
         {
+            "name": "minecraft:light_gray_wool_slab",
+            "description": "<工作台>淡灰色羊毛*3->淡灰色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:light_gray_wool_stairs",
+            "description": "<工作台>淡灰色羊毛*6->淡灰色羊毛楼梯*4"
+        },
+        {
             "name": "minecraft:light_weighted_pressure_plate",
             "description": "<工作台>金锭*2->轻质测重压力板"
         },
@@ -4666,6 +8390,18 @@
             "description": "<工作台>黄绿色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>黄绿色混凝土粉末*8"
         },
         {
+            "name": "minecraft:lime_concrete_slab",
+            "description": "<工作台>黄绿色混凝土*3->黄绿色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:lime_concrete_stairs",
+            "description": "<工作台>黄绿色混凝土*6->黄绿色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:lime_cushion",
+            "description": "<工作台>黄绿色羊毛台阶*3->黄绿色坐垫"
+        },
+        {
             "name": "minecraft:lime_dye",
             "description": "<工作台>绿色染料+白色染料~>黄绿色染料*2"
         },
@@ -4688,6 +8424,14 @@
         {
             "name": "minecraft:lime_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+黄绿色染料->黄绿色陶瓦*8"
+        },
+        {
+            "name": "minecraft:lime_wool_slab",
+            "description": "<工作台>黄绿色羊毛*3->黄绿色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:lime_wool_stairs",
+            "description": "<工作台>黄绿色羊毛*6->黄绿色羊毛楼梯*4"
         },
         {
             "name": "minecraft:lit_pumpkin",
@@ -4728,6 +8472,18 @@
         {
             "name": "minecraft:magenta_concrete_powder",
             "description": "<工作台>品红色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>品红色混凝土粉末*8"
+        },
+        {
+            "name": "minecraft:magenta_concrete_slab",
+            "description": "<工作台>品红色混凝土*3->品红色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:magenta_concrete_stairs",
+            "description": "<工作台>品红色混凝土*6->品红色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:magenta_cushion",
+            "description": "<工作台>品红色羊毛台阶*3->品红色坐垫"
         },
         {
             "name": "minecraft:magenta_dye",
@@ -4780,6 +8536,14 @@
         {
             "name": "minecraft:magenta_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+品红色染料->品红色陶瓦*8"
+        },
+        {
+            "name": "minecraft:magenta_wool_slab",
+            "description": "<工作台>品红色羊毛*3->品红色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:magenta_wool_stairs",
+            "description": "<工作台>品红色羊毛*6->品红色羊毛楼梯*4"
         },
         {
             "name": "minecraft:magma",
@@ -4939,7 +8703,7 @@
         },
         {
             "name": "minecraft:mushroom_stew",
-            "description": "<工作台>棕色蘑菇+红色蘑菇+碗~>蘑菇煲"
+            "description": "<工作台>蘑菇+蘑菇+碗~>蘑菇煲"
         },
         {
             "name": "minecraft:name_tag",
@@ -5054,6 +8818,18 @@
             "description": "<工作台>橙色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>橙色混凝土粉末*8"
         },
         {
+            "name": "minecraft:orange_concrete_slab",
+            "description": "<工作台>橙色混凝土*3->橙色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:orange_concrete_stairs",
+            "description": "<工作台>橙色混凝土*6->橙色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:orange_cushion",
+            "description": "<工作台>橙色羊毛台阶*3->橙色坐垫"
+        },
+        {
             "name": "minecraft:orange_dye_from_open_eyeblossom",
             "description": "<工作台>张开的眼眸花~>橙色染料"
         },
@@ -5084,6 +8860,14 @@
         {
             "name": "minecraft:orange_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+橙色染料->橙色陶瓦*8"
+        },
+        {
+            "name": "minecraft:orange_wool_slab",
+            "description": "<工作台>橙色羊毛*3->橙色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:orange_wool_stairs",
+            "description": "<工作台>橙色羊毛*6->橙色羊毛楼梯*4"
         },
         {
             "name": "minecraft:oxidized_chiseled_copper",
@@ -5218,6 +9002,18 @@
             "description": "<工作台>粉红色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>粉红色混凝土粉末*8"
         },
         {
+            "name": "minecraft:pink_concrete_slab",
+            "description": "<工作台>粉红色混凝土*3->粉红色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:pink_concrete_stairs",
+            "description": "<工作台>粉红色混凝土*6->粉红色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:pink_cushion",
+            "description": "<工作台>粉红色羊毛台阶*3->粉红色坐垫"
+        },
+        {
             "name": "minecraft:pink_dye",
             "description": "<工作台>红色染料+白色染料~>粉红色染料*2"
         },
@@ -5256,6 +9052,14 @@
         {
             "name": "minecraft:pink_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+粉红色染料->粉红色陶瓦*8"
+        },
+        {
+            "name": "minecraft:pink_wool_slab",
+            "description": "<工作台>粉红色羊毛*3->粉红色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:pink_wool_stairs",
+            "description": "<工作台>粉红色羊毛*6->粉红色羊毛楼梯*4"
         },
         {
             "name": "minecraft:piston",
@@ -5312,6 +9116,22 @@
         {
             "name": "minecraft:polished_blackstone_wall",
             "description": "<工作台>磨制黑石*6->磨制黑石墙*6"
+        },
+        {
+            "name": "minecraft:polished_cinnabar",
+            "description": "<工作台>朱砂*4->磨制朱砂*4"
+        },
+        {
+            "name": "minecraft:polished_cinnabar_slab",
+            "description": "<工作台>磨制朱砂*3->磨制朱砂台阶*6"
+        },
+        {
+            "name": "minecraft:polished_cinnabar_stairs",
+            "description": "<工作台>磨制朱砂*6->磨制朱砂楼梯*4"
+        },
+        {
+            "name": "minecraft:polished_cinnabar_wall",
+            "description": "<工作台>磨制朱砂*6->磨制朱砂墙*6"
         },
         {
             "name": "minecraft:polished_deepslate",
@@ -5374,6 +9194,22 @@
             "description": "<工作台>磨制花岗岩*6->磨制花岗岩楼梯*4"
         },
         {
+            "name": "minecraft:polished_sulfur",
+            "description": "<工作台>硫黄*4->磨制硫黄*4"
+        },
+        {
+            "name": "minecraft:polished_sulfur_slab",
+            "description": "<工作台>磨制硫黄*3->磨制硫黄台阶*6"
+        },
+        {
+            "name": "minecraft:polished_sulfur_stairs",
+            "description": "<工作台>磨制硫黄*6->磨制硫黄楼梯*4"
+        },
+        {
+            "name": "minecraft:polished_sulfur_wall",
+            "description": "<工作台>磨制硫黄*6->磨制硫黄墙*6"
+        },
+        {
             "name": "minecraft:polished_tuff",
             "description": "<工作台>凝灰岩*4->磨制凝灰岩*4"
         },
@@ -5388,6 +9224,86 @@
         {
             "name": "minecraft:polished_tuff_wall",
             "description": "<工作台>磨制凝灰岩*6->磨制凝灰岩墙*6"
+        },
+        {
+            "name": "minecraft:poplar_boat",
+            "description": "<工作台>杨木木板*5->杨木船"
+        },
+        {
+            "name": "minecraft:poplar_button",
+            "description": "<工作台>杨木木板->杨木按钮"
+        },
+        {
+            "name": "minecraft:poplar_chest_boat",
+            "description": "<工作台>箱子+杨木船~>杨木运输船"
+        },
+        {
+            "name": "minecraft:poplar_door",
+            "description": "<工作台>杨木木板*6->杨木门*3"
+        },
+        {
+            "name": "minecraft:poplar_fence",
+            "description": "<工作台>木棍*2+杨木木板*4->杨木栅栏*3"
+        },
+        {
+            "name": "minecraft:poplar_fence_gate",
+            "description": "<工作台>木棍*4+杨木木板*2->杨木栅栏门"
+        },
+        {
+            "name": "minecraft:poplar_hanging_sign",
+            "description": "<工作台>去皮杨木原木*6+铁链*2->悬挂式杨木告示牌*6"
+        },
+        {
+            "name": "minecraft:poplar_planks_from_log",
+            "description": "<工作台>杨木原木->杨木木板*4"
+        },
+        {
+            "name": "minecraft:poplar_planks_from_stripped_log",
+            "description": "<工作台>去皮杨木原木->杨木木板*4"
+        },
+        {
+            "name": "minecraft:poplar_planks_from_stripped_wood",
+            "description": "<工作台>去皮杨木->杨木木板*4"
+        },
+        {
+            "name": "minecraft:poplar_planks_from_wood",
+            "description": "<工作台>杨木->杨木木板*4"
+        },
+        {
+            "name": "minecraft:poplar_pressure_plate",
+            "description": "<工作台>杨木木板*2->杨木压力板"
+        },
+        {
+            "name": "minecraft:poplar_shelf_from_stripped_poplar_log",
+            "description": "<工作台>去皮杨木原木*6->杨木展示架*6"
+        },
+        {
+            "name": "minecraft:poplar_sign",
+            "description": "<工作台>杨木木板*6+木棍->杨木告示牌*3"
+        },
+        {
+            "name": "minecraft:poplar_slab",
+            "description": "<工作台>杨木木板*3->杨木台阶*6"
+        },
+        {
+            "name": "minecraft:poplar_stairs",
+            "description": "<工作台>杨木木板*6->杨木楼梯*4"
+        },
+        {
+            "name": "minecraft:poplar_trapdoor",
+            "description": "<工作台>杨木木板*6->杨木活板门*2"
+        },
+        {
+            "name": "minecraft:poplar_wood_from_log",
+            "description": "<工作台>杨木原木*4->杨木*3"
+        },
+        {
+            "name": "minecraft:poplar_wood_from_stripped_log",
+            "description": "<工作台>去皮杨木原木*4->去皮杨木*3"
+        },
+        {
+            "name": "minecraft:potent_sulfur",
+            "description": "<工作台>硫黄*9->烈性硫黄"
         },
         {
             "name": "minecraft:prismarine",
@@ -5442,6 +9358,18 @@
             "description": "<工作台>紫色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>紫色混凝土粉末*8"
         },
         {
+            "name": "minecraft:purple_concrete_slab",
+            "description": "<工作台>紫色混凝土*3->紫色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:purple_concrete_stairs",
+            "description": "<工作台>紫色混凝土*6->紫色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:purple_cushion",
+            "description": "<工作台>紫色羊毛台阶*3->紫色坐垫"
+        },
+        {
             "name": "minecraft:purple_dye",
             "description": "<工作台>蓝色染料+红色染料~>紫色染料*2"
         },
@@ -5464,6 +9392,14 @@
         {
             "name": "minecraft:purple_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+紫色染料->紫色陶瓦*8"
+        },
+        {
+            "name": "minecraft:purple_wool_slab",
+            "description": "<工作台>紫色羊毛*3->紫色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:purple_wool_stairs",
+            "description": "<工作台>紫色羊毛*6->紫色羊毛楼梯*4"
         },
         {
             "name": "minecraft:purpur_block",
@@ -5496,6 +9432,10 @@
         {
             "name": "minecraft:rabbit_stew_from_red_mushroom",
             "description": "<工作台>碗+烤马铃薯+胡萝卜+红色蘑菇+熟兔肉~>兔肉煲"
+        },
+        {
+            "name": "minecraft:rabbit_stew_from_shelf_mushroom",
+            "description": "<工作台>碗+烤马铃薯+胡萝卜+层孔菇+熟兔肉~>兔肉煲"
         },
         {
             "name": "minecraft:rail",
@@ -5562,6 +9502,18 @@
             "description": "<工作台>红色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>红色混凝土粉末*8"
         },
         {
+            "name": "minecraft:red_concrete_slab",
+            "description": "<工作台>红色混凝土*3->红色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:red_concrete_stairs",
+            "description": "<工作台>红色混凝土*6->红色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:red_cushion",
+            "description": "<工作台>红色羊毛台阶*3->红色坐垫"
+        },
+        {
             "name": "minecraft:red_dye_from_beetroot",
             "description": "<工作台>甜菜根~>红色染料"
         },
@@ -5624,6 +9576,14 @@
         {
             "name": "minecraft:red_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+红色染料->红色陶瓦*8"
+        },
+        {
+            "name": "minecraft:red_wool_slab",
+            "description": "<工作台>红色羊毛*3->红色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:red_wool_stairs",
+            "description": "<工作台>红色羊毛*6->红色羊毛楼梯*4"
         },
         {
             "name": "minecraft:redstone",
@@ -5962,6 +9922,14 @@
             "description": "<切石机>安山岩~>安山岩墙"
         },
         {
+            "name": "minecraft:stonecutter_black_concrete_slab_from_black_concrete",
+            "description": "<切石机>黑色混凝土~>黑色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_black_concrete_stairs_from_black_concrete",
+            "description": "<切石机>黑色混凝土~>黑色混凝土楼梯"
+        },
+        {
             "name": "minecraft:stonecutter_blackstone_slab_from_blackstone",
             "description": "<切石机>黑石~>黑石台阶*2"
         },
@@ -5972,6 +9940,14 @@
         {
             "name": "minecraft:stonecutter_blackstone_wall_from_blackstone",
             "description": "<切石机>黑石~>黑石墙"
+        },
+        {
+            "name": "minecraft:stonecutter_blue_concrete_slab_from_blue_concrete",
+            "description": "<切石机>蓝色混凝土~>蓝色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_blue_concrete_stairs_from_blue_concrete",
+            "description": "<切石机>蓝色混凝土~>蓝色混凝土楼梯"
         },
         {
             "name": "minecraft:stonecutter_brick_slab",
@@ -6002,6 +9978,18 @@
             "description": "<切石机>磨制黑石~>磨制黑石砖"
         },
         {
+            "name": "minecraft:stonecutter_brown_concrete_slab_from_brown_concrete",
+            "description": "<切石机>棕色混凝土~>棕色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_brown_concrete_stairs_from_brown_concrete",
+            "description": "<切石机>棕色混凝土~>棕色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_chiseled_cinnabar_from_cinnabar",
+            "description": "<切石机>朱砂~>雕纹朱砂"
+        },
+        {
             "name": "minecraft:stonecutter_chiseled_from_polished_blackstone",
             "description": "<切石机>磨制黑石~>雕纹磨制黑石"
         },
@@ -6014,16 +10002,96 @@
             "description": "<切石机>黑石~>雕纹磨制黑石"
         },
         {
+            "name": "minecraft:stonecutter_chiseled_stone_bricks_from_cobblestone",
+            "description": "<切石机>圆石~>雕纹石砖"
+        },
+        {
+            "name": "minecraft:stonecutter_chiseled_sulfur_from_sulfur",
+            "description": "<切石机>硫黄~>雕纹硫黄"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_slab_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_slab_from_cinnabar_bricks",
+            "description": "<切石机>朱砂砖~>朱砂砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_slab_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>朱砂砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_stairs_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_stairs_from_cinnabar_bricks",
+            "description": "<切石机>朱砂砖~>朱砂砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_stairs_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>朱砂砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_wall_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_wall_from_cinnabar_bricks",
+            "description": "<切石机>朱砂砖~>朱砂砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_brick_wall_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>朱砂砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_bricks_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂砖"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_bricks_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>朱砂砖"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_slab_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_stairs_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_cinnabar_wall_from_cinnabar",
+            "description": "<切石机>朱砂~>朱砂墙"
+        },
+        {
             "name": "minecraft:stonecutter_cobbledouble_stone_slab",
             "description": "<切石机>圆石~>圆石台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cobblestone_from_stone",
+            "description": "<切石机>石头~>圆石"
+        },
+        {
+            "name": "minecraft:stonecutter_cobblestone_slab_from_stone",
+            "description": "<切石机>石头~>圆石台阶*2"
         },
         {
             "name": "minecraft:stonecutter_cobblestone_stairs",
             "description": "<切石机>圆石~>圆石楼梯"
         },
         {
+            "name": "minecraft:stonecutter_cobblestone_stairs_from_stone",
+            "description": "<切石机>石头~>圆石楼梯"
+        },
+        {
             "name": "minecraft:stonecutter_cobblestone_wall",
             "description": "<切石机>圆石~>圆石墙"
+        },
+        {
+            "name": "minecraft:stonecutter_cobblestone_wall_from_stone",
+            "description": "<切石机>石头~>圆石墙"
         },
         {
             "name": "minecraft:stonecutter_copper_block_to_chiseled_copper",
@@ -6064,6 +10132,14 @@
         {
             "name": "minecraft:stonecutter_cut_sandstone_slab",
             "description": "<切石机>切制砂岩~>切制砂岩台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cyan_concrete_slab_from_cyan_concrete",
+            "description": "<切石机>青色混凝土~>青色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_cyan_concrete_stairs_from_cyan_concrete",
+            "description": "<切石机>青色混凝土~>青色混凝土楼梯"
         },
         {
             "name": "minecraft:stonecutter_dark_prismarine_slab",
@@ -6162,6 +10238,54 @@
             "description": "<切石机>花岗岩~>花岗岩墙"
         },
         {
+            "name": "minecraft:stonecutter_gray_concrete_slab_from_gray_concrete",
+            "description": "<切石机>灰色混凝土~>灰色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_gray_concrete_stairs_from_gray_concrete",
+            "description": "<切石机>灰色混凝土~>灰色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_green_concrete_slab_from_green_concrete",
+            "description": "<切石机>绿色混凝土~>绿色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_green_concrete_stairs_from_green_concrete",
+            "description": "<切石机>绿色混凝土~>绿色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_light_blue_concrete_slab_from_light_blue_concrete",
+            "description": "<切石机>淡蓝色混凝土~>淡蓝色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_light_blue_concrete_stairs_from_light_blue_concrete",
+            "description": "<切石机>淡蓝色混凝土~>淡蓝色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_light_gray_concrete_slab_from_light_gray_concrete",
+            "description": "<切石机>淡灰色混凝土~>淡灰色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_light_gray_concrete_stairs_from_light_gray_concrete",
+            "description": "<切石机>淡灰色混凝土~>淡灰色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_lime_concrete_slab_from_lime_concrete",
+            "description": "<切石机>黄绿色混凝土~>黄绿色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_lime_concrete_stairs_from_lime_concrete",
+            "description": "<切石机>黄绿色混凝土~>黄绿色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_magenta_concrete_slab_from_magenta_concrete",
+            "description": "<切石机>品红色混凝土~>品红色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_magenta_concrete_stairs_from_magenta_concrete",
+            "description": "<切石机>品红色混凝土~>品红色混凝土楼梯"
+        },
+        {
             "name": "minecraft:stonecutter_mossy_cobbledouble_stone_slab",
             "description": "<切石机>苔石~>苔石台阶*2"
         },
@@ -6210,6 +10334,14 @@
             "description": "<切石机>下界砖块~>下界砖墙"
         },
         {
+            "name": "minecraft:stonecutter_orange_concrete_slab_from_orange_concrete",
+            "description": "<切石机>橙色混凝土~>橙色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_orange_concrete_stairs_from_orange_concrete",
+            "description": "<切石机>橙色混凝土~>橙色混凝土楼梯"
+        },
+        {
             "name": "minecraft:stonecutter_oxidized_copper_to_cut_copper",
             "description": "<切石机>氧化的铜块~>氧化的切制铜块*4"
         },
@@ -6240,6 +10372,14 @@
         {
             "name": "minecraft:stonecutter_oxidized_cut_copper_to_oxidized_chiseled_copper",
             "description": "<切石机>氧化的切制铜块~>氧化的雕纹铜块"
+        },
+        {
+            "name": "minecraft:stonecutter_pink_concrete_slab_from_pink_concrete",
+            "description": "<切石机>粉红色混凝土~>粉红色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_pink_concrete_stairs_from_pink_concrete",
+            "description": "<切石机>粉红色混凝土~>粉红色混凝土楼梯"
         },
         {
             "name": "minecraft:stonecutter_polished_andesite",
@@ -6280,6 +10420,34 @@
         {
             "name": "minecraft:stonecutter_polished_bricks_from_blackstone",
             "description": "<切石机>黑石~>磨制黑石砖"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_from_cinnabar",
+            "description": "<切石机>朱砂~>磨制朱砂"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_slab_from_cinnabar",
+            "description": "<切石机>朱砂~>磨制朱砂台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_slab_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>磨制朱砂台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_stairs_from_cinnabar",
+            "description": "<切石机>朱砂~>磨制朱砂楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_stairs_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>磨制朱砂楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_wall_from_cinnabar",
+            "description": "<切石机>朱砂~>磨制朱砂墙"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_cinnabar_wall_from_polished_cinnabar",
+            "description": "<切石机>磨制朱砂~>磨制朱砂墙"
         },
         {
             "name": "minecraft:stonecutter_polished_diorite",
@@ -6332,6 +10500,34 @@
         {
             "name": "minecraft:stonecutter_polished_stairs_from_blackstone",
             "description": "<切石机>黑石~>磨制黑石楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_from_sulfur",
+            "description": "<切石机>硫黄~>磨制硫黄"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_slab_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>磨制硫黄台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_slab_from_sulfur",
+            "description": "<切石机>硫黄~>磨制硫黄台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_stairs_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>磨制硫黄楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_stairs_from_sulfur",
+            "description": "<切石机>硫黄~>磨制硫黄楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_wall_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>磨制硫黄墙"
+        },
+        {
+            "name": "minecraft:stonecutter_polished_sulfur_wall_from_sulfur",
+            "description": "<切石机>硫黄~>磨制硫黄墙"
         },
         {
             "name": "minecraft:stonecutter_polished_tuff_to_chiseled_tuff_bricks",
@@ -6390,6 +10586,14 @@
             "description": "<切石机>海晶石~>海晶石墙"
         },
         {
+            "name": "minecraft:stonecutter_purple_concrete_slab_from_purple_concrete",
+            "description": "<切石机>紫色混凝土~>紫色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_purple_concrete_stairs_from_purple_concrete",
+            "description": "<切石机>紫色混凝土~>紫色混凝土楼梯"
+        },
+        {
             "name": "minecraft:stonecutter_purpur_lines",
             "description": "<切石机>紫珀块~>紫珀柱"
         },
@@ -6420,6 +10624,14 @@
         {
             "name": "minecraft:stonecutter_quartz_stairs",
             "description": "<切石机>石英块~>石英楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_red_concrete_slab_from_red_concrete",
+            "description": "<切石机>红色混凝土~>红色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_red_concrete_stairs_from_red_concrete",
+            "description": "<切石机>红色混凝土~>红色混凝土楼梯"
         },
         {
             "name": "minecraft:stonecutter_red_nether_brick_slab",
@@ -6530,6 +10742,22 @@
             "description": "<切石机>磨制黑石~>磨制黑石楼梯"
         },
         {
+            "name": "minecraft:stonecutter_stone_brick_slab_from_cobblestone",
+            "description": "<切石机>圆石~>石砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_stone_brick_stairs_from_cobblestone",
+            "description": "<切石机>圆石~>石砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_stone_brick_wall_from_cobblestone",
+            "description": "<切石机>圆石~>石砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_stone_bricks_from_cobblestone",
+            "description": "<切石机>圆石~>石砖"
+        },
+        {
             "name": "minecraft:stonecutter_stone_stairs",
             "description": "<切石机>石头~>石头楼梯"
         },
@@ -6568,6 +10796,62 @@
         {
             "name": "minecraft:stonecutter_stonebrick_wall2",
             "description": "<切石机>石砖~>石砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_slab_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>硫黄砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_slab_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_slab_from_sulfur_bricks",
+            "description": "<切石机>硫黄砖~>硫黄砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_stairs_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>硫黄砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_stairs_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_stairs_from_sulfur_bricks",
+            "description": "<切石机>硫黄砖~>硫黄砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_wall_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>硫黄砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_wall_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_brick_wall_from_sulfur_bricks",
+            "description": "<切石机>硫黄砖~>硫黄砖墙"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_bricks_from_polished_sulfur",
+            "description": "<切石机>磨制硫黄~>硫黄砖"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_bricks_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄砖"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_slab_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_stairs_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_sulfur_wall_from_sulfur",
+            "description": "<切石机>硫黄~>硫黄墙"
         },
         {
             "name": "minecraft:stonecutter_tuff_bricks_to_chiseled_tuff_bricks",
@@ -6806,6 +11090,94 @@
             "description": "<切石机>锈蚀的切制铜块~>锈蚀的雕纹铜块"
         },
         {
+            "name": "minecraft:stonecutter_white_concrete_slab_from_white_concrete",
+            "description": "<切石机>白色混凝土~>白色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_white_concrete_stairs_from_white_concrete",
+            "description": "<切石机>白色混凝土~>白色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutter_yellow_concrete_slab_from_yellow_concrete",
+            "description": "<切石机>黄色混凝土~>黄色混凝土台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutter_yellow_concrete_stairs_from_yellow_concrete",
+            "description": "<切石机>黄色混凝土~>黄色混凝土楼梯"
+        },
+        {
+            "name": "minecraft:stonecutting_chiseled_deepslate_from_deepslate",
+            "description": "<切石机>深板岩~>雕纹深板岩"
+        },
+        {
+            "name": "minecraft:stonecutting_cobbled_deepslate_slab_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩圆石台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutting_cobbled_deepslate_stairs_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩圆石楼梯"
+        },
+        {
+            "name": "minecraft:stonecutting_cobbled_deepslate_wall_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩圆石墙"
+        },
+        {
+            "name": "minecraft:stonecutting_cobbled_deepslateblock_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩圆石"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_brick_slab_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩砖台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_brick_stairs_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩砖楼梯"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_brick_wall_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩砖墙"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_bricks_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩砖"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_tile_slab_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩瓦台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_tile_stairs_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩瓦楼梯"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_tile_wall_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩瓦墙"
+        },
+        {
+            "name": "minecraft:stonecutting_deepslate_tiles_from_deepslate",
+            "description": "<切石机>深板岩~>深板岩瓦"
+        },
+        {
+            "name": "minecraft:stonecutting_polished_deepslate_slab_from_deepslate",
+            "description": "<切石机>深板岩~>磨制深板岩台阶*2"
+        },
+        {
+            "name": "minecraft:stonecutting_polished_deepslate_stairs_from_deepslate",
+            "description": "<切石机>深板岩~>磨制深板岩楼梯"
+        },
+        {
+            "name": "minecraft:stonecutting_polished_deepslate_wall_from_deepslate",
+            "description": "<切石机>深板岩~>磨制深板岩墙"
+        },
+        {
+            "name": "minecraft:stonecutting_polished_deepslateblock_from_deepslate",
+            "description": "<切石机>深板岩~>磨制深板岩"
+        },
+        {
+            "name": "minecraft:straw_bed",
+            "description": "<工作台>干草捆*3->麦秆床*4"
+        },
+        {
             "name": "minecraft:string_to_wool",
             "description": "<工作台>线*4->白色羊毛"
         },
@@ -6824,6 +11196,38 @@
         {
             "name": "minecraft:sugar",
             "description": "<工作台>甘蔗->糖"
+        },
+        {
+            "name": "minecraft:sulfur",
+            "description": "<工作台>硫黄尖锥*4->硫黄"
+        },
+        {
+            "name": "minecraft:sulfur_brick_slab",
+            "description": "<工作台>硫黄砖*3->硫黄砖台阶*6"
+        },
+        {
+            "name": "minecraft:sulfur_brick_stairs",
+            "description": "<工作台>硫黄砖*6->硫黄砖楼梯*4"
+        },
+        {
+            "name": "minecraft:sulfur_brick_wall",
+            "description": "<工作台>硫黄砖*6->硫黄砖墙*6"
+        },
+        {
+            "name": "minecraft:sulfur_bricks",
+            "description": "<工作台>磨制硫黄*4->硫黄砖*4"
+        },
+        {
+            "name": "minecraft:sulfur_slab",
+            "description": "<工作台>硫黄*3->硫黄台阶*6"
+        },
+        {
+            "name": "minecraft:sulfur_stairs",
+            "description": "<工作台>硫黄*6->硫黄楼梯*4"
+        },
+        {
+            "name": "minecraft:sulfur_wall",
+            "description": "<工作台>硫黄*6->硫黄墙*6"
         },
         {
             "name": "minecraft:target",
@@ -7298,6 +11702,18 @@
             "description": "<工作台>骨粉+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>白色混凝土粉末*8"
         },
         {
+            "name": "minecraft:white_concrete_slab",
+            "description": "<工作台>白色混凝土*3->白色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:white_concrete_stairs",
+            "description": "<工作台>白色混凝土*6->白色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:white_cushion",
+            "description": "<工作台>白色羊毛台阶*3->白色坐垫"
+        },
+        {
             "name": "minecraft:white_dye_from_bone_meal",
             "description": "<工作台>骨粉~>白色染料"
         },
@@ -7330,6 +11746,14 @@
             "description": "<工作台>陶瓦*8+骨粉->白色陶瓦*8"
         },
         {
+            "name": "minecraft:white_wool_slab",
+            "description": "<工作台>白色羊毛*3->白色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:white_wool_stairs",
+            "description": "<工作台>白色羊毛*6->白色羊毛楼梯*4"
+        },
+        {
             "name": "minecraft:wild_armor_trim_smithing_template_duplicate",
             "description": "<工作台>荒野盔甲纹饰 锻造模板+钻石*7+苔石->荒野盔甲纹饰 锻造模板*2"
         },
@@ -7347,7 +11771,7 @@
         },
         {
             "name": "minecraft:wooden_door",
-            "description": "<工作台>橡木木板*6->橡木门*3"
+            "description": "<工作台>橡木木板*6->木门*3"
         },
         {
             "name": "minecraft:wooden_hoe",
@@ -7394,8 +11818,24 @@
             "description": "<工作台>黄色染料+沙子+沙子+沙子+沙子+沙砾+沙砾+沙砾+沙砾~>黄色混凝土粉末*8"
         },
         {
+            "name": "minecraft:yellow_concrete_slab",
+            "description": "<工作台>黄色混凝土*3->黄色混凝土台阶*6"
+        },
+        {
+            "name": "minecraft:yellow_concrete_stairs",
+            "description": "<工作台>黄色混凝土*6->黄色混凝土楼梯*4"
+        },
+        {
+            "name": "minecraft:yellow_cushion",
+            "description": "<工作台>黄色羊毛台阶*3->黄色坐垫"
+        },
+        {
             "name": "minecraft:yellow_dye_from_dandelion",
             "description": "<工作台>蒲公英~>黄色染料"
+        },
+        {
+            "name": "minecraft:yellow_dye_from_golden_dandelion",
+            "description": "<工作台>金蒲公英~>黄色染料"
         },
         {
             "name": "minecraft:yellow_dye_from_sunflower",
@@ -7420,6 +11860,14 @@
         {
             "name": "minecraft:yellow_stained_hardened_clay",
             "description": "<工作台>陶瓦*8+黄色染料->黄色陶瓦*8"
+        },
+        {
+            "name": "minecraft:yellow_wool_slab",
+            "description": "<工作台>黄色羊毛*3->黄色羊毛台阶*6"
+        },
+        {
+            "name": "minecraft:yellow_wool_stairs",
+            "description": "<工作台>黄色羊毛*6->黄色羊毛楼梯*4"
         },
         {
             "name": "oak_stairs_oak_recipeId"
@@ -8570,6 +13018,12 @@
         },
         {
             "name": "weapon_arrow_recipe_46"
+        },
+        {
+            "name": "weapon_arrow_recipe_47"
+        },
+        {
+            "name": "weapon_arrow_recipe_48"
         },
         {
             "name": "weapon_arrow_recipe_5"

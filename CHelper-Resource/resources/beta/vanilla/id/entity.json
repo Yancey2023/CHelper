@@ -107,6 +107,10 @@
             "description": "苦力怕"
         },
         {
+            "name": "cushion",
+            "description": "坐垫"
+        },
+        {
             "name": "dolphin",
             "description": "海豚"
         },
@@ -191,6 +195,9 @@
             "description": "青蛙"
         },
         {
+            "name": "frostbite"
+        },
+        {
             "name": "ghast",
             "description": "恶魂"
         },
@@ -225,6 +232,10 @@
         {
             "name": "husk",
             "description": "尸壳"
+        },
+        {
+            "name": "ice_ball",
+            "description": "冰球"
         },
         {
             "name": "iron_golem",
@@ -409,6 +420,10 @@
         {
             "name": "strider",
             "description": "炽足兽"
+        },
+        {
+            "name": "sulfur_cube",
+            "description": "硫方怪"
         },
         {
             "name": "tadpole",

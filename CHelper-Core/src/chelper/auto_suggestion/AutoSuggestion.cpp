@@ -449,7 +449,9 @@ namespace CHelper::AutoSuggestion {
                     suggestion.start = convertResult.convert(suggestion.start) + astNode.tokens.startIndex;
                     suggestion.end = convertResult.convert(suggestion.end) + astNode.tokens.startIndex;
                     if (convertStr.size() != astNode.tokens.string().size()) [[unlikely]] {
-                        suggestion.content = NormalId::make(convertStr, suggestion.content->description);
+                        auto content = NormalId::make(convertStr, suggestion.content->description);
+                        content->preview = suggestion.content->preview;
+                        suggestion.content = std::move(content);
                     }
                     return true;
                 });

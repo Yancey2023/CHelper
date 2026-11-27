@@ -25,4 +25,8 @@ class Suggestion {
     @Native var name: String? = null
 
     @Native var description: String? = null
+
+    @Native var previewKind: Int = 0
+
+    @Native var previewValue: String? = null
 }

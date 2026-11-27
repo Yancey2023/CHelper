@@ -91,7 +91,50 @@ namespace CHelper {
         commands->push_back(std::move(item));
     }
 
-    void CPack::initializeNamespaceIds() {
+    void CPack::initializeIds() {
+        const auto applyPreviews = [this](std::string_view category, const auto &ids, SuggestionPreviewKind kind) {
+            if (!ids) return;
+            const auto media = suggestionMedia.find(category == "music" ? "sound" : category);
+            for (const auto &id: *ids) {
+                const auto setPreview = [&](SuggestionPreviewKind previewKind, std::u16string_view value) {
+                    id->preview = &suggestionPreviews.emplace_back(previewKind, value);
+                    if constexpr (requires { id->getIdWithNamespace(); }) {
+                        id->getIdWithNamespace()->preview = id->preview;
+                    }
+                };
+                if (kind == SuggestionPreviewKind::EASING) {
+                    setPreview(kind, id->name);
+                    continue;
+                }
+                std::u16string_view name = id->name;
+                if constexpr (requires { id->idNamespace; }) {
+                    if (id->idNamespace && *id->idNamespace != u"minecraft") {
+                        name = id->getIdWithNamespace()->name;
+                    } else if (category == "item" && name.ends_with(u"_dye")) {
+                        setPreview(SuggestionPreviewKind::DYE_COLOR, name);
+                        continue;
+                    }
+                }
+                if (media == suggestionMedia.end()) continue;
+                if (const auto url = media->second.find(utf8::utf16to8(name)); url != media->second.end()) {
+                    setPreview(kind, url->second);
+                }
+            }
+        };
+        for (const auto &[category, ids]: normalIds) {
+            const std::string_view key = category;
+            if (key == "cameraEasing") applyPreviews(key, ids, SuggestionPreviewKind::EASING);
+            else if (key == "sound" || key == "music")
+                applyPreviews(key, ids, SuggestionPreviewKind::AUDIO);
+            else if (key == "effect")
+                applyPreviews(key, ids, SuggestionPreviewKind::ICON);
+        }
+        if (const auto entity = namespaceIds.find("entity"); entity != namespaceIds.end()) {
+            applyPreviews("entity", entity->second, SuggestionPreviewKind::ICON);
+        }
+        if (blockIds) applyPreviews("block", blockIds->blockStateValues, SuggestionPreviewKind::ICON);
+        applyPreviews("item", itemIds, SuggestionPreviewKind::ICON);
+
         const auto asNamespaceIds = [this](const auto &source) {
             auto result = allocateShared<std::pmr::vector<std::shared_ptr<NamespaceId>>>(cpackMemory);
             if (source != nullptr) {

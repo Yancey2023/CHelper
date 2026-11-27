@@ -177,29 +177,32 @@ function writeString(content) {
   return ptr
 }
 
-// 读取一条补全建议记录 [u32 name长度][u32 description长度][u16 name][u16 description]（ptr 已 4 对齐）
-// 返回 { value, next }，value 形如 { id, title, description }
+// 读取预览类型、三个 UTF-16 长度和字符串数据（记录头按 4 字节对齐）
 function readSuggestionRecord(ptr, which) {
-  checkMemRange(ptr, 8, `补全建议头部(记录 ${which})`)
-  const nameLength = wasmModule.HEAPU32[ptr >>> 2]
-  const descriptionLength = wasmModule.HEAPU32[(ptr + 4) >>> 2]
-  checkMemRange(
-    ptr + 8,
-    (nameLength + descriptionLength) * 2,
-    `补全建议数据(记录 ${which}, name=${nameLength}, description=${descriptionLength})`,
-  )
-  let title = ''
-  let p = ptr + 8
-  for (let i = 0; i < nameLength; i++) {
-    title += String.fromCharCode(getHEAPU16()[p >> 1])
-    p += 2
+  checkMemRange(ptr, 16, `补全建议头部(记录 ${which})`)
+  const header = ptr >>> 2
+  const words = wasmModule.HEAPU32
+  const kind = words[header]
+  const nameLength = words[header + 1]
+  const descriptionLength = words[header + 2]
+  const previewLength = words[header + 3]
+  let p = ptr + 16
+  checkMemRange(p, (nameLength + descriptionLength + previewLength) * 2, `补全建议数据(记录 ${which})`)
+  const read = (length) => {
+    let value = ''
+    const memory = getHEAPU16()
+    for (let i = 0; i < length; i++) {
+      value += String.fromCharCode(memory[p >>> 1])
+      p += 2
+    }
+    return value
   }
-  let description = ''
-  for (let i = 0; i < descriptionLength; i++) {
-    description += String.fromCharCode(getHEAPU16()[p >> 1])
-    p += 2
-  }
-  return { value: { id: which, title, description }, next: p }
+  const title = read(nameLength)
+  const description = read(descriptionLength)
+  const payload = read(previewLength)
+  const previewKind = [undefined, 'icon', 'audio', 'easing', 'dyeColor'][kind]
+  const preview = previewKind && payload ? { kind: previewKind, value: payload } : undefined
+  return { value: { id: which, title, description, preview }, next: p }
 }
 
 // 读取 [u32 数量]([u32 start][u32 end][u32 长度][u16 字符串][补齐到4])*
@@ -222,13 +225,13 @@ function readErrorReasons(basePtr) {
   return errorReasons
 }
 
-// 读取 [u32 数量]([u32 name长度][u32 description长度][u16 name][u16 description][补齐到4])*
+// 读取 [u32 数量]([补全建议][补齐到4])*
 function readSuggestions(basePtr) {
   let ptr = align4(basePtr)
   const count = readU32(ptr)
   ptr = count.next
-  // 防御: 每条补全建议至少 8 字节定长头，阻止损坏的 count 触发巨大循环
-  checkMemRange(ptr, count.value * 8, '补全建议数量')
+  // 防御: 每条补全建议至少 16 字节定长头，阻止损坏的 count 触发巨大循环
+  checkMemRange(ptr, count.value * 16, '补全建议数量')
   const suggestions = []
   for (let i = 0; i < count.value; i++) {
     ptr = align4(ptr) // C++ 在每条记录末尾写入了补齐到 4 的 padding

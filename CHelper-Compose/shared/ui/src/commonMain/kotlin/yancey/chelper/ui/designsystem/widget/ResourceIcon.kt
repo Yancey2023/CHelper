@@ -21,17 +21,23 @@ package yancey.chelper.ui.designsystem.widget
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.ui.designsystem.CHelperTheme
 
 @Composable
-fun Icon(id: DrawableResource, modifier: Modifier = Modifier, contentDescription: String? = null) {
+fun Icon(
+    id: DrawableResource,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    tint: Color = CHelperTheme.colors.iconMain,
+) {
     Image(
         painter = painterResource(id),
         contentDescription = contentDescription,
         modifier = modifier,
-        colorFilter = ColorFilter.tint(CHelperTheme.colors.iconMain),
+        colorFilter = ColorFilter.tint(tint),
     )
 }

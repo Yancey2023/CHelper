@@ -132,8 +132,8 @@ fun EditProfileDialog(
                             modifier =
                                 Modifier.size(56.dp).alpha(if (isUploadingAvatar) 0.45f else 1f),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(resource = Res.drawable.ic_user),
-                            error = painterResource(resource = Res.drawable.ic_user),
+                            placeholder = painterResource(resource = Res.drawable.user_round),
+                            error = painterResource(resource = Res.drawable.user_round),
                         )
                     }
                     Spacer(modifier = Modifier.width(14.dp))
@@ -200,7 +200,7 @@ fun EditProfileDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Image(
-                        painter = painterResource(resource = Res.drawable.ic_lock),
+                        painter = painterResource(resource = Res.drawable.lock),
                         contentDescription = "Lock",
                         modifier = Modifier.size(20.dp),
                         colorFilter = ColorFilter.tint(Color(0xFFD32F2F)),

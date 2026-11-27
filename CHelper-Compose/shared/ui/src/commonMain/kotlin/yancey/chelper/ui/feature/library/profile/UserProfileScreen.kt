@@ -147,7 +147,7 @@ fun UserProfileScreen(
             } else {
                 // 浏览别人 → 举报入口
                 Image(
-                    painter = painterResource(resource = Res.drawable.alert_triangle),
+                    painter = painterResource(resource = Res.drawable.triangle_exclamation_point),
                     contentDescription = "举报用户",
                     modifier =
                         Modifier.size(24.dp).clickable { showReportDialog = true }.padding(2.dp),
@@ -499,8 +499,8 @@ private fun ProfileHeader(user: UserProfile) {
                     .clip(CircleShape)
                     .background(CHelperTheme.colors.backgroundComponent),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(resource = Res.drawable.ic_user),
-            error = painterResource(resource = Res.drawable.ic_user),
+            placeholder = painterResource(resource = Res.drawable.user_round),
+            error = painterResource(resource = Res.drawable.user_round),
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -544,14 +544,14 @@ private fun ProfileHeader(user: UserProfile) {
             if (tier >= 2) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Image(
-                    painter = painterResource(resource = Res.drawable.ic_verified_advanced),
+                    painter = painterResource(resource = Res.drawable.shield_check),
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                 )
             } else if (tier == 1) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Image(
-                    painter = painterResource(resource = Res.drawable.ic_verified_normal),
+                    painter = painterResource(resource = Res.drawable.badge_check),
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                 )
@@ -744,7 +744,7 @@ private fun ProfileLibraryItem(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (!isPrivate) {
                 Image(
-                    painter = painterResource(resource = Res.drawable.heart_filled),
+                    painter = painterResource(resource = Res.drawable.heart),
                     contentDescription = "Likes",
                     modifier = Modifier.size(12.dp),
                     colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary),

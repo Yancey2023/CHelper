@@ -1,6 +1,5 @@
 package yancey.chelper.ui.designsystem.widget
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
@@ -9,12 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import yancey.chelper.resources.Res
+import yancey.chelper.resources.square
+import yancey.chelper.resources.square_check
 import yancey.chelper.ui.designsystem.CHelperTheme
 
 @Composable
@@ -79,19 +77,10 @@ fun Checkbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Mod
             .size(48.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(20.dp)) {
-            val width = 2.dp.toPx()
-            drawRoundRect(color, cornerRadius = CornerRadius(3.dp.toPx()), style = Stroke(width))
-            if (checked) {
-                drawRoundRect(color, cornerRadius = CornerRadius(3.dp.toPx()))
-                val check =
-                    Path().apply {
-                        moveTo(size.width * .2f, size.height * .5f)
-                        lineTo(size.width * .42f, size.height * .72f)
-                        lineTo(size.width * .8f, size.height * .26f)
-                    }
-                drawPath(check, Color.White, style = Stroke(width))
-            }
-        }
+        Icon(
+            id = if (checked) Res.drawable.square_check else Res.drawable.square,
+            modifier = Modifier.size(20.dp),
+            tint = color,
+        )
     }
 }

@@ -125,8 +125,8 @@ fun PublicLibraryCard(
                                     .clip(CircleShape)
                                     .background(CHelperTheme.colors.backgroundComponent),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(Res.drawable.ic_user),
-                            error = painterResource(Res.drawable.ic_user),
+                            placeholder = painterResource(Res.drawable.user_round),
+                            error = painterResource(Res.drawable.user_round),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
@@ -140,14 +140,14 @@ fun PublicLibraryCard(
                         if ((author.tier ?: 0) >= 2) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_advanced),
+                                painter = painterResource(Res.drawable.shield_check),
                                 contentDescription = "Advanced",
                                 modifier = Modifier.size(12.dp),
                             )
                         } else if ((author.tier ?: 0) >= 1) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_normal),
+                                painter = painterResource(Res.drawable.badge_check),
                                 contentDescription = "Normal",
                                 modifier = Modifier.size(12.dp),
                             )
@@ -171,11 +171,7 @@ fun PublicLibraryCard(
                                 ),
                         )
                         Image(
-                            painter =
-                                painterResource(
-                                    if (isFeatured) Res.drawable.heart_filled
-                                    else Res.drawable.ic_heart
-                                ),
+                            painter = painterResource(Res.drawable.heart),
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             colorFilter =
@@ -259,7 +255,7 @@ fun PublicLibraryCard(
             Image(
                 painter =
                     painterResource(
-                        if (library.isFavorited == true) Res.drawable.bookmark_filled
+                        if (library.isFavorited == true) Res.drawable.bookmark_check
                         else Res.drawable.bookmark
                     ),
                 contentDescription = if (library.isFavorited == true) "取消收藏" else "收藏",

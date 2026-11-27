@@ -132,6 +132,9 @@
             "name": "minecraft:deepslate_feature"
         },
         {
+            "name": "minecraft:deepslate_ore_host_feature"
+        },
+        {
             "name": "minecraft:diamond_ore_buried_feature"
         },
         {
@@ -160,6 +163,9 @@
         },
         {
             "name": "minecraft:fallen_oak_tree_feature"
+        },
+        {
+            "name": "minecraft:fallen_poplar_tree_feature"
         },
         {
             "name": "minecraft:fallen_spruce_tree_feature"
@@ -247,6 +253,75 @@
         },
         {
             "name": "minecraft:gravel_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_coal_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_coal_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:hosted_copper_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_diamond_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:hosted_diamond_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_diamond_ore_large_feature"
+        },
+        {
+            "name": "minecraft:hosted_gold_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_gold_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:hosted_iron_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_iron_ore_small_feature"
+        },
+        {
+            "name": "minecraft:hosted_lapis_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:hosted_lapis_ore_feature"
+        },
+        {
+            "name": "minecraft:hosted_redstone_ore_feature"
+        },
+        {
+            "name": "minecraft:ice_crevasse_feature"
+        },
+        {
+            "name": "minecraft:ice_crevasse_snap_to_floor_feature"
+        },
+        {
+            "name": "minecraft:ice_crystal_scatter_feature"
+        },
+        {
+            "name": "minecraft:ice_crystal_single_block_feature"
+        },
+        {
+            "name": "minecraft:ice_crystal_snap_to_floor_feature"
+        },
+        {
+            "name": "minecraft:intrusive_andesite_feature"
+        },
+        {
+            "name": "minecraft:intrusive_diorite_feature"
+        },
+        {
+            "name": "minecraft:intrusive_dirt_feature"
+        },
+        {
+            "name": "minecraft:intrusive_granite_feature"
+        },
+        {
+            "name": "minecraft:intrusive_gravel_ore_feature"
         },
         {
             "name": "minecraft:iron_ore_feature"
@@ -381,6 +456,9 @@
             "name": "minecraft:optional_roofed_tree_with_vines_feature"
         },
         {
+            "name": "minecraft:optional_shelf_mushroom_feature"
+        },
+        {
             "name": "minecraft:optional_spruce_tree_with_vines_feature"
         },
         {
@@ -391,6 +469,12 @@
         },
         {
             "name": "minecraft:optional_upper_cocoa_feature"
+        },
+        {
+            "name": "minecraft:orange_poplar_tree_feature"
+        },
+        {
+            "name": "minecraft:orange_poplar_tree_with_leaf_litter_feature"
         },
         {
             "name": "minecraft:pale_hanging_moss_feature"
@@ -418,6 +502,12 @@
         },
         {
             "name": "minecraft:pink_petals_scatter_feature"
+        },
+        {
+            "name": "minecraft:potent_sulfur_feature"
+        },
+        {
+            "name": "minecraft:potent_sulfur_search_feature"
         },
         {
             "name": "minecraft:random_cherry_tree_feature"
@@ -451,6 +541,18 @@
         },
         {
             "name": "minecraft:random_roofed_forest_feature_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:random_sulfur_spring_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:red_poplar_tree_feature"
+        },
+        {
+            "name": "minecraft:red_poplar_tree_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:red_shrub_single_block_feature"
         },
         {
             "name": "minecraft:redstone_ore_feature"
@@ -537,6 +639,9 @@
             "name": "minecraft:scatter_red_mushroom_feature"
         },
         {
+            "name": "minecraft:scatter_red_shrub_bush_feature"
+        },
+        {
             "name": "minecraft:scatter_river_seagrass_feature"
         },
         {
@@ -579,6 +684,9 @@
             "name": "minecraft:select_cocoa_feature"
         },
         {
+            "name": "minecraft:select_dappled_forest_fallen_tree_decoration"
+        },
+        {
             "name": "minecraft:select_jungle_plant_feature"
         },
         {
@@ -592,6 +700,9 @@
         },
         {
             "name": "minecraft:select_oak_tree_with_leaf_litter_feature"
+        },
+        {
+            "name": "minecraft:select_poplar_tree_feature"
         },
         {
             "name": "minecraft:select_roofed_tree_feature"
@@ -612,7 +723,13 @@
             "name": "minecraft:select_taiga_plant_feature"
         },
         {
+            "name": "minecraft:select_tree_dappled_forest_feature"
+        },
+        {
             "name": "minecraft:select_undecorated_jungle_tree_feature"
+        },
+        {
+            "name": "minecraft:shelf_mushroom_feature"
         },
         {
             "name": "minecraft:short_dry_grass_feature"
@@ -627,6 +744,15 @@
             "name": "minecraft:small_dripstone_snap_to_surface_feature"
         },
         {
+            "name": "minecraft:snow_layer_feature"
+        },
+        {
+            "name": "minecraft:snow_layer_scatter_feature"
+        },
+        {
+            "name": "minecraft:snow_layer_snap_to_floor_feature"
+        },
+        {
             "name": "minecraft:spore_blossom_feature"
         },
         {
@@ -637,6 +763,96 @@
         },
         {
             "name": "minecraft:spruce_tree_with_vines_feature"
+        },
+        {
+            "name": "minecraft:stone_ore_host_feature"
+        },
+        {
+            "name": "minecraft:sulfur_pool_with_potent_sulfur"
+        },
+        {
+            "name": "minecraft:sulfur_pool_with_potent_sulfur_snap_to_surface_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_extra_large_1_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_extra_large_1_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_extra_large_scatter_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_large_1_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_large_1_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_large_2_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_large_2_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_large_scatter_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_1_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_1_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_2_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_2_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_3_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_3_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_medium_scatter_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_1_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_1_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_2_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_2_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_3_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_3_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_4_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_4_with_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_small_scatter_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_trail_to_surface_snap_to_ceiling_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_tuff_feature"
+        },
+        {
+            "name": "minecraft:sulfur_spring_tuff_snap_to_surface_feature"
         },
         {
             "name": "minecraft:sunflower_double_plant_feature"
@@ -721,6 +937,12 @@
         },
         {
             "name": "minecraft:warped_roots_scatter_feature"
+        },
+        {
+            "name": "minecraft:yellow_poplar_tree_feature"
+        },
+        {
+            "name": "minecraft:yellow_poplar_tree_with_leaf_litter_feature"
         }
     ]
 }

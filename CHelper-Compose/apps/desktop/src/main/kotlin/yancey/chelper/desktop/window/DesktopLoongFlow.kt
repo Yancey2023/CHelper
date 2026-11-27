@@ -15,7 +15,7 @@ import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.domain.settings.Settings
 import yancey.chelper.resources.Res
-import yancey.chelper.resources.ic_loong_flow_bubble
+import yancey.chelper.resources.square_terminal
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.feature.loongflow.LoongFlowMiniPanel
 import yancey.chelper.ui.feature.loongflow.LoongFlowMode
@@ -158,7 +158,7 @@ internal fun ApplicationScope.DesktopLoongFlowWindow(
                                 )
                             host.minimized ->
                                 Image(
-                                    painterResource(Res.drawable.ic_loong_flow_bubble),
+                                    painterResource(Res.drawable.square_terminal),
                                     "展开游龙",
                                     Modifier.fillMaxSize()
                                         .pointerInput(model) {

@@ -26,6 +26,8 @@
 #include <chelper/resources/id/ItemId.h>
 #include <chelper/util/CPackMemory.h>
 #include <chelper/util/HashContainer.h>
+#include <deque>
+#include <map>
 #include <memory>
 #include <memory_resource>
 #include <optional>
@@ -63,6 +65,9 @@ namespace CHelper {
 
     using IdEntry = std::variant<NormalIdEntry, NamespaceIdEntry, BlockIdsEntry, ItemIdsEntry>;
 
+    // 类别 -> 完整资源 ID -> 中文 Wiki 媒体网址。
+    using SuggestionMedia = std::map<std::string, std::map<std::string, std::u16string>, std::less<>>;
+
     // Grammar 资源条目：content 复用 JSON 节点表格式，组合节点通过节点 id 绑定。
     // type 用于资源类型校验，避免把其他资源误当作 Grammar 读取。
     struct GrammarEntry {
@@ -79,6 +84,7 @@ namespace CHelper {
         std::pmr::vector<Node::NodeJsonElement> json{CPackMemoryRouter::getAllocationResource()};
         std::pmr::vector<Node::RepeatData> repeat{CPackMemoryRouter::getAllocationResource()};
         std::pmr::vector<Node::NodePerCommand> command{CPackMemoryRouter::getAllocationResource()};
+        std::optional<SuggestionMedia> suggestionMedia;
     };
 
     // 二进制（MessagePack）格式
@@ -150,6 +156,8 @@ namespace CHelper {
 
     private:
         Node::FreeableNodeWithTypes cacheNodes;
+        SuggestionMedia suggestionMedia;
+        std::deque<SuggestionPreview> suggestionPreviews;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> blockNamespaceIds;
         std::shared_ptr<std::pmr::vector<std::shared_ptr<NamespaceId>>> itemNamespaceIds;
 
@@ -158,7 +166,7 @@ namespace CHelper {
          * 非法数据在这里fail-fast，而不是进入Parser导致越界/空指针/未定义行为
          */
         void validate() const;
-        void initializeNamespaceIds();
+        void initializeIds();
         [[nodiscard]] std::vector<GrammarEntry> collectGrammarEntries() const;
 
         void applyId(const IdEntry &entry);

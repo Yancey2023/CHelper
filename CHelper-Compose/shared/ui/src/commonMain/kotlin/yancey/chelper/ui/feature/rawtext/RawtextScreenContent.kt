@@ -153,7 +153,7 @@ fun RawtextScreenContent(
         title = stringResource(Res.string.layout_rawtext_title),
         headerRight = {
             Box {
-                HeaderIconButton(id = Res.drawable.more, contentDescription = "菜单") {
+                HeaderIconButton(id = Res.drawable.ellipsis, contentDescription = "菜单") {
                     menuVisible = true
                 }
                 RawtextHeaderMenu(
@@ -408,10 +408,10 @@ private fun ExperimentalFeatureWarningBanner() {
             modifier = Modifier.size(26.dp).clip(CircleShape).background(Color(0xFFFFA000)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "!",
-                style =
-                    TextStyle(color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            Icon(
+                id = Res.drawable.circle_exclamation_point,
+                modifier = Modifier.size(18.dp),
+                tint = Color.White,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -723,10 +723,11 @@ private fun InlineFeatureChip(
                     .clickable { menuVisible = !menuVisible }
                     .padding(horizontal = 5.dp, vertical = 1.dp)
         ) {
-            Text(
-                text = "⋮",
-                style =
-                    TextStyle(color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+            Icon(
+                id = Res.drawable.ellipsis_vertical,
+                modifier = Modifier.size(14.dp),
+                contentDescription = "片段选项",
+                tint = Color.White,
             )
         }
     }

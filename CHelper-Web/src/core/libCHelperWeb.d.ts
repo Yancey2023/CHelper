@@ -14,6 +14,12 @@ export interface Suggestion {
   title: string
   /** 建议描述。 */
   description: string
+  preview?: SuggestionPreview
+}
+
+export interface SuggestionPreview {
+  kind: 'icon' | 'audio' | 'easing' | 'dyeColor'
+  value: string
 }
 
 /** 命令错误信息。 */

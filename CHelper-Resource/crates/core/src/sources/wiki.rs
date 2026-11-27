@@ -16,7 +16,7 @@ use std::path::Path;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-const WIKI_API: &str = "https://zh.minecraft.wiki/api.php";
+pub(super) const WIKI_API: &str = "https://zh.minecraft.wiki/api.php";
 const WIKI_PAGE: &str = "https://zh.minecraft.wiki/w/";
 /// 缓存 TTL：1 小时（与 caidlist wiki.js 一致）。
 const TTL: Duration = Duration::from_secs(60 * 60);

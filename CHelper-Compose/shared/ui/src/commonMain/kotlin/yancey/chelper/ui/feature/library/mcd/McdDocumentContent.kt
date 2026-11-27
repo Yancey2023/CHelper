@@ -252,7 +252,7 @@ private fun ChainHeader(name: String) {
         modifier = Modifier.padding(bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(id = Res.drawable.share, contentDescription = null, modifier = Modifier.size(16.dp))
+        Icon(id = Res.drawable.share_2, contentDescription = null, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
         Text(
             text = name,

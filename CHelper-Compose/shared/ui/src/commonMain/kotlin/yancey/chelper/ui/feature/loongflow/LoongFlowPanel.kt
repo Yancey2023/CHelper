@@ -42,9 +42,13 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import yancey.chelper.domain.library.LibraryFunction
 import yancey.chelper.resources.Res
-import yancey.chelper.resources.ic_loong_flow_bubble
+import yancey.chelper.resources.maximize
+import yancey.chelper.resources.minus
+import yancey.chelper.resources.square_terminal
+import yancey.chelper.resources.x
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.dialog.AppAlertDialog
+import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.platform.AppBackHandler
@@ -143,7 +147,7 @@ fun LoongFlowPanel(
                 ) {
                     // 专属矢量图腾 + 模式标题
                     Image(
-                        painter = painterResource(Res.drawable.ic_loong_flow_bubble),
+                        painter = painterResource(Res.drawable.square_terminal),
                         contentDescription = "LoongFlow Logo",
                         modifier = Modifier.size(20.dp),
                     )
@@ -189,14 +193,11 @@ fun LoongFlowPanel(
                                 .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = "⛶",
-                            style =
-                                TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = CHelperTheme.colors.textSecondary,
-                                ),
+                        Icon(
+                            id = Res.drawable.maximize,
+                            modifier = Modifier.size(16.dp),
+                            contentDescription = "切换窗口大小",
+                            tint = CHelperTheme.colors.textSecondary,
                         )
                     }
 
@@ -211,14 +212,11 @@ fun LoongFlowPanel(
                                 .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = "─",
-                            style =
-                                TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = CHelperTheme.colors.textSecondary,
-                                ),
+                        Icon(
+                            id = Res.drawable.minus,
+                            modifier = Modifier.size(16.dp),
+                            contentDescription = "最小化",
+                            tint = CHelperTheme.colors.textSecondary,
                         )
                     }
 
@@ -233,14 +231,11 @@ fun LoongFlowPanel(
                                 .background(CHelperTheme.colors.textSecondary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = "✕",
-                            style =
-                                TextStyle(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = CHelperTheme.colors.textSecondary,
-                                ),
+                        Icon(
+                            id = Res.drawable.x,
+                            modifier = Modifier.size(16.dp),
+                            contentDescription = "关闭",
+                            tint = CHelperTheme.colors.textSecondary,
                         )
                     }
                 }

@@ -1,3 +1,8 @@
+import javax.inject.Inject
+import org.gradle.api.Action
+import org.gradle.api.Task
+import org.gradle.api.file.FileSystemOperations
+
 plugins {
     id("chelper.multiplatform-library")
     alias(libs.plugins.compose.multiplatform)
@@ -38,3 +43,21 @@ compose.resources {
     publicResClass = true
     packageOfResClass = "yancey.chelper.resources"
 }
+
+// Compose 1.12 copies into this task's existing output, including after resource renames.
+// Start each copy from an empty output so deleted icons do not remain in incremental APKs.
+abstract class ClearComposeAssetOutput
+@Inject
+constructor(private val fileSystem: FileSystemOperations) : Action<Task> {
+    override fun execute(task: Task) {
+        fileSystem.delete { delete(task.outputs.files.singleFile) }
+    }
+}
+
+val clearComposeAssetOutput = objects.newInstance<ClearComposeAssetOutput>()
+
+tasks
+    .matching { it.name == "copyAndroidMainComposeResourcesToAndroidAssets" }
+    .configureEach {
+        doFirst(clearComposeAssetOutput)
+    }

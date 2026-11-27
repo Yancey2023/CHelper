@@ -127,7 +127,7 @@ fun PublicLibraryContent(
                 )
             }
             Icon(
-                id = Res.drawable.refresh,
+                id = Res.drawable.refresh_cw,
                 modifier =
                     Modifier.clickable { onRefresh() }
                         .padding(5.dp)
@@ -239,7 +239,7 @@ fun PublicLibraryContent(
                             if (isRecommend) {
                                 Spacer(Modifier.width(4.dp))
                                 Image(
-                                    painter = painterResource(Res.drawable.refresh),
+                                    painter = painterResource(Res.drawable.refresh_cw),
                                     contentDescription = "刷新猜你喜欢",
                                     modifier =
                                         Modifier.size(12.dp)

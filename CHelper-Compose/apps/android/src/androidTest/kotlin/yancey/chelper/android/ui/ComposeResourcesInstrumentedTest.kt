@@ -18,8 +18,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import yancey.chelper.resources.Res
 import yancey.chelper.resources.app_name
-import yancey.chelper.resources.ic_loong_flow_bubble
 import yancey.chelper.resources.pack_icon
+import yancey.chelper.resources.square_terminal
 
 /** Exercises Android's actual Compose asset reader, rather than desktop classpath resources. */
 @RunWith(AndroidJUnit4::class)
@@ -32,7 +32,7 @@ class ComposeResourcesInstrumentedTest {
             Column {
                 Image(painterResource(Res.drawable.pack_icon), "Raster icon", Modifier.size(48.dp))
                 Image(
-                    painterResource(Res.drawable.ic_loong_flow_bubble),
+                    painterResource(Res.drawable.square_terminal),
                     "Vector icon",
                     Modifier.size(48.dp),
                 )

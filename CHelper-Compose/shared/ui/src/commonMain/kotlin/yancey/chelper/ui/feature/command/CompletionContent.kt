@@ -34,11 +34,15 @@ import org.jetbrains.compose.resources.*
 import yancey.chelper.domain.command.CommandProblem
 import yancey.chelper.domain.command.CommandResult
 import yancey.chelper.domain.command.CommandSuggestion
+import yancey.chelper.domain.command.SuggestionAudioPlayer
+import yancey.chelper.domain.command.SuggestionPreview
+import yancey.chelper.domain.command.isWikiSuggestionAudioUrl
 import yancey.chelper.resources.*
 import yancey.chelper.ui.designsystem.CHelperTheme
 import yancey.chelper.ui.designsystem.layout.RootView
 import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
+import yancey.chelper.ui.platform.ClientMessages
 
 enum class CompletionAction {
     Undo,
@@ -123,6 +127,8 @@ fun CompletionContent(
     suggestionCount: Int = state.suggestions.size,
     suggestionAt: @Composable (Int) -> CommandSuggestion? = { state.suggestions.getOrNull(it) },
     resultsEnabled: Boolean = true,
+    previewAudioPlayer: SuggestionAudioPlayer? = null,
+    previewRevision: Long = 0,
     onVisibleSuggestions: (List<Int>) -> Unit = {},
     showMenu: Boolean,
     editorMode: Boolean,
@@ -136,6 +142,16 @@ fun CompletionContent(
     editor: @Composable (Modifier) -> Unit,
 ) {
     val suggestionsState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val audioController =
+        remember(previewRevision, resultsEnabled, previewAudioPlayer) {
+            previewAudioPlayer?.let { player ->
+                AudioPreviewController(scope, player) { ClientMessages.show("无法试听该音频") }
+            }
+        }
+    DisposableEffect(audioController) {
+        onDispose { audioController?.clear() }
+    }
     val reportVisible by rememberUpdatedState(onVisibleSuggestions)
     LaunchedEffect(suggestionsState, isCrowded) {
         snapshotFlow {
@@ -161,11 +177,13 @@ fun CompletionContent(
                         resultsEnabled = resultsEnabled,
                     )
                 }
-                LazyColumn(state = suggestionsState, modifier = Modifier.fillMaxSize().weight(1f)) {
-                    items(if (isCrowded) (suggestionCount + 1) else suggestionCount) {
-                        suggestionIndex ->
-                        if (isCrowded) {
-                            if (suggestionIndex == 0) {
+                BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+                    val stackAudio = maxWidth <= 576.dp && maxHeight >= 128.dp
+                    val audioWidth = (maxWidth * 0.32f).coerceIn(112.dp, 192.dp)
+                    LazyColumn(state = suggestionsState, modifier = Modifier.fillMaxSize()) {
+                        items(if (isCrowded) (suggestionCount + 1) else suggestionCount) {
+                            suggestionIndex ->
+                            if (isCrowded && suggestionIndex == 0) {
                                 CompletionScreenTopBar(
                                     state.structure,
                                     state.hint,
@@ -175,57 +193,45 @@ fun CompletionContent(
                                     resultsEnabled,
                                 )
                             } else {
-                                val realIndex = suggestionIndex - 1
-                                val suggestion = suggestionAt(realIndex)
-                                val suggestionText =
-                                    suggestion?.let {
-                                        it.name +
-                                            (it.description?.let { description ->
-                                                " - $description"
-                                            } ?: "")
-                                    } ?: ""
-                                Text(
-                                    modifier =
-                                        Modifier.fillMaxWidth()
-                                            .clickable(
-                                                enabled = resultsEnabled && suggestion != null,
-                                                onClick = { onSuggestion(realIndex) },
+                                val index = suggestionIndex - if (isCrowded) 1 else 0
+                                val suggestion = suggestionAt(index)
+                                val audio =
+                                    (suggestion?.preview as? SuggestionPreview.Audio)
+                                        ?.url
+                                        ?.takeIf {
+                                            previewAudioPlayer != null &&
+                                                isWikiSuggestionAudioUrl(it)
+                                        }
+                                        ?.let { AudioPreviewRequest(index, it) }
+                                val audioState by
+                                    remember(audio, audioController) {
+                                        derivedStateOf {
+                                            audioController?.state?.takeIf { it.request == audio }
+                                        }
+                                    }
+                                val controls: (@Composable (Modifier) -> Unit)? =
+                                    if (audio != null && audioController != null) {
+                                        { modifier ->
+                                            SuggestionAudioControls(
+                                                audioState,
+                                                resultsEnabled,
+                                                onToggle = { audioController.toggle(audio) },
+                                                onSeek = { audioController.seek(audio, it) },
+                                                modifier = modifier,
                                             )
-                                            .heightIn(min = 32.dp)
-                                            .padding(5.dp),
-                                    text = suggestionText,
-                                    style = TextStyle(fontSize = 14.sp),
+                                        }
+                                    } else null
+                                CompletionSuggestionRow(
+                                    suggestion = suggestion,
+                                    compact = isCrowded,
+                                    resultsEnabled = resultsEnabled,
+                                    onApply = { onSuggestion(index) },
+                                    stackAudio = stackAudio && audioState != null,
+                                    audioModifier =
+                                        if (audioState != null) Modifier.width(audioWidth)
+                                        else Modifier,
+                                    audioControls = controls,
                                 )
-                            }
-                        } else {
-                            val suggestion = suggestionAt(suggestionIndex)
-                            Column(
-                                modifier =
-                                    Modifier.clickable(
-                                            enabled = resultsEnabled && suggestion != null,
-                                            onClick = { onSuggestion(suggestionIndex) },
-                                        )
-                                        .heightIn(min = 32.dp)
-                                        .padding(5.dp)
-                            ) {
-                                suggestion?.name?.let {
-                                    Text(
-                                        text = it,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        style = TextStyle(fontSize = 14.sp),
-                                    )
-                                }
-                                suggestion?.description?.let {
-                                    Text(
-                                        text = it,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        style =
-                                            TextStyle(
-                                                color = CHelperTheme.colors.textSecondary,
-                                                fontSize = 14.sp,
-                                            ),
-                                    )
-                                }
                             }
                         }
                     }
@@ -240,12 +246,12 @@ fun CompletionContent(
                     horizontalArrangement = Arrangement.SpaceAround,
                 ) {
                     ToolbarItem(
-                        id = Res.drawable.arrow_back_up,
+                        id = Res.drawable.undo,
                         description = stringResource(Res.string.layout_completion_undo),
                         onClick = { onAction(CompletionAction.Undo) },
                     )
                     ToolbarItem(
-                        id = Res.drawable.arrow_forward_up,
+                        id = Res.drawable.redo,
                         description = stringResource(Res.string.layout_completion_redo),
                         onClick = { onAction(CompletionAction.Redo) },
                     )
@@ -255,7 +261,7 @@ fun CompletionContent(
                         onClick = { onAction(CompletionAction.Clear) },
                     )
                     ToolbarItem(
-                        id = Res.drawable.history,
+                        id = Res.drawable.rotate_ccw_clock,
                         description = stringResource(Res.string.layout_completion_history),
                         onClick = { onAction(CompletionAction.History) },
                     )
@@ -294,12 +300,14 @@ fun CompletionContent(
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
                         style = TextStyle(color = Color.White, fontSize = 13.sp),
                     )
-                    Text(
-                        text = "×",
+                    Icon(
+                        id = Res.drawable.x,
                         modifier =
                             Modifier.clickable { onAction(CompletionAction.DismissHint) }
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                        style = TextStyle(color = Color.White, fontSize = 18.sp),
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                                .size(18.dp),
+                        contentDescription = "关闭提示",
+                        tint = Color.White,
                     )
                 }
             }
@@ -338,5 +346,60 @@ fun CompletionContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CompletionSuggestionRow(
+    suggestion: CommandSuggestion?,
+    compact: Boolean,
+    resultsEnabled: Boolean,
+    onApply: () -> Unit,
+    stackAudio: Boolean,
+    audioModifier: Modifier,
+    audioControls: (@Composable (Modifier) -> Unit)?,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier =
+                    Modifier.weight(1f)
+                        .clickable(
+                            enabled = resultsEnabled && suggestion != null,
+                            onClick = onApply,
+                        )
+                        .heightIn(min = 32.dp)
+                        .padding(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                SuggestionVisualPreview(suggestion?.preview)
+                Column(modifier = Modifier.weight(1f)) {
+                    if (suggestion != null) {
+                        val description = suggestion.description
+                        Text(
+                            text =
+                                if (compact && description != null)
+                                    "${suggestion.name} - $description"
+                                else suggestion.name,
+                            style = TextStyle(fontSize = 14.sp),
+                        )
+                        if (!compact && description != null) {
+                            Text(
+                                text = description,
+                                style =
+                                    TextStyle(
+                                        color = CHelperTheme.colors.textSecondary,
+                                        fontSize = 14.sp,
+                                    ),
+                            )
+                        }
+                    }
+                }
+            }
+            if (!stackAudio) audioControls?.invoke(audioModifier.padding(end = 5.dp))
+        }
+        if (stackAudio)
+            audioControls?.invoke(Modifier.fillMaxWidth().padding(start = 5.dp, end = 5.dp))
     }
 }

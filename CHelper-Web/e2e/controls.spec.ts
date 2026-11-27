@@ -1,5 +1,171 @@
 import { expect, test, type Page } from '@playwright/test'
 
+test('centers completion icons and restores them on scroll and reload without the wiki', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 640 })
+  // The opaque artwork sits in the upper-right of this transparent PNG.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAF0lEQVR4nGNgoBRU6zr/B+EBUMgwnAEAbQkLfVWFzeMAAAAASUVORK5CYII=',
+    'base64',
+  )
+  let wikiUnavailable = false
+  await page.route('https://zh.minecraft.wiki/images/*.png', (route) =>
+    wikiUnavailable
+      ? route.abort()
+      : route.fulfill({
+          contentType: 'image/png',
+          headers: { 'access-control-allow-origin': '*', 'cache-control': 'no-store' },
+          body: png,
+        }),
+  )
+  await page.goto('/')
+  const editor = page.getByRole('textbox', { name: '命令输入' })
+  const list = page.getByRole('listbox', { name: '命令补全' })
+  await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
+  await editor.fill('give @s ')
+
+  const firstIcon = list.locator('canvas').first()
+  const index = await firstIcon.evaluate((icon) =>
+    icon.closest('[data-index]')!.getAttribute('data-index'),
+  )
+  const selector = `[data-index="${index}"] canvas`
+  const icon = list.locator(selector)
+  const pixel = () =>
+    icon.evaluate((canvas: HTMLCanvasElement) => [
+      ...canvas.getContext('2d')!.getImageData(28, 28, 1, 1).data,
+    ])
+  await expect.poll(pixel).toEqual([123, 45, 67, 255])
+  const rowAlignment = await icon.evaluate((canvas: HTMLCanvasElement) => {
+    const card = canvas.closest('[data-slot="card"]')!
+    const centerY = (element: Element) => {
+      const { top, height } = element.getBoundingClientRect()
+      return top + height / 2
+    }
+    return [centerY(canvas) - centerY(card), centerY(canvas.nextElementSibling!) - centerY(card)]
+  })
+  expect(rowAlignment).toEqual([0, 0])
+
+  await list.evaluate((element) => element.scrollTo(0, 6000))
+  await expect(icon).toHaveCount(0)
+  wikiUnavailable = true
+  const restoredPixel = await list.evaluate((element, iconSelector) => {
+    return new Promise<number[]>((resolve) => {
+      const observer = new MutationObserver(() => {
+        const canvas = element.querySelector<HTMLCanvasElement>(iconSelector)
+        if (!canvas) return
+        observer.disconnect()
+        requestAnimationFrame(() => {
+          resolve([...canvas.getContext('2d')!.getImageData(28, 28, 1, 1).data])
+        })
+      })
+      observer.observe(element, { childList: true, subtree: true })
+      element.scrollTo(0, 0)
+    })
+  }, selector)
+  expect(restoredPixel).toEqual([123, 45, 67, 255])
+
+  await page.reload()
+  await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
+  await editor.fill('give @s ')
+  await expect.poll(pixel).toEqual([123, 45, 67, 255])
+})
+
+test('audio suggestions support pause, resume, and seeking without applying the command', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'Audio', {
+      value: function Audio() {
+        const player = document.createElement('audio')
+        Object.defineProperty(player, 'duration', { get: () => 30 })
+        const context = window as Window & { testAudio: HTMLAudioElement }
+        context.testAudio = player
+        return player
+      },
+    })
+    HTMLMediaElement.prototype.play = async () => {}
+    HTMLMediaElement.prototype.pause = () => {}
+    HTMLMediaElement.prototype.load = () => {}
+  })
+  await page.goto('/')
+  await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
+  const editor = page.getByRole('textbox', { name: '命令输入' })
+  await editor.click()
+  await page.keyboard.insertText('playsound random.levelu')
+
+  const play = page.getByRole('button', { name: '播放试听' }).first()
+  const pause = page.getByRole('button', { name: '暂停试听' })
+  const buttonStyle = (element: Element) => {
+    const { backgroundColor, borderColor, borderRadius, width } = getComputedStyle(element)
+    return { backgroundColor, borderColor, borderRadius, width }
+  }
+  expect(await play.evaluate(buttonStyle)).toEqual(
+    await page.getByRole('button', { name: '复制', exact: true }).evaluate(buttonStyle),
+  )
+  await play.click()
+  await expect(pause).toBeVisible()
+  await expect(pause.locator('svg.lucide-pause')).toBeVisible()
+  await expect(editor).toHaveText('playsound random.levelu')
+  await expect(editor).toBeFocused()
+
+  const progress = page.getByRole('slider', { name: '播放进度' })
+  const timeline = page.locator('[data-slot="audio-timeline"]')
+  const readPosition = async () => Number(await progress.getAttribute('aria-valuenow'))
+  for (const slot of ['slider-track', 'slider-range']) {
+    const radius = await timeline
+      .locator(`[data-slot="${slot}"]`)
+      .evaluate((element) => Number.parseFloat(getComputedStyle(element).borderTopLeftRadius))
+    expect(radius).toBeGreaterThan(0)
+  }
+  const duration = timeline.getByText('0:30', { exact: true })
+  await expect(duration).toBeVisible()
+  await page.evaluate(() => {
+    const { testAudio } = window as Window & { testAudio: HTMLAudioElement }
+    testAudio.currentTime = 6
+    testAudio.dispatchEvent(new Event('timeupdate'))
+  })
+  await expect(progress).toHaveAttribute('aria-valuenow', '6')
+  await expect(timeline.getByText('0:06', { exact: true })).toBeVisible()
+  await expect(progress).toHaveAttribute('aria-valuetext', '0:06 / 0:30')
+  await pause.click()
+  await expect(play.locator('svg.lucide-play')).toBeVisible()
+
+  const track = (await timeline.locator('[data-slot="slider-track"]').boundingBox())!
+  const y = track.y + track.height / 2
+  await page.mouse.move(track.x + track.width * 0.2, y)
+  await page.mouse.down()
+  await page.mouse.move(track.x + track.width * 0.75, y, { steps: 5 })
+  await page.mouse.up()
+  await expect.poll(readPosition).toBeGreaterThan(18)
+  await expect(timeline.getByText('0:06', { exact: true })).toHaveCount(0)
+  await expect(duration).toBeVisible()
+
+  const draggedTime = await readPosition()
+  await progress.press('ArrowLeft')
+  const selectedTime = await readPosition()
+  expect(selectedTime).toBeLessThan(draggedTime)
+  expect(
+    await page.evaluate(
+      () => (window as Window & { testAudio: HTMLAudioElement }).testAudio.currentTime,
+    ),
+  ).toBeCloseTo(selectedTime)
+
+  await play.press('Enter')
+  await expect(pause).toBeVisible()
+  expect(await readPosition()).toBeCloseTo(selectedTime)
+  await expect(editor).toHaveText('playsound random.levelu')
+  await page
+    .getByRole('option')
+    .filter({ hasText: /^random\.levelup/ })
+    .first()
+    .click()
+  await expect
+    .poll(async () => (await editor.textContent())?.trimEnd())
+    .toBe('playsound random.levelup')
+  await expect(progress).toHaveCount(0)
+})
+
 test('the single-column layout uses consistent gaps on wide and narrow screens', async ({
   page,
 }) => {

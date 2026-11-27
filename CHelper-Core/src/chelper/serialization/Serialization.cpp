@@ -144,6 +144,9 @@ namespace CHelper {
             const IdEntry entry = BlockIdsEntry{"block", blockIds};
             writeJsonToFileWithCreateDirectory(path / "id" / "block.json", entry);
         }
+        if (!suggestionMedia.empty()) {
+            writeJsonToFileWithCreateDirectory(path / "suggestion_media.json", suggestionMedia);
+        }
         for (const auto &entry: collectGrammarEntries()) {
             writeJsonToFileWithCreateDirectory(path / "grammer" / (entry.id + ".json"), entry);
         }
@@ -173,7 +176,8 @@ namespace CHelper {
         std::vector<GrammarEntry> grammarEntries = collectGrammarEntries();
         // jsonNodes 不可拷贝（FreeableNodeWithTypes），通过引用写出
         auto value = glz::obj{"manifest", manifest, "id", idEntries, "grammar", grammarEntries,
-                              "json", jsonNodes, "repeat", repeatNodeData, "command", *commands};
+                              "json", jsonNodes, "repeat", repeatNodeData, "command", *commands,
+                              "suggestionMedia", suggestionMedia};
         std::string buffer;
         const auto error = glz::write_json(value, buffer);
         if (bool(error)) [[unlikely]] {
@@ -211,6 +215,7 @@ namespace CHelper {
         writeOne(repeatNodeData);
         writeOne(commands);
         writeOne(collectGrammarEntries());
+        if (!suggestionMedia.empty()) writeOne(suggestionMedia);
         buffer.resize(ix);
         std::ofstream ostream(path, std::ios::binary);
         if (!ostream.is_open()) [[unlikely]] {
@@ -251,7 +256,11 @@ namespace CHelper::serialization {
                 readJsonFromFile(entry, file.path(), ctx);
                 cpack->applyId(entry);
             }
-            cpack->initializeNamespaceIds();
+            if (const auto mediaPath = path / "suggestion_media.json"; std::filesystem::exists(mediaPath)) {
+                LoadTrail::Scope fileScope(trail, R"(file "{}")", mediaPath.string());
+                readJsonFromFile(cpack->suggestionMedia, mediaPath, ctx);
+            }
+            cpack->initializeIds();
             // Grammar 是按资源类型目录发现的，不绑定 target_selector 或任何固定文件名。
             // 资源包之间可以共享父目录中的 Grammar 资源（例如 vanilla/experiment）。
             std::vector<std::filesystem::path> grammarDirectories;
@@ -348,7 +357,8 @@ namespace CHelper::serialization {
             for (const auto &entry: data.id) {
                 cpack->applyId(entry);
             }
-            cpack->initializeNamespaceIds();
+            if (data.suggestionMedia) cpack->suggestionMedia = std::move(*data.suggestionMedia);
+            cpack->initializeIds();
             for (auto &entry: data.grammar) {
                 cpack->applyGrammar(std::move(entry), trail);
             }
@@ -407,6 +417,9 @@ namespace CHelper::serialization {
             if (it < end) {
                 readSection(cpackData.grammar, "grammar data");
             }
+            if (it < end) {
+                readSection(cpack->suggestionMedia, "suggestion media");
+            }
             if (it != end) throw std::runtime_error("unexpected trailing bytes in binary CPack");
             cpack->manifest = std::move(cpackData.manifest);
             cpack->normalIds = std::move(cpackData.normalIds);
@@ -416,7 +429,7 @@ namespace CHelper::serialization {
             cpack->jsonNodes = std::move(cpackData.jsonNodes);
             cpack->repeatNodeData = std::move(cpackData.repeatNodeData);
             cpack->commands = std::move(cpackData.commands);
-            cpack->initializeNamespaceIds();
+            cpack->initializeIds();
             cpack->grammarGraphs.reserve(cpackData.grammar.size());
             cpack->grammarNodes.reserve(cpackData.grammar.size());
             for (auto &entry: cpackData.grammar) {

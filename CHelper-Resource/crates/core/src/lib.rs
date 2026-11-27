@@ -21,6 +21,7 @@ mod output_stage;
 pub mod pipeline;
 pub mod resource_definitions;
 pub mod sources;
+pub mod suggestion_media;
 pub mod support;
 pub mod translate;
 pub mod wiki_catalog;

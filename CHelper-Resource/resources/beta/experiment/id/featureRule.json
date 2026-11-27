@@ -63,6 +63,9 @@
             "name": "minecraft:crimson_roots_warped_feature"
         },
         {
+            "name": "minecraft:dappled_forest_after_surface_brown_mushroom_feature_rules"
+        },
+        {
             "name": "minecraft:deep_cold_ocean_after_surface_seagrass_feature_rules"
         },
         {
@@ -106,6 +109,15 @@
         },
         {
             "name": "minecraft:grove_spruce_tree_feature"
+        },
+        {
+            "name": "minecraft:ice_caves_after_surface_ice_crystal_feature_rules"
+        },
+        {
+            "name": "minecraft:ice_caves_after_surface_snow_layer_feature_rules"
+        },
+        {
+            "name": "minecraft:ice_caves_surface_ice_crevasse_feature_rules"
         },
         {
             "name": "minecraft:jungle_after_surface_flowers_feature_rules"
@@ -345,6 +357,75 @@
             "name": "minecraft:overworld_underground_gravel_ore_feature"
         },
         {
+            "name": "minecraft:overworld_underground_hosted_coal_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_coal_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_copper_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_diamond_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_diamond_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_diamond_ore_large_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_gold_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_gold_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_iron_ore_middle_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_iron_ore_small_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_iron_ore_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_lapis_ore_buried_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_lapis_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_redstone_ore_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_hosted_redstone_ore_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_andesite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_andesite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_diorite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_diorite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_dirt_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_granite_lower_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_granite_upper_feature"
+        },
+        {
+            "name": "minecraft:overworld_underground_intrusive_gravel_ore_feature"
+        },
+        {
             "name": "minecraft:overworld_underground_iron_ore_feature"
         },
         {
@@ -432,10 +513,22 @@
             "name": "minecraft:savanna_surface_tall_grass_feature"
         },
         {
+            "name": "minecraft:scatter_red_shrub_bush_feature_rules"
+        },
+        {
+            "name": "minecraft:scatter_tree_dappled_forest_feature_rules"
+        },
+        {
             "name": "minecraft:sculk_vein_feature"
         },
         {
             "name": "minecraft:small_dripstone_feature"
+        },
+        {
+            "name": "minecraft:sulfur_caves_before_surface_sulfur_spring_trail_to_surface_feature_rules"
+        },
+        {
+            "name": "minecraft:sulfur_caves_surface_sulfur_pool_with_potent_sulfur_feature_rules"
         },
         {
             "name": "minecraft:swamp_after_surface_brown_mushroom_feature_rules"
