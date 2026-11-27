@@ -1285,7 +1285,7 @@ struct glz::meta<CHelper::IdEntry> {
 template<>
 struct glz::meta<CHelper::CPackJsonData> {
     using T = CHelper::CPackJsonData;
-    static constexpr auto value = glz::object("manifest", &T::manifest, "id", &T::id, "grammar", &T::grammar, "json", &T::json, "repeat", &T::repeat, "command", &T::command);
+    static constexpr auto value = glz::object("manifest", &T::manifest, "id", &T::id, "grammar", &T::grammar, "json", &T::json, "repeat", &T::repeat, "command", &T::command, "suggestionMedia", &T::suggestionMedia);
 };
 
 template<>

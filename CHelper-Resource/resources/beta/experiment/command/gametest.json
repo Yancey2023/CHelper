@@ -9,7 +9,7 @@
         "/gametest pos",
         "/gametest run <testName: string> <stopOnFailure: Boolean> <repeatCount: int> [rotationSteps: int]",
         "/gametest run <testName: string> [rotationSteps: int]",
-        "/gametest runset <tag list (optional flags 'withoutTags' and 'rotationSteps'): message>",
+        "/gametest runset [tag: string] [rotationSteps: int]",
         "/gametest runsetuntilfail [tag: string] [rotationSteps: int]",
         "/gametest runthese",
         "/gametest runthis",
@@ -134,13 +134,6 @@
                 "name": "stopall",
                 "description": "停止执行所有测试。"
             }
-        },
-        "<tag list (optional flags 'withoutTags' and 'rotationSteps'): message>": {
-            "type": "STRING",
-            "brief": "测试标签列表",
-            "description": "指定要执行的测试标签。",
-            "canContainSpace": true,
-            "ignoreLater": true
         }
     }
 }

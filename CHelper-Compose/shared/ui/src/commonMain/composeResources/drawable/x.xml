@@ -1,20 +1,21 @@
+<!-- Lucide x, @lucide/vue 1.77.0. See the in-app open source notices. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:pathData="M18,6l-12,12"
-        android:strokeLineJoin="round"
-        android:strokeWidth="2"
+        android:pathData="M18 6 6 18"
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeLineCap="round" />
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path
-        android:pathData="M6,6l12,12"
-        android:strokeLineJoin="round"
-        android:strokeWidth="2"
+        android:pathData="m6 6 12 12"
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeLineCap="round" />
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

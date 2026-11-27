@@ -17,6 +17,9 @@ cargo run --release -- generate release beta
 # 强制刷新缓存（重新解析分支指向并重新下载）
 cargo run --release -- generate --refresh
 
+# 单独刷新 resources/ 中内置包的补全媒体地址
+cargo run --release -- refresh-suggestion-media
+
 # 单独缓存全部命令 Wiki 原文，供子 agent 逐命令审阅
 cargo run --release -- cache-command-wiki
 
@@ -52,7 +55,8 @@ output/chelper/{release,beta,netease}/{vanilla,experiment}/
 ├─ command/*.json
 ├─ grammer/*.json
 ├─ json/*.json
-└─ repeat/*.json
+├─ repeat/*.json
+└─ suggestion_media.json
 ```
 
 生成时读取已复核命令结构，`command` 中的说明和 brief 根据原始Wiki及少量原文
@@ -64,6 +68,15 @@ CHelper-Core 可直接打包这份完整产物：
 ```powershell
 CHelperResourceGenerator.exe CHelper-Resource/output/chelper CHelper-Resource/generated
 ```
+
+在仓库根目录运行以下命令。
+
+```bash
+mise run resources:pack
+mise run resources:update
+```
+
+`resources:pack` 使用仓库中的 `CHelper-Resource/resources`，将当前版本打包到 `build/artifacts/resources` 供 Web 和 Compose 构建消费。`resources:update` 按 `config.toml` 抓取上游版本并验证命令原文和复核补丁，生成的包放在 `build/artifacts/resources-updated`。复核生成的资源源文件后再更新仓库内置快照。
 
 `output/command_wiki/<命令>/page.wiki` 保存原始页面 wikitext，`source.json` 保存来源链接、
 重定向链和抓取状态。`index.json` 列出所有命令，`overview` 缓存命令总览。
@@ -85,6 +98,7 @@ netease 数据取自 1.21.50.07 时代（`config.toml` 的 `[netease] commit` �
 ## 环境要求
 
 - Rust 1.85+（开发时使用 1.99；依赖以 edition 2021 构建未设 MSRV 下限）
+- 从仓库根目录打包需要 Python 3.11+、CMake 和 Ninja
 - 网络访问：GitHub（公开仓库 tarball、bedrock-samples）、zh.minecraft.wiki、Mojang piston
 - git CLI（仅用于解析分支指向的 commit）
 

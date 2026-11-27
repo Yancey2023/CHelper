@@ -37,13 +37,12 @@ build_test.ps1
 /build-logic/.kotlin/
 
 generated/
+/apps/android/src/main/baseline-prof.txt
+/apps/android/local-baseline-profile/
 performance/
 baselines/
 
-# Keep reviewed ART profiles and measured baselines in version control.
-!apps/android/src/main/generated/
-!apps/android/src/main/generated/baselineProfiles/
-!apps/android/src/main/generated/baselineProfiles/*.txt
+# Keep measured baselines in version control.
 !performance/
 !performance/profile-capture.json
 !performance/baselines/

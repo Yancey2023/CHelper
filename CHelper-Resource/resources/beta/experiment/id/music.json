@@ -130,6 +130,9 @@
             "name": "music.overworld.forest"
         },
         {
+            "name": "music.overworld.frozen_peaks"
+        },
+        {
             "name": "music.overworld.grove",
             "description": "雪林背景音乐"
         },
@@ -150,8 +153,14 @@
             "description": "繁茂洞穴背景音乐"
         },
         {
+            "name": "music.overworld.meadow"
+        },
+        {
             "name": "music.overworld.mesa",
             "description": "恶地背景音乐"
+        },
+        {
+            "name": "music.overworld.old_growth_taiga"
         },
         {
             "name": "music.overworld.snowy_slopes",
@@ -160,6 +169,12 @@
         {
             "name": "music.overworld.stony_peaks",
             "description": "裸岩山峰背景音乐"
+        },
+        {
+            "name": "music.overworld.sulfur_caves"
+        },
+        {
+            "name": "music.overworld.swamp_music"
         },
         {
             "name": "record.11",
@@ -176,6 +191,10 @@
         {
             "name": "record.blocks",
             "description": "音乐唱片（C418 - blocks）"
+        },
+        {
+            "name": "record.bounce",
+            "description": "音乐唱片（fingerspit - Bounce）"
         },
         {
             "name": "record.cat",

@@ -417,8 +417,8 @@ private fun SearchLibraryItem(
                                     .clip(CircleShape)
                                     .background(CHelperTheme.colors.backgroundComponent),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(resource = Res.drawable.ic_user),
-                            error = painterResource(resource = Res.drawable.ic_user),
+                            placeholder = painterResource(resource = Res.drawable.user_round),
+                            error = painterResource(resource = Res.drawable.user_round),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
@@ -432,14 +432,14 @@ private fun SearchLibraryItem(
                         if ((author.tier ?: 0) >= 2) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_advanced),
+                                painter = painterResource(Res.drawable.shield_check),
                                 contentDescription = "Advanced",
                                 modifier = Modifier.size(12.dp),
                             )
                         } else if ((author.tier ?: 0) >= 1) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_normal),
+                                painter = painterResource(Res.drawable.badge_check),
                                 contentDescription = "Normal",
                                 modifier = Modifier.size(12.dp),
                             )
@@ -460,7 +460,7 @@ private fun SearchLibraryItem(
                     library.likeCount?.let { likes ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
-                                painter = painterResource(Res.drawable.ic_heart),
+                                painter = painterResource(Res.drawable.heart),
                                 contentDescription = null,
                                 modifier = Modifier.size(12.dp),
                                 colorFilter = ColorFilter.tint(CHelperTheme.colors.textSecondary),

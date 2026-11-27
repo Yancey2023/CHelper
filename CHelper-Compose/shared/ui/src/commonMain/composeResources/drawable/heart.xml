@@ -1,13 +1,14 @@
+<!-- Lucide heart, @lucide/vue 1.77.0. See the in-app open source notices. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
+        android:pathData="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
         android:fillColor="#00000000"
-        android:pathData="M19.5,12.572l-7.5,7.428l-7.5,-7.428a5,5 0,1 1,7.5 -6.566a5,5 0,1 1,7.5 6.572"
+        android:strokeColor="#FFFFFF"
         android:strokeWidth="2"
-        android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>

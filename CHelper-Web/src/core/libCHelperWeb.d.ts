@@ -1,7 +1,7 @@
 /**
  * CHelper 内核（emscripten）JS 绑定模块的类型声明。
  *
- * 运行时实现由 scripts/build_web_core.py 在每次构建内核时生成：
+ * WASM 模块由 mise run core:wasm 生成，由同目录的适配器加载：
  * emscripten 胶水代码 + 追加的 JS wrapper（包含 CHelperCore / CommandContext）。
  * 该文件为生成代码，不要手工修改；若 wrapper 类发生变化，请同步本文件。
  */
@@ -14,6 +14,12 @@ export interface Suggestion {
   title: string
   /** 建议描述。 */
   description: string
+  preview?: SuggestionPreview
+}
+
+export interface SuggestionPreview {
+  kind: 'icon' | 'audio' | 'easing' | 'dyeColor'
+  value: string
 }
 
 /** 命令错误信息。 */

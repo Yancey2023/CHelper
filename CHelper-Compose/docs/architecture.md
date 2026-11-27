@@ -112,6 +112,8 @@ Android、浮窗和桌面统一使用 `ClientNavHost` 配置页面动画。前�
 
 普通控件使用项目自己的主题与 Foundation 设计组件，禁止 Material / Material 3 组件和依赖。CHelperTheme 统一通过 LocalIndication 提供无绘制的 NoIndication，关闭按钮、图标及普通可点击区域的默认按压、悬停和焦点遮罩，不影响点击语义、禁用状态和单选/开关自身的状态动画。普通输入和安全密码输入分别使用 BasicTextField 与 BasicSecureTextField，共用装饰器；命令编辑保留领域规则、语法样式和错误范围。命令编辑器的输入与输出转换器通过 remember 保持实例稳定，token 和主题通过 rememberUpdatedState 供输出转换器读取，输出转换器只应用语法文字颜色。长命令单行显示时，根据真实文本布局和横向滚动位置，仅生成视口及相邻区域的颜色区间，以 32 个 UTF-16 单元分块并预留半个视口缓冲，仅在视口接近缓冲边缘时移动高亮区间，避免字形测量细微变化造成重排震荡；首轮布局也限制样式数量，避免 Android TextLine 在一条长行上反复遍历全部颜色样式。视口命中按四分之一个视口的滚动距离分段执行，使用缓存的无颜色样式布局，避免逐像素查询和查询路径再次遍历颜色区间；从宽双向文字范围回到普通范围时会缩小缓冲。业务层默认高亮自动关闭阈值为 400,000 个 UTF-16 单元，设置上限为 10,000,000；DataStore 将既有阈值一次性放大 100 倍并写入版本标记，保留关闭状态和后续自定义值，损坏旧配置仍允许修复重导入。短命令和多行显示保留完整高亮，滚动、选择、主题和 token 更新均不替换转换器实例；错误下划线根据 TextLayoutResult 的选区路径独立绘制为错误色，跟随折行与滚动裁剪，不覆盖文字颜色，错误范围通过快照状态更新绘制；下划线路径和线段在布局或错误变化时缓存，滚动和光标闪烁只平移、裁剪和绘制缓存。样式变化只触发显示更新，不重建 BasicTextField 的内部转换状态或 IME 会话。回归测试通过官方 InterceptPlatformTextInput 记录会话启动和取消，同时检查错误下划线更新、中文与 emoji 输入、主题变化、撤销重做和焦点。所有预览使用统一注解和纯 Content，放在 commonMain，不创建真实仓库或业务 ViewModel。详细约束见[Compose 基础能力采用记录](official-compose.md)和根目录 AGENTS.md。
 
+界面图标使用与 Web 一致的 Lucide 图形，VectorDrawable 放在共享 Compose 资源中。文件名采用 Lucide 官方名称，短横线转换为 Android 资源名的下划线。补全播放器由共享界面维护播放状态、进度和布局，Android MediaPlayer 与 Windows Java Sound 通过领域会话接口提供播放、暂停和定位。
+
 长单行的纯左向文字使用有界字符位置缓存，二分查找只查询 32 个 UTF-16 单元分块的边界，并向外取整。零宽字符与组合字形仍完整包含在范围内，双向文字继续使用布局命中及可见运行边界。缓存最多保存 4,096 个位置，以底层 MultiParagraph 字形布局作为键；字体、文本和几何布局变化会重建缓存。
 
 纯左向长单行将当前高亮缓冲区的字形录制到由 drawWithCache 管理的 GraphicsLayer。普通滚动仅平移并按宿主视口裁剪，文字、主题、token、高亮范围或字体几何变化时重新录制。进入缓存路径的资格按正文内容判断，选区和组合注释更新产生的新快照可继续使用该路径。Foundation 继续持有完整原文、命中、光标、滚动和输入连接。缓存路径将原生文字前景置为透明，原文和偏移量保留。Foundation 提供的组合注释会复制到缓存排版，保留原生组合下划线。选区展开时先画 Foundation 的选区背景，再画文字。选择折叠时先画文字，再画 Foundation 光标。双向文字和多行模式保留原生文字绘制路径。GetTextLayoutResult 返回与实际缓存字形一致的带颜色排版。回归测试同时检查真实像素、关闭高亮后的文字、字号变化、原生组合下划线和输入连接连续性。
@@ -130,7 +132,7 @@ CommandCompletionController 在主线程持有单份 CompletionSnapshot。输入
 
 构建约定只有两个：`chelper.multiplatform-library` 管理 Android / JVM 目标、SDK、JVM 17 与公共测试；`chelper.jvm-library` 管理平台适配和桌面宿主的 JVM / Java 17 配置。`platform/jvm` 为两个宿主复用一份真实 JVM 适配，不向共享模块暴露 Java 类型。
 
-`shared/ui` 的 Android 目标显式启用 `androidResources.enable = true`，让 Compose 插件将资源打包到 APK 的 `assets/composeResources/yancey.chelper.resources/`。Android 宿主的原生 `res` 映射仅服务 Manifest 和宿主 R 引用，不能替代 Compose 的运行时资源路径。`scripts/check_android_resources.py` 对照构建生成的资源逐项检查 APK 中的路径和字节内容，CI 在上传 Release APK 前执行；设备测试实际加载共享 WebP、矢量图片和字符串。
+`shared/ui` 的 Android 目标显式启用 `androidResources.enable = true`，让 Compose 插件将资源打包到 APK 的 `assets/composeResources/yancey.chelper.resources/`。Android 宿主的原生 `res` 映射仅服务 Manifest 和宿主 R 引用，不能替代 Compose 的运行时资源路径。设备测试覆盖共享 WebP、矢量图片和字符串的实际加载。
 
 网络通过应用容器持有的 `NetworkServices` 实例组装。宿主向 `ClientServices` 注入账号、命令库内容、活动、消息、收藏、网页授权和应用内容等 domain Repository 接口，ViewModel 仅接收实际需要的接口；UI 不引用 `data.remote` / `data.auth` 中的图、服务、会话或 DTO。宿主的验证码和后台同步适配仍可使用网络图。不可变 `NetworkConfig` 固定服务地址与调试开关；会话、缓存和浏览器验证状态属于该应用实例。
 
@@ -158,4 +160,4 @@ MCD 预览在 Dispatchers.Default 解析并展平文档，通过共享 Foundatio
 
 这次重构不改变 Android 应用 ID、已注册入口组件、JNI ABI、历史数据目录、JSON 字段、命令草稿二进制格式或分享 URI。签名配置仍从根目录读取；相对密钥路径优先保留迁移前指向的文件，密钥随模块移动时按新位置解析，本次迁移不改写签名配置内容。导航路由通过显式 `SerialName` 保留迁移前的序列化标识，避免包名变化改变已保存的目标 ID。Gradle 模块路径、Kotlin 包名、构建脚本、CI 产物路径和 IDE 模块配置一起迁移，不保留旧模块或转发别名。
 
-`check_compose_architecture.py` 检查依赖方向、包名归属、文件路径、共享源码对宿主的引用、JNI 包白名单、DataStore 创建边界、重复 JVM 文件类和共享资源兼容性。`format_compose.py` 遍历维护中的源码与构建约定，调用保留版权头的格式化器。构建、测试与打包命令见上级 [README](../README.md)。
+Kotlin 源码和 Gradle Kotlin DSL 使用 IntelliJ IDEA 的 Reformat Code。也可从根目录执行 `mise run compose:format` 并传入文件路径。构建、测试与打包命令见上级 [README](../README.md)。

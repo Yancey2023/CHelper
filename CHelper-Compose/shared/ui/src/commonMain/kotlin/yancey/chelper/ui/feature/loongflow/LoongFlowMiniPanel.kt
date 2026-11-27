@@ -16,15 +16,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.DrawableResource
 import yancey.chelper.domain.library.BlockType
+import yancey.chelper.resources.Res
+import yancey.chelper.resources.check
+import yancey.chelper.resources.inbox
+import yancey.chelper.resources.link
+import yancey.chelper.resources.message_square
+import yancey.chelper.resources.repeat
+import yancey.chelper.resources.terminal
+import yancey.chelper.resources.zap
 import yancey.chelper.ui.designsystem.CHelperTheme
+import yancey.chelper.ui.designsystem.widget.Icon
 import yancey.chelper.ui.designsystem.widget.Text
 import yancey.chelper.ui.designsystem.widget.TextButton
 import yancey.chelper.ui.feature.library.mcd.darkColor
 import yancey.chelper.ui.feature.library.mcd.lightColor
 
 data class ImportMiniState(
-    val icon: String,
+    val icon: DrawableResource,
     val title: String,
     val subtitle: String,
     val progress: String,
@@ -38,7 +48,7 @@ fun importMiniState(model: LoongFlowViewModel, dark: Boolean): ImportMiniState {
     val total = model.selectedCommands.size
     if (model.isImportComplete)
         return ImportMiniState(
-            "✓",
+            Res.drawable.check,
             "导入完成",
             "所有命令都已经复制过一遍",
             "$total/$total",
@@ -49,7 +59,7 @@ fun importMiniState(model: LoongFlowViewModel, dark: Boolean): ImportMiniState {
     val context =
         model.currentImportCommand
             ?: return ImportMiniState(
-                "空",
+                Res.drawable.inbox,
                 "没有可导入命令",
                 "回到详情重新选择",
                 "0/0",
@@ -63,7 +73,7 @@ fun importMiniState(model: LoongFlowViewModel, dark: Boolean): ImportMiniState {
     if (block == null) {
         val compact = context.command.replace(Regex("\\s+"), " ").trim()
         return ImportMiniState(
-            "纯",
+            Res.drawable.terminal,
             context.chainName?.takeIf(String::isNotBlank) ?: "纯命令",
             if (compact.length > 42) compact.take(42) + "..." else compact,
             progress,
@@ -81,10 +91,10 @@ fun importMiniState(model: LoongFlowViewModel, dark: Boolean): ImportMiniState {
     }
     val icon =
         when (block.type) {
-            BlockType.IMPULSE -> "脉"
-            BlockType.CHAIN -> "链"
-            BlockType.REPEAT -> "循"
-            BlockType.CHAT -> "手"
+            BlockType.IMPULSE -> Res.drawable.zap
+            BlockType.CHAIN -> Res.drawable.link
+            BlockType.REPEAT -> Res.drawable.repeat
+            BlockType.CHAT -> Res.drawable.message_square
         }
     return ImportMiniState(
         icon,
@@ -137,15 +147,7 @@ fun LoongFlowMiniPanel(
                 Modifier.size(38.dp).clip(CircleShape).background(state.color),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    state.icon,
-                    style =
-                        TextStyle(
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                        ),
-                )
+                Icon(state.icon, Modifier.size(19.dp), tint = Color.White)
             }
             Column(Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(

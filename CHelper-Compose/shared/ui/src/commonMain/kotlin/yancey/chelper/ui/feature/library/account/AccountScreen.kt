@@ -229,8 +229,8 @@ fun UserProfileView(
                                 Modifier.fillMaxSize()
                                     .alpha(if (viewModel.isUploadingAvatar) 0.5f else 1f),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(resource = Res.drawable.ic_user),
-                            error = painterResource(resource = Res.drawable.ic_user),
+                            placeholder = painterResource(resource = Res.drawable.user_round),
+                            error = painterResource(resource = Res.drawable.user_round),
                         )
                     }
 
@@ -325,7 +325,7 @@ fun UserProfileView(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 10.dp),
             ) {
-                Icon(id = Res.drawable.ic_user, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.user_round, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "进入创作者主页 (云库管理)",
@@ -356,7 +356,7 @@ fun UserProfileView(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 10.dp),
             ) {
-                Icon(id = Res.drawable.ic_heart, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.heart, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
@@ -395,7 +395,7 @@ fun UserProfileView(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 10.dp),
             ) {
-                Icon(id = Res.drawable.ic_heart, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.heart, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
@@ -434,7 +434,7 @@ fun UserProfileView(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 10.dp),
             ) {
-                Icon(id = Res.drawable.ic_mail, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.mail, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "站内信",
@@ -470,7 +470,7 @@ fun GuestUserProfileView(viewModel: AccountViewModel, navController: NavHostCont
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(id = Res.drawable.ic_user, modifier = Modifier.size(80.dp).alpha(0.5f))
+        Icon(id = Res.drawable.user_round, modifier = Modifier.size(80.dp).alpha(0.5f))
         Spacer(Modifier.height(24.dp))
         Text(
             text = "访客模式",
@@ -504,7 +504,7 @@ fun GuestUserProfileView(viewModel: AccountViewModel, navController: NavHostCont
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
-                Icon(id = Res.drawable.ic_heart, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.heart, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "我的收藏",
@@ -534,7 +534,7 @@ fun GuestUserProfileView(viewModel: AccountViewModel, navController: NavHostCont
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 8.dp),
             ) {
-                Icon(id = Res.drawable.ic_mail, modifier = Modifier.size(24.dp))
+                Icon(id = Res.drawable.mail, modifier = Modifier.size(24.dp))
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "站内信",
@@ -660,14 +660,14 @@ fun LoginRegisterView(
                         state = viewModel.loginAccount,
                         hint = "用户邮箱 / 账号",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
+                        leadingIcon = { Icon(Res.drawable.user_round, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     SecureTextField(
                         state = viewModel.loginPassword,
                         hint = "密码",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
+                        leadingIcon = { Icon(Res.drawable.lock, Modifier.size(20.dp)) },
                         visible = isLoginPasswordVisible,
                         trailingIcon = {
                             IconButton(
@@ -698,7 +698,7 @@ fun LoginRegisterView(
                         state = viewModel.registerAccount,
                         hint = "电子邮箱 / 手机号",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        leadingIcon = { Icon(Res.drawable.ic_mail, Modifier.size(20.dp)) },
+                        leadingIcon = { Icon(Res.drawable.mail, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Row {
@@ -706,7 +706,7 @@ fun LoginRegisterView(
                             state = viewModel.registerCode,
                             hint = "验证码",
                             modifier = Modifier.weight(1f).height(50.dp),
-                            leadingIcon = { Icon(Res.drawable.ic_key, Modifier.size(20.dp)) },
+                            leadingIcon = { Icon(Res.drawable.key, Modifier.size(20.dp)) },
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Button(
@@ -729,14 +729,14 @@ fun LoginRegisterView(
                         state = viewModel.registerNickname,
                         hint = "用户昵称",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        leadingIcon = { Icon(Res.drawable.ic_user, Modifier.size(20.dp)) },
+                        leadingIcon = { Icon(Res.drawable.user_round, Modifier.size(20.dp)) },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     SecureTextField(
                         state = viewModel.registerPassword,
                         hint = "设置密码",
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        leadingIcon = { Icon(Res.drawable.ic_lock, Modifier.size(20.dp)) },
+                        leadingIcon = { Icon(Res.drawable.lock, Modifier.size(20.dp)) },
                         visible = isRegisterPasswordVisible,
                         trailingIcon = {
                             IconButton(

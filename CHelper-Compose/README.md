@@ -28,31 +28,29 @@ CHelper-Compose/
 
 ## 构建与检查
 
-需要完整 JDK、Android SDK 37；JVM 字节码目标为 17。本机验证使用 JDK 25。Windows JNI 构建还需要 Visual Studio C++ Build Tools、CMake、Ninja 和 Python。按仓库要求，Gradle 必须在提升权限的终端运行。
+在仓库根目录运行 `mise install --locked`。Android 需要 SDK 37（含相应的平台扩展版本）和已接受的 SDK 许可，可通过 Android Studio 的 `local.properties` 或 `ANDROID_HOME` 指定 SDK。首次运行 Android 构建时，mise 会下载并缓存锁定版本的 NDK。Windows JNI 需要 Visual Studio C++ Build Tools。
 
 ```powershell
-cd CHelper-Compose
-.\gradlew.bat :apps:android:testDebugUnitTest :apps:android:lintDebug
-.\gradlew.bat :shared:domain:jvmTest :shared:data:jvmTest :shared:ui:jvmTest :platform:jvm:test :apps:desktop:test
-.\gradlew.bat :shared:domain:testAndroidHostTest :shared:data:testAndroidHostTest :shared:ui:testAndroidHostTest
-.\gradlew.bat :apps:android:assembleDebug
-# 没有原正式签名密钥时，仅验证 Release / R8，生成未签名 APK
-.\gradlew.bat :apps:android:assembleRelease -PunsignedRelease=true
-.\gradlew.bat :apps:desktop:run
-.\gradlew.bat :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe
+mise run android:gradle :apps:android:testDebugUnitTest :apps:android:lintDebug
+mise run android:gradle :apps:android:assembleDebug
+# 使用正式签名配置时，省略 -PunsignedRelease=true
+mise run android:apk -PunsignedRelease=true
+mise run windows:gradle :apps:desktop:test
+mise run windows:gradle :apps:desktop:run
+mise run windows:package
 ```
 
-构建默认使用官方 Google Maven 和 Maven Central。需要为项目依赖指定 Google Maven 镜像时，加 `-PgoogleMavenMirror=https://maven.aliyun.com/repository/google`。需要 Maven Central 镜像时，加 `-I ../scripts/maven_mirror.init.gradle`。
+Android 构建由 mise 先生成 `build/artifacts/android/jni` 和 `build/artifacts/resources`，Gradle 随后将它们打进 APK。使用 Android Studio 的 Run 或直接调用 Gradle 前，先在根目录运行 `mise run core:android` 和 `mise run resources:pack`。Core 或资源源文件变更后重新运行相应任务。Android Studio 使用与 mise 一致的 Gradle JDK，可用 `mise where java` 查看路径。直接构建桌面 Gradle 任务前，先运行 `mise run core:windows` 和 `mise run resources:pack`。
+
+构建默认使用官方 Google Maven 和 Maven Central。需要为项目依赖指定 Google Maven 镜像时，加 `-PgoogleMavenMirror=https://maven.aliyun.com/repository/google`。
 
 Android 产物位于 `apps/android/build/outputs/apk`，Windows 产物位于 `apps/desktop/build/compose/binaries`。Windows 首次安装包构建会下载 WiX 工具。
 
-从仓库根目录执行结构检查与格式化：
+在仓库根目录运行以下命令，用 IntelliJ IDEA 格式化 Kotlin 文件。
 
 ```powershell
-python scripts/check_compose_architecture.py
-python scripts/check_android_headers.py
-python scripts/format_compose.py --formatter build/format-tools/ktfmt.jar
-python scripts/check_windows_installer.py CHelper-Compose/apps/desktop/build/compose/binaries/main/msi/CHelper-26.2.0.msi
+# 将 IDEA_HOME 指向 IntelliJ IDEA 的安装目录
+mise run compose:format CHelper-Compose/apps/android/build.gradle.kts
 ```
 
 ## 运行与兼容

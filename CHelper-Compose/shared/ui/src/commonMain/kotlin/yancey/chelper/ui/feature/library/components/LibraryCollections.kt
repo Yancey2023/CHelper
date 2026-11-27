@@ -92,7 +92,7 @@ fun LibraryLoginHint(onLogin: () -> Unit, onMessages: () -> Unit = onLogin) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                id = Res.drawable.ic_mail,
+                id = Res.drawable.mail,
                 modifier = Modifier.size(18.dp),
                 contentDescription = null,
             )

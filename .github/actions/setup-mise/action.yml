@@ -1,0 +1,95 @@
+name: Set up CHelper build tools
+description: Install and cache the tools needed by this job
+
+inputs:
+  tools:
+    description: Space-separated names of the locked mise tools to install
+    required: true
+  task-tools:
+    description: Space-separated backend names to install when the job runs their tasks
+    default: ""
+  native-cache:
+    description: Compiler cache group
+    default: ""
+  pnpm-cache:
+    description: Cache the pnpm store
+    default: "false"
+  compiler-packages:
+    description: Install and cache the compiler selected by CXX on Linux
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: jdx/mise-action@v5
+      env:
+        MISE_AUTO_INSTALL: "false"
+      with:
+        version: "2026.11.7"
+        install_args: --locked ${{ inputs.tools }}
+        cache_save_post: ${{ inputs.task-tools != '' }}
+
+    - if: inputs.task-tools != ''
+      shell: bash
+      env:
+        CHELPER_MISE_SELECTED_TOOLS: ${{ inputs.tools }} ${{ inputs.task-tools }}
+      run: |
+        read -r -a selected_tools <<< "$CHELPER_MISE_SELECTED_TOOLS"
+        (
+          IFS=,
+          printf 'MISE_ENABLE_TOOLS=%s\n' "${selected_tools[*]}"
+          printf 'MISE_AUTO_INSTALL=true\n'
+        ) >> "$GITHUB_ENV"
+
+    - if: inputs.native-cache != ''
+      shell: bash
+      run: |
+        {
+          echo "CMAKE_C_COMPILER_LAUNCHER=ccache"
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache"
+          echo "CCACHE_DIR=${{ runner.temp }}/chelper-ccache"
+          echo "CCACHE_BASEDIR=${{ github.workspace }}"
+          echo "CCACHE_MAXSIZE=350M"
+          echo "CCACHE_COMPILERCHECK=content"
+        } >> "$GITHUB_ENV"
+
+    - if: inputs.native-cache != ''
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/chelper-ccache
+        key: ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}-${{ inputs.native-cache }}-${{ github.sha }}
+        restore-keys: |
+          ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}-${{ inputs.native-cache }}-
+          ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}-
+
+    - if: inputs.native-cache != ''
+      uses: actions/cache@v6
+      with:
+        path: CHelper-Core/3rdparty_downloads
+        key: cxx-deps-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('CHelper-Core/CMakeLists.txt') }}
+        restore-keys: cxx-deps-v2-${{ runner.os }}-${{ runner.arch }}-
+
+    - if: inputs.pnpm-cache == 'true'
+      id: pnpm
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - if: inputs.pnpm-cache == 'true'
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.pnpm.outputs.path }}
+        key: pnpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock', 'pnpm-lock.yaml') }}
+        restore-keys: pnpm-v1-${{ runner.os }}-${{ runner.arch }}-
+
+    - if: inputs.compiler-packages == 'true' && runner.os == 'Linux'
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/chelper-apt/*.deb
+        key: core-apt-v2-ubuntu24-${{ runner.arch }}-${{ env.CXX }}-${{ hashFiles('mise.toml') }}
+        restore-keys: core-apt-v2-ubuntu24-${{ runner.arch }}-${{ env.CXX }}-
+
+    - if: inputs.compiler-packages == 'true' && runner.os == 'Linux'
+      shell: bash
+      run: |
+        mkdir -p "$RUNNER_TEMP/chelper-apt/partial"
+        mise run core:linux-compilers

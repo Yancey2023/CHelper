@@ -5,3 +5,4 @@ pub mod caidlist;
 pub mod java_lang;
 pub mod lson;
 pub mod wiki;
+pub(crate) mod wiki_media;

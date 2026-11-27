@@ -3,6 +3,312 @@
     "type": "normal",
     "content": [
         {
+            "name": "\"barrels/abandoned_camp_barrel\""
+        },
+        {
+            "name": "\"blocks/black_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/black_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/black_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/black_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/black_wool_slab\""
+        },
+        {
+            "name": "\"blocks/black_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/blue_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/blue_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/blue_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/blue_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/blue_wool_slab\""
+        },
+        {
+            "name": "\"blocks/blue_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/brown_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/brown_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/brown_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/brown_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/brown_wool_slab\""
+        },
+        {
+            "name": "\"blocks/brown_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/cyan_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/cyan_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/cyan_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/cyan_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/cyan_wool_slab\""
+        },
+        {
+            "name": "\"blocks/cyan_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/gray_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/gray_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/gray_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/gray_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/gray_wool_slab\""
+        },
+        {
+            "name": "\"blocks/gray_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/green_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/green_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/green_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/green_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/green_wool_slab\""
+        },
+        {
+            "name": "\"blocks/green_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/light_blue_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/light_blue_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/light_blue_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/light_blue_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/light_blue_wool_slab\""
+        },
+        {
+            "name": "\"blocks/light_blue_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/light_gray_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/light_gray_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/light_gray_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/light_gray_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/light_gray_wool_slab\""
+        },
+        {
+            "name": "\"blocks/light_gray_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/lime_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/lime_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/lime_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/lime_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/lime_wool_slab\""
+        },
+        {
+            "name": "\"blocks/lime_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/magenta_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/magenta_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/magenta_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/magenta_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/magenta_wool_slab\""
+        },
+        {
+            "name": "\"blocks/magenta_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/orange_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/orange_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/orange_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/orange_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/orange_wool_slab\""
+        },
+        {
+            "name": "\"blocks/orange_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/pink_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/pink_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/pink_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/pink_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/pink_wool_slab\""
+        },
+        {
+            "name": "\"blocks/pink_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/purple_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/purple_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/purple_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/purple_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/purple_wool_slab\""
+        },
+        {
+            "name": "\"blocks/purple_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/red_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/red_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/red_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/red_shrub\""
+        },
+        {
+            "name": "\"blocks/red_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/red_wool_slab\""
+        },
+        {
+            "name": "\"blocks/red_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/shelf_mushroom_growth_0\""
+        },
+        {
+            "name": "\"blocks/shelf_mushroom_growth_1\""
+        },
+        {
+            "name": "\"blocks/white_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/white_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/white_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/white_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/white_wool_slab\""
+        },
+        {
+            "name": "\"blocks/white_wool_stairs\""
+        },
+        {
+            "name": "\"blocks/yellow_concrete_double_slab\""
+        },
+        {
+            "name": "\"blocks/yellow_concrete_slab\""
+        },
+        {
+            "name": "\"blocks/yellow_concrete_stairs\""
+        },
+        {
+            "name": "\"blocks/yellow_wool_double_slab\""
+        },
+        {
+            "name": "\"blocks/yellow_wool_slab\""
+        },
+        {
+            "name": "\"blocks/yellow_wool_stairs\""
+        },
+        {
+            "name": "\"chests/abandoned_camp_common_chest\""
+        },
+        {
+            "name": "\"chests/abandoned_camp_secret_chest\""
+        },
+        {
             "name": "\"chests/abandoned_mineshaft\"",
             "description": "废弃矿井宝箱"
         },
@@ -391,6 +697,12 @@
         {
             "name": "\"entities/frog\"",
             "description": "青蛙的掉落物"
+        },
+        {
+            "name": "\"entities/frostbite\""
+        },
+        {
+            "name": "\"entities/frostbite_ranged_equipment\""
         },
         {
             "name": "\"entities/ghast\"",

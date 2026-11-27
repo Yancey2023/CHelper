@@ -4,55 +4,59 @@
     "content": [
         {
             "name": "slot.armor",
-            "description": "马铠槽"
+            "description": "驯服马的马铠槽，仅驯服的马"
         },
         {
             "name": "slot.armor.body",
-            "description": "身体装备栏位"
+            "description": "特定实体的身体装备槽位"
         },
         {
             "name": "slot.armor.chest",
-            "description": "胸甲"
+            "description": "胸甲，仅盔甲架、生物及玩家"
         },
         {
             "name": "slot.armor.feet",
-            "description": "靴子"
+            "description": "靴子，仅盔甲架、生物及玩家"
         },
         {
             "name": "slot.armor.head",
-            "description": "头盔"
+            "description": "头盔，仅盔甲架、生物及玩家"
         },
         {
             "name": "slot.armor.legs",
-            "description": "护腿"
+            "description": "护腿，仅盔甲架、生物及玩家"
         },
         {
             "name": "slot.chest",
-            "description": "箱子栏位"
+            "description": "驮箱子的驴、骡的箱子栏位，仅驮箱子的驴和骡"
         },
         {
             "name": "slot.enderchest",
-            "description": "玩家末影箱物品栏"
+            "description": "玩家末影箱物品栏，仅玩家"
+        },
+        {
+            "name": "slot.equippable",
+            "description": "马、驴、骡或羊驼的可装备槽位，适用实体由槽位编号限制决定"
         },
         {
             "name": "slot.hotbar",
-            "description": "快捷栏"
+            "description": "快捷栏，仅玩家"
         },
         {
             "name": "slot.inventory",
-            "description": "物品栏"
+            "description": "物品栏，仅玩家、村民、猪灵、熊猫、悦灵、漏斗矿车、运输矿车、命令方块矿车及驯服的马、驴、骡和羊驼"
         },
         {
             "name": "slot.saddle",
-            "description": "马鞍槽位"
+            "description": "驯服马、驴、骡的鞍槽，仅驯服的马、驴和骡"
         },
         {
             "name": "slot.weapon.mainhand",
-            "description": "惯用手栏位"
+            "description": "惯用手栏位，仅盔甲架、生物及玩家"
         },
         {
             "name": "slot.weapon.offhand",
-            "description": "副手"
+            "description": "副手，仅盔甲架、生物及玩家"
         }
     ]
 }

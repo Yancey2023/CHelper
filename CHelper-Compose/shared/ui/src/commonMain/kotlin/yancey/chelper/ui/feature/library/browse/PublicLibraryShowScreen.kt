@@ -256,7 +256,7 @@ fun PublicLibraryShowScreen(
                         viewModel.library.isPublish != false
                 ) {
                     Icon(
-                        id = Res.drawable.share,
+                        id = Res.drawable.share_2,
                         modifier =
                             Modifier.clickable { shareCurrentLibrary() }.padding(5.dp).size(24.dp),
                         contentDescription = "分享",
@@ -266,14 +266,14 @@ fun PublicLibraryShowScreen(
                     displayed && viewModel.library.id != null && context.platform.supportsLoongFlow
                 ) {
                     Icon(
-                        id = Res.drawable.loong_flow_import,
+                        id = Res.drawable.download,
                         modifier =
                             Modifier.clickable { openLoongFlowImport() }.padding(5.dp).size(24.dp),
                         contentDescription = "游龙导入",
                     )
                 }
                 Icon(
-                    id = Res.drawable.more,
+                    id = Res.drawable.ellipsis,
                     modifier =
                         Modifier.clickable(enabled = displayed) { showMainMenu = true }
                             .padding(5.dp)
@@ -489,12 +489,8 @@ fun PublicLibraryShowScreen(
                                 ) {
                                     val isLiked = viewModel.isLiked
                                     Image(
-                                        painter =
-                                            painterResource(
-                                                if (isLiked) Res.drawable.heart_filled
-                                                else Res.drawable.heart
-                                            ),
-                                        contentDescription = "点赞",
+                                        painter = painterResource(Res.drawable.heart),
+                                        contentDescription = if (isLiked) "已点赞" else "点赞",
                                         modifier = Modifier.size(16.dp),
                                         colorFilter =
                                             ColorFilter.tint(
@@ -544,10 +540,10 @@ fun PublicLibraryShowScreen(
                                         Image(
                                             painter =
                                                 painterResource(
-                                                    if (isFavorited) Res.drawable.bookmark_filled
+                                                    if (isFavorited) Res.drawable.bookmark_check
                                                     else Res.drawable.bookmark
                                                 ),
-                                            contentDescription = "收藏",
+                                            contentDescription = if (isFavorited) "已收藏" else "收藏",
                                             modifier = Modifier.size(16.dp),
                                             colorFilter =
                                                 ColorFilter.tint(

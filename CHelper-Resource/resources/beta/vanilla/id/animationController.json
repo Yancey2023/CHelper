@@ -42,6 +42,9 @@
             "name": "controller.animation.axolotl.move"
         },
         {
+            "name": "controller.animation.axolotl.move.v2"
+        },
+        {
             "name": "controller.animation.bat.move"
         },
         {
@@ -85,6 +88,12 @@
         },
         {
             "name": "controller.animation.camel.idle"
+        },
+        {
+            "name": "controller.animation.camel_husk.general"
+        },
+        {
+            "name": "controller.animation.camel_husk.idle"
         },
         {
             "name": "controller.animation.cat.baby"
@@ -169,6 +178,9 @@
         },
         {
             "name": "controller.animation.frog.general"
+        },
+        {
+            "name": "controller.animation.frostbite.attack"
         },
         {
             "name": "controller.animation.ghast.move"
@@ -363,6 +375,9 @@
             "name": "controller.animation.player.root"
         },
         {
+            "name": "controller.animation.polar_bear.move"
+        },
+        {
             "name": "controller.animation.polarbear.baby"
         },
         {
@@ -373,6 +388,9 @@
         },
         {
             "name": "controller.animation.rabbit.general"
+        },
+        {
+            "name": "controller.animation.rabbit.general.v2"
         },
         {
             "name": "controller.animation.ravager.head_movement"
@@ -439,6 +457,12 @@
         },
         {
             "name": "controller.animation.spider.move"
+        },
+        {
+            "name": "controller.animation.sulfur_cube.offset"
+        },
+        {
+            "name": "controller.animation.sulfur_cube.swelling"
         },
         {
             "name": "controller.animation.tadpole.general"

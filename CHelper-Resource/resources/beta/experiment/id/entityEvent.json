@@ -246,6 +246,9 @@
             "name": "minecraft:become_blue_dory"
         },
         {
+            "name": "minecraft:become_bouncy"
+        },
+        {
             "name": "minecraft:become_brown"
         },
         {
@@ -285,7 +288,16 @@
             "name": "minecraft:become_e_red_snapper"
         },
         {
+            "name": "minecraft:become_explosive"
+        },
+        {
             "name": "minecraft:become_farmer"
+        },
+        {
+            "name": "minecraft:become_fast_flat"
+        },
+        {
+            "name": "minecraft:become_fast_sliding"
         },
         {
             "name": "minecraft:become_fisherman"
@@ -297,7 +309,13 @@
             "name": "minecraft:become_goat_fish"
         },
         {
+            "name": "minecraft:become_high_resistance"
+        },
+        {
             "name": "minecraft:become_hostile"
+        },
+        {
+            "name": "minecraft:become_hot"
         },
         {
             "name": "minecraft:become_immobile"
@@ -307,6 +325,9 @@
         },
         {
             "name": "minecraft:become_librarian"
+        },
+        {
+            "name": "minecraft:become_light"
         },
         {
             "name": "minecraft:become_mason"
@@ -348,13 +369,28 @@
             "name": "minecraft:become_red_snapper"
         },
         {
+            "name": "minecraft:become_regular"
+        },
+        {
             "name": "minecraft:become_scared"
         },
         {
             "name": "minecraft:become_sheperd"
         },
         {
+            "name": "minecraft:become_slow_bouncy"
+        },
+        {
+            "name": "minecraft:become_slow_flat"
+        },
+        {
+            "name": "minecraft:become_slow_sliding"
+        },
+        {
             "name": "minecraft:become_statue"
+        },
+        {
+            "name": "minecraft:become_sticky"
         },
         {
             "name": "minecraft:become_stunned"
@@ -429,6 +465,9 @@
             "name": "minecraft:convert_to_drowned"
         },
         {
+            "name": "minecraft:convert_to_frostbite"
+        },
+        {
             "name": "minecraft:convert_to_zombie"
         },
         {
@@ -450,6 +489,9 @@
             "name": "minecraft:defend_wandering_trader"
         },
         {
+            "name": "minecraft:disable_mode_switcher"
+        },
+        {
             "name": "minecraft:donkey_saddled"
         },
         {
@@ -460,6 +502,9 @@
         },
         {
             "name": "minecraft:emerged"
+        },
+        {
+            "name": "minecraft:enable_mode_switcher"
         },
         {
             "name": "minecraft:end_roar"
@@ -666,6 +711,12 @@
             "name": "minecraft:on_armor_equip"
         },
         {
+            "name": "minecraft:on_block_absorbed"
+        },
+        {
+            "name": "minecraft:on_block_ejected"
+        },
+        {
             "name": "minecraft:on_calm"
         },
         {
@@ -690,6 +741,9 @@
             "name": "minecraft:on_full_puff"
         },
         {
+            "name": "minecraft:on_gain_target"
+        },
+        {
             "name": "minecraft:on_half_puff"
         },
         {
@@ -705,6 +759,9 @@
             "name": "minecraft:on_leash"
         },
         {
+            "name": "minecraft:on_lose_target"
+        },
+        {
             "name": "minecraft:on_mount"
         },
         {
@@ -718,6 +775,9 @@
         },
         {
             "name": "minecraft:on_passenger_mount"
+        },
+        {
+            "name": "minecraft:on_pickup_timeout"
         },
         {
             "name": "minecraft:on_player_dismount"
@@ -948,10 +1008,16 @@
             "name": "minecraft:spawn_librarian"
         },
         {
+            "name": "minecraft:spawn_medium"
+        },
+        {
             "name": "minecraft:spawn_midnight_cat"
         },
         {
             "name": "minecraft:spawn_skilled_adult"
+        },
+        {
+            "name": "minecraft:spawn_small"
         },
         {
             "name": "minecraft:spawn_tame"
@@ -1074,7 +1140,22 @@
             "name": "minecraft:start_sitting"
         },
         {
+            "name": "minecraft:start_sitting_adult"
+        },
+        {
+            "name": "minecraft:start_sitting_baby"
+        },
+        {
             "name": "minecraft:start_transforming"
+        },
+        {
+            "name": "minecraft:start_transforming_into_drowned"
+        },
+        {
+            "name": "minecraft:start_transforming_into_frostbite"
+        },
+        {
+            "name": "minecraft:start_transforming_into_zombie"
         },
         {
             "name": "minecraft:start_twitching"
@@ -1113,6 +1194,12 @@
             "name": "minecraft:stop_sitting"
         },
         {
+            "name": "minecraft:stop_sitting_adult"
+        },
+        {
+            "name": "minecraft:stop_sitting_baby"
+        },
+        {
             "name": "minecraft:stop_transforming"
         },
         {
@@ -1122,7 +1209,13 @@
             "name": "minecraft:switch_to_ai_controlled"
         },
         {
+            "name": "minecraft:switch_to_hard_ranged"
+        },
+        {
             "name": "minecraft:switch_to_melee"
+        },
+        {
+            "name": "minecraft:switch_to_normal_ranged"
         },
         {
             "name": "minecraft:switch_to_player_controlled"
@@ -1162,6 +1255,12 @@
         },
         {
             "name": "minecraft:trigger_raid"
+        },
+        {
+            "name": "minecraft:try_priming"
+        },
+        {
+            "name": "minecraft:try_priming_on_explosion"
         },
         {
             "name": "minecraft:turn_black"

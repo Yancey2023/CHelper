@@ -7,6 +7,7 @@ import yancey.chelper.domain.command.CommandEngine
 import yancey.chelper.domain.command.ErrorReason
 import yancey.chelper.domain.command.ParsedCommand
 import yancey.chelper.domain.command.Suggestion
+import yancey.chelper.domain.command.SuggestionPreview
 
 class NativeCommandEngine(private val core: CHelperCore) : CommandEngine {
     override suspend fun parse(text: String): ParsedCommand =
@@ -48,7 +49,19 @@ private class NativeParsedCommand(private val context: CommandContext) : ParsedC
     override fun suggestionCount(index: Int) = context.getSuggestionsSize(index)
 
     override fun suggestion(index: Int, which: Int) =
-        context.getSuggestion(index, which)?.let { Suggestion(it.name, it.description) }
+        context.getSuggestion(index, which)?.let { entry ->
+            val preview =
+                entry.previewValue?.takeIf(String::isNotEmpty)?.let { value ->
+                    when (entry.previewKind) {
+                        1 -> SuggestionPreview.Icon(value)
+                        2 -> SuggestionPreview.Audio(value)
+                        3 -> SuggestionPreview.Easing(value)
+                        4 -> SuggestionPreview.DyeColor(value)
+                        else -> null
+                    }
+                }
+            Suggestion(entry.name, entry.description, preview)
+        }
 
     override fun apply(index: Int, which: Int) =
         context.applySuggestion(index, which)?.let { ClickSuggestionResult(it.text, it.selection) }

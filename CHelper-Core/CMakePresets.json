@@ -1,0 +1,171 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "release-ninja",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_MSVC_DEBUG_INFORMATION_FORMAT": "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>"
+      }
+    },
+    {
+      "name": "host-tests",
+      "inherits": "release-ninja",
+      "binaryDir": "${sourceDir}/../build/core_tests",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "host-debug",
+      "inherits": "host-tests",
+      "binaryDir": "${sourceDir}/../build/core_tests_debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "qt",
+      "inherits": "host-tests"
+    },
+    {
+      "name": "qt-debug",
+      "inherits": "host-debug"
+    },
+    {
+      "name": "sanitizers",
+      "inherits": "host-tests",
+      "binaryDir": "${sourceDir}/../build/sanitizers",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CHELPER_ENABLE_SANITIZERS": "ON",
+        "CHELPER_ENABLE_RESOURCE_AUDIT": "ON"
+      }
+    },
+    {
+      "name": "fuzz",
+      "inherits": "sanitizers",
+      "binaryDir": "${sourceDir}/../build/fuzz",
+      "cacheVariables": {
+        "BUILD_TESTING": "OFF",
+        "CHELPER_ENABLE_RESOURCE_AUDIT": "OFF",
+        "CHELPER_BUILD_FUZZERS": "ON"
+      }
+    },
+    {
+      "name": "resource-generator",
+      "inherits": "release-ninja",
+      "binaryDir": "${sourceDir}/../build/resource_generator",
+      "cacheVariables": {
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "android-arm64",
+      "inherits": "release-ninja",
+      "binaryDir": "$env{CHELPER_ANDROID_BUILD_DIR}",
+      "toolchainFile": "$env{CHELPER_NDK}/build/cmake/android.toolchain.cmake",
+      "cacheVariables": {
+        "ANDROID_ABI": "arm64-v8a",
+        "ANDROID_PLATFORM": "android-24"
+      }
+    },
+    {
+      "name": "web",
+      "inherits": "release-ninja",
+      "binaryDir": "$env{CHELPER_WASM_BUILD_DIR}",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
+    },
+    {
+      "name": "windows-jni",
+      "inherits": "release-ninja",
+      "binaryDir": "${sourceDir}/../build/desktop_core",
+      "cacheVariables": {
+        "BUILD_TESTING": "OFF",
+        "CHELPER_BUILD_JNI": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "host-tests",
+      "configurePreset": "host-tests",
+      "targets": ["CHelperTest"]
+    },
+    {
+      "name": "resource-generator",
+      "configurePreset": "resource-generator",
+      "targets": ["CHelperResourceGenerator"]
+    },
+    {
+      "name": "android-arm64",
+      "configurePreset": "android-arm64",
+      "targets": ["CHelperAndroid"]
+    },
+    {
+      "name": "web",
+      "configurePreset": "web",
+      "targets": ["CHelperWebBundle"]
+    },
+    {
+      "name": "windows-jni",
+      "configurePreset": "windows-jni",
+      "targets": ["CHelperJvm"]
+    },
+    {
+      "name": "host-debug",
+      "configurePreset": "host-debug",
+      "targets": ["CHelperTest"]
+    },
+    {
+      "name": "qt",
+      "configurePreset": "qt",
+      "targets": ["CHelperQt"]
+    },
+    {
+      "name": "qt-debug",
+      "configurePreset": "qt-debug",
+      "targets": ["CHelperQt"]
+    },
+    {
+      "name": "sanitizers",
+      "configurePreset": "sanitizers",
+      "targets": ["CHelperTest"],
+      "jobs": 2
+    },
+    {
+      "name": "fuzz",
+      "configurePreset": "fuzz",
+      "targets": ["CHelperFuzz"],
+      "jobs": 2
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "host-tests",
+      "configurePreset": "host-tests",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "host-debug",
+      "configurePreset": "host-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "sanitizers",
+      "configurePreset": "sanitizers",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

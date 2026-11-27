@@ -11,6 +11,18 @@ I want to make a command helper for Minecraft Bedrock Edition, so here is CHelpe
 |     [CHelper-Web](./CHelper-Web)     |                    CHelper-Web is the web version of the app                     |
 |      [CHelper-Qt](./CHelper-Qt)      | maintain in [CHelper-Core](./CHelper-Core) for development and debugging purpose |
 
+## Build from source
+
+Install [mise](https://mise.jdx.dev/installing-mise.html), review and trust `mise.toml`, then run `mise install --locked` from the repository root.
+
+| Command | Result |
+| --- | --- |
+| `mise run core:test` | C++ tests for the current host |
+| `mise run android:apk -PunsignedRelease=true` | APK built with the generated ARM64 JNI library and resource packs |
+| `mise run windows:package` | Windows application image and installers, on Windows |
+| `mise run web:build` | Web distribution, including the generated WASM and resource packs |
+| `mise run docs:build` | VitePress documentation distribution |
+
 ## Usage
 
 ### Help in editing command
@@ -99,7 +111,7 @@ The Android application includes CHelper-Core and its runtime libraries above, t
 | [XXPermissions](https://github.com/getActivity/XXPermissions)            | Android permissions                                                              | [Apache-2.0](https://github.com/getActivity/XXPermissions/blob/HEAD/LICENSE)        |
 | [Toaster](https://github.com/getActivity/Toaster)                        | Toast notifications                                                              | [Apache-2.0](https://github.com/getActivity/Toaster/blob/HEAD/LICENSE)              |
 | [EasyWindow](https://github.com/getActivity/EasyWindow)                  | Floating windows                                                                 | [Apache-2.0](https://github.com/getActivity/EasyWindow/blob/HEAD/LICENSE)           |
-| [tabler-icons](https://github.com/tabler/tabler-icons)                   | SVG icons                                                                        | [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE)                     |
+| [Lucide](https://lucide.dev/)                                         | Compose UI icons                                                                 | [ISC / MIT](https://lucide.dev/license)                                      |
 | [Crunch](https://github.com/boxbeam/Crunch)                              | Expression compiler and evaluator                                                | [MIT](https://github.com/boxbeam/Crunch/blob/HEAD/LICENSE)                          |
 
 Local unit tests additionally use [JUnit 4](https://github.com/junit-team/junit4) ([EPL-1.0](https://github.com/junit-team/junit4/blob/HEAD/LICENSE-junit.txt)); instrumentation tests use AndroidX Test. JUnit's EPL-1.0 notice is also retained in the Android application's open source terms.

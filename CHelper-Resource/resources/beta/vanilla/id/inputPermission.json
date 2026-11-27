@@ -4,47 +4,47 @@
     "content": [
         {
             "name": "camera",
-            "description": "转动相机视角"
+            "description": "允许玩家控制摄像机的视角"
         },
         {
             "name": "dismount",
-            "description": "停止骑乘"
+            "description": "允许玩家解除骑乘"
         },
         {
             "name": "jump",
-            "description": "跳跃和向上飞行"
+            "description": "允许玩家跳跃"
         },
         {
             "name": "lateral_movement",
-            "description": "水平移动"
+            "description": "允许玩家四向移动"
         },
         {
             "name": "mount",
-            "description": "骑乘"
+            "description": "允许玩家骑乘"
         },
         {
             "name": "move_backward",
-            "description": "向后移动"
+            "description": "允许玩家向后移动"
         },
         {
             "name": "move_forward",
-            "description": "向前移动"
+            "description": "允许玩家向前移动"
         },
         {
             "name": "move_left",
-            "description": "向左移动"
+            "description": "允许玩家向左移动"
         },
         {
             "name": "move_right",
-            "description": "向右移动"
+            "description": "允许玩家向右移动"
         },
         {
             "name": "movement",
-            "description": "水平移动、潜行、跳跃和飞行"
+            "description": "允许玩家自主移动"
         },
         {
             "name": "sneak",
-            "description": "潜行和向下飞行"
+            "description": "允许玩家潜行"
         }
     ]
 }

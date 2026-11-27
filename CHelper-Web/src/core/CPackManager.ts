@@ -1,12 +1,5 @@
 import { CHelperCore, createWasmFuture } from '@/core/libCHelperWeb'
 
-import releaseVanillaCPack from '@/assets/release-vanilla-1.26.52.3.cpack?url'
-import releaseExperimentCPack from '@/assets/release-experiment-1.26.52.3.cpack?url'
-import betaVanillaCPack from '@/assets/beta-vanilla-1.26.60.29.cpack?url'
-import betaExperimentCPack from '@/assets/beta-experiment-1.26.60.29.cpack?url'
-import neteaseVanillaCPack from '@/assets/netease-vanilla-1.21.50.07.cpack?url'
-import neteaseExperimentCPack from '@/assets/netease-experiment-1.21.50.07.cpack?url'
-
 export type Branch =
   | 'release-vanilla'
   | 'release-experiment'
@@ -26,14 +19,36 @@ export const ALL_BRANCH: Branch[] = [
   'netease-experiment',
 ]
 
-export const ALL_BRANCH_CHINESE: string[] = [
-  '正式版-原版-1.26.52.3',
-  '正式版-实验性玩法-1.26.52.3',
-  '测试版-原版-1.26.60.29',
-  '测试版-实验性玩法-1.26.60.29',
-  '中国版-原版-1.21.50.07',
-  '中国版-实验性玩法-1.21.50.07',
-]
+const branchLabels: Record<Branch, string> = {
+  'release-vanilla': '正式版-原版',
+  'release-experiment': '正式版-实验性玩法',
+  'beta-vanilla': '测试版-原版',
+  'beta-experiment': '测试版-实验性玩法',
+  'netease-vanilla': '中国版-原版',
+  'netease-experiment': '中国版-实验性玩法',
+}
+
+const packFiles = Object.entries(
+  import.meta.glob<string>('../../../build/artifacts/resources/cpack/*.cpack', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
+)
+const bundledPacks = new Map(
+  ALL_BRANCH.map((branch) => {
+    const prefix = `${branch}-`
+    const files = packFiles.filter(([path]) => path.split('/').pop()?.startsWith(prefix))
+    if (files.length !== 1) throw new Error(`Expected one bundled resource pack for ${branch}`)
+    const [path, url] = files[0]
+    const version = path.slice(path.lastIndexOf('/') + 1 + prefix.length, -'.cpack'.length)
+    return [branch, { url, version }] as const
+  }),
+)
+
+export const ALL_BRANCH_CHINESE = ALL_BRANCH.map(
+  (branch) => `${branchLabels[branch]}-${bundledPacks.get(branch)!.version}`,
+)
 
 const cpackCache: Partial<Record<Branch, Uint8Array>> = {}
 
@@ -55,20 +70,5 @@ export async function getCore(branch: Branch): Promise<CHelperCore> {
 }
 
 export function getRealFileName(branch: Branch): string {
-  switch (branch) {
-    case 'release-vanilla':
-      return releaseVanillaCPack
-    case 'release-experiment':
-      return releaseExperimentCPack
-    case 'beta-vanilla':
-      return betaVanillaCPack
-    case 'beta-experiment':
-      return betaExperimentCPack
-    case 'netease-vanilla':
-      return neteaseVanillaCPack
-    case 'netease-experiment':
-      return neteaseExperimentCPack
-    default:
-      return getRealFileName(DEFAULT_BRANCH)
-  }
+  return (bundledPacks.get(branch) ?? bundledPacks.get(DEFAULT_BRANCH)!).url
 }

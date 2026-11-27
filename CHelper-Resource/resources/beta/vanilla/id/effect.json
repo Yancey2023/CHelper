@@ -35,6 +35,10 @@
             "description": "抗火"
         },
         {
+            "name": "freezing",
+            "description": "冰冻"
+        },
+        {
             "name": "haste",
             "description": "急迫"
         },

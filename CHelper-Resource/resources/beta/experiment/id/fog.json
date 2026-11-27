@@ -55,6 +55,9 @@
             "description": "绯红森林"
         },
         {
+            "name": "minecraft:fog_dappled_forest"
+        },
+        {
             "name": "minecraft:fog_deep_cold_ocean",
             "description": "冷水深海"
         },
@@ -87,8 +90,7 @@
             "description": "沙漠丘陵"
         },
         {
-            "name": "minecraft:fog_dry",
-            "description": "配置空气、水下、天气和熔岩雾。"
+            "name": "minecraft:fog_dry"
         },
         {
             "name": "minecraft:fog_extreme_hills",
@@ -135,8 +137,10 @@
             "description": "下界荒地"
         },
         {
-            "name": "minecraft:fog_humid",
-            "description": "配置空气体积雾和距离雾。"
+            "name": "minecraft:fog_humid"
+        },
+        {
+            "name": "minecraft:fog_ice_caves"
         },
         {
             "name": "minecraft:fog_ice_mountains",
@@ -171,8 +175,7 @@
             "description": "温水海洋"
         },
         {
-            "name": "minecraft:fog_lush_caves",
-            "description": "配置空气体积雾和距离雾。"
+            "name": "minecraft:fog_lush_caves"
         },
         {
             "name": "minecraft:fog_mangrove_swamp",
@@ -251,8 +254,7 @@
             "description": "黑森林"
         },
         {
-            "name": "minecraft:fog_roofed_forest_mutated",
-            "description": "配置空气体积雾和距离雾。"
+            "name": "minecraft:fog_roofed_forest_mutated"
         },
         {
             "name": "minecraft:fog_savanna",
@@ -267,8 +269,7 @@
             "description": "热带高原"
         },
         {
-            "name": "minecraft:fog_semi_humid",
-            "description": "配置空气体积雾和距离雾。"
+            "name": "minecraft:fog_semi_humid"
         },
         {
             "name": "minecraft:fog_soulsand_valley",
@@ -277,6 +278,9 @@
         {
             "name": "minecraft:fog_stone_beach",
             "description": "石岸"
+        },
+        {
+            "name": "minecraft:fog_sulfur_caves"
         },
         {
             "name": "minecraft:fog_sunflower_plains",

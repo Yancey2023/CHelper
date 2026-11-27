@@ -103,7 +103,7 @@ fun ActivityCenterScreen(
         onBack = { navController.popBackStack() },
         headerRight = {
             Icon(
-                id = Res.drawable.refresh,
+                id = Res.drawable.refresh_cw,
                 contentDescription = "刷新",
                 modifier =
                     Modifier.padding(5.dp).size(24.dp).clickable { viewModel.load(force = true) },

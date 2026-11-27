@@ -12,6 +12,7 @@ import yancey.chelper.domain.assets.AppContentRepository
 import yancey.chelper.domain.assets.AssetRepository
 import yancey.chelper.domain.command.CommandDraftRepository
 import yancey.chelper.domain.command.CommandEngine
+import yancey.chelper.domain.command.SuggestionAudioPlayer
 import yancey.chelper.domain.enumeration.EnumerationRepository
 import yancey.chelper.domain.library.*
 import yancey.chelper.domain.library.LibraryFunction
@@ -46,6 +47,7 @@ class ClientServices(
     val notices: NoticeStore,
     val packFilenames: List<String>,
     val clipboardCodec: TextClipCodec,
+    val suggestionAudioPlayer: SuggestionAudioPlayer? = null,
 )
 
 val LocalClientServices =

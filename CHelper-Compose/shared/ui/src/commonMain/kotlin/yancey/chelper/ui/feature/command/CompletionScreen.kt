@@ -165,6 +165,9 @@ fun CompletionScreen(
         suggestionCount = viewModel.suggestionsSize,
         suggestionAt = { index -> viewModel.suggestionAt(index) },
         resultsEnabled = viewModel.resultsEnabled,
+        previewAudioPlayer =
+            context.suggestionAudioPlayer.takeIf { isScreenVisible && isLifecycleResumed },
+        previewRevision = analysisRevision,
         onVisibleSuggestions = viewModel::showSuggestions,
         showMenu = viewModel.isShowMenu,
         editorMode = viewModel.isCommandEditorMode,

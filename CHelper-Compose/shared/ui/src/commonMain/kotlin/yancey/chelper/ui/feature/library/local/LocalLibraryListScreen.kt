@@ -163,7 +163,7 @@ fun LocalLibraryListScreen(
         onBack = if (isTab) ({ navController.popBackStack() }) else null,
         headerRight = {
             Icon(
-                id = Res.drawable.file_arrow_left,
+                id = Res.drawable.file_input,
                 modifier =
                     Modifier.clickable { viewModel.isShowImportDialog = true }
                         .padding(5.dp)
@@ -187,7 +187,7 @@ fun LocalLibraryListScreen(
                     stringResource(Res.string.layout_library_list_icon_add_content_description),
             )
             Icon(
-                id = Res.drawable.more,
+                id = Res.drawable.ellipsis,
                 modifier =
                     Modifier.clickable { showLocalToolsMenu = true }.padding(5.dp).size(24.dp),
                 contentDescription = "本地库管理",
@@ -195,7 +195,7 @@ fun LocalLibraryListScreen(
             // 账户入口：把原来"我的" tab 砍掉后挪到这里。已登录弹菜单（账户中心/登出），
             // 未登录直接跳 AccountScreen 让用户去登录注册
             Icon(
-                id = Res.drawable.ic_user,
+                id = Res.drawable.user_round,
                 modifier =
                     Modifier.clickable {
                             if (viewModel.isLoggedIn) {
@@ -459,7 +459,7 @@ fun LocalLibraryListScreen(
                                 if (isSelectionMode) {
                                     Icon(
                                         id =
-                                            if (isSelected) Res.drawable.check_circle
+                                            if (isSelected) Res.drawable.circle_check
                                             else Res.drawable.circle,
                                         contentDescription = if (isSelected) "取消选择" else "选择",
                                         modifier =
@@ -469,7 +469,7 @@ fun LocalLibraryListScreen(
                                     )
                                 } else {
                                     Icon(
-                                        id = Res.drawable.more,
+                                        id = Res.drawable.ellipsis,
                                         contentDescription = "更多操作",
                                         modifier =
                                             Modifier.align(Alignment.CenterVertically)
@@ -763,8 +763,8 @@ private fun UserCloudLibrariesHeader(
                         .clip(CircleShape)
                         .background(CHelperTheme.colors.mainColor.copy(alpha = 0.15f)),
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(resource = Res.drawable.ic_user),
-                error = painterResource(resource = Res.drawable.ic_user),
+                placeholder = painterResource(resource = Res.drawable.user_round),
+                error = painterResource(resource = Res.drawable.user_round),
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -810,14 +810,14 @@ private fun UserCloudLibrariesHeader(
                     if (tier >= 2) {
                         Spacer(Modifier.width(4.dp))
                         Image(
-                            painter = painterResource(resource = Res.drawable.ic_verified_advanced),
+                            painter = painterResource(resource = Res.drawable.shield_check),
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                         )
                     } else if (tier == 1) {
                         Spacer(Modifier.width(4.dp))
                         Image(
-                            painter = painterResource(resource = Res.drawable.ic_verified_normal),
+                            painter = painterResource(resource = Res.drawable.badge_check),
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                         )
@@ -871,7 +871,7 @@ private fun UserCloudLibrariesHeader(
         ) {
             // 站内信按钮
             QuickActionButton(
-                icon = Res.drawable.ic_mail,
+                icon = Res.drawable.mail,
                 label = "站内信",
                 onClick = { navController.navigate(MessageScreenKey) },
             )
@@ -882,13 +882,13 @@ private fun UserCloudLibrariesHeader(
                 onClick = { navController.navigate(LibraryUploadScreenKey()) },
             )
             QuickActionButton(
-                icon = Res.drawable.ic_heart,
+                icon = Res.drawable.heart,
                 label = "创作季",
                 onClick = { navController.navigate(ActivityCenterScreenKey()) },
             )
             // 创作者主页按钮
             QuickActionButton(
-                icon = Res.drawable.ic_user,
+                icon = Res.drawable.user_round,
                 label = "创作者",
                 onClick = {
                     navController.navigate(
@@ -932,7 +932,7 @@ private fun UserCloudLibrariesHeader(
                 // 显式刷新入口：缓存命中时用户看不到自动刷新，需要这个出口手动绕过 TTL。
                 // 比如上传 / 删除完云端库立刻想确认列表对齐。
                 Icon(
-                    id = Res.drawable.refresh,
+                    id = Res.drawable.refresh_cw,
                     modifier =
                         Modifier.clickable { viewModel.refreshUserState(forceRefresh = true) }
                             .padding(4.dp)

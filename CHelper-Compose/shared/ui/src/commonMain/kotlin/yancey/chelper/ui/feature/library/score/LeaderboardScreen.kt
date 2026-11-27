@@ -96,7 +96,8 @@ fun LeaderboardScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
-                        painter = painterResource(resource = Res.drawable.alert_triangle),
+                        painter =
+                            painterResource(resource = Res.drawable.triangle_exclamation_point),
                         contentDescription = "Error",
                         modifier = Modifier.size(48.dp),
                         colorFilter = ColorFilter.tint(CHelperTheme.colors.mainColor),
@@ -129,7 +130,7 @@ fun LeaderboardScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Image(
-                            painter = painterResource(resource = Res.drawable.ic_verified_advanced),
+                            painter = painterResource(resource = Res.drawable.shield_check),
                             contentDescription = "Leaderboard",
                             modifier = Modifier.size(64.dp),
                         )
@@ -284,8 +285,8 @@ private fun LeaderboardItem(
                     .clip(CircleShape)
                     .background(CHelperTheme.colors.backgroundComponent),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(resource = Res.drawable.ic_user),
-            error = painterResource(resource = Res.drawable.ic_user),
+            placeholder = painterResource(resource = Res.drawable.user_round),
+            error = painterResource(resource = Res.drawable.user_round),
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -304,14 +305,14 @@ private fun LeaderboardItem(
                 if ((user.tier ?: 0) >= 2) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Image(
-                        painter = painterResource(resource = Res.drawable.ic_verified_advanced),
+                        painter = painterResource(resource = Res.drawable.shield_check),
                         contentDescription = "Tier",
                         modifier = Modifier.size(16.dp),
                     )
                 } else if ((user.tier ?: 0) >= 1) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Image(
-                        painter = painterResource(resource = Res.drawable.ic_verified_normal),
+                        painter = painterResource(resource = Res.drawable.badge_check),
                         contentDescription = "Tier",
                         modifier = Modifier.size(16.dp),
                     )
@@ -328,8 +329,7 @@ private fun LeaderboardItem(
                 Image(
                     painter =
                         painterResource(
-                            resource =
-                                if (publishMode) Res.drawable.box else Res.drawable.heart_filled
+                            resource = if (publishMode) Res.drawable.box else Res.drawable.heart
                         ),
                     contentDescription = if (publishMode) "Functions" else "Likes",
                     modifier = Modifier.size(14.dp),

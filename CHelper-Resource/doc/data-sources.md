@@ -12,6 +12,7 @@
 | 方块属性描述 | `Module:Block_property_descriptions_BE` | LSON 解析 |
 | gamerule 描述（第 2 级） | wiki 页面《游戏规则》`?action=raw` | wikitext 解析（移植 `update_translation.py`） |
 | particle 描述（第 2 级） | wiki 页面《基岩版粒子》`?action=raw` | 同上 |
+| 补全媒体 | 中文 Wiki 的基岩版数据值子表、音效表和文件索引，Mojang 的基岩版声音定义 | 优先按 Wiki 表中的基岩版 ID 获取。缺少图标时查询同名精灵图并解析文件重定向。补齐音效时优先使用资源包对应的 Mojang 版本标签，从 Wiki 文件索引获取实际文件名，同时核对文件是否对应唯一音源并使用受支持的编码 |
 | Java 版语言文件（JE） | `piston-meta.mojang.com` 版本清单 → 最新快照（跳过愚人节版本）→ 资源索引定位 `zh_cn.json` | 语言资源按 sha1 校验缓存 |
 | 基岩版语言文件（BE） | `Mojang/bedrock-samples` 的 `resource_pack/texts/zh_CN.lang` | release→`main`、beta→`preview`；netease 先按 `v<包版本>` 尝试标签，失败回退 `main` |
 | 命令人工审阅来源 | 中文 Wiki 的 `命令/<命令>` 和命令总览原始页面 | 保存到 `output/command_wiki`，不自动推导节点说明 |
@@ -46,6 +47,10 @@ cache/http/meta/<sha256(url)>.json  # { fetched_at, extra }
 - Mojang 语言资源额外做 sha1 校验，不匹配则重新下载。
 - 命令页面缓存使用 1 小时 TTL；下载失败时保留已导出的原文快照，
   `source.json` 标记为 `retained` 并记录错误，不将旧快照标为本次成功抓取。
+- 补全媒体复用 HTTP 缓存与 `http_ttl_hours`。`--refresh` 会请求最新数据，
+  临时下载失败时仍可使用旧缓存。目录只记录媒体地址。
+- Wiki 与游戏音源命名不一致时，生成器使用经波形核对的文件名作为查找别名，
+  再通过 Wiki API 解析当前文件地址与编码。别名仅适用于资源包中引用该音源的声音事件。
 
 ## 配置项（config.toml）
 

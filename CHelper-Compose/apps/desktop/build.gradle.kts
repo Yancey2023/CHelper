@@ -17,6 +17,7 @@ configurations.configureEach {
 
 dependencies {
     implementation(libs.jna.platform)
+    runtimeOnly(libs.vorbis.spi)
     implementation(libs.ktor.client.websockets)
     implementation(project(":shared:domain"))
     implementation(project(":shared:data"))
@@ -39,28 +40,11 @@ dependencies {
 }
 
 val bundledResources = layout.buildDirectory.dir("generated/resources")
-val buildNativeCore =
-    tasks.register<Exec>("buildNativeCore") {
-        description = "Build the Windows x64 JNI bridge and bundle its runtime dependencies"
-        workingDir = rootProject.projectDir.parentFile
-        commandLine("python", "scripts/build_desktop_core.py")
-        inputs.files(
-            rootProject.fileTree("../CHelper-Core") {
-                include("src/**", "cmake/**", "CMakeLists.txt")
-            }
-        )
-        inputs.file(rootProject.file("../scripts/build_desktop_core.py"))
-        inputs.file(rootProject.file("../scripts/native_build_tools.py"))
-        outputs.dir(layout.projectDirectory.dir("native/windows-x64"))
-        onlyIf { System.getProperty("os.name").startsWith("Windows") }
-    }
+val windowsJni = rootProject.file("../build/artifacts/windows/jni/bin")
 val prepareResources =
     tasks.register<Sync>("prepareResources") {
-        dependsOn(buildNativeCore)
-        from(rootProject.file("resources")) {
-            include("cpack/**", "old2new/**", "about/**", "rawtext/**")
-        }
-        from(layout.projectDirectory.dir("native")) { into("native") }
+        from(rootProject.file("../build/artifacts/resources"))
+        from(windowsJni) { into("native/windows-x64") }
         into(bundledResources)
         doLast {
             val packs = bundledResources.get().file("cpack/index.txt").asFile
@@ -71,7 +55,6 @@ val prepareResources =
                     .filter { it.extension == "cpack" }
                     .map { it.name }
                     .sorted()
-            check(filenames.isNotEmpty()) { "Missing bundled resource packs" }
             packs.writeText(filenames.joinToString("\n"))
         }
     }
@@ -84,17 +67,56 @@ val installerResources = layout.buildDirectory.dir("generated/windowsInstaller")
 val prepareWindowsInstaller =
     tasks.register<Exec>("prepareWindowsInstaller") {
         val javaHome = file(System.getProperty("java.home"))
+        val template = "jdk/jpackage/internal/resources/main.wxs"
         commandLine(
-            "python",
-            rootProject.file("../scripts/prepare_windows_installer.py"),
-            "--java-home",
-            javaHome,
-            "--output",
-            installerResources.get().asFile,
+            javaHome.resolve("bin/jimage.exe"),
+            "extract",
+            "--dir",
+            temporaryDir,
+            "--include",
+            "glob:**/$template",
+            javaHome.resolve("lib/modules"),
         )
-        inputs.file(rootProject.file("../scripts/prepare_windows_installer.py"))
         inputs.files(javaHome.resolve("bin/jimage.exe"), javaHome.resolve("lib/modules"))
         outputs.dir(installerResources)
+        doFirst {
+            val extracted = temporaryDir.resolve("jdk.jpackage/$template")
+            check(!extracted.exists() || extracted.delete()) { "Unable to refresh the JDK installer template" }
+        }
+        doLast {
+            val source = temporaryDir.resolve("jdk.jpackage/$template").readText()
+            val feature = """<ComponentGroupRef Id="FileAssociations"/>"""
+            val directory = """<Directory Id="TARGETDIR" Name="SourceDir"/>"""
+            check(listOf(feature, directory).all {
+                source.indexOf(it) >= 0 && source.indexOf(it) == source.lastIndexOf(
+                    it
+                )
+            }) {
+                "The JDK Windows installer template has changed. Review the URL protocol integration."
+            }
+            val protocol = """
+                <DirectoryRef Id="INSTALLDIR">
+                  <Component Id="CHelperUrlProtocol" Guid="F5C85EB7-23EB-46C6-8975-E236901C9579" Win64="yes">
+                    <RegistryKey Root="HKMU" Key="Software\Classes\chelper">
+                      <RegistryValue Type="string" Value="URL:CHelper command library" KeyPath="yes"/>
+                      <RegistryValue Name="URL Protocol" Type="string" Value=""/>
+                      <RegistryKey Key="DefaultIcon">
+                        <RegistryValue Type="string" Value="&quot;[INSTALLDIR]$(var.JpAppName).exe&quot;,0"/>
+                      </RegistryKey>
+                      <RegistryKey Key="shell\open\command">
+                        <RegistryValue Type="string" Value="&quot;[INSTALLDIR]$(var.JpAppName).exe&quot; &quot;%1&quot;"/>
+                      </RegistryKey>
+                    </RegistryKey>
+                  </Component>
+                </DirectoryRef>
+            """.trimIndent()
+            val output = installerResources.get().file("main.wxs").asFile
+            output.parentFile.mkdirs()
+            output.writeText(
+                source.replace(feature, "$feature\n      <ComponentRef Id=\"CHelperUrlProtocol\"/>")
+                    .replace(directory, "$directory\n$protocol\n"),
+            )
+        }
     }
 
 // Compose owns the application image. Its packager replaces --resource-dir, so use jpackage's

@@ -3,6 +3,78 @@
     "type": "normal",
     "content": [
         {
+            "name": "minecraft:abandoned_camp_bamboo_jungle",
+            "description": "竹林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_birch_forest",
+            "description": "桦木森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_birch_forest_mutated",
+            "description": "原始桦木森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_cherry_grove",
+            "description": "樱花树林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_cold_taiga",
+            "description": "积雪针叶林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_dappled_forest",
+            "description": "斑驳森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_extreme_hills_plus_trees",
+            "description": "风袭森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_flower_forest",
+            "description": "繁花森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_forest",
+            "description": "森林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_jungle_edge",
+            "description": "稀疏丛林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_meadow",
+            "description": "草甸废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_mega_taiga",
+            "description": "原始松木针叶林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_mesa_plateau_stone",
+            "description": "疏林恶地废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_pale_garden",
+            "description": "苍白之园废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_redwood_taiga_mutated",
+            "description": "原始云杉针叶林废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_savanna",
+            "description": "热带草原废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_swampland",
+            "description": "沼泽废弃营地"
+        },
+        {
+            "name": "minecraft:abandoned_camp_taiga",
+            "description": "针叶林废弃营地"
+        },
+        {
             "name": "minecraft:ancient_city",
             "description": "远古城市"
         },

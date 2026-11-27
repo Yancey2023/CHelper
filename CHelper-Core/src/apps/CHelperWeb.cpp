@@ -151,37 +151,36 @@ namespace {
 
     // 一条补全建议的内容字节数（不含记录间 padding）
     size_t getSuggestionBytes(const CHelper::AutoSuggestion::Suggestion &suggestion) {
-        size_t size = 8;// name长度 + description长度
+        size_t size = 4 * sizeof(std::uint32_t);
         size += suggestion.content->name.size() * sizeof(char16_t);
+        if (const auto *preview = suggestion.content->preview) {
+            size += preview->value.size() * sizeof(char16_t);
+        }
         if (suggestion.content->description.has_value()) {
             size += suggestion.content->description->size() * sizeof(char16_t);
         }
         return size;
     }
 
-    // 写入一条补全建议: [u32 name长度][u32 description长度][u16 name][u16 description]
-    // 返回数据末尾的位置（不含记录间 padding，由调用方决定是否补齐）。
-    // 注意：name/description 的长度已作为 u32 写在前面，这里只写 u16 数据本身，
-    // 不能使用带长度前缀的 writeUtf16。
+    // 写入预览类型和三条带长度的 UTF-16 字符串；每条补全建议按 4 字节对齐。
     size_t writeSuggestion(size_t offset, const CHelper::AutoSuggestion::Suggestion &suggestion) {
-        const auto &name = suggestion.content->name;
-        const auto &description = suggestion.content->description;
-        size_t nameLength = name.size();
-        size_t descriptionLength = description.has_value() ? description->size() : 0;
-        offset = writeU32(offset, static_cast<std::uint32_t>(nameLength));
-        offset = writeU32(offset, static_cast<std::uint32_t>(descriptionLength));
-        if (nameLength != 0) {
-            std::memcpy(buffer.data() + offset, name.data(), nameLength * sizeof(char16_t));
-            offset += nameLength * sizeof(char16_t);
-        }
-        if (descriptionLength != 0) {
-            std::memcpy(buffer.data() + offset, description->data(), descriptionLength * sizeof(char16_t));
-            offset += descriptionLength * sizeof(char16_t);
+        const auto &content = *suggestion.content;
+        const auto description = content.description ? std::u16string_view(*content.description) : std::u16string_view{};
+        const auto preview = content.preview ? *content.preview : CHelper::SuggestionPreview{};
+        offset = writeU32(offset, static_cast<std::uint32_t>(preview.kind));
+        offset = writeU32(offset, static_cast<std::uint32_t>(content.name.size()));
+        offset = writeU32(offset, static_cast<std::uint32_t>(description.size()));
+        offset = writeU32(offset, static_cast<std::uint32_t>(preview.value.size()));
+        for (const std::u16string_view value: {std::u16string_view(content.name), description, preview.value}) {
+            if (value.empty()) continue;
+            const size_t size = value.size() * sizeof(char16_t);
+            std::memcpy(buffer.data() + offset, value.data(), size);
+            offset += size;
         }
         return offset;
     }
 
-    // 布局: [u32 数量]([u32 name长度][u32 description长度][u16 name][u16 description][补齐到4])*
+    // 布局: [u32 数量]([补全建议][补齐到4])*
     const uint8_t *writeSuggestions(const std::vector<CHelper::AutoSuggestion::Suggestion> &suggestions) {
         size_t contentSize = sizeof(std::uint32_t);
         for (const auto &item: suggestions) {

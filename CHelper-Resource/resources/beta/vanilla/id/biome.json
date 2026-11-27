@@ -63,6 +63,10 @@
             "description": "绯红森林"
         },
         {
+            "name": "minecraft:dappled_forest",
+            "description": "斑驳森林"
+        },
+        {
             "name": "minecraft:deep_cold_ocean",
             "description": "冷水深海"
         },
@@ -151,6 +155,9 @@
             "description": "下界荒地"
         },
         {
+            "name": "minecraft:ice_caves"
+        },
+        {
             "name": "minecraft:ice_mountains",
             "description": "雪山"
         },
@@ -172,7 +179,7 @@
         },
         {
             "name": "minecraft:jungle_edge",
-            "description": "丛林边缘"
+            "description": "稀疏丛林"
         },
         {
             "name": "minecraft:jungle_edge_mutated",
@@ -232,7 +239,7 @@
         },
         {
             "name": "minecraft:mesa_plateau_stone",
-            "description": "繁茂的恶地高原"
+            "description": "疏林恶地"
         },
         {
             "name": "minecraft:mesa_plateau_stone_mutated",
@@ -309,6 +316,10 @@
         {
             "name": "minecraft:stony_peaks",
             "description": "裸岩山峰"
+        },
+        {
+            "name": "minecraft:sulfur_caves",
+            "description": "硫黄洞穴"
         },
         {
             "name": "minecraft:sunflower_plains",

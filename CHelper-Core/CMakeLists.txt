@@ -77,6 +77,11 @@ function(chelper_fetch_thirdparty name)
   cmake_parse_arguments(ARG "EXCLUDE_FROM_ALL;SYSTEM"
                         "GIT_REPOSITORY;GIT_TAG;SOURCE_SUBDIR" "" ${ARGN})
 
+  # Host and cross builds can configure concurrently from the same checkout.
+  file(
+    LOCK "${CHELPER_THIRDPARTY_SOURCE_DIR}/${name}.lock"
+    GUARD FUNCTION
+    TIMEOUT 300)
   set(sourceDir "${CHELPER_THIRDPARTY_SOURCE_DIR}/${name}")
   string(TOUPPER "${name}" nameUpper)
   set(contentOptions GIT_REPOSITORY "${ARG_GIT_REPOSITORY}" GIT_TAG
@@ -254,6 +259,7 @@ if(ANDROID)
   target_link_options(CHelperAndroid PRIVATE "-Wl,--exclude-libs,ALL")
   set_target_properties(CHelperAndroid PROPERTIES CXX_VISIBILITY_PRESET hidden
                                                   VISIBILITY_INLINES_HIDDEN ON)
+  install(TARGETS CHelperAndroid LIBRARY DESTINATION arm64-v8a COMPONENT jni)
 endif()
 
 if(CHELPER_BUILD_JNI AND NOT ANDROID AND NOT EMSCRIPTEN)
@@ -262,7 +268,15 @@ if(CHELPER_BUILD_JNI AND NOT ANDROID AND NOT EMSCRIPTEN)
   chelper_configure_target(CHelperJvm)
   target_include_directories(CHelperJvm PRIVATE ${JNI_INCLUDE_DIRS})
   target_link_libraries(CHelperJvm PRIVATE CHelper::Core)
-  install(TARGETS CHelperJvm RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
+  install(
+    TARGETS CHelperJvm
+    RUNTIME DESTINATION bin COMPONENT jni
+    LIBRARY DESTINATION lib COMPONENT jni)
+  if(WIN32)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT jni)
+    include(InstallRequiredSystemLibraries)
+  endif()
 endif()
 
 if(EMSCRIPTEN)
@@ -271,6 +285,37 @@ if(EMSCRIPTEN)
   target_link_libraries(CHelperWeb PRIVATE CHelper::NoFilesystemCore)
   set_target_properties(CHelperWeb PROPERTIES CXX_VISIBILITY_PRESET hidden
                                               VISIBILITY_INLINES_HIDDEN ON)
+
+  set(webOutput "${CMAKE_CURRENT_BINARY_DIR}/libCHelperWeb")
+  set(webLibraries CHelperWeb CHelperNoFilesystemCore fmt::fmt spdlog::spdlog
+                   xxHash::xxhash)
+  set(webLibraryFiles)
+  foreach(library IN LISTS webLibraries)
+    list(APPEND webLibraryFiles "$<TARGET_FILE:${library}>")
+  endforeach()
+  set(webExports
+    _init _release _createCommandContext _releaseCommandContext
+    _contextGetCommand _contextGetStructure _contextGetParamHint
+    _contextGetErrorReasons _contextGetSuggestionSize _contextGetSuggestion
+    _contextGetAllSuggestions _contextApplySuggestion _contextGetSyntaxTokens
+    _contextGetNodeCount _malloc _free)
+  list(JOIN webExports "','" webExports)
+  add_custom_command(
+    OUTPUT "${webOutput}.js" "${webOutput}.wasm"
+    COMMAND
+      "${CMAKE_CXX_COMPILER}" ${webLibraryFiles} -Os -o "${webOutput}.js" -s
+      FILESYSTEM=0 -s DISABLE_EXCEPTION_CATCHING=1 -s ALLOW_MEMORY_GROWTH -s
+      "ENVIRONMENT=[\"web\"]" -s "EXPORTED_FUNCTIONS=['${webExports}']" -s
+      WASM=1 -s "EXPORTED_RUNTIME_METHODS=['HEAPU8','HEAPU32']" -s MODULARIZE=1
+      -s EXPORT_ES6=1 -s EXPORT_NAME=createCHelperModule
+    DEPENDS ${webLibraryFiles}
+    VERBATIM)
+  add_custom_target(CHelperWebBundle DEPENDS "${webOutput}.js"
+                                             "${webOutput}.wasm")
+  install(
+    FILES "${webOutput}.js" "${webOutput}.wasm"
+    DESTINATION .
+    COMPONENT web)
 endif()
 
 if(NOT ANDROID AND NOT EMSCRIPTEN)

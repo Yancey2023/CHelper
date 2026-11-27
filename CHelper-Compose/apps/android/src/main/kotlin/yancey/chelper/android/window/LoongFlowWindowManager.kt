@@ -94,15 +94,15 @@ class LoongFlowWindowManager(private val application: Application) {
     /** 以导入模式启动游龙面板。 从 PublicLibraryShowScreen 菜单触发，携带当前查看的命令库数据 */
     fun showImport(context: Context, library: LibraryFunction): Boolean {
         return runCatching {
-                dismissImmediately()
+            dismissImmediately()
 
-                val vm = createViewModel()
-                vm.initImport(library)
-                viewModel = vm
+            val vm = createViewModel()
+            vm.initImport(library)
+            viewModel = vm
 
-                showPanel(context, LoongFlowMode.IMPORT, library)
-                true
-            }
+            showPanel(context, LoongFlowMode.IMPORT, library)
+            true
+        }
             .getOrElse {
                 dismissImmediately()
                 false
@@ -482,7 +482,7 @@ class LoongFlowWindowManager(private val application: Application) {
             bubbleHeight = bubbleSize
             bubbleView =
                 ImageView(application).apply {
-                    setImageResource(R.drawable.ic_loong_flow_bubble)
+                    setImageResource(R.drawable.square_terminal)
                     layoutParams = FrameLayout.LayoutParams(bubbleSize, bubbleSize)
                 }
         }

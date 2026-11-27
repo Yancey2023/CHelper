@@ -92,13 +92,13 @@ fun PublicLibraryCard(
                 // 标题行 + 版本号
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = library.name ?: "未命名",
+                        text = library.name,
                         modifier = Modifier.weight(1f, fill = false),
                         style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium),
                         maxLines = 1,
                     )
                     library.version
-                        ?.takeIf { it.isNotBlank() }
+                        .takeIf { it.isNotBlank() }
                         ?.let { ver ->
                             Spacer(Modifier.width(6.dp))
                             Text(
@@ -125,8 +125,8 @@ fun PublicLibraryCard(
                                     .clip(CircleShape)
                                     .background(CHelperTheme.colors.backgroundComponent),
                             contentScale = ContentScale.Crop,
-                            placeholder = painterResource(Res.drawable.ic_user),
-                            error = painterResource(Res.drawable.ic_user),
+                            placeholder = painterResource(Res.drawable.user_round),
+                            error = painterResource(Res.drawable.user_round),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
@@ -140,46 +140,38 @@ fun PublicLibraryCard(
                         if ((author.tier ?: 0) >= 2) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_advanced),
+                                painter = painterResource(Res.drawable.shield_check),
                                 contentDescription = "Advanced",
                                 modifier = Modifier.size(12.dp),
                             )
                         } else if ((author.tier ?: 0) >= 1) {
                             Spacer(Modifier.width(4.dp))
                             Image(
-                                painter = painterResource(Res.drawable.ic_verified_normal),
+                                painter = painterResource(Res.drawable.badge_check),
                                 contentDescription = "Normal",
                                 modifier = Modifier.size(12.dp),
                             )
                         }
                     }
-                        ?: library.authorName?.let { author ->
-                            Text(
-                                text = author,
-                                style =
-                                    TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 12.sp,
-                                    ),
-                            )
-                        }
-                    library.likeCount?.let { likes ->
-                        if (library.authorName != null) {
-                            Text(
-                                text = " · ",
-                                style =
-                                    TextStyle(
-                                        color = CHelperTheme.colors.textSecondary,
-                                        fontSize = 12.sp,
-                                    ),
-                            )
-                        }
-                        Image(
-                            painter =
-                                painterResource(
-                                    if (isFeatured) Res.drawable.heart_filled
-                                    else Res.drawable.ic_heart
+                        ?: Text(
+                            text = library.authorName,
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
                                 ),
+                        )
+                    library.likeCount?.let { likes ->
+                        Text(
+                            text = " · ",
+                            style =
+                                TextStyle(
+                                    color = CHelperTheme.colors.textSecondary,
+                                    fontSize = 12.sp,
+                                ),
+                        )
+                        Image(
+                            painter = painterResource(Res.drawable.heart),
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             colorFilter =
@@ -203,7 +195,7 @@ fun PublicLibraryCard(
 
                 // 标签
                 library.tags
-                    ?.takeIf { it.isNotEmpty() }
+                    .takeIf { it.isNotEmpty() }
                     ?.let { tags ->
                         FlowRow(
                             modifier = Modifier.padding(top = 6.dp),
@@ -244,7 +236,7 @@ fun PublicLibraryCard(
 
                 // 备注
                 library.note
-                    ?.takeIf { it.isNotBlank() }
+                    .takeIf { it.isNotBlank() }
                     ?.let { note ->
                         Spacer(Modifier.height(4.dp))
                         Text(
@@ -263,7 +255,7 @@ fun PublicLibraryCard(
             Image(
                 painter =
                     painterResource(
-                        if (library.isFavorited == true) Res.drawable.bookmark_filled
+                        if (library.isFavorited == true) Res.drawable.bookmark_check
                         else Res.drawable.bookmark
                     ),
                 contentDescription = if (library.isFavorited == true) "取消收藏" else "收藏",

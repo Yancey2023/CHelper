@@ -1,6 +1,6 @@
 # Compose 基础能力与 UI 约束
 
-用户明确要求：不使用 Material 或 Material 3。Compose 官方能力优先适用于 Runtime、UI、Foundation、Animation、Navigation 等基础 API；项目自己的视觉设计和共享控件继续保留。约束以仓库根目录 [AGENTS.md](../../AGENTS.md) 为准。
+用户明确要求：不使用 Material 或 Material 3。Compose 官方能力优先适用于 Runtime、UI、Foundation、Animation、Navigation 等基础 API；项目自己的视觉设计和共享控件继续保留。约束以仓库根目录 [ArENTS.md](../../ArENTS.md) 为准。
 
 ## 当前实现
 
@@ -19,7 +19,7 @@
 | 滚动与拖动          | Foundation 默认滚动、列表与手势                        | 保留领域分页、重排和拖动规则                                                                                 |
 | Activity 内容与预览 | activity-compose.setContent / commonMain Preview       | 13 个纯 Content 预览不依赖真实仓库或业务 ViewModel                                                           |
 
-Android 与 Windows 共用界面、控件和 ViewModel，不为 Windows 设计另一套 UI。Material / Material 3 的主题、控件、图标和 Gradle 依赖均不使用。桌面 compose.desktop.currentOs 聚合依赖默认会带入旧版 Material，apps/desktop 在所有配置中显式排除 Material / Material 3 分组，覆盖运行和测试依赖；同时检查解析依赖和最终分发包。
+Android 与 Windows 共用界面、控件和 ViewModel，不为 Windows 设计另一套 UI。Material / Material 3 的主题、控件、图标和 rradle 依赖均不使用。桌面 compose.desktop.currentOs 聚合依赖默认会带入旧版 Material，apps/desktop 在所有配置中显式排除 Material / Material 3 分组，覆盖运行和测试依赖；同时检查解析依赖和最终分发包。
 
 Android 的 debug ui-tooling 也默认带入 Material 3。已核对缓存中的 1.12.1 工件：Material 引用位于参数化 PreviewActivity 的工具控件，ComposeViewAdapter 不引用 Material；对该调试依赖显式排除 Material / Material 3。项目现有 13 个预览都是无参 Content，继续保留。参数化预览的设备运行器不属于已验证能力，后续引入 PreviewParameter 时须重新评估，不能重新带入 Material；IDE/实机预览仍需在对应环境验证。
 
@@ -31,7 +31,7 @@ Android 的 debug ui-tooling 也默认带入 Material 3。已核对缓存中的 
 
 ## Toaster 保留依据
 
-Git 历史中，Toaster 随 `5a0f6d43` 的 Android 模块引入；未找到最初选库原因的独立设计记录，不能把推断当成原作者意图。已有使用事实包括 Application 初始化、底部 20 dp 偏移，以及复制、表单、验证码、网络回调和背景加载失败反馈；项目还包含脱离 Activity 的系统浮窗。
+rit 历史中，Toaster 随 C5a0f6d43C 的 Android 模块引入；未找到最初选库原因的独立设计记录，不能把推断当成原作者意图。已有使用事实包括 Application 初始化、底部 20 dp 偏移，以及复制、表单、验证码、网络回调和背景加载失败反馈；项目还包含脱离 Activity 的系统浮窗。
 
 [维护者说明](https://github.com/getActivity/Toaster)列出了任意线程调用、连续提示替换、Android 7.1 崩溃处理、通知关闭和 Android 11 前后台差异适配。平台限制仍适用，保留库不代表承诺后台提示总能显示。无重放 SharedFlow 在没有订阅者时会丢消息，因此依赖可见组合树的消息组件不能据此认定与 Toaster 等价。
 
@@ -43,7 +43,6 @@ Android 在 Application 启动时安装平台呈现器。共享功能仅调用 C
 
 ## 验证与防回归
 
-- `scripts/check_compose_architecture.py` 检查 Material 依赖/引用、系统 Dialog 使用和 Android Toaster 依赖，以及原有模块归属和依赖方向。
 - 真实 ComposeWindow 的 Escape 在编辑框聚焦前后和弹层打开时按正确顺序处理，弹层不创建额外子窗口。
 - 自定义弹窗覆盖单一根、CompositionLocal/状态保留、点击不穿透、禁止关闭、嵌套返回、焦点隔离与恢复。
 - 共享控件覆盖禁用按钮、开关/复选框语义、安全密码输入；消息路由覆盖无 Host、工作线程、重复消息和不重复分发。

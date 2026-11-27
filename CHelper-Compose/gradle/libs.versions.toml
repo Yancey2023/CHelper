@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.2"
+agp = "9.5.3"
 benchmark = "1.5.0"
 metrics = "1.0.0"
 profileinstaller = "1.4.1"
@@ -19,6 +19,7 @@ lifecycle = "2.11.1"
 multiplatform-lifecycle = "2.11.0"
 compose-ui = "1.13.0"
 compose-multiplatform = "1.12.2"
+compose-hot-reload = "1.3.0"
 coroutines = "1.11.0"
 coil = "3.6.3"
 kotlinx-serialization-json = "1.13.0"
@@ -37,6 +38,7 @@ umeng-asms = "1.8.7.2"
 umeng-apm = "2.1.0"
 junit = "4.13.2"
 jna = "5.19.1"
+vorbis-spi = "1.0.3.3"
 androidx-test-core = "1.7.0"
 androidx-test-espresso = "3.7.0"
 androidx-test-ext-junit = "1.3.0"
@@ -64,6 +66,7 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
+vorbis-spi = { module = "com.googlecode.soundlibs:vorbisspi", version.ref = "vorbis-spi" }
 compose-multiplatform-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
 multiplatform-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "multiplatform-lifecycle" }
 multiplatform-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "multiplatform-lifecycle" }
@@ -120,6 +123,7 @@ android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+compose-hot-reload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

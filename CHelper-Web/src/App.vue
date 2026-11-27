@@ -2,7 +2,15 @@
 import { CircleAlert, Copy } from '@lucide/vue'
 import { useColorMode } from '@vueuse/core'
 import { ListboxContent, ListboxRoot, ListboxVirtualizer } from 'reka-ui'
-import { onBeforeUnmount, ref, shallowReactive, shallowRef, toRaw, useTemplateRef } from 'vue'
+import {
+  onBeforeUnmount,
+  ref,
+  shallowReactive,
+  shallowRef,
+  toRaw,
+  useTemplateRef,
+  watch,
+} from 'vue'
 import { toast } from 'vue-sonner'
 import { ALL_BRANCH, ALL_BRANCH_CHINESE, DEFAULT_BRANCH, getCore } from '@/core/CPackManager'
 import type { Branch } from '@/core/CPackManager'
@@ -18,6 +26,7 @@ import { ScrollArea, VirtualScrollViewport } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Toaster } from '@/components/ui/sonner'
 import { useEditorViewport } from '@/lib/useEditorViewport'
+import { useSuggestionAudio } from '@/lib/useSuggestionAudio'
 import type { EditorValue } from '@/types'
 
 const appFrame = useTemplateRef<HTMLDivElement>('appFrame')
@@ -45,6 +54,10 @@ const suggestions = shallowRef<{
   cachedTitle: (index: number) => string
 }>()
 let suggestionRevision = 0
+const { audioPreview, toggleAudio, seekAudio, releaseAudio } = useSuggestionAudio(() =>
+  toast.error('无法试听该音频'),
+)
+watch(suggestions, releaseAudio)
 const editorValue = ref<EditorValue>({
   text: '',
   selectionStart: 0,
@@ -269,8 +282,11 @@ void loadBranch(DEFAULT_BRANCH)
                     :index="option"
                     :suggestion="suggestions.read(option)"
                     :measure="virtualizer.measureElement"
-                    :class="{ 'pb-(--component-gap)': option < suggestions.indices.length - 1 }"
+                    :audio-state="audioPreview?.index === option ? audioPreview : undefined"
+                    :gap-after="option < suggestions.indices.length - 1"
                     @apply="onSuggestionClick"
+                    @audio="toggleAudio"
+                    @seek-audio="seekAudio"
                   />
                 </ListboxVirtualizer>
               </VirtualScrollViewport>
@@ -332,7 +348,7 @@ void loadBranch(DEFAULT_BRANCH)
   height: 100dvh;
   max-height: var(--visual-viewport-height, none);
   max-height: min(100dvh, var(--visual-viewport-height, 100dvh));
-  grid-template-rows: minmax(0, auto) minmax(0, 1fr) auto;
+  grid-template-rows: fit-content(50%) minmax(0, 1fr) auto;
   gap: var(--component-gap);
   padding: var(--component-gap);
   overflow: clip;
@@ -346,10 +362,13 @@ void loadBranch(DEFAULT_BRANCH)
 }
 
 .command-info {
-  overflow: clip;
+  grid-auto-rows: max-content;
+  overflow: auto;
+  overscroll-behavior-y: contain;
 }
 
 .suggestion-viewport {
+  container: suggestion-list / size;
   /* 为 shadcn 的 w-2.5 滚动条留出轨道宽度及卡片间距。 */
   padding-inline-end: calc(var(--component-gap) + var(--spacing) * 2.5);
   overscroll-behavior-y: contain;

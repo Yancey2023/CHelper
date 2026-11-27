@@ -427,6 +427,18 @@
             "description": "黑色混凝土粉末"
         },
         {
+            "name": "black_concrete_slab",
+            "description": "黑色混凝土台阶"
+        },
+        {
+            "name": "black_concrete_stairs",
+            "description": "黑色混凝土楼梯"
+        },
+        {
+            "name": "black_cushion",
+            "description": "黑色坐垫"
+        },
+        {
             "name": "black_dye",
             "description": "黑色染料"
         },
@@ -457,6 +469,14 @@
         {
             "name": "black_wool",
             "description": "黑色羊毛"
+        },
+        {
+            "name": "black_wool_slab",
+            "description": "黑色羊毛台阶"
+        },
+        {
+            "name": "black_wool_stairs",
+            "description": "黑色羊毛楼梯"
         },
         {
             "name": "blackstone",
@@ -515,6 +535,18 @@
             "description": "蓝色混凝土粉末"
         },
         {
+            "name": "blue_concrete_slab",
+            "description": "蓝色混凝土台阶"
+        },
+        {
+            "name": "blue_concrete_stairs",
+            "description": "蓝色混凝土楼梯"
+        },
+        {
+            "name": "blue_cushion",
+            "description": "蓝色坐垫"
+        },
+        {
             "name": "blue_dye",
             "description": "蓝色染料"
         },
@@ -557,6 +589,14 @@
         {
             "name": "blue_wool",
             "description": "蓝色羊毛"
+        },
+        {
+            "name": "blue_wool_slab",
+            "description": "蓝色羊毛台阶"
+        },
+        {
+            "name": "blue_wool_stairs",
+            "description": "蓝色羊毛楼梯"
         },
         {
             "name": "bogged_spawn_egg",
@@ -655,6 +695,10 @@
             "description": "红砖墙"
         },
         {
+            "name": "brittle_ice",
+            "description": "脆冰"
+        },
+        {
             "name": "brown_bundle",
             "description": "棕色收纳袋"
         },
@@ -673,6 +717,18 @@
         {
             "name": "brown_concrete_powder",
             "description": "棕色混凝土粉末"
+        },
+        {
+            "name": "brown_concrete_slab",
+            "description": "棕色混凝土台阶"
+        },
+        {
+            "name": "brown_concrete_stairs",
+            "description": "棕色混凝土楼梯"
+        },
+        {
+            "name": "brown_cushion",
+            "description": "棕色坐垫"
         },
         {
             "name": "brown_dye",
@@ -717,6 +773,14 @@
         {
             "name": "brown_wool",
             "description": "棕色羊毛"
+        },
+        {
+            "name": "brown_wool_slab",
+            "description": "棕色羊毛台阶"
+        },
+        {
+            "name": "brown_wool_stairs",
+            "description": "棕色羊毛楼梯"
         },
         {
             "name": "brush",
@@ -939,6 +1003,10 @@
             "description": "雕纹书架"
         },
         {
+            "name": "chiseled_cinnabar",
+            "description": "雕纹朱砂"
+        },
+        {
             "name": "chiseled_copper",
             "description": "雕纹铜块"
         },
@@ -975,6 +1043,10 @@
             "description": "雕纹石砖"
         },
         {
+            "name": "chiseled_sulfur",
+            "description": "雕纹硫黄"
+        },
+        {
             "name": "chiseled_tuff",
             "description": "雕纹凝灰岩"
         },
@@ -993,6 +1065,38 @@
         {
             "name": "chorus_plant",
             "description": "紫颂植株"
+        },
+        {
+            "name": "cinnabar",
+            "description": "朱砂"
+        },
+        {
+            "name": "cinnabar_brick_slab",
+            "description": "朱砂砖台阶"
+        },
+        {
+            "name": "cinnabar_brick_stairs",
+            "description": "朱砂砖楼梯"
+        },
+        {
+            "name": "cinnabar_brick_wall",
+            "description": "朱砂砖墙"
+        },
+        {
+            "name": "cinnabar_bricks",
+            "description": "朱砂砖"
+        },
+        {
+            "name": "cinnabar_slab",
+            "description": "朱砂台阶"
+        },
+        {
+            "name": "cinnabar_stairs",
+            "description": "朱砂楼梯"
+        },
+        {
+            "name": "cinnabar_wall",
+            "description": "朱砂墙"
         },
         {
             "name": "clay",
@@ -1419,6 +1523,18 @@
             "description": "青色混凝土粉末"
         },
         {
+            "name": "cyan_concrete_slab",
+            "description": "青色混凝土台阶"
+        },
+        {
+            "name": "cyan_concrete_stairs",
+            "description": "青色混凝土楼梯"
+        },
+        {
+            "name": "cyan_cushion",
+            "description": "青色坐垫"
+        },
+        {
             "name": "cyan_dye",
             "description": "青色染料"
         },
@@ -1449,6 +1565,14 @@
         {
             "name": "cyan_wool",
             "description": "青色羊毛"
+        },
+        {
+            "name": "cyan_wool_slab",
+            "description": "青色羊毛台阶"
+        },
+        {
+            "name": "cyan_wool_stairs",
+            "description": "青色羊毛楼梯"
         },
         {
             "name": "damaged_anvil",
@@ -2127,6 +2251,9 @@
             "description": "青蛙刷怪蛋"
         },
         {
+            "name": "frostbite_spawn_egg"
+        },
+        {
             "name": "frosted_ice",
             "description": "霜冰"
         },
@@ -2239,6 +2366,10 @@
             "description": "金胸甲"
         },
         {
+            "name": "golden_dandelion",
+            "description": "金蒲公英"
+        },
+        {
             "name": "golden_helmet",
             "description": "金头盔"
         },
@@ -2327,6 +2458,18 @@
             "description": "灰色混凝土粉末"
         },
         {
+            "name": "gray_concrete_slab",
+            "description": "灰色混凝土台阶"
+        },
+        {
+            "name": "gray_concrete_stairs",
+            "description": "灰色混凝土楼梯"
+        },
+        {
+            "name": "gray_cushion",
+            "description": "灰色坐垫"
+        },
+        {
             "name": "gray_dye",
             "description": "灰色染料"
         },
@@ -2359,6 +2502,14 @@
             "description": "灰色羊毛"
         },
         {
+            "name": "gray_wool_slab",
+            "description": "灰色羊毛台阶"
+        },
+        {
+            "name": "gray_wool_stairs",
+            "description": "灰色羊毛楼梯"
+        },
+        {
             "name": "green_bundle",
             "description": "绿色收纳袋"
         },
@@ -2377,6 +2528,18 @@
         {
             "name": "green_concrete_powder",
             "description": "绿色混凝土粉末"
+        },
+        {
+            "name": "green_concrete_slab",
+            "description": "绿色混凝土台阶"
+        },
+        {
+            "name": "green_concrete_stairs",
+            "description": "绿色混凝土楼梯"
+        },
+        {
+            "name": "green_cushion",
+            "description": "绿色坐垫"
         },
         {
             "name": "green_dye",
@@ -2409,6 +2572,14 @@
         {
             "name": "green_wool",
             "description": "绿色羊毛"
+        },
+        {
+            "name": "green_wool_slab",
+            "description": "绿色羊毛台阶"
+        },
+        {
+            "name": "green_wool_stairs",
+            "description": "绿色羊毛楼梯"
         },
         {
             "name": "grindstone",
@@ -2525,6 +2696,18 @@
         {
             "name": "ice",
             "description": "冰"
+        },
+        {
+            "name": "ice_ball",
+            "description": "冰球"
+        },
+        {
+            "name": "ice_crystal",
+            "description": "冰晶"
+        },
+        {
+            "name": "icicle",
+            "description": "冰锥"
         },
         {
             "name": "infested_chiseled_stone_bricks",
@@ -2812,7 +2995,7 @@
         },
         {
             "name": "light_block_11",
-            "description": "光源方块（11）"
+            "description": "光源方块"
         },
         {
             "name": "light_block_12",
@@ -2883,6 +3066,18 @@
             "description": "淡蓝色混凝土粉末"
         },
         {
+            "name": "light_blue_concrete_slab",
+            "description": "淡蓝色混凝土台阶"
+        },
+        {
+            "name": "light_blue_concrete_stairs",
+            "description": "淡蓝色混凝土楼梯"
+        },
+        {
+            "name": "light_blue_cushion",
+            "description": "淡蓝色坐垫"
+        },
+        {
             "name": "light_blue_dye",
             "description": "淡蓝色染料"
         },
@@ -2915,6 +3110,14 @@
             "description": "淡蓝色羊毛"
         },
         {
+            "name": "light_blue_wool_slab",
+            "description": "淡蓝色羊毛台阶"
+        },
+        {
+            "name": "light_blue_wool_stairs",
+            "description": "淡蓝色羊毛楼梯"
+        },
+        {
             "name": "light_gray_bundle",
             "description": "淡灰色收纳袋"
         },
@@ -2933,6 +3136,18 @@
         {
             "name": "light_gray_concrete_powder",
             "description": "淡灰色混凝土粉末"
+        },
+        {
+            "name": "light_gray_concrete_slab",
+            "description": "淡灰色混凝土台阶"
+        },
+        {
+            "name": "light_gray_concrete_stairs",
+            "description": "淡灰色混凝土楼梯"
+        },
+        {
+            "name": "light_gray_cushion",
+            "description": "淡灰色坐垫"
         },
         {
             "name": "light_gray_dye",
@@ -2961,6 +3176,14 @@
         {
             "name": "light_gray_wool",
             "description": "淡灰色羊毛"
+        },
+        {
+            "name": "light_gray_wool_slab",
+            "description": "淡灰色羊毛台阶"
+        },
+        {
+            "name": "light_gray_wool_stairs",
+            "description": "淡灰色羊毛楼梯"
         },
         {
             "name": "light_weighted_pressure_plate",
@@ -2999,6 +3222,18 @@
             "description": "黄绿色混凝土粉末"
         },
         {
+            "name": "lime_concrete_slab",
+            "description": "黄绿色混凝土台阶"
+        },
+        {
+            "name": "lime_concrete_stairs",
+            "description": "黄绿色混凝土楼梯"
+        },
+        {
+            "name": "lime_cushion",
+            "description": "黄绿色坐垫"
+        },
+        {
             "name": "lime_dye",
             "description": "黄绿色染料"
         },
@@ -3029,6 +3264,14 @@
         {
             "name": "lime_wool",
             "description": "黄绿色羊毛"
+        },
+        {
+            "name": "lime_wool_slab",
+            "description": "黄绿色羊毛台阶"
+        },
+        {
+            "name": "lime_wool_stairs",
+            "description": "黄绿色羊毛楼梯"
         },
         {
             "name": "lingering_potion",
@@ -3128,6 +3371,18 @@
             "description": "品红色混凝土粉末"
         },
         {
+            "name": "magenta_concrete_slab",
+            "description": "品红色混凝土台阶"
+        },
+        {
+            "name": "magenta_concrete_stairs",
+            "description": "品红色混凝土楼梯"
+        },
+        {
+            "name": "magenta_cushion",
+            "description": "品红色坐垫"
+        },
+        {
             "name": "magenta_dye",
             "description": "品红色染料"
         },
@@ -3158,6 +3413,14 @@
         {
             "name": "magenta_wool",
             "description": "品红色羊毛"
+        },
+        {
+            "name": "magenta_wool_slab",
+            "description": "品红色羊毛台阶"
+        },
+        {
+            "name": "magenta_wool_stairs",
+            "description": "品红色羊毛楼梯"
         },
         {
             "name": "magma",
@@ -3382,6 +3645,10 @@
         {
             "name": "music_disc_blocks",
             "description": "音乐唱片 C418 - blocks"
+        },
+        {
+            "name": "music_disc_bounce",
+            "description": "音乐唱片"
         },
         {
             "name": "music_disc_cat",
@@ -3696,6 +3963,18 @@
             "description": "橙色混凝土粉末"
         },
         {
+            "name": "orange_concrete_slab",
+            "description": "橙色混凝土台阶"
+        },
+        {
+            "name": "orange_concrete_stairs",
+            "description": "橙色混凝土楼梯"
+        },
+        {
+            "name": "orange_cushion",
+            "description": "橙色坐垫"
+        },
+        {
             "name": "orange_dye",
             "description": "橙色染料"
         },
@@ -3706,6 +3985,10 @@
         {
             "name": "orange_harness",
             "description": "橙色挽具"
+        },
+        {
+            "name": "orange_poplar_leaves",
+            "description": "橙色杨树树叶"
         },
         {
             "name": "orange_shulker_box",
@@ -3730,6 +4013,14 @@
         {
             "name": "orange_wool",
             "description": "橙色羊毛"
+        },
+        {
+            "name": "orange_wool_slab",
+            "description": "橙色羊毛台阶"
+        },
+        {
+            "name": "orange_wool_stairs",
+            "description": "橙色羊毛楼梯"
         },
         {
             "name": "oxeye_daisy",
@@ -3972,6 +4263,18 @@
             "description": "粉红色混凝土粉末"
         },
         {
+            "name": "pink_concrete_slab",
+            "description": "粉红色混凝土台阶"
+        },
+        {
+            "name": "pink_concrete_stairs",
+            "description": "粉红色混凝土楼梯"
+        },
+        {
+            "name": "pink_cushion",
+            "description": "粉红色坐垫"
+        },
+        {
             "name": "pink_dye",
             "description": "粉红色染料"
         },
@@ -4010,6 +4313,14 @@
         {
             "name": "pink_wool",
             "description": "粉红色羊毛"
+        },
+        {
+            "name": "pink_wool_slab",
+            "description": "粉红色羊毛台阶"
+        },
+        {
+            "name": "pink_wool_stairs",
+            "description": "粉红色羊毛楼梯"
         },
         {
             "name": "piston",
@@ -4104,6 +4415,22 @@
             "description": "磨制黑石墙"
         },
         {
+            "name": "polished_cinnabar",
+            "description": "磨制朱砂"
+        },
+        {
+            "name": "polished_cinnabar_slab",
+            "description": "磨制朱砂台阶"
+        },
+        {
+            "name": "polished_cinnabar_stairs",
+            "description": "磨制朱砂楼梯"
+        },
+        {
+            "name": "polished_cinnabar_wall",
+            "description": "磨制朱砂墙"
+        },
+        {
             "name": "polished_deepslate",
             "description": "磨制深板岩"
         },
@@ -4144,6 +4471,22 @@
             "description": "磨制花岗岩楼梯"
         },
         {
+            "name": "polished_sulfur",
+            "description": "磨制硫黄"
+        },
+        {
+            "name": "polished_sulfur_slab",
+            "description": "磨制硫黄台阶"
+        },
+        {
+            "name": "polished_sulfur_stairs",
+            "description": "磨制硫黄楼梯"
+        },
+        {
+            "name": "polished_sulfur_wall",
+            "description": "磨制硫黄墙"
+        },
+        {
             "name": "polished_tuff",
             "description": "磨制凝灰岩"
         },
@@ -4160,6 +4503,74 @@
             "description": "磨制凝灰岩墙"
         },
         {
+            "name": "poplar_boat",
+            "description": "杨木船"
+        },
+        {
+            "name": "poplar_button",
+            "description": "杨木按钮"
+        },
+        {
+            "name": "poplar_chest_boat",
+            "description": "杨木运输船"
+        },
+        {
+            "name": "poplar_door",
+            "description": "杨木门"
+        },
+        {
+            "name": "poplar_fence",
+            "description": "杨木栅栏"
+        },
+        {
+            "name": "poplar_fence_gate",
+            "description": "杨木栅栏门"
+        },
+        {
+            "name": "poplar_hanging_sign",
+            "description": "悬挂式杨木告示牌"
+        },
+        {
+            "name": "poplar_log",
+            "description": "杨木原木"
+        },
+        {
+            "name": "poplar_planks",
+            "description": "杨木木板"
+        },
+        {
+            "name": "poplar_pressure_plate",
+            "description": "杨木压力板"
+        },
+        {
+            "name": "poplar_sapling",
+            "description": "杨树树苗"
+        },
+        {
+            "name": "poplar_shelf",
+            "description": "杨木展示架"
+        },
+        {
+            "name": "poplar_sign",
+            "description": "杨木告示牌"
+        },
+        {
+            "name": "poplar_slab",
+            "description": "杨木台阶"
+        },
+        {
+            "name": "poplar_stairs",
+            "description": "杨木楼梯"
+        },
+        {
+            "name": "poplar_trapdoor",
+            "description": "杨木活板门"
+        },
+        {
+            "name": "poplar_wood",
+            "description": "杨木"
+        },
+        {
             "name": "popped_chorus_fruit",
             "description": "爆裂紫颂果"
         },
@@ -4174,6 +4585,10 @@
         {
             "name": "potato",
             "description": "马铃薯"
+        },
+        {
+            "name": "potent_sulfur",
+            "description": "烈性硫黄"
         },
         {
             "name": "potion",
@@ -4317,6 +4732,18 @@
             "description": "紫色混凝土粉末"
         },
         {
+            "name": "purple_concrete_slab",
+            "description": "紫色混凝土台阶"
+        },
+        {
+            "name": "purple_concrete_stairs",
+            "description": "紫色混凝土楼梯"
+        },
+        {
+            "name": "purple_cushion",
+            "description": "紫色坐垫"
+        },
+        {
             "name": "purple_dye",
             "description": "紫色染料"
         },
@@ -4347,6 +4774,14 @@
         {
             "name": "purple_wool",
             "description": "紫色羊毛"
+        },
+        {
+            "name": "purple_wool_slab",
+            "description": "紫色羊毛台阶"
+        },
+        {
+            "name": "purple_wool_stairs",
+            "description": "紫色羊毛楼梯"
         },
         {
             "name": "purpur_block",
@@ -4473,6 +4908,18 @@
             "description": "红色混凝土粉末"
         },
         {
+            "name": "red_concrete_slab",
+            "description": "红色混凝土台阶"
+        },
+        {
+            "name": "red_concrete_stairs",
+            "description": "红色混凝土楼梯"
+        },
+        {
+            "name": "red_cushion",
+            "description": "红色坐垫"
+        },
+        {
             "name": "red_dye",
             "description": "红色染料"
         },
@@ -4509,6 +4956,10 @@
             "description": "红色下界砖墙"
         },
         {
+            "name": "red_poplar_leaves",
+            "description": "红色杨树树叶"
+        },
+        {
             "name": "red_sand",
             "description": "红沙"
         },
@@ -4527,6 +4978,10 @@
         {
             "name": "red_sandstone_wall",
             "description": "红砂岩墙"
+        },
+        {
+            "name": "red_shrub",
+            "description": "红灌木"
         },
         {
             "name": "red_shulker_box",
@@ -4551,6 +5006,14 @@
         {
             "name": "red_wool",
             "description": "红色羊毛"
+        },
+        {
+            "name": "red_wool_slab",
+            "description": "红色羊毛台阶"
+        },
+        {
+            "name": "red_wool_stairs",
+            "description": "红色羊毛楼梯"
         },
         {
             "name": "redstone",
@@ -4723,6 +5186,10 @@
         {
             "name": "sheep_spawn_egg",
             "description": "绵羊刷怪蛋"
+        },
+        {
+            "name": "shelf_mushroom",
+            "description": "层孔菇"
         },
         {
             "name": "shelter_pottery_sherd",
@@ -5134,6 +5601,10 @@
             "description": "切石机"
         },
         {
+            "name": "straw_bed",
+            "description": "麦秆床"
+        },
+        {
             "name": "stray_spawn_egg",
             "description": "流浪者刷怪蛋"
         },
@@ -5222,6 +5693,14 @@
             "description": "去皮苍白橡木"
         },
         {
+            "name": "stripped_poplar_log",
+            "description": "去皮杨木原木"
+        },
+        {
+            "name": "stripped_poplar_wood",
+            "description": "去皮杨木"
+        },
+        {
             "name": "stripped_spruce_log",
             "description": "去皮云杉原木"
         },
@@ -5252,6 +5731,50 @@
         {
             "name": "sugar_cane",
             "description": "甘蔗"
+        },
+        {
+            "name": "sulfur",
+            "description": "硫黄"
+        },
+        {
+            "name": "sulfur_brick_slab",
+            "description": "硫黄砖台阶"
+        },
+        {
+            "name": "sulfur_brick_stairs",
+            "description": "硫黄砖楼梯"
+        },
+        {
+            "name": "sulfur_brick_wall",
+            "description": "硫黄砖墙"
+        },
+        {
+            "name": "sulfur_bricks",
+            "description": "硫黄砖"
+        },
+        {
+            "name": "sulfur_cube_bucket",
+            "description": "硫方怪桶"
+        },
+        {
+            "name": "sulfur_cube_spawn_egg",
+            "description": "硫方怪刷怪蛋"
+        },
+        {
+            "name": "sulfur_slab",
+            "description": "硫黄台阶"
+        },
+        {
+            "name": "sulfur_spike",
+            "description": "硫黄尖锥"
+        },
+        {
+            "name": "sulfur_stairs",
+            "description": "硫黄楼梯"
+        },
+        {
+            "name": "sulfur_wall",
+            "description": "硫黄墙"
         },
         {
             "name": "sunflower",
@@ -5902,6 +6425,18 @@
             "description": "白色混凝土粉末"
         },
         {
+            "name": "white_concrete_slab",
+            "description": "白色混凝土台阶"
+        },
+        {
+            "name": "white_concrete_stairs",
+            "description": "白色混凝土楼梯"
+        },
+        {
+            "name": "white_cushion",
+            "description": "白色坐垫"
+        },
+        {
             "name": "white_dye",
             "description": "白色染料"
         },
@@ -5936,6 +6471,14 @@
         {
             "name": "white_wool",
             "description": "白色羊毛"
+        },
+        {
+            "name": "white_wool_slab",
+            "description": "白色羊毛台阶"
+        },
+        {
+            "name": "white_wool_stairs",
+            "description": "白色羊毛楼梯"
         },
         {
             "name": "wild_armor_trim_smithing_template",
@@ -5987,7 +6530,7 @@
         },
         {
             "name": "wooden_door",
-            "description": "橡木门"
+            "description": "木门"
         },
         {
             "name": "wooden_hoe",
@@ -6038,6 +6581,18 @@
             "description": "黄色混凝土粉末"
         },
         {
+            "name": "yellow_concrete_slab",
+            "description": "黄色混凝土台阶"
+        },
+        {
+            "name": "yellow_concrete_stairs",
+            "description": "黄色混凝土楼梯"
+        },
+        {
+            "name": "yellow_cushion",
+            "description": "黄色坐垫"
+        },
+        {
             "name": "yellow_dye",
             "description": "黄色染料"
         },
@@ -6048,6 +6603,10 @@
         {
             "name": "yellow_harness",
             "description": "黄色挽具"
+        },
+        {
+            "name": "yellow_poplar_leaves",
+            "description": "黄色杨树树叶"
         },
         {
             "name": "yellow_shulker_box",
@@ -6068,6 +6627,14 @@
         {
             "name": "yellow_wool",
             "description": "黄色羊毛"
+        },
+        {
+            "name": "yellow_wool_slab",
+            "description": "黄色羊毛台阶"
+        },
+        {
+            "name": "yellow_wool_stairs",
+            "description": "黄色羊毛楼梯"
         },
         {
             "name": "zoglin_spawn_egg",

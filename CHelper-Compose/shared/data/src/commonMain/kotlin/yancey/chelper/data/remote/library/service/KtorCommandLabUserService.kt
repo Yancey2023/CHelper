@@ -194,7 +194,7 @@ internal class KtorCommandLabUserService(private val api: RemoteApi) : CommandLa
         request: RedeemActivityRequest,
     ): BaseResult<RedeemActivityResponse?> =
         api.request(
-            "activity/redeem/${productId.toString().encodeURLPathPart()}",
+            "activity/redeem/${productId.encodeURLPathPart()}",
             HttpMethod.Post,
         ) {
             contentType(ContentType.Application.Json)

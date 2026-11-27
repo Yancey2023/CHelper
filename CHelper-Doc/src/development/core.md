@@ -57,59 +57,16 @@ CHelper 内核包含了语法解析、错误检测、补全提示、命令结构
 
 ## 编译
 
-CHelper 使用 CMake 项目构建系统，同时支持 GCC、Clang、MSVC 等主流编译器，也同时支持 Windows、Linux、MacOS 等主流的操作系统。在你电脑安装好 CMake 和任意的 c++ 编译工具链后，即可通过下面的命令构建 CHelper，命令仅作参考：
+从仓库根目录运行 `mise install --locked`。内核使用 C++23，需要支持 `std::expected` 的 C++ 工具链。
 
 ```bash
-git clone https://github.com/Yancey2023/CHelper.git
-cd ./CHelper/CHelper-Core
-cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release
-cmake --build ./build ---target CHelperCmd
+mise run core:test       # 构建并运行宿主内核测试
+mise run core:android    # 生成 Android ARM64 JNI 库
+mise run core:wasm       # 生成浏览器 WASM 和 JavaScript 适配器
+mise run resources:pack # 生成各客户端使用的资源包
 ```
 
-关于 Android 的支持，请下载官方的 NDK，用它的工具链编译 CHelper。以下是我使用的编译命令，仅作参考：
-
-```sh
-cmake
--D CMAKE_BUILD_TYPE=Release
--D CMAKE_TOOLCHAIN_FILE=D:\\AS\\sdk\ndk\\29.0.14206865\\build\\cmake\\android.toolchain.cmake
--D ANDROID_ABI=arm64-v8a
--D ANDROID_NDK=D:\\AS\sdk\\ndk\\29.0.14206865
--D ANDROID_PLATFORM=android-24
--D CMAKE_ANDROID_ARCH_ABI=arm64-v8a
--D CMAKE_ANDROID_NDK=D:\\AS\\sdk\\ndk\\29.0.14206865
--D CMAKE_EXPORT_COMPILE_COMMANDS=ON
--D CMAKE_MAKE_PROGRAM=D:\\AS\\sdk\\cmake\\3.22.1\\bin\\ninja.exe
--D CMAKE_SYSTEM_NAME=Android
--D CMAKE_SYSTEM_VERSION=24
--B .\\build
--G Ninja
-
-cmake --build .\\build --target CHelperAndroid
-```
-
-关于 WebAsembly 的编译，请通过[emsdk](https://github.com/emscripten-core/emsdk)配置好环境，然后执行编译命令。以下是我使用的编译命令，仅作参考：
-
-```sh
-git clone https://github.com/emscripten-core/emsdk.git
-cd ./emsdk
-git pull
-./emsdk install latest
-./emsdk activate latest
-source ./emsdk_env.sh
-sudo apt-get install -y cmake ninja-build
-cd ..
-
-git clone https://github.com/Yancey2023/CHelper.git
-cd ./CHelper/CHelper-Web
-
-cmake -B build -D CMAKE_BUILD_TYPE=MinSizeRel -D CMAKE_TOOLCHAIN_FILE="./emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" -G "Ninja"
-cd build
-cmake --build . --target CHelperWeb --parallel
-emcc libCHelperWeb.a libCHelperNoFilesystemCore.a _deps/fmt-build/libfmt.a _deps/spdlog-build/libspdlog.a _deps/xxhash-build/libxxhash.a -Os -o libCHelperWeb.js -s FILESYSTEM=0 -s DISABLE_EXCEPTION_CATCHING=1 -s ALLOW_MEMORY_GROWTH -s ENVIRONMENT="web" -s EXPORTED_FUNCTIONS="['_init','_release','_onTextChanged','_onSelectionChanged','_getParamHint','_getErrorReasons','_getSuggestionSize','_getSuggestion','_getAllSuggestions','_onSuggestionClick','_getSyntaxTokens','_createCommandContext','_releaseCommandContext','_contextGetCommand','_contextGetStructure','_contextGetParamHint','_contextGetErrorReasons','_contextGetSuggestionSize','_contextGetSuggestion','_contextGetAllSuggestions','_contextApplySuggestion','_contextGetSyntaxTokens','_contextGetNodeCount','_malloc','_free']" -s WASM=1 -s "EXPORTED_RUNTIME_METHODS=[]"
-cd ..
-
-python ./scripts/patch-wasm.py
-```
+CMake Presets 定义宿主、Android 和 Web 的编译配置。Android 和 Web 任务会按需准备锁定版本的 NDK 或 Emscripten SDK。CMake 的构建目录位于仓库根目录下的 `build`。
 
 ## 加入我们
 

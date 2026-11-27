@@ -33,6 +33,24 @@
             "name": "animation.allay.look_at_target.default"
         },
         {
+            "name": "animation.armadillo.baby_peek"
+        },
+        {
+            "name": "animation.armadillo.baby_roll_up"
+        },
+        {
+            "name": "animation.armadillo.baby_rolled_up"
+        },
+        {
+            "name": "animation.armadillo.baby_unroll"
+        },
+        {
+            "name": "animation.armadillo.baby_unroll_fast"
+        },
+        {
+            "name": "animation.armadillo.baby_walk"
+        },
+        {
             "name": "animation.armadillo.look_at_target"
         },
         {
@@ -114,6 +132,24 @@
             "name": "animation.arrow.move"
         },
         {
+            "name": "animation.axolotl.baby_idle_floor"
+        },
+        {
+            "name": "animation.axolotl.baby_idle_floor_underwater"
+        },
+        {
+            "name": "animation.axolotl.baby_idle_underwater"
+        },
+        {
+            "name": "animation.axolotl.baby_swim"
+        },
+        {
+            "name": "animation.axolotl.baby_walk_floor"
+        },
+        {
+            "name": "animation.axolotl.baby_walk_floor_underwater"
+        },
+        {
             "name": "animation.axolotl.idle_floor"
         },
         {
@@ -189,6 +225,24 @@
             "name": "animation.breeze.whirl_sound"
         },
         {
+            "name": "animation.camel.baby_dash"
+        },
+        {
+            "name": "animation.camel.baby_idle"
+        },
+        {
+            "name": "animation.camel.baby_sit"
+        },
+        {
+            "name": "animation.camel.baby_sit_down"
+        },
+        {
+            "name": "animation.camel.baby_stand_up"
+        },
+        {
+            "name": "animation.camel.baby_walk"
+        },
+        {
             "name": "animation.camel.dash"
         },
         {
@@ -213,7 +267,22 @@
             "name": "animation.camel.walk"
         },
         {
+            "name": "animation.cat.baby_lie_down"
+        },
+        {
+            "name": "animation.cat.baby_sit"
+        },
+        {
+            "name": "animation.cat.baby_sneak"
+        },
+        {
+            "name": "animation.cat.baby_sprint"
+        },
+        {
             "name": "animation.cat.baby_transform"
+        },
+        {
+            "name": "animation.cat.baby_walk"
         },
         {
             "name": "animation.cat.lie_down"
@@ -321,6 +390,9 @@
             "name": "animation.dolphin.move"
         },
         {
+            "name": "animation.drowned.attack.baby_rotations"
+        },
+        {
             "name": "animation.drowned.attack.rotations"
         },
         {
@@ -405,7 +477,22 @@
             "name": "animation.fireworks_rocket.move"
         },
         {
+            "name": "animation.fox.baby_pounce"
+        },
+        {
+            "name": "animation.fox.baby_sit"
+        },
+        {
+            "name": "animation.fox.baby_sleep"
+        },
+        {
             "name": "animation.fox.baby_transform"
+        },
+        {
+            "name": "animation.fox.baby_walk"
+        },
+        {
+            "name": "animation.fox.baby_wiggle"
         },
         {
             "name": "animation.fox.crouch"
@@ -445,6 +532,12 @@
         },
         {
             "name": "animation.frog.walk"
+        },
+        {
+            "name": "animation.frostbite.arms_idle"
+        },
+        {
+            "name": "animation.frostbite.baby_arms_idle"
         },
         {
             "name": "animation.ghast.move"
@@ -822,6 +915,15 @@
             "name": "animation.ocelot_v1.0.walk"
         },
         {
+            "name": "animation.panda.baby_lying"
+        },
+        {
+            "name": "animation.panda.baby_rolling"
+        },
+        {
+            "name": "animation.panda.baby_sitting"
+        },
+        {
             "name": "animation.panda.baby_transform"
         },
         {
@@ -1101,7 +1203,16 @@
             "name": "animation.rabbit.baby_transform"
         },
         {
+            "name": "animation.rabbit.idle_head_tilt"
+        },
+        {
             "name": "animation.rabbit.move"
+        },
+        {
+            "name": "animation.rabbit.move.baby"
+        },
+        {
+            "name": "animation.rabbit.move.v2"
         },
         {
             "name": "animation.ravager.biting"
@@ -1221,13 +1332,22 @@
             "name": "animation.salmon.swim"
         },
         {
+            "name": "animation.sheep.baby_grazing"
+        },
+        {
             "name": "animation.sheep.baby_transform"
         },
         {
             "name": "animation.sheep.grazing"
         },
         {
+            "name": "animation.sheep.grazing.v2"
+        },
+        {
             "name": "animation.sheep.setup"
+        },
+        {
+            "name": "animation.sheep.setup.v2"
         },
         {
             "name": "animation.shield.wield_first_person_blocking"
@@ -1335,6 +1455,12 @@
             "name": "animation.squid.rotate"
         },
         {
+            "name": "animation.strider.baby.bristle_flow"
+        },
+        {
+            "name": "animation.strider.baby.walk"
+        },
+        {
             "name": "animation.strider.bristle_flow"
         },
         {
@@ -1342,6 +1468,12 @@
         },
         {
             "name": "animation.strider.walk"
+        },
+        {
+            "name": "animation.sulfur_cube.offset"
+        },
+        {
+            "name": "animation.sulfur_cube.swelling"
         },
         {
             "name": "animation.tadpole.swim"
@@ -1372,6 +1504,9 @@
         },
         {
             "name": "animation.tropicalfish.swim"
+        },
+        {
+            "name": "animation.turtle.baby_move"
         },
         {
             "name": "animation.turtle.general"
@@ -1491,6 +1626,9 @@
             "name": "animation.wolf.baby_scaling"
         },
         {
+            "name": "animation.wolf.baby_sitting"
+        },
+        {
             "name": "animation.wolf.head_rot_z"
         },
         {
@@ -1510,6 +1648,9 @@
         },
         {
             "name": "animation.zombie.attack_bare_hand"
+        },
+        {
+            "name": "animation.zombie.baby_attack_bare_hand"
         },
         {
             "name": "animation.zombie.melee_spear_hold"

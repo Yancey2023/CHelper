@@ -217,6 +217,7 @@ fun rememberAndroidClientServices(
             clipboardCodec = AndroidTextClipCodec(context),
             notices = NoticeStore(context.dataDir.toOkioPath()),
             packFilenames = context.assets.list("cpack").orEmpty().toList(),
+            suggestionAudioPlayer = AndroidSuggestionAudioPlayer(),
         )
     }
 }

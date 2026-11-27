@@ -1,5 +1,6 @@
 import java.io.FileInputStream
 import java.util.Properties
+import org.gradle.api.tasks.PathSensitivity
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -9,6 +10,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     id("chelper.android-text-field-performance")
 }
+
+val generatedJni = rootProject.file("../build/artifacts/android/jni")
+val generatedResources = rootProject.file("../build/artifacts/resources")
+val useLocalBaselineProfile = providers.gradleProperty("localBaselineProfile").orNull == "true"
 
 android {
     namespace = "yancey.chelper"
@@ -66,10 +71,12 @@ android {
         }
     }
 
-    sourceSets.all {
-        jniLibs.directories.add("libs")
+    sourceSets.getByName("main").apply {
+        jniLibs.directories.add(generatedJni.path)
+        assets.directories.add(generatedResources.path)
     }
-    sourceSets.getByName("main").assets.directories.add(rootProject.file("resources").path)
+    // The NDK build task already strips this library before handing it to Gradle.
+    packaging.jniLibs.keepDebugSymbols.add("**/libCHelperAndroid.so")
     // Native manifest/host R references also use these assets. Compose packages its own assets
     // through shared:ui's androidResources support; this AAPT mapping does not replace it.
     sourceSets
@@ -97,8 +104,6 @@ android {
     // 仅影响 testDebugUnitTest，对 instrumented test 和运行时无任何作用。
     testOptions { unitTests.isReturnDefaultValues = true }
 
-    ndkVersion = "30.0.16248370"
-
     gradle.projectsEvaluated {
         tasks.withType<JavaCompile> {
             options.compilerArgs.add("-Xlint:unchecked")
@@ -109,7 +114,7 @@ android {
     val keystorePropertiesFile: File = rootProject.file("keystore.properties")
     if (
         keystorePropertiesFile.exists() &&
-            providers.gradleProperty("unsignedRelease").orNull != "true"
+        providers.gradleProperty("unsignedRelease").orNull != "true"
     ) {
         val keystoreProperties = Properties()
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
@@ -134,6 +139,23 @@ android {
             getByName("release") { signingConfig = signingConfigs["sign"] }
             getByName("beta") { signingConfig = signingConfigs["sign"] }
         }
+    }
+}
+
+androidComponents.onVariants { variant ->
+    val taskSuffix = variant.name.replaceFirstChar(Char::uppercaseChar)
+    tasks.named { it == "merge${taskSuffix}JniLibFolders" }.configureEach {
+        inputs.file(generatedJni.resolve("arm64-v8a/libCHelperAndroid.so"))
+            .withPropertyName("chelperJniLibrary")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+    tasks.named { it == "merge${taskSuffix}Assets" }.configureEach {
+        inputs.dir(generatedResources.resolve("cpack"))
+            .withPropertyName("chelperResourcePacks")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+        inputs.file(generatedResources.resolve("old2new/old2new.dat"))
+            .withPropertyName("chelperBlockConversionData")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
     }
 }
 
@@ -163,9 +185,12 @@ androidComponents.finalizeDsl { extension ->
 kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
 
 baselineProfile {
-    automaticGenerationDuringBuild = false
-    saveInSrc = true
+    // Without a producer dependency the plugin wires an empty generated input in ordinary builds.
+    automaticGenerationDuringBuild = !useLocalBaselineProfile
+    saveInSrc = useLocalBaselineProfile
+    baselineProfileOutputDir = "../../local-baseline-profile"
     mergeIntoMain = true
+    warnings { variantHasNoBaselineProfileDependency = useLocalBaselineProfile }
     filter {
         exclude("yancey.chelper.android.benchmark.**")
         exclude("io.ktor.client.engine.mock.**")
@@ -177,7 +202,9 @@ baselineProfile {
 dependencies {
     implementation(libs.profileinstaller)
     implementation(libs.metrics.performance)
-    baselineProfile(project(":apps:benchmark"))
+    if (useLocalBaselineProfile) {
+        baselineProfile(project(":apps:benchmark"))
+    }
     implementation(project(":shared:domain"))
     implementation(project(":shared:data"))
     implementation(project(":shared:ui"))
@@ -243,7 +270,7 @@ configurations.configureEach {
     }
     if (
         name.endsWith("Implementation") &&
-            (name.startsWith("benchmark") || name.startsWith("nonMinified"))
+        (name.startsWith("benchmark") || name.startsWith("nonMinified"))
     ) {
         dependencies.add(project.dependencies.create(libs.ktor.client.mock.get()))
         dependencies.add(project.dependencies.create(libs.compose.runtime.tracing.get()))
