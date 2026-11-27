@@ -11,6 +11,18 @@ I want to make a command helper for Minecraft Bedrock Edition, so here is CHelpe
 |     [CHelper-Web](./CHelper-Web)     |                    CHelper-Web is the web version of the app                     |
 |      [CHelper-Qt](./CHelper-Qt)      | maintain in [CHelper-Core](./CHelper-Core) for development and debugging purpose |
 
+## Build from source
+
+Install [mise](https://mise.jdx.dev/installing-mise.html), review and trust `mise.toml`, then run `mise install --locked` from the repository root.
+
+| Command | Result |
+| --- | --- |
+| `mise run core:test` | C++ tests for the current host |
+| `mise run android:apk -PunsignedRelease=true` | APK built with the generated ARM64 JNI library and resource packs |
+| `mise run windows:package` | Windows application image and installers, on Windows |
+| `mise run web:build` | Web distribution, including the generated WASM and resource packs |
+| `mise run docs:build` | VitePress documentation distribution |
+
 ## Usage
 
 ### Help in editing command

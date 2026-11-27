@@ -4,9 +4,9 @@
   "packageManager": "pnpm@12.21.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @chelper/web dev",
-    "build": "pnpm --filter @chelper/web build",
-    "docs:dev": "pnpm --filter @chelper/doc docs:dev",
-    "docs:build": "pnpm --filter @chelper/doc docs:build"
+    "dev": "mise run web:dev",
+    "build": "mise run web:build",
+    "docs:dev": "mise run docs:dev",
+    "docs:build": "mise run docs:build"
   }
 }

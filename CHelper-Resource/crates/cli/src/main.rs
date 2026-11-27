@@ -35,6 +35,9 @@ enum Command {
         /// 强制刷新缓存（重新解析引用并下载）
         #[arg(long)]
         refresh: bool,
+        /// 覆盖本次生成的资源输出目录（相对项目根目录）
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
     },
     /// 从中文 Wiki 自动刷新内置资源包中的补全媒体网址
     RefreshSuggestionMedia {
@@ -99,9 +102,16 @@ async fn main() -> Result<()> {
     let project_root = cli
         .project
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-    let cfg = Config::load(&project_root, cli.config.as_deref())?;
+    let mut cfg = Config::load(&project_root, cli.config.as_deref())?;
     match cli.command {
-        Command::Generate { editions, refresh } => {
+        Command::Generate {
+            editions,
+            refresh,
+            output_dir,
+        } => {
+            if let Some(output_dir) = output_dir {
+                cfg.output_dir = project_root.join(output_dir);
+            }
             let editions = if editions.is_empty() {
                 vec!["release".into(), "beta".into(), "netease".into()]
             } else {

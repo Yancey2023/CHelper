@@ -129,8 +129,8 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 `suggestion_media.json`。文件按 `block`、`item`、`effect` 和 `sound` 分类，记录
 `https://zh.minecraft.wiki/images/` 下的 PNG、GIF、WebP、Ogg Vorbis 或 WAV 直链。原版 ID 省略
 `minecraft:`，其他命名空间保留完整 ID。`music` 与 `sound` 复用同一份映射。
-常规 `generate` 随版本和 ID 自动生成媒体目录。打包内置快照时，`scripts/build.py` 会先刷新
-其中的媒体网址。也可以运行 `cargo run --release -- refresh-suggestion-media` 单独刷新快照。
+常规 `generate` 随版本和 ID 自动生成媒体目录。`mise run resources:pack` 使用内置快照中的
+媒体网址。可以运行 `cargo run --locked --release -- refresh-suggestion-media` 单独刷新快照。
 
 单文件 JSON 将目录写入 `suggestionMedia`，二进制包将它追加在现有语法数据之后。
 这部分可省略。缺少映射时仍可使用普通文本补全。`cameraEasing` 的曲线和染料色样由客户端根据 ID 绘制。

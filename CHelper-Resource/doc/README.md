@@ -69,19 +69,14 @@ CHelper-Core 可直接打包这份完整产物：
 CHelperResourceGenerator.exe CHelper-Resource/output/chelper CHelper-Resource/generated
 ```
 
-在仓库根目录运行以下命令可以生成二进制包并同步到 Web 和 Compose。
+在仓库根目录运行以下命令。
 
 ```bash
-# 刷新当前内置版本的 Wiki 媒体并打包
-python scripts/build.py --resources-only
-
-# 根据 config.toml 更新版本，自动抓取媒体并打包本次生成的资源
-python scripts/build.py --resources-only --update-resources
+mise run resources:pack
+mise run resources:update
 ```
 
-常规打包使用仓库的内置版本清单。`--update-resources` 使用本次 `generate` 的输出目录，
-上游版本更新仍须通过命令原文和复核补丁的校验。打包成功后，生成目录、Web 和 Compose 每个分支
-只保留本次生成的一份包。省略 `--resources-only` 时，脚本同步资源包后继续构建客户端。
+`resources:pack` 使用仓库中的 `CHelper-Resource/resources`，将当前版本打包到 `build/artifacts/resources` 供 Web 和 Compose 构建消费。`resources:update` 按 `config.toml` 抓取上游版本并验证命令原文和复核补丁，生成的包放在 `build/artifacts/resources-updated`。复核生成的资源源文件后再更新仓库内置快照。
 
 `output/command_wiki/<命令>/page.wiki` 保存原始页面 wikitext，`source.json` 保存来源链接、
 重定向链和抓取状态。`index.json` 列出所有命令，`overview` 缓存命令总览。

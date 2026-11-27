@@ -132,7 +132,7 @@ CommandCompletionController 在主线程持有单份 CompletionSnapshot。输入
 
 构建约定只有两个：`chelper.multiplatform-library` 管理 Android / JVM 目标、SDK、JVM 17 与公共测试；`chelper.jvm-library` 管理平台适配和桌面宿主的 JVM / Java 17 配置。`platform/jvm` 为两个宿主复用一份真实 JVM 适配，不向共享模块暴露 Java 类型。
 
-`shared/ui` 的 Android 目标显式启用 `androidResources.enable = true`，让 Compose 插件将资源打包到 APK 的 `assets/composeResources/yancey.chelper.resources/`。Android 宿主的原生 `res` 映射仅服务 Manifest 和宿主 R 引用，不能替代 Compose 的运行时资源路径。`scripts/check_android_resources.py` 对照构建生成的资源逐项检查 APK 中的路径和字节内容，CI 在上传 Release APK 前执行；设备测试实际加载共享 WebP、矢量图片和字符串。
+`shared/ui` 的 Android 目标显式启用 `androidResources.enable = true`，让 Compose 插件将资源打包到 APK 的 `assets/composeResources/yancey.chelper.resources/`。Android 宿主的原生 `res` 映射仅服务 Manifest 和宿主 R 引用，不能替代 Compose 的运行时资源路径。设备测试覆盖共享 WebP、矢量图片和字符串的实际加载。
 
 网络通过应用容器持有的 `NetworkServices` 实例组装。宿主向 `ClientServices` 注入账号、命令库内容、活动、消息、收藏、网页授权和应用内容等 domain Repository 接口，ViewModel 仅接收实际需要的接口；UI 不引用 `data.remote` / `data.auth` 中的图、服务、会话或 DTO。宿主的验证码和后台同步适配仍可使用网络图。不可变 `NetworkConfig` 固定服务地址与调试开关；会话、缓存和浏览器验证状态属于该应用实例。
 
@@ -160,4 +160,4 @@ MCD 预览在 Dispatchers.Default 解析并展平文档，通过共享 Foundatio
 
 这次重构不改变 Android 应用 ID、已注册入口组件、JNI ABI、历史数据目录、JSON 字段、命令草稿二进制格式或分享 URI。签名配置仍从根目录读取；相对密钥路径优先保留迁移前指向的文件，密钥随模块移动时按新位置解析，本次迁移不改写签名配置内容。导航路由通过显式 `SerialName` 保留迁移前的序列化标识，避免包名变化改变已保存的目标 ID。Gradle 模块路径、Kotlin 包名、构建脚本、CI 产物路径和 IDE 模块配置一起迁移，不保留旧模块或转发别名。
 
-`check_compose_architecture.py` 检查依赖方向、包名归属、文件路径、共享源码对宿主的引用、JNI 包白名单、DataStore 创建边界、重复 JVM 文件类和共享资源兼容性。`format_compose.py` 遍历维护中的源码与构建约定，调用保留版权头的格式化器。构建、测试与打包命令见上级 [README](../README.md)。
+Kotlin 源码和 Gradle Kotlin DSL 使用 IntelliJ IDEA 的 Reformat Code。也可从根目录执行 `mise run compose:format` 并传入文件路径。构建、测试与打包命令见上级 [README](../README.md)。

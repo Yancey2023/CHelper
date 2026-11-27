@@ -32,6 +32,7 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utf8.h>
 #include <vector>
 
@@ -83,17 +84,20 @@ int main(int argc, char **argv) {
     // testDir();
     // testBin();
     // return 0;
-    if (argc > 3) {
-        SPDLOG_ERROR("Usage: CHelperResourceGenerator [resources-root] [output-root]");
+    const bool binaryOnly = argc == 4 && std::string_view(argv[3]) == "--binary-only";
+    if (argc > 3 && !binaryOnly) {
+        SPDLOG_ERROR("Usage: CHelperResourceGenerator [resources-root] [output-root] [--binary-only]");
         return 1;
     }
     const std::filesystem::path resourcesRoot = argc >= 2 ? std::filesystem::path(argv[1]) : std::filesystem::path(RESOURCE_DIR) / "resources";
     const std::filesystem::path outputRoot = argc >= 3 ? std::filesystem::path(argv[2]) : std::filesystem::path(RESOURCE_DIR) / "generated";
     try {
-        const auto jsonPacks = outputPacks(CHelper::Test::writeSingleJson, resourcesRoot, outputRoot / "json");
+        if (!binaryOnly) {
+            const auto jsonPacks = outputPacks(CHelper::Test::writeSingleJson, resourcesRoot, outputRoot / "json");
+            removeStalePacks(outputRoot / "json", ".json", jsonPacks);
+        }
         const auto binaryPacks = outputPacks(CHelper::Test::writeBinary, resourcesRoot, outputRoot / "cpack");
-        if (jsonPacks.empty() || binaryPacks.empty() || !outputOld2New(resourcesRoot, outputRoot)) return 1;
-        removeStalePacks(outputRoot / "json", ".json", jsonPacks);
+        if (!outputOld2New(resourcesRoot, outputRoot)) return 1;
         removeStalePacks(outputRoot / "cpack", ".cpack", binaryPacks);
         return 0;
     } catch (const std::exception &error) {

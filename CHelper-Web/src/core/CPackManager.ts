@@ -29,7 +29,11 @@ const branchLabels: Record<Branch, string> = {
 }
 
 const packFiles = Object.entries(
-  import.meta.glob<string>('@/assets/*.cpack', { eager: true, query: '?url', import: 'default' }),
+  import.meta.glob<string>('../../../build/artifacts/resources/cpack/*.cpack', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
 )
 const bundledPacks = new Map(
   ALL_BRANCH.map((branch) => {

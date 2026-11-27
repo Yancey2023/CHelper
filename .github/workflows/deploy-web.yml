@@ -6,7 +6,11 @@ on:
     paths:
       - ".github/workflows/deploy-web.yml"
       - "CHelper-Web/**"
-      - ".node-version"
+      - ".github/actions/setup-mise/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "CHelper-Core/**"
+      - "CHelper-Resource/resources/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -17,8 +21,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  group: deploy-web-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MISE_AUTO_INSTALL: "false"
+  MISE_LOCKED: "1"
 
 jobs:
   deploy:
@@ -26,27 +34,21 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup-mise
         with:
-          node-version-file: ".node-version"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          tools: cmake ninja node pnpm python ccache
+          task-tools: http:emsdk
+          native-cache: wasm
+          pnpm-cache: "true"
 
       - name: Build For GitHub Page
-        working-directory: ${{ github.workspace }}/CHelper-Web
-        run: pnpm run build --base=/${{ github.event.repository.name }}/ --mode production
+        run: mise run web:build --base=/${{ github.event.repository.name }}/ --mode production
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
@@ -61,8 +63,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Build For My Server
-        working-directory: ${{ github.workspace }}/CHelper-Web
-        run: pnpm run build --base=/chelper/ --mode my_server
+        run: mise run web:build --base=/chelper/ --mode my_server
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@v6.0.3

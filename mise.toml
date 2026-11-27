@@ -1,0 +1,343 @@
+min_version = "2026.11.7"
+
+[tools]
+cmake = "4.4.5"
+java = "temurin-27"
+ninja = "1.13.2"
+node = "26.13.1"
+pnpm = "12.21.0"
+python = "3.14.7"
+rust = "1.99.0"
+ccache = "4.14.1"
+
+[task_config]
+shell = "{% if os() == 'windows' %}pwsh -NoProfile -Command{% else %}sh -c{% endif %}"
+
+[settings.task]
+source_freshness_hash_contents = true
+
+[tasks."core:host"]
+hide = true
+dir = "CHelper-Core"
+usage = 'arg "<preset>"'
+run = 'cmake --preset "$usage_preset" && cmake --build --preset "$usage_preset"'
+run_windows = '''
+$ErrorActionPreference = "Stop"
+if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio/Installer/vswhere.exe"
+    $installation = & $vswhere -latest -products "*" -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+    if (-not $installation) { throw "Install Visual Studio Build Tools with Desktop development with C++." }
+    & (Join-Path $installation "Common7/Tools/Launch-VsDevShell.ps1") -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+}
+cmake --preset $env:usage_preset
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+cmake --build --preset $env:usage_preset
+exit $LASTEXITCODE
+'''
+
+[tasks."core:test"]
+description = "Build and test the host C++ core"
+lock = "core-host-release"
+dir = "CHelper-Core"
+run = [
+  { task = "core:host", args = [
+    "host-tests",
+  ] },
+  "ctest --preset host-tests",
+]
+
+[tasks."core:test:debug"]
+description = "Build and test the debug host C++ core"
+dir = "CHelper-Core"
+lock = "core-host-debug"
+run = [
+  { task = "core:host", args = [
+    "host-debug",
+  ] },
+  "ctest --preset host-debug",
+]
+
+[tasks."core:qt"]
+description = "Build the Qt debugging application"
+dir = "CHelper-Core"
+lock = "core-host-release"
+run = [{ task = "core:host", args = ["qt"] }]
+
+[tasks."core:qt:debug"]
+description = "Build the debug Qt application"
+dir = "CHelper-Core"
+lock = "core-host-debug"
+run = [{ task = "core:host", args = ["qt-debug"] }]
+
+[tasks."core:sanitize"]
+description = "Run ASan/UBSan tests and the fuzz smoke test on Linux"
+dir = "CHelper-Core"
+env = { ASAN_OPTIONS = "detect_leaks=1", UBSAN_OPTIONS = "halt_on_error=1:print_stacktrace=1" }
+run = [
+  { task = "core:host", args = [
+    "sanitizers",
+  ] },
+  "ctest --preset sanitizers",
+  { task = "core:host", args = [
+    "fuzz",
+  ] },
+  "../build/fuzz/CHelperFuzz -max_total_time=60 -max_len=65536",
+]
+
+[tasks."core:linux-compilers"]
+description = "Install the selected Linux CI compiler when missing"
+hide = true
+run = '''
+set -eu
+case "$CXX" in
+    g++-13) package=g++-13 ;;
+    clang++-19) package=clang-19 ;;
+    *) echo "Unexpected Linux CI compiler: $CXX" >&2; exit 1 ;;
+esac
+if ! command -v "$CXX" >/dev/null; then
+    sudo apt-get update
+    sudo apt-get -o Dir::Cache::archives="$RUNNER_TEMP/chelper-apt" install -y "$package"
+fi
+'''
+
+[tasks."core:android"]
+description = "Build and stage the Android ARM64 JNI library"
+dir = "CHelper-Core"
+lock = true
+env.CHELPER_NDK = { value = '{{ tools["http:android-ndk"].path }}', tools = true }
+env.CHELPER_ANDROID_BUILD_DIR = { value = '{{config_root}}/build/android_core/{{ tools["http:android-ndk"].version }}', tools = true }
+run = '''
+set -eu
+cmake --preset android-arm64
+cmake --build --preset android-arm64
+cmake --install "$CHELPER_ANDROID_BUILD_DIR" --prefix ../build/artifacts/android/jni --component jni --strip
+'''
+run_windows = '''
+$ErrorActionPreference = "Stop"
+cmake --preset android-arm64
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+cmake --build --preset android-arm64
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+cmake --install "$env:CHELPER_ANDROID_BUILD_DIR" --prefix ../build/artifacts/android/jni --component jni --strip
+exit $LASTEXITCODE
+'''
+
+[tasks."core:android".tools."http:android-ndk"]
+version = "30.0.16248370"
+strip_components = 1
+
+[tasks."core:android".tools."http:android-ndk".platforms]
+windows-x64 = { url = "https://dl.google.com/android/repository/android-ndk-r30-windows.zip", checksum = "sha1:9bf167a1985fa7d4a036186b78f702eab9179408", size = 727980788 }
+linux-x64 = { url = "https://dl.google.com/android/repository/android-ndk-r30-linux.zip", checksum = "sha1:5107f898313790e449e87eee2183d9a20602dee9", size = 738633529 }
+macos-arm64 = { url = "https://dl.google.com/android/repository/android-ndk-r30-darwin.zip", checksum = "sha1:c060be96767eefbb8e0a27796d6f43115fc1a0c4", size = 974984488 }
+macos-x64 = { url = "https://dl.google.com/android/repository/android-ndk-r30-darwin.zip", checksum = "sha1:c060be96767eefbb8e0a27796d6f43115fc1a0c4", size = 974984488 }
+
+[tasks."core:windows"]
+description = "Build and stage the Windows x64 JNI library and its MSVC runtime"
+dir = "CHelper-Core"
+lock = true
+run_windows = [
+  { task = "core:host", args = [
+    "windows-jni",
+  ] },
+  "cmake --install ../build/desktop_core --prefix ../build/artifacts/windows/jni --component jni",
+]
+
+[tasks."core:wasm"]
+description = "Build the browser WASM and its Emscripten module"
+dir = "CHelper-Core"
+lock = true
+env.EMSDK = { value = '{{ tools["http:emsdk"].path }}', tools = true }
+env.EM_CONFIG = { value = '{{ tools["http:emsdk"].path }}/.emscripten', tools = true }
+env.CHELPER_WASM_BUILD_DIR = { value = '{{config_root}}/build/web_core/{{ tools["http:emsdk"].version }}', tools = true }
+run = '''
+set -eu
+if [ "${CMAKE_CXX_COMPILER_LAUNCHER:-}" = ccache ]; then
+    export EM_COMPILER_WRAPPER=ccache
+    unset CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER
+fi
+cmake --preset web
+cmake --build --preset web
+cmake --install "$CHELPER_WASM_BUILD_DIR" --prefix ../build/web_core --component web
+'''
+run_windows = '''
+$ErrorActionPreference = "Stop"
+if ($env:CMAKE_CXX_COMPILER_LAUNCHER -eq "ccache") {
+    $env:EM_COMPILER_WRAPPER = "ccache"
+    Remove-Item Env:CMAKE_C_COMPILER_LAUNCHER, Env:CMAKE_CXX_COMPILER_LAUNCHER -ErrorAction SilentlyContinue
+}
+cmake --preset web
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+cmake --build --preset web
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+cmake --install "$env:CHELPER_WASM_BUILD_DIR" --prefix ../build/web_core --component web
+exit $LASTEXITCODE
+'''
+
+[tasks."core:wasm".tools."http:emsdk"]
+version = "7.0.0"
+url = "https://codeload.github.com/emscripten-core/emsdk/tar.gz/1693ce7359fc9694f198694f902a2cc061239b86"
+format = "tar.gz"
+checksum = "sha256:fd37b19a256254cd90c1737062ee77ab4d82341c4c7bc890601b1a355034f345"
+size = 178744
+strip_components = 1
+depends = ["python"]
+postinstall = '''
+{%- if os() == "windows" -%}
+python "%MISE_TOOL_INSTALL_PATH%/emsdk.py" install "%MISE_TOOL_VERSION%" && python "%MISE_TOOL_INSTALL_PATH%/emsdk.py" activate "%MISE_TOOL_VERSION%"
+{%- else -%}
+python "$MISE_TOOL_INSTALL_PATH/emsdk.py" install "$MISE_TOOL_VERSION" && python "$MISE_TOOL_INSTALL_PATH/emsdk.py" activate "$MISE_TOOL_VERSION"
+{%- endif -%}
+'''
+
+[tasks."resources:binary"]
+hide = true
+usage = """
+arg "<source>"
+arg "<output>"
+"""
+run = "cmake -P CHelper-Core/cmake/StageClientResources.cmake"
+
+[tasks."resources:pack"]
+description = "Pack the checked-in resource sources for Android, Windows, and Web"
+lock = "chelper-resource-generation"
+sources = [
+  "CHelper-Compose/resources/about/**",
+  "CHelper-Compose/resources/rawtext/**",
+  "CHelper-Core/cmake/**",
+  "CHelper-Core/src/**",
+  "CHelper-Resource/resources/**",
+  "CHANGELOG.md",
+  "CHelper-Core/CMakeLists.txt",
+  "CHelper-Core/CMakePresets.json",
+  "mise.lock",
+  "mise.toml",
+]
+outputs = ["build/artifacts/resources"]
+run = [
+  { task = "core:host", args = [
+    "resource-generator",
+  ] },
+  { task = "resources:binary", args = [
+    "CHelper-Resource/resources",
+    "build/artifacts/resources",
+  ] },
+]
+
+[tasks."resources:check"]
+description = "Check the checked-in resource packs and run the Rust generator tests"
+depends = ["resources:pack"]
+dir = "CHelper-Resource"
+run = "cargo test --locked --workspace"
+
+[tasks."resources:update"]
+description = "Fetch the configured resource versions and pack them"
+lock = "chelper-resource-generation"
+run = [
+  "cargo run --locked --release --manifest-path CHelper-Resource/Cargo.toml -- --project CHelper-Resource generate --output-dir output/chelper",
+  { task = "core:host", args = [
+    "resource-generator",
+  ] },
+  { task = "resources:binary", args = [
+    "CHelper-Resource/output/chelper",
+    "build/artifacts/resources-updated",
+  ] },
+]
+
+[tasks."android:gradle"]
+description = "Run Android Gradle tasks with the generated JNI library and resources"
+depends = ["core:android", "resources:pack"]
+dir = "CHelper-Compose"
+raw_args = true
+run = "sh ./gradlew"
+run_windows = "./gradlew.bat"
+
+[tasks."android:apk"]
+description = "Assemble the Android release APK"
+depends = ["core:android", "resources:pack"]
+dir = "CHelper-Compose"
+raw_args = true
+run = "sh ./gradlew :apps:android:assembleRelease"
+run_windows = "./gradlew.bat :apps:android:assembleRelease"
+
+[tasks."android:ci"]
+description = "Build the Android APK and benchmark APK and run the Android and shared checks"
+run = [{ task = "android:gradle", args = [
+    ":apps:android:testDebugUnitTest", ":apps:android:assembleRelease", ":apps:android:lintDebug",
+    ":apps:benchmark:assembleBenchmarkRelease", ":shared:domain:jvmTest", ":shared:domain:testAndroidHostTest",
+    ":shared:data:jvmTest", ":shared:data:testAndroidHostTest", ":shared:ui:jvmTest",
+    ":shared:ui:testAndroidHostTest", ":platform:jvm:test", "--warning-mode", "all",
+] }]
+
+[tasks."windows:gradle"]
+description = "Run Gradle tasks for the Windows client"
+depends = ["core:windows", "resources:pack"]
+dir = "CHelper-Compose"
+raw_args = true
+run_windows = "./gradlew.bat"
+
+[tasks."windows:package"]
+description = "Build the Windows application image, MSI, and EXE on Windows"
+depends = ["core:windows", "resources:pack"]
+dir = "CHelper-Compose"
+raw_args = true
+run_windows = "./gradlew.bat :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe"
+
+[tasks."windows:ci"]
+description = "Build Windows installers and run the desktop and shared tests"
+run = [{ task = "windows:package", args = [
+    ":platform:jvm:test", ":shared:domain:jvmTest", ":shared:data:jvmTest",
+    ":shared:ui:jvmTest", ":apps:desktop:test", "--warning-mode", "all",
+] }]
+
+[tasks."compose:format"]
+description = "Format the specified Kotlin files with IntelliJ IDEA"
+raw_args = true
+run = '"$IDEA_HOME/bin/format.sh" -allowDefaults'
+run_windows = '& (Join-Path $env:IDEA_HOME "bin/format.bat") -allowDefaults'
+
+[tasks."web:install"]
+description = "Install the locked Web dependencies"
+lock = "pnpm-install"
+run = "pnpm --filter @chelper/web... install --frozen-lockfile --prefer-offline"
+
+[tasks."web:build"]
+description = "Build the Web app with the generated WASM and packs"
+depends = ["web:install", "core:wasm", "resources:pack"]
+raw_args = true
+run = "pnpm --filter @chelper/web run build"
+
+[tasks."web:dev"]
+description = "Start the Web app with the generated WASM and packs"
+depends = ["web:install", "core:wasm", "resources:pack"]
+raw_args = true
+run = "pnpm --filter @chelper/web run dev"
+
+[tasks."web:test"]
+description = "Run the Web unit tests"
+depends = ["web:install", "core:wasm", "resources:pack"]
+raw_args = true
+run = "pnpm --filter @chelper/web run test"
+
+[tasks."web:e2e"]
+description = "Run the Web browser tests"
+depends = ["web:install", "core:wasm", "resources:pack"]
+raw_args = true
+run = "pnpm --filter @chelper/web run test:e2e"
+
+[tasks."docs:install"]
+description = "Install the locked documentation dependencies"
+lock = "pnpm-install"
+run = "pnpm --filter @chelper/doc... install --frozen-lockfile --prefer-offline"
+
+[tasks."docs:build"]
+description = "Build the VitePress documentation site"
+depends = ["docs:install"]
+raw_args = true
+run = "pnpm --filter @chelper/doc run docs:build"
+
+[tasks."docs:dev"]
+description = "Start the VitePress development server"
+depends = ["docs:install"]
+raw_args = true
+run = "pnpm --filter @chelper/doc run docs:dev"
