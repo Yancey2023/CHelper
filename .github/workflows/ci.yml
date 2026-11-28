@@ -16,6 +16,7 @@ concurrency:
 env:
   MISE_AUTO_INSTALL: "false"
   MISE_LOCKED: "1"
+  CLIENT_RESOURCES_ARTIFACT: client-resources
 
 jobs:
   changes:
@@ -28,6 +29,7 @@ jobs:
       windows: ${{ steps.paths.outputs.windows }}
       web: ${{ steps.paths.outputs.web }}
       docs: ${{ steps.paths.outputs.docs }}
+      clients: ${{ steps.paths.outputs.android == 'true' || steps.paths.outputs.windows == 'true' || steps.paths.outputs.web == 'true' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -65,6 +67,12 @@ jobs:
                 CHelper-Resource/*) jobs[resources]=true ;;
                 mise.toml|mise.lock|.github/workflows/ci.yml|.github/actions/*)
                   all_jobs; break ;;
+                CHelper-Core/tests/*|CHelper-Core/src/apps/qt/*) jobs[core]=true ;;
+                CHelper-Core/src/apps/CHelperWeb.cpp) jobs[core]=true jobs[web]=true ;;
+                CHelper-Core/cmake/ConfigureWeb.cmake) jobs[web]=true ;;
+                CHelper-Core/src/apps/CHelperJvm.cpp) jobs[android]=true jobs[windows]=true ;;
+                CHelper-Core/src/apps/CHelperResourceGenerator.*|CHelper-Core/cmake/StageClientResources.cmake)
+                  jobs[resources]=true jobs[android]=true jobs[windows]=true jobs[web]=true ;;
                 CHelper-Core/*) jobs[core]=true jobs[android]=true jobs[windows]=true jobs[web]=true ;;
                 CHelper-Compose/apps/android/src/*|CHelper-Compose/apps/benchmark/src/*) jobs[android]=true ;;
                 CHelper-Compose/apps/desktop/src/*) jobs[windows]=true ;;
@@ -81,22 +89,37 @@ jobs:
 
   resources:
     needs: changes
-    if: needs.changes.outputs.resources == 'true'
+    if: needs.changes.outputs.resources == 'true' || needs.changes.outputs.clients == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-mise
         with:
-          tools: cmake ninja ccache ${{ needs.changes.outputs.resource-rust == 'true' && 'rust' || '' }}
+          tools: cmake ninja ccache
           native-cache: resource-generator
-      - if: needs.changes.outputs.resource-rust == 'true'
-        uses: Swatinem/rust-cache@v2
+          resources-cache: "true"
+      - run: mise run resources:pack
+      - if: needs.changes.outputs.clients == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.CLIENT_RESOURCES_ARTIFACT }}
+          path: build/artifacts/resources/
+          if-no-files-found: error
+          overwrite: true
+
+  resources-rust:
+    needs: changes
+    if: needs.changes.outputs.resource-rust == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-mise
+        with:
+          tools: rust
+      - uses: Swatinem/rust-cache@v2
         with:
           workspaces: CHelper-Resource
-      - if: needs.changes.outputs.resource-rust != 'true'
-        run: mise run resources:pack
-      - if: needs.changes.outputs.resource-rust == 'true'
-        run: mise run resources:check
+      - run: mise run resources:test
 
   core:
     needs: changes
@@ -163,6 +186,10 @@ jobs:
     needs: changes
     if: needs.changes.outputs.core == 'true'
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [tests, fuzz]
     env:
       CXX: clang++-19
       CC: clang-19
@@ -171,12 +198,12 @@ jobs:
       - uses: ./.github/actions/setup-mise
         with:
           tools: cmake ninja ccache
-          native-cache: core-sanitizers
+          native-cache: core-sanitizers-${{ matrix.task }}
           compiler-packages: "true"
-      - run: mise run core:sanitize
+      - run: mise run core:sanitize:${{ matrix.task }}
 
   android:
-    needs: changes
+    needs: [changes, resources]
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-24.04
     steps:
@@ -186,6 +213,7 @@ jobs:
           tools: cmake ninja java ccache
           task-tools: http:android-ndk
           native-cache: android
+          resources-artifact: ${{ env.CLIENT_RESOURCES_ARTIFACT }}
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.event_name != 'push' }}
@@ -197,7 +225,7 @@ jobs:
           path: CHelper-Compose/apps/android/build/outputs/apk/release/*.apk
 
   windows:
-    needs: changes
+    needs: [changes, resources]
     if: needs.changes.outputs.windows == 'true'
     runs-on: windows-2025
     steps:
@@ -206,6 +234,7 @@ jobs:
         with:
           tools: cmake ninja java ccache
           native-cache: windows
+          resources-artifact: ${{ env.CLIENT_RESOURCES_ARTIFACT }}
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.event_name != 'push' }}
@@ -220,7 +249,7 @@ jobs:
             CHelper-Compose/apps/desktop/build/compose/binaries/main/exe/*.exe
 
   web:
-    needs: changes
+    needs: [changes, resources]
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
     steps:
@@ -231,6 +260,8 @@ jobs:
           task-tools: http:emsdk
           native-cache: wasm
           pnpm-cache: "true"
+          resources-artifact: ${{ env.CLIENT_RESOURCES_ARTIFACT }}
+          wasm-cache: "true"
       - run: |
           mise run web:build --base=/${{ github.event.repository.name }}/ --mode production ::: web:test
 

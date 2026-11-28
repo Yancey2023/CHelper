@@ -46,6 +46,8 @@ jobs:
           task-tools: http:emsdk
           native-cache: wasm
           pnpm-cache: "true"
+          resources-cache: "true"
+          wasm-cache: "true"
 
       - name: Build For GitHub Page
         run: mise run web:build --base=/${{ github.event.repository.name }}/ --mode production
@@ -63,7 +65,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Build For My Server
-        run: mise run web:build --base=/chelper/ --mode my_server
+        run: mise run web:bundle --base=/chelper/ --mode my_server
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@v6.0.3

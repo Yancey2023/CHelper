@@ -14,6 +14,15 @@ inputs:
   pnpm-cache:
     description: Cache the pnpm store
     default: "false"
+  resources-cache:
+    description: Cache generated client resources by their exact inputs
+    default: "false"
+  resources-artifact:
+    description: Download the named client resources artifact from this workflow run
+    default: ""
+  wasm-cache:
+    description: Cache the generated Web runtime and declarations by their exact inputs
+    default: "false"
   compiler-packages:
     description: Install and cache the compiler selected by CXX on Linux
     default: "false"
@@ -21,15 +30,66 @@ inputs:
 runs:
   using: composite
   steps:
+    - if: inputs.resources-artifact != ''
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ inputs.resources-artifact }}
+        path: build/artifacts/resources
+
+    - if: inputs.resources-cache == 'true' && inputs.resources-artifact == ''
+      id: resources
+      uses: actions/cache@v6
+      with:
+        path: build/artifacts/resources
+        key: >-
+          client-resources-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(
+          'mise.toml', 'mise.lock', 'CHelper-Core/CMakeLists.txt', 'CHelper-Core/CMakePresets.json',
+          'CHelper-Core/cmake/Sources.cmake', 'CHelper-Core/cmake/StageClientResources.cmake',
+          'CHelper-Core/src/chelper/**', 'CHelper-Core/src/apps/CHelperResourceGenerator.*',
+          'CHelper-Resource/resources/**', 'CHelper-Compose/resources/about/**',
+          'CHelper-Compose/resources/rawtext/**', 'CHANGELOG.md') }}
+
+    - if: inputs.wasm-cache == 'true'
+      id: wasm
+      uses: actions/cache@v6
+      with:
+        path: |
+          build/web_core/libCHelperWeb.js
+          build/web_core/libCHelperWeb.wasm
+          build/web_core/libCHelperWeb.d.ts
+        key: >-
+          web-wasm-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles(
+          'mise.toml', 'mise.lock', 'CHelper-Core/CMakeLists.txt', 'CHelper-Core/CMakePresets.json',
+          'CHelper-Core/cmake/Sources.cmake', 'CHelper-Core/cmake/ConfigureWeb.cmake',
+          'CHelper-Core/src/chelper/**', 'CHelper-Core/src/apps/CHelperWeb.cpp',
+          'CHelper-Web/package.json', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
+
+    - if: inputs.resources-artifact != '' || steps.resources.outputs.cache-hit == 'true' || steps.wasm.outputs.cache-hit == 'true'
+      id: prepared
+      shell: bash
+      env:
+        RESOURCES_READY: ${{ inputs.resources-artifact != '' || steps.resources.outputs.cache-hit == 'true' }}
+        WASM_HIT: ${{ steps.wasm.outputs.cache-hit }}
+      run: |
+        skip=()
+        if [[ $RESOURCES_READY == true ]]; then
+          skip+=(resources:pack)
+          echo 'resources=true' >> "$GITHUB_OUTPUT"
+        fi
+        if [[ $WASM_HIT == true ]]; then skip+=(core:wasm); fi
+        (IFS=,; printf 'MISE_TASK_SKIP=%s\n' "${skip[*]}") >> "$GITHUB_ENV"
+
     - uses: jdx/mise-action@v5
       env:
         MISE_AUTO_INSTALL: "false"
       with:
         version: "2026.11.7"
-        install_args: --locked ${{ inputs.tools }}
-        cache_save_post: ${{ inputs.task-tools != '' }}
+        install_args: --locked ${{ steps.wasm.outputs.cache-hit == 'true' && steps.prepared.outputs.resources == 'true' && 'node pnpm' || inputs.tools }}
+        # A cache saved without emsdk must not shadow the build-tool cache.
+        cache_key_prefix: ${{ steps.wasm.outputs.cache-hit == 'true' && 'mise-v1-no-wasm-sdk' || 'mise-v1' }}
+        cache_save_post: ${{ inputs.task-tools != '' && steps.wasm.outputs.cache-hit != 'true' }}
 
-    - if: inputs.task-tools != ''
+    - if: inputs.task-tools != '' && steps.wasm.outputs.cache-hit != 'true'
       shell: bash
       env:
         CHELPER_MISE_SELECTED_TOOLS: ${{ inputs.tools }} ${{ inputs.task-tools }}
@@ -41,7 +101,7 @@ runs:
           printf 'MISE_AUTO_INSTALL=true\n'
         ) >> "$GITHUB_ENV"
 
-    - if: inputs.native-cache != ''
+    - if: inputs.native-cache != '' && (steps.wasm.outputs.cache-hit != 'true' || steps.prepared.outputs.resources != 'true')
       shell: bash
       run: |
         {
@@ -53,7 +113,7 @@ runs:
           echo "CCACHE_COMPILERCHECK=content"
         } >> "$GITHUB_ENV"
 
-    - if: inputs.native-cache != ''
+    - if: inputs.native-cache != '' && (steps.wasm.outputs.cache-hit != 'true' || steps.prepared.outputs.resources != 'true')
       uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/chelper-ccache
@@ -62,7 +122,7 @@ runs:
           ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}-${{ inputs.native-cache }}-
           ccache-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}-
 
-    - if: inputs.native-cache != ''
+    - if: inputs.native-cache != '' && (steps.wasm.outputs.cache-hit != 'true' || steps.prepared.outputs.resources != 'true')
       uses: actions/cache@v6
       with:
         path: CHelper-Core/3rdparty_downloads

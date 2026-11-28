@@ -1,6 +1,26 @@
 import { expect, test } from '@playwright/test'
 import type { Suggestion } from '../src/core/libCHelperWeb'
 
+test('retries failed Wasm initialization without reloading the page', async ({ page }) => {
+  const wasm = (url: URL) => url.pathname.endsWith('/libCHelperWeb.wasm')
+  await page.route(wasm, (route) =>
+    route.request().resourceType() === 'fetch' ? route.abort() : route.continue(),
+  )
+  await page.goto('/')
+  await expect(page.getByText('CHelper 内核加载失败')).toBeVisible()
+  const navigationStart = await page.evaluate(() => performance.timeOrigin)
+
+  await page.unroute(wasm)
+  const retry = page.waitForResponse(
+    (response) => response.request().resourceType() === 'fetch' && wasm(new URL(response.url())),
+  )
+  await page.getByRole('button', { name: '重试' }).click()
+  expect((await retry).ok()).toBe(true)
+  await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
+  await expect(page.getByRole('button', { name: '重试' })).toBeHidden()
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(navigationStart)
+})
+
 test('loads every bundled resource pack with the generated Wasm core', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))

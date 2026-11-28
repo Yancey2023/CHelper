@@ -1,18 +1,51 @@
-import createCHelperModule from '../../../build/web_core/libCHelperWeb.js'
+import createCHelperModule, { type MainModule } from '../../../build/web_core/libCHelperWeb.js'
 import wasmUrl from '../../../build/web_core/libCHelperWeb.wasm?url'
 
-let wasmModule
-export const createWasmFuture = createCHelperModule({
-  locateFile: () => wasmUrl,
-}).then((module) => {
-  wasmModule = module
-})
+/** 补全提示中的一条建议。 */
+export interface Suggestion {
+  /** 建议在列表中的序号（从 0 开始）。 */
+  id: number
+  title: string
+  description: string
+  preview?: SuggestionPreview
+}
+
+export interface SuggestionPreview {
+  kind: 'icon' | 'audio' | 'easing' | 'dyeColor'
+  value: string
+}
+
+export interface ErrorReason {
+  start: number
+  end: number
+  errorReason: string
+}
+
+export interface ClickSuggestionResult {
+  cursorPosition: number
+  newText: string
+}
+
+let wasmModule: MainModule
+let initialization: Promise<void> | undefined
+
+/** 初始化 WASM。并发调用共享同一次加载，失败后可以再次调用。 */
+export function initializeWasm(): Promise<void> {
+  return (initialization ??= createCHelperModule({ locateFile: () => wasmUrl })
+    .then((module) => {
+      wasmModule = module
+    })
+    .catch((error: unknown) => {
+      initialization = undefined
+      throw error
+    }))
+}
 
 // 内存视图可能因内存增长（ALLOW_MEMORY_GROWTH）而失效，每次读取前通过 wasmModule.HEAPU8 获取底层 buffer
-let u16View = null
+let u16View: Uint16Array | undefined
 function getHEAPU16() {
   const buffer = wasmModule.HEAPU8.buffer
-  if (u16View === null || u16View.buffer !== buffer) {
+  if (u16View === undefined || u16View.buffer !== buffer) {
     u16View = new Uint16Array(buffer)
   }
   return u16View
@@ -28,13 +61,13 @@ function getHEAPU16() {
 
 // 4 字节向上对齐，与 C++ 的 align4 完全一致。
 // 不用位运算公式 (value + 3) & ~3，避免 32 位有符号溢出影响地址计算。
-function align4(value) {
+function align4(value: number) {
   return value + ((4 - (value % 4)) % 4)
 }
 
 // 校验 [start, start + byteLength) 完全落在 WASM 线性内存内。
 // 防御性检查：损坏的长度字段必须在这里抛出明确错误，而不是进入巨大的循环。
-function checkMemRange(start, byteLength, what) {
+function checkMemRange(start: number, byteLength: number, what: string) {
   if (!Number.isFinite(byteLength) || byteLength < 0) {
     throw new Error(`Invalid WASM buffer: ${what} 长度非法: ${byteLength}`)
   }
@@ -47,7 +80,7 @@ function checkMemRange(start, byteLength, what) {
 }
 
 // 读取 4 字节无符号整数，返回 { value, next }；ptr 必须 4 字节对齐（协议不变量）
-function readU32(ptr) {
+function readU32(ptr: number) {
   if (ptr % 4 !== 0) {
     throw new Error(`Invalid WASM buffer: u32 读取位置未 4 字节对齐: ${ptr}`)
   }
@@ -56,7 +89,7 @@ function readU32(ptr) {
 }
 
 // 读取 [u32 长度][u16 字符串]（ptr 已 4 对齐），返回 { value, next }
-function readUtf16(ptr) {
+function readUtf16(ptr: number) {
   const length = readU32(ptr).value
   const dataStart = ptr + 4
   checkMemRange(dataStart, length * 2, `字符串数据(length=${length})`)
@@ -68,7 +101,7 @@ function readUtf16(ptr) {
 }
 
 // 写入 utf16 编码并以0结尾的字符串，返回起始指针（仅用于向 C++ 传入命令文本）
-function writeString(content) {
+function writeString(content: string) {
   const ptr = wasmModule._malloc((content.length + 1) * 2)
   const start = ptr / 2
   const end = start + content.length
@@ -82,7 +115,7 @@ function writeString(content) {
 }
 
 // 读取预览类型、三个 UTF-16 长度和字符串数据（记录头按 4 字节对齐）
-function readSuggestionRecord(ptr, which) {
+function readSuggestionRecord(ptr: number, which: number): { value: Suggestion; next: number } {
   checkMemRange(ptr, 16, `补全建议头部(记录 ${which})`)
   const header = ptr >>> 2
   const words = wasmModule.HEAPU32
@@ -96,7 +129,7 @@ function readSuggestionRecord(ptr, which) {
     (nameLength + descriptionLength + previewLength) * 2,
     `补全建议数据(记录 ${which})`,
   )
-  const read = (length) => {
+  const read = (length: number) => {
     let value = ''
     const memory = getHEAPU16()
     for (let i = 0; i < length; i++) {
@@ -108,13 +141,13 @@ function readSuggestionRecord(ptr, which) {
   const title = read(nameLength)
   const description = read(descriptionLength)
   const payload = read(previewLength)
-  const previewKind = [undefined, 'icon', 'audio', 'easing', 'dyeColor'][kind]
+  const previewKind = ([undefined, 'icon', 'audio', 'easing', 'dyeColor'] as const)[kind]
   const preview = previewKind && payload ? { kind: previewKind, value: payload } : undefined
   return { value: { id: which, title, description, preview }, next: p }
 }
 
 // 读取 [u32 数量]([u32 start][u32 end][u32 长度][u16 字符串][补齐到4])*
-function readErrorReasons(basePtr) {
+function readErrorReasons(basePtr: number): ErrorReason[] {
   let ptr = align4(basePtr)
   const count = readU32(ptr)
   ptr = count.next
@@ -134,7 +167,7 @@ function readErrorReasons(basePtr) {
 }
 
 // 读取 [u32 数量]([补全建议][补齐到4])*
-function readSuggestions(basePtr) {
+function readSuggestions(basePtr: number): Suggestion[] {
   let ptr = align4(basePtr)
   const count = readU32(ptr)
   ptr = count.next
@@ -153,7 +186,9 @@ function readSuggestions(basePtr) {
 // 软件内核，负责持有资源包并通过createContext创建命令上下文
 // 所有和命令相关的功能都在CommandContext上执行
 export class CHelperCore {
-  constructor(cpack) {
+  private _corePtr: number
+
+  constructor(cpack: Uint8Array) {
     const cpackPtr = wasmModule._malloc(cpack.byteLength)
     wasmModule.HEAPU8.set(cpack, cpackPtr)
     this._corePtr = wasmModule._init(cpackPtr, cpack.byteLength)
@@ -169,13 +204,13 @@ export class CHelperCore {
   }
 
   // 把命令文本解析成AST，生成独立的命令上下文
-  createContext(command) {
+  createContext(command: string) {
     return new CommandContext(this._corePtr, command)
   }
 }
 
 // 读取 [u32 光标位置][u32 长度][u16 字符串]
-function readClickSuggestionResult(ptr) {
+function readClickSuggestionResult(ptr: number): ClickSuggestionResult | null {
   if (ptr === 0) {
     return null
   }
@@ -188,9 +223,9 @@ function readClickSuggestionResult(ptr) {
 }
 
 // 读取 [u32 数量][u8]*
-function readSyntaxTokens(ptr) {
+function readSyntaxTokens(ptr: number): number[] {
   if (ptr === 0) {
-    return null
+    return []
   }
   const count = readU32(align4(ptr))
   checkMemRange(count.next, count.value, '语法 token 数量')
@@ -204,8 +239,10 @@ function readSyntaxTokens(ptr) {
 // 命令上下文，持有某条命令解析好的AST
 // 每个上下文在 WASM 中缓存最近一次光标位置的补全结果，供单线程 Web 接口复用。
 export class CommandContext {
+  private _contextPtr: number
+
   // corePtr 是CHelperCore对应的指针，command 是命令文本
-  constructor(corePtr, command) {
+  constructor(corePtr: number, command: string) {
     const ptr = writeString(command)
     this._contextPtr = wasmModule._createCommandContext(corePtr, ptr)
     wasmModule._free(ptr)
@@ -238,7 +275,7 @@ export class CommandContext {
   }
 
   // 获取指定位置的参数注释
-  getParamHint(index) {
+  getParamHint(index: number) {
     const ptr = wasmModule._contextGetParamHint(this._contextPtr, index)
     if (ptr === 0) {
       return ''
@@ -256,12 +293,12 @@ export class CommandContext {
   }
 
   // 获取指定位置的补全提示数量
-  getSuggestionSize(index) {
+  getSuggestionSize(index: number) {
     return wasmModule._contextGetSuggestionSize(this._contextPtr, index)
   }
 
   // 获取指定位置的其中一个补全提示
-  getSuggestion(index, which) {
+  getSuggestion(index: number, which: number) {
     const ptr = wasmModule._contextGetSuggestion(this._contextPtr, index, which)
     if (ptr === 0) {
       return null
@@ -270,7 +307,7 @@ export class CommandContext {
   }
 
   // 获取指定位置的所有补全提示
-  getAllSuggestions(index) {
+  getAllSuggestions(index: number) {
     const ptr = wasmModule._contextGetAllSuggestions(this._contextPtr, index)
     if (ptr === 0) {
       return []
@@ -280,7 +317,7 @@ export class CommandContext {
 
   // 把指定位置的其中一个补全提示应用到命令文本
   // 不会修改上下文持有的命令文本，同样的操作可以重复执行
-  applySuggestion(index, which) {
+  applySuggestion(index: number, which: number) {
     return readClickSuggestionResult(
       wasmModule._contextApplySuggestion(this._contextPtr, index, which),
     )

@@ -19,9 +19,14 @@ endif()
 if(CMAKE_HOST_WIN32)
   set(executableSuffix ".exe")
 endif()
+set(generatorDir "$ENV{CHELPER_RESOURCE_GENERATOR_DIR}")
+if(generatorDir STREQUAL "")
+  set(generatorDir "build/resource_generator")
+endif()
+cmake_path(ABSOLUTE_PATH generatorDir BASE_DIRECTORY "${projectRoot}" NORMALIZE)
 execute_process(
   COMMAND
-    "${projectRoot}/build/resource_generator/CHelperResourceGenerator${executableSuffix}"
+    "${generatorDir}/CHelperResourceGenerator${executableSuffix}"
     "${resourcesSource}" "${resourcesOutput}" --binary-only
     COMMAND_ERROR_IS_FATAL ANY)
 

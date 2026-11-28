@@ -89,6 +89,10 @@
         "BUILD_TESTING": "OFF",
         "CHELPER_BUILD_JNI": "ON"
       }
+    },
+    {
+      "name": "windows-client",
+      "inherits": "windows-jni"
     }
   ],
   "buildPresets": [
@@ -116,6 +120,11 @@
       "name": "windows-jni",
       "configurePreset": "windows-jni",
       "targets": ["CHelperJvm"]
+    },
+    {
+      "name": "windows-client",
+      "configurePreset": "windows-client",
+      "targets": ["CHelperJvm", "CHelperResourceGenerator"]
     },
     {
       "name": "host-debug",

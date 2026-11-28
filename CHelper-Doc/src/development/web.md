@@ -4,13 +4,13 @@
 
 ## 构建 Web 客户端
 
-从仓库根目录运行 `mise run web:build`。首次运行时，mise 会安装锁定版本的 emsdk，并由 emsdk 安装和激活对应的 Emscripten 工具链。WASM 和配套 JavaScript 会生成到 `build/web_core`，资源包会生成到 `build/artifacts/resources/cpack`。只构建内核可运行 `mise run core:wasm`，启动开发服务器可运行 `mise run web:dev`。
+从仓库根目录运行 `mise run web:build`。首次运行时，mise 会安装锁定版本的 emsdk，并由 emsdk 安装和激活对应的 Emscripten 工具链。WASM、配套 JavaScript 和 Emscripten 生成的 TypeScript 声明会放到 `build/web_core`，资源包会放到 `build/artifacts/resources/cpack`。单独生成内核可运行 `mise run core:wasm`，它会先准备生成声明所需的 TypeScript。启动开发服务器可运行 `mise run web:dev`。
 
 单元测试使用 `mise run web:test`。首次运行浏览器测试前，在仓库根目录执行 `mise exec -- pnpm --filter @chelper/web exec playwright install chromium`，随后执行 `mise run web:e2e`。
 
 ## 与 JavaScript 代码交互
 
-`src/core/libCHelperWeb.js` 是内核适配器。它加载同次构建的 Emscripten 模块和 WASM，并提供以下接口。
+`src/core/libCHelperWeb.ts` 是内核适配器，包含实现和类型。它加载同次构建的 Emscripten 模块和 WASM，并提供以下接口。
 
 ```js
 export class CHelperCore {
@@ -74,23 +74,7 @@ export class CommandContext {
 }
 ```
 
-可以观察到这个类的构建函数需要传入资源包。在`src/core`目录下，`CPackManager.ts`用于获取资源包并通过资源包初始化内核，其实现如下：
-
-```js
-export async function getCore(branch) {
-  let cpack = cpackCache[branch];
-  if (cpack === undefined) {
-    cpack = await fetch(getRealFileName(branch))
-      .then((response) => response.arrayBuffer())
-      .then(async (cpack) => {
-        return new Uint8Array(cpack);
-      });
-    cpackCache[branch] = cpack;
-  }
-  await createWasmFuture;
-  return new CHelperCore(cpack);
-}
-```
+在 `src/core` 目录下，`CPackManager.ts` 并行获取资源包和初始化 WASM。两者就绪后，`getCore` 使用资源包创建内核。并发调用共享同一次 WASM 初始化，初始化失败后下次调用可以重试。
 
 获取到内核后，即可去调用内核的各种接口了。需要注意的是，在内核要被销毁的时候，记得调用`release()`函数释放内存。
 

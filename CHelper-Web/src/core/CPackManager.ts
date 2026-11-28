@@ -1,4 +1,4 @@
-import { CHelperCore, createWasmFuture } from '@/core/libCHelperWeb'
+import { CHelperCore, initializeWasm } from '@/core/libCHelperWeb'
 
 export type Branch =
   | 'release-vanilla'
@@ -53,20 +53,21 @@ export const ALL_BRANCH_CHINESE = ALL_BRANCH.map(
 const cpackCache: Partial<Record<Branch, Uint8Array>> = {}
 
 export async function getCore(branch: Branch): Promise<CHelperCore> {
-  let cpack = cpackCache[branch]
-  if (cpack === undefined) {
-    const response = await fetch(getRealFileName(branch))
-    // 服务器返回 404/500 等错误页面时必须直接失败，
-    // 否则错误页内容会被当成资源包解析，甚至被缓存导致重试永远失败
-    if (!response.ok) {
-      throw new Error(`fail to download cpack (${branch}): ${response.status} ${response.url}`)
-    }
-    const buffer = await response.arrayBuffer()
-    cpack = new Uint8Array(buffer)
-    cpackCache[branch] = cpack
-  }
-  await createWasmFuture
+  const [cpack] = await Promise.all([loadCPack(branch), initializeWasm()])
   return new CHelperCore(cpack)
+}
+
+async function loadCPack(branch: Branch): Promise<Uint8Array> {
+  const cached = cpackCache[branch]
+  if (cached !== undefined) return cached
+
+  const response = await fetch(getRealFileName(branch))
+  if (!response.ok) {
+    throw new Error(`fail to download cpack (${branch}): ${response.status} ${response.url}`)
+  }
+  const cpack = new Uint8Array(await response.arrayBuffer())
+  cpackCache[branch] = cpack
+  return cpack
 }
 
 export function getRealFileName(branch: Branch): string {

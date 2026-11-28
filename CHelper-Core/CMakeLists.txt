@@ -287,6 +287,7 @@ if(EMSCRIPTEN)
                                               VISIBILITY_INLINES_HIDDEN ON)
 
   set(webOutput "${CMAKE_CURRENT_BINARY_DIR}/libCHelperWeb")
+  set(webOutputs "${webOutput}.js" "${webOutput}.wasm" "${webOutput}.d.ts")
   set(webLibraries CHelperWeb CHelperNoFilesystemCore fmt::fmt spdlog::spdlog
                    xxHash::xxhash)
   set(webLibraryFiles)
@@ -301,19 +302,21 @@ if(EMSCRIPTEN)
     _contextGetNodeCount _malloc _free)
   list(JOIN webExports "','" webExports)
   add_custom_command(
-    OUTPUT "${webOutput}.js" "${webOutput}.wasm"
+    OUTPUT ${webOutputs}
     COMMAND
-      "${CMAKE_CXX_COMPILER}" ${webLibraryFiles} -Os -o "${webOutput}.js" -s
+      "${CMAKE_COMMAND}" -E env --modify
+      "PATH=path_list_prepend:${CMAKE_CURRENT_SOURCE_DIR}/../CHelper-Web/node_modules/.bin"
+      -- "${CMAKE_CXX_COMPILER}" ${webLibraryFiles} -Os -o "${webOutput}.js" -s
       FILESYSTEM=0 -s DISABLE_EXCEPTION_CATCHING=1 -s ALLOW_MEMORY_GROWTH -s
       "ENVIRONMENT=[\"web\"]" -s "EXPORTED_FUNCTIONS=['${webExports}']" -s
       WASM=1 -s "EXPORTED_RUNTIME_METHODS=['HEAPU8','HEAPU32']" -s MODULARIZE=1
-      -s EXPORT_ES6=1 -s EXPORT_NAME=createCHelperModule
-    DEPENDS ${webLibraryFiles}
+      -s EXPORT_ES6=1 -s EXPORT_NAME=createCHelperModule --emit-tsd
+      "${webOutput}.d.ts"
+    DEPENDS ${webLibraryFiles} ../pnpm-lock.yaml
     VERBATIM)
-  add_custom_target(CHelperWebBundle DEPENDS "${webOutput}.js"
-                                             "${webOutput}.wasm")
+  add_custom_target(CHelperWebBundle DEPENDS ${webOutputs})
   install(
-    FILES "${webOutput}.js" "${webOutput}.wasm"
+    FILES ${webOutputs}
     DESTINATION .
     COMPONENT web)
 endif()

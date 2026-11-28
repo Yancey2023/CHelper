@@ -409,7 +409,7 @@ test('the styled scrollbar spans every completion and supports on-demand draggin
   await expect(page.getByText('欢迎使用CHelper')).toBeVisible()
   type InstrumentedWindow = Window & { completionReads: number[] }
   await page.evaluate(async () => {
-    const path = '/src/core/libCHelperWeb.js'
+    const path = '/src/core/libCHelperWeb.ts'
     const { CommandContext } = await import(/* @vite-ignore */ path)
     const reads: number[] = []
     ;(window as InstrumentedWindow).completionReads = reads

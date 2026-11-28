@@ -23,15 +23,23 @@ usage = 'arg "<preset>"'
 run = 'cmake --preset "$usage_preset" && cmake --build --preset "$usage_preset"'
 run_windows = '''
 $ErrorActionPreference = "Stop"
+$preset = $env:usage_preset
+if ($preset -eq "resource-generator" -and $env:CHELPER_RESOURCE_GENERATOR_DIR) {
+    exit 0       # The Windows client build already built the generator.
+}
+if ($preset -eq "windows-jni" -and $env:CHELPER_BUILD_WINDOWS_RESOURCES -eq "1" -and
+    ($env:MISE_TASK_SKIP -split ',') -notcontains "resources:pack") {
+    $preset = "windows-client"
+}
 if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
     $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio/Installer/vswhere.exe"
     $installation = & $vswhere -latest -products "*" -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
     if (-not $installation) { throw "Install Visual Studio Build Tools with Desktop development with C++." }
     & (Join-Path $installation "Common7/Tools/Launch-VsDevShell.ps1") -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
 }
-cmake --preset $env:usage_preset
+cmake --preset $preset
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-cmake --build --preset $env:usage_preset
+cmake --build --preset $preset
 exit $LASTEXITCODE
 '''
 
@@ -71,6 +79,10 @@ run = [{ task = "core:host", args = ["qt-debug"] }]
 
 [tasks."core:sanitize"]
 description = "Run ASan/UBSan tests and the fuzz smoke test on Linux"
+run = [{ task = "core:sanitize:tests" }, { task = "core:sanitize:fuzz" }]
+
+[tasks."core:sanitize:tests"]
+description = "Run the ASan/UBSan core tests"
 dir = "CHelper-Core"
 env = { ASAN_OPTIONS = "detect_leaks=1", UBSAN_OPTIONS = "halt_on_error=1:print_stacktrace=1" }
 run = [
@@ -78,6 +90,13 @@ run = [
     "sanitizers",
   ] },
   "ctest --preset sanitizers",
+]
+
+[tasks."core:sanitize:fuzz"]
+description = "Run the ASan/UBSan fuzz smoke test"
+dir = "CHelper-Core"
+env = { ASAN_OPTIONS = "detect_leaks=1", UBSAN_OPTIONS = "halt_on_error=1:print_stacktrace=1" }
+run = [
   { task = "core:host", args = [
     "fuzz",
   ] },
@@ -144,7 +163,8 @@ run_windows = [
 ]
 
 [tasks."core:wasm"]
-description = "Build the browser WASM and its Emscripten module"
+description = "Build the browser WASM, Emscripten module, and TypeScript declarations"
+depends = ["web:install"]
 dir = "CHelper-Core"
 lock = true
 env.EMSDK = { value = '{{ tools["http:emsdk"].path }}', tools = true }
@@ -156,7 +176,7 @@ if [ "${CMAKE_CXX_COMPILER_LAUNCHER:-}" = ccache ]; then
     export EM_COMPILER_WRAPPER=ccache
     unset CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER
 fi
-cmake --preset web
+cmake -P cmake/ConfigureWeb.cmake
 cmake --build --preset web
 cmake --install "$CHELPER_WASM_BUILD_DIR" --prefix ../build/web_core --component web
 '''
@@ -166,7 +186,7 @@ if ($env:CMAKE_CXX_COMPILER_LAUNCHER -eq "ccache") {
     $env:EM_COMPILER_WRAPPER = "ccache"
     Remove-Item Env:CMAKE_C_COMPILER_LAUNCHER, Env:CMAKE_CXX_COMPILER_LAUNCHER -ErrorAction SilentlyContinue
 }
-cmake --preset web
+cmake -P cmake/ConfigureWeb.cmake
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 cmake --build --preset web
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -227,6 +247,10 @@ run = [
 [tasks."resources:check"]
 description = "Check the checked-in resource packs and run the Rust generator tests"
 depends = ["resources:pack"]
+run = [{ task = "resources:test" }]
+
+[tasks."resources:test"]
+description = "Run the Rust resource generator tests"
 dir = "CHelper-Resource"
 run = "cargo test --locked --workspace"
 
@@ -271,17 +295,27 @@ run = [{ task = "android:gradle", args = [
 
 [tasks."windows:gradle"]
 description = "Run Gradle tasks for the Windows client"
-depends = ["core:windows", "resources:pack"]
+depends = ["windows:prepare"]
 dir = "CHelper-Compose"
 raw_args = true
 run_windows = "./gradlew.bat"
 
 [tasks."windows:package"]
 description = "Build the Windows application image, MSI, and EXE on Windows"
-depends = ["core:windows", "resources:pack"]
+depends = ["windows:prepare"]
 dir = "CHelper-Compose"
 raw_args = true
 run_windows = "./gradlew.bat :apps:desktop:createDistributable :apps:desktop:packageMsi :apps:desktop:packageExe"
+
+[tasks."windows:prepare"]
+description = "Prepare Windows JNI and resources in the same native build"
+hide = true
+depends = [
+  { task = "core:windows", env = { CHELPER_BUILD_WINDOWS_RESOURCES = "1" } },
+]
+run_windows = [
+  { task = "resources:pack", env = { CHELPER_RESOURCE_GENERATOR_DIR = "build/desktop_core" } },
+]
 
 [tasks."windows:ci"]
 description = "Build Windows installers and run the desktop and shared tests"
@@ -306,6 +340,12 @@ description = "Build the Web app with the generated WASM and packs"
 depends = ["web:install", "core:wasm", "resources:pack"]
 raw_args = true
 run = "pnpm --filter @chelper/web run build"
+
+[tasks."web:bundle"]
+description = "Bundle Web with the already prepared WASM, packs, and dependencies"
+hide = true
+raw_args = true
+run = "pnpm --filter @chelper/web exec vite build"
 
 [tasks."web:dev"]
 description = "Start the Web app with the generated WASM and packs"
