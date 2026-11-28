@@ -19,7 +19,6 @@
 #include "CHelperQt.h"
 #include "ui_chelper.h"
 #include <QClipboard>
-#include <QDir>
 #include <QFile>
 #include <QListWidget>
 #include <QStringListModel>
@@ -49,7 +48,7 @@ CHelperApp::CHelperApp(QWidget *parent)
     std::filesystem::path resourcePath(RESOURCE_DIR);
     core = CHelper::CHelperCore::createByDirectory(resourcePath / "resources" / "beta" / "vanilla");
 #else
-    QFile file = QFile(QDir(":/assets").entryInfoList().first().filePath());
+    QFile file(":/assets/release-experiment.cpack");
     if (file.open(QIODevice::ReadOnly) && file.isReadable()) {
         const QByteArray cpackData = file.readAll();
         core = CHelper::CHelperCore::createByBinary(std::string_view(cpackData.data(), cpackData.size()));

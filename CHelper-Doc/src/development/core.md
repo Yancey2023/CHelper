@@ -63,10 +63,13 @@ CHelper 内核包含了语法解析、错误检测、补全提示、命令结构
 mise run core:test       # 构建并运行宿主内核测试
 mise run core:android    # 生成 Android ARM64 JNI 库
 mise run core:wasm       # 生成浏览器 WASM 和 JavaScript 适配器
-mise run resources:pack # 生成各客户端使用的资源包
+mise run core:qt         # 构建 Qt 调试应用
+mise run resources:pack  # 生成各客户端使用的资源包
 ```
 
 CMake Presets 定义宿主、Android 和 Web 的编译配置。Android 和 Web 任务会按需准备锁定版本的 NDK 或 Emscripten SDK。CMake 的构建目录位于仓库根目录下的 `build`。
+
+Qt 构建需要 Qt 6。`mise run core:qt` 会自动准备 `build/artifacts/resources/cpack` 下的 CPack，并将其嵌入应用。`mise run core:qt:debug` 构建的应用在运行时直接读取源 JSON，便于调试资源数据。
 
 ## 加入我们
 

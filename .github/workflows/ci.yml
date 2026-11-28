@@ -29,7 +29,7 @@ jobs:
       windows: ${{ steps.paths.outputs.windows }}
       web: ${{ steps.paths.outputs.web }}
       docs: ${{ steps.paths.outputs.docs }}
-      clients: ${{ steps.paths.outputs.android == 'true' || steps.paths.outputs.windows == 'true' || steps.paths.outputs.web == 'true' }}
+      clients: ${{ steps.paths.outputs.core == 'true' || steps.paths.outputs.android == 'true' || steps.paths.outputs.windows == 'true' || steps.paths.outputs.web == 'true' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -122,7 +122,7 @@ jobs:
       - run: mise run resources:test
 
   core:
-    needs: changes
+    needs: [changes, resources]
     if: needs.changes.outputs.core == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
@@ -170,6 +170,7 @@ jobs:
           tools: cmake ninja ccache ${{ matrix.qt != '' && 'python' || '' }}
           native-cache: core-${{ matrix.compiler }}-${{ matrix.type }}
           compiler-packages: "true"
+          resources-artifact: ${{ matrix.qt != '' && env.CLIENT_RESOURCES_ARTIFACT || '' }}
       - if: matrix.qt != ''
         uses: jurplel/install-qt-action@v4.5.0
         with:

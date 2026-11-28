@@ -15,7 +15,8 @@
       "inherits": "release-ninja",
       "binaryDir": "${sourceDir}/../build/core_tests",
       "cacheVariables": {
-        "BUILD_TESTING": "ON"
+        "BUILD_TESTING": "ON",
+        "CHELPER_BUILD_QT": "OFF"
       }
     },
     {
@@ -28,11 +29,17 @@
     },
     {
       "name": "qt",
-      "inherits": "host-tests"
+      "inherits": "host-tests",
+      "cacheVariables": {
+        "CHELPER_BUILD_QT": "ON"
+      }
     },
     {
       "name": "qt-debug",
-      "inherits": "host-debug"
+      "inherits": "host-debug",
+      "cacheVariables": {
+        "CHELPER_BUILD_QT": "ON"
+      }
     },
     {
       "name": "sanitizers",

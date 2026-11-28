@@ -50,6 +50,7 @@ option(CHELPER_ENABLE_SANITIZERS
        "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(CHELPER_BUILD_FUZZERS "Build Clang libFuzzer targets" OFF)
 option(CHELPER_BUILD_JNI "Build the desktop JVM native bridge" OFF)
+option(CHELPER_BUILD_QT "Build the Qt debugging application" OFF)
 if(CHELPER_BUILD_JNI AND NOT ANDROID AND NOT EMSCRIPTEN)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -369,11 +370,30 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     target_link_libraries(CHelperFuzz PRIVATE CHelper::Core)
   endif()
 
-  find_package(Qt6 QUIET COMPONENTS Core Gui Widgets)
-  if(Qt6_FOUND)
+  if(CHELPER_BUILD_QT)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+    file(
+      GLOB qtResourcePack
+      LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/../build/artifacts/resources/cpack/release-experiment-*.cpack"
+    )
+    list(LENGTH qtResourcePack qtResourcePackCount)
+    if(NOT qtResourcePackCount EQUAL 1)
+      message(
+        FATAL_ERROR
+          "Qt requires one generated release-experiment CPack. Run mise run resources:pack."
+      )
+    endif()
+
     add_executable(
       CHelperQt WIN32 src/apps/qt/CHelperQt.h src/apps/qt/CHelperQt.cpp
                       src/apps/qt/chelper.qrc src/apps/qt/chelper.ui)
+    set_source_files_properties(
+      "${qtResourcePack}" PROPERTIES QT_RESOURCE_ALIAS
+                                     "assets/release-experiment.cpack")
+    qt_add_resources(CHelperQt "chelper_cpack" PREFIX "/" FILES
+                     "${qtResourcePack}")
     chelper_configure_target(CHelperQt)
     set_target_properties(
       CHelperQt

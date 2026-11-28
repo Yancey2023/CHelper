@@ -67,12 +67,14 @@ run = [
 
 [tasks."core:qt"]
 description = "Build the Qt debugging application"
+depends = ["resources:pack"]
 dir = "CHelper-Core"
 lock = "core-host-release"
 run = [{ task = "core:host", args = ["qt"] }]
 
 [tasks."core:qt:debug"]
 description = "Build the debug Qt application"
+depends = ["resources:pack"]
 dir = "CHelper-Core"
 lock = "core-host-debug"
 run = [{ task = "core:host", args = ["qt-debug"] }]
@@ -219,7 +221,7 @@ arg "<output>"
 run = "cmake -P CHelper-Core/cmake/StageClientResources.cmake"
 
 [tasks."resources:pack"]
-description = "Pack the checked-in resource sources for Android, Windows, and Web"
+description = "Pack the checked-in resource sources for Android, Windows, Web, and Qt"
 lock = "chelper-resource-generation"
 sources = [
   "CHelper-Compose/resources/about/**",
