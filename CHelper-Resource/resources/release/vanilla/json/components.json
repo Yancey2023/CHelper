@@ -49,11 +49,11 @@
                     "contents": [
                         {
                             "name": "lock_in_inventory",
-                            "description": "阻止该物品被从玩家的物品栏移除、丢弃或用于合成。 "
+                            "description": "阻止该物品被从玩家的物品栏移除、丢弃或用于合成 "
                         },
                         {
                             "name": "lock_in_slot",
-                            "description": "阻止该物品被从玩家物品栏的该槽位移动、移除、丢弃或用于合成。"
+                            "description": "阻止该物品被从玩家物品栏的该槽位移动、移除、丢弃或用于合成"
                         }
                     ]
                 }
@@ -88,14 +88,14 @@
             "data": [
                 {
                     "key": "minecraft:can_place_on",
-                    "description": "控制此物品/方块（在冒险模式下）可以使用/放置在其上的方块类型。",
+                    "description": "控制此物品/方块（在冒险模式下）可以使用/放置在其上的方块类型",
                     "value": [
                         "BLOCKS"
                     ]
                 },
                 {
                     "key": "minecraft:can_destroy",
-                    "description": "控制冒险模式下可破坏的方块类型。",
+                    "description": "控制冒险模式下可破坏的方块类型",
                     "value": [
                         "BLOCKS"
                     ]

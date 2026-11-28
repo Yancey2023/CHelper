@@ -2,14 +2,14 @@
     "name": [
         "kill"
     ],
-    "description": "杀死生物，清除非生物实体。",
+    "description": "杀死生物，清除非生物实体",
     "syntax": [
         "/kill [target: target]"
     ],
     "node": {
         "[target: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要杀死/清除的目标实体。",
+            "description": "指定要杀死/清除的目标实体",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,

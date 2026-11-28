@@ -2,7 +2,7 @@
     "name": [
         "gamemode"
     ],
-    "description": "设置玩家的游戏模式。",
+    "description": "设置玩家的游戏模式",
     "syntax": [
         "/gamemode <gameMode: GameMode> [player: target]",
         "/gamemode <gameMode: int> [player: target]"
@@ -17,7 +17,7 @@
         },
         "[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要被修改游戏模式的玩家。",
+            "description": "指定要被修改游戏模式的玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,

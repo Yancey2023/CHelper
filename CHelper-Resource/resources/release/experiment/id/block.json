@@ -15716,7 +15716,7 @@
                 },
                 {
                     "propertyName": "coral_direction",
-                    "description": "墙上的珊瑚扇朝向的方向。 0：朝北 1：朝东 2：朝南 3：朝西",
+                    "description": "墙上的珊瑚扇朝向的方向； 0：朝北 1：朝东 2：朝南 3：朝西",
                     "values": [
                         {
                             "valueName": 0
@@ -15894,7 +15894,7 @@
                 },
                 {
                     "propertyName": "door_hinge_bit",
-                    "description": "门轴在哪一侧，当为false时为左侧。储存在上半层的门中，对于下半层的门，该值正常情况下永远为false",
+                    "description": "门轴在哪一侧，当为false时为左侧；储存在上半层的门中，对于下半层的门，该值正常情况下永远为false",
                     "values": [
                         {
                             "valueName": false
@@ -18943,7 +18943,7 @@
                     "properties": [
                         {
                             "propertyName": "direction",
-                            "description": "已弃用，为兼容性而保留 门的朝向，门关闭时把手所在的方向。 0：南 1：西 2：北 3：东",
+                            "description": "已弃用，为兼容性而保留 门的朝向，门关闭时把手所在的方向； 0：南 1：西 2：北 3：东",
                             "values": [
                                 {
                                     "valueName": 0
@@ -18961,7 +18961,7 @@
                         },
                         {
                             "propertyName": "minecraft:cardinal_direction",
-                            "description": "门的朝向，门关闭时把手所在的方向。 west：西 north：北 east：东 south：南",
+                            "description": "门的朝向，门关闭时把手所在的方向； west：西 north：北 east：东 south：南",
                             "values": [
                                 {
                                     "valueName": "south"
@@ -18979,7 +18979,7 @@
                         },
                         {
                             "propertyName": "open_bit",
-                            "description": "门是否已打开，当为true时已打开。储存在下半层的门中，对于上半层的门，该值正常情况下永远为false",
+                            "description": "门是否已打开，当为true时已打开；储存在下半层的门中，对于上半层的门，该值正常情况下永远为false",
                             "values": [
                                 {
                                     "valueName": false
@@ -19679,23 +19679,23 @@
                             "values": [
                                 {
                                     "valueName": 0,
-                                    "description": " 紫颂花的age从0开始。当水平生长时或额外长出一朵新的紫颂花时增加"
+                                    "description": " 紫颂花的age从0开始；当水平生长时或额外长出一朵新的紫颂花时增加"
                                 },
                                 {
                                     "valueName": 1,
-                                    "description": " 紫颂花的age从0开始。当水平生长时或额外长出一朵新的紫颂花时增加"
+                                    "description": " 紫颂花的age从0开始；当水平生长时或额外长出一朵新的紫颂花时增加"
                                 },
                                 {
                                     "valueName": 2,
-                                    "description": " 紫颂花的age从0开始。当水平生长时或额外长出一朵新的紫颂花时增加"
+                                    "description": " 紫颂花的age从0开始；当水平生长时或额外长出一朵新的紫颂花时增加"
                                 },
                                 {
                                     "valueName": 3,
-                                    "description": " 紫颂花的age从0开始。当水平生长时或额外长出一朵新的紫颂花时增加"
+                                    "description": " 紫颂花的age从0开始；当水平生长时或额外长出一朵新的紫颂花时增加"
                                 },
                                 {
                                     "valueName": 4,
-                                    "description": " 紫颂花的age从0开始。当水平生长时或额外长出一朵新的紫颂花时增加"
+                                    "description": " 紫颂花的age从0开始；当水平生长时或额外长出一朵新的紫颂花时增加"
                                 },
                                 {
                                     "valueName": 5,

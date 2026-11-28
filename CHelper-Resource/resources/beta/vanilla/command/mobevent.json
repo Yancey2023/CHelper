@@ -2,7 +2,7 @@
     "name": [
         "mobevent"
     ],
-    "description": "控制或查询允许运行的生物事件。",
+    "description": "控制或查询允许运行的生物事件",
     "syntax": [
         "/mobevent <event: MobEvent> [value: Boolean]"
     ],
@@ -10,33 +10,33 @@
         "<event: MobEvent>": {
             "type": "NORMAL_ID",
             "brief": "要控制或查询的事件",
-            "description": "指定要控制或查询的事件。",
+            "description": "指定要控制或查询的事件",
             "ignoreError": true,
             "contents": [
                 {
                     "name": "minecraft:ender_dragon_event",
-                    "description": "控制末影龙生成事件。"
+                    "description": "控制末影龙生成事件"
                 },
                 {
                     "name": "minecraft:pillager_patrols_event",
-                    "description": "控制灾厄巡逻队生成事件。"
+                    "description": "控制灾厄巡逻队生成事件"
                 },
                 {
                     "name": "minecraft:wandering_trader_event",
-                    "description": "控制流浪商人生成事件。"
+                    "description": "控制流浪商人生成事件"
                 },
                 {
                     "name": "events_enabled",
-                    "description": "控制事件子系统。"
+                    "description": "控制事件子系统"
                 }
             ]
         },
         "[value: Boolean]": {
             "type": "BOOLEAN",
             "brief": "事件状态",
-            "description": "指定事件的状态。",
-            "descriptionFalse": "禁用事件。",
-            "descriptionTrue": "启用事件。"
+            "description": "指定事件的状态",
+            "descriptionFalse": "禁用事件",
+            "descriptionTrue": "启用事件"
         }
     }
 }

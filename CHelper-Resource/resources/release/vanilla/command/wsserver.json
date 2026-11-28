@@ -2,14 +2,14 @@
     "name": [
         "wsserver"
     ],
-    "description": "连接WebSocket服务器。",
+    "description": "连接WebSocket服务器",
     "syntax": [
         "/wsserver <serverUri: text>"
     ],
     "node": {
         "<serverUri: text>": {
             "type": "STRING",
-            "description": "指定WebSocket服务器的URI。",
+            "description": "指定WebSocket服务器的URI",
             "canContainSpace": false,
             "ignoreLater": false,
             "brief": "服务器URI"

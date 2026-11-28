@@ -2,14 +2,14 @@
     "name": [
         "op"
     ],
-    "description": "给予玩家管理员身份。",
+    "description": "给予玩家管理员身份",
     "syntax": [
         "/op <player: target>"
     ],
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要被授予管理员权限的玩家。",
+            "description": "指定要被授予管理员权限的玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,

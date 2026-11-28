@@ -2,7 +2,7 @@
     "name": [
         "schedule"
     ],
-    "description": "计划执行函数。",
+    "description": "计划执行函数",
     "syntax": [
         "/schedule clear <function: filepath>",
         "/schedule delay add <function: filepath> <time: int> [replace|append]",
@@ -19,39 +19,39 @@
     "node": {
         "clear": {
             "type": "TEXT",
-            "description": "将之前指定的函数从计划中移除。",
+            "description": "将之前指定的函数从计划中移除",
             "data": {
                 "name": "clear",
-                "description": "将之前指定的函数从计划中移除。"
+                "description": "将之前指定的函数从计划中移除"
             }
         },
         "<function: filepath>": {
             "type": "STRING",
             "brief": "函数",
-            "description": "指定函数文件路径。",
+            "description": "指定函数文件路径",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "delay": {
             "type": "TEXT",
-            "description": "指定函数延时执行的计划。",
+            "description": "指定函数延时执行的计划",
             "data": {
                 "name": "delay",
-                "description": "指定函数延时执行的计划。"
+                "description": "指定函数延时执行的计划"
             }
         },
         "add": {
             "type": "TEXT",
-            "description": "安排函数执行计划。",
+            "description": "安排函数执行计划",
             "data": {
                 "name": "add",
-                "description": "安排函数执行计划。"
+                "description": "安排函数执行计划"
             }
         },
         "<time: int>D|<time: int>S|<time: int>T|<time: int>": {
             "type": "INTEGER_WITH_UNIT",
             "brief": "等待的时间",
-            "description": "指定等待的时间。",
+            "description": "指定等待的时间",
             "units": [
                 {
                     "name": "D",
@@ -81,84 +81,84 @@
         },
         "[replace|append]": {
             "type": "NORMAL_ID",
-            "description": "指定是否取代还在等待执行的函数或函数标签。",
+            "description": "指定是否取代还在等待执行的函数或函数标签",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "replace",
-                    "description": "取代此函数或函数标签的现有计划。"
+                    "description": "取代此函数或函数标签的现有计划"
                 },
                 {
                     "name": "append",
-                    "description": "为此函数或函数标签添加新的计划。"
+                    "description": "为此函数或函数标签添加新的计划"
                 }
             ],
             "brief": "计划更新方式"
         },
         "on_area_loaded": {
             "type": "TEXT",
-            "description": "区域加载条件下的函数计划。",
+            "description": "区域加载条件下的函数计划",
             "data": {
                 "name": "on_area_loaded",
-                "description": "区域加载条件下的函数计划。"
+                "description": "区域加载条件下的函数计划"
             }
         },
         "<from: x y z>": {
             "type": "POSITION",
             "brief": "矩形区域一角",
-            "description": "指定矩形加载区域一个对角点的坐标。"
+            "description": "指定矩形加载区域一个对角点的坐标"
         },
         "<to: x y z>": {
             "type": "POSITION",
             "brief": "矩形对角点",
-            "description": "指定与from相对的另一个角点坐标。"
+            "description": "指定与from相对的另一个角点坐标"
         },
         "circle": {
             "type": "TEXT",
-            "description": "当指定区域被加载后，执行所计划的函数。",
+            "description": "当指定区域被加载后，执行所计划的函数",
             "data": {
                 "name": "circle",
-                "description": "当指定区域被加载后，执行所计划的函数。"
+                "description": "当指定区域被加载后，执行所计划的函数"
             }
         },
         "<center: x y z>": {
             "type": "POSITION",
             "brief": "圆形区域圆心",
-            "description": "指定用于定义圆形加载区域的圆心的坐标。"
+            "description": "指定用于定义圆形加载区域的圆心的坐标"
         },
         "<radius: int>": {
             "type": "INTEGER",
             "brief": "圆形区域半径",
-            "description": "指定圆形常加载区域的半径作为从中心到圆周的区块数。"
+            "description": "指定圆形常加载区域的半径作为从中心到圆周的区块数"
         },
         "tickingarea": {
             "type": "TEXT",
-            "description": "常加载区域计划。",
+            "description": "常加载区域计划",
             "data": {
                 "name": "tickingarea",
-                "description": "常加载区域计划。"
+                "description": "常加载区域计划"
             }
         },
         "<name: string>": {
             "type": "STRING",
             "brief": "常加载区域的名称",
-            "description": "指定常加载区域的名称； add语法中在该区域被添加时执行函数。",
+            "description": "指定常加载区域的名称； add语法中在该区域被添加时执行函数",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "[function: filepath]": {
             "type": "STRING",
             "brief": "函数",
-            "description": "指定函数文件路径。",
+            "description": "指定函数文件路径",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "function": {
             "type": "TEXT",
-            "description": "清除指定函数对应的区域加载计划。",
+            "description": "清除指定函数对应的区域加载计划",
             "data": {
                 "name": "function",
-                "description": "清除指定函数对应的区域加载计划。"
+                "description": "清除指定函数对应的区域加载计划"
             }
         }
     }

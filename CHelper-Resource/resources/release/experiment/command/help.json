@@ -3,7 +3,7 @@
         "?",
         "help"
     ],
-    "description": "获取可用命令列表或单个命令的帮助信息。",
+    "description": "获取可用命令列表或单个命令的帮助信息",
     "syntax": [
         "/help <page: int>",
         "/help [command: CommandName]"
@@ -12,12 +12,12 @@
         "<page: int>": {
             "type": "INTEGER",
             "brief": "要展示的命令列表的页码",
-            "description": "指定要展示的命令列表的页码。"
+            "description": "指定要展示的命令列表的页码"
         },
         "[command: CommandName]": {
             "type": "COMMAND_NAME",
             "brief": "命令名称",
-            "description": "指定要提供帮助的命令名称。"
+            "description": "指定要提供帮助的命令名称"
         }
     }
 }

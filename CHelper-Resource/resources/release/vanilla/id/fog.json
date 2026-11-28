@@ -88,7 +88,7 @@
         },
         {
             "name": "minecraft:fog_dry",
-            "description": "配置空气、水下、天气和熔岩雾。"
+            "description": "配置空气、水下、天气和熔岩雾"
         },
         {
             "name": "minecraft:fog_extreme_hills",
@@ -136,7 +136,7 @@
         },
         {
             "name": "minecraft:fog_humid",
-            "description": "配置空气体积雾和距离雾。"
+            "description": "配置空气体积雾和距离雾"
         },
         {
             "name": "minecraft:fog_ice_mountains",
@@ -172,7 +172,7 @@
         },
         {
             "name": "minecraft:fog_lush_caves",
-            "description": "配置空气体积雾和距离雾。"
+            "description": "配置空气体积雾和距离雾"
         },
         {
             "name": "minecraft:fog_mangrove_swamp",
@@ -252,7 +252,7 @@
         },
         {
             "name": "minecraft:fog_roofed_forest_mutated",
-            "description": "配置空气体积雾和距离雾。"
+            "description": "配置空气体积雾和距离雾"
         },
         {
             "name": "minecraft:fog_savanna",
@@ -268,7 +268,7 @@
         },
         {
             "name": "minecraft:fog_semi_humid",
-            "description": "配置空气体积雾和距离雾。"
+            "description": "配置空气体积雾和距离雾"
         },
         {
             "name": "minecraft:fog_soulsand_valley",

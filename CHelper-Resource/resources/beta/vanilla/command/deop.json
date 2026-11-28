@@ -2,14 +2,14 @@
     "name": [
         "deop"
     ],
-    "description": "撤销玩家的管理员身份。",
+    "description": "撤销玩家的管理员身份",
     "syntax": [
         "/deop <player: target>"
     ],
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要撤销管理员的玩家。",
+            "description": "指定要撤销管理员的玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,

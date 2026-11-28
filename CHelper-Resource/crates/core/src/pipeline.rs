@@ -11,6 +11,7 @@ use crate::command_patch::{
 use crate::command_wiki::{archive_command_pages, CommandWikiReport};
 use crate::config::Config;
 use crate::resource_definitions::ResourceDefinitions;
+use crate::resource_text::normalize_exported_descriptions;
 use crate::sources::bedrock_lang::fetch_bedrock_lang;
 use crate::sources::caidlist::{remove_minecraft_namespace, Enums, RepoSnapshot};
 use crate::sources::java_lang::{fetch_java_lang, JavaLang};
@@ -339,6 +340,7 @@ async fn generate_staged(
         )
         .await
         .with_context(|| format!("[{edition}] 写出 suggestion_media.json 失败"))?;
+        normalize_exported_descriptions(&cfg.output_dir.join(edition))?;
         report.editions.push(EditionReport {
             edition: edition.to_string(),
             package_version,
@@ -349,6 +351,7 @@ async fn generate_staged(
         tracing::warn!("{warning}");
     }
     write_old2new_resources(&cfg.project_root.join("resources"), &cfg.output_dir)?;
+    normalize_exported_descriptions(&cfg.output_dir.join("old2new"))?;
     Ok(report)
 }
 

@@ -25,7 +25,7 @@
                     },
                     {
                         "name": "r",
-                        "description": "随机选择目标。"
+                        "description": "随机选择目标"
                     },
                     {
                         "name": "p",
@@ -41,7 +41,7 @@
                     },
                     {
                         "name": "initiator",
-                        "description": "选择与NPC交互的玩家。"
+                        "description": "选择与NPC交互的玩家"
                     }
                 ]
             },

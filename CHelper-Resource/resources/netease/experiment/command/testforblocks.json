@@ -2,7 +2,7 @@
     "name": [
         "testforblocks"
     ],
-    "description": "测试两个区域中的方块是否相同。",
+    "description": "测试两个区域中的方块是否相同",
     "syntax": [
         "/testforblocks <begin: x y z> <end: x y z> <destination: x y z> [masked|all]"
     ],
@@ -10,30 +10,30 @@
         "<begin: x y z>": {
             "type": "POSITION",
             "brief": "源区域起点",
-            "description": "指定源区域的一个端点坐标。"
+            "description": "指定源区域的一个端点坐标"
         },
         "<end: x y z>": {
             "type": "POSITION",
             "brief": "源区域另一端点",
-            "description": "指定源区域的另一个端点坐标。"
+            "description": "指定源区域的另一个端点坐标"
         },
         "<destination: x y z>": {
             "type": "POSITION",
             "brief": "目标区域坐标",
-            "description": "指定目标区域的起点坐标。"
+            "description": "指定目标区域的起点坐标"
         },
         "[masked|all]": {
             "type": "NORMAL_ID",
-            "description": "指定测试模式。",
+            "description": "指定测试模式",
             "ignoreError": false,
             "contents": [
                 {
                     "name": "masked",
-                    "description": "源区域的空气方块可匹配目标区域的任意方块。"
+                    "description": "源区域的空气方块可匹配目标区域的任意方块"
                 },
                 {
                     "name": "all",
-                    "description": "两个区域的所有方块必须完全相同。"
+                    "description": "两个区域的所有方块必须完全相同"
                 }
             ],
             "brief": "测试模式"

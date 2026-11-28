@@ -2,14 +2,14 @@
     "name": [
         "kick"
     ],
-    "description": "将玩家踢出服务器。",
+    "description": "将玩家踢出服务器",
     "syntax": [
         "/kick <name: target> <reason: message>"
     ],
     "node": {
         "<name: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要踢出的玩家。",
+            "description": "指定要踢出的玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
@@ -18,7 +18,7 @@
         },
         "<reason: message>": {
             "type": "STRING",
-            "description": "指定将显示给被踢出玩家的消息。",
+            "description": "指定将显示给被踢出玩家的消息",
             "canContainSpace": true,
             "ignoreLater": true,
             "brief": "将显示给被踢出玩家的消息"

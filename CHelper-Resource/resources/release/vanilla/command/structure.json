@@ -2,7 +2,7 @@
     "name": [
         "structure"
     ],
-    "description": "用于在不使用结构方块的情况下保存、加载或删除结构。",
+    "description": "用于在不使用结构方块的情况下保存、加载或删除结构",
     "syntax": [
         "/structure delete <name: string>",
         "/structure load <name: string> <to: x y z> [rotation: Rotation] [mirror: Mirror] [animationMode: StructureAnimationMode] [animationSeconds: float] [includeEntities: Boolean] [includeBlocks: Boolean] [waterlogged: Boolean] [integrity: float] [seed: string]",
@@ -13,36 +13,36 @@
     "node": {
         "delete": {
             "type": "TEXT",
-            "description": "删除某个储存的结构文件。",
+            "description": "删除某个储存的结构文件",
             "data": {
                 "name": "delete",
-                "description": "删除某个储存的结构文件。"
+                "description": "删除某个储存的结构文件"
             }
         },
         "<name: string>": {
             "type": "STRING",
             "brief": "结构名称",
-            "description": "指定结构名称。",
+            "description": "指定结构名称",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "load": {
             "type": "TEXT",
-            "description": "加载一个结构。",
+            "description": "加载一个结构",
             "data": {
                 "name": "load",
-                "description": "加载一个结构。"
+                "description": "加载一个结构"
             }
         },
         "<to: x y z>": {
             "type": "POSITION",
             "brief": "结构坐标",
-            "description": "保存时指定源区域另一端点，加载时指定放置坐标。"
+            "description": "保存时指定源区域另一端点，加载时指定放置坐标"
         },
         "[rotation: Rotation]": {
             "type": "NORMAL_ID",
             "brief": "结构旋转的角度",
-            "description": "指定结构旋转的角度。",
+            "description": "指定结构旋转的角度",
             "ignoreError": false,
             "contents": [
                 {
@@ -66,7 +66,7 @@
         "[mirror: Mirror]": {
             "type": "NORMAL_ID",
             "brief": "结构的镜像模式",
-            "description": "指定结构的镜像模式。",
+            "description": "指定结构的镜像模式",
             "ignoreError": false,
             "contents": [
                 {
@@ -90,7 +90,7 @@
         "[animationMode: StructureAnimationMode]": {
             "type": "NORMAL_ID",
             "brief": "生成结构使用的动画",
-            "description": "指定生成结构使用的动画。",
+            "description": "指定生成结构使用的动画",
             "ignoreError": false,
             "contents": [
                 {
@@ -105,61 +105,61 @@
         },
         "[animationSeconds: float]": {
             "type": "FLOAT",
-            "description": "指定动画时长。 单位为秒。",
+            "description": "指定动画时长； 单位为秒",
             "brief": "动画的时长"
         },
         "[includeEntities: Boolean]": {
             "type": "BOOLEAN",
             "brief": "是否包含实体",
-            "description": "指定加载或保存结构时是否包含实体。",
-            "descriptionTrue": "包含实体。",
-            "descriptionFalse": "不包含实体。"
+            "description": "指定加载或保存结构时是否包含实体",
+            "descriptionTrue": "包含实体",
+            "descriptionFalse": "不包含实体"
         },
         "[includeBlocks: Boolean]": {
             "type": "BOOLEAN",
             "brief": "是否包含方块",
-            "description": "指定加载或保存结构时是否包括方块。",
-            "descriptionTrue": "包含方块。",
-            "descriptionFalse": "不包含方块。"
+            "description": "指定加载或保存结构时是否包括方块",
+            "descriptionTrue": "包含方块",
+            "descriptionFalse": "不包含方块"
         },
         "[waterlogged: Boolean]": {
             "type": "BOOLEAN",
             "brief": "含水状态",
-            "description": "指定解析器是否将结构视为含水。",
-            "descriptionTrue": "为解析器提供含水状态提示。",
-            "descriptionFalse": "不向解析器提供含水状态提示。"
+            "description": "指定解析器是否将结构视为含水",
+            "descriptionTrue": "为解析器提供含水状态提示",
+            "descriptionFalse": "不向解析器提供含水状态提示"
         },
         "[integrity: float]": {
             "type": "FLOAT",
             "brief": "结构完整度",
-            "description": "指定每个方块的加载概率。",
+            "description": "指定每个方块的加载概率",
             "min": 0,
             "max": 100
         },
         "[seed: string]": {
             "type": "STRING",
             "brief": "随机种子",
-            "description": "指定用于integrity的随机种子。",
+            "description": "指定用于integrity的随机种子",
             "canContainSpace": false,
             "ignoreLater": false
         },
         "save": {
             "type": "TEXT",
-            "description": "保存一个结构。",
+            "description": "保存一个结构",
             "data": {
                 "name": "save",
-                "description": "保存一个结构。"
+                "description": "保存一个结构"
             }
         },
         "<from: x y z>": {
             "type": "POSITION",
             "brief": "保存端点",
-            "description": "指定源区域的一个端点坐标。"
+            "description": "指定源区域的一个端点坐标"
         },
         "[saveMode: StructureSaveMode]": {
             "type": "NORMAL_ID",
             "brief": "结构的存储位置",
-            "description": "指定结构的存储位置。",
+            "description": "指定结构的存储位置",
             "ignoreError": false,
             "contents": [
                 {

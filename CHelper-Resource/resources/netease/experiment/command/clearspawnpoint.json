@@ -2,14 +2,14 @@
     "name": [
         "clearspawnpoint"
     ],
-    "description": "清除玩家的重生点。",
+    "description": "清除玩家的重生点",
     "syntax": [
         "/clearspawnpoint [player: target]"
     ],
     "node": {
         "[player: target]": {
             "type": "TARGET_SELECTOR",
-            "description": "指定被删除出生点的玩家。",
+            "description": "指定被删除出生点的玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,

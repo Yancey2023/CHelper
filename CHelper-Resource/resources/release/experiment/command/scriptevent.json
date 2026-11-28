@@ -2,7 +2,7 @@
     "name": [
         "scriptevent"
     ],
-    "description": "通过ID和消息来触发脚本事件。",
+    "description": "通过ID和消息来触发脚本事件",
     "syntax": [
         "/scriptevent <messageId: string> <message: message>"
     ],
@@ -17,7 +17,7 @@
         "<message: message>": {
             "type": "STRING",
             "brief": "触发脚本事件的消息",
-            "description": "指定触发脚本事件的消息。",
+            "description": "指定触发脚本事件的消息",
             "canContainSpace": true,
             "ignoreLater": true
         }

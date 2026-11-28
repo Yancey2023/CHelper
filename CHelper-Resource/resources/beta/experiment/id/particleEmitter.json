@@ -100,7 +100,7 @@
         },
         {
             "name": "minecraft:cauldron_bubble_particle",
-            "description": "炼药锅气泡粒子（该粒子未被使用）。该粒子原本是为炼药锅装入水时，所产生的气泡粒子效果而设计的（该粒子只能在水中生成和存在）"
+            "description": "炼药锅气泡粒子（该粒子未被使用）；该粒子原本是为炼药锅装入水时，所产生的气泡粒子效果而设计的（该粒子只能在水中生成和存在）"
         },
         {
             "name": "minecraft:cauldron_explosion_emitter",
@@ -112,7 +112,7 @@
         },
         {
             "name": "minecraft:cauldron_splash_particle",
-            "description": "炼药锅的杂质粒子（该粒子未被使用）。该粒子原本是为装有水的炼药锅，放入任意染料时，所产生的气泡粒子而设计的（该粒子只能在水中生成和存在）"
+            "description": "炼药锅的杂质粒子（该粒子未被使用）；该粒子原本是为装有水的炼药锅，放入任意染料时，所产生的气泡粒子而设计的（该粒子只能在水中生成和存在）"
         },
         {
             "name": "minecraft:cherry_leaves_particle",
@@ -300,15 +300,15 @@
         },
         {
             "name": "minecraft:geyser_base",
-            "description": "间歇泉底部产生的较为持续的粒子。"
+            "description": "间歇泉底部产生的较为持续的粒子"
         },
         {
             "name": "minecraft:geyser_plume",
-            "description": "间歇泉产生的上升水柱。"
+            "description": "间歇泉产生的上升水柱"
         },
         {
             "name": "minecraft:geyser_poof",
-            "description": "间歇泉底部产生的爆发速度较快的粒子。"
+            "description": "间歇泉底部产生的爆发速度较快的粒子"
         },
         {
             "name": "minecraft:glow_particle",
@@ -591,7 +591,7 @@
         },
         {
             "name": "minecraft:sparkler_emitter",
-            "description": "使用烟花棒（仅教育版）时的粒子。"
+            "description": "使用烟花棒（仅教育版）时的粒子"
         },
         {
             "name": "minecraft:splash_spell_emitter",

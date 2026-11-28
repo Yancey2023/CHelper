@@ -4,23 +4,23 @@
     "content": [
         {
             "name": "functionCommandLimit",
-            "description": "function命令可执行的命令数量上限。"
+            "description": "function命令可执行的命令数量上限"
         },
         {
             "name": "maxCommandChainLength",
-            "description": "决定了连锁型命令方块能连锁执行的总数量。"
+            "description": "决定了连锁型命令方块能连锁执行的总数量"
         },
         {
             "name": "playersSleepingPercentage",
-            "description": "指定跳过夜晚所需的入睡玩家百分比。"
+            "description": "指定跳过夜晚所需的入睡玩家百分比"
         },
         {
             "name": "randomTickSpeed",
-            "description": "指定每游戏刻每区块触发随机方块刻的频率。"
+            "description": "指定每游戏刻每区块触发随机方块刻的频率"
         },
         {
             "name": "spawnRadius",
-            "description": "指定玩家在世界出生点附近重生的半径，单位为方块。"
+            "description": "指定玩家在世界出生点附近重生的半径，单位为方块"
         }
     ]
 }

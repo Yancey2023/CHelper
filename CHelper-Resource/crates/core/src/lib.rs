@@ -20,6 +20,7 @@ pub mod manifest;
 mod output_stage;
 pub mod pipeline;
 pub mod resource_definitions;
+mod resource_text;
 pub mod sources;
 pub mod suggestion_media;
 pub mod support;

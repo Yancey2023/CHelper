@@ -2,7 +2,7 @@
     "name": [
         "time"
     ],
-    "description": "控制或查询时间。",
+    "description": "控制或查询时间",
     "syntax": [
         "/time add <amount: int>",
         "/time of <clockName: string> add <amount: int>",
@@ -20,44 +20,44 @@
     "node": {
         "add": {
             "type": "TEXT",
-            "description": "增加昼夜更替时间。",
+            "description": "增加昼夜更替时间",
             "data": {
                 "name": "add",
-                "description": "增加昼夜更替时间。"
+                "description": "增加昼夜更替时间"
             }
         },
         "<amount: int>": {
             "type": "INTEGER",
-            "description": "指定要增加或设置的时间。 单位为游戏刻。",
+            "description": "指定要增加或设置的时间； 单位为游戏刻",
             "brief": "要增加或设置的时间"
         },
         "query": {
             "type": "TEXT",
-            "description": "查询当前经过的时间。",
+            "description": "查询当前经过的时间",
             "data": {
                 "name": "query",
-                "description": "查询当前经过的时间。"
+                "description": "查询当前经过的时间"
             }
         },
         "set": {
             "type": "TEXT",
-            "description": "设置昼夜更替时间。",
+            "description": "设置昼夜更替时间",
             "data": {
                 "name": "set",
-                "description": "设置昼夜更替时间。"
+                "description": "设置昼夜更替时间"
             }
         },
         "of": {
             "type": "TEXT",
-            "description": "指定要操作的世界时钟。",
+            "description": "指定要操作的世界时钟",
             "data": {
                 "name": "of",
-                "description": "指定要操作的世界时钟。"
+                "description": "指定要操作的世界时钟"
             }
         },
         "<clockName: string>": {
             "type": "NORMAL_ID",
-            "description": "指定要操作的世界时钟。",
+            "description": "指定要操作的世界时钟",
             "ignoreError": false,
             "contents": [
                 {
@@ -69,31 +69,31 @@
         },
         "pause": {
             "type": "TEXT",
-            "description": "暂停世界时钟。",
+            "description": "暂停世界时钟",
             "data": {
                 "name": "pause",
-                "description": "暂停世界时钟。"
+                "description": "暂停世界时钟"
             }
         },
         "resume": {
             "type": "TEXT",
-            "description": "取消暂停世界时钟。",
+            "description": "取消暂停世界时钟",
             "data": {
                 "name": "resume",
-                "description": "取消暂停世界时钟。"
+                "description": "取消暂停世界时钟"
             }
         },
         "time": {
             "type": "TEXT",
-            "description": "查询世界时钟经过的总刻数。",
+            "description": "查询世界时钟经过的总刻数",
             "data": {
                 "name": "time",
-                "description": "查询世界时钟经过的总刻数。"
+                "description": "查询世界时钟经过的总刻数"
             }
         },
         "<timeMarkerName: timemarker name>": {
             "type": "NORMAL_ID",
-            "description": "指定要设置的时间标记。",
+            "description": "指定要设置的时间标记",
             "ignoreError": false,
             "contents": [
                 {
@@ -145,7 +145,7 @@
         },
         "<time: TimeQuery2>": {
             "type": "NORMAL_ID",
-            "description": "指定要查询的数据。",
+            "description": "指定要查询的数据",
             "ignoreError": false,
             "contents": [
                 {

@@ -27,6 +27,7 @@ ID 字符串数组。只要类别仍有未翻译 ID 就保留该文件；漏译�
 - 文件**末尾无换行符**（以 `}` 结束）；
 - 键顺序 = 构造顺序（JSON 对象键保序）；
 - 值为 `undefined` / 空时**整个字段省略**（如 `description`、`properties`、`valid`）；
+- `description`、`descriptionTrue` 和 `descriptionFalse` 省略末尾的句号，句中的 `。` 改为 `；`，保留省略号。
 - 整数值的浮点数按 JS 规则输出为整数（`1.0` → `1`）；
 - ID 文件不包含版本号 / uuid / 生成时间元信息；版本信息由资源包根目录的 manifest 提供。
 

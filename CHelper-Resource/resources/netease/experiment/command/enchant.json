@@ -2,7 +2,7 @@
     "name": [
         "enchant"
     ],
-    "description": "为实体手持的物品添加魔咒。",
+    "description": "为实体手持的物品添加魔咒",
     "syntax": [
         "/enchant <player: target> <enchantmentId: int> [level: int]",
         "/enchant <player: target> <enchantmentName: Enchant> [level: int]"
@@ -10,7 +10,7 @@
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定目标。",
+            "description": "指定目标",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
@@ -20,18 +20,18 @@
         "<enchantmentId: int>": {
             "type": "INTEGER",
             "brief": "魔咒",
-            "description": "指定要添加到实体主手持有物品上的魔咒。"
+            "description": "指定要添加到实体主手持有物品上的魔咒"
         },
         "[level: int]": {
             "type": "INTEGER",
-            "description": "指定魔咒的等级。",
+            "description": "指定魔咒的等级",
             "min": 1,
             "brief": "魔咒的等级"
         },
         "<enchantmentName: Enchant>": {
             "type": "NORMAL_ID",
             "brief": "魔咒",
-            "description": "指定要添加到实体主手持有物品上的魔咒。",
+            "description": "指定要添加到实体主手持有物品上的魔咒",
             "ignoreError": true,
             "key": "enchantType"
         }

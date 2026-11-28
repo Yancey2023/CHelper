@@ -1,6 +1,7 @@
 //! Canonical static resource definitions from data, independent of generated snapshots.
 
 use crate::parse_jsonc;
+use crate::{jfmt::to_string_pretty4, resource_text::normalize_descriptions};
 use anyhow::{bail, Context, Result};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -82,10 +83,15 @@ fn collect(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, String>) 
             && path.extension().and_then(|extension| extension.to_str()) == Some("json")
         {
             let text = std::fs::read_to_string(&path)?;
-            let value = parse_jsonc(&text)
+            let mut value = parse_jsonc(&text)
                 .with_context(|| format!("解析静态资源数据源失败: {}", path.display()))?;
             validate(&name, &value)
                 .with_context(|| format!("静态资源数据源结构无效: {}", path.display()))?;
+            let text = if normalize_descriptions(&mut value) {
+                to_string_pretty4(&value).replace('\n', "\r\n")
+            } else {
+                text
+            };
             files.insert(name, text);
         } else {
             bail!("静态资源数据源包含非JSON普通文件: {}", path.display());

@@ -2,7 +2,7 @@
     "name": [
         "music"
     ],
-    "description": "允许玩家控制音乐。",
+    "description": "允许玩家控制音乐",
     "syntax": [
         "/music play <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
         "/music queue <trackName: string> [volume: float] [fadeSeconds: float] [repeatMode: MusicRepeatMode]",
@@ -12,16 +12,16 @@
     "node": {
         "play": {
             "type": "TEXT",
-            "description": "播放音乐。",
+            "description": "播放音乐",
             "data": {
                 "name": "play",
-                "description": "播放音乐。"
+                "description": "播放音乐"
             }
         },
         "<trackName: string>": {
             "type": "STRING",
             "brief": "播放音乐名",
-            "description": "指定播放音乐名。",
+            "description": "指定播放音乐名",
             "canContainSpace": true,
             "ignoreLater": false
         },
@@ -35,14 +35,14 @@
         "[fadeSeconds: float]": {
             "type": "FLOAT",
             "brief": "调整音乐淡入/淡出时间",
-            "description": "指定音乐淡入/淡出时长，单位为秒。",
+            "description": "指定音乐淡入/淡出时长，单位为秒",
             "min": 0,
             "max": 10
         },
         "[repeatMode: MusicRepeatMode]": {
             "type": "NORMAL_ID",
             "brief": "是否循环播放音乐",
-            "description": "指定是否循环播放音乐。",
+            "description": "指定是否循环播放音乐",
             "ignoreError": false,
             "contents": [
                 {
@@ -57,18 +57,18 @@
         },
         "queue": {
             "type": "TEXT",
-            "description": "将音乐添加到队列中。",
+            "description": "将音乐添加到队列中",
             "data": {
                 "name": "queue",
-                "description": "将音乐添加到队列中。"
+                "description": "将音乐添加到队列中"
             }
         },
         "stop": {
             "type": "TEXT",
-            "description": "停止播放音乐。",
+            "description": "停止播放音乐",
             "data": {
                 "name": "stop",
-                "description": "停止播放音乐。"
+                "description": "停止播放音乐"
             }
         },
         "volume": {

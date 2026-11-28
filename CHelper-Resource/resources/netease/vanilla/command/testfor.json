@@ -2,14 +2,14 @@
     "name": [
         "testfor"
     ],
-    "description": "检测并列出符合指定条件的实体名称。",
+    "description": "检测并列出符合指定条件的实体名称",
     "syntax": [
         "/testfor <victim: target>"
     ],
     "node": {
         "<victim: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定列出的目标。",
+            "description": "指定列出的目标",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,

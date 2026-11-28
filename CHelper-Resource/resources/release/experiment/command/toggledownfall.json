@@ -2,7 +2,7 @@
     "name": [
         "toggledownfall"
     ],
-    "description": "切换当前天气状态。",
+    "description": "切换当前天气状态",
     "syntax": [
         "/toggledownfall"
     ],

@@ -561,7 +561,7 @@
         },
         {
             "name": "minecraft:sparkler_emitter",
-            "description": "使用烟花棒（仅教育版）时的粒子。"
+            "description": "使用烟花棒（仅教育版）时的粒子"
         },
         {
             "name": "minecraft:splash_spell_emitter",

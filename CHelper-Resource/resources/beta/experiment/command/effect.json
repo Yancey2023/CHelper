@@ -2,7 +2,7 @@
     "name": [
         "effect"
     ],
-    "description": "管理玩家及其他实体上的状态效果。",
+    "description": "管理玩家及其他实体上的状态效果",
     "syntax": [
         "/effect <player: target> <effect: Effect> [seconds: int] [amplifier: int] [hideParticles: Boolean]",
         "/effect <player: target> <effect: Effect> infinite [amplifier: int] [hideParticles: Boolean]",
@@ -11,7 +11,7 @@
     "node": {
         "<player: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定目标。",
+            "description": "指定目标",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
@@ -21,7 +21,7 @@
         "<effect: Effect>": {
             "type": "NORMAL_ID",
             "brief": "给予或者需要移除的效果",
-            "description": "指定给予或者需要移除的效果。",
+            "description": "指定给予或者需要移除的效果",
             "ignoreError": true,
             "key": "effect"
         },
@@ -29,12 +29,12 @@
             "type": "INTEGER",
             "min": 0,
             "brief": "效果时长",
-            "description": "以秒为单位指定效果时长。"
+            "description": "以秒为单位指定效果时长"
         },
         "[effect: Effect]": {
             "type": "NORMAL_ID",
             "brief": "给予或者需要移除的效果",
-            "description": "指定给予或者需要移除的效果。",
+            "description": "指定给予或者需要移除的效果",
             "ignoreError": true,
             "key": "effect"
         },
@@ -42,29 +42,29 @@
             "type": "INTEGER",
             "min": 0,
             "brief": "效果的放大倍率",
-            "description": "指定效果的放大倍率。"
+            "description": "指定效果的放大倍率"
         },
         "[hideParticles: Boolean]": {
             "type": "BOOLEAN",
             "brief": "粒子显示状态",
-            "description": "指定是否隐藏状态效果的粒子。",
-            "descriptionTrue": "隐藏状态效果的粒子。",
-            "descriptionFalse": "显示状态效果的粒子。"
+            "description": "指定是否隐藏状态效果的粒子",
+            "descriptionTrue": "隐藏状态效果的粒子",
+            "descriptionFalse": "显示状态效果的粒子"
         },
         "infinite": {
             "type": "TEXT",
-            "description": "给予一种效果，时长为无限。",
+            "description": "给予一种效果，时长为无限",
             "data": {
                 "name": "infinite",
-                "description": "给予一种效果，时长为无限。"
+                "description": "给予一种效果，时长为无限"
             }
         },
         "clear": {
             "type": "TEXT",
-            "description": "清除目标身上的状态效果。",
+            "description": "清除目标身上的状态效果",
             "data": {
                 "name": "clear",
-                "description": "清除目标身上的状态效果。"
+                "description": "清除目标身上的状态效果"
             }
         }
     }

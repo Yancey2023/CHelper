@@ -4,131 +4,131 @@
     "content": [
         {
             "name": "commandBlockOutput",
-            "description": "命令方块执行命令时是否在聊天框中向管理员显示。"
+            "description": "命令方块执行命令时是否在聊天框中向管理员显示"
         },
         {
             "name": "commandBlocksEnabled",
-            "description": "命令方块在游戏中是否被启用。"
+            "description": "命令方块在游戏中是否被启用"
         },
         {
             "name": "doDaylightCycle",
-            "description": "是否进行昼夜更替。"
+            "description": "是否进行昼夜更替"
         },
         {
             "name": "doEntityDrops",
-            "description": "非生物实体是否掉落物品。"
+            "description": "非生物实体是否掉落物品"
         },
         {
             "name": "doFireTick",
-            "description": "火是否蔓延及自然熄灭。"
+            "description": "火是否蔓延及自然熄灭"
         },
         {
             "name": "doImmediateRespawn",
-            "description": "玩家死亡后是否立即重生。"
+            "description": "玩家死亡后是否立即重生"
         },
         {
             "name": "doInsomnia",
-            "description": "幻翼是否在夜晚生成。"
+            "description": "幻翼是否在夜晚生成"
         },
         {
             "name": "doLimitedCrafting",
-            "description": "玩家的合成配方是否需要解锁才能使用。"
+            "description": "玩家的合成配方是否需要解锁才能使用"
         },
         {
             "name": "doMobLoot",
-            "description": "生物在死亡时是否掉落物品。"
+            "description": "生物在死亡时是否掉落物品"
         },
         {
             "name": "doMobSpawning",
-            "description": "控制生物自然生成。"
+            "description": "控制生物自然生成"
         },
         {
             "name": "doTileDrops",
-            "description": "方块被破坏时是否掉落物品。"
+            "description": "方块被破坏时是否掉落物品"
         },
         {
             "name": "doWeatherCycle",
-            "description": "天气是否变化。"
+            "description": "天气是否变化"
         },
         {
             "name": "drowningDamage",
-            "description": "玩家是否承受溺水伤害。"
+            "description": "玩家是否承受溺水伤害"
         },
         {
             "name": "fallDamage",
-            "description": "玩家是否承受摔落伤害。"
+            "description": "玩家是否承受摔落伤害"
         },
         {
             "name": "fireDamage",
-            "description": "玩家是否承受火焰伤害。"
+            "description": "玩家是否承受火焰伤害"
         },
         {
             "name": "freezeDamage",
-            "description": "玩家是否承受冰冻伤害。"
+            "description": "玩家是否承受冰冻伤害"
         },
         {
             "name": "keepInventory",
-            "description": "玩家死亡后是否保留物品和经验。"
+            "description": "玩家死亡后是否保留物品和经验"
         },
         {
             "name": "mobGriefing",
-            "description": "控制生物是否能放置、修改或破坏方块及捡拾物品。"
+            "description": "控制生物是否能放置、修改或破坏方块及捡拾物品"
         },
         {
             "name": "naturalRegeneration",
-            "description": "玩家饥饿值足够时是否自然恢复生命值。"
+            "description": "玩家饥饿值足够时是否自然恢复生命值"
         },
         {
             "name": "projectilesCanBreakBlocks",
-            "description": "弹射物是否能破坏方块。"
+            "description": "弹射物是否能破坏方块"
         },
         {
             "name": "pvp",
-            "description": "玩家之间能否造成伤害。"
+            "description": "玩家之间能否造成伤害"
         },
         {
             "name": "recipesUnlock",
-            "description": "是否启用配方解锁机制。"
+            "description": "是否启用配方解锁机制"
         },
         {
             "name": "respawnBlocksExplode",
-            "description": "玩家在非主世界维度使用床或在非下界维度使用重生锚时是否会爆炸。"
+            "description": "玩家在非主世界维度使用床或在非下界维度使用重生锚时是否会爆炸"
         },
         {
             "name": "sendCommandFeedback",
-            "description": "玩家执行命令的返回信息是否显示在聊天框。"
+            "description": "玩家执行命令的返回信息是否显示在聊天框"
         },
         {
             "name": "showBorderEffect",
-            "description": "边界是否发出红色粒子。"
+            "description": "边界是否发出红色粒子"
         },
         {
             "name": "showCoordinates",
-            "description": "是否在屏幕上持续显示玩家当前的坐标。"
+            "description": "是否在屏幕上持续显示玩家当前的坐标"
         },
         {
             "name": "showDaysPlayed",
-            "description": "是否显示游玩天数。"
+            "description": "是否显示游玩天数"
         },
         {
             "name": "showDeathMessages",
-            "description": "是否在聊天框中显示玩家死亡消息。"
+            "description": "是否在聊天框中显示玩家死亡消息"
         },
         {
             "name": "showRecipeMessages",
-            "description": "是否在解锁新配方时显示消息。"
+            "description": "是否在解锁新配方时显示消息"
         },
         {
             "name": "showTags",
-            "description": "是否展示物品的物品组件。"
+            "description": "是否展示物品的物品组件"
         },
         {
             "name": "tntExplodes",
-            "description": "控制TNT和TNT矿车的激活与爆炸，以及发射器发射TNT。"
+            "description": "控制TNT和TNT矿车的激活与爆炸，以及发射器发射TNT"
         },
         {
             "name": "tntExplosionDropDecay",
-            "description": "由TNT爆炸炸毁的方块是否会有概率不掉落。"
+            "description": "由TNT爆炸炸毁的方块是否会有概率不掉落"
         }
     ]
 }

@@ -2,14 +2,14 @@
     "name": [
         "playanimation"
     ],
-    "description": "在一个或多个实体上播放一次性动画。",
+    "description": "在一个或多个实体上播放一次性动画",
     "syntax": [
         "/playanimation <entity: target> <animation: string> [next_state: string] [blend_out_time: float] [stop_expression: string] [controller: string]"
     ],
     "node": {
         "<entity: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定目标。",
+            "description": "指定目标",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,
@@ -19,32 +19,32 @@
         "<animation: string>": {
             "type": "NORMAL_ID",
             "brief": "动画",
-            "description": "指定动画。",
+            "description": "指定动画",
             "ignoreError": true,
             "key": "animation"
         },
         "[next_state: string]": {
             "type": "NORMAL_ID",
             "brief": "动画播放完毕后的状态",
-            "description": "指定动画播放完毕后的状态。",
+            "description": "指定动画播放完毕后的状态",
             "ignoreError": true,
             "key": "animationController"
         },
         "[blend_out_time: float]": {
             "type": "FLOAT",
             "brief": "动画渐变的持续时间",
-            "description": "指定动画渐变的持续时间。"
+            "description": "指定动画渐变的持续时间"
         },
         "[stop_expression: string]": {
             "type": "STRING",
             "brief": "动画播放终止的条件",
-            "description": "指定动画播放终止的条件。",
+            "description": "指定动画播放终止的条件",
             "canContainSpace": true,
             "ignoreLater": false
         },
         "[controller: string]": {
             "type": "STRING",
-            "description": "指定动画控制器。",
+            "description": "指定动画控制器",
             "canContainSpace": true,
             "ignoreLater": false,
             "brief": "动画控制器"

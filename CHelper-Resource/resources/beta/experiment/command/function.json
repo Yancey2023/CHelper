@@ -2,7 +2,7 @@
     "name": [
         "function"
     ],
-    "description": "运行函数。",
+    "description": "运行函数",
     "syntax": [
         "/function <name: filepath>"
     ],
@@ -10,7 +10,7 @@
         "<name: filepath>": {
             "type": "STRING",
             "brief": "行为包函数",
-            "description": "指定要执行的行为包函数。",
+            "description": "指定要执行的行为包函数",
             "canContainSpace": true,
             "ignoreLater": true
         }

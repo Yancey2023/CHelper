@@ -3,7 +3,7 @@
         "teleport",
         "tp"
     ],
-    "description": "传送实体（玩家、生物等）到指定的地点；部分语法还会设置其旋转角度。",
+    "description": "传送实体（玩家、生物等）到指定的地点；部分语法还会设置其旋转角度",
     "syntax": [
         "/teleport <destination: target>",
         "/teleport <destination: x y z> [checkForBlocks: Boolean]",
@@ -20,11 +20,11 @@
         "<destination: x y z>": {
             "type": "POSITION",
             "brief": "要被传送到的坐标",
-            "description": "指定要被传送到的坐标。"
+            "description": "指定要被传送到的坐标"
         },
         "<destination: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要被传送到的实体。",
+            "description": "指定要被传送到的实体",
             "isOnlyOne": true,
             "isMustPlayer": false,
             "isMustNPC": false,
@@ -34,33 +34,33 @@
         "[yRot: value]": {
             "type": "RELATIVE_FLOAT",
             "brief": "绕Y轴旋转角度",
-            "description": "指定实体传送后的绕Y轴旋转角度。",
+            "description": "指定实体传送后的绕Y轴旋转角度",
             "canUseCaretNotation": false
         },
         "[checkForBlocks: Boolean]": {
             "type": "BOOLEAN",
             "brief": "碰撞阻挡检查",
-            "description": "指定传送目的地是否进行方块碰撞箱检查。",
-            "descriptionTrue": "检查目的地的方块阻挡。",
-            "descriptionFalse": "不检查方块阻挡。"
+            "description": "指定传送目的地是否进行方块碰撞箱检查",
+            "descriptionTrue": "检查目的地的方块阻挡",
+            "descriptionFalse": "不检查方块阻挡"
         },
         "[xRot: value]": {
             "type": "RELATIVE_FLOAT",
             "brief": "绕X轴旋转角度",
-            "description": "指定实体传送后的绕X轴旋转角度。",
+            "description": "指定实体传送后的绕X轴旋转角度",
             "canUseCaretNotation": false
         },
         "facing": {
             "type": "TEXT",
-            "description": "将指定的实体传送到一个确定的坐标位置，并使其旋转角度与指定的一致。",
+            "description": "将指定的实体传送到一个确定的坐标位置，并使其旋转角度与指定的一致",
             "data": {
                 "name": "facing",
-                "description": "将指定的实体传送到一个确定的坐标位置，并使其旋转角度与指定的一致。"
+                "description": "将指定的实体传送到一个确定的坐标位置，并使其旋转角度与指定的一致"
             }
         },
         "<lookAtEntity: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定实体传送后朝向的实体。",
+            "description": "指定实体传送后朝向的实体",
             "isMustPlayer": false,
             "isOnlyOne": true,
             "isMustNPC": false,
@@ -70,11 +70,11 @@
         "<lookAtPosition: x y z>": {
             "type": "POSITION",
             "brief": "实体传送后朝向的坐标",
-            "description": "指定实体传送后朝向的坐标。"
+            "description": "指定实体传送后朝向的坐标"
         },
         "<victim: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定要被传送的实体。",
+            "description": "指定要被传送的实体",
             "isOnlyOne": false,
             "isMustPlayer": false,
             "isMustNPC": false,

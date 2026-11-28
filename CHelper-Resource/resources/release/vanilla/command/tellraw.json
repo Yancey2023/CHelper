@@ -2,14 +2,14 @@
     "name": [
         "tellraw"
     ],
-    "description": "向一个或多个玩家发送一条以文本组件表示的消息。",
+    "description": "向一个或多个玩家发送一条以文本组件表示的消息",
     "syntax": [
         "/tellraw <target: target> <raw json message: json>"
     ],
     "node": {
         "<target: target>": {
             "type": "TARGET_SELECTOR",
-            "description": "指定该消息的接收玩家。",
+            "description": "指定该消息的接收玩家",
             "isOnlyOne": false,
             "isMustPlayer": true,
             "isMustNPC": false,
@@ -19,7 +19,7 @@
         "<raw json message: json>": {
             "type": "JSON",
             "brief": "要发送的文本组件消息",
-            "description": "指定要发送的文本组件消息。",
+            "description": "指定要发送的文本组件消息",
             "key": "rawtext"
         }
     }
